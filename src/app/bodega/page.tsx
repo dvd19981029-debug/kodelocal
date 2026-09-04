@@ -137,23 +137,33 @@ export default function BodegaPage() {
 
   // Marcar pedido como listo para ventanilla
   const handleMarkAsReady = (orderId: string) => {
-    setSales(prev => prev.map(s => {
-      if (s.id === orderId) {
-        return { ...s, status: 'READY_AT_WINDOW' };
-      }
-      return s;
-    }));
+    setSales(prev => {
+      const updated = prev.map(s => {
+        if (s.id === orderId) {
+          return { ...s, status: 'READY_AT_WINDOW' as const };
+        }
+        return s;
+      });
+      localStorage.setItem('kodelocal_sales', JSON.stringify(updated));
+      window.dispatchEvent(new Event('kodelocal_sales_updated'));
+      return updated;
+    });
     showToast('✅ Pedido preparado y enviado a Ventanilla.');
   };
 
   // Marcar pedido como entregado
   const handleMarkAsCompleted = (orderId: string) => {
-    setSales(prev => prev.map(s => {
-      if (s.id === orderId) {
-        return { ...s, status: 'COMPLETED' };
-      }
-      return s;
-    }));
+    setSales(prev => {
+      const updated = prev.map(s => {
+        if (s.id === orderId) {
+          return { ...s, status: 'COMPLETED' as const };
+        }
+        return s;
+      });
+      localStorage.setItem('kodelocal_sales', JSON.stringify(updated));
+      window.dispatchEvent(new Event('kodelocal_sales_updated'));
+      return updated;
+    });
     showToast('📦 Pedido entregado al cliente / repartidor.');
   };
 
