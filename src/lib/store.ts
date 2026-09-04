@@ -49,6 +49,8 @@ export interface SaleRecord {
     simulated?: boolean;
     mensaje?: string;
   };
+  status?: 'PENDING_PREPARATION' | 'READY_AT_WINDOW' | 'COMPLETED' | 'CANCELLED';
+  vendedor?: string;
   items: {
     productId: string;
     name: string;
@@ -56,6 +58,7 @@ export interface SaleRecord {
     price: number;
     total: number;
     unit?: string;
+    puesto?: string;
   }[];
 }
 

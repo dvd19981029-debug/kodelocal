@@ -29,9 +29,19 @@ import {
   Lock,
   ArrowUpRight,
   ReceiptText,
-  FileCheck
+  FileCheck,
+  Box,
+  Check
 } from 'lucide-react';
-import { getStoredUsers, UserAccount, UserRole } from '@/lib/auth';
+import { 
+  getStoredUsers, 
+  UserAccount, 
+  UserRole, 
+  getStoredRoles, 
+  saveStoredRoles, 
+  CustomRole, 
+  SYSTEM_VIEWS 
+} from '@/lib/auth';
 import { INITIAL_PRODUCTS, ProductItem, PERFUME_CATEGORIES, SaleRecord } from '@/lib/store';
 
 type AdminTab = 
@@ -98,6 +108,11 @@ export default function AdminPage() {
   // Reporte Filtro Período
   const [periodFilter, setPeriodFilter] = useState<'HOY' | 'MES' | 'ANIO'>('HOY');
 
+  // Roles y Privilegios
+  const [roles, setRoles] = useState<CustomRole[]>(() => getStoredRoles());
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [editingRole, setEditingRole] = useState<CustomRole | null>(null);
+
   useEffect(() => {
     localStorage.setItem('kodelocal_users', JSON.stringify(users));
   }, [users]);
@@ -105,6 +120,10 @@ export default function AdminPage() {
   useEffect(() => {
     localStorage.setItem('kodelocal_products', JSON.stringify(products));
   }, [products]);
+
+  useEffect(() => {
+    saveStoredRoles(roles);
+  }, [roles]);
 
   // Cálculos Financieros
   const totalEsencias = useMemo(() => products.filter(p => p.category === 'Esencias para Perfume').length, [products]);
@@ -220,6 +239,66 @@ export default function AdminPage() {
 
     setIsEditModalOpen(false);
     setEditingProduct(null);
+  };
+
+  const handleStartEditRole = (r: CustomRole) => {
+    setEditingRole({ ...r, allowedViews: [...r.allowedViews] });
+    setIsRoleModalOpen(true);
+  };
+
+  const handleOpenNewRole = () => {
+    setEditingRole({
+      id: `role_${Date.now()}`,
+      code: `ROL_${roles.length + 1}`,
+      name: '',
+      description: '',
+      color: 'indigo',
+      allowedViews: ['pos'],
+      canSeeCosts: false,
+      canEditPrices: false,
+      isSystem: false,
+    });
+    setIsRoleModalOpen(true);
+  };
+
+  const handleSaveRole = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingRole || !editingRole.name.trim()) return;
+
+    setRoles(prev => {
+      const exists = prev.some(r => r.id === editingRole.id);
+      if (exists) {
+        return prev.map(r => r.id === editingRole.id ? editingRole : r);
+      } else {
+        return [...prev, editingRole];
+      }
+    });
+
+    setIsRoleModalOpen(false);
+    setEditingRole(null);
+  };
+
+  const handleDeleteRole = (roleId: string) => {
+    const roleToDelete = roles.find(r => r.id === roleId);
+    if (!roleToDelete || roleToDelete.isSystem) {
+      alert('No se pueden eliminar los roles base del sistema.');
+      return;
+    }
+    if (confirm(`¿Estás seguro de eliminar el rol "${roleToDelete.name}"?`)) {
+      setRoles(prev => prev.filter(r => r.id !== roleId));
+    }
+  };
+
+  const handleToggleViewInRole = (viewId: string) => {
+    if (!editingRole) return;
+    const currentViews = editingRole.allowedViews;
+    const hasView = currentViews.includes(viewId);
+    setEditingRole({
+      ...editingRole,
+      allowedViews: hasView 
+        ? currentViews.filter(v => v !== viewId)
+        : [...currentViews, viewId]
+    });
   };
 
   return (
@@ -948,10 +1027,13 @@ export default function AdminPage() {
                         </td>
                         <td className="py-3 px-3 font-mono text-slate-500">{u.email}</td>
                         <td className="py-3 px-3">
-                          <span className={`clay-badge text-[10px] py-0.5 px-2 ${
-                            u.role === 'ADMIN' ? 'bg-purple-50 text-purple-700' : 'bg-indigo-50 text-indigo-700'
+                          <span className={`clay-badge text-[10px] py-0.5 px-2 font-bold ${
+                            u.role === 'ADMIN' ? 'bg-purple-50 text-purple-700' :
+                            u.role === 'BODEGA' ? 'bg-amber-50 text-amber-800 border border-amber-200' :
+                            u.role === 'DESPACHO' ? 'bg-blue-50 text-blue-800 border border-blue-200' :
+                            'bg-indigo-50 text-indigo-700'
                           }`}>
-                            {u.role === 'ADMIN' ? '👑 Gerente' : '🛒 Cajero'}
+                            {roles.find(r => r.code === u.role)?.name || u.role}
                           </span>
                         </td>
                         <td className="py-3 px-3 font-mono font-bold text-slate-800">
@@ -982,75 +1064,141 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ================= TAB 8: MATRIZ DE ROLES Y PERMISOS ================= */}
+        {/* ================= TAB 8: MATRIZ DE ROLES Y CONTROL DE ACCESOS ================= */}
         {activeTab === 'roles' && (
           <div className="space-y-6 animate-in fade-in duration-150">
-            <div className="clay-card p-6">
-              <h2 className="text-xl font-black text-slate-800">Matriz de Roles y Privilegios de Seguridad</h2>
-              <p className="text-xs text-slate-500 font-medium">Control estricto de qué información puede ver cada puesto de trabajo</p>
+            
+            <div className="clay-card p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h2 className="text-xl font-black text-slate-800">Matriz de Roles y Accesos a Vistas</h2>
+                <p className="text-xs text-slate-500 font-medium">
+                  Crea roles personalizados y define exactamente a qué pantallas (Punto de Venta, Bodega, Inventario, Caja, Gerencia) tiene acceso cada colaborador.
+                </p>
+              </div>
+              <button
+                onClick={handleOpenNewRole}
+                className="clay-btn clay-btn-primary px-4 py-2.5 text-xs flex items-center gap-1.5 font-bold whitespace-nowrap"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Crear Nuevo Rol</span>
+              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              
-              {/* Rol Administrador */}
-              <div className="clay-card p-5 space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">👑</span>
-                    <h3 className="font-extrabold text-sm text-slate-800">Gerente / Administrador</h3>
-                  </div>
-                  <span className="clay-badge bg-purple-50 text-purple-700 text-[10px] py-0.5 px-2">Acceso Total</span>
-                </div>
-                <ul className="text-xs text-slate-600 space-y-2">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>Ver costos de compra ($1.95) y márgenes de ganancia.</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>Crear, editar o desactivar cajeros y usuarios.</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>Actualización masiva de precios y catálogo.</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>Configuración fiscal con Factura Llama y Hacienda.</span>
-                  </li>
-                </ul>
-              </div>
+              {roles.map((r) => {
+                const assignedUsersCount = users.filter(u => u.role === r.code).length;
 
-              {/* Rol Cajero */}
-              <div className="clay-card p-5 space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">🛒</span>
-                    <h3 className="font-extrabold text-sm text-slate-800">Cajero / Vendedor</h3>
-                  </div>
-                  <span className="clay-badge bg-indigo-50 text-indigo-700 text-[10px] py-0.5 px-2">Operativo</span>
-                </div>
-                <ul className="text-xs text-slate-600 space-y-2">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>Cobrar, buscar fragancias y emitir tickets o DTEs.</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>Ingreso ultra rápido mediante PIN de 4 dígitos.</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-rose-600 font-semibold">
-                    <X className="w-3.5 h-3.5 text-rose-500" />
-                    <span>🔒 Costos de compra ($1.95) y márgenes estrictamente ocultos.</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-rose-600 font-semibold">
-                    <X className="w-3.5 h-3.5 text-rose-500" />
-                    <span>No puede borrar categorías ni cambiar precios oficiales.</span>
-                  </li>
-                </ul>
-              </div>
+                return (
+                  <div key={r.id} className="clay-card p-5 space-y-4 flex flex-col justify-between">
+                    <div>
+                      {/* Cabecera del Rol */}
+                      <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xl">
+                              {r.code === 'ADMIN' ? '👑' : r.code === 'BODEGA' ? '📦' : r.code === 'DESPACHO' ? '🚚' : '🛒'}
+                            </span>
+                            <h3 className="font-black text-sm text-slate-800">{r.name}</h3>
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1">{r.description}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className={`clay-badge text-[10px] py-0.5 px-2.5 font-mono font-bold ${
+                            r.code === 'ADMIN' ? 'bg-purple-100 text-purple-900 border border-purple-200' :
+                            r.code === 'BODEGA' ? 'bg-amber-100 text-amber-900 border border-amber-200' :
+                            r.code === 'DESPACHO' ? 'bg-blue-100 text-blue-900 border border-blue-200' :
+                            'bg-indigo-100 text-indigo-900 border border-indigo-200'
+                          }`}>
+                            {r.code}
+                          </span>
+                          <span className="text-[10px] text-slate-400 block mt-1">
+                            {assignedUsersCount} {assignedUsersCount === 1 ? 'usuario' : 'usuarios'}
+                          </span>
+                        </div>
+                      </div>
 
+                      {/* Vistas Permitidas */}
+                      <div className="pt-3 space-y-2">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+                          Vistas Habilitadas en el Menú ({r.allowedViews.length} de {SYSTEM_VIEWS.length}):
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {SYSTEM_VIEWS.map((sv) => {
+                            const isAllowed = r.allowedViews.includes(sv.id);
+                            return (
+                              <span
+                                key={sv.id}
+                                className={`text-[11px] font-bold py-1 px-2.5 rounded-xl border flex items-center gap-1 transition-all ${
+                                  isAllowed
+                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200 shadow-sm'
+                                    : 'bg-slate-50 text-slate-400 border-slate-200 opacity-40 line-through'
+                                }`}
+                              >
+                                {isAllowed ? <CheckCircle2 className="w-3 h-3 text-emerald-600" /> : <X className="w-3 h-3 text-slate-400" />}
+                                <span>{sv.name}</span>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Permisos Especiales de Seguridad */}
+                      <div className="pt-3 border-t border-slate-100 text-xs space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          {r.canSeeCosts ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          ) : (
+                            <X className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                          )}
+                          <span className={r.canSeeCosts ? 'text-slate-700 font-medium' : 'text-rose-600 font-bold'}>
+                            {r.canSeeCosts ? 'Acceso a costos de compra ($1.95) y márgenes' : '🔒 Costos ($1.95) y márgenes estrictamente ocultos'}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {r.canEditPrices ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          ) : (
+                            <X className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          )}
+                          <span className={r.canEditPrices ? 'text-slate-700 font-medium' : 'text-slate-500'}>
+                            {r.canEditPrices ? 'Puede modificar precios oficiales' : 'Bloqueado cambio de precios'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Acciones del Rol */}
+                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                      <span className="text-[10px] text-slate-400">
+                        {r.isSystem ? 'Rol predeterminado' : 'Rol personalizado'}
+                      </span>
+
+                      <div className="flex items-center gap-2">
+                        {!r.isSystem && (
+                          <button
+                            onClick={() => handleDeleteRole(r.id)}
+                            className="p-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors"
+                            title="Eliminar Rol"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleStartEditRole(r)}
+                          className="clay-btn clay-btn-light px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 text-indigo-700"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>Configurar Accesos</span>
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+                );
+              })}
             </div>
+
           </div>
         )}
 
@@ -1165,12 +1313,12 @@ export default function AdminPage() {
                   <label className="text-xs font-bold text-slate-700 block mb-1">Rol de Acceso</label>
                   <select
                     value={userRole}
-                    onChange={(e) => setUserRole(e.target.value as UserRole)}
+                    onChange={(e) => setUserRole(e.target.value)}
                     className="clay-input w-full text-xs font-bold"
                   >
-                    <option value="CASHIER">Cajero / Cotizador</option>
-                    <option value="LOGISTICS">Almacén y Envíos</option>
-                    <option value="ADMIN">Gerente General</option>
+                    {roles.map(r => (
+                      <option key={r.id} value={r.code}>{r.name}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -1497,6 +1645,165 @@ export default function AdminPage() {
                   className="clay-btn clay-btn-primary flex-1 py-2.5 text-xs font-bold"
                 >
                   Guardar Cambios
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: CREAR / EDITAR ROL ================= */}
+      {isRoleModalOpen && editingRole && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm overflow-y-auto">
+          <div className="clay-card w-full max-w-xl p-6 relative my-8 animate-in fade-in zoom-in-95">
+            <button
+              onClick={() => { setIsRoleModalOpen(false); setEditingRole(null); }}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-xl font-black text-slate-800 mb-1">
+              {roles.some(r => r.id === editingRole.id) ? 'Configurar Rol y Accesos' : 'Crear Nuevo Rol'}
+            </h3>
+            <p className="text-xs text-slate-500 mb-5">
+              Define el nombre del puesto y selecciona exactamente a qué vistas y datos podrá acceder este colaborador.
+            </p>
+
+            <form onSubmit={handleSaveRole} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Nombre del Rol <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingRole.name}
+                    onChange={(e) => setEditingRole({ ...editingRole, name: e.target.value })}
+                    placeholder="Ej. Bodega / Preparador"
+                    className="clay-input w-full text-xs font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Código <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    disabled={editingRole.isSystem}
+                    value={editingRole.code}
+                    onChange={(e) => setEditingRole({ ...editingRole, code: e.target.value.toUpperCase().replace(/\s+/g, '_') })}
+                    placeholder="BODEGA"
+                    className="clay-input w-full text-xs font-mono font-black uppercase text-indigo-600 disabled:opacity-50"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  Descripción del Puesto
+                </label>
+                <input
+                  type="text"
+                  value={editingRole.description}
+                  onChange={(e) => setEditingRole({ ...editingRole, description: e.target.value })}
+                  placeholder="Ej. Responsable de preparar pedidos en estante y entrega en ventanilla"
+                  className="clay-input w-full text-xs"
+                />
+              </div>
+
+              {/* Selección de Vistas con Acceso Permitido */}
+              <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-wider text-indigo-900">
+                    Vistas y Módulos Permitidos
+                  </span>
+                  <span className="text-[11px] font-bold text-indigo-600">
+                    {editingRole.allowedViews.length} de {SYSTEM_VIEWS.length} seleccionadas
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  Las pantallas no seleccionadas estarán completamente ocultas y bloqueadas para este usuario.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                  {SYSTEM_VIEWS.map((sv) => {
+                    const isChecked = editingRole.allowedViews.includes(sv.id);
+                    return (
+                      <div
+                        key={sv.id}
+                        onClick={() => handleToggleViewInRole(sv.id)}
+                        className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start gap-2.5 ${
+                          isChecked
+                            ? 'bg-white border-indigo-300 shadow-sm'
+                            : 'bg-white/40 border-slate-200 opacity-60'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {}}
+                          className="mt-0.5 w-4 h-4 rounded text-indigo-600 cursor-pointer pointer-events-none"
+                        />
+                        <div>
+                          <p className="font-bold text-xs text-slate-800">{sv.name}</p>
+                          <span className="text-[10px] text-slate-500 leading-tight block mt-0.5">
+                            {sv.description}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Permisos Especiales de Seguridad */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+                <span className="text-xs font-black uppercase tracking-wider text-slate-700 block">
+                  Permisos Financieros Especiales
+                </span>
+
+                <label className="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editingRole.canSeeCosts}
+                    onChange={(e) => setEditingRole({ ...editingRole, canSeeCosts: e.target.checked })}
+                    className="w-4 h-4 rounded text-indigo-600 cursor-pointer"
+                  />
+                  <span>
+                    Permitir ver <strong>costos de compra ($1.95)</strong> y márgenes de ganancia
+                  </span>
+                </label>
+
+                <label className="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editingRole.canEditPrices}
+                    onChange={(e) => setEditingRole({ ...editingRole, canEditPrices: e.target.checked })}
+                    className="w-4 h-4 rounded text-indigo-600 cursor-pointer"
+                  />
+                  <span>
+                    Permitir modificar precios oficiales de venta y catálogo
+                  </span>
+                </label>
+              </div>
+
+              {/* Botones de acción */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => { setIsRoleModalOpen(false); setEditingRole(null); }}
+                  className="clay-btn clay-btn-light flex-1 py-2.5 text-xs"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="clay-btn clay-btn-primary flex-1 py-2.5 text-xs font-bold"
+                >
+                  Guardar Rol y Privilegios
                 </button>
               </div>
             </form>
