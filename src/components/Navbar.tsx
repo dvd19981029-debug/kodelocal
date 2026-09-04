@@ -38,19 +38,40 @@ export function Navbar() {
   const currentRole = roles.find(r => r.code === currentUser?.role);
   const allowedViews = currentRole ? currentRole.allowedViews : ['pos', 'admin'];
 
-  const allNavItems = [
-    { id: 'pos', href: '/pos', label: 'Punto de Venta', icon: Store },
-    { id: 'bodega', href: '/bodega', label: 'Bodega & Comandas', icon: Box },
-    { id: 'inventario', href: '/inventario', label: 'Inventario', icon: Package },
-    { id: 'ventas', href: '/ventas', label: 'Ventas & DTE', icon: ReceiptText },
-    { id: 'logistica', href: '/logistica', label: 'Envíos & Logística', icon: Truck },
-    { id: 'admin', href: '/admin', label: 'Gerencia', icon: Crown, adminOnly: true },
+  const macroNavItems = [
+    { 
+      id: 'admin', 
+      href: '/admin', 
+      label: 'Administración', 
+      icon: Crown, 
+      isAdmin: true,
+      matchPaths: ['/admin'],
+      checkAccess: () => currentUser?.role === 'ADMIN' || allowedViews.includes('admin')
+    },
+    { 
+      id: 'pos', 
+      href: '/pos', 
+      label: 'Punto de Venta', 
+      icon: Store, 
+      isAdmin: false,
+      matchPaths: ['/pos', '/ventas', '/logistica'],
+      checkAccess: () => currentUser?.role === 'ADMIN' || allowedViews.includes('pos') || allowedViews.includes('ventas')
+    },
+    { 
+      id: 'bodega', 
+      href: '/bodega', 
+      label: 'Bodega & Preparación', 
+      icon: Box, 
+      isAdmin: false,
+      matchPaths: ['/bodega', '/inventario'],
+      checkAccess: () => currentUser?.role === 'ADMIN' || allowedViews.includes('bodega') || allowedViews.includes('inventario')
+    },
   ];
 
   // Filtrado dinámico de vistas según los permisos del rol del usuario
-  const visibleNavItems = allNavItems.filter(item => {
+  const visibleNavItems = macroNavItems.filter(item => {
     if (currentUser?.role === 'ADMIN') return true;
-    return allowedViews.includes(item.id);
+    return item.checkAccess();
   });
 
   const handleLogout = () => {
@@ -80,7 +101,7 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
         
         {/* Brand Logo with Claymorphic Badge */}
-        <Link href="/pos" className="flex items-center gap-3 group">
+        <Link href={currentUser?.role === 'ADMIN' ? '/admin' : '/pos'} className="flex items-center gap-3 group">
           <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-xl shadow-[4px_6px_12px_rgba(99,102,241,0.4),inset_2px_2px_3px_rgba(255,255,255,0.6),inset_-2px_-2px_4px_rgba(0,0,0,0.2)] group-hover:scale-105 transition-transform">
             K
           </div>
@@ -95,24 +116,22 @@ export function Navbar() {
           </div>
         </Link>
 
-        {/* Center Navigation Dinámica */}
-        <nav className="hidden md:flex items-center gap-1.5 p-1.5 rounded-2xl bg-white/60 shadow-[inset_2px_2px_5px_rgba(164,177,198,0.25),inset_-2px_-2px_5px_rgba(255,255,255,0.8)] border border-white/80">
+        {/* Center Navigation: Módulos / Perfiles autorizados */}
+        <nav className="hidden md:flex items-center gap-2 p-1.5 rounded-2xl bg-white/60 shadow-[inset_2px_2px_5px_rgba(164,177,198,0.25),inset_-2px_-2px_5px_rgba(255,255,255,0.8)] border border-white/80">
           {visibleNavItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname.startsWith(item.href);
+            const isActive = item.matchPaths.some(p => pathname.startsWith(p));
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`clay-btn px-3.5 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 shrink-0 ${
+                className={`clay-btn px-4 py-2.5 text-xs font-black rounded-xl transition-all whitespace-nowrap flex items-center gap-2 shrink-0 ${
                   isActive
-                    ? 'clay-btn-primary !shadow-[3px_4px_10px_rgba(79,70,229,0.4)]'
-                    : item.adminOnly 
-                    ? 'text-indigo-700 bg-indigo-50/70 hover:bg-indigo-100'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/70'
+                    ? 'clay-btn-primary !shadow-[3px_4px_10px_rgba(79,70,229,0.4)] ring-2 ring-indigo-400/30'
+                    : 'text-slate-600 hover:text-indigo-900 hover:bg-white/80'
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 shrink-0 ${item.adminOnly && !isActive ? 'text-indigo-600' : ''}`} />
+                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-indigo-600'}`} />
                 <span className="whitespace-nowrap">{item.label}</span>
               </Link>
             );

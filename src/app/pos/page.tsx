@@ -21,12 +21,37 @@ import {
   User,
   Sparkle,
   Droplets,
-  Tag
+  Tag,
+  ReceiptText,
+  Truck,
+  Store,
+  DollarSign,
+  TrendingUp,
+  Eye,
+  Clock,
+  MapPin,
+  Phone
 } from 'lucide-react';
 import { INITIAL_PRODUCTS, ProductItem, CartItem, SaleRecord, PERFUME_CATEGORIES, getStoredProducts } from '@/lib/store';
 
 export default function PosPage() {
   const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
+  const [posTab, setPosTab] = useState<'caja' | 'ventas' | 'logistica'>('caja');
+
+  // Historial de ventas para el cajero
+  const [sales, setSales] = useState<SaleRecord[]>(() => {
+    if (typeof window !== 'undefined') {
+      const currentVersion = localStorage.getItem('kodelocal_data_version');
+      if (currentVersion !== '2026_zero_stock_v3') return [];
+      const saved = localStorage.getItem('kodelocal_sales');
+      if (saved) {
+        try { return JSON.parse(saved); } catch (e) {}
+      }
+    }
+    return [];
+  });
+  const [ventasSearch, setVentasSearch] = useState('');
+  const [selectedSaleDetail, setSelectedSaleDetail] = useState<SaleRecord | null>(null);
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('Esencias para Perfume');
@@ -258,6 +283,7 @@ export default function PosPage() {
 
     const savedSales = JSON.parse(localStorage.getItem('kodelocal_sales') || '[]');
     localStorage.setItem('kodelocal_sales', JSON.stringify([newSale, ...savedSales]));
+    setSales(prev => [newSale, ...prev]);
 
     setIsProcessing(false);
     setIsCheckoutOpen(false);
@@ -266,10 +292,104 @@ export default function PosPage() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 pb-12">
+    <div className="flex flex-col lg:flex-row gap-6 pb-16 max-w-[1650px] mx-auto items-start">
       
-      {/* ================= COLUMNA IZQUIERDA: CATÁLOGO DE PERFUMERÍA ================= */}
-      <div className="flex-1 flex flex-col gap-5">
+      {/* ========================================================================= */}
+      {/* MENÚ LATERAL IZQUIERDO DE PUNTO DE VENTA                                  */}
+      {/* ========================================================================= */}
+      <aside className="w-full lg:w-60 shrink-0 space-y-4">
+        <div className="clay-card p-3.5 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white flex items-center justify-center font-black text-lg shadow-md">
+            <Store className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="font-black text-xs text-slate-800 leading-tight">Punto de Venta</h2>
+            <p className="text-[10px] text-slate-500 font-medium">Caja & Facturación DTE</p>
+          </div>
+        </div>
+
+        <div className="clay-card p-2.5 space-y-1.5">
+          <p className="px-2.5 text-[9.5px] font-bold text-slate-400 uppercase tracking-wider">
+            Operaciones de Caja
+          </p>
+
+          <button
+            type="button"
+            onClick={() => setPosTab('caja')}
+            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+              posTab === 'caja'
+                ? 'clay-btn-primary !shadow-[3px_4px_10px_rgba(79,70,229,0.35)]'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Store className="w-4 h-4" />
+              <span>Caja / Mostrador</span>
+            </div>
+            {totalItemsCount > 0 && (
+              <span className={`clay-badge text-[10px] font-black px-2 py-0.5 ${
+                posTab === 'caja' ? 'bg-white text-indigo-900' : 'bg-indigo-100 text-indigo-800'
+              }`}>
+                {totalItemsCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setPosTab('ventas')}
+            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+              posTab === 'ventas'
+                ? 'clay-btn-primary !shadow-[3px_4px_10px_rgba(79,70,229,0.35)]'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <ReceiptText className="w-4 h-4" />
+              <span>Ventas & DTEs</span>
+            </div>
+            <span className="text-[10px] text-slate-400 font-mono font-bold">
+              {sales.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setPosTab('logistica')}
+            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+              posTab === 'logistica'
+                ? 'clay-btn-primary !shadow-[3px_4px_10px_rgba(79,70,229,0.35)]'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Truck className="w-4 h-4" />
+              <span>Envíos & Domicilio</span>
+            </div>
+          </button>
+        </div>
+
+        {/* Resumen del Turno */}
+        <div className="clay-card p-3.5 bg-indigo-50/50 border border-indigo-100 text-xs space-y-2">
+          <span className="font-black text-indigo-950 block text-[11px]">Resumen del Turno:</span>
+          <div className="flex justify-between text-slate-600 text-[11px]">
+            <span>Ventas del Día:</span>
+            <strong className="font-mono text-slate-800">{sales.length}</strong>
+          </div>
+          <div className="flex justify-between text-slate-600 text-[11px]">
+            <span>Total Cobrado:</span>
+            <strong className="font-mono text-indigo-700">${sales.reduce((acc, s) => acc + s.total, 0).toFixed(2)}</strong>
+          </div>
+        </div>
+      </aside>
+
+      {/* ================= ÁREA DE TRABAJO A LA DERECHA ================= */}
+      <div className="flex-1 w-full min-w-0">
+        {posTab === 'caja' && (
+          <div className="flex flex-col xl:flex-row gap-6">
+            
+            {/* ================= COLUMNA IZQUIERDA: CATÁLOGO DE PERFUMERÍA ================= */}
+            <div className="flex-1 flex flex-col gap-5 min-w-0">
         
         {/* Barra superior de Búsqueda y Cotizador Rápido */}
         <div className="clay-card p-4 sm:p-5 flex flex-col sm:flex-row gap-3 items-center justify-between">
@@ -583,6 +703,317 @@ export default function PosPage() {
           )}
         </div>
       </div>
+    </div>
+  )}
+
+    {/* ================= PESTAÑA 2: HISTORIAL DE VENTAS & DTES ================= */}
+    {posTab === 'ventas' && (
+      <div className="space-y-5 animate-in fade-in">
+        
+        {/* Métricas Rápidas de Ventas */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="clay-card p-4 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Cobrado (Hoy)</p>
+              <h3 className="text-xl font-black text-indigo-600 mt-0.5">
+                ${sales.reduce((acc, s) => acc + s.total, 0).toFixed(2)}
+              </h3>
+              <span className="text-[10px] text-slate-500 font-medium">{sales.length} comprobantes</span>
+            </div>
+            <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-inner">
+              <DollarSign className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="clay-card p-4 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">DTEs Oficiales (MH)</p>
+              <h3 className="text-xl font-black text-emerald-600 mt-0.5">
+                {sales.filter(s => s.tipoComprobante === '01' || s.tipoComprobante === '03').length}
+              </h3>
+              <span className="text-[10px] text-slate-500 font-medium">Facturas & Créditos Fiscales</span>
+            </div>
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner">
+              <FileCheck className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="clay-card p-4 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">IVA Débito Fiscal (13%)</p>
+              <h3 className="text-xl font-black text-purple-600 mt-0.5">
+                ${sales.reduce((acc, s) => acc + s.ivaTotal, 0).toFixed(2)}
+              </h3>
+              <span className="text-[10px] text-slate-500 font-medium">Retenido para Hacienda</span>
+            </div>
+            <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-inner">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+          </div>
+        </div>
+
+        {/* Buscador de Comprobantes */}
+        <div className="clay-card p-3.5 flex items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Buscar por N° Venta (#CMD-1081), cliente, DTE o código de generación..."
+              value={ventasSearch}
+              onChange={(e) => setVentasSearch(e.target.value)}
+              className="clay-input w-full pl-9 pr-3 py-2 text-xs font-bold"
+            />
+          </div>
+        </div>
+
+        {/* Tabla de Historial de Ventas */}
+        <div className="clay-card overflow-hidden p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/70 text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="py-2.5 px-3">N° Venta / Hora</th>
+                  <th className="py-2.5 px-3">Cliente</th>
+                  <th className="py-2.5 px-3">Comprobante DTE</th>
+                  <th className="py-2.5 px-3">Método</th>
+                  <th className="py-2.5 px-3 text-right">Total ($)</th>
+                  <th className="py-2.5 px-3 text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {sales.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-12 text-center text-slate-400">
+                      No hay ventas registradas aún. Las ventas completadas en caja aparecerán aquí.
+                    </td>
+                  </tr>
+                ) : (
+                  sales
+                    .filter(s => {
+                      if (!ventasSearch.trim()) return true;
+                      const q = ventasSearch.toLowerCase().trim();
+                      return (
+                        s.saleNumber.toLowerCase().includes(q) ||
+                        s.cliente.nombre.toLowerCase().includes(q) ||
+                        (s.dteInfo?.codigoGeneracion && s.dteInfo.codigoGeneracion.toLowerCase().includes(q)) ||
+                        (s.dteInfo?.numeroControl && s.dteInfo.numeroControl.toLowerCase().includes(q))
+                      );
+                    })
+                    .map((sale) => (
+                      <tr key={sale.id} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="py-2.5 px-3 font-mono font-bold text-slate-800">
+                          <div>#{sale.saleNumber}</div>
+                          <span className="text-[10px] text-slate-400 font-sans font-normal">
+                            {new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <span className="font-extrabold text-slate-800 block text-xs">{sale.cliente.nombre}</span>
+                          {sale.cliente.numDocumento && (
+                            <span className="text-[10px] font-mono text-slate-400">Doc: {sale.cliente.numDocumento}</span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <span className={`clay-badge text-[10px] font-bold py-0.5 px-2 ${
+                            sale.tipoComprobante === '03'
+                              ? 'bg-purple-100 text-purple-800 border border-purple-200'
+                              : sale.tipoComprobante === '01'
+                              ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                              : 'bg-slate-100 text-slate-700'
+                          }`}>
+                            {sale.tipoComprobante === '03' ? 'Crédito Fiscal (03)' : sale.tipoComprobante === '01' ? 'Factura (01)' : 'Ticket'}
+                          </span>
+                          {sale.dteInfo?.numeroControl && (
+                            <span className="block text-[9.5px] font-mono text-emerald-700 font-bold mt-0.5 truncate max-w-[150px]">
+                              {sale.dteInfo.numeroControl}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-600 font-bold text-[11px]">
+                          {sale.paymentMethod === 'CASH' ? 'Efectivo' : sale.paymentMethod === 'CARD' ? 'Tarjeta' : 'Transferencia'}
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-mono font-black text-xs text-indigo-700">
+                          ${sale.total.toFixed(2)}
+                        </td>
+                        <td className="py-2.5 px-3 text-center">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedSaleDetail(sale)}
+                            className="clay-btn clay-btn-light px-2.5 py-1 text-[11px] font-bold text-indigo-700 inline-flex items-center gap-1"
+                          >
+                            <Eye className="w-3 h-3" />
+                            <span>Ver</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    )}
+
+    {/* ================= PESTAÑA 3: ENVÍOS & DOMICILIO ================= */}
+    {posTab === 'logistica' && (
+      <div className="space-y-4 animate-in fade-in">
+        <div className="clay-card p-5">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold shadow-inner">
+              <Truck className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-slate-800">Despachos & Mensajería de Ventas</h3>
+              <p className="text-xs text-slate-500">Coordinación de entregas locales originadas en caja</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="clay-card p-4 space-y-2 border-l-4 border-amber-500">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="font-mono font-bold text-xs text-indigo-700">#ENV-SV-8801</span>
+                <h4 className="text-xs font-black text-slate-800">Beatriz Morales</h4>
+                <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                  <MapPin className="w-3 h-3 text-slate-400" />
+                  Colonia Escalón, Calle El Mirador #42
+                </p>
+              </div>
+              <span className="clay-badge text-[10px] bg-amber-100 text-amber-900 font-bold">
+                En Ruta
+              </span>
+            </div>
+            <div className="pt-2 border-t border-slate-100 flex justify-between text-xs text-slate-600">
+              <span>Mensajero: <strong>Moto #1</strong></span>
+              <span className="font-mono font-black text-indigo-700">$49.50</span>
+            </div>
+          </div>
+
+          <div className="clay-card p-4 space-y-2 border-l-4 border-emerald-500">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="font-mono font-bold text-xs text-indigo-700">#ENV-SV-8802</span>
+                <h4 className="text-xs font-black text-slate-800">Roberto Fuentes</h4>
+                <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                  <MapPin className="w-3 h-3 text-slate-400" />
+                  Santa Tecla, Residencial Santa Teresa #15
+                </p>
+              </div>
+              <span className="clay-badge text-[10px] bg-emerald-100 text-emerald-900 font-bold">
+                Entregado
+              </span>
+            </div>
+            <div className="pt-2 border-t border-slate-100 flex justify-between text-xs text-slate-600">
+              <span>Mensajero: <strong>Cargo Expreso</strong></span>
+              <span className="font-mono font-black text-indigo-700">$32.50</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+
+    </div>
+
+  {/* ================= MODAL DETALLE DE COMPROBANTE DE VENTA ================= */}
+  {selectedSaleDetail && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
+      <div className="clay-card w-full max-w-md p-5 relative bg-white animate-in zoom-in-95">
+        <button
+          type="button"
+          onClick={() => setSelectedSaleDetail(null)}
+          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <div className="mb-4 pb-3 border-b border-slate-100 text-center">
+          <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-2 font-black">
+            K
+          </div>
+          <h3 className="font-black text-base text-slate-800">Comprobante de Venta</h3>
+          <p className="font-mono text-xs text-indigo-600 font-bold">#{selectedSaleDetail.saleNumber}</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">
+            {new Date(selectedSaleDetail.createdAt).toLocaleString()}
+          </p>
+        </div>
+
+        <div className="space-y-3 mb-4 text-xs">
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
+            <div className="flex justify-between">
+              <span className="text-slate-500">Cliente:</span>
+              <strong className="text-slate-800">{selectedSaleDetail.cliente.nombre}</strong>
+            </div>
+            {selectedSaleDetail.cliente.numDocumento && (
+              <div className="flex justify-between">
+                <span className="text-slate-500">Documento:</span>
+                <span className="font-mono">{selectedSaleDetail.cliente.numDocumento}</span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span className="text-slate-500">Comprobante:</span>
+              <span className="font-bold text-indigo-700">
+                {selectedSaleDetail.tipoComprobante === '03' ? 'Crédito Fiscal (03)' : selectedSaleDetail.tipoComprobante === '01' ? 'Factura (01)' : 'Ticket'}
+              </span>
+            </div>
+            {selectedSaleDetail.dteInfo?.numeroControl && (
+              <div className="flex justify-between pt-1 border-t border-slate-200 text-[10px]">
+                <span className="text-slate-500">N° Control Hacienda:</span>
+                <span className="font-mono font-bold text-emerald-700">{selectedSaleDetail.dteInfo.numeroControl}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl p-2.5 max-h-48 overflow-y-auto">
+            {selectedSaleDetail.items.map((it, idx) => (
+              <div key={idx} className="py-1.5 flex justify-between items-center text-xs">
+                <div>
+                  <span className="font-bold text-slate-800">{it.name}</span>
+                  <span className="text-[10px] text-slate-400 block">{it.quantity} x ${it.price.toFixed(2)}</span>
+                </div>
+                <span className="font-mono font-black text-slate-800">${it.total.toFixed(2)}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="p-3 rounded-xl bg-indigo-50/60 border border-indigo-100 space-y-1.5 text-xs">
+            <div className="flex justify-between text-slate-600">
+              <span>Subtotal Neto:</span>
+              <span className="font-mono font-bold">${selectedSaleDetail.subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-slate-600">
+              <span>IVA (13%):</span>
+              <span className="font-mono font-bold">${selectedSaleDetail.ivaTotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-sm font-black text-indigo-900 pt-1 border-t border-indigo-200">
+              <span>Total:</span>
+              <span className="font-mono text-base text-indigo-600">${selectedSaleDetail.total.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="clay-btn clay-btn-light flex-1 py-2 text-xs font-bold flex items-center justify-center gap-1.5"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span>Imprimir</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedSaleDetail(null)}
+            className="clay-btn clay-btn-primary flex-1 py-2 text-xs font-bold"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
 
       {/* ================= MODAL DE COBRO Y EMISIÓN DTE ================= */}
       {isCheckoutOpen && (
