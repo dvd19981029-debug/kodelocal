@@ -156,6 +156,28 @@ export default function PosPage() {
   const [clienteEmail, setClienteEmail] = useState('');
   const [clienteGiro, setClienteGiro] = useState('');
 
+  // Buscador interactivo de clientes en Carrito (Combobox)
+  const [cartCustomerQuery, setCartCustomerQuery] = useState('');
+  const [isCartCustomerDropdownOpen, setIsCartCustomerDropdownOpen] = useState(false);
+
+  const selectedCustomerObj = useMemo(() => {
+    return customers.find(c => c.id === selectedCustomerId);
+  }, [customers, selectedCustomerId]);
+
+  const filteredCartCustomers = useMemo(() => {
+    if (!cartCustomerQuery.trim()) {
+      return customers.slice(0, 10);
+    }
+    const q = cartCustomerQuery.toLowerCase().trim();
+    return customers.filter(c => 
+      c.name.toLowerCase().includes(q) ||
+      (c.nombreComercial && c.nombreComercial.toLowerCase().includes(q)) ||
+      (c.numDocumento && c.numDocumento.toLowerCase().includes(q)) ||
+      (c.nrc && c.nrc.toLowerCase().includes(q)) ||
+      (c.phone && c.phone.toLowerCase().includes(q))
+    );
+  }, [customers, cartCustomerQuery]);
+
   // Proceso de emisión
   const [isProcessing, setIsProcessing] = useState(false);
   const [completedSale, setCompletedSale] = useState<SaleRecord | null>(null);
@@ -1330,62 +1352,197 @@ export default function PosPage() {
                   )}
                 </div>
 
-                {/* Selector de Cliente para Cotización y Venta */}
-                <div className="mt-2.5 p-2 rounded-xl bg-indigo-50/60 border border-indigo-100/80 space-y-1.5">
+                {/* Selector de Cliente para Cotización y Venta (Buscador Interactivo) */}
+                <div className="mt-2.5 p-2 rounded-xl bg-indigo-50/60 border border-indigo-100/80 space-y-1.5 relative">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700">
                       <User className="w-3.5 h-3.5 text-indigo-600" />
                       <span>Cliente:</span>
-                      {selectedCustomerId && (
+                      {selectedCustomerObj && (
                         <span className={`text-[9px] px-1.5 py-0.2 rounded font-black tracking-tight ${
                           tipoComprobante === '03' ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-700'
                         }`}>
-                          {tipoComprobante === '03' ? 'CCF (Crédito Fiscal)' : 'FC (Consumidor)'}
+                          {tipoComprobante === '03' ? 'CCF (03)' : 'FC (01)'}
                         </span>
                       )}
                     </div>
                     <div className="flex items-center gap-1">
-                      {selectedCustomerId && (
+                      {selectedCustomerObj ? (
                         <button
                           type="button"
-                          onClick={() => handleSelectCustomer('')}
-                          className="text-[10px] text-slate-400 hover:text-rose-600 font-bold flex items-center gap-0.5 px-1 py-0.5 rounded hover:bg-rose-50"
-                          title="Regresar a Consumidor Final"
+                          onClick={() => {
+                            handleSelectCustomer('');
+                            setCartCustomerQuery('');
+                            setIsCartCustomerDropdownOpen(false);
+                          }}
+                          className="text-[10px] text-slate-400 hover:text-rose-600 font-bold flex items-center gap-0.5 px-1 py-0.5 rounded hover:bg-rose-50 transition-colors"
+                          title="Cambiar cliente y volver a Consumidor Final"
                         >
                           <X className="w-3 h-3" /> Quitar
                         </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsCartCustomerDropdownOpen(false);
+                            handleOpenNewCustomerModal();
+                          }}
+                          className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5 bg-white px-1.5 py-0.5 rounded-md border border-indigo-200/70 hover:bg-indigo-50 shadow-2xs transition-colors"
+                        >
+                          <UserPlus className="w-3 h-3" /> + Nuevo
+                        </button>
                       )}
-                      <button
-                        type="button"
-                        onClick={handleOpenNewCustomerModal}
-                        className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5 bg-white px-1.5 py-0.5 rounded-md border border-indigo-200/70 hover:bg-indigo-50 shadow-2xs transition-colors"
-                      >
-                        <UserPlus className="w-3 h-3" /> + Nuevo
-                      </button>
                     </div>
                   </div>
 
-                  <select
-                    value={selectedCustomerId}
-                    onChange={(e) => handleSelectCustomer(e.target.value)}
-                    className="w-full text-xs font-semibold py-1 px-2 rounded-lg bg-white border border-indigo-200/60 text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-2xs"
-                  >
-                    <option value="">👤 Consumidor Final (Venta Rápida)</option>
-                    {customers.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name} {c.nrc ? `• CCF (NRC: ${c.nrc})` : c.numDocumento ? `• DUI: ${c.numDocumento}` : ''}
-                      </option>
-                    ))}
-                  </select>
+                  {/* Estado A: Cliente ya seleccionado */}
+                  {selectedCustomerObj ? (
+                    <div className="p-2 rounded-lg bg-white border border-indigo-200/80 shadow-2xs flex items-center justify-between gap-2 animate-in fade-in duration-150">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-extrabold text-xs text-slate-800 truncate leading-tight">
+                            {selectedCustomerObj.name}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500 font-medium">
+                          {selectedCustomerObj.numDocumento && (
+                            <span>DUI: {selectedCustomerObj.numDocumento}</span>
+                          )}
+                          {selectedCustomerObj.nrc && (
+                            <span className="font-mono text-purple-700 font-bold">NRC: {selectedCustomerObj.nrc}</span>
+                          )}
+                          {selectedCustomerObj.phone && (
+                            <span>Tel: {selectedCustomerObj.phone}</span>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleSelectCustomer('');
+                          setCartCustomerQuery('');
+                          setIsCartCustomerDropdownOpen(true);
+                        }}
+                        className="px-2 py-1 text-[10px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-md shrink-0 transition-colors"
+                        title="Buscar otro cliente"
+                      >
+                        Cambiar
+                      </button>
+                    </div>
+                  ) : (
+                    /* Estado B: Buscador de Cliente Interactivo */
+                    <div className="relative">
+                      {isCartCustomerDropdownOpen && (
+                        <div 
+                          className="fixed inset-0 z-30" 
+                          onClick={() => setIsCartCustomerDropdownOpen(false)} 
+                        />
+                      )}
 
-                  {selectedCustomerId && (
-                    <div className="flex items-center justify-between text-[10px] text-slate-500 font-medium px-0.5">
-                      <span className="truncate max-w-[210px]">
-                        {clienteDoc ? `Doc: ${clienteDoc}` : clienteNrc ? `NRC: ${clienteNrc}` : 'Registrado'}
-                      </span>
-                      <span className="text-indigo-600 font-bold shrink-0">
-                        {tipoComprobante === '03' ? 'Comprobante 03' : 'Factura 01'}
-                      </span>
+                      <div className="relative flex items-center z-40">
+                        <Search className="w-3.5 h-3.5 absolute left-2.5 text-slate-400 pointer-events-none" />
+                        <input
+                          type="text"
+                          placeholder="Buscar cliente (Nombre, DUI o NRC)..."
+                          value={cartCustomerQuery}
+                          onChange={(e) => {
+                            setCartCustomerQuery(e.target.value);
+                            setIsCartCustomerDropdownOpen(true);
+                          }}
+                          onFocus={() => setIsCartCustomerDropdownOpen(true)}
+                          className="w-full text-xs font-medium pl-8 pr-7 py-1.5 rounded-lg bg-white border border-indigo-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 shadow-2xs"
+                        />
+                        {cartCustomerQuery && (
+                          <button
+                            type="button"
+                            onClick={() => setCartCustomerQuery('')}
+                            className="absolute right-2 text-slate-400 hover:text-slate-600"
+                            title="Limpiar búsqueda"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Dropdown de resultados de búsqueda */}
+                      {isCartCustomerDropdownOpen && (
+                        <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-slate-200 z-50 max-h-56 overflow-y-auto divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-100">
+                          
+                          {/* Opción rápida: Consumidor Final */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleSelectCustomer('');
+                              setCartCustomerQuery('');
+                              setIsCartCustomerDropdownOpen(false);
+                            }}
+                            className="w-full p-2 text-left hover:bg-slate-50 flex items-center justify-between text-xs transition-colors"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-base shrink-0">👤</span>
+                              <div className="min-w-0">
+                                <p className="font-bold text-slate-800 text-xs truncate">Consumidor Final</p>
+                                <p className="text-[10px] text-slate-400 truncate">Venta Rápida sin datos fiscales</p>
+                              </div>
+                            </div>
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-bold shrink-0">
+                              FC (01)
+                            </span>
+                          </button>
+
+                          {/* Listado de clientes que coinciden con la búsqueda */}
+                          {filteredCartCustomers.length === 0 ? (
+                            <div className="p-3 text-center">
+                              <p className="text-xs text-slate-500 font-medium">No se encontró cliente con ese nombre o documento</p>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsCartCustomerDropdownOpen(false);
+                                  handleOpenNewCustomerModal();
+                                  setCustName(cartCustomerQuery);
+                                }}
+                                className="mt-1 text-[11px] font-black text-indigo-600 hover:underline"
+                              >
+                                + Registrar &quot;{cartCustomerQuery}&quot; ahora
+                              </button>
+                            </div>
+                          ) : (
+                            filteredCartCustomers.map(cust => (
+                              <button
+                                key={cust.id}
+                                type="button"
+                                onClick={() => {
+                                  handleSelectCustomer(cust.id);
+                                  setCartCustomerQuery('');
+                                  setIsCartCustomerDropdownOpen(false);
+                                }}
+                                className="w-full p-2 text-left hover:bg-indigo-50/80 flex items-center justify-between text-xs transition-colors group"
+                              >
+                                <div className="min-w-0 flex-1 pr-2">
+                                  <div className="flex items-center gap-1.5">
+                                    <p className="font-bold text-slate-800 text-xs truncate group-hover:text-indigo-900">
+                                      {cust.name}
+                                    </p>
+                                    {cust.nombreComercial && (
+                                      <span className="text-[10px] text-slate-400 truncate">({cust.nombreComercial})</span>
+                                    )}
+                                  </div>
+                                  <p className="text-[10px] text-slate-500 flex items-center gap-2 mt-0.5">
+                                    {cust.numDocumento && <span>DUI: {cust.numDocumento}</span>}
+                                    {cust.nrc && <span className="font-mono text-purple-700 font-bold">NRC: {cust.nrc}</span>}
+                                    {cust.phone && <span>Tel: {cust.phone}</span>}
+                                  </p>
+                                </div>
+                                <span className={`text-[9px] px-1.5 py-0.5 rounded font-black shrink-0 ${
+                                  cust.nrc || cust.tipoPersona === 'JURIDICA' ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-700'
+                                }`}>
+                                  {cust.nrc || cust.tipoPersona === 'JURIDICA' ? 'CCF (03)' : 'FC (01)'}
+                                </span>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
