@@ -36,6 +36,7 @@ import {
   applyPurchaseToProducts
 } from '@/lib/purchases';
 import { ProductItem, PERFUME_CATEGORIES } from '@/lib/store';
+import { KardexMovement } from '@/lib/kardex';
 
 interface ComprasModuleProps {
   products: ProductItem[];
@@ -44,6 +45,7 @@ interface ComprasModuleProps {
   onUpdateSuppliers: (suppliers: Supplier[]) => void;
   purchases: PurchaseRecord[];
   onUpdatePurchases: (purchases: PurchaseRecord[]) => void;
+  onAddKardexMovement?: (movement: KardexMovement) => void;
 }
 
 export default function ComprasModule({
@@ -52,7 +54,8 @@ export default function ComprasModule({
   suppliers,
   onUpdateSuppliers,
   purchases,
-  onUpdatePurchases
+  onUpdatePurchases,
+  onAddKardexMovement
 }: ComprasModuleProps) {
   // Subpestaña activa dentro del módulo de Compras
   const [subTab, setSubTab] = useState<'historial' | 'registrar' | 'proveedores'>('historial');
@@ -315,7 +318,34 @@ export default function ComprasModule({
     const updatedProducts = applyPurchaseToProducts(newPurchase, products);
     onUpdateProducts(updatedProducts);
 
-    // 2. Guardar la compra en el historial
+    // 2. Registrar movimientos automáticos en Kárdex
+    if (onAddKardexMovement) {
+      newPurchase.items.forEach(it => {
+        const prevProd = products.find(p => p.id === it.productId);
+        const prevStock = prevProd?.stock || 0;
+        const newStock = isNC ? Math.max(0, prevStock - it.quantity) : prevStock + it.quantity;
+
+        onAddKardexMovement({
+          id: `kdx-${Date.now()}-${it.productId}`,
+          productId: it.productId,
+          productName: it.productName,
+          productSku: it.productSku || '',
+          puesto: prevProd?.puesto,
+          unit: it.unit,
+          type: isNC ? 'RETURN' : 'IN_PURCHASE',
+          quantity: it.quantity,
+          previousStock: prevStock,
+          newStock: newStock,
+          costPrice: it.costPrice,
+          reference: `Compra ${newPurchase.purchaseNumber} (${supplierName})`,
+          dteNumber: newPurchase.controlNumber || newPurchase.docNumber,
+          user: 'Gerente General',
+          createdAt: new Date().toISOString()
+        });
+      });
+    }
+
+    // 3. Guardar la compra en el historial
     onUpdatePurchases([newPurchase, ...purchases]);
 
     // 3. Limpiar formulario y regresar a la vista de historial

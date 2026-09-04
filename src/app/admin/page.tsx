@@ -32,7 +32,8 @@ import {
   FileCheck,
   Box,
   Check,
-  ShoppingCart
+  ShoppingCart,
+  History
 } from 'lucide-react';
 import { 
   getStoredUsers, 
@@ -45,6 +46,7 @@ import {
 } from '@/lib/auth';
 import { INITIAL_PRODUCTS, ProductItem, PERFUME_CATEGORIES, SaleRecord } from '@/lib/store';
 import ComprasModule from '@/components/admin/ComprasModule';
+import KardexModule from '@/components/admin/KardexModule';
 import {
   getStoredPurchases,
   saveStoredPurchases,
@@ -53,11 +55,17 @@ import {
   PurchaseRecord,
   Supplier
 } from '@/lib/purchases';
+import {
+  getStoredKardex,
+  saveStoredKardex,
+  KardexMovement
+} from '@/lib/kardex';
 
 type AdminTab = 
   | 'dashboard' 
   | 'productos' 
   | 'categorias' 
+  | 'kardex'
   | 'ventas-dia' 
   | 'reportes-periodo' 
   | 'reportes-financieros' 
@@ -142,6 +150,18 @@ export default function AdminPage() {
   useEffect(() => {
     saveStoredSuppliers(suppliers);
   }, [suppliers]);
+
+  // Kárdex de Inventario
+  const [kardexMovements, setKardexMovements] = useState<KardexMovement[]>(() => getStoredKardex());
+  const [kardexFilterProduct, setKardexFilterProduct] = useState<string | null>(null);
+
+  useEffect(() => {
+    saveStoredKardex(kardexMovements);
+  }, [kardexMovements]);
+
+  const handleAddKardexMovement = (movement: KardexMovement) => {
+    setKardexMovements(prev => [movement, ...prev]);
+  };
 
   // Cálculos Financieros
   const totalEsencias = useMemo(() => products.filter(p => p.category === 'Esencias para Perfume').length, [products]);
@@ -424,6 +444,26 @@ export default function AdminPage() {
                 </div>
                 <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 text-slate-700">
                   {categories.length}
+                </span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setKardexFilterProduct(null);
+                  setActiveTab('kardex');
+                }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+                  activeTab === 'kardex'
+                    ? 'clay-btn-primary !shadow-[3px_4px_10px_rgba(79,70,229,0.35)]'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <History className="w-4 h-4" />
+                  <span>Kárdex de Inventario</span>
+                </div>
+                <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-100/50 text-indigo-700">
+                  {kardexMovements.length}
                 </span>
               </button>
             </div>
@@ -715,6 +755,16 @@ export default function AdminPage() {
               </div>
               <div className="flex items-center gap-2">
                 <button
+                  onClick={() => {
+                    setKardexFilterProduct(null);
+                    setActiveTab('kardex');
+                  }}
+                  className="clay-btn clay-btn-light px-3.5 py-2.5 text-xs flex items-center gap-1.5 font-bold text-indigo-700"
+                >
+                  <History className="w-3.5 h-3.5" />
+                  <span>Kárdex General</span>
+                </button>
+                <button
                   onClick={handleOpenNewProduct}
                   className="clay-btn clay-btn-light px-4 py-2.5 text-xs flex items-center gap-1.5 font-bold"
                 >
@@ -817,14 +867,27 @@ export default function AdminPage() {
                             {p.stock} {p.unit === 'Onza' ? 'Oz' : 'Un.'}
                           </td>
                           <td className="py-2.5 px-3 text-right">
-                            <button
-                              onClick={() => handleStartEdit(p)}
-                              className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 hover:text-indigo-800 font-bold transition-all inline-flex items-center gap-1 shadow-sm active:scale-95"
-                              title="Editar producto, precios y stock"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" />
-                              <span>Editar</span>
-                            </button>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={() => {
+                                  setKardexFilterProduct(p.id);
+                                  setActiveTab('kardex');
+                                }}
+                                className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all inline-flex items-center gap-1 shadow-sm active:scale-95 text-[11px]"
+                                title={`Ver movimientos de ${p.name} en el Kárdex`}
+                              >
+                                <History className="w-3 h-3 text-indigo-600" />
+                                <span>Kárdex</span>
+                              </button>
+                              <button
+                                onClick={() => handleStartEdit(p)}
+                                className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 hover:text-indigo-800 font-bold transition-all inline-flex items-center gap-1 shadow-sm active:scale-95 text-[11px]"
+                                title="Editar producto, precios y stock"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                                <span>Editar</span>
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -1313,6 +1376,18 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* ================= TAB: KÁRDEX DE INVENTARIO ================= */}
+        {activeTab === 'kardex' && (
+          <KardexModule
+            kardexMovements={kardexMovements}
+            onAddKardexMovement={handleAddKardexMovement}
+            products={products}
+            onUpdateProducts={setProducts}
+            initialSelectedProductId={kardexFilterProduct}
+            onClearSelectedProduct={() => setKardexFilterProduct(null)}
+          />
+        )}
+
         {/* ================= TAB: COMPRAS & PROVEEDORES ================= */}
         {activeTab === 'compras' && (
           <ComprasModule
@@ -1322,6 +1397,7 @@ export default function AdminPage() {
             onUpdateSuppliers={setSuppliers}
             purchases={purchases}
             onUpdatePurchases={setPurchases}
+            onAddKardexMovement={handleAddKardexMovement}
           />
         )}
 
