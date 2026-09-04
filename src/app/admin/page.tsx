@@ -1212,25 +1212,31 @@ export default function AdminPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">Precio Venta ($ / Oz)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    value={bulkPrice}
-                    onChange={(e) => setBulkPrice(e.target.value)}
-                    className="clay-input w-full text-lg font-black text-indigo-600"
-                  />
+                  <div className="clay-input flex items-center gap-1.5 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20">
+                    <span className="font-black text-slate-400 select-none text-base">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      value={bulkPrice}
+                      onChange={(e) => setBulkPrice(e.target.value)}
+                      className="bg-transparent border-none outline-none w-full text-lg font-black text-indigo-600 p-0"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">Costo Compra ($ / Oz)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    value={bulkCost}
-                    onChange={(e) => setBulkCost(e.target.value)}
-                    className="clay-input w-full text-lg font-black text-slate-700"
-                  />
+                  <div className="clay-input flex items-center gap-1.5 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20">
+                    <span className="font-black text-slate-400 select-none text-base">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      value={bulkCost}
+                      onChange={(e) => setBulkCost(e.target.value)}
+                      className="bg-transparent border-none outline-none w-full text-lg font-black text-slate-700 p-0"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -1364,8 +1370,8 @@ export default function AdminPage() {
                     <label className="text-xs font-bold text-slate-700 block mb-1">
                       Precio de Venta ($ PVP) <span className="text-rose-500">*</span>
                     </label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
+                    <div className="clay-input flex items-center gap-2 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20">
+                      <span className="font-bold text-slate-400 select-none text-base">$</span>
                       <input
                         type="number"
                         step="0.01"
@@ -1374,7 +1380,7 @@ export default function AdminPage() {
                         value={editingProduct.price === 0 ? '' : editingProduct.price}
                         onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) || 0 })}
                         placeholder="0.00"
-                        className="clay-input w-full pl-8 text-base font-black text-indigo-600"
+                        className="bg-transparent border-none outline-none w-full text-base font-black text-indigo-600 p-0"
                       />
                     </div>
                     <span className="text-[10px] text-slate-400 mt-1 block">Precio al cliente en el Punto de Venta</span>
@@ -1384,8 +1390,8 @@ export default function AdminPage() {
                     <label className="text-xs font-bold text-slate-700 block mb-1">
                       Costo de Compra ($ Costo) <span className="text-rose-500">*</span>
                     </label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
+                    <div className="clay-input flex items-center gap-2 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20">
+                      <span className="font-bold text-slate-400 select-none text-base">$</span>
                       <input
                         type="number"
                         step="0.01"
@@ -1394,7 +1400,7 @@ export default function AdminPage() {
                         value={editingProduct.cost === 0 ? '' : editingProduct.cost}
                         onChange={(e) => setEditingProduct({ ...editingProduct, cost: parseFloat(e.target.value) || 0 })}
                         placeholder="0.00"
-                        className="clay-input w-full pl-8 text-base font-black text-slate-700"
+                        className="bg-transparent border-none outline-none w-full text-base font-black text-slate-700 p-0"
                       />
                     </div>
                     <span className="text-[10px] text-slate-400 mt-1 block">Costo mayorista (solo Gerencia)</span>
