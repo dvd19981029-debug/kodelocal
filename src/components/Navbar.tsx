@@ -36,8 +36,8 @@ export function Navbar() {
           <div>
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-xl tracking-tight text-slate-800">KodeLocal</span>
-              <span className="clay-badge bg-indigo-50 text-indigo-600 text-[10px] px-2 py-0.5 border border-indigo-100">
-                CLAY OS
+              <span className="clay-badge bg-indigo-50 text-indigo-600 text-[10px] px-2 py-0.5 border border-indigo-100 font-bold tracking-tight">
+                by Kode Tech
               </span>
             </div>
             <p className="text-xs text-slate-500 font-medium">POS • Inventario • Factura Llama</p>
