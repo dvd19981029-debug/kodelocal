@@ -294,20 +294,32 @@ export default function PosPage() {
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none z-10" />
             <input
-              type="text"
-              placeholder="Buscar por código (100), contratipo (Sauvage), marca o puesto (A1)..."
+              type="search"
+              name="search-fragrance"
+              id="search-fragrance"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck={false}
+              data-1p-ignore="true"
+              data-lpignore="true"
+              placeholder="Buscar por código (100), contratipo (Sauvage), marca..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="clay-input has-icon w-full pr-4 py-2.5 text-sm"
-              autoFocus
             />
           </div>
 
           {/* Lector o código rápido */}
-          <form onSubmit={handleBarcodeSubmit} className="relative w-full sm:w-60">
+          <form onSubmit={handleBarcodeSubmit} className="relative w-full sm:w-60" autoComplete="off">
             <Barcode className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-500 pointer-events-none z-10" />
             <input
               type="text"
+              name="quick-sku"
+              id="quick-sku"
+              autoComplete="off"
+              data-1p-ignore="true"
+              data-lpignore="true"
               placeholder="Código o SKU..."
               value={barcodeInput}
               onChange={(e) => setBarcodeInput(e.target.value)}
@@ -393,18 +405,11 @@ export default function PosPage() {
                 }`}
               >
                 <div>
-                  {/* Header de la tarjeta con Código, Puesto, Stock Badge y Género */}
-                  <div className="flex items-center justify-between gap-1 mb-2 flex-wrap">
-                    <div className="flex items-center gap-1">
-                      <span className="clay-badge bg-indigo-50 text-indigo-700 border border-indigo-200 font-mono text-[11px] py-0.5 px-2">
-                        #{product.sku}
-                      </span>
-                      {product.puesto && (
-                        <span className="clay-badge bg-amber-50 text-amber-900 border border-amber-200/80 font-mono font-black text-[10px] py-0.5 px-1.5 shadow-sm" title="Puesto / Estante">
-                          📍 {product.puesto}
-                        </span>
-                      )}
-                    </div>
+                  {/* Header de la tarjeta limpio y minimalista */}
+                  <div className="flex items-center justify-between gap-1 mb-2">
+                    <span className="clay-badge bg-indigo-50 text-indigo-700 border border-indigo-200 font-mono text-[11px] py-0.5 px-2 font-bold">
+                      #{product.sku}
+                    </span>
 
                     {/* Stock disponible en tiempo real */}
                     {isOutOfStock || availableRemaining <= 0 ? (
@@ -413,17 +418,11 @@ export default function PosPage() {
                       </span>
                     ) : isLowStock ? (
                       <span className="clay-badge bg-amber-50 text-amber-700 border border-amber-200 text-[10px] py-0.5 px-2 font-bold">
-                        ¡{availableRemaining} {product.unit === 'Onza' ? 'Oz' : 'Un.'}!
+                        {availableRemaining} {product.unit === 'Onza' ? 'Oz' : 'Un.'}
                       </span>
                     ) : (
                       <span className="clay-badge bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] py-0.5 px-2 font-bold">
                         {availableRemaining} {product.unit === 'Onza' ? 'Oz' : 'Un.'}
-                      </span>
-                    )}
-
-                    {product.gender && (
-                      <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md">
-                        {product.gender}
                       </span>
                     )}
                   </div>
