@@ -349,32 +349,9 @@ export default function ComprasModule({
     const updatedProducts = applyPurchaseToProducts(newPurchase, products);
     onUpdateProducts(updatedProducts);
 
-    // 2. Registrar movimientos automáticos en Kárdex
-    if (onAddKardexMovement) {
-      newPurchase.items.forEach(it => {
-        const prevProd = products.find(p => p.id === it.productId);
-        const prevStock = prevProd?.stock || 0;
-        const newStock = isNC ? Math.max(0, prevStock - it.quantity) : prevStock + it.quantity;
-
-        onAddKardexMovement({
-          id: `kdx-${Date.now()}-${it.productId}`,
-          productId: it.productId,
-          productName: it.productName,
-          productSku: it.productSku || '',
-          puesto: prevProd?.puesto,
-          unit: it.unit,
-          type: isNC ? 'RETURN' : 'IN_PURCHASE',
-          quantity: it.quantity,
-          previousStock: prevStock,
-          newStock: newStock,
-          costPrice: it.costPrice,
-          reference: `Compra ${newPurchase.purchaseNumber} (${supplierName})`,
-          dteNumber: newPurchase.controlNumber || newPurchase.docNumber,
-          user: 'Gerente General',
-          createdAt: new Date().toISOString()
-        });
-      });
-    }
+    // 2. Movimientos en Kárdex:
+    // Se generan de forma reactiva y automática en el Kárdex a partir del historial oficial de compras (purchases).
+    // No se inserta movimiento manual duplicado para evitar doble conteo.
 
     // 3. Guardar la compra en el historial
     onUpdatePurchases([newPurchase, ...purchases]);

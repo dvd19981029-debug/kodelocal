@@ -41,7 +41,15 @@ export function getStoredKardex(): KardexMovement[] {
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) {
+        // Los manuales solo deben contener AJUSTE o MERMA (las compras y ventas se calculan de sus fuentes)
+        const sanitized = parsed.filter((m: any) => 
+          m.type !== 'IN_PURCHASE' && 
+          m.type !== 'OUT_SALE' && 
+          !m.reference?.startsWith('Compra ')
+        );
+        return sanitized;
+      }
     } catch (e) {
       console.error('Error parsing kodelocal_kardex:', e);
     }

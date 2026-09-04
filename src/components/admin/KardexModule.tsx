@@ -151,12 +151,14 @@ export default function KardexModule({
       });
     });
 
-    // 3. Ajustes de Inventario Manuales
-    const manualMovs = manualMovements.map(m => ({
-      ...m,
-      sourceCategory: 'AJUSTE' as const,
-      dteTipo: m.type === 'OUT_DAMAGE' ? 'MERMA' : 'AJUSTE'
-    }));
+    // 3. Ajustes de Inventario Manuales (excluye compras y ventas que ya se generan desde sus respectivos módulos)
+    const manualMovs = manualMovements
+      .filter(m => m.type !== 'IN_PURCHASE' && m.type !== 'OUT_SALE' && !m.reference?.startsWith('Compra '))
+      .map(m => ({
+        ...m,
+        sourceCategory: 'AJUSTE' as const,
+        dteTipo: m.type === 'OUT_DAMAGE' ? 'MERMA' : 'AJUSTE'
+      }));
 
     // Combinar y ordenar cronológicamente de más reciente a más antiguo
     return [...purchaseMovs, ...saleMovs, ...manualMovs].sort((a, b) => {
