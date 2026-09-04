@@ -22,6 +22,8 @@ export interface KardexMovement {
   unitPrice?: number;
   reference: string; // Ej: Factura CMP-0042, DTE-01-M001P001-..., Conteo Mensual
   dteNumber?: string; // Número oficial DTE o UUID si aplica
+  dteTipo?: string; // CCF, FAC, FSE, TICKET, AJUSTE
+  sourceCategory?: 'COMPRA' | 'VENTA' | 'AJUSTE';
   notes?: string;
   user?: string; // Vendedor o Administrador
   createdAt: string; // ISO 8601 o YYYY-MM-DD HH:mm

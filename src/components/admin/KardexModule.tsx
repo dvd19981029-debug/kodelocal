@@ -19,30 +19,37 @@ import {
   FileText,
   Building,
   User,
-  Printer,
-  ChevronDown
+  Download,
+  Receipt,
+  ShoppingCart
 } from 'lucide-react';
 import { KardexMovement, KardexMovementType } from '@/lib/kardex';
-import { ProductItem } from '@/lib/store';
+import { ProductItem, SaleRecord } from '@/lib/store';
+import { PurchaseRecord } from '@/lib/purchases';
 
 interface KardexModuleProps {
-  kardexMovements: KardexMovement[];
-  onAddKardexMovement: (movement: KardexMovement) => void;
   products: ProductItem[];
   onUpdateProducts: (products: ProductItem[]) => void;
+  purchases?: PurchaseRecord[];
+  sales?: SaleRecord[];
+  manualMovements: KardexMovement[];
+  onAddManualMovement: (movement: KardexMovement) => void;
   initialSelectedProductId?: string | null;
   onClearSelectedProduct?: () => void;
 }
 
 export default function KardexModule({
-  kardexMovements,
-  onAddKardexMovement,
   products,
   onUpdateProducts,
+  purchases = [],
+  sales = [],
+  manualMovements = [],
+  onAddManualMovement,
   initialSelectedProductId = null,
   onClearSelectedProduct
 }: KardexModuleProps) {
   // Filtros
+  const [activeCategoryFilter, setActiveCategoryFilter] = useState<'ALL' | 'COMPRA' | 'VENTA' | 'AJUSTE'>('ALL');
   const [selectedProductId, setSelectedProductId] = useState<string>(initialSelectedProductId || 'ALL');
   const [typeFilter, setTypeFilter] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -56,12 +63,18 @@ export default function KardexModule({
   const [adjReason, setAdjReason] = useState<string>('Conteo físico de inventario');
   const [adjNotes, setAdjNotes] = useState<string>('');
 
-  // Producto seleccionado para ajuste
+  // Sincronizar initialSelectedProductId si cambia desde fuera
+  React.useEffect(() => {
+    if (initialSelectedProductId) {
+      setSelectedProductId(initialSelectedProductId);
+    }
+  }, [initialSelectedProductId]);
+
+  // Producto seleccionado para ajuste manual
   const currentAdjProduct = useMemo(() => {
     return products.find(p => p.id === adjProductId);
   }, [products, adjProductId]);
 
-  // Cálculo del nuevo stock proyectado en el modal
   const projectedStock = useMemo(() => {
     if (!currentAdjProduct) return 0;
     const current = currentAdjProduct.stock || 0;
@@ -72,22 +85,108 @@ export default function KardexModule({
     }
   }, [currentAdjProduct, adjType, adjQuantity]);
 
-  // Filtrado de movimientos
+  // =========================================================================
+  // COMBINAR MOVIMIENTOS: COMPRAS DTE + VENTAS DTE + AJUSTES (Estilo Mecanic OS)
+  // =========================================================================
+  const allKardexMovements = useMemo(() => {
+    // 1. Entradas desde el Módulo de Compras (DTEs de Compra)
+    const purchaseMovs: KardexMovement[] = purchases.flatMap(pur => {
+      const isNC = pur.tipoDte === 'NC';
+      const dteDisplay = pur.controlNumber || pur.docNumber || 'S/N';
+      return pur.items.map((it, idx) => {
+        const prod = products.find(p => p.id === it.productId);
+        const unitVal = it.costPrice || prod?.cost || 0;
+        return {
+          id: `pur-kdx-${pur.id}-${it.productId}-${idx}`,
+          productId: it.productId,
+          productName: it.productName || prod?.name || 'Insumo / Esencia',
+          productSku: it.productSku || prod?.sku || '',
+          puesto: prod?.puesto,
+          unit: it.unit || prod?.unit || 'Onza',
+          type: isNC ? ('RETURN' as const) : ('IN_PURCHASE' as const),
+          quantity: it.quantity,
+          previousStock: prod ? Math.max(0, prod.stock - it.quantity) : 0,
+          newStock: prod?.stock || it.quantity,
+          costPrice: unitVal,
+          unitPrice: prod?.price,
+          reference: `Factura ${pur.tipoDte} • ${pur.supplierName}`,
+          dteNumber: dteDisplay,
+          dteTipo: pur.tipoDte,
+          sourceCategory: 'COMPRA' as const,
+          notes: pur.notes || `Recepción de mercadería en bodega`,
+          user: 'Gerente General',
+          createdAt: pur.createdAt || `${pur.purchaseDate}T10:00:00.000Z`
+        };
+      });
+    });
+
+    // 2. Salidas desde el Punto de Venta (DTEs de Venta POS)
+    const saleMovs: KardexMovement[] = sales.flatMap(sale => {
+      const dteDisplay = sale.dteInfo?.numeroControl || sale.dteInfo?.codigoGeneracion || sale.saleNumber;
+      const dteTypeLabel = sale.tipoComprobante === '03' ? 'CCF-03' : sale.tipoComprobante === '01' ? 'FE-01' : 'TICKET';
+      return sale.items.map((it, idx) => {
+        const prod = products.find(p => p.id === it.productId);
+        const unitVal = it.price || prod?.price || 0;
+        return {
+          id: `sale-kdx-${sale.id}-${it.productId}-${idx}`,
+          productId: it.productId,
+          productName: it.name || prod?.name || 'Fragancia',
+          productSku: prod?.sku || '',
+          puesto: it.puesto || prod?.puesto,
+          unit: it.unit || prod?.unit || 'Onza',
+          type: 'OUT_SALE' as const,
+          quantity: it.quantity,
+          previousStock: prod ? prod.stock + it.quantity : it.quantity,
+          newStock: prod?.stock || 0,
+          costPrice: prod?.cost,
+          unitPrice: unitVal,
+          reference: `Venta Mostrador ${sale.saleNumber} • ${sale.cliente?.nombre || 'Consumidor Final'}`,
+          dteNumber: dteDisplay,
+          dteTipo: dteTypeLabel,
+          sourceCategory: 'VENTA' as const,
+          notes: `Despachado en ${sale.vendedor || 'Caja 1'}`,
+          user: sale.vendedor || 'Cajero de Turno',
+          createdAt: sale.createdAt
+        };
+      });
+    });
+
+    // 3. Ajustes de Inventario Manuales
+    const manualMovs = manualMovements.map(m => ({
+      ...m,
+      sourceCategory: 'AJUSTE' as const,
+      dteTipo: m.type === 'OUT_DAMAGE' ? 'MERMA' : 'AJUSTE'
+    }));
+
+    // Combinar y ordenar cronológicamente de más reciente a más antiguo
+    return [...purchaseMovs, ...saleMovs, ...manualMovs].sort((a, b) => {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }, [purchases, sales, manualMovements, products]);
+
+  // =========================================================================
+  // FILTRADO DINÁMICO
+  // =========================================================================
   const filteredMovements = useMemo(() => {
     const q = searchTerm.toLowerCase().trim();
 
-    return kardexMovements.filter(m => {
-      // Filtro por producto
+    return allKardexMovements.filter(m => {
+      // Filtro de pestaña rápida (Todas, Compras, Ventas, Ajustes)
+      if (activeCategoryFilter !== 'ALL' && m.sourceCategory !== activeCategoryFilter) {
+        return false;
+      }
+
+      // Filtro por producto específico
       if (selectedProductId !== 'ALL' && m.productId !== selectedProductId) {
         return false;
       }
 
-      // Filtro por tipo
+      // Filtro por tipo de movimiento
       if (typeFilter !== 'ALL' && m.type !== typeFilter) {
         return false;
       }
 
-      // Filtro por fecha
+      // Filtro de período
       if (dateFilter !== 'ALL') {
         const movDate = new Date(m.createdAt);
         const now = new Date();
@@ -101,7 +200,7 @@ export default function KardexModule({
         }
       }
 
-      // Búsqueda de texto
+      // Buscador predictivo
       if (q) {
         const matchName = m.productName.toLowerCase().includes(q);
         const matchSku = m.productSku.toLowerCase().includes(q);
@@ -114,9 +213,14 @@ export default function KardexModule({
 
       return true;
     });
-  }, [kardexMovements, selectedProductId, typeFilter, searchTerm, dateFilter]);
+  }, [allKardexMovements, activeCategoryFilter, selectedProductId, typeFilter, searchTerm, dateFilter]);
 
-  // Cálculos de Resumen
+  // Contadores por categoría
+  const countCompras = useMemo(() => allKardexMovements.filter(m => m.sourceCategory === 'COMPRA').length, [allKardexMovements]);
+  const countVentas = useMemo(() => allKardexMovements.filter(m => m.sourceCategory === 'VENTA').length, [allKardexMovements]);
+  const countAjustes = useMemo(() => allKardexMovements.filter(m => m.sourceCategory === 'AJUSTE').length, [allKardexMovements]);
+
+  // Totales de cantidades
   const totalEntradas = useMemo(() => {
     return filteredMovements
       .filter(m => m.type === 'IN_PURCHASE' || (m.type === 'ADJUSTMENT' && m.newStock > m.previousStock))
@@ -126,12 +230,6 @@ export default function KardexModule({
   const totalSalidas = useMemo(() => {
     return filteredMovements
       .filter(m => m.type === 'OUT_SALE' || m.type === 'OUT_DAMAGE' || (m.type === 'ADJUSTMENT' && m.newStock < m.previousStock))
-      .reduce((sum, m) => sum + m.quantity, 0);
-  }, [filteredMovements]);
-
-  const totalMermas = useMemo(() => {
-    return filteredMovements
-      .filter(m => m.type === 'OUT_DAMAGE')
       .reduce((sum, m) => sum + m.quantity, 0);
   }, [filteredMovements]);
 
@@ -155,7 +253,7 @@ export default function KardexModule({
       movementType = 'OUT_DAMAGE';
     }
 
-    // 1. Actualizar producto en inventario
+    // 1. Actualizar producto en el estado de inventario
     const updatedProducts = products.map(p => {
       if (p.id === currentAdjProduct.id) {
         return { ...p, stock: newStock };
@@ -164,7 +262,7 @@ export default function KardexModule({
     });
     onUpdateProducts(updatedProducts);
 
-    // 2. Crear movimiento en Kárdex
+    // 2. Registrar movimiento manual en el Kárdex
     const newMovement: KardexMovement = {
       id: `kdx-${Date.now()}`,
       productId: currentAdjProduct.id,
@@ -184,9 +282,57 @@ export default function KardexModule({
       createdAt: new Date().toISOString()
     };
 
-    onAddKardexMovement(newMovement);
+    onAddManualMovement(newMovement);
     setIsAdjustmentModalOpen(false);
     setAdjNotes('');
+  };
+
+  // Exportar a CSV (Compatible con Excel, como en Mecanic OS)
+  const handleExportCSV = () => {
+    if (filteredMovements.length === 0) return;
+
+    const headers = [
+      'Fecha Movimiento',
+      'Código (SKU)',
+      'Puesto',
+      'Descripción / Producto',
+      'Tipo Movimiento',
+      'Cantidad',
+      'Unidad',
+      'Valor Unitario ($)',
+      'Monto Total ($)',
+      'Número DTE',
+      'Observación / Referencia',
+      'Responsable'
+    ];
+
+    const rows = filteredMovements.map(m => {
+      const val = m.costPrice || m.unitPrice || 0;
+      const sub = m.quantity * val;
+      return [
+        new Date(m.createdAt).toLocaleString('es-SV'),
+        m.productSku,
+        m.puesto || '-',
+        `"${m.productName.replace(/"/g, '""')}"`,
+        m.type,
+        m.quantity,
+        m.unit,
+        val.toFixed(2),
+        sub.toFixed(2),
+        `"${(m.dteNumber || 'N/A').replace(/"/g, '""')}"`,
+        `"${(m.reference || '').replace(/"/g, '""')}"`,
+        `"${(m.user || '').replace(/"/g, '""')}"`
+      ].join(',');
+    });
+
+    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `Kardex_KodeLocal_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const selectedProductObj = useMemo(() => {
@@ -195,70 +341,79 @@ export default function KardexModule({
   }, [products, selectedProductId]);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-150">
+    <div className="space-y-4 animate-in fade-in duration-150 text-xs">
       
-      {/* Header del Kárdex */}
-      <div className="clay-card p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-[3px_4px_10px_rgba(79,70,229,0.35)]">
-            <History className="w-6 h-6" />
+      {/* Header Compacto del Kárdex */}
+      <div className="clay-card p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black shadow-[2px_3px_8px_rgba(79,70,229,0.35)] shrink-0">
+            <History className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-black text-slate-800">Kárdex de Movimientos de Inventario</h2>
-              <span className="clay-badge bg-indigo-50 text-indigo-700 text-[10px] font-bold py-0.5 px-2.5">
-                Trazabilidad Oficial
+              <h2 className="text-base font-black text-slate-800 leading-tight">
+                Kárdex de Movimientos de Inventario
+              </h2>
+              <span className="clay-badge bg-indigo-50 text-indigo-700 text-[9px] font-bold py-0.5 px-2">
+                Auditoría DTE
               </span>
             </div>
-            <p className="text-xs text-slate-500 font-medium">
-              Historial de entradas por compras, salidas por ventas en mostrador y ajustes físicos
+            <p className="text-[11px] text-slate-500 font-medium">
+              Trazabilidad de DTEs de Compra (Proveedores), DTEs de Venta (POS) y Ajustes de Stock
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <button
+            onClick={handleExportCSV}
+            className="clay-btn clay-btn-light px-2.5 py-1.5 text-[11px] font-bold flex items-center gap-1.5 text-emerald-700"
+            title="Exportar movimientos a CSV / Excel"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Exportar Kárdex</span>
+          </button>
+
           <button
             onClick={() => setIsAdjustmentModalOpen(true)}
-            className="clay-btn clay-btn-primary px-3.5 py-2 text-xs font-bold flex items-center gap-1.5"
+            className="clay-btn clay-btn-primary px-3 py-1.5 text-[11px] font-bold flex items-center gap-1.5"
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
-            <span>Ajuste Manual de Stock</span>
+            <span>Ajuste de Stock</span>
           </button>
         </div>
       </div>
 
-      {/* Tarjeta de enfoque si hay un producto seleccionado específicamente */}
+      {/* Tarjeta de Producto Seleccionado Específico */}
       {selectedProductObj && (
-        <div className="clay-card p-4 bg-gradient-to-r from-indigo-50/70 to-purple-50/70 border-indigo-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-white text-indigo-600 shadow-sm">
-              <Package className="w-5 h-5" />
+        <div className="clay-card p-3 bg-gradient-to-r from-indigo-50/70 to-purple-50/70 border-indigo-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-lg bg-white text-indigo-600 shadow-sm shrink-0">
+              <Package className="w-4 h-4" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="clay-badge text-[10px] font-mono font-bold bg-indigo-100 text-indigo-800">
-                  SKU #{selectedProductObj.sku}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="clay-badge text-[9px] font-mono font-bold bg-indigo-100 text-indigo-800">
+                  #{selectedProductObj.sku}
                 </span>
                 {selectedProductObj.puesto && (
-                  <span className="clay-badge text-[10px] font-mono font-black bg-amber-100 text-amber-900 border border-amber-300">
-                    📍 PUESTO: {selectedProductObj.puesto}
+                  <span className="clay-badge text-[9px] font-mono font-black bg-amber-100 text-amber-900 border border-amber-300">
+                    📍 {selectedProductObj.puesto}
                   </span>
                 )}
-                <h3 className="text-sm font-black text-slate-800">{selectedProductObj.name}</h3>
+                <h3 className="text-xs font-black text-slate-800">{selectedProductObj.name}</h3>
               </div>
-              <p className="text-xs text-slate-600 mt-0.5">
-                Categoría: <strong>{selectedProductObj.category}</strong> • Costo: <strong>${selectedProductObj.cost.toFixed(2)}</strong> • PVP: <strong>${selectedProductObj.price.toFixed(2)}</strong>
+              <p className="text-[10px] text-slate-500 mt-0.5">
+                {selectedProductObj.category} • Costo: <strong>${selectedProductObj.cost.toFixed(2)}</strong> • PVP: <strong>${selectedProductObj.price.toFixed(2)}</strong>
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
             <div className="text-right">
-              <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">
-                Existencias Actuales
-              </span>
-              <span className="text-lg font-mono font-black text-indigo-700">
-                {selectedProductObj.stock} {selectedProductObj.unit === 'Onza' ? 'Oz' : 'Unidades'}
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Existencias</span>
+              <span className="text-sm font-mono font-black text-indigo-700">
+                {selectedProductObj.stock} {selectedProductObj.unit === 'Onza' ? 'Oz' : 'Un.'}
               </span>
             </div>
             <button
@@ -266,80 +421,91 @@ export default function KardexModule({
                 setSelectedProductId('ALL');
                 if (onClearSelectedProduct) onClearSelectedProduct();
               }}
-              className="clay-btn clay-btn-light px-2.5 py-1.5 text-xs font-bold text-slate-600 flex items-center gap-1"
+              className="clay-btn clay-btn-light px-2 py-1 text-[10px] font-bold text-slate-600 flex items-center gap-1"
               title="Quitar filtro de producto"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-3 h-3" />
               <span>Ver Todos</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* KPI Cards de Movimientos */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="clay-card p-5">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Movimientos Totales</p>
-            <span className="p-2 rounded-xl bg-slate-100 text-slate-700">
-              <History className="w-4 h-4" />
-            </span>
-          </div>
-          <h3 className="text-2xl font-black text-slate-800 mt-1">{filteredMovements.length}</h3>
-          <span className="text-[11px] text-slate-500 font-medium">Registros en el período</span>
-        </div>
-
-        <div className="clay-card p-5">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Entradas (Compras/Ajustes)</p>
-            <span className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
-              <ArrowDownLeft className="w-4 h-4" />
-            </span>
-          </div>
-          <h3 className="text-2xl font-black text-emerald-600 mt-1">+{totalEntradas}</h3>
-          <span className="text-[11px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-            Unidades / Oz ingresadas
+      {/* Pestañas Rápidas de Filtrado (Mecanic OS Style) */}
+      <div className="flex flex-wrap items-center gap-1.5 bg-slate-100/90 p-1 rounded-xl border border-slate-200/80">
+        <button
+          onClick={() => setActiveCategoryFilter('ALL')}
+          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5 ${
+            activeCategoryFilter === 'ALL'
+              ? 'clay-btn-primary !shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <History className="w-3 h-3" />
+          <span>Todos los Movimientos</span>
+          <span className="text-[10px] ml-0.5 px-1.5 py-0.2 rounded-full bg-white/30 text-white font-mono">
+            {allKardexMovements.length}
           </span>
-        </div>
+        </button>
 
-        <div className="clay-card p-5">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Salidas (Ventas Mostrador)</p>
-            <span className="p-2 rounded-xl bg-blue-50 text-blue-600">
-              <ArrowUpRight className="w-4 h-4" />
-            </span>
-          </div>
-          <h3 className="text-2xl font-black text-blue-600 mt-1">-{totalSalidas}</h3>
-          <span className="text-[11px] text-blue-700 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
-            Despachos a clientes
+        <button
+          onClick={() => setActiveCategoryFilter('COMPRA')}
+          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5 ${
+            activeCategoryFilter === 'COMPRA'
+              ? 'clay-btn-primary !shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <ShoppingCart className="w-3 h-3 text-emerald-500" />
+          <span>📥 DTEs de Compra</span>
+          <span className="text-[10px] ml-0.5 px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 font-mono font-bold">
+            {countCompras}
           </span>
-        </div>
+        </button>
 
-        <div className="clay-card p-5">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Mermas / Roturas</p>
-            <span className="p-2 rounded-xl bg-rose-50 text-rose-600">
-              <AlertTriangle className="w-4 h-4" />
-            </span>
-          </div>
-          <h3 className="text-2xl font-black text-rose-600 mt-1">{totalMermas}</h3>
-          <span className="text-[11px] text-rose-700 font-medium">Frascos rotos o evaporación</span>
-        </div>
+        <button
+          onClick={() => setActiveCategoryFilter('VENTA')}
+          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5 ${
+            activeCategoryFilter === 'VENTA'
+              ? 'clay-btn-primary !shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <Receipt className="w-3 h-3 text-blue-500" />
+          <span>📤 DTEs de Venta (POS)</span>
+          <span className="text-[10px] ml-0.5 px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-800 font-mono font-bold">
+            {countVentas}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveCategoryFilter('AJUSTE')}
+          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5 ${
+            activeCategoryFilter === 'AJUSTE'
+              ? 'clay-btn-primary !shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <SlidersHorizontal className="w-3 h-3 text-purple-500" />
+          <span>⚖️ Ajustes & Mermas</span>
+          <span className="text-[10px] ml-0.5 px-1.5 py-0.2 rounded-full bg-purple-100 text-purple-800 font-mono font-bold">
+            {countAjustes}
+          </span>
+        </button>
       </div>
 
-      {/* Barra de Filtros del Kárdex */}
-      <div className="clay-card p-4 space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          
-          {/* Selector de Producto Específico */}
+      {/* Barra de Filtros Compacta */}
+      <div className="clay-card p-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          {/* Selector de Producto */}
           <div>
-            <label className="text-[11px] font-bold text-slate-600 block mb-1">
-              Filtrar por Producto / Insumo
+            <label className="text-[10px] font-bold text-slate-500 block mb-0.5">
+              Producto / Contratipo
             </label>
             <select
               value={selectedProductId}
               onChange={(e) => setSelectedProductId(e.target.value)}
-              className="clay-input w-full text-xs font-bold truncate"
+              className="clay-input w-full text-[11px] font-bold py-1 px-2"
             >
               <option value="ALL">📦 Todos los Productos e Insumos</option>
               {products.map(p => (
@@ -350,36 +516,36 @@ export default function KardexModule({
             </select>
           </div>
 
-          {/* Selector de Tipo de Movimiento */}
+          {/* Tipo de Movimiento */}
           <div>
-            <label className="text-[11px] font-bold text-slate-600 block mb-1">
-              Tipo de Movimiento
+            <label className="text-[10px] font-bold text-slate-500 block mb-0.5">
+              Operación
             </label>
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="clay-input w-full text-xs font-bold"
+              className="clay-input w-full text-[11px] font-bold py-1 px-2"
             >
-              <option value="ALL">Todos los Movimientos</option>
-              <option value="IN_PURCHASE">📥 Entradas (Compras a Proveedores)</option>
-              <option value="OUT_SALE">📤 Salidas (Ventas en Punto de Venta)</option>
-              <option value="ADJUSTMENT">⚖️ Ajustes de Inventario Físico</option>
-              <option value="OUT_DAMAGE">⚠️ Mermas / Daños / Roturas</option>
-              <option value="RETURN">🔄 Devoluciones</option>
+              <option value="ALL">Todas las Operaciones</option>
+              <option value="IN_PURCHASE">📥 Entrada (Compra DTE)</option>
+              <option value="OUT_SALE">📤 Salida (Venta POS DTE)</option>
+              <option value="ADJUSTMENT">⚖️ Ajuste Físico</option>
+              <option value="OUT_DAMAGE">⚠️ Merma / Rotura</option>
+              <option value="RETURN">🔄 Devolución (NC)</option>
             </select>
           </div>
 
-          {/* Filtro de Fecha */}
+          {/* Período */}
           <div>
-            <label className="text-[11px] font-bold text-slate-600 block mb-1">
-              Período
+            <label className="text-[10px] font-bold text-slate-500 block mb-0.5">
+              Fecha
             </label>
             <select
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value as any)}
-              className="clay-input w-full text-xs font-bold"
+              className="clay-input w-full text-[11px] font-bold py-1 px-2"
             >
-              <option value="ALL">Todo el Histórico</option>
+              <option value="ALL">Todo el Historial</option>
               <option value="TODAY">Solo Hoy</option>
               <option value="WEEK">Últimos 7 días</option>
               <option value="MONTH">Este Mes</option>
@@ -388,61 +554,69 @@ export default function KardexModule({
 
           {/* Buscador de Texto */}
           <div>
-            <label className="text-[11px] font-bold text-slate-600 block mb-1">
-              Búsqueda Rápida
+            <label className="text-[10px] font-bold text-slate-500 block mb-0.5">
+              Buscar DTE / Referencia / Cliente
             </label>
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                placeholder="SKU, # Factura, DTE..."
+                placeholder="DTE-01..., SKU, Proveedor..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="clay-input w-full pl-8 pr-3 py-1.5 text-xs"
+                className="clay-input w-full pl-7 pr-2.5 py-1 text-[11px]"
               />
             </div>
           </div>
-
         </div>
       </div>
 
-      {/* Tabla del Kárdex */}
+      {/* ========================================================================= */}
+      {/* TABLA PRINCIPAL DEL KÁRDEX (Compacta, Basada en Mecanic OS)              */}
+      {/* ========================================================================= */}
       <div className="clay-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-slate-200/80 bg-slate-50/50 text-[11px] font-black uppercase tracking-wider text-slate-500">
-                <th className="py-3 px-4">Fecha / Hora</th>
-                <th className="py-3 px-4">Producto & Puesto</th>
-                <th className="py-3 px-4 text-center">Tipo Movimiento</th>
-                <th className="py-3 px-4 text-right">Cantidad</th>
-                <th className="py-3 px-4 text-center">Balance Stock</th>
-                <th className="py-3 px-4">Referencia / DTE</th>
-                <th className="py-3 px-4 text-right">Valor Unitario</th>
-                <th className="py-3 px-4">Responsable / Notas</th>
+        <div className="overflow-x-auto max-h-[620px] overflow-y-auto">
+          <table className="w-full text-left border-collapse text-[11px]">
+            <thead className="text-[10px] font-black uppercase tracking-wider text-slate-500 border-b border-slate-200/90 bg-slate-50/90 sticky top-0 z-10 shadow-sm">
+              <tr>
+                <th className="py-2.5 px-3">Fecha Movimiento</th>
+                <th className="py-2.5 px-2.5">Código (SKU)</th>
+                <th className="py-2.5 px-3">Descripción</th>
+                <th className="py-2.5 px-2.5 text-center">Tipo</th>
+                <th className="py-2.5 px-2.5 text-center">Cantidad</th>
+                <th className="py-2.5 px-2.5 text-right">Costo / Valor ($)</th>
+                <th className="py-2.5 px-2.5 text-right">Monto Total ($)</th>
+                <th className="py-2.5 px-3">Observación / Concepto</th>
+                <th className="py-2.5 px-3">Número DTE / Referencia</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-xs">
+            <tbody className="divide-y divide-slate-100">
               {filteredMovements.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400 font-medium">
-                    No se encontraron movimientos de Kárdex con los filtros aplicados.
+                  <td colSpan={9} className="py-10 text-center text-slate-400 font-medium">
+                    No se encontraron movimientos registrados en el Kárdex con los filtros aplicados.
                   </td>
                 </tr>
               ) : (
                 filteredMovements.map((mov) => {
                   const isIncoming = mov.type === 'IN_PURCHASE' || (mov.type === 'ADJUSTMENT' && mov.newStock > mov.previousStock);
+                  const isSale = mov.type === 'OUT_SALE';
                   const isDamage = mov.type === 'OUT_DAMAGE';
+                  
+                  const val = mov.costPrice || mov.unitPrice || 0;
+                  const total = mov.quantity * val;
 
-                  const badgeConfig = {
-                    IN_PURCHASE: { bg: 'bg-emerald-100 text-emerald-800', label: '📥 ENTRADA COMPRA' },
-                    OUT_SALE: { bg: 'bg-blue-100 text-blue-800', label: '📤 VENTA POS' },
-                    ADJUSTMENT: { bg: 'bg-purple-100 text-purple-800', label: '⚖️ AJUSTE FÍSICO' },
-                    OUT_DAMAGE: { bg: 'bg-rose-100 text-rose-800', label: '⚠️ MERMA / ROTURA' },
-                    RETURN: { bg: 'bg-amber-100 text-amber-800', label: '🔄 DEVOLUCIÓN' }
-                  }[mov.type] || { bg: 'bg-slate-100 text-slate-800', label: mov.type };
+                  // Badge según tipo Mecanic OS
+                  const badgeTag = {
+                    IN_PURCHASE: { bg: 'bg-emerald-100 text-emerald-800 border-emerald-200', text: 'ENTRADA' },
+                    OUT_SALE: { bg: 'bg-rose-100 text-rose-800 border-rose-200', text: 'SALIDA' },
+                    ADJUSTMENT: { bg: 'bg-purple-100 text-purple-800 border-purple-200', text: 'AJUSTE' },
+                    OUT_DAMAGE: { bg: 'bg-amber-100 text-amber-900 border-amber-200', text: 'MERMA' },
+                    RETURN: { bg: 'bg-orange-100 text-orange-800 border-orange-200', text: 'DEVOLUCIÓN' }
+                  }[mov.type] || { bg: 'bg-slate-100 text-slate-700 border-slate-200', text: mov.type };
 
-                  const dateFormatted = new Date(mov.createdAt).toLocaleString('es-SV', {
+                  // Formato de fecha compacto
+                  const dateStr = new Date(mov.createdAt).toLocaleString('es-SV', {
                     day: '2-digit',
                     month: '2-digit',
                     year: 'numeric',
@@ -452,72 +626,91 @@ export default function KardexModule({
 
                   return (
                     <tr key={mov.id} className="hover:bg-indigo-50/20 transition-colors">
-                      <td className="py-3 px-4 font-mono text-[11px] text-slate-600 font-bold whitespace-nowrap">
-                        {dateFormatted}
+                      {/* Fecha Movimiento */}
+                      <td className="py-2 px-3 font-mono text-[10px] text-slate-600 font-semibold whitespace-nowrap">
+                        {dateStr}
                       </td>
 
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono text-[10px] text-indigo-700 font-bold bg-indigo-50 px-1 rounded">
-                            #{mov.productSku}
-                          </span>
-                          <span className="font-bold text-slate-800">{mov.productName}</span>
-                        </div>
-                        {mov.puesto && (
-                          <span className="inline-block text-[10px] font-mono font-black text-amber-900 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200 mt-0.5">
-                            📍 Puesto: {mov.puesto}
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="py-3 px-4 text-center whitespace-nowrap">
-                        <span className={`clay-badge text-[10px] font-black py-0.5 px-2.5 ${badgeConfig.bg}`}>
-                          {badgeConfig.label}
-                        </span>
-                      </td>
-
-                      <td className="py-3 px-4 text-right whitespace-nowrap">
-                        <span className={`font-mono font-black text-sm ${
-                          isIncoming ? 'text-emerald-600' : isDamage ? 'text-rose-600' : 'text-blue-600'
-                        }`}>
-                          {isIncoming ? '+' : '-'}{mov.quantity} {mov.unit === 'Onza' ? 'Oz' : mov.unit === 'Galón' ? 'Gal' : 'Un.'}
-                        </span>
-                      </td>
-
-                      <td className="py-3 px-4 text-center whitespace-nowrap">
-                        <div className="inline-flex items-center gap-1 font-mono text-xs">
-                          <span className="text-slate-400 line-through">{mov.previousStock}</span>
-                          <span className="text-slate-300">→</span>
-                          <span className="font-black text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                            {mov.newStock}
-                          </span>
+                      {/* Código Producto (SKU) & Puesto */}
+                      <td className="py-2 px-2.5 whitespace-nowrap">
+                        <div className="flex items-center gap-1">
+                          <code className="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50/80 px-1.5 py-0.5 rounded border border-indigo-100">
+                            #{mov.productSku || 'S/N'}
+                          </code>
+                          {mov.puesto && (
+                            <span className="text-[9px] font-mono font-black text-amber-900 bg-amber-50 px-1 py-0.2 rounded border border-amber-200">
+                              📍{mov.puesto}
+                            </span>
+                          )}
                         </div>
                       </td>
 
-                      <td className="py-3 px-4">
-                        <p className="font-bold text-slate-700 line-clamp-1" title={mov.reference}>
+                      {/* Descripción */}
+                      <td className="py-2 px-3">
+                        <span className="font-bold text-slate-800 line-clamp-1 max-w-[200px]" title={mov.productName}>
+                          {mov.productName}
+                        </span>
+                      </td>
+
+                      {/* Tipo */}
+                      <td className="py-2 px-2.5 text-center whitespace-nowrap">
+                        <span className={`inline-block text-[9px] font-black py-0.5 px-2 rounded-full border ${badgeTag.bg}`}>
+                          {badgeTag.text}
+                        </span>
+                      </td>
+
+                      {/* Cantidad */}
+                      <td className="py-2 px-2.5 text-center font-mono font-black whitespace-nowrap">
+                        <span className={isIncoming ? 'text-emerald-600' : isSale ? 'text-rose-600' : 'text-slate-700'}>
+                          {isIncoming ? '+' : '-'}{mov.quantity}
+                        </span>
+                        <span className="text-[9px] text-slate-400 font-sans ml-1">
+                          {mov.unit === 'Onza' ? 'Oz' : mov.unit === 'Galón' ? 'Gal' : 'Un.'}
+                        </span>
+                      </td>
+
+                      {/* Costo / Valor Unitario ($) */}
+                      <td className="py-2 px-2.5 text-right font-mono text-slate-600 whitespace-nowrap">
+                        ${val.toFixed(2)}
+                      </td>
+
+                      {/* Monto Total ($) */}
+                      <td className="py-2 px-2.5 text-right font-mono font-black text-slate-800 whitespace-nowrap">
+                        ${total.toFixed(2)}
+                      </td>
+
+                      {/* Observación / Concepto */}
+                      <td className="py-2 px-3">
+                        <span className="text-[10px] text-slate-600 block line-clamp-1 max-w-[240px]" title={mov.reference}>
                           {mov.reference}
-                        </p>
-                        {mov.dteNumber && (
-                          <span className="text-[10px] text-slate-400 font-mono block truncate max-w-[150px]" title={mov.dteNumber}>
-                            {mov.dteNumber}
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="py-3 px-4 text-right font-mono font-bold text-slate-700 whitespace-nowrap">
-                        {mov.costPrice ? `$${mov.costPrice.toFixed(2)}` : mov.unitPrice ? `$${mov.unitPrice.toFixed(2)}` : '-'}
-                      </td>
-
-                      <td className="py-3 px-4">
-                        {mov.user && (
-                          <span className="text-[11px] font-medium text-slate-600 block">
-                            👤 {mov.user}
-                          </span>
-                        )}
-                        {mov.notes && (
-                          <span className="text-[10px] text-slate-400 italic line-clamp-1" title={mov.notes}>
+                        </span>
+                        {mov.notes && mov.notes !== mov.reference && (
+                          <span className="text-[9px] text-slate-400 italic block truncate max-w-[240px]">
                             {mov.notes}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Número DTE */}
+                      <td className="py-2 px-3 whitespace-nowrap">
+                        {mov.dteNumber && mov.dteNumber !== 'N/A' ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className={`text-[9px] font-black uppercase px-1.5 py-0.2 rounded font-mono ${
+                              mov.sourceCategory === 'COMPRA'
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                : mov.sourceCategory === 'VENTA'
+                                ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                                : 'bg-slate-100 text-slate-700'
+                            }`}>
+                              {mov.sourceCategory === 'COMPRA' ? 'DTE COMPRA' : mov.sourceCategory === 'VENTA' ? 'DTE VENTA' : 'INT'}
+                            </span>
+                            <span className="text-[10px] font-mono font-bold text-slate-800 truncate max-w-[160px]" title={mov.dteNumber}>
+                              {mov.dteNumber}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 italic font-mono">
+                            N/A (Ajuste Interno)
                           </span>
                         )}
                       </td>
@@ -528,6 +721,21 @@ export default function KardexModule({
             </tbody>
           </table>
         </div>
+
+        {/* Footer Informativo */}
+        <div className="p-2.5 bg-slate-50 border-t border-slate-200/80 flex flex-col sm:flex-row justify-between items-center text-[10px] text-slate-500 gap-2">
+          <div>
+            Mostrando <strong>{filteredMovements.length}</strong> movimientos de Kárdex registrados
+          </div>
+          <div className="flex items-center gap-4 font-mono font-bold">
+            <span className="text-emerald-700">
+              Total Entradas: +{totalEntradas}
+            </span>
+            <span className="text-rose-700">
+              Total Salidas: -{totalSalidas}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* ========================================================================= */}
@@ -535,7 +743,7 @@ export default function KardexModule({
       {/* ========================================================================= */}
       {isAdjustmentModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="clay-card w-full max-w-md p-6 relative animate-in fade-in zoom-in-95">
+          <div className="clay-card w-full max-w-md p-5 relative animate-in fade-in zoom-in-95">
             <button
               onClick={() => setIsAdjustmentModalOpen(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
@@ -543,20 +751,20 @@ export default function KardexModule({
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-xl font-black text-slate-800 mb-1">Ajuste de Stock en Kárdex</h3>
-            <p className="text-xs text-slate-500 mb-4">
-              Registra ajustes por conteo físico, mermas de alcohol o roturas de frascos con trazabilidad oficial.
+            <h3 className="text-base font-black text-slate-800 mb-0.5">Ajuste de Stock en Kárdex</h3>
+            <p className="text-[11px] text-slate-500 mb-3.5">
+              Registra ajustes por conteo físico o mermas de frascos con trazabilidad oficial.
             </p>
 
-            <form onSubmit={handleSaveAdjustment} className="space-y-4">
+            <form onSubmit={handleSaveAdjustment} className="space-y-3">
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
+                <label className="text-[11px] font-bold text-slate-700 block mb-1">
                   Producto / Insumo a Ajustar *
                 </label>
                 <select
                   value={adjProductId}
                   onChange={(e) => setAdjProductId(e.target.value)}
-                  className="clay-input w-full text-xs font-bold"
+                  className="clay-input w-full text-xs font-bold py-1.5"
                 >
                   {products.map(p => (
                     <option key={p.id} value={p.id}>
@@ -567,13 +775,13 @@ export default function KardexModule({
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
+                <label className="text-[11px] font-bold text-slate-700 block mb-1">
                   Tipo de Operación *
                 </label>
                 <select
                   value={adjType}
                   onChange={(e) => setAdjType(e.target.value as any)}
-                  className="clay-input w-full text-xs font-bold"
+                  className="clay-input w-full text-xs font-bold py-1.5"
                 >
                   <option value="ADJUSTMENT_ADD">➕ Entrada por Conteo Físico / Inventario Inicial</option>
                   <option value="ADJUSTMENT_SUB">➖ Salida por Diferencia de Conteo Físico</option>
@@ -583,7 +791,7 @@ export default function KardexModule({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                  <label className="text-[11px] font-bold text-slate-700 block mb-1">
                     Cantidad a Ajustar ({currentAdjProduct?.unit === 'Onza' ? 'Oz' : 'Un.'}) *
                   </label>
                   <input
@@ -593,22 +801,22 @@ export default function KardexModule({
                     required
                     value={adjQuantity}
                     onChange={(e) => setAdjQuantity(parseFloat(e.target.value) || 0)}
-                    className="clay-input w-full text-sm font-mono font-bold"
+                    className="clay-input w-full text-xs font-mono font-bold py-1.5"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                  <label className="text-[11px] font-bold text-slate-700 block mb-1">
                     Stock Resultante Proyectado
                   </label>
-                  <div className="p-2 rounded-xl bg-slate-100 text-center font-mono font-black text-sm text-indigo-700 border border-slate-200">
+                  <div className="p-1.5 rounded-xl bg-slate-100 text-center font-mono font-black text-xs text-indigo-700 border border-slate-200">
                     {projectedStock} {currentAdjProduct?.unit === 'Onza' ? 'Oz' : 'Un.'}
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
+                <label className="text-[11px] font-bold text-slate-700 block mb-1">
                   Motivo / Concepto del Ajuste *
                 </label>
                 <input
@@ -616,13 +824,13 @@ export default function KardexModule({
                   required
                   value={adjReason}
                   onChange={(e) => setAdjReason(e.target.value)}
-                  placeholder="Ej. Auditoría de fin de mes, frasco quebrado en bodega..."
-                  className="clay-input w-full text-xs"
+                  placeholder="Ej. Conteo físico fin de mes, frasco quebrado..."
+                  className="clay-input w-full text-xs py-1.5"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
+                <label className="text-[11px] font-bold text-slate-700 block mb-1">
                   Notas Adicionales
                 </label>
                 <textarea
@@ -634,7 +842,7 @@ export default function KardexModule({
                 ></textarea>
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-2.5 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsAdjustmentModalOpen(false)}

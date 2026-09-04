@@ -1379,10 +1379,12 @@ export default function AdminPage() {
         {/* ================= TAB: KÁRDEX DE INVENTARIO ================= */}
         {activeTab === 'kardex' && (
           <KardexModule
-            kardexMovements={kardexMovements}
-            onAddKardexMovement={handleAddKardexMovement}
             products={products}
             onUpdateProducts={setProducts}
+            purchases={purchases}
+            sales={sales}
+            manualMovements={kardexMovements}
+            onAddManualMovement={handleAddKardexMovement}
             initialSelectedProductId={kardexFilterProduct}
             onClearSelectedProduct={() => setKardexFilterProduct(null)}
           />
