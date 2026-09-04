@@ -368,7 +368,7 @@ export default function PosPage() {
             Mostrando <strong>{displayedProducts.length}</strong> de <strong>{filteredProducts.length}</strong> productos
           </span>
           <span className="text-indigo-600 font-bold">
-            Precio Esencia: $3.25 / Onza
+            Precio Esencia: $3.25 / Oz
           </span>
         </div>
 
@@ -405,11 +405,11 @@ export default function PosPage() {
                       </span>
                     ) : isLowStock ? (
                       <span className="clay-badge bg-amber-50 text-amber-700 border border-amber-200 text-[10px] py-0.5 px-2 font-bold">
-                        ¡{availableRemaining} {product.unit.toLowerCase()}s!
+                        ¡{availableRemaining} {product.unit === 'Onza' ? 'Oz' : 'Un.'}!
                       </span>
                     ) : (
                       <span className="clay-badge bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] py-0.5 px-2 font-bold">
-                        {availableRemaining} {product.unit.toLowerCase()}s
+                        {availableRemaining} {product.unit === 'Onza' ? 'Oz' : 'Un.'}
                       </span>
                     )}
 
@@ -438,7 +438,7 @@ export default function PosPage() {
                   <div>
                     <div className="flex items-center gap-1">
                       <span className="text-[10px] text-slate-400 block font-semibold">
-                        Por {product.unit}
+                        Por {product.unit === 'Onza' ? 'Oz' : product.unit}
                       </span>
                       {cartQty > 0 && (
                         <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-100">
