@@ -31,7 +31,8 @@ import {
   ReceiptText,
   FileCheck,
   Box,
-  Check
+  Check,
+  ShoppingCart
 } from 'lucide-react';
 import { 
   getStoredUsers, 
@@ -43,6 +44,15 @@ import {
   SYSTEM_VIEWS 
 } from '@/lib/auth';
 import { INITIAL_PRODUCTS, ProductItem, PERFUME_CATEGORIES, SaleRecord } from '@/lib/store';
+import ComprasModule from '@/components/admin/ComprasModule';
+import {
+  getStoredPurchases,
+  saveStoredPurchases,
+  getStoredSuppliers,
+  saveStoredSuppliers,
+  PurchaseRecord,
+  Supplier
+} from '@/lib/purchases';
 
 type AdminTab = 
   | 'dashboard' 
@@ -51,6 +61,7 @@ type AdminTab =
   | 'ventas-dia' 
   | 'reportes-periodo' 
   | 'reportes-financieros' 
+  | 'compras'
   | 'usuarios' 
   | 'roles' 
   | 'configuracion';
@@ -108,6 +119,10 @@ export default function AdminPage() {
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<CustomRole | null>(null);
 
+  // Compras y Proveedores (Inspirado en Mecanic OS)
+  const [purchases, setPurchases] = useState<PurchaseRecord[]>(() => getStoredPurchases());
+  const [suppliers, setSuppliers] = useState<Supplier[]>(() => getStoredSuppliers());
+
   useEffect(() => {
     localStorage.setItem('kodelocal_users', JSON.stringify(users));
   }, [users]);
@@ -119,6 +134,14 @@ export default function AdminPage() {
   useEffect(() => {
     saveStoredRoles(roles);
   }, [roles]);
+
+  useEffect(() => {
+    saveStoredPurchases(purchases);
+  }, [purchases]);
+
+  useEffect(() => {
+    saveStoredSuppliers(suppliers);
+  }, [suppliers]);
 
   // Cálculos Financieros
   const totalEsencias = useMemo(() => products.filter(p => p.category === 'Esencias para Perfume').length, [products]);
@@ -402,6 +425,37 @@ export default function AdminPage() {
                 <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 text-slate-700">
                   {categories.length}
                 </span>
+              </button>
+            </div>
+          </div>
+
+          {/* SECCIÓN: COMPRAS & SUMINISTROS */}
+          <div>
+            <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+              Compras & Suministros
+            </p>
+            <div className="space-y-1">
+              <button
+                onClick={() => setActiveTab('compras')}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+                  activeTab === 'compras'
+                    ? 'clay-btn-primary !shadow-[3px_4px_10px_rgba(79,70,229,0.35)]'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <ShoppingCart className="w-4 h-4" />
+                  <span>Compras & Proveedores</span>
+                </div>
+                {purchases.filter(p => p.paymentStatus === 'PENDIENTE').length > 0 ? (
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 font-bold">
+                    {purchases.filter(p => p.paymentStatus === 'PENDIENTE').length} CxP
+                  </span>
+                ) : (
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-100/50 text-indigo-700">
+                    {purchases.length}
+                  </span>
+                )}
               </button>
             </div>
           </div>
@@ -1257,6 +1311,18 @@ export default function AdminPage() {
             </div>
 
           </div>
+        )}
+
+        {/* ================= TAB: COMPRAS & PROVEEDORES ================= */}
+        {activeTab === 'compras' && (
+          <ComprasModule
+            products={products}
+            onUpdateProducts={setProducts}
+            suppliers={suppliers}
+            onUpdateSuppliers={setSuppliers}
+            purchases={purchases}
+            onUpdatePurchases={setPurchases}
+          />
         )}
 
         {/* ================= TAB 9: CONFIGURACIÓN FACTURA LLAMA ================= */}
