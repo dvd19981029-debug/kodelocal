@@ -124,7 +124,7 @@ export default function AdminPage() {
     const q = prodSearch.toLowerCase().trim();
     return products.filter(p => {
       const matchCat = prodCatFilter === 'Todos' || p.category === prodCatFilter;
-      const matchQ = !q || p.name.toLowerCase().includes(q) || (p.brand && p.brand.toLowerCase().includes(q)) || p.sku.toLowerCase() === q;
+      const matchQ = !q || p.name.toLowerCase().includes(q) || (p.brand && p.brand.toLowerCase().includes(q)) || p.sku.toLowerCase() === q || (p.puesto && p.puesto.toLowerCase().includes(q));
       return matchCat && matchQ;
     });
   }, [products, prodCatFilter, prodSearch]);
@@ -191,6 +191,7 @@ export default function AdminPage() {
       barcode: '',
       name: '',
       brand: '',
+      puesto: '',
       gender: 'Unisex',
       category: 'Esencias para Perfume',
       unit: 'Onza',
@@ -578,7 +579,7 @@ export default function AdminPage() {
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                 <input
                   type="text"
-                  placeholder="Buscar por código (#100), nombre o marca..."
+                  placeholder="Buscar por código (#100), nombre, marca o puesto (A1)..."
                   value={prodSearch}
                   onChange={(e) => setProdSearch(e.target.value)}
                   className="clay-input has-icon w-full text-xs py-2"
@@ -604,6 +605,7 @@ export default function AdminPage() {
                   <thead className="text-[11px] uppercase text-slate-400 font-bold border-b border-slate-200 sticky top-0 bg-white">
                     <tr>
                       <th className="py-3 px-3">Código</th>
+                      <th className="py-3 px-3">Puesto</th>
                       <th className="py-3 px-3">Producto / Contratipo</th>
                       <th className="py-3 px-3">Marca</th>
                       <th className="py-3 px-3">Categoría</th>
@@ -621,6 +623,17 @@ export default function AdminPage() {
                         <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
                           <td className="py-2.5 px-3 font-mono font-bold text-indigo-600">
                             #{p.sku}
+                          </td>
+                          <td className="py-2.5 px-3">
+                            {p.puesto ? (
+                              <span className="clay-badge bg-amber-50 text-amber-900 border border-amber-200/80 font-mono font-black text-xs py-0.5 px-2 inline-flex items-center gap-1 shadow-sm" title="Ubicación física en estante">
+                                📍 {p.puesto}
+                              </span>
+                            ) : (
+                              <span className="text-slate-300 font-mono text-[11px]">
+                                -
+                              </span>
+                            )}
                           </td>
                           <td className="py-2.5 px-3 font-bold text-slate-800">
                             {p.name}
@@ -1289,9 +1302,9 @@ export default function AdminPage() {
             </p>
 
             <form onSubmit={handleSaveProduct} className="space-y-4">
-              {/* Nombre y Marca */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="sm:col-span-2">
+              {/* Nombre, Marca y Puesto */}
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                <div className="sm:col-span-5">
                   <label className="text-xs font-bold text-slate-700 block mb-1">
                     Nombre / Fragancia Contratipo <span className="text-rose-500">*</span>
                   </label>
@@ -1300,11 +1313,11 @@ export default function AdminPage() {
                     required
                     value={editingProduct.name}
                     onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
-                    placeholder="Ej. ACQUA DI GIO"
+                    placeholder="Ej. Sauvage H"
                     className="clay-input w-full text-xs font-bold"
                   />
                 </div>
-                <div>
+                <div className="sm:col-span-4">
                   <label className="text-xs font-bold text-slate-700 block mb-1">
                     Marca / Casa
                   </label>
@@ -1312,9 +1325,22 @@ export default function AdminPage() {
                     type="text"
                     value={editingProduct.brand || ''}
                     onChange={(e) => setEditingProduct({ ...editingProduct, brand: e.target.value })}
-                    placeholder="Ej. Giorgio Armani"
+                    placeholder="Ej. Dior"
                     className="clay-input w-full text-xs"
                   />
+                </div>
+                <div className="sm:col-span-3">
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Puesto / Estante
+                  </label>
+                  <input
+                    type="text"
+                    value={editingProduct.puesto || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, puesto: e.target.value.toUpperCase() })}
+                    placeholder="Ej. A1"
+                    className="clay-input w-full text-xs font-mono font-black text-amber-900 bg-amber-50/40 uppercase"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-1 block">Ej: A1 = Estante A, Nivel 1</span>
                 </div>
               </div>
 

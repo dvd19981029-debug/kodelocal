@@ -90,6 +90,7 @@ export default function PosPage() {
         product.sku.toLowerCase() === q ||
         product.name.toLowerCase().includes(q) ||
         (product.brand && product.brand.toLowerCase().includes(q)) ||
+        (product.puesto && product.puesto.toLowerCase().includes(q)) ||
         product.barcode.includes(q);
 
       return matchesCat && matchesGender && matchesQuery;
@@ -294,7 +295,7 @@ export default function PosPage() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none z-10" />
             <input
               type="text"
-              placeholder="Buscar por código (ej. 100), contratipo (ej. 1 Million) o marca..."
+              placeholder="Buscar por código (100), contratipo (Sauvage), marca o puesto (A1)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="clay-input has-icon w-full pr-4 py-2.5 text-sm"
@@ -392,11 +393,18 @@ export default function PosPage() {
                 }`}
               >
                 <div>
-                  {/* Header de la tarjeta con Código, Stock Badge y Género */}
-                  <div className="flex items-center justify-between gap-1 mb-2">
-                    <span className="clay-badge bg-indigo-50 text-indigo-700 border border-indigo-200 font-mono text-[11px] py-0.5 px-2">
-                      #{product.sku}
-                    </span>
+                  {/* Header de la tarjeta con Código, Puesto, Stock Badge y Género */}
+                  <div className="flex items-center justify-between gap-1 mb-2 flex-wrap">
+                    <div className="flex items-center gap-1">
+                      <span className="clay-badge bg-indigo-50 text-indigo-700 border border-indigo-200 font-mono text-[11px] py-0.5 px-2">
+                        #{product.sku}
+                      </span>
+                      {product.puesto && (
+                        <span className="clay-badge bg-amber-50 text-amber-900 border border-amber-200/80 font-mono font-black text-[10px] py-0.5 px-1.5 shadow-sm" title="Puesto / Estante">
+                          📍 {product.puesto}
+                        </span>
+                      )}
+                    </div>
 
                     {/* Stock disponible en tiempo real */}
                     {isOutOfStock || availableRemaining <= 0 ? (
@@ -514,9 +522,16 @@ export default function PosPage() {
                   className="p-3 rounded-2xl bg-slate-50/80 border border-white flex items-center justify-between gap-2.5 shadow-[inset_1px_1px_3px_rgba(164,177,198,0.2),inset_-1px_-1px_3px_rgba(255,255,255,0.8)]"
                 >
                   <div className="flex-1 min-w-0">
-                    <span className="text-[10px] font-bold text-indigo-600 font-mono">
-                      #{item.product.sku}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-bold text-indigo-600 font-mono">
+                        #{item.product.sku}
+                      </span>
+                      {item.product.puesto && (
+                        <span className="text-[9px] font-black text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded font-mono">
+                          📍 {item.product.puesto}
+                        </span>
+                      )}
+                    </div>
                     <h4 className="font-bold text-xs text-slate-800 truncate leading-tight">
                       {item.product.name}
                     </h4>

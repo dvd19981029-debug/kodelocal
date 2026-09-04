@@ -15,6 +15,7 @@ export interface ProductItem {
   minStock: number;
   imageUrl: string;
   isAvailableOnline: boolean;
+  puesto?: string; // Ubicación física en estante (Ej: A1 = Estante A, Nivel 1)
 }
 
 export interface CartItem {
@@ -3968,7 +3969,8 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "stock": 100,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
-    "isAvailableOnline": true
+    "isAvailableOnline": true,
+    "puesto": "A1"
   },
   {
     "id": "esencia-345",
