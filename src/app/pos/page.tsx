@@ -18,7 +18,10 @@ import {
   X,
   FileCheck,
   Building,
+  Building2,
   User,
+  Users,
+  UserPlus,
   Sparkle,
   Droplets,
   Tag,
@@ -30,15 +33,34 @@ import {
   Eye,
   Clock,
   MapPin,
-  Phone
+  Phone,
+  Edit3,
+  Check,
+  FileText,
+  Flame
 } from 'lucide-react';
 import { INITIAL_PRODUCTS, ProductItem, CartItem, SaleRecord, PERFUME_CATEGORIES, getStoredProducts } from '@/lib/store';
+import { 
+  CustomerRecord, 
+  TipoPersona, 
+  TipoDocumentoCliente, 
+  CategoriaContribuyente,
+  getStoredCustomers, 
+  saveStoredCustomers,
+  DEPARTAMENTOS_SV,
+  GIROS_COMUNES_SV
+} from '@/lib/customers';
 
 export default function PosPage() {
   const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
-  const [posTab, setPosTab] = useState<'caja' | 'ventas' | 'logistica'>('caja');
+  
+  // Pestaña activa en el menú lateral de Punto de Venta:
+  // 'pos': Terminal de venta
+  // 'clientes': Módulo de clientes para FC y CCF
+  // 'ventas': Resumen del día y onzas vendidas
+  const [posTab, setPosTab] = useState<'pos' | 'clientes' | 'ventas'>('pos');
 
-  // Historial de ventas para el cajero
+  // Historial de ventas
   const [sales, setSales] = useState<SaleRecord[]>(() => {
     if (typeof window !== 'undefined') {
       const currentVersion = localStorage.getItem('kodelocal_data_version');
@@ -53,6 +75,30 @@ export default function PosPage() {
   const [ventasSearch, setVentasSearch] = useState('');
   const [selectedSaleDetail, setSelectedSaleDetail] = useState<SaleRecord | null>(null);
 
+  // Clientes
+  const [customers, setCustomers] = useState<CustomerRecord[]>(() => getStoredCustomers());
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [customerFilterType, setCustomerFilterType] = useState<'TODOS' | 'NATURAL' | 'JURIDICA'>('TODOS');
+  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const [editingCustomerId, setEditingCustomerId] = useState<string | null>(null);
+
+  // Formulario de Cliente (Estilo Mecanic OS para FC y CCF)
+  const [custTipoPersona, setCustTipoPersona] = useState<TipoPersona>('NATURAL');
+  const [custName, setCustName] = useState('');
+  const [custNombreComercial, setCustNombreComercial] = useState('');
+  const [custTipoDocumento, setCustTipoDocumento] = useState<TipoDocumentoCliente>('DUI');
+  const [custNumDocumento, setCustNumDocumento] = useState('');
+  const [custNrc, setCustNrc] = useState('');
+  const [custGiro, setCustGiro] = useState(GIROS_COMUNES_SV[0]);
+  const [custCategoria, setCustCategoria] = useState<CategoriaContribuyente>('OTRO');
+  const [custEmail, setCustEmail] = useState('');
+  const [custPhone, setCustPhone] = useState('');
+  const [custDepartamento, setCustDepartamento] = useState(DEPARTAMENTOS_SV[0]);
+  const [custMunicipio, setCustMunicipio] = useState('');
+  const [custDireccion, setCustDireccion] = useState('');
+  const [custNotas, setCustNotas] = useState('');
+
+  // Carrito de ventas
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('Esencias para Perfume');
   const [selectedGender, setSelectedGender] = useState<string>('Todos');
@@ -65,7 +111,8 @@ export default function PosPage() {
   const [cashAmount, setCashAmount] = useState<string>('');
   const [tipoComprobante, setTipoComprobante] = useState<'TICKET' | '01' | '03'>('01');
   
-  // Datos de cliente
+  // Datos de cliente en venta activa
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
   const [clienteNombre, setClienteNombre] = useState('Consumidor Final');
   const [clienteDoc, setClienteDoc] = useState('');
   const [clienteNrc, setClienteNrc] = useState('');
@@ -81,19 +128,19 @@ export default function PosPage() {
     localStorage.setItem('kodelocal_products', JSON.stringify(products));
   }, [products]);
 
-  // Filtrado de productos (Optimizado para 600+ esencias)
+  // Guardar clientes en localStorage
+  useEffect(() => {
+    saveStoredCustomers(customers);
+  }, [customers]);
+
+  // Filtrado de productos
   const filteredProducts = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     return products.filter(product => {
-      // Filtro de categoría
       const matchesCat = selectedCategory === 'Todos' || product.category === selectedCategory;
-      
-      // Filtro de género (solo si es esencia)
       const matchesGender = 
         selectedGender === 'Todos' || 
         (product.gender && product.gender.toLowerCase() === selectedGender.toLowerCase());
-
-      // Búsqueda inteligente por código, contratipo, marca o código de barras
       const matchesQuery = 
         !q ||
         product.sku.toLowerCase() === q ||
@@ -106,7 +153,6 @@ export default function PosPage() {
     });
   }, [products, selectedCategory, selectedGender, searchQuery]);
 
-  // Mostrar un máximo de 60 productos a la vez para rendimiento ultra fluido
   const displayedProducts = useMemo(() => {
     return filteredProducts.slice(0, 60);
   }, [filteredProducts]);
@@ -120,7 +166,6 @@ export default function PosPage() {
     return cart.reduce((acc, item) => acc + item.quantity, 0);
   }, [cart]);
 
-  // Desglose IVA 13% El Salvador
   const ivaCalculado = useMemo(() => {
     return (cartSubtotal - (cartSubtotal / 1.13));
   }, [cartSubtotal]);
@@ -128,6 +173,49 @@ export default function PosPage() {
   const subtotalNeto = useMemo(() => {
     return cartSubtotal / 1.13;
   }, [cartSubtotal]);
+
+  // --- CÁLCULOS DE VENTAS Y ONZAS VENDIDAS EN EL DÍA ---
+  const totalOnzasVendidas = useMemo(() => {
+    return sales.reduce((sum, sale) => {
+      const ozInSale = sale.items
+        .filter(it => it.unit === 'Onza' || it.name.includes('Esencia') || it.name.includes('Elixir') || it.unit === 'Oz')
+        .reduce((s, it) => s + it.quantity, 0);
+      return sum + ozInSale;
+    }, 0);
+  }, [sales]);
+
+  const totalBotesVendidos = useMemo(() => {
+    return sales.reduce((sum, sale) => {
+      const botesInSale = sale.items
+        .filter(it => it.name.toLowerCase().includes('bote') || it.name.toLowerCase().includes('frasco') || it.name.toLowerCase().includes('atomizador'))
+        .reduce((s, it) => s + it.quantity, 0);
+      return sum + botesInSale;
+    }, 0);
+  }, [sales]);
+
+  const totalMontoVentas = useMemo(() => {
+    return sales.reduce((sum, s) => sum + s.total, 0);
+  }, [sales]);
+
+  // Ranking de fragancias en onzas vendidas
+  const rankingFragancias = useMemo(() => {
+    const map: Record<string, { name: string; onzas: number; totalMonto: number; sku?: string }> = {};
+    sales.forEach(sale => {
+      sale.items.forEach(it => {
+        const isOz = it.unit === 'Onza' || it.name.includes('Esencia') || it.name.includes('Elixir') || it.unit === 'Oz';
+        if (isOz) {
+          const key = it.productId || it.name;
+          if (!map[key]) {
+            const prod = products.find(p => p.id === it.productId);
+            map[key] = { name: it.name, onzas: 0, totalMonto: 0, sku: prod?.sku };
+          }
+          map[key].onzas += it.quantity;
+          map[key].totalMonto += it.total;
+        }
+      });
+    });
+    return Object.values(map).sort((a, b) => b.onzas - a.onzas);
+  }, [sales, products]);
 
   // Manejo del carrito
   const addToCart = (product: ProductItem) => {
@@ -175,32 +263,167 @@ export default function PosPage() {
     setCart([]);
   };
 
-  // Escaneo rápido de código o SKU
   const handleBarcodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!barcodeInput.trim()) return;
-    const q = barcodeInput.trim().toLowerCase();
-    const found = products.find(p => p.barcode === q || p.sku.toLowerCase() === q);
-    if (found) {
-      addToCart(found);
+    const cleanInput = barcodeInput.trim();
+    const product = products.find(p => 
+      p.barcode === cleanInput || 
+      p.sku.toLowerCase() === cleanInput.toLowerCase()
+    );
+    if (product) {
+      addToCart(product);
       setBarcodeInput('');
     } else {
-      alert(`No se encontró esencia con código: ${barcodeInput}`);
+      alert(`No se encontró producto con código: ${cleanInput}`);
     }
   };
 
-  // Cálculo de cambio
-  const parsedCash = parseFloat(cashAmount) || 0;
-  const changeAmount = parsedCash >= cartSubtotal ? (parsedCash - cartSubtotal) : 0;
+  // Autocompletar datos de cliente al seleccionarlo
+  const handleSelectCustomer = (customerId: string) => {
+    setSelectedCustomerId(customerId);
+    const found = customers.find(c => c.id === customerId);
+    if (found) {
+      setClienteNombre(found.name);
+      setClienteDoc(found.numDocumento);
+      setClienteNrc(found.nrc || '');
+      setClienteEmail(found.email || '');
+      setClienteGiro(found.actividadEconomica || '');
+      if (found.nrc || found.tipoPersona === 'JURIDICA') {
+        setTipoComprobante('03');
+      } else {
+        setTipoComprobante('01');
+      }
+    }
+  };
 
-  // Finalizar venta
+  // Iniciar venta directa desde el módulo de clientes
+  const handleStartSaleForCustomer = (cust: CustomerRecord) => {
+    handleSelectCustomer(cust.id);
+    setPosTab('pos');
+  };
+
+  // Abrir modal de nuevo cliente
+  const handleOpenNewCustomerModal = () => {
+    setEditingCustomerId(null);
+    setCustTipoPersona('NATURAL');
+    setCustName('');
+    setCustNombreComercial('');
+    setCustTipoDocumento('DUI');
+    setCustNumDocumento('');
+    setCustNrc('');
+    setCustGiro(GIROS_COMUNES_SV[0]);
+    setCustCategoria('OTRO');
+    setCustEmail('');
+    setCustPhone('');
+    setCustDepartamento(DEPARTAMENTOS_SV[0]);
+    setCustMunicipio('');
+    setCustDireccion('');
+    setCustNotas('');
+    setIsCustomerModalOpen(true);
+  };
+
+  // Abrir modal para editar cliente
+  const handleOpenEditCustomerModal = (cust: CustomerRecord) => {
+    setEditingCustomerId(cust.id);
+    setCustTipoPersona(cust.tipoPersona);
+    setCustName(cust.name);
+    setCustNombreComercial(cust.nombreComercial || '');
+    setCustTipoDocumento(cust.tipoDocumento);
+    setCustNumDocumento(cust.numDocumento);
+    setCustNrc(cust.nrc || '');
+    setCustGiro(cust.actividadEconomica || GIROS_COMUNES_SV[0]);
+    setCustCategoria(cust.categoriaContribuyente || 'OTRO');
+    setCustEmail(cust.email);
+    setCustPhone(cust.phone);
+    setCustDepartamento(cust.departamento || DEPARTAMENTOS_SV[0]);
+    setCustMunicipio(cust.municipio || '');
+    setCustDireccion(cust.direccion || '');
+    setCustNotas(cust.notas || '');
+    setIsCustomerModalOpen(true);
+  };
+
+  // Guardar cliente
+  const handleSaveCustomer = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!custName.trim()) {
+      alert('Por favor ingresa el nombre o razón social del cliente.');
+      return;
+    }
+
+    if (custTipoPersona === 'JURIDICA' && !custNrc.trim()) {
+      alert('El NRC es obligatorio para empresas y Crédito Fiscal.');
+      return;
+    }
+
+    if (editingCustomerId) {
+      setCustomers(prev => prev.map(c => {
+        if (c.id === editingCustomerId) {
+          return {
+            ...c,
+            tipoPersona: custTipoPersona,
+            name: custName.trim(),
+            nombreComercial: custNombreComercial.trim() || undefined,
+            tipoDocumento: custTipoDocumento,
+            numDocumento: custNumDocumento.trim(),
+            nrc: custNrc.trim() || undefined,
+            actividadEconomica: custGiro.trim() || undefined,
+            categoriaContribuyente: custCategoria,
+            email: custEmail.trim(),
+            phone: custPhone.trim(),
+            departamento: custDepartamento,
+            municipio: custMunicipio.trim() || undefined,
+            direccion: custDireccion.trim() || undefined,
+            notas: custNotas.trim() || undefined
+          };
+        }
+        return c;
+      }));
+    } else {
+      const newCust: CustomerRecord = {
+        id: `cli-${Date.now()}`,
+        tipoPersona: custTipoPersona,
+        name: custName.trim(),
+        nombreComercial: custNombreComercial.trim() || undefined,
+        tipoDocumento: custTipoDocumento,
+        numDocumento: custNumDocumento.trim(),
+        nrc: custNrc.trim() || undefined,
+        actividadEconomica: custGiro.trim() || undefined,
+        categoriaContribuyente: custCategoria,
+        email: custEmail.trim(),
+        phone: custPhone.trim(),
+        departamento: custDepartamento,
+        municipio: custMunicipio.trim() || undefined,
+        direccion: custDireccion.trim() || undefined,
+        notas: custNotas.trim() || undefined,
+        createdAt: new Date().toISOString()
+      };
+      setCustomers(prev => [newCust, ...prev]);
+      handleSelectCustomer(newCust.id);
+    }
+
+    setIsCustomerModalOpen(false);
+  };
+
+  // Finalizar venta y emitir DTE
   const handleCompleteSale = async () => {
     if (cart.length === 0) return;
+
+    if (paymentMethod === 'CASH') {
+      const parsed = parseFloat(cashAmount);
+      if (isNaN(parsed) || parsed < cartSubtotal) {
+        alert('El monto en efectivo ingresado es insuficiente.');
+        return;
+      }
+    }
+
     setIsProcessing(true);
 
-    const saleNumber = `POS-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.floor(1000 + Math.random() * 9000)}`;
-    let dteResponseData: any = null;
+    const saleNumber = `CMD-${Math.floor(1000 + Math.random() * 9000)}`;
+    const parsedCash = paymentMethod === 'CASH' ? parseFloat(cashAmount) : undefined;
+    const changeAmount = parsedCash ? parsedCash - cartSubtotal : undefined;
 
+    let dteResponseData = null;
     if (tipoComprobante === '01' || tipoComprobante === '03') {
       try {
         const res = await fetch('/api/dte', {
@@ -208,20 +431,24 @@ export default function PosPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             tipoDte: tipoComprobante,
-            saleId: saleNumber,
-            items: cart.map(item => ({
-              sku: item.product.sku,
-              name: `${item.product.name} (${item.product.unit})`,
-              quantity: item.quantity,
-              price: item.product.price
-            })),
+            saleId: `sale-${Date.now()}`,
             cliente: {
               nombre: clienteNombre,
-              numDocumento: clienteDoc || (tipoComprobante === '01' ? '00000000-0' : ''),
+              numDocumento: clienteDoc,
               nrc: clienteNrc,
-              correo: clienteEmail,
-              direccion: 'San Salvador, El Salvador'
+              email: clienteEmail,
+              giro: clienteGiro
             },
+            items: cart.map(i => ({
+              nombre: i.product.name,
+              cantidad: i.quantity,
+              precioUnitario: i.product.price,
+              total: i.product.price * i.quantity,
+              unit: i.product.unit
+            })),
+            total: cartSubtotal,
+            subtotal: subtotalNeto,
+            iva: ivaCalculado,
             metodoPago: paymentMethod
           })
         });
@@ -239,7 +466,7 @@ export default function PosPage() {
       const updated = prev.map(prod => {
         const itemInCart = cart.find(ci => ci.product.id === prod.id);
         if (itemInCart) {
-          return { ...prod, stock: prod.stock - itemInCart.quantity };
+          return { ...prod, stock: Math.max(0, prod.stock - itemInCart.quantity) };
         }
         return prod;
       });
@@ -291,13 +518,32 @@ export default function PosPage() {
     clearCart();
   };
 
+  // Filtrado de clientes
+  const filteredCustomers = useMemo(() => {
+    const q = customerSearch.toLowerCase().trim();
+    return customers.filter(c => {
+      if (customerFilterType === 'NATURAL' && c.tipoPersona !== 'NATURAL') return false;
+      if (customerFilterType === 'JURIDICA' && c.tipoPersona !== 'JURIDICA') return false;
+      if (!q) return true;
+      return (
+        c.name.toLowerCase().includes(q) ||
+        (c.nombreComercial && c.nombreComercial.toLowerCase().includes(q)) ||
+        c.numDocumento.includes(q) ||
+        (c.nrc && c.nrc.includes(q)) ||
+        c.phone.includes(q) ||
+        c.email.toLowerCase().includes(q)
+      );
+    });
+  }, [customers, customerSearch, customerFilterType]);
+
   return (
     <div className="flex flex-col lg:flex-row gap-6 pb-16 max-w-[1650px] mx-auto items-start">
       
       {/* ========================================================================= */}
       {/* MENÚ LATERAL IZQUIERDO DE PUNTO DE VENTA                                  */}
       {/* ========================================================================= */}
-      <aside className="w-full lg:w-60 shrink-0 space-y-4">
+      <aside className="w-full lg:w-64 shrink-0 space-y-4">
+        
         <div className="clay-card p-3.5 flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white flex items-center justify-center font-black text-lg shadow-md">
             <Store className="w-5 h-5" />
@@ -313,28 +559,49 @@ export default function PosPage() {
             Operaciones de Caja
           </p>
 
+          {/* Botón 1: Punto de Venta (El punto de venta que ya tenemos) */}
           <button
             type="button"
-            onClick={() => setPosTab('caja')}
+            onClick={() => setPosTab('pos')}
             className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
-              posTab === 'caja'
+              posTab === 'pos'
                 ? 'clay-btn-primary !shadow-[3px_4px_10px_rgba(79,70,229,0.35)]'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <div className="flex items-center gap-2">
               <Store className="w-4 h-4" />
-              <span>Caja / Mostrador</span>
+              <span>Punto de Venta</span>
             </div>
             {totalItemsCount > 0 && (
               <span className={`clay-badge text-[10px] font-black px-2 py-0.5 ${
-                posTab === 'caja' ? 'bg-white text-indigo-900' : 'bg-indigo-100 text-indigo-800'
+                posTab === 'pos' ? 'bg-white text-indigo-900' : 'bg-indigo-100 text-indigo-800'
               }`}>
                 {totalItemsCount}
               </span>
             )}
           </button>
 
+          {/* Botón 2: Clientes (Módulo estilo Mecanic OS para FC y CCF) */}
+          <button
+            type="button"
+            onClick={() => setPosTab('clientes')}
+            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+              posTab === 'clientes'
+                ? 'clay-btn-primary !shadow-[3px_4px_10px_rgba(79,70,229,0.35)]'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              <span>Clientes</span>
+            </div>
+            <span className="text-[10px] text-slate-400 font-mono font-bold">
+              {customers.length}
+            </span>
+          </button>
+
+          {/* Botón 3: Ventas (Resumen diario de onzas vendidas) */}
           <button
             type="button"
             onClick={() => setPosTab('ventas')}
@@ -345,680 +612,1022 @@ export default function PosPage() {
             }`}
           >
             <div className="flex items-center gap-2">
-              <ReceiptText className="w-4 h-4" />
-              <span>Ventas & DTEs</span>
+              <Droplets className="w-4 h-4 text-cyan-400" />
+              <span>Ventas & Onzas</span>
             </div>
-            <span className="text-[10px] text-slate-400 font-mono font-bold">
-              {sales.length}
+            <span className={`clay-badge text-[10px] font-mono font-bold px-1.5 py-0.5 ${
+              posTab === 'ventas' ? 'bg-white text-indigo-900' : 'bg-indigo-100 text-indigo-800'
+            }`}>
+              {totalOnzasVendidas} Oz
             </span>
           </button>
-
-          <button
-            type="button"
-            onClick={() => setPosTab('logistica')}
-            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
-              posTab === 'logistica'
-                ? 'clay-btn-primary !shadow-[3px_4px_10px_rgba(79,70,229,0.35)]'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <Truck className="w-4 h-4" />
-              <span>Envíos & Domicilio</span>
-            </div>
-          </button>
         </div>
 
-        {/* Resumen del Turno */}
-        <div className="clay-card p-3.5 bg-indigo-50/50 border border-indigo-100 text-xs space-y-2">
-          <span className="font-black text-indigo-950 block text-[11px]">Resumen del Turno:</span>
-          <div className="flex justify-between text-slate-600 text-[11px]">
-            <span>Ventas del Día:</span>
+        {/* Resumen del Día en Menú Lateral */}
+        <div className="clay-card p-3.5 bg-gradient-to-br from-indigo-50/60 to-purple-50/40 border border-indigo-100/80 text-xs space-y-2.5">
+          <div className="flex items-center justify-between">
+            <span className="font-black text-indigo-950 text-[11px] flex items-center gap-1">
+              <Droplets className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Onzas Hoy:</span>
+            </span>
+            <span className="font-mono font-black text-xs text-indigo-700 bg-white px-2 py-0.5 rounded border border-indigo-200">
+              {totalOnzasVendidas} Oz
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between pt-1 border-t border-indigo-100/60 text-slate-600 text-[11px]">
+            <span>Total Cobrado:</span>
+            <strong className="font-mono text-slate-800">${totalMontoVentas.toFixed(2)}</strong>
+          </div>
+
+          <div className="flex items-center justify-between text-slate-600 text-[11px]">
+            <span>Comprobantes:</span>
             <strong className="font-mono text-slate-800">{sales.length}</strong>
           </div>
-          <div className="flex justify-between text-slate-600 text-[11px]">
-            <span>Total Cobrado:</span>
-            <strong className="font-mono text-indigo-700">${sales.reduce((acc, s) => acc + s.total, 0).toFixed(2)}</strong>
-          </div>
         </div>
+
       </aside>
 
-      {/* ================= ÁREA DE TRABAJO A LA DERECHA ================= */}
+      {/* ========================================================================= */}
+      {/* ÁREA DE CONTENIDO A LA DERECHA                                            */}
+      {/* ========================================================================= */}
       <div className="flex-1 w-full min-w-0">
-        {posTab === 'caja' && (
+
+        {/* ======================================================================= */}
+        {/* PESTAÑA 1: PUNTO DE VENTA (EL PUNTO DE VENTA QUE YA TENEMOS)             */}
+        {/* ======================================================================= */}
+        {posTab === 'pos' && (
           <div className="flex flex-col xl:flex-row gap-6">
             
-            {/* ================= COLUMNA IZQUIERDA: CATÁLOGO DE PERFUMERÍA ================= */}
+            {/* Columna Izquierda del POS: Buscador y Catálogo */}
             <div className="flex-1 flex flex-col gap-5 min-w-0">
-        
-        {/* Barra superior de Búsqueda y Cotizador Rápido */}
-        <div className="clay-card p-4 sm:p-5 flex flex-col sm:flex-row gap-3 items-center justify-between">
-          
-          {/* Buscador inteligente */}
-          <div className="relative flex-1 w-full">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none z-10" />
-            <input
-              type="search"
-              name="search-fragrance"
-              id="search-fragrance"
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="none"
-              spellCheck={false}
-              data-1p-ignore="true"
-              data-lpignore="true"
-              placeholder="Buscar por código (100), contratipo (Sauvage), marca..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="clay-input has-icon w-full pr-4 py-2.5 text-sm"
-            />
-          </div>
+              
+              {/* Barra superior de Búsqueda y Cotizador Rápido */}
+              <div className="clay-card p-4 sm:p-5 flex flex-col sm:flex-row gap-3 items-center justify-between">
+                <div className="relative flex-1 w-full">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none z-10" />
+                  <input
+                    type="search"
+                    name="search-fragrance"
+                    id="search-fragrance"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    placeholder="Buscar por código (100), contratipo (Sauvage), marca..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="clay-input has-icon w-full pr-4 py-2.5 text-sm font-bold"
+                  />
+                </div>
 
-          {/* Lector o código rápido */}
-          <form onSubmit={handleBarcodeSubmit} className="relative w-full sm:w-60" autoComplete="off">
-            <Barcode className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-500 pointer-events-none z-10" />
-            <input
-              type="text"
-              name="quick-sku"
-              id="quick-sku"
-              autoComplete="off"
-              data-1p-ignore="true"
-              data-lpignore="true"
-              placeholder="Código o SKU..."
-              value={barcodeInput}
-              onChange={(e) => setBarcodeInput(e.target.value)}
-              className="clay-input has-icon w-full pr-4 py-2.5 text-sm font-mono border-indigo-200"
-            />
-          </form>
-        </div>
+                <form onSubmit={handleBarcodeSubmit} className="relative w-full sm:w-60" autoComplete="off">
+                  <Barcode className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-500 pointer-events-none z-10" />
+                  <input
+                    type="text"
+                    name="quick-sku"
+                    id="quick-sku"
+                    autoComplete="off"
+                    placeholder="Código o SKU..."
+                    value={barcodeInput}
+                    onChange={(e) => setBarcodeInput(e.target.value)}
+                    className="clay-input has-icon w-full pr-4 py-2.5 text-sm font-mono font-bold border-indigo-200"
+                  />
+                </form>
+              </div>
 
-        {/* Filtro de Categorías */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-          {['Todos', ...PERFUME_CATEGORIES].map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`clay-btn px-4 py-2 text-xs rounded-full whitespace-nowrap transition-all ${
-                selectedCategory === cat
-                  ? 'clay-btn-primary'
-                  : 'clay-btn-light'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+              {/* Filtro de Categorías */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {['Todos', ...PERFUME_CATEGORIES].map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`clay-btn px-4 py-2 text-xs rounded-full whitespace-nowrap transition-all font-bold ${
+                      selectedCategory === cat ? 'clay-btn-primary' : 'clay-btn-light'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
 
-        {/* Subfiltro de Género (Especial para Esencias) */}
-        {selectedCategory === 'Esencias para Perfume' && (
-          <div className="flex items-center justify-between p-2.5 rounded-2xl bg-white/70 border border-white shadow-[inset_1px_1px_3px_rgba(164,177,198,0.2)]">
-            <div className="flex items-center gap-1 text-xs text-slate-500 font-bold px-2">
-              <Droplets className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Género:</span>
+              {/* Filtro de Género (para esencias) */}
+              {selectedCategory === 'Esencias para Perfume' && (
+                <div className="clay-card p-2 px-4 flex items-center justify-between gap-4 text-xs font-semibold text-slate-600">
+                  <span className="flex items-center gap-1.5 font-bold text-slate-700">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Género:
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {['Todos', 'Caballero', 'Dama', 'Unisex'].map((gender) => (
+                      <button
+                        key={gender}
+                        onClick={() => setSelectedGender(gender)}
+                        className={`px-3 py-1 rounded-full text-xs transition-all font-bold ${
+                          selectedGender === gender
+                            ? 'bg-indigo-600 text-white shadow-sm'
+                            : 'hover:bg-slate-100 text-slate-600'
+                        }`}
+                      >
+                        {gender === 'Caballero' ? '🧔 Caballero' : gender === 'Dama' ? '👩 Dama' : gender === 'Unisex' ? '⚧ Unisex' : 'Todos'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Conteo de Resultados y Precio Base */}
+              <div className="flex items-center justify-between px-1 text-xs text-slate-500">
+                <span>Mostrando <strong>{displayedProducts.length}</strong> de {filteredProducts.length} productos</span>
+                <span className="font-bold text-indigo-600">Precio Esencia: $3.25 / Oz</span>
+              </div>
+
+              {/* Rejilla de Productos */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3.5">
+                {displayedProducts.map((product) => {
+                  const itemInCart = cart.find(i => i.product.id === product.id);
+                  const cartQty = itemInCart ? itemInCart.quantity : 0;
+                  const isOutOfStock = product.stock <= 0;
+                  const isLowStock = product.stock > 0 && product.stock <= product.minStock;
+                  const availableRemaining = product.stock - cartQty;
+
+                  return (
+                    <div 
+                      key={product.id}
+                      onClick={() => !isOutOfStock && availableRemaining > 0 && addToCart(product)}
+                      className={`clay-card p-3 flex flex-col justify-between cursor-pointer transition-all hover:scale-[1.02] ${
+                        isOutOfStock 
+                          ? 'opacity-50 cursor-not-allowed bg-slate-50' 
+                          : 'hover:shadow-[4px_6px_14px_rgba(99,102,241,0.2)]'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-1 mb-1.5">
+                          <span className="clay-badge text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                            #{product.sku}
+                          </span>
+                          {product.puesto && (
+                            <span className="clay-badge text-[9px] font-mono font-black bg-amber-100 text-amber-900 px-1 py-0.5 border border-amber-200" title={`Puesto: ${product.puesto}`}>
+                              📍{product.puesto}
+                            </span>
+                          )}
+                          <span className={`clay-badge text-[10px] font-bold py-0.5 px-1.5 ${
+                            isOutOfStock 
+                              ? 'bg-rose-50 text-rose-700 border border-rose-200' 
+                              : isLowStock 
+                              ? 'bg-amber-50 text-amber-700 border border-amber-200' 
+                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          }`}>
+                            {isOutOfStock ? 'Agotado' : `${availableRemaining} ${product.unit === 'Onza' ? 'Oz' : 'Un.'}`}
+                          </span>
+                        </div>
+
+                        {product.brand && (
+                          <span className="text-[10.5px] font-bold text-indigo-500 block truncate">
+                            {product.brand}
+                          </span>
+                        )}
+
+                        <h3 className="font-extrabold text-xs text-slate-800 line-clamp-2 leading-snug mt-0.5">
+                          {product.name}
+                        </h3>
+                      </div>
+
+                      <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-slate-100">
+                        <div>
+                          <span className="text-[9.5px] text-slate-400 block font-semibold">
+                            Por {product.unit === 'Onza' ? 'Oz' : product.unit}
+                          </span>
+                          <span className="text-base font-black text-indigo-600">
+                            ${product.price.toFixed(2)}
+                          </span>
+                        </div>
+
+                        <div className={`w-7 h-7 rounded-xl flex items-center justify-center font-bold transition-colors ${
+                          isOutOfStock || availableRemaining <= 0
+                            ? 'bg-slate-100 text-slate-400'
+                            : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white'
+                        }`}>
+                          <Plus className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
             </div>
-            <div className="flex items-center gap-1.5">
-              {[
-                { label: 'Todos', val: 'Todos' },
-                { label: '👨 Caballero', val: 'Caballero' },
-                { label: '👩 Dama', val: 'Dama' },
-                { label: '⚥ Unisex', val: 'Unisex' }
-              ].map(g => (
+
+            {/* Columna Derecha del POS: Carrito y Cobro */}
+            <div className="w-full xl:w-96 flex flex-col gap-4 shrink-0">
+              <div className="clay-card p-5 flex flex-col h-[calc(100vh-140px)] sticky top-24">
+                
+                {/* Header del Carrito */}
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shadow-inner font-bold">
+                      <ShoppingCart className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h2 className="font-extrabold text-base text-slate-800 leading-none">Orden Actual</h2>
+                      <span className="text-[11px] text-slate-400 font-medium">{totalItemsCount} unidades</span>
+                    </div>
+                  </div>
+                  {cart.length > 0 && (
+                    <button
+                      onClick={clearCart}
+                      className="text-xs text-rose-500 hover:text-rose-700 font-semibold flex items-center gap-1"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Vaciar
+                    </button>
+                  )}
+                </div>
+
+                {/* Lista de productos en el carrito */}
+                <div className="flex-1 overflow-y-auto py-3 space-y-2 pr-1">
+                  {cart.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-slate-400 text-center p-4">
+                      <Droplets className="w-12 h-12 mb-2 opacity-30 stroke-[1.5] text-indigo-400" />
+                      <p className="font-bold text-sm text-slate-600">Orden Vacía</p>
+                      <p className="text-xs mt-1">Selecciona esencias, botes o empaque para cotizar y cobrar</p>
+                    </div>
+                  ) : (
+                    cart.map((item) => (
+                      <div 
+                        key={item.product.id}
+                        className="p-2.5 rounded-2xl bg-white/70 border border-white/80 shadow-[2px_3px_8px_rgba(164,177,198,0.2)] flex items-center justify-between gap-2"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-mono font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.2 rounded">
+                              #{item.product.sku}
+                            </span>
+                          </div>
+                          <h4 className="font-bold text-xs text-slate-800 truncate leading-tight">
+                            {item.product.name}
+                          </h4>
+                          <p className="text-[11px] text-slate-500 font-medium">
+                            ${item.product.price.toFixed(2)} por {item.product.unit}
+                          </p>
+                        </div>
+
+                        {/* Controles de cantidad */}
+                        <div className="flex items-center gap-1.5 bg-white px-2 py-1 rounded-xl shadow-inner border border-slate-100">
+                          <button
+                            onClick={() => updateQuantity(item.product.id, -1)}
+                            className="w-5 h-5 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center active:scale-90"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="text-xs font-black w-6 text-center text-slate-800">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => updateQuantity(item.product.id, 1)}
+                            className="w-5 h-5 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center active:scale-90"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+
+                        {/* Subtotal del item */}
+                        <div className="text-right min-w-[50px]">
+                          <span className="font-black text-xs text-slate-800">
+                            ${(item.product.price * item.quantity).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Desglose de Totales e Impuestos */}
+                {cart.length > 0 && (
+                  <div className="pt-3 border-t border-slate-200/80 flex flex-col gap-1.5">
+                    <div className="flex justify-between text-xs text-slate-500 font-medium">
+                      <span>Subtotal (Neto):</span>
+                      <span>${subtotalNeto.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-slate-500 font-medium">
+                      <span>IVA (13%):</span>
+                      <span>${ivaCalculado.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-slate-100">
+                      <span>Total a Cobrar:</span>
+                      <span className="text-indigo-600 text-xl font-extrabold">
+                        ${cartSubtotal.toFixed(2)}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => setIsCheckoutOpen(true)}
+                      className="clay-btn clay-btn-success w-full py-3.5 text-base mt-2 rounded-2xl shadow-[4px_6px_16px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2 font-black"
+                    >
+                      <Banknote className="w-5 h-5" />
+                      <span>Cobrar ${cartSubtotal.toFixed(2)}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* ======================================================================= */}
+        {/* PESTAÑA 2: CLIENTES (MÓDULO BASADO EN MECANIC OS PARA FC Y CCF)         */}
+        {/* ======================================================================= */}
+        {posTab === 'clientes' && (
+          <div className="space-y-5 animate-in fade-in">
+            
+            <div className="clay-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div>
+                <h3 className="text-base font-black text-slate-800 flex items-center gap-2">
+                  <span>Directorio de Clientes</span>
+                  <span className="clay-badge text-[10px] bg-indigo-100 text-indigo-800 font-bold">
+                    {customers.length} registrados
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Registro de datos fiscales para Facturas (FC - DTE 01) y Crédito Fiscal (CCF - DTE 03)
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleOpenNewCustomerModal}
+                className="clay-btn clay-btn-primary px-4 py-2 text-xs font-black flex items-center gap-1.5"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>+ Registrar Cliente</span>
+              </button>
+            </div>
+
+            {/* Buscador y Filtros */}
+            <div className="clay-card p-3.5 flex flex-col sm:flex-row gap-2.5 items-center justify-between">
+              <div className="relative flex-1 w-full">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar cliente por Nombre, DUI, NIT, NRC o Teléfono..."
+                  value={customerSearch}
+                  onChange={(e) => setCustomerSearch(e.target.value)}
+                  className="clay-input w-full pl-9 pr-3 py-2 text-xs font-bold"
+                />
+              </div>
+
+              <div className="flex gap-1">
                 <button
-                  key={g.val}
-                  onClick={() => setSelectedGender(g.val)}
+                  type="button"
+                  onClick={() => setCustomerFilterType('TODOS')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    selectedGender === g.val
-                      ? 'bg-indigo-600 text-white shadow-[2px_3px_6px_rgba(99,102,241,0.3)]'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    customerFilterType === 'TODOS' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
-                  {g.label}
+                  Todos ({customers.length})
                 </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Indicador de resultados */}
-        <div className="flex items-center justify-between text-xs text-slate-500 px-1 font-medium">
-          <span>
-            Mostrando <strong>{displayedProducts.length}</strong> de <strong>{filteredProducts.length}</strong> productos
-          </span>
-          <span className="text-indigo-600 font-bold">
-            Precio Esencia: $3.25 / Oz
-          </span>
-        </div>
-
-        {/* Cuadrícula de Productos */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-          {displayedProducts.map((product) => {
-            const isOutOfStock = product.stock <= 0;
-            const itemInCart = cart.find(ci => ci.product.id === product.id);
-            const cartQty = itemInCart ? itemInCart.quantity : 0;
-            const availableRemaining = Math.max(0, product.stock - cartQty);
-            const isLowStock = availableRemaining > 0 && availableRemaining <= product.minStock;
-
-            return (
-              <div
-                key={product.id}
-                onClick={() => !isOutOfStock && availableRemaining > 0 && addToCart(product)}
-                className={`clay-card p-3.5 flex flex-col justify-between cursor-pointer transition-all ${
-                  isOutOfStock || availableRemaining <= 0
-                    ? 'opacity-60 grayscale cursor-not-allowed' 
-                    : 'clay-card-interactive active:scale-[0.98]'
-                }`}
-              >
-                <div>
-                  {/* Header de la tarjeta limpio y minimalista */}
-                  <div className="flex items-center justify-between gap-1 mb-2">
-                    <span className="clay-badge bg-indigo-50 text-indigo-700 border border-indigo-200 font-mono text-[11px] py-0.5 px-2 font-bold">
-                      #{product.sku}
-                    </span>
-
-                    {/* Stock disponible en tiempo real */}
-                    {isOutOfStock || availableRemaining <= 0 ? (
-                      <span className="clay-badge bg-rose-50 text-rose-700 border border-rose-200 text-[10px] py-0.5 px-2 font-bold">
-                        Agotado
-                      </span>
-                    ) : isLowStock ? (
-                      <span className="clay-badge bg-amber-50 text-amber-700 border border-amber-200 text-[10px] py-0.5 px-2 font-bold">
-                        {availableRemaining} {product.unit === 'Onza' ? 'Oz' : 'Un.'}
-                      </span>
-                    ) : (
-                      <span className="clay-badge bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] py-0.5 px-2 font-bold">
-                        {availableRemaining} {product.unit === 'Onza' ? 'Oz' : 'Un.'}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Marca comercial inspirada */}
-                  {product.brand && (
-                    <span className="text-[11px] font-bold text-indigo-500 block truncate">
-                      {product.brand}
-                    </span>
-                  )}
-
-                  {/* Nombre del contratipo */}
-                  <h3 className="font-extrabold text-sm text-slate-800 line-clamp-2 leading-snug mt-0.5">
-                    {product.name}
-                  </h3>
-                </div>
-
-                {/* Footer: Unidad, Precio y Botón Agregar */}
-                <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-100">
-                  <div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-[10px] text-slate-400 block font-semibold">
-                        Por {product.unit === 'Onza' ? 'Oz' : product.unit}
-                      </span>
-                      {cartQty > 0 && (
-                        <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-100">
-                          {cartQty} en orden
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-lg font-black text-indigo-600">
-                      ${product.price.toFixed(2)}
-                    </span>
-                  </div>
-
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold transition-colors ${
-                    availableRemaining <= 0
-                      ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                      : 'bg-indigo-50 text-indigo-600 shadow-[2px_3px_6px_rgba(99,102,241,0.2),inset_1px_1px_2px_rgba(255,255,255,0.8)] hover:bg-indigo-600 hover:text-white'
-                  }`}>
-                    <Plus className="w-4 h-4" />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {filteredProducts.length === 0 && (
-          <div className="clay-card p-12 text-center text-slate-400">
-            <Search className="w-12 h-12 mx-auto mb-3 opacity-40" />
-            <p className="font-bold text-base text-slate-700">No se encontró ninguna esencia o producto</p>
-            <p className="text-xs mt-1">Prueba buscando por número de código (ej. 100) o parte del nombre.</p>
-          </div>
-        )}
-      </div>
-
-      {/* ================= COLUMNA DERECHA: ORDEN DE VENTA Y COTIZACIÓN ================= */}
-      <div className="w-full lg:w-96 flex flex-col gap-4">
-        
-        <div className="clay-card p-5 flex flex-col h-[calc(100vh-140px)] sticky top-24">
-          
-          {/* Header del Carrito */}
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shadow-[inset_1px_1px_2px_rgba(255,255,255,0.8)]">
-                <ShoppingCart className="w-4 h-4" />
-              </div>
-              <div>
-                <h2 className="font-extrabold text-base text-slate-800 leading-none">Orden Actual</h2>
-                <span className="text-[11px] text-slate-400 font-medium">{totalItemsCount} unidades</span>
-              </div>
-            </div>
-            {cart.length > 0 && (
-              <button
-                onClick={clearCart}
-                className="text-xs text-rose-500 hover:text-rose-700 font-semibold flex items-center gap-1"
-              >
-                <Trash2 className="w-3.5 h-3.5" /> Vaciar
-              </button>
-            )}
-          </div>
-
-          {/* Lista de productos en la orden */}
-          <div className="flex-1 overflow-y-auto py-3 space-y-2.5 pr-1">
-            {cart.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-400 text-center p-4">
-                <Droplets className="w-12 h-12 mb-2 opacity-30 stroke-[1.5] text-indigo-400" />
-                <p className="font-bold text-sm text-slate-600">Cotización Vacía</p>
-                <p className="text-xs mt-1">Selecciona esencias, botes o empaque para cotizar y cobrar</p>
-              </div>
-            ) : (
-              cart.map((item) => (
-                <div 
-                  key={item.product.id}
-                  className="p-3 rounded-2xl bg-slate-50/80 border border-white flex items-center justify-between gap-2.5 shadow-[inset_1px_1px_3px_rgba(164,177,198,0.2),inset_-1px_-1px_3px_rgba(255,255,255,0.8)]"
+                <button
+                  type="button"
+                  onClick={() => setCustomerFilterType('NATURAL')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    customerFilterType === 'NATURAL' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
                 >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-bold text-indigo-600 font-mono">
-                        #{item.product.sku}
-                      </span>
-                      {item.product.puesto && (
-                        <span className="text-[9px] font-black text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded font-mono">
-                          📍 {item.product.puesto}
-                        </span>
-                      )}
-                    </div>
-                    <h4 className="font-bold text-xs text-slate-800 truncate leading-tight">
-                      {item.product.name}
-                    </h4>
-                    <p className="text-[11px] text-slate-500 font-medium">
-                      ${item.product.price.toFixed(2)} por {item.product.unit}
-                    </p>
-                  </div>
+                  Naturales (FC)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCustomerFilterType('JURIDICA')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    customerFilterType === 'JURIDICA' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Empresas (CCF)
+                </button>
+              </div>
+            </div>
 
-                  {/* Controles de cantidad */}
-                  <div className="flex items-center gap-1.5 bg-white px-2 py-1 rounded-xl shadow-[2px_2px_5px_rgba(164,177,198,0.25)]">
-                    <button
-                      onClick={() => updateQuantity(item.product.id, -1)}
-                      className="w-5 h-5 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center active:scale-90"
-                    >
-                      <Minus className="w-3 h-3" />
-                    </button>
-                    <span className="text-xs font-black w-6 text-center text-slate-800">
-                      {item.quantity}
-                    </span>
-                    <button
-                      onClick={() => updateQuantity(item.product.id, 1)}
-                      className="w-5 h-5 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center active:scale-90"
-                    >
-                      <Plus className="w-3 h-3" />
-                    </button>
-                  </div>
-
-                  {/* Subtotal del item */}
-                  <div className="text-right min-w-[50px]">
-                    <span className="font-black text-xs text-slate-800">
-                      ${(item.product.price * item.quantity).toFixed(2)}
-                    </span>
-                  </div>
+            {/* Rejilla de Clientes */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredCustomers.length === 0 ? (
+                <div className="col-span-2 clay-card p-12 text-center text-slate-400">
+                  <Users className="w-12 h-12 mx-auto mb-2.5 opacity-30 text-indigo-500" />
+                  <h4 className="text-sm font-bold text-slate-700">No se encontraron clientes</h4>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Registra un nuevo cliente con sus datos fiscales para facturar en caja.
+                  </p>
                 </div>
-              ))
-            )}
-          </div>
+              ) : (
+                filteredCustomers.map(cust => (
+                  <div key={cust.id} className="clay-card p-4 flex flex-col justify-between space-y-3">
+                    <div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <span className={`clay-badge text-[9.5px] font-bold py-0.5 px-2 ${
+                              cust.tipoPersona === 'JURIDICA'
+                                ? 'bg-purple-100 text-purple-800 border border-purple-200'
+                                : 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                            }`}>
+                              {cust.tipoPersona === 'JURIDICA' ? '🏢 Jurídica (Crédito Fiscal)' : '👤 Natural (Consumidor)'}
+                            </span>
+                            {cust.nrc && (
+                              <span className="clay-badge text-[9.5px] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-200">
+                                NRC: {cust.nrc}
+                              </span>
+                            )}
+                          </div>
+                          <h4 className="font-extrabold text-sm text-slate-800">{cust.name}</h4>
+                          {cust.nombreComercial && (
+                            <p className="text-[11px] text-slate-500 font-medium">
+                              Nombre comercial: <strong>{cust.nombreComercial}</strong>
+                            </p>
+                          )}
+                        </div>
 
-          {/* Desglose de Totales e Impuestos */}
-          {cart.length > 0 && (
-            <div className="pt-3 border-t border-slate-200/80 flex flex-col gap-1.5">
-              <div className="flex justify-between text-xs text-slate-500 font-medium">
-                <span>Subtotal (Neto):</span>
-                <span>${subtotalNeto.toFixed(2)}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditCustomerModal(cust)}
+                          className="text-slate-400 hover:text-indigo-600 p-1"
+                          title="Editar cliente"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Datos de contacto y fiscales */}
+                      <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600 mt-2 pt-2 border-t border-slate-100">
+                        <div>
+                          <span className="text-slate-400 block font-semibold">{cust.tipoDocumento}:</span>
+                          <span className="font-mono font-bold text-slate-800">{cust.numDocumento}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block font-semibold">Teléfono / WhatsApp:</span>
+                          <span className="font-mono font-bold text-slate-800">{cust.phone}</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-slate-400 block font-semibold">Correo de Facturación:</span>
+                          <span className="font-mono text-slate-700 truncate block">{cust.email}</span>
+                        </div>
+                        {cust.actividadEconomica && (
+                          <div className="col-span-2">
+                            <span className="text-slate-400 block font-semibold">Giro Comercial:</span>
+                            <span className="text-slate-700 text-[10.5px]">{cust.actividadEconomica}</span>
+                          </div>
+                        )}
+                        {cust.direccion && (
+                          <div className="col-span-2 text-[10.5px] text-slate-500">
+                            📍 {cust.direccion}{cust.municipio ? `, ${cust.municipio}` : ''} ({cust.departamento || 'San Salvador'})
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-100 flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleStartSaleForCustomer(cust)}
+                        className="clay-btn clay-btn-primary px-3 py-1.5 text-xs font-black flex items-center gap-1.5"
+                      >
+                        <ShoppingCart className="w-3.5 h-3.5" />
+                        <span>Nueva Venta para este Cliente</span>
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+          </div>
+        )}
+
+        {/* ======================================================================= */}
+        {/* PESTAÑA 3: VENTAS (RESUMEN DEL DÍA Y ONZAS VENDIDAS)                     */}
+        {/* ======================================================================= */}
+        {posTab === 'ventas' && (
+          <div className="space-y-6 animate-in fade-in">
+            
+            {/* KPI PRINCIPAL: TOTAL DE ONZAS VENDIDAS EN EL DÍA */}
+            <div className="clay-card p-6 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 text-white relative overflow-hidden shadow-xl">
+              <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 opacity-10 pointer-events-none">
+                <Droplets className="w-64 h-64" />
               </div>
-              <div className="flex justify-between text-xs text-slate-500 font-medium">
-                <span>IVA (13% incluido):</span>
-                <span>${ivaCalculado.toFixed(2)}</span>
+
+              <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-black uppercase tracking-wider backdrop-blur-sm">
+                      💧 Métrica Clave del Día
+                    </span>
+                    <span className="text-xs text-indigo-200">Perfumería & Fragancias</span>
+                  </div>
+                  <h2 className="text-xl md:text-2xl font-black">
+                    Resumen de Fragancias Vendidas en el Turno
+                  </h2>
+                  <p className="text-xs text-indigo-100/90 mt-1 max-w-xl">
+                    Monitoreo en tiempo real del consumo de esencias contratipo preparadas y despachadas en mostrador.
+                  </p>
+                </div>
+
+                <div className="text-left md:text-right bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20">
+                  <span className="text-[11px] uppercase font-bold text-indigo-200 block">Total Onzas Despachadas</span>
+                  <div className="text-4xl md:text-5xl font-black font-mono tracking-tight text-amber-300">
+                    {totalOnzasVendidas} <span className="text-2xl text-white">Oz</span>
+                  </div>
+                  <span className="text-[10px] text-indigo-200 block mt-0.5">
+                    Equivalente a {(totalOnzasVendidas / 1.7).toFixed(0)} frascos de 50ml aprox.
+                  </span>
+                </div>
               </div>
-              <div className="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-slate-100">
-                <span>Total a Cobrar:</span>
-                <span className="text-indigo-600 text-xl font-extrabold">
-                  ${cartSubtotal.toFixed(2)}
+            </div>
+
+            {/* Métricas Secundarias de Caja */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              
+              <div className="clay-card p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Ingresos en Caja</p>
+                  <h3 className="text-xl font-black text-indigo-600 mt-0.5">
+                    ${totalMontoVentas.toFixed(2)}
+                  </h3>
+                  <span className="text-[10px] text-slate-500 font-medium">Recaudado en el turno</span>
+                </div>
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-inner font-bold">
+                  <DollarSign className="w-5 h-5" />
+                </div>
+              </div>
+
+              <div className="clay-card p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Botes & Atomizadores</p>
+                  <h3 className="text-xl font-black text-amber-600 mt-0.5">
+                    {totalBotesVendidos} Un.
+                  </h3>
+                  <span className="text-[10px] text-slate-500 font-medium">Envases de 30, 50 y 100ml</span>
+                </div>
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-inner font-bold">
+                  <Tag className="w-5 h-5" />
+                </div>
+              </div>
+
+              <div className="clay-card p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Comprobantes Emitidos</p>
+                  <h3 className="text-xl font-black text-emerald-600 mt-0.5">
+                    {sales.length}
+                  </h3>
+                  <span className="text-[10px] text-slate-500 font-medium">DTEs Hacienda & Tickets</span>
+                </div>
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner font-bold">
+                  <FileCheck className="w-5 h-5" />
+                </div>
+              </div>
+
+            </div>
+
+            {/* Ranking de Fragancias por Onzas Vendidas */}
+            <div className="clay-card p-5 space-y-3">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-sm font-black text-slate-800 flex items-center gap-1.5">
+                    <Flame className="w-4 h-4 text-amber-500" />
+                    <span>Ranking de Fragancias Más Vendidas (en Onzas)</span>
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Desglose de cada esencia solicitada por los clientes hoy
+                  </p>
+                </div>
+                <span className="clay-badge text-[10px] bg-amber-100 text-amber-900 font-bold">
+                  {rankingFragancias.length} esencias distintas
                 </span>
               </div>
 
-              {/* Botón de Cobro Claymórfico */}
-              <button
-                onClick={() => setIsCheckoutOpen(true)}
-                className="clay-btn clay-btn-success w-full py-3.5 text-base mt-2.5 rounded-2xl shadow-[4px_6px_16px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2"
-              >
-                <Banknote className="w-5 h-5" />
-                <span>Cobrar ${cartSubtotal.toFixed(2)}</span>
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )}
-
-    {/* ================= PESTAÑA 2: HISTORIAL DE VENTAS & DTES ================= */}
-    {posTab === 'ventas' && (
-      <div className="space-y-5 animate-in fade-in">
-        
-        {/* Métricas Rápidas de Ventas */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="clay-card p-4 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Cobrado (Hoy)</p>
-              <h3 className="text-xl font-black text-indigo-600 mt-0.5">
-                ${sales.reduce((acc, s) => acc + s.total, 0).toFixed(2)}
-              </h3>
-              <span className="text-[10px] text-slate-500 font-medium">{sales.length} comprobantes</span>
-            </div>
-            <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-inner">
-              <DollarSign className="w-5 h-5" />
-            </div>
-          </div>
-
-          <div className="clay-card p-4 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">DTEs Oficiales (MH)</p>
-              <h3 className="text-xl font-black text-emerald-600 mt-0.5">
-                {sales.filter(s => s.tipoComprobante === '01' || s.tipoComprobante === '03').length}
-              </h3>
-              <span className="text-[10px] text-slate-500 font-medium">Facturas & Créditos Fiscales</span>
-            </div>
-            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner">
-              <FileCheck className="w-5 h-5" />
-            </div>
-          </div>
-
-          <div className="clay-card p-4 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">IVA Débito Fiscal (13%)</p>
-              <h3 className="text-xl font-black text-purple-600 mt-0.5">
-                ${sales.reduce((acc, s) => acc + s.ivaTotal, 0).toFixed(2)}
-              </h3>
-              <span className="text-[10px] text-slate-500 font-medium">Retenido para Hacienda</span>
-            </div>
-            <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-inner">
-              <TrendingUp className="w-5 h-5" />
-            </div>
-          </div>
-        </div>
-
-        {/* Buscador de Comprobantes */}
-        <div className="clay-card p-3.5 flex items-center gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Buscar por N° Venta (#CMD-1081), cliente, DTE o código de generación..."
-              value={ventasSearch}
-              onChange={(e) => setVentasSearch(e.target.value)}
-              className="clay-input w-full pl-9 pr-3 py-2 text-xs font-bold"
-            />
-          </div>
-        </div>
-
-        {/* Tabla de Historial de Ventas */}
-        <div className="clay-card overflow-hidden p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/70 text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
-                  <th className="py-2.5 px-3">N° Venta / Hora</th>
-                  <th className="py-2.5 px-3">Cliente</th>
-                  <th className="py-2.5 px-3">Comprobante DTE</th>
-                  <th className="py-2.5 px-3">Método</th>
-                  <th className="py-2.5 px-3 text-right">Total ($)</th>
-                  <th className="py-2.5 px-3 text-center">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {sales.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="py-12 text-center text-slate-400">
-                      No hay ventas registradas aún. Las ventas completadas en caja aparecerán aquí.
-                    </td>
-                  </tr>
-                ) : (
-                  sales
-                    .filter(s => {
-                      if (!ventasSearch.trim()) return true;
-                      const q = ventasSearch.toLowerCase().trim();
-                      return (
-                        s.saleNumber.toLowerCase().includes(q) ||
-                        s.cliente.nombre.toLowerCase().includes(q) ||
-                        (s.dteInfo?.codigoGeneracion && s.dteInfo.codigoGeneracion.toLowerCase().includes(q)) ||
-                        (s.dteInfo?.numeroControl && s.dteInfo.numeroControl.toLowerCase().includes(q))
-                      );
-                    })
-                    .map((sale) => (
-                      <tr key={sale.id} className="hover:bg-slate-50/70 transition-colors">
-                        <td className="py-2.5 px-3 font-mono font-bold text-slate-800">
-                          <div>#{sale.saleNumber}</div>
-                          <span className="text-[10px] text-slate-400 font-sans font-normal">
-                            {new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-3">
-                          <span className="font-extrabold text-slate-800 block text-xs">{sale.cliente.nombre}</span>
-                          {sale.cliente.numDocumento && (
-                            <span className="text-[10px] font-mono text-slate-400">Doc: {sale.cliente.numDocumento}</span>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-3">
-                          <span className={`clay-badge text-[10px] font-bold py-0.5 px-2 ${
-                            sale.tipoComprobante === '03'
-                              ? 'bg-purple-100 text-purple-800 border border-purple-200'
-                              : sale.tipoComprobante === '01'
-                              ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
-                              : 'bg-slate-100 text-slate-700'
-                          }`}>
-                            {sale.tipoComprobante === '03' ? 'Crédito Fiscal (03)' : sale.tipoComprobante === '01' ? 'Factura (01)' : 'Ticket'}
-                          </span>
-                          {sale.dteInfo?.numeroControl && (
-                            <span className="block text-[9.5px] font-mono text-emerald-700 font-bold mt-0.5 truncate max-w-[150px]">
-                              {sale.dteInfo.numeroControl}
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-3 text-slate-600 font-bold text-[11px]">
-                          {sale.paymentMethod === 'CASH' ? 'Efectivo' : sale.paymentMethod === 'CARD' ? 'Tarjeta' : 'Transferencia'}
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-mono font-black text-xs text-indigo-700">
-                          ${sale.total.toFixed(2)}
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedSaleDetail(sale)}
-                            className="clay-btn clay-btn-light px-2.5 py-1 text-[11px] font-bold text-indigo-700 inline-flex items-center gap-1"
-                          >
-                            <Eye className="w-3 h-3" />
-                            <span>Ver</span>
-                          </button>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50/70 text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+                      <th className="py-2.5 px-3" style={{ width: '10%' }}>SKU</th>
+                      <th className="py-2.5 px-3" style={{ width: '50%' }}>Fragancia / Contratipo</th>
+                      <th className="py-2.5 px-3 text-right" style={{ width: '20%' }}>Onzas Vendidas</th>
+                      <th className="py-2.5 px-3 text-right" style={{ width: '20%' }}>Total Recaudado ($)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {rankingFragancias.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="py-8 text-center text-slate-400">
+                          Aún no se han registrado ventas de fragancias en este turno.
                         </td>
                       </tr>
-                    ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </div>
-    )}
-
-    {/* ================= PESTAÑA 3: ENVÍOS & DOMICILIO ================= */}
-    {posTab === 'logistica' && (
-      <div className="space-y-4 animate-in fade-in">
-        <div className="clay-card p-5">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold shadow-inner">
-              <Truck className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-black text-slate-800">Despachos & Mensajería de Ventas</h3>
-              <p className="text-xs text-slate-500">Coordinación de entregas locales originadas en caja</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="clay-card p-4 space-y-2 border-l-4 border-amber-500">
-            <div className="flex justify-between items-start">
-              <div>
-                <span className="font-mono font-bold text-xs text-indigo-700">#ENV-SV-8801</span>
-                <h4 className="text-xs font-black text-slate-800">Beatriz Morales</h4>
-                <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
-                  <MapPin className="w-3 h-3 text-slate-400" />
-                  Colonia Escalón, Calle El Mirador #42
-                </p>
+                    ) : (
+                      rankingFragancias.map((frag, idx) => (
+                        <tr key={idx} className="hover:bg-indigo-50/40 transition-colors">
+                          <td className="py-2.5 px-3 font-mono font-bold text-indigo-700">
+                            #{frag.sku || 'S/N'}
+                          </td>
+                          <td className="py-2.5 px-3 font-extrabold text-slate-800">
+                            {frag.name}
+                          </td>
+                          <td className="py-2.5 px-3 text-right">
+                            <span className="clay-badge text-xs font-mono font-black bg-indigo-100 text-indigo-800 px-2 py-0.5">
+                              {frag.onzas} Oz
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-mono font-black text-slate-800">
+                            ${frag.totalMonto.toFixed(2)}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
-              <span className="clay-badge text-[10px] bg-amber-100 text-amber-900 font-bold">
-                En Ruta
-              </span>
             </div>
-            <div className="pt-2 border-t border-slate-100 flex justify-between text-xs text-slate-600">
-              <span>Mensajero: <strong>Moto #1</strong></span>
-              <span className="font-mono font-black text-indigo-700">$49.50</span>
-            </div>
-          </div>
 
-          <div className="clay-card p-4 space-y-2 border-l-4 border-emerald-500">
-            <div className="flex justify-between items-start">
-              <div>
-                <span className="font-mono font-bold text-xs text-indigo-700">#ENV-SV-8802</span>
-                <h4 className="text-xs font-black text-slate-800">Roberto Fuentes</h4>
-                <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
-                  <MapPin className="w-3 h-3 text-slate-400" />
-                  Santa Tecla, Residencial Santa Teresa #15
-                </p>
-              </div>
-              <span className="clay-badge text-[10px] bg-emerald-100 text-emerald-900 font-bold">
-                Entregado
-              </span>
-            </div>
-            <div className="pt-2 border-t border-slate-100 flex justify-between text-xs text-slate-600">
-              <span>Mensajero: <strong>Cargo Expreso</strong></span>
-              <span className="font-mono font-black text-indigo-700">$32.50</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    )}
-
-    </div>
-
-  {/* ================= MODAL DETALLE DE COMPROBANTE DE VENTA ================= */}
-  {selectedSaleDetail && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
-      <div className="clay-card w-full max-w-md p-5 relative bg-white animate-in zoom-in-95">
-        <button
-          type="button"
-          onClick={() => setSelectedSaleDetail(null)}
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        <div className="mb-4 pb-3 border-b border-slate-100 text-center">
-          <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-2 font-black">
-            K
-          </div>
-          <h3 className="font-black text-base text-slate-800">Comprobante de Venta</h3>
-          <p className="font-mono text-xs text-indigo-600 font-bold">#{selectedSaleDetail.saleNumber}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">
-            {new Date(selectedSaleDetail.createdAt).toLocaleString()}
-          </p>
-        </div>
-
-        <div className="space-y-3 mb-4 text-xs">
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
-            <div className="flex justify-between">
-              <span className="text-slate-500">Cliente:</span>
-              <strong className="text-slate-800">{selectedSaleDetail.cliente.nombre}</strong>
-            </div>
-            {selectedSaleDetail.cliente.numDocumento && (
-              <div className="flex justify-between">
-                <span className="text-slate-500">Documento:</span>
-                <span className="font-mono">{selectedSaleDetail.cliente.numDocumento}</span>
-              </div>
-            )}
-            <div className="flex justify-between">
-              <span className="text-slate-500">Comprobante:</span>
-              <span className="font-bold text-indigo-700">
-                {selectedSaleDetail.tipoComprobante === '03' ? 'Crédito Fiscal (03)' : selectedSaleDetail.tipoComprobante === '01' ? 'Factura (01)' : 'Ticket'}
-              </span>
-            </div>
-            {selectedSaleDetail.dteInfo?.numeroControl && (
-              <div className="flex justify-between pt-1 border-t border-slate-200 text-[10px]">
-                <span className="text-slate-500">N° Control Hacienda:</span>
-                <span className="font-mono font-bold text-emerald-700">{selectedSaleDetail.dteInfo.numeroControl}</span>
-              </div>
-            )}
-          </div>
-
-          <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl p-2.5 max-h-48 overflow-y-auto">
-            {selectedSaleDetail.items.map((it, idx) => (
-              <div key={idx} className="py-1.5 flex justify-between items-center text-xs">
-                <div>
-                  <span className="font-bold text-slate-800">{it.name}</span>
-                  <span className="text-[10px] text-slate-400 block">{it.quantity} x ${it.price.toFixed(2)}</span>
+            {/* Listado Completo de Comprobantes del Día */}
+            <div className="clay-card p-5 space-y-3">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <h3 className="text-sm font-black text-slate-800">
+                  Historial de Comprobantes Emitidos en Caja
+                </h3>
+                <div className="relative w-full sm:w-72">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Buscar comanda (#CMD-1081) o cliente..."
+                    value={ventasSearch}
+                    onChange={(e) => setVentasSearch(e.target.value)}
+                    className="clay-input w-full pl-8 pr-3 py-1.5 text-xs font-bold"
+                  />
                 </div>
-                <span className="font-mono font-black text-slate-800">${it.total.toFixed(2)}</span>
               </div>
-            ))}
-          </div>
 
-          <div className="p-3 rounded-xl bg-indigo-50/60 border border-indigo-100 space-y-1.5 text-xs">
-            <div className="flex justify-between text-slate-600">
-              <span>Subtotal Neto:</span>
-              <span className="font-mono font-bold">${selectedSaleDetail.subtotal.toFixed(2)}</span>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50/70 text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+                      <th className="py-2.5 px-3">Comanda / Hora</th>
+                      <th className="py-2.5 px-3">Cliente</th>
+                      <th className="py-2.5 px-3">Comprobante DTE</th>
+                      <th className="py-2.5 px-3">Método</th>
+                      <th className="py-2.5 px-3 text-right">Total ($)</th>
+                      <th className="py-2.5 px-3 text-center">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {sales.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-slate-400">
+                          No hay ventas registradas.
+                        </td>
+                      </tr>
+                    ) : (
+                      sales
+                        .filter(s => {
+                          if (!ventasSearch.trim()) return true;
+                          const q = ventasSearch.toLowerCase().trim();
+                          return (
+                            s.saleNumber.toLowerCase().includes(q) ||
+                            s.cliente.nombre.toLowerCase().includes(q) ||
+                            (s.dteInfo?.numeroControl && s.dteInfo.numeroControl.toLowerCase().includes(q))
+                          );
+                        })
+                        .map((sale) => (
+                          <tr key={sale.id} className="hover:bg-slate-50/70 transition-colors">
+                            <td className="py-2.5 px-3 font-mono font-bold text-slate-800">
+                              <div>#{sale.saleNumber}</div>
+                              <span className="text-[10px] text-slate-400 font-sans font-normal">
+                                {new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <span className="font-extrabold text-slate-800 block text-xs">{sale.cliente.nombre}</span>
+                              {sale.cliente.numDocumento && (
+                                <span className="text-[10px] font-mono text-slate-400">Doc: {sale.cliente.numDocumento}</span>
+                              )}
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <span className={`clay-badge text-[10px] font-bold py-0.5 px-2 ${
+                                sale.tipoComprobante === '03'
+                                  ? 'bg-purple-100 text-purple-800 border border-purple-200'
+                                  : sale.tipoComprobante === '01'
+                                  ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                                  : 'bg-slate-100 text-slate-700'
+                              }`}>
+                                {sale.tipoComprobante === '03' ? 'Crédito Fiscal (03)' : sale.tipoComprobante === '01' ? 'Factura (01)' : 'Ticket'}
+                              </span>
+                              {sale.dteInfo?.numeroControl && (
+                                <span className="block text-[9.5px] font-mono text-emerald-700 font-bold mt-0.5 truncate max-w-[140px]">
+                                  {sale.dteInfo.numeroControl}
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-600 font-bold text-[11px]">
+                              {sale.paymentMethod === 'CASH' ? 'Efectivo' : sale.paymentMethod === 'CARD' ? 'Tarjeta' : 'Transferencia'}
+                            </td>
+                            <td className="py-2.5 px-3 text-right font-mono font-black text-xs text-indigo-700">
+                              ${sale.total.toFixed(2)}
+                            </td>
+                            <td className="py-2.5 px-3 text-center">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedSaleDetail(sale)}
+                                className="clay-btn clay-btn-light px-2.5 py-1 text-[11px] font-bold text-indigo-700 inline-flex items-center gap-1"
+                              >
+                                <Eye className="w-3 h-3" />
+                                <span>Ver</span>
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <div className="flex justify-between text-slate-600">
-              <span>IVA (13%):</span>
-              <span className="font-mono font-bold">${selectedSaleDetail.ivaTotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-sm font-black text-indigo-900 pt-1 border-t border-indigo-200">
-              <span>Total:</span>
-              <span className="font-mono text-base text-indigo-600">${selectedSaleDetail.total.toFixed(2)}</span>
-            </div>
-          </div>
-        </div>
 
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="clay-btn clay-btn-light flex-1 py-2 text-xs font-bold flex items-center justify-center gap-1.5"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Imprimir</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelectedSaleDetail(null)}
-            className="clay-btn clay-btn-primary flex-1 py-2 text-xs font-bold"
-          >
-            Cerrar
-          </button>
-        </div>
+          </div>
+        )}
+
       </div>
-    </div>
-  )}
 
-      {/* ================= MODAL DE COBRO Y EMISIÓN DTE ================= */}
+      {/* ========================================================================= */}
+      {/* MODAL 1: FORMULARIO DE CLIENTE (ESTILO MECANIC OS PARA FC Y CCF)          */}
+      {/* ========================================================================= */}
+      {isCustomerModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
+          <div className="clay-card w-full max-w-2xl p-6 relative bg-white animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+            <button
+              type="button"
+              onClick={() => setIsCustomerModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="mb-4">
+              <h3 className="text-base font-black text-slate-800 flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-indigo-600" />
+                <span>{editingCustomerId ? 'Editar Datos del Cliente' : 'Registrar Nuevo Cliente'}</span>
+              </h3>
+              <p className="text-xs text-slate-500">
+                Formulario oficial para emisión de Facturas a Consumidor (FC) y Comprobantes de Crédito Fiscal (CCF).
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveCustomer} className="space-y-4">
+              
+              {/* Tipo de Persona Toggle */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                  Tipo de Contribuyente / Persona *
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustTipoPersona('NATURAL');
+                      setCustTipoDocumento('DUI');
+                    }}
+                    className={`p-2.5 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-2 ${
+                      custTipoPersona === 'NATURAL'
+                        ? 'bg-indigo-600 text-white shadow-md border-indigo-600'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    <User className="w-4 h-4" />
+                    <span>Persona Natural (Factura FC)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustTipoPersona('JURIDICA');
+                      setCustTipoDocumento('NIT');
+                    }}
+                    className={`p-2.5 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-2 ${
+                      custTipoPersona === 'JURIDICA'
+                        ? 'bg-purple-600 text-white shadow-md border-purple-600'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Building2 className="w-4 h-4" />
+                    <span>Persona Jurídica (Crédito Fiscal CCF)</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Nombre / Razón Social */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    {custTipoPersona === 'JURIDICA' ? 'Razón Social (según Tarjeta NRC) *' : 'Nombre Completo *'}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder={custTipoPersona === 'JURIDICA' ? 'Ej. Distribuidora Las Fragancias S.A. de C.V.' : 'Ej. María Julia Hernández'}
+                    value={custName}
+                    onChange={(e) => setCustName(e.target.value)}
+                    className="clay-input w-full text-xs font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Nombre Comercial (Opcional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Boutique Elegance"
+                    value={custNombreComercial}
+                    onChange={(e) => setCustNombreComercial(e.target.value)}
+                    className="clay-input w-full text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Documentos de Identidad */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Tipo de Documento *
+                  </label>
+                  <select
+                    value={custTipoDocumento}
+                    onChange={(e) => setCustTipoDocumento(e.target.value as TipoDocumentoCliente)}
+                    className="clay-input w-full text-xs font-bold"
+                  >
+                    <option value="DUI">DUI (El Salvador)</option>
+                    <option value="NIT">NIT (El Salvador)</option>
+                    <option value="PASAPORTE">Pasaporte (Extranjero)</option>
+                    <option value="CARNET_RESIDENCIA">Carnet de Residente</option>
+                    <option value="OTRO">Otro Documento</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    N° de Documento ({custTipoDocumento}) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder={custTipoDocumento === 'DUI' ? '00000000-0' : '0614-000000-000-0'}
+                    value={custNumDocumento}
+                    onChange={(e) => setCustNumDocumento(e.target.value)}
+                    className="clay-input w-full text-xs font-mono font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    NRC {custTipoPersona === 'JURIDICA' ? '(Requerido CCF) *' : '(Si es Contribuyente)'}
+                  </label>
+                  <input
+                    type="text"
+                    required={custTipoPersona === 'JURIDICA'}
+                    placeholder="Ej. 123456-7"
+                    value={custNrc}
+                    onChange={(e) => setCustNrc(e.target.value)}
+                    className="clay-input w-full text-xs font-mono font-bold"
+                  />
+                </div>
+              </div>
+
+              {/* Giro / Actividad Económica para CCF */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Actividad Económica / Giro (para Hacienda CCF)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Venta al por menor de cosméticos y perfumes"
+                    value={custGiro}
+                    onChange={(e) => setCustGiro(e.target.value)}
+                    className="clay-input w-full text-xs font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Categoría Contribuyente
+                  </label>
+                  <select
+                    value={custCategoria}
+                    onChange={(e) => setCustCategoria(e.target.value as CategoriaContribuyente)}
+                    className="clay-input w-full text-xs font-bold"
+                  >
+                    <option value="OTRO">Otro / General</option>
+                    <option value="MEDIANO">Mediano Contribuyente</option>
+                    <option value="GRANDE">Gran Contribuyente</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Contacto */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Correo Electrónico (Recepción DTE PDF/JSON) *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="facturacion@cliente.com"
+                    value={custEmail}
+                    onChange={(e) => setCustEmail(e.target.value)}
+                    className="clay-input w-full text-xs font-bold font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Teléfono / WhatsApp *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="7700-0000"
+                    value={custPhone}
+                    onChange={(e) => setCustPhone(e.target.value)}
+                    className="clay-input w-full text-xs font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Dirección */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Departamento
+                  </label>
+                  <select
+                    value={custDepartamento}
+                    onChange={(e) => setCustDepartamento(e.target.value)}
+                    className="clay-input w-full text-xs font-bold"
+                  >
+                    {DEPARTAMENTOS_SV.map(dep => (
+                      <option key={dep} value={dep}>{dep}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Municipio / Distrito
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej. San Salvador Centro o Santa Tecla"
+                    value={custMunicipio}
+                    onChange={(e) => setCustMunicipio(e.target.value)}
+                    className="clay-input w-full text-xs"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  Dirección Detallada (Calle, Colonia, N° Local o Casa)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ej. Colonia Escalón, Calle El Mirador #42"
+                  value={custDireccion}
+                  onChange={(e) => setCustDireccion(e.target.value)}
+                  className="clay-input w-full text-xs"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setIsCustomerModalOpen(false)}
+                  className="clay-btn clay-btn-light px-4 py-2 text-xs font-bold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="clay-btn clay-btn-primary px-5 py-2 text-xs font-black flex items-center gap-1.5"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Guardar Cliente</span>
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 2: MODAL DE COBRO Y EMISIÓN DTE                                     */}
+      {/* ========================================================================= */}
       {isCheckoutOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="clay-card w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto relative animate-in fade-in zoom-in-95 duration-150">
+          <div className="clay-card w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto relative animate-in fade-in zoom-in-95 duration-150 bg-white">
             
             <button 
               onClick={() => setIsCheckoutOpen(false)}
@@ -1028,11 +1637,41 @@ export default function PosPage() {
             </button>
 
             <h3 className="text-xl font-black text-slate-800 mb-1">Finalizar Venta de Perfumería</h3>
-            <p className="text-xs text-slate-500 mb-5">Selecciona el comprobante legal y método de pago.</p>
+            <p className="text-xs text-slate-500 mb-4">Selecciona el cliente y comprobante legal a emitir.</p>
+
+            {/* Selector Rápido de Clientes Registrados */}
+            <div className="mb-4 p-3 rounded-2xl bg-indigo-50/60 border border-indigo-100">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-[11px] font-bold text-indigo-900 flex items-center gap-1">
+                  <Users className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Cliente para Facturación:</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleOpenNewCustomerModal}
+                  className="text-[10.5px] font-bold text-indigo-600 hover:underline"
+                >
+                  + Nuevo Cliente
+                </button>
+              </div>
+
+              <select
+                value={selectedCustomerId}
+                onChange={(e) => handleSelectCustomer(e.target.value)}
+                className="clay-input w-full text-xs py-2 font-bold bg-white"
+              >
+                <option value="">Consumidor Final (Venta Genérica)</option>
+                {customers.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} {c.nrc ? `(CCF: ${c.nrc})` : `(DUI: ${c.numDocumento})`}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             {/* Selector de Comprobante */}
-            <div className="mb-5">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block mb-2">
+            <div className="mb-4">
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block mb-1.5">
                 Tipo de Comprobante
               </label>
               <div className="grid grid-cols-3 gap-2">
@@ -1066,30 +1705,30 @@ export default function PosPage() {
               </div>
             </div>
 
-            {/* Datos del Cliente */}
+            {/* Datos del Cliente para DTE */}
             {(tipoComprobante === '01' || tipoComprobante === '03') && (
-              <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 mb-5 space-y-3">
-                <div className="flex items-center gap-2 text-indigo-700 font-bold text-xs">
-                  <FileCheck className="w-4 h-4" />
-                  <span>Datos Fiscales (Factura Llama - El Salvador)</span>
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 mb-4 space-y-2.5">
+                <div className="flex items-center gap-1.5 text-indigo-700 font-bold text-xs">
+                  <FileCheck className="w-3.5 h-3.5" />
+                  <span>Datos Fiscales para Hacienda (DTE {tipoComprobante === '03' ? 'CCF-03' : 'FC-01'})</span>
                 </div>
                 
                 <div>
-                  <label className="text-[11px] font-semibold text-slate-600 block mb-1">
-                    {tipoComprobante === '03' ? 'Razón Social / Empresa *' : 'Nombre del Cliente'}
+                  <label className="text-[10.5px] font-semibold text-slate-600 block mb-0.5">
+                    {tipoComprobante === '03' ? 'Razón Social *' : 'Nombre del Cliente'}
                   </label>
                   <input
                     type="text"
                     value={clienteNombre}
                     onChange={(e) => setClienteNombre(e.target.value)}
-                    placeholder="Ej. Juan Pérez o Distribuidora S.A. de C.V."
-                    className="clay-input w-full text-xs py-2"
+                    placeholder="Nombre o Empresa"
+                    className="clay-input w-full text-xs py-1.5"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[11px] font-semibold text-slate-600 block mb-1">
+                    <label className="text-[10.5px] font-semibold text-slate-600 block mb-0.5">
                       {tipoComprobante === '03' ? 'NIT *' : 'DUI o NIT'}
                     </label>
                     <input
@@ -1097,239 +1736,289 @@ export default function PosPage() {
                       value={clienteDoc}
                       onChange={(e) => setClienteDoc(e.target.value)}
                       placeholder="00000000-0"
-                      className="clay-input w-full text-xs py-2 font-mono"
+                      className="clay-input w-full text-xs py-1.5 font-mono"
                     />
                   </div>
 
-                  {tipoComprobante === '03' && (
-                    <div>
-                      <label className="text-[11px] font-semibold text-slate-600 block mb-1">
-                        NRC *
-                      </label>
-                      <input
-                        type="text"
-                        value={clienteNrc}
-                        onChange={(e) => setClienteNrc(e.target.value)}
-                        placeholder="123456-7"
-                        className="clay-input w-full text-xs py-2 font-mono"
-                      />
-                    </div>
-                  )}
-
-                  <div className={tipoComprobante === '03' ? 'col-span-2' : ''}>
-                    <label className="text-[11px] font-semibold text-slate-600 block mb-1">
-                      Correo Electrónico
+                  <div>
+                    <label className="text-[10.5px] font-semibold text-slate-600 block mb-0.5">
+                      {tipoComprobante === '03' ? 'NRC *' : 'NRC (Opcional)'}
                     </label>
                     <input
-                      type="email"
-                      value={clienteEmail}
-                      onChange={(e) => setClienteEmail(e.target.value)}
-                      placeholder="cliente@correo.com"
-                      className="clay-input w-full text-xs py-2"
+                      type="text"
+                      value={clienteNrc}
+                      onChange={(e) => setClienteNrc(e.target.value)}
+                      placeholder="123456-7"
+                      className="clay-input w-full text-xs py-1.5 font-mono"
                     />
                   </div>
+                </div>
+
+                {tipoComprobante === '03' && (
+                  <div>
+                    <label className="text-[10.5px] font-semibold text-slate-600 block mb-0.5">
+                      Giro / Actividad Económica *
+                    </label>
+                    <input
+                      type="text"
+                      value={clienteGiro}
+                      onChange={(e) => setClienteGiro(e.target.value)}
+                      placeholder="Ej. Venta al por menor de cosméticos"
+                      className="clay-input w-full text-xs py-1.5"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="text-[10.5px] font-semibold text-slate-600 block mb-0.5">
+                    Correo para envío de DTE
+                  </label>
+                  <input
+                    type="email"
+                    value={clienteEmail}
+                    onChange={(e) => setClienteEmail(e.target.value)}
+                    placeholder="correo@cliente.com"
+                    className="clay-input w-full text-xs py-1.5 font-mono"
+                  />
                 </div>
               </div>
             )}
 
             {/* Método de Pago */}
-            <div className="mb-5">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block mb-2">
+            <div className="mb-4">
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block mb-1.5">
                 Método de Pago
               </label>
               <div className="grid grid-cols-4 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod('CASH')}
-                  className={`p-3 rounded-xl flex flex-col items-center gap-1.5 text-xs font-bold ${
-                    paymentMethod === 'CASH' ? 'clay-btn-primary' : 'clay-btn-light'
-                  }`}
-                >
-                  <Banknote className="w-5 h-5" />
-                  <span>Efectivo</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod('CARD')}
-                  className={`p-3 rounded-xl flex flex-col items-center gap-1.5 text-xs font-bold ${
-                    paymentMethod === 'CARD' ? 'clay-btn-primary' : 'clay-btn-light'
-                  }`}
-                >
-                  <CreditCard className="w-5 h-5" />
-                  <span>Tarjeta</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod('TRANSFER')}
-                  className={`p-3 rounded-xl flex flex-col items-center gap-1.5 text-xs font-bold ${
-                    paymentMethod === 'TRANSFER' ? 'clay-btn-primary' : 'clay-btn-light'
-                  }`}
-                >
-                  <Building className="w-5 h-5" />
-                  <span>Transf.</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod('BITCOIN')}
-                  className={`p-3 rounded-xl flex flex-col items-center gap-1.5 text-xs font-bold ${
-                    paymentMethod === 'BITCOIN' ? 'clay-btn-primary' : 'clay-btn-light'
-                  }`}
-                >
-                  <QrCode className="w-5 h-5" />
-                  <span>Bitcoin</span>
-                </button>
+                {[
+                  { id: 'CASH', label: 'Efectivo', icon: Banknote },
+                  { id: 'CARD', label: 'Tarjeta', icon: CreditCard },
+                  { id: 'TRANSFER', label: 'Transf.', icon: Building },
+                  { id: 'BITCOIN', label: 'Bitcoin', icon: QrCode },
+                ].map((method) => {
+                  const Icon = method.icon;
+                  return (
+                    <button
+                      key={method.id}
+                      type="button"
+                      onClick={() => setPaymentMethod(method.id as any)}
+                      className={`p-2 rounded-xl text-xs font-bold flex flex-col items-center gap-1 transition-all ${
+                        paymentMethod === method.id ? 'clay-btn-primary' : 'clay-btn-light'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span>{method.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Calculadora de Efectivo */}
+            {/* Efectivo recibido */}
             {paymentMethod === 'CASH' && (
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 mb-5">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-bold text-slate-700">Monto Recibido</label>
-                  <span className="text-xs text-slate-500 font-medium">
-                    Total: <strong>${cartSubtotal.toFixed(2)}</strong>
-                  </span>
+              <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200 mb-4 space-y-1.5">
+                <label className="text-xs font-bold text-amber-900 block">
+                  Efectivo Recibido ($)
+                </label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                    <input
+                      type="number"
+                      step="any"
+                      placeholder="0.00"
+                      value={cashAmount}
+                      onChange={(e) => setCashAmount(e.target.value)}
+                      className="clay-input w-full pl-7 pr-3 py-2 text-sm font-mono font-bold bg-white"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCashAmount(cartSubtotal.toFixed(2))}
+                    className="clay-btn clay-btn-light px-3 text-xs font-bold whitespace-nowrap"
+                  >
+                    Exacto (${cartSubtotal.toFixed(2)})
+                  </button>
                 </div>
-                
-                <input
-                  type="number"
-                  step="0.01"
-                  value={cashAmount}
-                  onChange={(e) => setCashAmount(e.target.value)}
-                  placeholder="0.00"
-                  className="clay-input w-full text-xl font-bold py-2 text-center text-slate-800"
-                />
-
-                <div className="flex gap-2 mt-2">
-                  {[cartSubtotal, 5, 10, 20, 50].map((amt, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setCashAmount(amt.toFixed(2))}
-                      className="clay-btn clay-btn-light text-[11px] py-1.5 px-2 flex-1 rounded-lg"
-                    >
-                      ${amt.toFixed(2)}
-                    </button>
-                  ))}
-                </div>
-
-                {parsedCash >= cartSubtotal && (
-                  <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-200">
-                    <span className="font-bold text-slate-700 text-sm">Cambio / Vuelto:</span>
-                    <span className="font-black text-emerald-600 text-xl">
-                      ${changeAmount.toFixed(2)}
+                {parseFloat(cashAmount) >= cartSubtotal && (
+                  <div className="flex justify-between items-center text-xs font-bold text-emerald-800 pt-1">
+                    <span>Cambio a devolver:</span>
+                    <span className="font-mono text-base font-black">
+                      ${(parseFloat(cashAmount) - cartSubtotal).toFixed(2)}
                     </span>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Botones */}
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setIsCheckoutOpen(false)}
-                className="clay-btn clay-btn-light flex-1 py-3"
-              >
-                Cancelar
-              </button>
+            {/* Resumen Final y Botón Confirmar */}
+            <div className="pt-3 border-t border-slate-200 flex justify-between items-center mb-4">
+              <div>
+                <span className="text-xs text-slate-500 block">Total a Pagar:</span>
+                <span className="text-2xl font-black text-indigo-600 font-mono">
+                  ${cartSubtotal.toFixed(2)}
+                </span>
+              </div>
 
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsCheckoutOpen(false)}
+                  className="clay-btn clay-btn-light px-4 py-2.5 text-xs font-bold"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isProcessing}
+                  onClick={handleCompleteSale}
+                  className="clay-btn clay-btn-success px-5 py-2.5 text-xs font-black flex items-center gap-1.5"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>{isProcessing ? 'Emitiendo DTE...' : 'Completar Venta'}</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 3: TICKET DE VENTA COMPLETADA                                       */}
+      {/* ========================================================================= */}
+      {completedSale && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
+          <div className="clay-card w-full max-w-sm p-6 relative bg-white text-center">
+            <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3 shadow-inner">
+              <CheckCircle2 className="w-7 h-7" />
+            </div>
+
+            <h3 className="text-lg font-black text-slate-800">¡Venta Completada con Éxito!</h3>
+            <p className="text-xs text-slate-500 mt-1">Comprobante #{completedSale.saleNumber}</p>
+
+            <div className="my-4 p-3 rounded-2xl bg-indigo-50 border border-indigo-100 text-left text-xs space-y-1">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Cliente:</span>
+                <strong className="text-slate-800">{completedSale.cliente.nombre}</strong>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Comprobante:</span>
+                <span className="font-bold text-indigo-700">
+                  {completedSale.tipoComprobante === '03' ? 'Crédito Fiscal (03)' : completedSale.tipoComprobante === '01' ? 'Factura (01)' : 'Ticket'}
+                </span>
+              </div>
+              <div className="flex justify-between font-black text-slate-800 pt-1 border-t border-indigo-200">
+                <span>Total Cobrado:</span>
+                <span className="font-mono text-indigo-600">${completedSale.total.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
               <button
                 type="button"
-                disabled={isProcessing || (paymentMethod === 'CASH' && parsedCash < cartSubtotal)}
-                onClick={handleCompleteSale}
-                className={`clay-btn clay-btn-success flex-1 py-3 text-base shadow-[4px_6px_16px_rgba(16,185,129,0.4)] ${
-                  isProcessing || (paymentMethod === 'CASH' && parsedCash < cartSubtotal)
-                    ? 'opacity-50 cursor-not-allowed'
-                    : ''
-                }`}
+                onClick={() => window.print()}
+                className="clay-btn clay-btn-light flex-1 py-2 text-xs font-bold flex items-center justify-center gap-1"
               >
-                {isProcessing ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
-                    Emitiendo...
-                  </span>
-                ) : (
-                  <span>Completar Venta</span>
-                )}
+                <Printer className="w-3.5 h-3.5" />
+                <span>Imprimir Ticket</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCompletedSale(null)}
+                className="clay-btn clay-btn-primary flex-1 py-2 text-xs font-bold"
+              >
+                Nueva Venta
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ================= MODAL DE RECIBO FINALIZADO ================= */}
-      {completedSale && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="clay-card w-full max-w-md p-6 relative animate-in fade-in zoom-in-95">
-            
-            <div className="text-center pb-4 border-b border-dashed border-slate-200">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-2 shadow-[2px_3px_6px_rgba(16,185,129,0.2)]">
-                <CheckCircle2 className="w-6 h-6" />
-              </div>
-              <h3 className="font-extrabold text-xl text-slate-800">¡Venta Exitosa!</h3>
-              <p className="text-xs text-slate-500 font-mono mt-0.5">{completedSale.saleNumber}</p>
+      {/* ========================================================================= */}
+      {/* MODAL 4: DETALLE DE VENTA PARA CONSULTA                                   */}
+      {/* ========================================================================= */}
+      {selectedSaleDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
+          <div className="clay-card w-full max-w-md p-5 relative bg-white">
+            <button
+              type="button"
+              onClick={() => setSelectedSaleDetail(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-center pb-3 border-b border-slate-100 mb-3">
+              <h4 className="text-sm font-black text-slate-800">Detalle de Comprobante</h4>
+              <p className="font-mono text-xs text-indigo-700 font-bold">#{selectedSaleDetail.saleNumber}</p>
             </div>
 
-            {completedSale.dteInfo && (
-              <div className="my-4 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-bold text-emerald-800 flex items-center gap-1.5">
-                    <FileCheck className="w-4 h-4 text-emerald-600" />
-                    DTE-{completedSale.tipoComprobante} Emitido
-                  </span>
-                  <span className="clay-badge bg-emerald-100 text-emerald-700 text-[10px] py-0.5 px-2">
-                    {completedSale.dteInfo.estado}
-                  </span>
-                </div>
-                <div className="font-mono text-[10px] text-slate-600 space-y-0.5">
-                  <p><strong>N° Control:</strong> {completedSale.dteInfo.numeroControl}</p>
-                  <p className="truncate"><strong>Cód. Gen:</strong> {completedSale.dteInfo.codigoGeneracion}</p>
-                  {completedSale.dteInfo.selloRecepcion && (
-                    <p className="truncate"><strong>Sello MH:</strong> {completedSale.dteInfo.selloRecepcion}</p>
-                  )}
-                </div>
+            <div className="space-y-2 text-xs mb-4">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Cliente:</span>
+                <strong className="text-slate-800">{selectedSaleDetail.cliente.nombre}</strong>
               </div>
-            )}
-
-            <div className="py-3 text-xs space-y-2 border-b border-dashed border-slate-200">
-              <div className="flex justify-between font-medium text-slate-600">
-                <span>Cliente:</span>
-                <span className="font-bold text-slate-800">{completedSale.cliente.nombre}</span>
-              </div>
-              <div className="flex justify-between font-medium text-slate-600">
-                <span>Método de Pago:</span>
-                <span className="font-bold text-slate-800">{completedSale.paymentMethod}</span>
-              </div>
-              {completedSale.cashChange !== undefined && (
-                <div className="flex justify-between font-medium text-emerald-600">
-                  <span>Cambio Entregado:</span>
-                  <span className="font-bold">${completedSale.cashChange.toFixed(2)}</span>
+              {selectedSaleDetail.cliente.numDocumento && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Documento:</span>
+                  <span className="font-mono">{selectedSaleDetail.cliente.numDocumento}</span>
                 </div>
               )}
+              {selectedSaleDetail.dteInfo?.numeroControl && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">N° Control Hacienda:</span>
+                  <span className="font-mono font-bold text-emerald-700">{selectedSaleDetail.dteInfo.numeroControl}</span>
+                </div>
+              )}
+
+              <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl p-2 max-h-48 overflow-y-auto">
+                {selectedSaleDetail.items.map((it, idx) => (
+                  <div key={idx} className="py-1 flex justify-between items-center text-xs">
+                    <div>
+                      <span className="font-bold text-slate-800 block">{it.name}</span>
+                      <span className="text-[10px] text-slate-400">{it.quantity} {it.unit || 'Oz'} x ${it.price.toFixed(2)}</span>
+                    </div>
+                    <span className="font-mono font-black text-slate-800">${it.total.toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-indigo-50/60 border border-indigo-100 space-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span>Subtotal Neto:</span>
+                  <span className="font-mono font-bold">${selectedSaleDetail.subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>IVA (13%):</span>
+                  <span className="font-mono font-bold">${selectedSaleDetail.ivaTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm font-black text-indigo-900 pt-1 border-t border-indigo-200">
+                  <span>Total:</span>
+                  <span className="font-mono text-indigo-600">${selectedSaleDetail.total.toFixed(2)}</span>
+                </div>
+              </div>
             </div>
 
-            <div className="flex justify-between items-center py-4">
-              <span className="text-sm font-bold text-slate-700">Total Cobrado:</span>
-              <span className="text-2xl font-black text-indigo-600">
-                ${completedSale.total.toFixed(2)}
-              </span>
-            </div>
-
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <button
+                type="button"
                 onClick={() => window.print()}
-                className="clay-btn clay-btn-light flex-1 py-3 text-xs flex items-center justify-center gap-2"
+                className="clay-btn clay-btn-light flex-1 py-2 text-xs font-bold flex items-center justify-center gap-1.5"
               >
-                <Printer className="w-4 h-4" /> Imprimir Ticket
+                <Printer className="w-3.5 h-3.5" />
+                <span>Imprimir Ticket</span>
               </button>
               <button
-                onClick={() => setCompletedSale(null)}
-                className="clay-btn clay-btn-primary flex-1 py-3 text-xs"
+                type="button"
+                onClick={() => setSelectedSaleDetail(null)}
+                className="clay-btn clay-btn-primary flex-1 py-2 text-xs font-bold"
               >
-                Nueva Venta
+                Cerrar
               </button>
             </div>
+
           </div>
         </div>
       )}
