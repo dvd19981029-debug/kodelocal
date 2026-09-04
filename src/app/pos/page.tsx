@@ -1124,7 +1124,7 @@ export default function PosPage() {
               </div>
 
               {/* Rejilla de Productos */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3.5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3">
                 {displayedProducts.map((product) => {
                   const itemInCart = cart.find(i => i.product.id === product.id);
                   const cartQty = itemInCart ? itemInCart.quantity : 0;
@@ -1136,60 +1136,60 @@ export default function PosPage() {
                     <div 
                       key={product.id}
                       onClick={() => !isOutOfStock && availableRemaining > 0 && addToCart(product)}
-                      className={`clay-card p-3 flex flex-col justify-between cursor-pointer transition-all hover:scale-[1.02] ${
+                      className={`clay-card p-2.5 sm:p-3 flex flex-col justify-between cursor-pointer transition-all hover:scale-[1.015] ${
                         isOutOfStock 
-                          ? 'opacity-50 cursor-not-allowed bg-slate-50' 
-                          : 'hover:shadow-[4px_6px_14px_rgba(99,102,241,0.2)]'
+                          ? 'opacity-55 cursor-not-allowed bg-slate-50/70' 
+                          : 'hover:shadow-[3px_5px_12px_rgba(99,102,241,0.18)]'
                       }`}
                     >
                       <div>
-                        <div className="flex items-center justify-between gap-1 mb-1.5">
-                          <span className="clay-badge text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          <span className="clay-badge text-[9px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-100/80 px-1.5 py-0.5 rounded-md">
                             #{product.sku}
                           </span>
                           {product.puesto && (
-                            <span className="clay-badge text-[9px] font-mono font-black bg-amber-100 text-amber-900 px-1 py-0.5 border border-amber-200" title={`Puesto: ${product.puesto}`}>
+                            <span className="clay-badge text-[8.5px] font-mono font-bold bg-amber-100 text-amber-900 px-1 py-0.5 border border-amber-200" title={`Puesto: ${product.puesto}`}>
                               📍{product.puesto}
                             </span>
                           )}
-                          <span className={`clay-badge text-[10px] font-bold py-0.5 px-1.5 ${
+                          <span className={`clay-badge text-[9px] font-bold py-0.5 px-1.5 rounded-md ${
                             isOutOfStock 
                               ? 'bg-rose-50 text-rose-700 border border-rose-200' 
                               : isLowStock 
-                              ? 'bg-amber-50 text-amber-700 border border-amber-200' 
-                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              ? 'bg-amber-50 text-amber-800 border border-amber-200' 
+                              : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                           }`}>
                             {isOutOfStock ? 'Agotado' : `${availableRemaining} ${product.unit === 'Onza' ? 'Oz' : 'Un.'}`}
                           </span>
                         </div>
 
                         {product.brand && (
-                          <span className="text-[10.5px] font-bold text-indigo-500 block truncate">
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-indigo-500/90 block truncate">
                             {product.brand}
                           </span>
                         )}
 
-                        <h3 className="font-extrabold text-xs text-slate-800 line-clamp-2 leading-snug mt-0.5">
+                        <h3 className="font-bold text-[11.5px] text-slate-800 line-clamp-2 leading-snug min-h-[28px] mt-0.5">
                           {product.name}
                         </h3>
                       </div>
 
-                      <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-slate-100">
+                      <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-100">
                         <div>
-                          <span className="text-[9.5px] text-slate-400 block font-semibold">
+                          <span className="text-[8.5px] text-slate-400 block font-semibold uppercase tracking-wider">
                             Por {product.unit === 'Onza' ? 'Oz' : product.unit}
                           </span>
-                          <span className="text-base font-black text-indigo-600">
+                          <span className="text-xs sm:text-[13px] font-black font-mono text-indigo-600">
                             ${product.price.toFixed(2)}
                           </span>
                         </div>
 
-                        <div className={`w-7 h-7 rounded-xl flex items-center justify-center font-bold transition-colors ${
+                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold transition-all ${
                           isOutOfStock || availableRemaining <= 0
                             ? 'bg-slate-100 text-slate-400'
-                            : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white'
+                            : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white shadow-sm'
                         }`}>
-                          <Plus className="w-3.5 h-3.5" />
+                          <Plus className="w-3 h-3" />
                         </div>
                       </div>
                     </div>
