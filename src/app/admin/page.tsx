@@ -80,7 +80,8 @@ export default function AdminPage() {
   // Modales
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isBulkPriceModalOpen, setIsBulkPriceModalOpen] = useState(false);
-  const [isNewProdModalOpen, setIsNewProdModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Formulario Usuario
   const [userName, setUserName] = useState('');
@@ -175,6 +176,49 @@ export default function AdminPage() {
     if (categories.includes(newCatName.trim())) return;
     setCategories(prev => [...prev, newCatName.trim()]);
     setNewCatName('');
+  };
+
+  const handleStartEdit = (p: ProductItem) => {
+    setEditingProduct({ ...p });
+    setIsEditModalOpen(true);
+  };
+
+  const handleOpenNewProduct = () => {
+    const nextSku = (products.length + 1).toString();
+    setEditingProduct({
+      id: `prod_${Date.now()}`,
+      sku: nextSku,
+      barcode: '',
+      name: '',
+      brand: '',
+      gender: 'Unisex',
+      category: 'Esencias para Perfume',
+      unit: 'Onza',
+      price: 3.25,
+      cost: 1.95,
+      stock: 20,
+      minStock: 5,
+      imageUrl: '',
+      isAvailableOnline: true
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveProduct = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct || !editingProduct.name.trim()) return;
+
+    setProducts(prev => {
+      const exists = prev.some(p => p.id === editingProduct.id);
+      if (exists) {
+        return prev.map(p => p.id === editingProduct.id ? editingProduct : p);
+      } else {
+        return [editingProduct, ...prev];
+      }
+    });
+
+    setIsEditModalOpen(false);
+    setEditingProduct(null);
   };
 
   return (
@@ -510,13 +554,22 @@ export default function AdminPage() {
                 <h2 className="text-xl font-black text-slate-800">Catálogo Maestro de Productos</h2>
                 <p className="text-xs text-slate-500 font-medium">Control de precios de venta, costos de compra y existencias</p>
               </div>
-              <button
-                onClick={() => setIsBulkPriceModalOpen(true)}
-                className="clay-btn clay-btn-primary px-4 py-2.5 text-xs flex items-center gap-1.5"
-              >
-                <Sliders className="w-3.5 h-3.5" />
-                <span>Cambio Masivo de Precios</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleOpenNewProduct}
+                  className="clay-btn clay-btn-light px-4 py-2.5 text-xs flex items-center gap-1.5 font-bold"
+                >
+                  <Plus className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Nuevo Producto</span>
+                </button>
+                <button
+                  onClick={() => setIsBulkPriceModalOpen(true)}
+                  className="clay-btn clay-btn-primary px-4 py-2.5 text-xs flex items-center gap-1.5"
+                >
+                  <Sliders className="w-3.5 h-3.5" />
+                  <span>Cambio Masivo de Precios</span>
+                </button>
+              </div>
             </div>
 
             {/* Barra de Filtros */}
@@ -558,6 +611,7 @@ export default function AdminPage() {
                       <th className="py-3 px-3">PVP Venta ($)</th>
                       <th className="py-3 px-3">Margen Neto</th>
                       <th className="py-3 px-3">Stock</th>
+                      <th className="py-3 px-3 text-right">Acción</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -590,6 +644,16 @@ export default function AdminPage() {
                           </td>
                           <td className="py-2.5 px-3 font-mono font-bold text-slate-700">
                             {p.stock} {p.unit === 'Onza' ? 'Oz' : 'Un.'}
+                          </td>
+                          <td className="py-2.5 px-3 text-right">
+                            <button
+                              onClick={() => handleStartEdit(p)}
+                              className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 hover:text-indigo-800 font-bold transition-all inline-flex items-center gap-1 shadow-sm active:scale-95"
+                              title="Editar producto, precios y stock"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                              <span>Editar</span>
+                            </button>
                           </td>
                         </tr>
                       );
@@ -1188,6 +1252,219 @@ export default function AdminPage() {
                   className="clay-btn clay-btn-primary flex-1 py-2.5 text-xs"
                 >
                   Actualizar Todas
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: EDITAR / CREAR PRODUCTO ================= */}
+      {isEditModalOpen && editingProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm overflow-y-auto">
+          <div className="clay-card w-full max-w-xl p-6 relative my-8 animate-in fade-in zoom-in-95">
+            <button
+              onClick={() => { setIsEditModalOpen(false); setEditingProduct(null); }}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2 mb-1">
+              <span className="clay-badge bg-indigo-50 text-indigo-700 text-xs font-mono font-bold px-2.5 py-0.5">
+                #{editingProduct.sku}
+              </span>
+              <h3 className="text-xl font-black text-slate-800">
+                {products.some(p => p.id === editingProduct.id) ? 'Editar Producto' : 'Nuevo Producto'}
+              </h3>
+            </div>
+            <p className="text-xs text-slate-500 mb-5">
+              Modifica precios de venta, costo de compra o nivel de existencias en tiempo real.
+            </p>
+
+            <form onSubmit={handleSaveProduct} className="space-y-4">
+              {/* Nombre y Marca */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Nombre / Fragancia Contratipo <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingProduct.name}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                    placeholder="Ej. ACQUA DI GIO"
+                    className="clay-input w-full text-xs font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Marca / Casa
+                  </label>
+                  <input
+                    type="text"
+                    value={editingProduct.brand || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, brand: e.target.value })}
+                    placeholder="Ej. Giorgio Armani"
+                    className="clay-input w-full text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Categoría, Género y Unidad */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Categoría</label>
+                  <select
+                    value={editingProduct.category}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
+                    className="clay-input w-full text-xs font-bold"
+                  >
+                    {categories.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Género</label>
+                  <select
+                    value={editingProduct.gender || 'Unisex'}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, gender: e.target.value })}
+                    className="clay-input w-full text-xs font-bold"
+                  >
+                    <option value="Caballero">Caballero</option>
+                    <option value="Dama">Dama</option>
+                    <option value="Unisex">Unisex</option>
+                    <option value="General">General</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Unidad de Medida</label>
+                  <select
+                    value={editingProduct.unit}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, unit: e.target.value })}
+                    className="clay-input w-full text-xs font-bold"
+                  >
+                    <option value="Onza">Onza (Oz)</option>
+                    <option value="Unidad">Unidad (Un.)</option>
+                    <option value="Paquete">Paquete</option>
+                    <option value="Galón">Galón</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Precios y Costo */}
+              <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 space-y-3">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-900 block">
+                  Estructura de Precios y Margen
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">
+                      Precio de Venta ($ PVP) <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        required
+                        value={editingProduct.price === 0 ? '' : editingProduct.price}
+                        onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) || 0 })}
+                        placeholder="0.00"
+                        className="clay-input w-full pl-8 text-base font-black text-indigo-600"
+                      />
+                    </div>
+                    <span className="text-[10px] text-slate-400 mt-1 block">Precio al cliente en el Punto de Venta</span>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">
+                      Costo de Compra ($ Costo) <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        required
+                        value={editingProduct.cost === 0 ? '' : editingProduct.cost}
+                        onChange={(e) => setEditingProduct({ ...editingProduct, cost: parseFloat(e.target.value) || 0 })}
+                        placeholder="0.00"
+                        className="clay-input w-full pl-8 text-base font-black text-slate-700"
+                      />
+                    </div>
+                    <span className="text-[10px] text-slate-400 mt-1 block">Costo mayorista (solo Gerencia)</span>
+                  </div>
+                </div>
+
+                {/* Margen Calculado en Tiempo Real */}
+                {(() => {
+                  const marginNet = (editingProduct.price || 0) - (editingProduct.cost || 0);
+                  const marginPct = (editingProduct.price || 0) > 0 ? ((marginNet / editingProduct.price) * 100) : 0;
+                  return (
+                    <div className="pt-2 border-t border-indigo-100/60 flex items-center justify-between text-xs">
+                      <span className="text-slate-600 font-medium">Margen neto proyectado:</span>
+                      <div className="flex items-center gap-2">
+                        <span className={`font-black font-mono text-sm ${marginNet >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          {marginNet >= 0 ? '+' : ''}${marginNet.toFixed(2)}
+                        </span>
+                        <span className={`clay-badge text-[10px] py-0.5 px-2 ${marginNet >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                          {marginPct.toFixed(1)}% margen
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Control de Inventario y Stock */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Stock Disponible ({editingProduct.unit === 'Onza' ? 'Oz' : 'Unidades'})
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    value={editingProduct.stock === 0 ? '0' : editingProduct.stock}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, stock: parseInt(e.target.value) || 0 })}
+                    className="clay-input w-full text-sm font-bold text-slate-800 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Stock Mínimo de Alerta
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    value={editingProduct.minStock === 0 ? '0' : editingProduct.minStock}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, minStock: parseInt(e.target.value) || 0 })}
+                    className="clay-input w-full text-sm font-bold text-slate-600 font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Botones de acción */}
+              <div className="flex gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => { setIsEditModalOpen(false); setEditingProduct(null); }}
+                  className="clay-btn clay-btn-light flex-1 py-2.5 text-xs"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="clay-btn clay-btn-primary flex-1 py-2.5 text-xs font-bold"
+                >
+                  Guardar Cambios
                 </button>
               </div>
             </form>
