@@ -394,6 +394,13 @@ export default function PosPage() {
       } else {
         setTipoComprobante('01');
       }
+    } else {
+      setClienteNombre('Consumidor Final');
+      setClienteDoc('');
+      setClienteNrc('');
+      setClienteEmail('');
+      setClienteGiro('');
+      setTipoComprobante('01');
     }
   };
 
@@ -1201,45 +1208,103 @@ export default function PosPage() {
 
             {/* Columna Derecha del POS: Carrito y Cobro */}
             <div className="w-full xl:w-96 flex flex-col gap-4 shrink-0">
-              <div className="clay-card p-5 flex flex-col h-[calc(100vh-140px)] sticky top-24">
+              <div className="clay-card p-3.5 sm:p-4 flex flex-col h-[calc(100vh-130px)] sticky top-20">
                 
                 {/* Header del Carrito */}
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shadow-inner font-bold">
-                      <ShoppingCart className="w-4 h-4" />
+                    <div className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shadow-inner font-bold">
+                      <ShoppingCart className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <h2 className="font-extrabold text-base text-slate-800 leading-none">Orden Actual</h2>
-                      <span className="text-[11px] text-slate-400 font-medium">{totalItemsCount} unidades</span>
+                      <h2 className="font-extrabold text-sm text-slate-800 leading-none">Orden Actual</h2>
+                      <span className="text-[10px] text-slate-400 font-medium">{totalItemsCount} unidades</span>
                     </div>
                   </div>
                   {cart.length > 0 && (
                     <button
                       onClick={clearCart}
-                      className="text-xs text-rose-500 hover:text-rose-700 font-semibold flex items-center gap-1"
+                      className="text-[11px] text-rose-500 hover:text-rose-700 font-semibold flex items-center gap-1"
                     >
-                      <Trash2 className="w-3.5 h-3.5" /> Vaciar
+                      <Trash2 className="w-3 h-3" /> Vaciar
                     </button>
+                  )}
+                </div>
+
+                {/* Selector de Cliente para Cotización y Venta */}
+                <div className="mt-2.5 p-2 rounded-xl bg-indigo-50/60 border border-indigo-100/80 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700">
+                      <User className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>Cliente:</span>
+                      {selectedCustomerId && (
+                        <span className={`text-[9px] px-1.5 py-0.2 rounded font-black tracking-tight ${
+                          tipoComprobante === '03' ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-700'
+                        }`}>
+                          {tipoComprobante === '03' ? 'CCF (Crédito Fiscal)' : 'FC (Consumidor)'}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {selectedCustomerId && (
+                        <button
+                          type="button"
+                          onClick={() => handleSelectCustomer('')}
+                          className="text-[10px] text-slate-400 hover:text-rose-600 font-bold flex items-center gap-0.5 px-1 py-0.5 rounded hover:bg-rose-50"
+                          title="Regresar a Consumidor Final"
+                        >
+                          <X className="w-3 h-3" /> Quitar
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleOpenNewCustomerModal}
+                        className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5 bg-white px-1.5 py-0.5 rounded-md border border-indigo-200/70 hover:bg-indigo-50 shadow-2xs transition-colors"
+                      >
+                        <UserPlus className="w-3 h-3" /> + Nuevo
+                      </button>
+                    </div>
+                  </div>
+
+                  <select
+                    value={selectedCustomerId}
+                    onChange={(e) => handleSelectCustomer(e.target.value)}
+                    className="w-full text-xs font-semibold py-1 px-2 rounded-lg bg-white border border-indigo-200/60 text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-2xs"
+                  >
+                    <option value="">👤 Consumidor Final (Venta Rápida)</option>
+                    {customers.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} {c.nrc ? `• CCF (NRC: ${c.nrc})` : c.numDocumento ? `• DUI: ${c.numDocumento}` : ''}
+                      </option>
+                    ))}
+                  </select>
+
+                  {selectedCustomerId && (
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 font-medium px-0.5">
+                      <span className="truncate max-w-[210px]">
+                        {clienteDoc ? `Doc: ${clienteDoc}` : clienteNrc ? `NRC: ${clienteNrc}` : 'Registrado'}
+                      </span>
+                      <span className="text-indigo-600 font-bold shrink-0">
+                        {tipoComprobante === '03' ? 'Comprobante 03' : 'Factura 01'}
+                      </span>
+                    </div>
                   )}
                 </div>
 
                 {/* Toast de Orden Enviada a Bodega */}
                 {orderSentToast && (
-                  <div className="mb-3 p-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg animate-in fade-in flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                        <Box className="w-4 h-4 text-amber-300" />
-                      </div>
-                      <div>
-                        <p className="font-black text-xs">¡Orden #{orderSentToast.orderNumber} enviada!</p>
-                        <p className="text-[10px] text-emerald-100">Bodega la preparará y la pondrá en ventanilla para cobro.</p>
+                  <div className="mt-2 p-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <Box className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="font-black text-[11px] leading-tight truncate">¡Orden #{orderSentToast.orderNumber} enviada!</p>
+                        <p className="text-[9px] text-emerald-100 leading-tight">En preparación para caja.</p>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => setPosTab('caja_facturacion')}
-                      className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-white text-emerald-800 shadow-sm hover:bg-emerald-50 whitespace-nowrap"
+                      className="px-2 py-0.5 text-[9px] font-black rounded bg-white text-emerald-800 shadow-2xs hover:bg-emerald-50 shrink-0"
                     >
                       Ver en Caja
                     </button>
@@ -1247,55 +1312,66 @@ export default function PosPage() {
                 )}
 
                 {/* Lista de productos en el carrito */}
-                <div className="flex-1 overflow-y-auto py-3 space-y-2 pr-1">
+                <div className="flex-1 overflow-y-auto py-2 space-y-1.5 pr-0.5">
                   {cart.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-slate-400 text-center p-4">
-                      <Droplets className="w-12 h-12 mb-2 opacity-30 stroke-[1.5] text-indigo-400" />
-                      <p className="font-bold text-sm text-slate-600">Orden Vacía</p>
-                      <p className="text-xs mt-1">Selecciona esencias, botes o empaque para cotizar y cobrar</p>
+                    <div className="h-full flex flex-col items-center justify-center text-slate-400 text-center p-3">
+                      <Droplets className="w-8 h-8 mb-1.5 opacity-30 text-indigo-400" />
+                      <p className="font-bold text-xs text-slate-600">Orden Vacía</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5 max-w-[180px]">
+                        Elige esencias o envases del catálogo para cotizar y cobrar
+                      </p>
                     </div>
                   ) : (
                     cart.map((item) => (
                       <div 
                         key={item.product.id}
-                        className="p-2.5 rounded-2xl bg-white/70 border border-white/80 shadow-[2px_3px_8px_rgba(164,177,198,0.2)] flex items-center justify-between gap-2"
+                        className="p-1.5 px-2 rounded-xl bg-white/80 border border-slate-200/70 shadow-2xs hover:border-indigo-200 transition-all flex items-center justify-between gap-2"
                       >
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-mono font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.2 rounded">
+                          <div className="flex items-center gap-1">
+                            <span className="text-[9px] font-mono font-bold text-indigo-600 bg-indigo-50 px-1 py-0.2 rounded shrink-0">
                               #{item.product.sku}
                             </span>
+                            <h4 className="font-bold text-[11px] text-slate-800 truncate leading-tight">
+                              {item.product.name}
+                            </h4>
                           </div>
-                          <h4 className="font-bold text-xs text-slate-800 truncate leading-tight">
-                            {item.product.name}
-                          </h4>
-                          <p className="text-[11px] text-slate-500 font-medium">
-                            ${item.product.price.toFixed(2)} por {item.product.unit}
-                          </p>
+                          <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-500">
+                            <span className="font-medium">${item.product.price.toFixed(2)}/{item.product.unit}</span>
+                            {item.product.puesto && (
+                              <span className="text-[9px] text-amber-700 bg-amber-50 px-1 rounded font-medium truncate">
+                                📍 {item.product.puesto}
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         {/* Controles de cantidad */}
-                        <div className="flex items-center gap-1.5 bg-white px-2 py-1 rounded-xl shadow-inner border border-slate-100">
+                        <div className="flex items-center gap-1 bg-slate-50 px-1.5 py-0.5 rounded-lg border border-slate-200/80 shrink-0">
                           <button
+                            type="button"
                             onClick={() => updateQuantity(item.product.id, -1)}
-                            className="w-5 h-5 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center active:scale-90"
+                            className="w-4 h-4 rounded bg-white text-slate-600 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center active:scale-90 shadow-2xs"
+                            title="Reducir cantidad"
                           >
-                            <Minus className="w-3 h-3" />
+                            <Minus className="w-2.5 h-2.5" />
                           </button>
-                          <span className="text-xs font-black w-6 text-center text-slate-800">
+                          <span className="text-[11px] font-black w-4 text-center text-slate-800">
                             {item.quantity}
                           </span>
                           <button
+                            type="button"
                             onClick={() => updateQuantity(item.product.id, 1)}
-                            className="w-5 h-5 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center active:scale-90"
+                            className="w-4 h-4 rounded bg-white text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-center active:scale-90 shadow-2xs"
+                            title="Aumentar cantidad"
                           >
-                            <Plus className="w-3 h-3" />
+                            <Plus className="w-2.5 h-2.5" />
                           </button>
                         </div>
 
                         {/* Subtotal del item */}
-                        <div className="text-right min-w-[50px]">
-                          <span className="font-black text-xs text-slate-800">
+                        <div className="text-right min-w-[46px] shrink-0">
+                          <span className="font-black text-[11px] font-mono text-slate-900">
                             ${(item.product.price * item.quantity).toFixed(2)}
                           </span>
                         </div>
@@ -1306,41 +1382,41 @@ export default function PosPage() {
 
                 {/* Desglose de Totales e Impuestos */}
                 {cart.length > 0 && (
-                  <div className="pt-3 border-t border-slate-200/80 flex flex-col gap-1.5">
-                    <div className="flex justify-between text-xs text-slate-500 font-medium">
+                  <div className="pt-2 border-t border-slate-200/80 flex flex-col gap-1 shrink-0">
+                    <div className="flex justify-between text-[11px] text-slate-500 font-medium">
                       <span>Subtotal (Neto):</span>
                       <span>${subtotalNeto.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-xs text-slate-500 font-medium">
+                    <div className="flex justify-between text-[11px] text-slate-500 font-medium">
                       <span>IVA (13%):</span>
                       <span>${ivaCalculado.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-slate-100">
+                    <div className="flex justify-between text-xs font-black text-slate-900 pt-1.5 border-t border-slate-100 items-baseline">
                       <span>Total Estimado:</span>
-                      <span className="text-indigo-600 text-xl font-extrabold">
+                      <span className="text-indigo-600 text-lg font-black">
                         ${cartSubtotal.toFixed(2)}
                       </span>
                     </div>
 
-                    {/* Botón Principal: Mandar a Bodega */}
+                    {/* Botón Principal: Mandar a Bodega (compacto y ergonómico) */}
                     <button
                       type="button"
                       onClick={handleSendOrderToBodega}
-                      className="clay-btn clay-btn-primary w-full py-3 text-sm mt-2 rounded-2xl shadow-[4px_6px_16px_rgba(79,70,229,0.4)] flex items-center justify-center gap-2 font-black !bg-gradient-to-r !from-indigo-600 !to-indigo-800 text-white hover:brightness-110"
+                      className="clay-btn clay-btn-primary w-full py-2 px-3 text-xs mt-1 rounded-xl shadow-md flex items-center justify-center gap-1.5 font-bold !bg-gradient-to-r !from-indigo-600 !to-indigo-800 text-white hover:brightness-110 active:scale-[0.99] transition-all"
                     >
-                      <Box className="w-4 h-4 text-amber-300" />
-                      <span>Mandar a Preparar (Enviar a Bodega)</span>
+                      <Box className="w-3.5 h-3.5 text-amber-300" />
+                      <span>Mandar a Preparar (Bodega)</span>
                     </button>
 
                     {/* Fila de Botones Secundarios: Cotización PDF y Cobro Directo */}
-                    <div className="grid grid-cols-2 gap-2 mt-1">
+                    <div className="grid grid-cols-2 gap-1.5 mt-0.5">
                       <button
                         type="button"
                         onClick={handleOpenQuoteModal}
-                        className="clay-btn clay-btn-light py-2 px-2 text-xs rounded-xl flex items-center justify-center gap-1.5 font-bold text-slate-700 hover:text-indigo-700 hover:bg-indigo-50 border border-slate-200"
+                        className="clay-btn clay-btn-light py-1.5 px-2 text-[11px] rounded-lg flex items-center justify-center gap-1 font-bold text-slate-700 hover:text-indigo-700 hover:bg-indigo-50 border border-slate-200 transition-all"
                         title="Generar cotización o prefactura en PDF para compartir"
                       >
-                        <FileText className="w-3.5 h-3.5 text-indigo-600" />
+                        <FileText className="w-3 h-3 text-indigo-600" />
                         <span>Cotización (PDF)</span>
                       </button>
 
@@ -1350,10 +1426,10 @@ export default function PosPage() {
                           setOrderToInvoice(null);
                           setIsCheckoutOpen(true);
                         }}
-                        className="clay-btn clay-btn-success py-2 px-2 text-xs rounded-xl flex items-center justify-center gap-1.5 font-black text-emerald-800 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300"
+                        className="clay-btn clay-btn-success py-1.5 px-2 text-[11px] rounded-lg flex items-center justify-center gap-1 font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 transition-all"
                         title="Cobrar directamente sin enviar a bodega"
                       >
-                        <Banknote className="w-3.5 h-3.5 text-emerald-700" />
+                        <Banknote className="w-3 h-3 text-emerald-700" />
                         <span>Cobro Directo</span>
                       </button>
                     </div>
