@@ -45,7 +45,7 @@ import {
   CustomRole, 
   SYSTEM_VIEWS 
 } from '@/lib/auth';
-import { INITIAL_PRODUCTS, ProductItem, PERFUME_CATEGORIES, SaleRecord, resetDatabaseToZeroStock } from '@/lib/store';
+import { INITIAL_PRODUCTS, ProductItem, PERFUME_CATEGORIES, SaleRecord, resetDatabaseToZeroStock, getStoredProducts, DATA_VERSION } from '@/lib/store';
 import ComprasModule from '@/components/admin/ComprasModule';
 import KardexModule from '@/components/admin/KardexModule';
 import {
@@ -80,18 +80,12 @@ export default function AdminPage() {
   
   // Datos
   const [users, setUsers] = useState<UserAccount[]>(() => getStoredUsers());
-  const [products, setProducts] = useState<ProductItem[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('kodelocal_products');
-      if (saved) {
-        try { return JSON.parse(saved); } catch (e) {}
-      }
-    }
-    return INITIAL_PRODUCTS;
-  });
+  const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
 
   const [sales, setSales] = useState<SaleRecord[]>(() => {
     if (typeof window !== 'undefined') {
+      const currentVersion = localStorage.getItem('kodelocal_data_version');
+      if (currentVersion !== DATA_VERSION) return [];
       const saved = localStorage.getItem('kodelocal_sales');
       if (saved) {
         try { return JSON.parse(saved); } catch (e) {}

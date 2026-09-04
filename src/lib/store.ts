@@ -10457,34 +10457,48 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   }
 ];
 
-export const DATA_VERSION = '2026_zero_stock_v1';
+export const DATA_VERSION = '2026_zero_stock_v3';
 
 export function resetDatabaseToZeroStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;
   
-  let baseProducts: ProductItem[] = INITIAL_PRODUCTS;
-  const savedProds = localStorage.getItem('kodelocal_products');
-  if (savedProds) {
-    try {
-      const parsed = JSON.parse(savedProds);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        baseProducts = parsed;
-      }
-    } catch (e) {}
-  }
-
-  const zeroStockProducts: ProductItem[] = baseProducts.map(p => ({
+  // Garantizar que todos los productos del catálogo tengan stock 0
+  const zeroStockProducts: ProductItem[] = INITIAL_PRODUCTS.map(p => ({
     ...p,
     stock: 0
   }));
 
-  localStorage.setItem('kodelocal_products', JSON.stringify(zeroStockProducts));
-  localStorage.setItem('kodelocal_sales', JSON.stringify([]));
-  localStorage.setItem('kodelocal_purchases', JSON.stringify([]));
-  localStorage.setItem('kodelocal_kardex', JSON.stringify([]));
-  localStorage.setItem('kodelocal_data_version', DATA_VERSION);
+  try {
+    localStorage.setItem('kodelocal_products', JSON.stringify(zeroStockProducts));
+    localStorage.setItem('kodelocal_sales', JSON.stringify([]));
+    localStorage.setItem('kodelocal_purchases', JSON.stringify([]));
+    localStorage.setItem('kodelocal_kardex', JSON.stringify([]));
+    localStorage.setItem('kodelocal_data_version', DATA_VERSION);
+  } catch (e) {
+    console.error('Error in resetDatabaseToZeroStock:', e);
+  }
 
   return zeroStockProducts;
+}
+
+export function getStoredProducts(): ProductItem[] {
+  if (typeof window === 'undefined') return INITIAL_PRODUCTS;
+  
+  const currentVersion = localStorage.getItem('kodelocal_data_version');
+  if (currentVersion !== DATA_VERSION) {
+    return resetDatabaseToZeroStock();
+  }
+
+  const saved = localStorage.getItem('kodelocal_products');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 50 && parsed[0]?.category !== 'Audio') {
+        return parsed;
+      }
+    } catch (e) {}
+  }
+  return resetDatabaseToZeroStock();
 }
 
 export function checkAndMigrateToZeroStock(): boolean {

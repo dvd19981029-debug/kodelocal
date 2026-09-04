@@ -33,6 +33,10 @@ export const INITIAL_KARDEX: KardexMovement[] = [];
 
 export function getStoredKardex(): KardexMovement[] {
   if (typeof window === 'undefined') return INITIAL_KARDEX;
+  const currentVersion = localStorage.getItem('kodelocal_data_version');
+  if (currentVersion !== '2026_zero_stock_v3') {
+    return [];
+  }
   const saved = localStorage.getItem('kodelocal_kardex');
   if (saved) {
     try {

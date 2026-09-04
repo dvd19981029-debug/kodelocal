@@ -5,7 +5,10 @@ import { checkAndMigrateToZeroStock } from '@/lib/store';
 
 export default function StorageInitializer() {
   useEffect(() => {
-    checkAndMigrateToZeroStock();
+    const didReset = checkAndMigrateToZeroStock();
+    if (didReset) {
+      window.dispatchEvent(new Event('storage'));
+    }
   }, []);
 
   return null;

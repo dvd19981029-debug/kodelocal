@@ -20,6 +20,8 @@ export default function BodegaPage() {
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
   const [sales, setSales] = useState<SaleRecord[]>(() => {
     if (typeof window !== 'undefined') {
+      const currentVersion = localStorage.getItem('kodelocal_data_version');
+      if (currentVersion !== '2026_zero_stock_v3') return [];
       const saved = localStorage.getItem('kodelocal_sales');
       if (saved) {
         try { return JSON.parse(saved); } catch (e) {}

@@ -16,25 +16,10 @@ import {
   ArrowUpDown,
   Barcode
 } from 'lucide-react';
-import { INITIAL_PRODUCTS, ProductItem } from '@/lib/store';
+import { INITIAL_PRODUCTS, ProductItem, getStoredProducts } from '@/lib/store';
 
 export default function InventarioPage() {
-  const [products, setProducts] = useState<ProductItem[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('kodelocal_products');
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (parsed.length < 50 || parsed[0]?.category === 'Audio') {
-            localStorage.setItem('kodelocal_products', JSON.stringify(INITIAL_PRODUCTS));
-            return INITIAL_PRODUCTS;
-          }
-          return parsed;
-        } catch (e) {}
-      }
-    }
-    return INITIAL_PRODUCTS;
-  });
+  const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
