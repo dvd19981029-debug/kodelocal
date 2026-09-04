@@ -38,8 +38,10 @@ import {
   Check,
   FileText,
   Flame,
-  Box
+  Box,
+  ExternalLink
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { INITIAL_PRODUCTS, ProductItem, CartItem, SaleRecord, PERFUME_CATEGORIES, getStoredProducts } from '@/lib/store';
 import { 
   CustomerRecord, 
@@ -53,6 +55,7 @@ import {
 } from '@/lib/customers';
 
 export default function PosPage() {
+  const router = useRouter();
   const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
   
   // Pestaña activa en el menú lateral de Punto de Venta:
@@ -731,6 +734,19 @@ export default function PosPage() {
                 <span className="text-[10px] text-slate-400 font-mono">0</span>
               )}
             </div>
+          </button>
+
+          {/* Botón 5: Envíos & Domicilio */}
+          <button
+            type="button"
+            onClick={() => router.push('/logistica')}
+            className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all text-left"
+          >
+            <div className="flex items-center gap-2">
+              <Truck className="w-4 h-4 text-blue-500" />
+              <span>Envíos & Domicilio</span>
+            </div>
+            <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
           </button>
         </div>
 
