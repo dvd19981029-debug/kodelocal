@@ -291,26 +291,26 @@ export default function PosPage() {
           
           {/* Buscador inteligente */}
           <div className="relative flex-1 w-full">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none z-10" />
             <input
               type="text"
               placeholder="Buscar por código (ej. 100), contratipo (ej. 1 Million) o marca..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="clay-input w-full pl-11 pr-4 py-2.5 text-sm"
+              className="clay-input has-icon w-full pr-4 py-2.5 text-sm"
               autoFocus
             />
           </div>
 
           {/* Lector o código rápido */}
-          <form onSubmit={handleBarcodeSubmit} className="relative w-full sm:w-56">
-            <Barcode className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-500" />
+          <form onSubmit={handleBarcodeSubmit} className="relative w-full sm:w-60">
+            <Barcode className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-500 pointer-events-none z-10" />
             <input
               type="text"
               placeholder="Código o SKU..."
               value={barcodeInput}
               onChange={(e) => setBarcodeInput(e.target.value)}
-              className="clay-input w-full pl-11 pr-4 py-2.5 text-sm font-mono border-indigo-200"
+              className="clay-input has-icon w-full pr-4 py-2.5 text-sm font-mono border-indigo-200"
             />
           </form>
         </div>

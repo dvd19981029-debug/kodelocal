@@ -128,6 +128,11 @@ body {
   transition: all 0.2s ease;
 }
 
+.clay-input.has-icon,
+.clay-input-icon {
+  padding-left: 2.85rem !important;
+}
+
 .clay-input:focus {
   border-color: #818cf8;
   box-shadow: 

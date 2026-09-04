@@ -193,13 +193,13 @@ export default function InventarioPage() {
         
         {/* Buscador */}
         <div className="relative flex-1 w-full">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none z-10" />
           <input
             type="text"
-            placeholder="Buscar por producto, SKU o código de barras..."
+            placeholder="Buscar por producto, marca, SKU o código de barras..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="clay-input w-full pl-11 pr-4 py-2.5 text-sm"
+            className="clay-input has-icon w-full pr-4 py-2.5 text-sm"
           />
         </div>
 

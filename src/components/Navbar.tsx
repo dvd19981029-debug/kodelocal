@@ -53,14 +53,14 @@ export function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`clay-btn px-4 py-2 text-sm rounded-xl transition-all ${
+                className={`clay-btn px-4 py-2 text-sm rounded-xl transition-all whitespace-nowrap flex items-center shrink-0 ${
                   isActive
                     ? 'clay-btn-primary !shadow-[3px_4px_10px_rgba(79,70,229,0.4)]'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/70'
                 }`}
               >
-                <Icon className="w-4 h-4" />
-                <span>{item.label}</span>
+                <Icon className="w-4 h-4 shrink-0" />
+                <span className="whitespace-nowrap">{item.label}</span>
               </Link>
             );
           })}
