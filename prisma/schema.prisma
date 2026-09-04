@@ -1,0 +1,203 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  icon        String?   @default("folder")
+  color       String?   @default("#6366f1")
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id                 String          @id @default(cuid())
+  sku                String?         @unique
+  barcode            String?         @unique
+  name               String
+  description        String?
+  price              Decimal         @db.Decimal(10, 2)
+  cost               Decimal?        @db.Decimal(10, 2)
+  stock              Int             @default(0)
+  minStock           Int             @default(5)
+  imageUrl           String?
+  isActive           Boolean         @default(true)
+  isAvailableOnline  Boolean         @default(true)
+  categoryId         String?
+  category           Category?       @relation(fields: [categoryId], references: [id])
+  saleItems          SaleItem[]
+  stockMovements     StockMovement[]
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@index([barcode])
+  @@index([name])
+}
+
+model Customer {
+  id           String    @id @default(cuid())
+  name         String
+  documentType String?   @default("DUI")
+  documentNum  String?
+  nrc          String?
+  businessName String?
+  activityCode String?
+  activityDesc String?
+  email        String?
+  phone        String?
+  address      String?
+  department   String?
+  municipality String?
+  sales        Sale[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([documentNum])
+  @@index([name])
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  BITCOIN
+  OTHER
+}
+
+enum SaleChannel {
+  POS
+  ONLINE
+}
+
+enum SaleStatus {
+  COMPLETED
+  CANCELLED
+  PENDING
+}
+
+model Sale {
+  id            String        @id @default(cuid())
+  saleNumber    String        @unique
+  channel       SaleChannel   @default(POS)
+  subtotal      Decimal       @db.Decimal(10, 2)
+  ivaTotal      Decimal       @db.Decimal(10, 2) @default(0.00)
+  discountTotal Decimal       @db.Decimal(10, 2) @default(0.00)
+  total         Decimal       @db.Decimal(10, 2)
+  paymentMethod PaymentMethod @default(CASH)
+  paymentStatus SaleStatus    @default(COMPLETED)
+  cashReceived  Decimal?      @db.Decimal(10, 2)
+  cashChange    Decimal?      @db.Decimal(10, 2)
+  notes         String?
+  cashierName   String?       @default("Caja 1")
+  customerId    String?
+  customer      Customer?     @relation(fields: [customerId], references: [id])
+  items         SaleItem[]
+  dteDocument   DteDocument?
+  shiftId       String?
+  shift         CashShift?    @relation(fields: [shiftId], references: [id])
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([createdAt])
+}
+
+model SaleItem {
+  id          String   @id @default(cuid())
+  saleId      String
+  sale        Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  productName String
+  quantity    Int      @default(1)
+  unitPrice   Decimal  @db.Decimal(10, 2)
+  ivaRate     Decimal  @db.Decimal(4, 2) @default(0.13)
+  total       Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+}
+
+enum DteType {
+  FACTURA_01
+  CREDITO_FISCAL_03
+  NOTA_CREDITO_05
+  SUJETO_EXCLUIDO_14
+}
+
+enum DteStatus {
+  SIMULADO
+  PROCESADO
+  RECHAZADO
+  CONTINGENCIA
+  ANULADO
+}
+
+model DteDocument {
+  id               String    @id @default(cuid())
+  saleId           String    @unique
+  sale             Sale      @relation(fields: [saleId], references: [id])
+  tipoDte          DteType   @default(FACTURA_01)
+  version          Int       @default(1)
+  codigoGeneracion String    @unique
+  numeroControl    String?
+  selloRecepcion   String?
+  estado           DteStatus @default(SIMULADO)
+  fhProcesamiento  DateTime?
+  mensajeRespuesta String?
+  observaciones    String?
+  requestJson      String?   @db.Text
+  responseJson     String?   @db.Text
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+enum MovementType {
+  IN_PURCHASE
+  OUT_SALE
+  OUT_DAMAGE
+  ADJUSTMENT
+  RETURN
+}
+
+model StockMovement {
+  id            String       @id @default(cuid())
+  productId     String
+  product       Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  type          MovementType
+  quantity      Int
+  previousStock Int
+  newStock      Int
+  reference     String?
+  notes         String?
+  createdAt     DateTime     @default(now())
+
+  @@index([productId])
+  @@index([createdAt])
+}
+
+enum ShiftStatus {
+  OPEN
+  CLOSED
+}
+
+model CashShift {
+  id            String      @id @default(cuid())
+  cashierName   String
+  openedAt      DateTime    @default(now())
+  closedAt      DateTime?
+  initialAmount Decimal     @db.Decimal(10, 2)
+  finalAmount   Decimal?    @db.Decimal(10, 2)
+  totalSales    Decimal?    @db.Decimal(10, 2) @default(0.00)
+  status        ShiftStatus @default(OPEN)
+  sales         Sale[]
+}
