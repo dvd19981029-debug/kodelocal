@@ -48,6 +48,154 @@ interface ComprasModuleProps {
   onAddKardexMovement?: (movement: KardexMovement) => void;
 }
 
+// Selector predictivo con buscador de productos para renglones de compra
+function PurchaseItemProductSelector({
+  item,
+  products,
+  onSelectProduct,
+  onClearProduct
+}: {
+  item: {
+    productId: string;
+    productName: string;
+    productSku: string;
+    unit: string;
+  };
+  products: ProductItem[];
+  onSelectProduct: (product: ProductItem) => void;
+  onClearProduct: () => void;
+}) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+
+  const matchedProduct = useMemo(() => {
+    return products.find(p => p.id === item.productId);
+  }, [products, item.productId]);
+
+  const filteredProducts = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return products.slice(0, 25);
+    return products.filter(p => 
+      p.name.toLowerCase().includes(q) || 
+      p.sku.toLowerCase().includes(q) ||
+      (p.brand && p.brand.toLowerCase().includes(q)) ||
+      (p.puesto && p.puesto.toLowerCase().includes(q))
+    ).slice(0, 35);
+  }, [products, searchQuery]);
+
+  if (item.productId && matchedProduct) {
+    return (
+      <div className="flex items-center justify-between p-2 rounded-xl bg-indigo-50/90 border border-indigo-200 shadow-sm">
+        <div className="flex items-center gap-1.5 overflow-hidden">
+          <span className="text-[10px] font-mono font-bold text-indigo-700 bg-white px-1.5 py-0.5 rounded border border-indigo-200 shrink-0">
+            #{matchedProduct.sku}
+          </span>
+          {matchedProduct.puesto && (
+            <span className="text-[9px] font-mono font-black text-amber-900 bg-amber-100 px-1 py-0.5 rounded border border-amber-200 shrink-0" title={`Puesto: ${matchedProduct.puesto}`}>
+              📍{matchedProduct.puesto}
+            </span>
+          )}
+          <span className="font-black text-xs text-slate-800 truncate max-w-[180px] sm:max-w-[280px]" title={matchedProduct.name}>
+            {matchedProduct.name}
+          </span>
+          <span className="text-[10px] text-slate-400 font-medium shrink-0 hidden md:inline">
+            [{matchedProduct.category}]
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={onClearProduct}
+          className="text-[10.5px] font-bold text-indigo-600 hover:text-indigo-900 hover:underline shrink-0 ml-2"
+          title="Buscar o cambiar por otro producto"
+        >
+          Cambiar
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <div className="relative">
+        <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setIsOpen(true);
+          }}
+          onFocus={() => setIsOpen(true)}
+          placeholder="🔍 Buscar por fragancia, contratipo o SKU (ej. Sauvage, 100, Bote)..."
+          className="clay-input w-full pl-8 pr-7 py-1.5 text-xs font-semibold placeholder:text-slate-400 placeholder:font-normal"
+        />
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={() => setSearchQuery('')}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        )}
+      </div>
+
+      {isOpen && (
+        <>
+          <div 
+            className="fixed inset-0 z-40 bg-black/10" 
+            onClick={() => setIsOpen(false)} 
+          />
+          <div className="absolute left-0 top-full mt-1 w-full max-h-64 overflow-y-auto bg-white rounded-xl shadow-2xl border border-indigo-200 z-50 divide-y divide-slate-100">
+            {filteredProducts.length === 0 ? (
+              <div className="p-3 text-center text-xs text-slate-400 font-medium">
+                No se encontró ningún producto con &quot;{searchQuery}&quot;
+              </div>
+            ) : (
+              filteredProducts.map(p => (
+                <div
+                  key={p.id}
+                  onClick={() => {
+                    onSelectProduct(p);
+                    setIsOpen(false);
+                    setSearchQuery('');
+                  }}
+                  className="p-2.5 hover:bg-indigo-50 cursor-pointer flex items-center justify-between transition-colors gap-2"
+                >
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <span className="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 shrink-0">
+                      #{p.sku}
+                    </span>
+                    {p.puesto && (
+                      <span className="text-[9px] font-mono font-black text-amber-900 bg-amber-50 px-1 py-0.5 rounded border border-amber-200 shrink-0">
+                        📍{p.puesto}
+                      </span>
+                    )}
+                    <span className="text-xs font-black text-slate-800 truncate max-w-[200px] sm:max-w-[300px]" title={p.name}>
+                      {p.name}
+                    </span>
+                    <span className="text-[10px] text-slate-400 shrink-0 hidden sm:inline">
+                      [{p.category}]
+                    </span>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="text-[10.5px] font-mono font-bold text-slate-700 block">
+                      Costo: ${p.cost.toFixed(2)}
+                    </span>
+                    <span className="text-[9.5px] text-slate-400 font-sans">
+                      {p.unit === 'Onza' ? 'Oz' : p.unit}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function ComprasModule({
   products,
   onUpdateProducts,
@@ -82,7 +230,7 @@ export default function ComprasModule({
   const [formControlNumber, setFormControlNumber] = useState<string>('');
   const [formNotes, setFormNotes] = useState<string>('');
   
-  // Renglones de productos en la compra actual
+  // Renglones de productos en la compra actual (Inician en cantidad 0 y sin producto preseleccionado)
   const [formItems, setFormItems] = useState<Array<{
     productId: string;
     productName: string;
@@ -93,13 +241,13 @@ export default function ComprasModule({
     subtotal: number;
   }>>([
     {
-      productId: products[0]?.id || '',
-      productName: products[0]?.name || '',
-      productSku: products[0]?.sku || '',
-      unit: products[0]?.unit || 'Onza',
-      quantity: 50,
-      costPrice: products[0]?.cost || 1.95,
-      subtotal: (products[0]?.cost || 1.95) * 50
+      productId: '',
+      productName: '',
+      productSku: '',
+      unit: 'Onza',
+      quantity: 0,
+      costPrice: 0,
+      subtotal: 0
     }
   ]);
 
@@ -181,14 +329,11 @@ export default function ComprasModule({
     return suppliers.find(s => s.id === formSupplierId);
   }, [suppliers, formSupplierId]);
 
-  // Manejo de cambio de producto en un renglón
-  const handleSelectProductInRow = (index: number, productId: string) => {
-    const prod = products.find(p => p.id === productId);
-    if (!prod) return;
-
+  // Manejo de cambio de producto en un renglón mediante buscador predictivo
+  const handleSelectProductInRow = (index: number, prod: ProductItem) => {
     setFormItems(prev => {
       const copy = [...prev];
-      const qty = copy[index].quantity || 1;
+      const qty = copy[index].quantity;
       const cost = prod.cost || 0;
       copy[index] = {
         productId: prod.id,
@@ -198,6 +343,21 @@ export default function ComprasModule({
         quantity: qty,
         costPrice: cost,
         subtotal: parseFloat((qty * cost).toFixed(2))
+      };
+      return copy;
+    });
+  };
+
+  const handleClearProductInRow = (index: number) => {
+    setFormItems(prev => {
+      const copy = [...prev];
+      copy[index] = {
+        ...copy[index],
+        productId: '',
+        productName: '',
+        productSku: '',
+        costPrice: 0,
+        subtotal: 0
       };
       return copy;
     });
@@ -216,19 +376,18 @@ export default function ComprasModule({
     });
   };
 
-  // Agregar renglón
+  // Agregar renglón vacío con cantidad en cero
   const handleAddItemRow = () => {
-    const defaultProd = products[0];
     setFormItems(prev => [
       ...prev,
       {
-        productId: defaultProd?.id || '',
-        productName: defaultProd?.name || '',
-        productSku: defaultProd?.sku || '',
-        unit: defaultProd?.unit || 'Onza',
-        quantity: 10,
-        costPrice: defaultProd?.cost || 1.95,
-        subtotal: parseFloat(((defaultProd?.cost || 1.95) * 10).toFixed(2))
+        productId: '',
+        productName: '',
+        productSku: '',
+        unit: 'Onza',
+        quantity: 0,
+        costPrice: 0,
+        subtotal: 0
       }
     ]);
   };
@@ -254,8 +413,8 @@ export default function ComprasModule({
       showToast('Ingresa el Código de Generación o Número de Factura.');
       return;
     }
-    if (formItems.length === 0 || formItems.some(it => it.quantity <= 0 || !it.productId)) {
-      showToast('Verifica los renglones de la compra: todos deben tener producto y cantidad válida.');
+    if (formItems.length === 0 || formItems.some(it => Number(it.quantity) <= 0 || !it.productId)) {
+      showToast('Verifica los renglones: debes seleccionar el producto y especificar una cantidad mayor a 0.');
       return;
     }
 
@@ -352,6 +511,17 @@ export default function ComprasModule({
     setFormDocNumber('');
     setFormControlNumber('');
     setFormNotes('');
+    setFormItems([
+      {
+        productId: '',
+        productName: '',
+        productSku: '',
+        unit: 'Onza',
+        quantity: 0,
+        costPrice: 0,
+        subtotal: 0
+      }
+    ]);
     setSubTab('historial');
     showToast(`✅ Factura ${newPurchase.purchaseNumber} registrada. Se actualizó el stock y costo de los productos.`);
   };
@@ -465,18 +635,31 @@ export default function ComprasModule({
     setIsQuickProductModalOpen(false);
 
     // Agregar al primer renglón del formulario si está libre o añadir renglón
-    setFormItems(prev => [
-      ...prev,
-      {
-        productId: newProd.id,
-        productName: newProd.name,
-        productSku: newProd.sku,
-        unit: newProd.unit,
-        quantity: 20,
-        costPrice: newProd.cost,
-        subtotal: parseFloat((20 * newProd.cost).toFixed(2))
+    setFormItems(prev => {
+      if (prev.length === 1 && !prev[0].productId) {
+        return [{
+          productId: newProd.id,
+          productName: newProd.name,
+          productSku: newProd.sku,
+          unit: newProd.unit,
+          quantity: 0,
+          costPrice: newProd.cost,
+          subtotal: 0
+        }];
       }
-    ]);
+      return [
+        ...prev,
+        {
+          productId: newProd.id,
+          productName: newProd.name,
+          productSku: newProd.sku,
+          unit: newProd.unit,
+          quantity: 0,
+          costPrice: newProd.cost,
+          subtotal: 0
+        }
+      ];
+    });
 
     setQuickProdName('');
     showToast(`✅ Insumo "${newProd.name}" creado e insertado en la compra.`);
@@ -989,36 +1172,40 @@ export default function ComprasModule({
                   <tbody className="divide-y divide-slate-100 text-xs">
                     {formItems.map((item, idx) => (
                       <tr key={idx} className="hover:bg-slate-50/50">
+                        {/* Producto / Insumo con Buscador Predictivo */}
                         <td className="p-2.5">
-                          <select
-                            value={item.productId}
-                            onChange={(e) => handleSelectProductInRow(idx, e.target.value)}
-                            className="clay-input w-full text-xs font-bold"
-                          >
-                            <option value="">-- Seleccionar Producto --</option>
-                            {products.map(p => (
-                              <option key={p.id} value={p.id}>
-                                {p.name} [{p.category}] - Unidad: {p.unit}
-                              </option>
-                            ))}
-                          </select>
+                          <PurchaseItemProductSelector
+                            item={item}
+                            products={products}
+                            onSelectProduct={(prod) => handleSelectProductInRow(idx, prod)}
+                            onClearProduct={() => handleClearProductInRow(idx)}
+                          />
                         </td>
+
+                        {/* Cantidad (Inicia en 0, editable a mano) */}
                         <td className="p-2.5">
                           <div className="flex items-center gap-1">
                             <input
                               type="number"
-                              min="0.1"
+                              min="0"
                               step="any"
                               required
-                              value={item.quantity}
-                              onChange={(e) => handleUpdateItemValue(idx, 'quantity', parseFloat(e.target.value) || 0)}
-                              className="clay-input w-full text-xs font-bold text-center"
+                              placeholder="0"
+                              value={item.quantity === 0 ? '' : item.quantity}
+                              onChange={(e) => {
+                                const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                                handleUpdateItemValue(idx, 'quantity', isNaN(val) ? 0 : val);
+                              }}
+                              className="clay-input w-full text-xs font-mono font-bold text-center"
+                              title="Cantidad comprada (ingrésala a mano)"
                             />
-                            <span className="text-[11px] text-slate-400 font-bold whitespace-nowrap">
+                            <span className="text-[11px] text-slate-500 font-bold whitespace-nowrap min-w-[20px]">
                               {item.unit === 'Onza' ? 'Oz' : item.unit === 'Galón' ? 'Gal' : 'Un.'}
                             </span>
                           </div>
                         </td>
+
+                        {/* Costo Unitario ($) (Editable por centavos) */}
                         <td className="p-2.5">
                           <div className="clay-input flex items-center gap-1">
                             <span className="text-slate-400 font-bold">$</span>
@@ -1027,21 +1214,30 @@ export default function ComprasModule({
                               min="0"
                               step="0.01"
                               required
-                              value={item.costPrice}
-                              onChange={(e) => handleUpdateItemValue(idx, 'costPrice', parseFloat(e.target.value) || 0)}
-                              className="bg-transparent border-none outline-none w-full text-xs font-black text-slate-700"
+                              placeholder="0.00"
+                              value={item.costPrice === 0 ? '' : item.costPrice}
+                              onChange={(e) => {
+                                const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                                handleUpdateItemValue(idx, 'costPrice', isNaN(val) ? 0 : val);
+                              }}
+                              className="bg-transparent border-none outline-none w-full text-xs font-mono font-black text-slate-800"
+                              title="Costo unitario de compra (puedes ajustarlo por centavos)"
                             />
                           </div>
                         </td>
-                        <td className="p-2.5 text-right font-mono font-black text-slate-800">
+
+                        {/* Subtotal */}
+                        <td className="p-2.5 text-right font-mono font-black text-slate-800 whitespace-nowrap">
                           ${(item.quantity * item.costPrice).toFixed(2)}
                         </td>
+
+                        {/* Eliminar Fila */}
                         <td className="p-2.5 text-center">
                           <button
                             type="button"
                             onClick={() => handleRemoveItemRow(idx)}
-                            className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50"
-                            title="Eliminar fila"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                            title="Eliminar renglón"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
