@@ -14,6 +14,7 @@ export interface CustomerRecord {
   nrc?: string; // Número de Registro de Contribuyente (Requerido para CCF)
   actividadEconomica?: string; // Giro o Actividad Comercial según Hacienda
   categoriaContribuyente?: CategoriaContribuyente;
+  documentoPreferido?: '01' | '03' | 'TICKET'; // Documento preferido para facturar: 01 (Factura), 03 (CCF), TICKET
   email: string;
   phone: string;
   departamento?: string;
@@ -63,6 +64,7 @@ export const INITIAL_CUSTOMERS: CustomerRecord[] = [
     departamento: 'San Salvador',
     municipio: 'San Salvador Centro',
     direccion: 'Venta de Mostrador Local',
+    documentoPreferido: '01',
     createdAt: '2026-09-01T08:00:00.000Z'
   },
   {
@@ -76,6 +78,7 @@ export const INITIAL_CUSTOMERS: CustomerRecord[] = [
     departamento: 'San Salvador',
     municipio: 'San Salvador',
     direccion: 'Colonia Escalón, Calle El Mirador #42',
+    documentoPreferido: '01',
     createdAt: '2026-09-02T10:30:00.000Z'
   },
   {
@@ -93,6 +96,7 @@ export const INITIAL_CUSTOMERS: CustomerRecord[] = [
     departamento: 'La Libertad',
     municipio: 'Santa Tecla',
     direccion: 'Centro Comercial Multiplaza, Nivel 2, Local 45',
+    documentoPreferido: '03',
     notas: 'Cliente corporativo de fragancias en onzas al por mayor para reenvase.',
     createdAt: '2026-09-03T14:15:00.000Z'
   },
@@ -107,6 +111,7 @@ export const INITIAL_CUSTOMERS: CustomerRecord[] = [
     departamento: 'La Libertad',
     municipio: 'Santa Tecla',
     direccion: 'Residencial Santa Teresa, Senda 4, Polígono B, Casa #15',
+    documentoPreferido: '01',
     createdAt: '2026-09-03T16:20:00.000Z'
   }
 ];

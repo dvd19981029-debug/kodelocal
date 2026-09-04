@@ -128,6 +128,7 @@ export default function PosPage() {
   const [custNrc, setCustNrc] = useState('');
   const [custGiro, setCustGiro] = useState(GIROS_COMUNES_SV[0]);
   const [custCategoria, setCustCategoria] = useState<CategoriaContribuyente>('OTRO');
+  const [custDocumentoPreferido, setCustDocumentoPreferido] = useState<'01' | '03' | 'TICKET'>('01');
   const [custEmail, setCustEmail] = useState('');
   const [custPhone, setCustPhone] = useState('');
   const [custDepartamento, setCustDepartamento] = useState(DEPARTAMENTOS_SV[0]);
@@ -418,7 +419,9 @@ export default function PosPage() {
       setClienteNrc(found.nrc || '');
       setClienteEmail(found.email || '');
       setClienteGiro(found.actividadEconomica || '');
-      if (found.nrc || found.tipoPersona === 'JURIDICA') {
+      if (found.documentoPreferido) {
+        setTipoComprobante(found.documentoPreferido);
+      } else if (found.nrc || found.tipoPersona === 'JURIDICA') {
         setTipoComprobante('03');
       } else {
         setTipoComprobante('01');
@@ -450,6 +453,7 @@ export default function PosPage() {
     setCustNrc('');
     setCustGiro(GIROS_COMUNES_SV[0]);
     setCustCategoria('OTRO');
+    setCustDocumentoPreferido('01');
     setCustEmail('');
     setCustPhone('');
     setCustDepartamento(DEPARTAMENTOS_SV[0]);
@@ -470,6 +474,7 @@ export default function PosPage() {
     setCustNrc(cust.nrc || '');
     setCustGiro(cust.actividadEconomica || GIROS_COMUNES_SV[0]);
     setCustCategoria(cust.categoriaContribuyente || 'OTRO');
+    setCustDocumentoPreferido(cust.documentoPreferido || (cust.nrc || cust.tipoPersona === 'JURIDICA' ? '03' : '01'));
     setCustEmail(cust.email);
     setCustPhone(cust.phone);
     setCustDepartamento(cust.departamento || DEPARTAMENTOS_SV[0]);
@@ -505,6 +510,7 @@ export default function PosPage() {
             nrc: custNrc.trim() || undefined,
             actividadEconomica: custGiro.trim() || undefined,
             categoriaContribuyente: custCategoria,
+            documentoPreferido: custDocumentoPreferido,
             email: custEmail.trim(),
             phone: custPhone.trim(),
             departamento: custDepartamento,
@@ -515,6 +521,9 @@ export default function PosPage() {
         }
         return c;
       }));
+      if (selectedCustomerId === editingCustomerId) {
+        handleSelectCustomer(editingCustomerId);
+      }
     } else {
       const newCust: CustomerRecord = {
         id: `cli-${Date.now()}`,
@@ -526,6 +535,7 @@ export default function PosPage() {
         nrc: custNrc.trim() || undefined,
         actividadEconomica: custGiro.trim() || undefined,
         categoriaContribuyente: custCategoria,
+        documentoPreferido: custDocumentoPreferido,
         email: custEmail.trim(),
         phone: custPhone.trim(),
         departamento: custDepartamento,
@@ -2300,6 +2310,15 @@ export default function PosPage() {
                                   NRC: {cust.nrc}
                                 </span>
                               )}
+                              <span className={`clay-badge text-[8.5px] font-mono font-bold px-1.5 py-0.2 rounded border ${
+                                cust.documentoPreferido === '03'
+                                  ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                  : cust.documentoPreferido === 'TICKET'
+                                  ? 'bg-slate-100 text-slate-700 border-slate-200'
+                                  : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              }`}>
+                                Doc: {cust.documentoPreferido === '03' ? 'CCF (03)' : cust.documentoPreferido === 'TICKET' ? 'Ticket' : 'Factura (01)'}
+                              </span>
                             </div>
                           </td>
                           <td className="py-3 px-3 font-mono">
@@ -2955,6 +2974,7 @@ export default function PosPage() {
                     onClick={() => {
                       setCustTipoPersona('NATURAL');
                       setCustTipoDocumento('DUI');
+                      setCustDocumentoPreferido('01');
                     }}
                     className={`p-2.5 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-2 ${
                       custTipoPersona === 'NATURAL'
@@ -2963,7 +2983,7 @@ export default function PosPage() {
                     }`}
                   >
                     <User className="w-4 h-4" />
-                    <span>Persona Natural (Factura FC)</span>
+                    <span>Persona Natural</span>
                   </button>
 
                   <button
@@ -2971,6 +2991,7 @@ export default function PosPage() {
                     onClick={() => {
                       setCustTipoPersona('JURIDICA');
                       setCustTipoDocumento('NIT');
+                      setCustDocumentoPreferido('03');
                     }}
                     className={`p-2.5 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-2 ${
                       custTipoPersona === 'JURIDICA'
@@ -2979,9 +3000,68 @@ export default function PosPage() {
                     }`}
                   >
                     <Building2 className="w-4 h-4" />
-                    <span>Persona Jurídica (Crédito Fiscal CCF)</span>
+                    <span>Persona Jurídica (Empresa)</span>
                   </button>
                 </div>
+              </div>
+
+              {/* Documento Tributario Preferido para Facturación */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                  Documento Tributario Preferido para Facturación *
+                </label>
+                <div className="grid grid-cols-3 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setCustDocumentoPreferido('01')}
+                    className={`p-2.5 rounded-xl text-xs font-bold transition-all border flex flex-col items-center justify-center text-center gap-1 ${
+                      custDocumentoPreferido === '01'
+                        ? 'bg-emerald-600 text-white shadow-md border-emerald-600'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    <FileText className="w-4 h-4" />
+                    <span className="leading-tight">Factura FC (01)</span>
+                    <span className={`text-[9.5px] ${custDocumentoPreferido === '01' ? 'text-emerald-100' : 'text-slate-400'}`}>
+                      Consumidor Final
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setCustDocumentoPreferido('03')}
+                    className={`p-2.5 rounded-xl text-xs font-bold transition-all border flex flex-col items-center justify-center text-center gap-1 ${
+                      custDocumentoPreferido === '03'
+                        ? 'bg-purple-600 text-white shadow-md border-purple-600'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Building2 className="w-4 h-4" />
+                    <span className="leading-tight">Crédito Fiscal CCF (03)</span>
+                    <span className={`text-[9.5px] ${custDocumentoPreferido === '03' ? 'text-purple-100' : 'text-slate-400'}`}>
+                      Contribuyentes
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setCustDocumentoPreferido('TICKET')}
+                    className={`p-2.5 rounded-xl text-xs font-bold transition-all border flex flex-col items-center justify-center text-center gap-1 ${
+                      custDocumentoPreferido === 'TICKET'
+                        ? 'bg-indigo-600 text-white shadow-md border-indigo-600'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    <ReceiptText className="w-4 h-4" />
+                    <span className="leading-tight">Ticket de Venta</span>
+                    <span className={`text-[9.5px] ${custDocumentoPreferido === 'TICKET' ? 'text-indigo-100' : 'text-slate-400'}`}>
+                      Venta Mostrador
+                    </span>
+                  </button>
+                </div>
+                <p className="text-[10.5px] text-slate-500 mt-1">
+                  Este documento se seleccionará automáticamente al cotizar o mandar a bodega, y viajará a Caja al facturar.
+                </p>
               </div>
 
               {/* Nombre / Razón Social */}
