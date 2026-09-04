@@ -400,7 +400,7 @@ export default function PosPage() {
   // Iniciar venta directa desde el módulo de clientes
   const handleStartSaleForCustomer = (cust: CustomerRecord) => {
     handleSelectCustomer(cust.id);
-    setPosTab('pos');
+    setPosTab('nueva_orden');
   };
 
   // Abrir modal de nuevo cliente
@@ -1903,95 +1903,125 @@ export default function PosPage() {
               </div>
             </div>
 
-            {/* Rejilla de Clientes */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredCustomers.length === 0 ? (
-                <div className="col-span-2 clay-card p-12 text-center text-slate-400">
-                  <Users className="w-12 h-12 mx-auto mb-2.5 opacity-30 text-indigo-500" />
-                  <h4 className="text-sm font-bold text-slate-700">No se encontraron clientes</h4>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Registra un nuevo cliente con sus datos fiscales para facturar en caja.
-                  </p>
-                </div>
-              ) : (
-                filteredCustomers.map(cust => (
-                  <div key={cust.id} className="clay-card p-4 flex flex-col justify-between space-y-3">
-                    <div>
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className="flex items-center gap-1.5 mb-1">
-                            <span className={`clay-badge text-[9.5px] font-bold py-0.5 px-2 ${
-                              cust.tipoPersona === 'JURIDICA'
-                                ? 'bg-purple-100 text-purple-800 border border-purple-200'
-                                : 'bg-indigo-100 text-indigo-800 border border-indigo-200'
-                            }`}>
-                              {cust.tipoPersona === 'JURIDICA' ? '🏢 Jurídica (Crédito Fiscal)' : '👤 Natural (Consumidor)'}
-                            </span>
-                            {cust.nrc && (
-                              <span className="clay-badge text-[9.5px] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-200">
-                                NRC: {cust.nrc}
+            {/* Tabla de Clientes (Estilo Mecanic OS) */}
+            <div className="clay-card p-5 space-y-3">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <span className="text-xs font-bold text-slate-500">
+                  Mostrando <strong>{filteredCustomers.length}</strong> de {customers.length} clientes registrados
+                </span>
+                <span className="clay-badge text-[10px] bg-slate-100 text-slate-700 font-bold">
+                  {filteredCustomers.filter(c => c.tipoPersona === 'JURIDICA').length} CCF (Empresas) • {filteredCustomers.filter(c => c.tipoPersona === 'NATURAL').length} FC (Consumidor)
+                </span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50/70 text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+                      <th className="py-3 px-3.5">Cliente / Razón Social</th>
+                      <th className="py-3 px-3">Tipo & Régimen</th>
+                      <th className="py-3 px-3">Doc. Fiscal</th>
+                      <th className="py-3 px-3">Contacto / WhatsApp</th>
+                      <th className="py-3 px-3">Correo Facturación</th>
+                      <th className="py-3 px-3">Giro Comercial</th>
+                      <th className="py-3 px-3 text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredCustomers.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="py-12 text-center text-slate-400">
+                          <Users className="w-12 h-12 mx-auto mb-2 opacity-30 text-indigo-500" />
+                          <p className="font-bold text-sm text-slate-600">No se encontraron clientes</p>
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            Prueba ajustando el filtro de búsqueda o registra un nuevo cliente.
+                          </p>
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredCustomers.map((cust) => (
+                        <tr key={cust.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="py-3 px-3.5">
+                            <div className="font-extrabold text-slate-800 text-xs">{cust.name}</div>
+                            {cust.nombreComercial && (
+                              <span className="text-[10px] text-slate-500 font-medium block">
+                                Cial: {cust.nombreComercial}
                               </span>
                             )}
-                          </div>
-                          <h4 className="font-extrabold text-sm text-slate-800">{cust.name}</h4>
-                          {cust.nombreComercial && (
-                            <p className="text-[11px] text-slate-500 font-medium">
-                              Nombre comercial: <strong>{cust.nombreComercial}</strong>
-                            </p>
-                          )}
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEditCustomerModal(cust)}
-                          className="text-slate-400 hover:text-indigo-600 p-1"
-                          title="Editar cliente"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      {/* Datos de contacto y fiscales */}
-                      <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600 mt-2 pt-2 border-t border-slate-100">
-                        <div>
-                          <span className="text-slate-400 block font-semibold">{cust.tipoDocumento}:</span>
-                          <span className="font-mono font-bold text-slate-800">{cust.numDocumento}</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-400 block font-semibold">Teléfono / WhatsApp:</span>
-                          <span className="font-mono font-bold text-slate-800">{cust.phone}</span>
-                        </div>
-                        <div className="col-span-2">
-                          <span className="text-slate-400 block font-semibold">Correo de Facturación:</span>
-                          <span className="font-mono text-slate-700 truncate block">{cust.email}</span>
-                        </div>
-                        {cust.actividadEconomica && (
-                          <div className="col-span-2">
-                            <span className="text-slate-400 block font-semibold">Giro Comercial:</span>
-                            <span className="text-slate-700 text-[10.5px]">{cust.actividadEconomica}</span>
-                          </div>
-                        )}
-                        {cust.direccion && (
-                          <div className="col-span-2 text-[10.5px] text-slate-500">
-                            📍 {cust.direccion}{cust.municipio ? `, ${cust.municipio}` : ''} ({cust.departamento || 'San Salvador'})
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="pt-2 border-t border-slate-100 flex justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleStartSaleForCustomer(cust)}
-                        className="clay-btn clay-btn-primary px-3 py-1.5 text-xs font-black flex items-center gap-1.5"
-                      >
-                        <ShoppingCart className="w-3.5 h-3.5" />
-                        <span>Nueva Venta para este Cliente</span>
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
+                            {cust.direccion && (
+                              <span className="text-[9.5px] text-slate-400 truncate block max-w-[220px]" title={`${cust.direccion}, ${cust.municipio || ''} (${cust.departamento || ''})`}>
+                                📍 {cust.direccion}{cust.municipio ? `, ${cust.municipio}` : ''}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-3">
+                            <div className="flex flex-col items-start gap-1">
+                              <span className={`clay-badge text-[9.5px] font-bold py-0.5 px-2 ${
+                                cust.tipoPersona === 'JURIDICA'
+                                  ? 'bg-purple-100 text-purple-800 border border-purple-200'
+                                  : 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                              }`}>
+                                {cust.tipoPersona === 'JURIDICA' ? '🏢 CCF (Empresa)' : '👤 FC (Natural)'}
+                              </span>
+                              {cust.nrc && (
+                                <span className="clay-badge text-[9px] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-200">
+                                  NRC: {cust.nrc}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 font-mono">
+                            <span className="text-[10px] text-slate-400 block">{cust.tipoDocumento}</span>
+                            <span className="font-bold text-slate-800 text-xs">{cust.numDocumento || 'S/N'}</span>
+                          </td>
+                          <td className="py-3 px-3 font-mono">
+                            <div className="font-bold text-slate-700 text-xs flex items-center gap-1">
+                              <Phone className="w-3 h-3 text-slate-400" />
+                              <span>{cust.phone || 'S/N'}</span>
+                            </div>
+                            {cust.departamento && (
+                              <span className="text-[9.5px] text-slate-400 font-sans block mt-0.5">
+                                {cust.departamento}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-3 font-mono text-[11px] text-slate-600">
+                            <span className="truncate block max-w-[180px]" title={cust.email}>
+                              {cust.email || '—'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 text-[11px] text-slate-600">
+                            <span className="truncate block max-w-[160px]" title={cust.actividadEconomica || 'Consumo final'}>
+                              {cust.actividadEconomica || '—'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditCustomerModal(cust)}
+                                className="clay-btn clay-btn-light p-1.5 text-slate-500 hover:text-indigo-600 rounded-lg"
+                                title="Editar datos del cliente"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleStartSaleForCustomer(cust)}
+                                className="clay-btn clay-btn-primary px-2.5 py-1 text-[10.5px] font-black flex items-center gap-1 shadow-sm"
+                                title="Crear orden para este cliente"
+                              >
+                                <ShoppingCart className="w-3 h-3" />
+                                <span>+ Orden</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
           </div>
