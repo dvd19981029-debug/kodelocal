@@ -48,154 +48,6 @@ interface ComprasModuleProps {
   onAddKardexMovement?: (movement: KardexMovement) => void;
 }
 
-// Selector predictivo con buscador de productos para renglones de compra
-function PurchaseItemProductSelector({
-  item,
-  products,
-  onSelectProduct,
-  onClearProduct
-}: {
-  item: {
-    productId: string;
-    productName: string;
-    productSku: string;
-    unit: string;
-  };
-  products: ProductItem[];
-  onSelectProduct: (product: ProductItem) => void;
-  onClearProduct: () => void;
-}) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isOpen, setIsOpen] = useState(false);
-
-  const matchedProduct = useMemo(() => {
-    return products.find(p => p.id === item.productId);
-  }, [products, item.productId]);
-
-  const filteredProducts = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
-    if (!q) return products.slice(0, 25);
-    return products.filter(p => 
-      p.name.toLowerCase().includes(q) || 
-      p.sku.toLowerCase().includes(q) ||
-      (p.brand && p.brand.toLowerCase().includes(q)) ||
-      (p.puesto && p.puesto.toLowerCase().includes(q))
-    ).slice(0, 35);
-  }, [products, searchQuery]);
-
-  if (item.productId && matchedProduct) {
-    return (
-      <div className="flex items-center justify-between p-2 rounded-xl bg-indigo-50/90 border border-indigo-200 shadow-sm">
-        <div className="flex items-center gap-1.5 overflow-hidden">
-          <span className="text-[10px] font-mono font-bold text-indigo-700 bg-white px-1.5 py-0.5 rounded border border-indigo-200 shrink-0">
-            #{matchedProduct.sku}
-          </span>
-          {matchedProduct.puesto && (
-            <span className="text-[9px] font-mono font-black text-amber-900 bg-amber-100 px-1 py-0.5 rounded border border-amber-200 shrink-0" title={`Puesto: ${matchedProduct.puesto}`}>
-              📍{matchedProduct.puesto}
-            </span>
-          )}
-          <span className="font-black text-xs text-slate-800 truncate max-w-[180px] sm:max-w-[280px]" title={matchedProduct.name}>
-            {matchedProduct.name}
-          </span>
-          <span className="text-[10px] text-slate-400 font-medium shrink-0 hidden md:inline">
-            [{matchedProduct.category}]
-          </span>
-        </div>
-        <button
-          type="button"
-          onClick={onClearProduct}
-          className="text-[10.5px] font-bold text-indigo-600 hover:text-indigo-900 hover:underline shrink-0 ml-2"
-          title="Buscar o cambiar por otro producto"
-        >
-          Cambiar
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative">
-      <div className="relative">
-        <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            setIsOpen(true);
-          }}
-          onFocus={() => setIsOpen(true)}
-          placeholder="🔍 Buscar por fragancia, contratipo o SKU (ej. Sauvage, 100, Bote)..."
-          className="clay-input w-full pl-8 pr-7 py-1.5 text-xs font-semibold placeholder:text-slate-400 placeholder:font-normal"
-        />
-        {searchQuery && (
-          <button
-            type="button"
-            onClick={() => setSearchQuery('')}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
-          >
-            <X className="w-3 h-3" />
-          </button>
-        )}
-      </div>
-
-      {isOpen && (
-        <>
-          <div 
-            className="fixed inset-0 z-40 bg-black/10" 
-            onClick={() => setIsOpen(false)} 
-          />
-          <div className="absolute left-0 top-full mt-1 w-full max-h-64 overflow-y-auto bg-white rounded-xl shadow-2xl border border-indigo-200 z-50 divide-y divide-slate-100">
-            {filteredProducts.length === 0 ? (
-              <div className="p-3 text-center text-xs text-slate-400 font-medium">
-                No se encontró ningún producto con &quot;{searchQuery}&quot;
-              </div>
-            ) : (
-              filteredProducts.map(p => (
-                <div
-                  key={p.id}
-                  onClick={() => {
-                    onSelectProduct(p);
-                    setIsOpen(false);
-                    setSearchQuery('');
-                  }}
-                  className="p-2.5 hover:bg-indigo-50 cursor-pointer flex items-center justify-between transition-colors gap-2"
-                >
-                  <div className="flex items-center gap-2 overflow-hidden">
-                    <span className="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 shrink-0">
-                      #{p.sku}
-                    </span>
-                    {p.puesto && (
-                      <span className="text-[9px] font-mono font-black text-amber-900 bg-amber-50 px-1 py-0.5 rounded border border-amber-200 shrink-0">
-                        📍{p.puesto}
-                      </span>
-                    )}
-                    <span className="text-xs font-black text-slate-800 truncate max-w-[200px] sm:max-w-[300px]" title={p.name}>
-                      {p.name}
-                    </span>
-                    <span className="text-[10px] text-slate-400 shrink-0 hidden sm:inline">
-                      [{p.category}]
-                    </span>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <span className="text-[10.5px] font-mono font-bold text-slate-700 block">
-                      Costo: ${p.cost.toFixed(2)}
-                    </span>
-                    <span className="text-[9.5px] text-slate-400 font-sans">
-                      {p.unit === 'Onza' ? 'Oz' : p.unit}
-                    </span>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
 export default function ComprasModule({
   products,
   onUpdateProducts,
@@ -219,6 +71,26 @@ export default function ComprasModule({
   const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [isQuickProductModalOpen, setIsQuickProductModalOpen] = useState(false);
+
+  // Modal Buscador de Productos para Compra
+  const [pickerRowIndex, setPickerRowIndex] = useState<number | null>(null);
+  const [pickerSearch, setPickerSearch] = useState('');
+  const [pickerCategory, setPickerCategory] = useState('Todos');
+
+  const filteredPickerProducts = useMemo(() => {
+    const q = pickerSearch.toLowerCase().trim();
+    return products.filter(p => {
+      const matchCat = pickerCategory === 'Todos' || p.category === pickerCategory;
+      if (!matchCat) return false;
+      if (!q) return true;
+      return (
+        p.name.toLowerCase().includes(q) ||
+        p.sku.toLowerCase().includes(q) ||
+        (p.brand && p.brand.toLowerCase().includes(q)) ||
+        (p.puesto && p.puesto.toLowerCase().includes(q))
+      );
+    });
+  }, [products, pickerSearch, pickerCategory]);
 
   // Formulario: Registrar Nueva Compra
   const [formTipoDte, setFormTipoDte] = useState<TipoDteCompra>('CCF');
@@ -1172,14 +1044,70 @@ export default function ComprasModule({
                   <tbody className="divide-y divide-slate-100 text-xs">
                     {formItems.map((item, idx) => (
                       <tr key={idx} className="hover:bg-slate-50/50">
-                        {/* Producto / Insumo con Buscador Predictivo */}
+                        {/* Producto / Insumo con Buscador Modal */}
                         <td className="p-2.5">
-                          <PurchaseItemProductSelector
-                            item={item}
-                            products={products}
-                            onSelectProduct={(prod) => handleSelectProductInRow(idx, prod)}
-                            onClearProduct={() => handleClearProductInRow(idx)}
-                          />
+                          {item.productId ? (
+                            <div className="flex items-center justify-between p-2 rounded-xl bg-indigo-50/90 border border-indigo-200 shadow-sm">
+                              <div className="flex items-center gap-1.5 overflow-hidden">
+                                <span className="text-[10px] font-mono font-bold text-indigo-700 bg-white px-1.5 py-0.5 rounded border border-indigo-200 shrink-0">
+                                  #{item.productSku || 'S/N'}
+                                </span>
+                                {products.find(p => p.id === item.productId)?.puesto && (
+                                  <span className="text-[9px] font-mono font-black text-amber-900 bg-amber-100 px-1 py-0.5 rounded border border-amber-200 shrink-0" title={`Puesto: ${products.find(p => p.id === item.productId)?.puesto}`}>
+                                    📍{products.find(p => p.id === item.productId)?.puesto}
+                                  </span>
+                                )}
+                                <span className="font-black text-xs text-slate-800 truncate max-w-[180px] sm:max-w-[280px]" title={item.productName}>
+                                  {item.productName}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-medium shrink-0 hidden md:inline">
+                                  [{products.find(p => p.id === item.productId)?.category || item.unit}]
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setPickerRowIndex(idx);
+                                    setPickerSearch('');
+                                    setPickerCategory('Todos');
+                                  }}
+                                  className="text-[10.5px] font-bold text-indigo-600 hover:text-indigo-900 hover:underline"
+                                  title="Buscar o cambiar por otro producto"
+                                >
+                                  Cambiar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleClearProductInRow(idx)}
+                                  className="text-slate-400 hover:text-rose-600 p-0.5"
+                                  title="Quitar producto seleccionado"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPickerRowIndex(idx);
+                                setPickerSearch('');
+                                setPickerCategory('Todos');
+                              }}
+                              className="w-full flex items-center justify-between px-3 py-2 rounded-xl border-2 border-dashed border-indigo-300 bg-indigo-50/60 hover:bg-indigo-100/70 text-indigo-800 text-xs font-bold transition-all text-left group shadow-sm"
+                            >
+                              <div className="flex items-center gap-2 overflow-hidden">
+                                <Search className="w-3.5 h-3.5 text-indigo-600 group-hover:scale-110 transition-transform shrink-0" />
+                                <span className="text-slate-600 font-medium truncate">
+                                  🔍 Clic aquí para buscar fragancia, bote o insumo (Sauvage, 100, Bote)...
+                                </span>
+                              </div>
+                              <span className="clay-badge text-[10px] font-black bg-indigo-600 text-white shrink-0 ml-2">
+                                Buscar
+                              </span>
+                            </button>
+                          )}
                         </td>
 
                         {/* Cantidad (Inicia en 0, editable a mano) */}
@@ -1965,6 +1893,119 @@ export default function ComprasModule({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: BUSCADOR DE PRODUCTOS / INSUMOS PARA RENGLÓN DE COMPRA             */}
+      {/* ========================================================================= */}
+      {pickerRowIndex !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
+          <div className="clay-card w-full max-w-2xl p-5 relative animate-in zoom-in-95 flex flex-col max-h-[85vh] bg-white">
+            <button
+              type="button"
+              onClick={() => setPickerRowIndex(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="mb-3">
+              <h3 className="text-base font-black text-slate-800 flex items-center gap-2">
+                <span>🔍 Seleccionar Fragancia, Bote o Insumo</span>
+                <span className="clay-badge text-[10px] bg-indigo-100 text-indigo-800 font-bold">
+                  {filteredPickerProducts.length} disponibles
+                </span>
+              </h3>
+              <p className="text-[11px] text-slate-500">
+                Busca por nombre, contratipo, SKU o puesto para agregarlo a la factura de compra.
+              </p>
+            </div>
+
+            <div className="space-y-2 mb-3">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="Escribe el nombre o SKU (ej. Sauvage, 100, Bote, 50ml, Alcohol)..."
+                  value={pickerSearch}
+                  onChange={(e) => setPickerSearch(e.target.value)}
+                  className="clay-input w-full pl-9 pr-3 py-2 text-xs font-bold"
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-1">
+                {['Todos', ...PERFUME_CATEGORIES].map(cat => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setPickerCategory(cat)}
+                    className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition-all ${
+                      pickerCategory === cat
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="overflow-y-auto flex-1 divide-y divide-slate-100 border border-slate-200 rounded-xl">
+              {filteredPickerProducts.length === 0 ? (
+                <div className="p-8 text-center text-slate-400 text-xs">
+                  No se encontraron productos que coincidan con &quot;{pickerSearch}&quot;.
+                </div>
+              ) : (
+                filteredPickerProducts.map(prod => (
+                  <div
+                    key={prod.id}
+                    onClick={() => {
+                      handleSelectProductInRow(pickerRowIndex, prod);
+                      setPickerRowIndex(null);
+                    }}
+                    className="p-3 hover:bg-indigo-50/70 cursor-pointer flex items-center justify-between transition-colors gap-3 group"
+                  >
+                    <div className="flex items-center gap-2.5 overflow-hidden">
+                      <span className="text-xs font-mono font-bold text-indigo-700 bg-indigo-50 group-hover:bg-white px-2 py-1 rounded-lg border border-indigo-200 shrink-0">
+                        #{prod.sku}
+                      </span>
+                      {prod.puesto && (
+                        <span className="text-[10px] font-mono font-black text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 shrink-0">
+                          📍{prod.puesto}
+                        </span>
+                      )}
+                      <div className="truncate">
+                        <h4 className="text-xs font-black text-slate-800 group-hover:text-indigo-900 truncate">
+                          {prod.name}
+                        </h4>
+                        <p className="text-[10px] text-slate-500">
+                          {prod.category} • Presentación: <strong>{prod.unit === 'Onza' ? 'Oz' : prod.unit}</strong>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-right shrink-0 flex items-center gap-3">
+                      <div>
+                        <span className="text-[9px] text-slate-400 uppercase font-bold block">Costo sugerido</span>
+                        <span className="text-xs font-mono font-black text-slate-800">
+                          ${prod.cost.toFixed(2)}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        className="clay-btn clay-btn-primary px-3 py-1 text-[11px] font-bold"
+                      >
+                        Seleccionar
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}
