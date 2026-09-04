@@ -93,13 +93,8 @@ export default function AdminPage() {
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  // Formulario Usuario
-  const [userName, setUserName] = useState('');
-  const [userEmail, setUserEmail] = useState('');
-  const [userPassword, setUserPassword] = useState('');
-  const [userPin, setUserPin] = useState('');
-  const [userRole, setUserRole] = useState<UserRole>('CASHIER');
-  const [userRegister, setUserRegister] = useState('Caja 1 - Mostrador');
+  // Estado Usuario
+  const [editingUser, setEditingUser] = useState<UserAccount | null>(null);
 
   // Precios Masivos
   const [bulkPrice, setBulkPrice] = useState('3.25');
@@ -148,28 +143,58 @@ export default function AdminPage() {
     });
   }, [products, prodCatFilter, prodSearch]);
 
-  const handleCreateUser = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!userName || !userEmail) return;
-
-    const newUser: UserAccount = {
+  const handleOpenNewUser = () => {
+    setEditingUser({
       id: `usr-${Date.now()}`,
-      name: userName,
-      email: userEmail,
-      password: userPassword || '123456',
-      pin: userPin || String(Math.floor(1000 + Math.random() * 9000)),
-      role: userRole,
-      cashRegister: userRegister,
+      name: '',
+      email: '',
+      password: '',
+      pin: String(Math.floor(1000 + Math.random() * 9000)),
+      role: 'CASHIER',
+      cashRegister: 'Caja 1 - Mostrador Principal',
       isActive: true,
       createdAt: new Date().toISOString()
-    };
+    });
+    setIsUserModalOpen(true);
+  };
 
-    setUsers(prev => [...prev, newUser]);
+  const handleStartEditUser = (u: UserAccount) => {
+    setEditingUser({ ...u });
+    setIsUserModalOpen(true);
+  };
+
+  const handleSaveUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser || !editingUser.name.trim() || !editingUser.email.trim()) return;
+
+    setUsers(prev => {
+      const exists = prev.some(u => u.id === editingUser.id);
+      if (exists) {
+        return prev.map(u => u.id === editingUser.id ? editingUser : u);
+      } else {
+        return [...prev, editingUser];
+      }
+    });
+
     setIsUserModalOpen(false);
-    setUserName('');
-    setUserEmail('');
-    setUserPassword('');
-    setUserPin('');
+    setEditingUser(null);
+  };
+
+  const handleToggleUserStatus = (userId: string) => {
+    const target = users.find(u => u.id === userId);
+    if (!target) return;
+    if (target.role === 'ADMIN') {
+      alert('No se puede desactivar la cuenta del Administrador General.');
+      return;
+    }
+    const newStatus = target.isActive === false ? true : false;
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, isActive: newStatus } : u));
+  };
+
+  const handleGenerateRandomPin = () => {
+    if (!editingUser) return;
+    const randomPin = String(Math.floor(1000 + Math.random() * 9000));
+    setEditingUser({ ...editingUser, pin: randomPin });
   };
 
   const handleApplyBulkPrices = (e: React.FormEvent) => {
@@ -994,8 +1019,8 @@ export default function AdminPage() {
                 <p className="text-xs text-slate-500 font-medium">Crea usuarios, asigna PIN de 4 dígitos y define accesos</p>
               </div>
               <button
-                onClick={() => setIsUserModalOpen(true)}
-                className="clay-btn clay-btn-primary px-4 py-2.5 text-xs flex items-center gap-1.5"
+                onClick={handleOpenNewUser}
+                className="clay-btn clay-btn-primary px-4 py-2.5 text-xs flex items-center gap-1.5 font-bold"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Nuevo Usuario</span>
@@ -1018,12 +1043,17 @@ export default function AdminPage() {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {users.map(u => (
-                      <tr key={u.id} className="hover:bg-slate-50/70">
+                      <tr key={u.id} className="hover:bg-slate-50/70 transition-colors">
                         <td className="py-3 px-3 font-bold text-slate-800 flex items-center gap-2">
                           <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-[11px]">
                             {u.name.charAt(0)}
                           </div>
-                          <span>{u.name}</span>
+                          <div className="flex flex-col">
+                            <span className="font-bold">{u.name}</span>
+                            {u.role === 'ADMIN' && (
+                              <span className="text-[9px] text-purple-600 font-bold uppercase">Super Administrador</span>
+                            )}
+                          </div>
                         </td>
                         <td className="py-3 px-3 font-mono text-slate-500">{u.email}</td>
                         <td className="py-3 px-3">
@@ -1041,19 +1071,46 @@ export default function AdminPage() {
                             {u.pin}
                           </span>
                         </td>
-                        <td className="py-3 px-3 text-slate-600">{u.cashRegister}</td>
+                        <td className="py-3 px-3 text-slate-600">{u.cashRegister || 'Sin asignar'}</td>
                         <td className="py-3 px-3">
-                          <span className="text-emerald-600 font-bold text-[11px]">● Activo</span>
+                          <button
+                            onClick={() => handleToggleUserStatus(u.id)}
+                            className={`px-2.5 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 transition-all shadow-sm ${
+                              u.isActive !== false
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                                : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                            }`}
+                            title={u.isActive !== false ? 'Cuenta activa (clic para suspender)' : 'Cuenta desactivada (clic para reactivar)'}
+                          >
+                            <span className={`w-2 h-2 rounded-full ${u.isActive !== false ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                            <span>{u.isActive !== false ? 'Activo' : 'Inactivo'}</span>
+                          </button>
                         </td>
                         <td className="py-3 px-3 text-right">
-                          {u.role !== 'ADMIN' && (
+                          <div className="flex items-center justify-end gap-1.5">
                             <button
-                              onClick={() => setUsers(prev => prev.filter(x => x.id !== u.id))}
-                              className="text-slate-400 hover:text-rose-600 p-1"
+                              onClick={() => handleStartEditUser(u)}
+                              className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold transition-all inline-flex items-center gap-1 text-[11px] shadow-sm active:scale-95"
+                              title="Editar datos, rol, PIN y contraseña"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Edit3 className="w-3.5 h-3.5" />
+                              <span>Editar</span>
                             </button>
-                          )}
+
+                            {u.role !== 'ADMIN' && (
+                              <button
+                                onClick={() => {
+                                  if (confirm(`¿Estás seguro de eliminar el usuario "${u.name}"?`)) {
+                                    setUsers(prev => prev.filter(x => x.id !== u.id));
+                                  }
+                                }}
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                                title="Eliminar usuario"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -1245,75 +1302,65 @@ export default function AdminPage() {
 
       </main>
 
-      {/* ================= MODAL: CREAR USUARIO DE CAJA ================= */}
-      {isUserModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="clay-card w-full max-w-md p-6 relative animate-in fade-in zoom-in-95">
+      {/* ================= MODAL: CREAR / EDITAR USUARIO ================= */}
+      {isUserModalOpen && editingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm overflow-y-auto">
+          <div className="clay-card w-full max-w-lg p-6 relative my-8 animate-in fade-in zoom-in-95">
             <button
-              onClick={() => setIsUserModalOpen(false)}
+              onClick={() => { setIsUserModalOpen(false); setEditingUser(null); }}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-xl font-black text-slate-800 mb-1">Nuevo Usuario de Caja</h3>
-            <p className="text-xs text-slate-500 mb-5">Define el colaborador, su PIN de mostrador y sucursal.</p>
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-xl font-black text-slate-800">
+                {users.some(u => u.id === editingUser.id) ? 'Editar Usuario y Accesos' : 'Nuevo Usuario de Sistema'}
+              </h3>
+              <span className={`clay-badge text-[10px] font-bold py-0.5 px-2.5 ${
+                editingUser.isActive !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+              }`}>
+                {editingUser.isActive !== false ? '● Activo' : '○ Inactivo'}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mb-5">
+              Gestiona credenciales, sucursal, rol asignado y restablecimiento de contraseña.
+            </p>
 
-            <form onSubmit={handleCreateUser} className="space-y-3.5">
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Nombre Completo *</label>
-                <input
-                  type="text"
-                  required
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                  placeholder="Ej. Sofía Martínez"
-                  className="clay-input w-full text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Correo Electrónico *</label>
-                <input
-                  type="email"
-                  required
-                  value={userEmail}
-                  onChange={(e) => setUserEmail(e.target.value)}
-                  placeholder="sofia@kodelocal.com"
-                  className="clay-input w-full text-xs"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+            <form onSubmit={handleSaveUser} className="space-y-4">
+              {/* Nombre y Correo */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">Contraseña</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Nombre Completo *</label>
                   <input
-                    type="password"
-                    value={userPassword}
-                    onChange={(e) => setUserPassword(e.target.value)}
-                    placeholder="••••••••"
+                    type="text"
+                    required
+                    value={editingUser.name}
+                    onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
+                    placeholder="Ej. Sofía Martínez"
+                    className="clay-input w-full text-xs font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Correo Electrónico *</label>
+                  <input
+                    type="email"
+                    required
+                    value={editingUser.email}
+                    onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                    placeholder="sofia@kodelocal.com"
                     className="clay-input w-full text-xs"
                   />
                 </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">PIN Rápido (4 dígitos)</label>
-                  <input
-                    type="text"
-                    maxLength={4}
-                    value={userPin}
-                    onChange={(e) => setUserPin(e.target.value)}
-                    placeholder="1234"
-                    className="clay-input w-full text-xs font-mono font-bold text-indigo-600"
-                  />
-                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              {/* Rol y Sucursal / Caja */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">Rol de Acceso</label>
                   <select
-                    value={userRole}
-                    onChange={(e) => setUserRole(e.target.value)}
+                    value={editingUser.role}
+                    onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}
                     className="clay-input w-full text-xs font-bold"
                   >
                     {roles.map(r => (
@@ -1322,28 +1369,103 @@ export default function AdminPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">Caja Asignada</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Sucursal / Terminal Asignada</label>
                   <input
                     type="text"
-                    value={userRegister}
-                    onChange={(e) => setUserRegister(e.target.value)}
-                    placeholder="Caja 1"
+                    value={editingUser.cashRegister || ''}
+                    onChange={(e) => setEditingUser({ ...editingUser, cashRegister: e.target.value })}
+                    placeholder="Ej. Caja 1 - Mostrador Principal"
                     className="clay-input w-full text-xs"
                   />
                 </div>
               </div>
 
+              {/* Credenciales y Reset de Contraseña / PIN */}
+              <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-wider text-indigo-900">
+                    Credenciales de Seguridad & Acceso
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-medium">
+                    Restablece clave o PIN en cualquier momento
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">
+                      Contraseña Web
+                    </label>
+                    <input
+                      type="text"
+                      value={editingUser.password || ''}
+                      onChange={(e) => setEditingUser({ ...editingUser, password: e.target.value })}
+                      placeholder="Nueva contraseña..."
+                      className="clay-input w-full text-xs font-mono"
+                    />
+                    <span className="text-[10px] text-slate-400 mt-1 block">Visible solo para Gerencia</span>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-bold text-slate-700">
+                        PIN de Caja (4 dígitos)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleGenerateRandomPin}
+                        className="text-[10px] font-bold text-indigo-600 hover:underline flex items-center gap-0.5"
+                      >
+                        <KeyRound className="w-3 h-3" />
+                        <span>Generar Aleatorio</span>
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      maxLength={4}
+                      value={editingUser.pin || ''}
+                      onChange={(e) => setEditingUser({ ...editingUser, pin: e.target.value.replace(/\D/g, '') })}
+                      placeholder="1234"
+                      className="clay-input w-full text-sm font-mono font-black text-indigo-600 text-center tracking-widest"
+                    />
+                    <span className="text-[10px] text-slate-400 mt-1 block text-center">Para cobro rápido en mostrador</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Estado de la Cuenta (Activo / Inactivo) */}
+              <div className="p-3.5 rounded-2xl bg-white border border-slate-200 flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-xs text-slate-800">Estado de Acceso</h4>
+                  <p className="text-[11px] text-slate-500">
+                    {editingUser.isActive !== false 
+                      ? 'El colaborador puede iniciar sesión y operar en el sistema.' 
+                      : 'Acceso suspendido: el usuario no podrá iniciar sesión en ninguna terminal.'}
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editingUser.isActive !== false}
+                    onChange={(e) => setEditingUser({ ...editingUser, isActive: e.target.checked })}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
+              </div>
+
+              {/* Botones de acción */}
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setIsUserModalOpen(false)}
+                  onClick={() => { setIsUserModalOpen(false); setEditingUser(null); }}
                   className="clay-btn clay-btn-light flex-1 py-2.5 text-xs"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="clay-btn clay-btn-primary flex-1 py-2.5 text-xs"
+                  className="clay-btn clay-btn-primary flex-1 py-2.5 text-xs font-bold"
                 >
                   Guardar Usuario
                 </button>
