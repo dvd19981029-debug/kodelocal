@@ -562,13 +562,13 @@ export default function KardexModule({
               Buscar DTE / Referencia / SKU
             </label>
             <div className="relative">
-              <Search className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
               <input
                 type="text"
                 placeholder="DTE-01..., SKU, Proveedor..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="clay-input w-full pl-6 pr-2 py-1 text-[10.5px]"
+                className="clay-input has-icon w-full pr-2 py-1 text-[10.5px]"
               />
             </div>
           </div>

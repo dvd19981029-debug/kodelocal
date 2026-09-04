@@ -1450,7 +1450,7 @@ export default function PosPage() {
                       )}
 
                       <div className="relative flex items-center z-40">
-                        <Search className="w-3.5 h-3.5 absolute left-2.5 text-slate-400 pointer-events-none" />
+                        <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
                         <input
                           type="text"
                           placeholder="Buscar cliente (Nombre, DUI o NRC)..."
@@ -1460,7 +1460,7 @@ export default function PosPage() {
                             setIsCartCustomerDropdownOpen(true);
                           }}
                           onFocus={() => setIsCartCustomerDropdownOpen(true)}
-                          className="w-full text-xs font-medium pl-8 pr-7 py-1.5 rounded-lg bg-white border border-indigo-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 shadow-2xs"
+                          className="w-full text-xs font-medium pl-9 pr-7 py-1.5 rounded-lg bg-white border border-indigo-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 shadow-2xs"
                         />
                         {cartCustomerQuery && (
                           <button
@@ -1982,13 +1982,13 @@ export default function PosPage() {
                 {/* Barra de Búsqueda y Filtros de DTE */}
                 <div className="clay-card p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                   <div className="relative flex-1 w-full">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none z-10" />
                     <input
                       type="text"
                       placeholder="Buscar por N° de Control (DTE-01-...), Código de Generación, cliente u orden..."
                       value={dteSearchQuery}
                       onChange={(e) => setDteSearchQuery(e.target.value)}
-                      className="clay-input w-full pl-9 pr-3 py-2 text-xs font-bold"
+                      className="clay-input has-icon w-full pr-3 py-2 text-xs font-bold"
                     />
                   </div>
 
@@ -2204,13 +2204,13 @@ export default function PosPage() {
             {/* Buscador y Filtros */}
             <div className="clay-card p-3.5 flex flex-col sm:flex-row gap-2.5 items-center justify-between">
               <div className="relative flex-1 w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none z-10" />
                 <input
                   type="text"
                   placeholder="Buscar cliente por Nombre, DUI, NIT, NRC o Teléfono..."
                   value={customerSearch}
                   onChange={(e) => setCustomerSearch(e.target.value)}
-                  className="clay-input w-full pl-9 pr-3 py-2 text-xs font-bold"
+                  className="clay-input has-icon w-full pr-3 py-2 text-xs font-bold"
                 />
               </div>
 
@@ -2528,13 +2528,13 @@ export default function PosPage() {
                   Historial de Comprobantes Emitidos en Caja
                 </h3>
                 <div className="relative w-full sm:w-72">
-                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
                   <input
                     type="text"
                     placeholder="Buscar comanda (#CMD-1081) o cliente..."
                     value={ventasSearch}
                     onChange={(e) => setVentasSearch(e.target.value)}
-                    className="clay-input w-full pl-8 pr-3 py-1.5 text-xs font-bold"
+                    className="clay-input has-icon w-full pr-3 py-1.5 text-xs font-bold"
                   />
                 </div>
               </div>
@@ -2767,13 +2767,13 @@ export default function PosPage() {
               </div>
 
               <div className="relative w-full md:w-72">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
                 <input
                   type="text"
                   placeholder="Buscar comanda, cliente o fragancia..."
                   value={bodegaOrdenesSearch}
                   onChange={(e) => setBodegaOrdenesSearch(e.target.value)}
-                  className="clay-input w-full pl-9 pr-3 py-1.5 text-xs font-bold"
+                  className="clay-input has-icon w-full pr-3 py-1.5 text-xs font-bold"
                 />
               </div>
             </div>

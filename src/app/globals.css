@@ -129,8 +129,16 @@ body {
 }
 
 .clay-input.has-icon,
-.clay-input-icon {
-  padding-left: 2.85rem !important;
+.clay-input-icon,
+.has-icon,
+.clay-input[class*="pl-8"],
+.clay-input[class*="pl-9"],
+.clay-input[class*="pl-10"],
+.clay-input[class*="pl-11"],
+.relative:has(> svg.lucide-search) > .clay-input,
+.relative:has(> svg.lucide-barcode) > .clay-input,
+.relative:has(> svg) > .clay-input {
+  padding-left: 2.75rem !important;
 }
 
 .clay-input:focus {

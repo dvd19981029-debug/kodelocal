@@ -802,7 +802,7 @@ export default function AdminPage() {
             {/* Barra de Filtros */}
             <div className="clay-card p-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
               <div className="relative flex-1 w-full">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none z-10" />
                 <input
                   type="text"
                   placeholder="Buscar por código (#100), nombre, marca o puesto (A1)..."

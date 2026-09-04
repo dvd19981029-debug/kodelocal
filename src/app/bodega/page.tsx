@@ -563,13 +563,13 @@ export default function BodegaPage() {
                 </div>
 
                 <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none z-10" />
                   <input
                     type="text"
                     placeholder="Buscar comanda o fragancia..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="clay-input w-full pl-9 pr-3 py-1.5 text-xs font-bold"
+                    className="clay-input has-icon w-full pr-3 py-1.5 text-xs font-bold"
                   />
                 </div>
               </div>
@@ -707,13 +707,13 @@ export default function BodegaPage() {
                 </div>
 
                 <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none z-10" />
                   <input
                     type="text"
                     placeholder="Buscar pedido listo..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="clay-input w-full pl-9 pr-3 py-1.5 text-xs font-bold"
+                    className="clay-input has-icon w-full pr-3 py-1.5 text-xs font-bold"
                   />
                 </div>
               </div>
@@ -802,13 +802,13 @@ export default function BodegaPage() {
                 </div>
 
                 <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none z-10" />
                   <input
                     type="text"
                     placeholder="Buscar entregado..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="clay-input w-full pl-9 pr-3 py-1.5 text-xs font-bold"
+                    className="clay-input has-icon w-full pr-3 py-1.5 text-xs font-bold"
                   />
                 </div>
               </div>
@@ -917,13 +917,13 @@ export default function BodegaPage() {
 
                 <div className="flex flex-col sm:flex-row gap-2.5">
                   <div className="relative flex-1">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
                     <input
                       type="text"
                       placeholder="Buscar por fragancia, contratipo, SKU (#100) o Puesto (A1)..."
                       value={stockSearch}
                       onChange={(e) => setStockSearch(e.target.value)}
-                      className="clay-input w-full pl-9 pr-3 py-2 text-xs font-bold"
+                      className="clay-input has-icon w-full pr-3 py-2 text-xs font-bold"
                     />
                   </div>
 

@@ -654,13 +654,13 @@ export default function ComprasModule({
           {/* Barra de Búsqueda y Filtros */}
           <div className="clay-card p-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
             <div className="relative flex-1 w-full">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
               <input
                 type="text"
                 placeholder="Buscar por proveedor, # DTE, # Control o # Compra..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="clay-input w-full pl-9 pr-4 py-2 text-xs"
+                className="clay-input has-icon w-full pr-4 py-2 text-xs"
               />
             </div>
 
@@ -1918,14 +1918,14 @@ export default function ComprasModule({
 
             <div className="space-y-2 mb-3">
               <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
                 <input
                   type="text"
                   autoFocus
                   placeholder="Escribe el nombre o SKU (ej. Sauvage, 100, Bote, 50ml, Alcohol)..."
                   value={pickerSearch}
                   onChange={(e) => setPickerSearch(e.target.value)}
-                  className="clay-input w-full pl-9 pr-3 py-2 text-xs font-bold"
+                  className="clay-input has-icon w-full pr-3 py-2 text-xs font-bold"
                 />
               </div>
 
