@@ -23,7 +23,14 @@ export default function InventarioPage() {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('kodelocal_products');
       if (saved) {
-        try { return JSON.parse(saved); } catch (e) {}
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.length < 50 || parsed[0]?.category === 'Audio') {
+            localStorage.setItem('kodelocal_products', JSON.stringify(INITIAL_PRODUCTS));
+            return INITIAL_PRODUCTS;
+          }
+          return parsed;
+        } catch (e) {}
       }
     }
     return INITIAL_PRODUCTS;
@@ -39,12 +46,15 @@ export default function InventarioPage() {
     name: '',
     sku: '',
     barcode: '',
-    category: 'General',
-    price: 0,
-    cost: 0,
-    stock: 10,
-    minStock: 5,
-    imageUrl: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=500&q=80',
+    brand: '',
+    gender: 'Unisex',
+    category: 'Esencias para Perfume',
+    unit: 'Onza',
+    price: 3.25,
+    cost: 1.95,
+    stock: 50,
+    minStock: 10,
+    imageUrl: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80',
     isAvailableOnline: true
   });
 
@@ -64,6 +74,7 @@ export default function InventarioPage() {
       const matchCat = selectedCategory === 'Todos' || p.category === selectedCategory;
       const matchSearch = 
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.brand && p.brand.toLowerCase().includes(searchQuery.toLowerCase())) ||
         p.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.barcode.includes(searchQuery);
       return matchCat && matchSearch;
@@ -91,12 +102,15 @@ export default function InventarioPage() {
         name: formData.name || 'Nuevo Producto',
         sku: formData.sku || `SKU-${Math.floor(1000 + Math.random() * 9000)}`,
         barcode: formData.barcode || `${Math.floor(741000000000 + Math.random() * 99999999)}`,
-        category: formData.category || 'General',
+        brand: formData.brand || 'Kode',
+        gender: formData.gender || 'Unisex',
+        category: formData.category || 'Esencias para Perfume',
+        unit: formData.unit || 'Onza',
         price: Number(formData.price),
         cost: Number(formData.cost || 0),
         stock: Number(formData.stock || 0),
         minStock: Number(formData.minStock || 5),
-        imageUrl: formData.imageUrl || 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=500&q=80',
+        imageUrl: formData.imageUrl || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80',
         isAvailableOnline: Boolean(formData.isAvailableOnline)
       };
       setProducts(prev => [newProduct, ...prev]);

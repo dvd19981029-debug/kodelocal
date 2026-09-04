@@ -1,0 +1,4489 @@
+[
+  {
+    "kodigo": "100",
+    "contratipo": "1 Million Elixir H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "101",
+    "contratipo": "1 Million Golden Oud",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "102",
+    "contratipo": "1 Million H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "103",
+    "contratipo": "1 Million Intense H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "104",
+    "contratipo": "1 Million Lucky H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "105",
+    "contratipo": "1 Million Parfum H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "106",
+    "contratipo": "1 Million Privé H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "107",
+    "contratipo": "1 Million Royal H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "108",
+    "contratipo": "18 Perry Ellis H",
+    "marca": "Perry Ellis",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "109",
+    "contratipo": "212 H",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "110",
+    "contratipo": "212 H Aqua",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "111",
+    "contratipo": "212 H Gua",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "112",
+    "contratipo": "212 Heroes H",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "113",
+    "contratipo": "212 Sexy H",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "114",
+    "contratipo": "212 Sexy Pills H",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "115",
+    "contratipo": "212 Vip Black H",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "116",
+    "contratipo": "212 Vip Black Red H",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "117",
+    "contratipo": "212 Vip Black Smiley H",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "118",
+    "contratipo": "212 Vip H",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "119",
+    "contratipo": "212 Vip Party Fever H",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "120",
+    "contratipo": "212 Vip Pills H",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "121",
+    "contratipo": "212 Vip Wild Party H",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "122",
+    "contratipo": "212 Vip Wins H",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "123",
+    "contratipo": "360 Black H",
+    "marca": "Perry Ellis",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "124",
+    "contratipo": "360 Blue H",
+    "marca": "Perry Ellis",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "125",
+    "contratipo": "360 Collection H",
+    "marca": "Perry Ellis",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "126",
+    "contratipo": "360 H",
+    "marca": "Perry Ellis",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "127",
+    "contratipo": "360 H Gua",
+    "marca": "Perry Ellis",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "128",
+    "contratipo": "360 Red H",
+    "marca": "Perry Ellis",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "129",
+    "contratipo": "360 Very Blue H",
+    "marca": "Perry Ellis",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "130",
+    "contratipo": "9PM H",
+    "marca": "Afnan",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "131",
+    "contratipo": "A*Men",
+    "marca": "Thierry Mugler",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "132",
+    "contratipo": "Absolu Aventus H",
+    "marca": "Creed",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "133",
+    "contratipo": "Adrenaline H",
+    "marca": "Enrique Iglesias",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "134",
+    "contratipo": "Allure H",
+    "marca": "Chanel",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "135",
+    "contratipo": "Allure Sport Extreme H",
+    "marca": "Chanel",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "136",
+    "contratipo": "Allure Sport H",
+    "marca": "Chanel",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "137",
+    "contratipo": "Altitude",
+    "marca": "Victorinox Swiss Army",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "138",
+    "contratipo": "Animal H",
+    "marca": "Animale",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "139",
+    "contratipo": "Aqua Di Gio Absolu H",
+    "marca": "Giorgio Armani",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "140",
+    "contratipo": "Aqua Di Gio H",
+    "marca": "Giorgio Armani",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "141",
+    "contratipo": "Aqua Di Gio Profondo H",
+    "marca": "Giorgio Armani",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "142",
+    "contratipo": "Aqua Di Gio Profumo H",
+    "marca": "Giorgio Armani",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "143",
+    "contratipo": "Aqua H",
+    "marca": "Perry Ellis",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "144",
+    "contratipo": "Aqva H",
+    "marca": "Bvlgari",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "145",
+    "contratipo": "Armani Black Code H",
+    "marca": "Giorgio Armani",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "146",
+    "contratipo": "Armani Code Sport H",
+    "marca": "Giorgio Armani",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "147",
+    "contratipo": "Armani Mania H",
+    "marca": "Giorgio Armani",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "148",
+    "contratipo": "Asad H",
+    "marca": "Lattafa",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "149",
+    "contratipo": "Aventus H",
+    "marca": "Creed",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "150",
+    "contratipo": "Azzaro H",
+    "marca": "Azzaro",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "151",
+    "contratipo": "Azzaro most wanted Intense H",
+    "marca": "Azzaro",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "152",
+    "contratipo": "Bad Boy H",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "153",
+    "contratipo": "Bad H",
+    "marca": "Diesel",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "154",
+    "contratipo": "Bharara King",
+    "marca": "Bharara",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "155",
+    "contratipo": "Big Pony 1 H",
+    "marca": "Ralph Lauren",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "156",
+    "contratipo": "Big Pony 2 H",
+    "marca": "Ralph Lauren",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "157",
+    "contratipo": "Big Pony 3 H",
+    "marca": "Ralph Lauren",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "158",
+    "contratipo": "Big Pony 4 H",
+    "marca": "Ralph Lauren",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "159",
+    "contratipo": "Black Ferrari H",
+    "marca": "Ferrari",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "160",
+    "contratipo": "Black H",
+    "marca": "Kenneth Cole",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "161",
+    "contratipo": "Bleu De Chanel H",
+    "marca": "Chanel",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "162",
+    "contratipo": "Blue Label H",
+    "marca": "Givenchy",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "163",
+    "contratipo": "Blue Seduction H",
+    "marca": "Antonio Banderas",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "164",
+    "contratipo": "Blv H",
+    "marca": "Bvlgari",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "165",
+    "contratipo": "Born in Roma H",
+    "marca": "Valentino",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "166",
+    "contratipo": "Boss Bottled 98 H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "167",
+    "contratipo": "Boss Bottled 98 Intense H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "168",
+    "contratipo": "Boss Bottled Marine",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "169",
+    "contratipo": "Boss Bottled Night H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "170",
+    "contratipo": "Boss Bottled Sport H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "171",
+    "contratipo": "Boss Bottled Tonic H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "172",
+    "contratipo": "Boss Bottled Unlimited H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "173",
+    "contratipo": "Boss Element H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "174",
+    "contratipo": "Boss In Motion H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "175",
+    "contratipo": "Boss Infinite H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "176",
+    "contratipo": "Boss Orange H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "177",
+    "contratipo": "Boss Soul H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "178",
+    "contratipo": "Bulgari H",
+    "marca": "Bvlgari",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "179",
+    "contratipo": "Bulgari Man In Black H",
+    "marca": "Bvlgari",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "180",
+    "contratipo": "Bulgari Man Rain Essence H",
+    "marca": "Bvlgari",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "181",
+    "contratipo": "Carolina Herrera H",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "182",
+    "contratipo": "Ch Africa H",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "183",
+    "contratipo": "Ch Beasts H",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "184",
+    "contratipo": "Ch Men H",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "185",
+    "contratipo": "Ch Privé H",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "186",
+    "contratipo": "Chrome Azzaro H",
+    "marca": "Azzaro",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "187",
+    "contratipo": "Chrome Azzaro H Edition 2015",
+    "marca": "Azzaro",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "188",
+    "contratipo": "Chrome Parfum H",
+    "marca": "Azzaro",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "189",
+    "contratipo": "Chrome Pure H",
+    "marca": "Azzaro",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "190",
+    "contratipo": "Ck In 2 U H",
+    "marca": "Calvin Klein",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "191",
+    "contratipo": "Ck One Shock For Him H",
+    "marca": "Calvin Klein",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "192",
+    "contratipo": "Club De Nuit Intense H",
+    "marca": "Armaf",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "193",
+    "contratipo": "Cool Play H",
+    "marca": "Lacoste",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "194",
+    "contratipo": "Cool Water H",
+    "marca": "Davidoff",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "195",
+    "contratipo": "CR7 H",
+    "marca": "Cristiano Ronaldo",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "196",
+    "contratipo": "Cuba Blue H",
+    "marca": "Cuba",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "197",
+    "contratipo": "Cuba Magnum Gold H",
+    "marca": "Cuba",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "198",
+    "contratipo": "Curve Crush H",
+    "marca": "Liz Clairborne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "199",
+    "contratipo": "Curve H",
+    "marca": "Liz Clairborne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "200",
+    "contratipo": "Daddy Yankee H",
+    "marca": "Daddy Yankee",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "201",
+    "contratipo": "Dark Blue H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "202",
+    "contratipo": "Declaration H",
+    "marca": "Cartier",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "203",
+    "contratipo": "Deep Energy",
+    "marca": "Adidas",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "204",
+    "contratipo": "Desire Bleu",
+    "marca": "Dunhill",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "205",
+    "contratipo": "Diesel Gua H",
+    "marca": "Diesel",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "206",
+    "contratipo": "Diesel H",
+    "marca": "Diesel",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "207",
+    "contratipo": "Diesel Plus Plus H",
+    "marca": "Diesel",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "208",
+    "contratipo": "Dior Homme H",
+    "marca": "Dior",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "209",
+    "contratipo": "Dior Homme Intense H",
+    "marca": "Dior",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "210",
+    "contratipo": "Dior Homme Sport H",
+    "marca": "Dior",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "211",
+    "contratipo": "Dolce Gabbana H",
+    "marca": "Dolce & Gabbana",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "212",
+    "contratipo": "Drakar H",
+    "marca": "Guy Laroche",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "213",
+    "contratipo": "Dylan Blue H",
+    "marca": "Versace",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "214",
+    "contratipo": "Dynamic Pulse",
+    "marca": "Adidas",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "215",
+    "contratipo": "Emporio H",
+    "marca": "Armani",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "216",
+    "contratipo": "Eros Flame H",
+    "marca": "Versace",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "217",
+    "contratipo": "Eros H",
+    "marca": "Versace",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "218",
+    "contratipo": "Escape H",
+    "marca": "Calvin Klein",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "219",
+    "contratipo": "Eternity H",
+    "marca": "Calvin Klein",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "220",
+    "contratipo": "Eternity Now H",
+    "marca": "Calvin Klein",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "221",
+    "contratipo": "Euphoria H",
+    "marca": "Calvin Klein",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "222",
+    "contratipo": "Fahrenheit Gua H",
+    "marca": "Dior",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "223",
+    "contratipo": "Fahrenheit H",
+    "marca": "Dior",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "224",
+    "contratipo": "Ferrari Man In Red",
+    "marca": "Ferrari",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "225",
+    "contratipo": "Fuel For Life Spirit H",
+    "marca": "Diesel",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "226",
+    "contratipo": "Gentleman Only",
+    "marca": "Givenchy",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "227",
+    "contratipo": "Guess By Marciano H",
+    "marca": "Marciano",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "228",
+    "contratipo": "Guess H",
+    "marca": "Guess",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "229",
+    "contratipo": "Guilty H",
+    "marca": "Gucci",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "230",
+    "contratipo": "Halloween H",
+    "marca": "Jesus Del Pozo",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "231",
+    "contratipo": "Halloween Rock On H",
+    "marca": "Jesus Del Pozo",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "232",
+    "contratipo": "Halloween Shot H",
+    "marca": "Jesus Del Pozo",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "233",
+    "contratipo": "Halloween Tattoo H",
+    "marca": "Jesus Del Pozo",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "234",
+    "contratipo": "Halloween X H",
+    "marca": "Halloween",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "235",
+    "contratipo": "Happy H",
+    "marca": "Clinique",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "236",
+    "contratipo": "Hawas H",
+    "marca": "Rasasi",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "237",
+    "contratipo": "Hugo Boss H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "238",
+    "contratipo": "Hugo Boss H Gua",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "239",
+    "contratipo": "Hugo Energise H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "240",
+    "contratipo": "Hugo Iced H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "241",
+    "contratipo": "Hugo Now H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "242",
+    "contratipo": "Hugo Red H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "243",
+    "contratipo": "Hugo Reflective H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "244",
+    "contratipo": "Hugo Reversed H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "245",
+    "contratipo": "Hugo Urban Journey H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "246",
+    "contratipo": "Hugo XY H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "247",
+    "contratipo": "Ice Dive",
+    "marca": "Adidas",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "248",
+    "contratipo": "Insense Ultramarine H",
+    "marca": "Givenchy",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "249",
+    "contratipo": "Intenso",
+    "marca": "Dolce & Gabbana",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "250",
+    "contratipo": "Invictus Aqua H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "251",
+    "contratipo": "Invictus H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "252",
+    "contratipo": "Invictus Intense H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "253",
+    "contratipo": "Invictus Legend H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "254",
+    "contratipo": "Invictus Platinum",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "255",
+    "contratipo": "Invictus Victory H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "256",
+    "contratipo": "Issey Miyake L'eau D'issey H",
+    "marca": "Issey Miyake",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "257",
+    "contratipo": "Jean Paul Gaultier H",
+    "marca": "Jean Paul Gaultier",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "258",
+    "contratipo": "Joop H",
+    "marca": "Joop",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "259",
+    "contratipo": "Jules H",
+    "marca": "Dior",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "260",
+    "contratipo": "K H",
+    "marca": "Dolce & Gabbana",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "261",
+    "contratipo": "Kaiak Aventura H",
+    "marca": "Natura",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "262",
+    "contratipo": "King Of Seduction H",
+    "marca": "Antonio Banderas",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "263",
+    "contratipo": "Kouros H",
+    "marca": "Yves Saint Laurent",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "264",
+    "contratipo": "Kouros Silver H",
+    "marca": "Yves Saint Laurent",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "265",
+    "contratipo": "L1212 Amarillo H",
+    "marca": "Lacoste",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "266",
+    "contratipo": "L1212 Azul H",
+    "marca": "Lacoste",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "267",
+    "contratipo": "L1212 Blanco H",
+    "marca": "Lacoste",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "268",
+    "contratipo": "L1212 Energized H",
+    "marca": "Lacoste",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "269",
+    "contratipo": "L1212 Fraiche H",
+    "marca": "Lacoste",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "270",
+    "contratipo": "L1212 Magnetic H",
+    "marca": "Lacoste",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "271",
+    "contratipo": "L1212 Negro H",
+    "marca": "Lacoste",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "272",
+    "contratipo": "L1212 Rojo H",
+    "marca": "Lacoste",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "273",
+    "contratipo": "L1212 Verde H",
+    "marca": "Lacoste",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "274",
+    "contratipo": "Lacoste Booster H",
+    "marca": "Lacoste",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "275",
+    "contratipo": "Lacoste Essential H",
+    "marca": "Lacoste",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "276",
+    "contratipo": "Lacoste Essential Sport H",
+    "marca": "Lacoste",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "277",
+    "contratipo": "Lacoste H",
+    "marca": "Lacoste",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "278",
+    "contratipo": "Lacoste Homme 2017",
+    "marca": "Lacoste",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "279",
+    "contratipo": "Lacoste Live H",
+    "marca": "Lacoste",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "280",
+    "contratipo": "Lacoste Pour Homme H",
+    "marca": "Lacoste",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "281",
+    "contratipo": "Lacoste Style In Play 2004 H",
+    "marca": "Lacoste",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "282",
+    "contratipo": "Lapidus H",
+    "marca": "Ted Lapidus",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "283",
+    "contratipo": "Lapidus H Gua",
+    "marca": "Ted Lapidus",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "284",
+    "contratipo": "Lattitude Longitude H",
+    "marca": "Nautica",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "285",
+    "contratipo": "Le Beau H",
+    "marca": "Jean Paul Gaultier",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "286",
+    "contratipo": "Le Male Elixir H",
+    "marca": "Jean Paul Gaultier",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "287",
+    "contratipo": "Le Male Le Parfum H",
+    "marca": "Jean Paul Gaultier",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "288",
+    "contratipo": "Legacy H",
+    "marca": "Cristiano Ronaldo",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "289",
+    "contratipo": "Legend H",
+    "marca": "Montblanc",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "290",
+    "contratipo": "Legend Red",
+    "marca": "Montblanc",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "291",
+    "contratipo": "L'Homme Ysl H",
+    "marca": "Yves Saint Laurent",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "292",
+    "contratipo": "Light Blue H",
+    "marca": "Dolce & Gabbana",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "293",
+    "contratipo": "Light Blue Intense H",
+    "marca": "Dolce & Gabbana",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "294",
+    "contratipo": "Lolita Lempika H",
+    "marca": "Lolita Lempicka",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "295",
+    "contratipo": "Luna Rossa Carbon",
+    "marca": "Prada",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "296",
+    "contratipo": "Match Point H",
+    "marca": "Lacoste",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "297",
+    "contratipo": "Mercedes Benz Club H",
+    "marca": "Mercedes Benz",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "298",
+    "contratipo": "Messi",
+    "marca": "Barcelona",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "299",
+    "contratipo": "Morton H",
+    "marca": "Morton",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "300",
+    "contratipo": "Morton Musk H",
+    "marca": "Morton",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "301",
+    "contratipo": "Narciso Rodriguez H",
+    "marca": "Narciso Rodriguez",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "302",
+    "contratipo": "Nautica Blue H",
+    "marca": "Nautica",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "303",
+    "contratipo": "Nautica H",
+    "marca": "Nautica",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "304",
+    "contratipo": "Nautica Voyage Blue H",
+    "marca": "Nautica",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "305",
+    "contratipo": "Nautica Voyage H",
+    "marca": "Nautica",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "306",
+    "contratipo": "Obsession H",
+    "marca": "Calvin Klein",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "307",
+    "contratipo": "Only The Brave Tattoo H",
+    "marca": "Diesel",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "308",
+    "contratipo": "Oscar De La Renta H",
+    "marca": "Oscar De La Renta",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "309",
+    "contratipo": "Pacha Cartier H",
+    "marca": "Cartier",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "310",
+    "contratipo": "Paco Rabanne H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "311",
+    "contratipo": "Paris Hilton H",
+    "marca": "Paris Hilton",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "312",
+    "contratipo": "Perry Ellis Citron",
+    "marca": "Perry Ellis",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "313",
+    "contratipo": "Perry Ellis Cobalt",
+    "marca": "Perry Ellis",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "314",
+    "contratipo": "Perry Ellis Platinum",
+    "marca": "Perry Ellis",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "315",
+    "contratipo": "Phantom H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "316",
+    "contratipo": "Phantom Legion H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "317",
+    "contratipo": "Phantom Parfum H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "318",
+    "contratipo": "Pi H",
+    "marca": "Givenchy",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "319",
+    "contratipo": "Pino Silvestre H",
+    "marca": "Pino Silvestre",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "320",
+    "contratipo": "Play H",
+    "marca": "Givenchy",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "321",
+    "contratipo": "Playboy Vip Gold H",
+    "marca": "Playboy",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "322",
+    "contratipo": "Playboy Vip H",
+    "marca": "Playboy",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "323",
+    "contratipo": "Polo Black H",
+    "marca": "Ralph Lauren",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "324",
+    "contratipo": "Polo Blue H",
+    "marca": "Ralph Lauren",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "325",
+    "contratipo": "Polo H",
+    "marca": "Ralph Lauren",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "326",
+    "contratipo": "Polo H Gua",
+    "marca": "Ralph Lauren",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "327",
+    "contratipo": "Polo Red Extreme H",
+    "marca": "Ralph Lauren",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "328",
+    "contratipo": "Polo Red H",
+    "marca": "Ralph Lauren",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "329",
+    "contratipo": "Polo Red Intense H",
+    "marca": "Ralph Lauren",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "330",
+    "contratipo": "Polo Sport H",
+    "marca": "Ralph Lauren",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "331",
+    "contratipo": "Polo Sport H Gua",
+    "marca": "Ralph Lauren",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "332",
+    "contratipo": "Polo Ultra Blue H",
+    "marca": "Ralph Lauren",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "333",
+    "contratipo": "Portfolio H",
+    "marca": "Perry Ellis",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "334",
+    "contratipo": "Pour Homme",
+    "marca": "Caron",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "335",
+    "contratipo": "Pour Homme DG H",
+    "marca": "Dolce & Gabbana",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "336",
+    "contratipo": "Puma H",
+    "marca": "Puma",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "337",
+    "contratipo": "Puma Jamaica H",
+    "marca": "Puma",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "339",
+    "contratipo": "Red Ferrari H",
+    "marca": "Ferrari",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "340",
+    "contratipo": "Reserve H",
+    "marca": "Perry Ellis",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "341",
+    "contratipo": "Rock The Night H",
+    "marca": "Shakira",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "342",
+    "contratipo": "Santos H",
+    "marca": "Cartier",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "343",
+    "contratipo": "Sauvage Elixir H",
+    "marca": "Dior",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "344",
+    "contratipo": "Sauvage H",
+    "marca": "Dior",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "345",
+    "contratipo": "Scandal H",
+    "marca": "Jean Paul Gaultier",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "346",
+    "contratipo": "Sensus H",
+    "marca": "Avon",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "347",
+    "contratipo": "Spicebomb H",
+    "marca": "Viktor&Rolf",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "348",
+    "contratipo": "Spirited H",
+    "marca": "Perry Ellis",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "349",
+    "contratipo": "Starwalker H",
+    "marca": "Montblanc",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "350",
+    "contratipo": "Stronger With You H",
+    "marca": "Giorgio Armani",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "351",
+    "contratipo": "Swiss H",
+    "marca": "Victorinox Swiss Army",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "352",
+    "contratipo": "Terre D'Hermes H",
+    "marca": "Hermes",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "353",
+    "contratipo": "The Golden Secret H",
+    "marca": "Antonio Banderas",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "354",
+    "contratipo": "The Icon H",
+    "marca": "Antonio Banderas",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "355",
+    "contratipo": "The One H",
+    "marca": "Dolce & Gabbana",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "356",
+    "contratipo": "The One Sport H",
+    "marca": "Dolce & Gabbana",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "357",
+    "contratipo": "The Scent H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "358",
+    "contratipo": "The Secret H",
+    "marca": "Antonio Banderas",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "359",
+    "contratipo": "Tommy Brights H",
+    "marca": "Tommy Hillfiger",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "360",
+    "contratipo": "Tommy H",
+    "marca": "Tommy Hillfiger",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "361",
+    "contratipo": "Tous H",
+    "marca": "Tous",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "362",
+    "contratipo": "Toy Boy H",
+    "marca": "Moschino",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "363",
+    "contratipo": "Ultra Le Male",
+    "marca": "Jean Paul Gaultier",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "364",
+    "contratipo": "Ultraviolet H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "365",
+    "contratipo": "Unforgivable H",
+    "marca": "Sean John",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "366",
+    "contratipo": "Uomo H",
+    "marca": "Valentino",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "367",
+    "contratipo": "Versace H",
+    "marca": "Versace",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "368",
+    "contratipo": "Versce Eau Fraiche H",
+    "marca": "Versace",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "369",
+    "contratipo": "Very Irresistible H",
+    "marca": "Givenchy",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "370",
+    "contratipo": "Victory League H",
+    "marca": "Adidas",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "371",
+    "contratipo": "Wanted H",
+    "marca": "Azzaro",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "373",
+    "contratipo": "Xs Black Be A Legend Iggy",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "374",
+    "contratipo": "Xs Black H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "375",
+    "contratipo": "Xs Black Lexces H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "372",
+    "contratipo": "Xs H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "376",
+    "contratipo": "Y H",
+    "marca": "Yves Saint Laurent",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "377",
+    "contratipo": "Y Intense H",
+    "marca": "Yves Saint Laurent",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "378",
+    "contratipo": "Zero Plus H",
+    "marca": "Diesel",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "379",
+    "contratipo": "18 Perry Ellis F",
+    "marca": "Perry Ellis",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "380",
+    "contratipo": "212 F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "381",
+    "contratipo": "212 Heroes F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "382",
+    "contratipo": "212 On Ice F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "383",
+    "contratipo": "212 Sexy F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "384",
+    "contratipo": "212 Sexy F vv",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "385",
+    "contratipo": "212 Sexy Pills F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "386",
+    "contratipo": "212 Vip F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "387",
+    "contratipo": "212 Vip Party Fever F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "388",
+    "contratipo": "212 Vip Rose Extra F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "389",
+    "contratipo": "212 Vip Rose F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "390",
+    "contratipo": "212 Vip Rose Red F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "391",
+    "contratipo": "212 Vip Rose Smiley F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "392",
+    "contratipo": "212 Vip Wild Party F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "393",
+    "contratipo": "212 Vip Wins F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "394",
+    "contratipo": "360 Black F",
+    "marca": "Perry Ellis",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "395",
+    "contratipo": "360 Coral F",
+    "marca": "Perry Ellis",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "396",
+    "contratipo": "360 F",
+    "marca": "Perry Ellis",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "397",
+    "contratipo": "360 Pink F",
+    "marca": "Perry Ellis",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "398",
+    "contratipo": "360 Purple F",
+    "marca": "Perry Ellis",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "399",
+    "contratipo": "360 Red F",
+    "marca": "Perry Ellis",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "400",
+    "contratipo": "360 White F",
+    "marca": "Perry Ellis",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "401",
+    "contratipo": "Aires De Los Tiempos",
+    "marca": "Nina Ricci",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "402",
+    "contratipo": "Alien F",
+    "marca": "Thierry Mugler",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "403",
+    "contratipo": "Allure F",
+    "marca": "Chanel",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "404",
+    "contratipo": "Amarige F",
+    "marca": "Givenchy",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "406",
+    "contratipo": "Amour F",
+    "marca": "Kenzo",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "407",
+    "contratipo": "Anais Anais F",
+    "marca": "Cacharel",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "408",
+    "contratipo": "Ange O Demon F",
+    "marca": "Givenchy",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "409",
+    "contratipo": "Angel Elixir F",
+    "marca": "Thierry Mugler",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "410",
+    "contratipo": "Angel F",
+    "marca": "Thierry Mugler",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "411",
+    "contratipo": "Animal F",
+    "marca": "Animale",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "412",
+    "contratipo": "Aqua De Gioia F",
+    "marca": "Giorgio Armani",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "413",
+    "contratipo": "Aqua Di Gio F",
+    "marca": "Giorgio Armani",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "414",
+    "contratipo": "Ari F",
+    "marca": "Ariana Grande",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "415",
+    "contratipo": "Aventus F",
+    "marca": "Creed",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "416",
+    "contratipo": "Bae F",
+    "marca": "Kim Kardashian",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "417",
+    "contratipo": "Be Delicious F",
+    "marca": "DKNY Donna Karan",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "418",
+    "contratipo": "Be Tempted F",
+    "marca": "DKNY Donna Karan",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "419",
+    "contratipo": "Bff",
+    "marca": "Kim Kardashian",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "420",
+    "contratipo": "Big Pony 1 F",
+    "marca": "Ralph Lauren",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "421",
+    "contratipo": "Big Pony 2 F",
+    "marca": "Ralph Lauren",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "422",
+    "contratipo": "Big Pony 3 F",
+    "marca": "Ralph Lauren",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "423",
+    "contratipo": "Big Pony 4 F",
+    "marca": "Ralph Lauren",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "424",
+    "contratipo": "Black F",
+    "marca": "Kenneth Cole",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "425",
+    "contratipo": "Black Opium F",
+    "marca": "Yves Saint Laurent",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "426",
+    "contratipo": "Black Orchid F",
+    "marca": "Tom Ford",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "427",
+    "contratipo": "Bombshell F",
+    "marca": "Victorias Secret",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "428",
+    "contratipo": "Born in Roma F",
+    "marca": "Valentino",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "429",
+    "contratipo": "Bright Crystal F",
+    "marca": "Versace",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "430",
+    "contratipo": "Bulgari F",
+    "marca": "Bvlgari",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "431",
+    "contratipo": "Burberry Her",
+    "marca": "Burberry",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "432",
+    "contratipo": "Can Can F",
+    "marca": "Paris Hilton",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "433",
+    "contratipo": "Can Can Gua F",
+    "marca": "Paris Hilton",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "434",
+    "contratipo": "Candy Florale F",
+    "marca": "Prada",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "435",
+    "contratipo": "Carmina F",
+    "marca": "Creed",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "436",
+    "contratipo": "Carolina Herrera F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "437",
+    "contratipo": "Ch Africa F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "438",
+    "contratipo": "Ch Beauties F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "439",
+    "contratipo": "Ch F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "440",
+    "contratipo": "Ch L'Eau F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "441",
+    "contratipo": "Ch Sublime F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "442",
+    "contratipo": "Chance Eau Fraiche F",
+    "marca": "Chanel",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "443",
+    "contratipo": "Chance Eau Tendre F",
+    "marca": "Chanel",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "444",
+    "contratipo": "Chance Eau Vive F",
+    "marca": "Chanel",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "445",
+    "contratipo": "Chance F",
+    "marca": "Chanel",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "446",
+    "contratipo": "Chanel 5",
+    "marca": "Chanel",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "447",
+    "contratipo": "Chic F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "448",
+    "contratipo": "Cloud F",
+    "marca": "Ariana Grande",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "449",
+    "contratipo": "Cloud Pink F",
+    "marca": "Ariana Grande",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "450",
+    "contratipo": "Club de Nuit F",
+    "marca": "Armaf",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "451",
+    "contratipo": "Club de Nuit Intense F",
+    "marca": "Armaf",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "452",
+    "contratipo": "Coco Chanel F",
+    "marca": "Chanel",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "453",
+    "contratipo": "Coco Mademoiselle F",
+    "marca": "Chanel",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "454",
+    "contratipo": "Cool Water F",
+    "marca": "Davidoff",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "455",
+    "contratipo": "Curious F",
+    "marca": "Britney Spears",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "456",
+    "contratipo": "Curve Crush F",
+    "marca": "Liz Claiborne",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "457",
+    "contratipo": "Curve F",
+    "marca": "Liz Clairborne",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "458",
+    "contratipo": "Daisy Dream F",
+    "marca": "Marc Jacobs",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "459",
+    "contratipo": "Daisy Eau So Fresh F",
+    "marca": "Marc Jacobs",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "460",
+    "contratipo": "Daisy F",
+    "marca": "Marc Jacobs",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "461",
+    "contratipo": "Dance F",
+    "marca": "Shakira",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "462",
+    "contratipo": "Dazzle F",
+    "marca": "Paris Hilton",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "463",
+    "contratipo": "Deep Euphoria F",
+    "marca": "Calvin Klein",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "464",
+    "contratipo": "Deep Red F",
+    "marca": "Hugo Boss",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "465",
+    "contratipo": "Delina F",
+    "marca": "Parfums de Marly",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "466",
+    "contratipo": "Devotion F",
+    "marca": "Dolce & Gabbana",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "467",
+    "contratipo": "Diesel Plus Plus F",
+    "marca": "Diesel",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "468",
+    "contratipo": "Dior Addict F",
+    "marca": "Dior",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "469",
+    "contratipo": "Dolce Floral Drops F",
+    "marca": "Dolce & Gabbana",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "470",
+    "contratipo": "Dolce Gabbana F",
+    "marca": "Dolce & Gabbana",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "471",
+    "contratipo": "Dylan Blue F",
+    "marca": "Versace",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "472",
+    "contratipo": "Eau De Gaga F",
+    "marca": "Lady Gaga",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "473",
+    "contratipo": "Eau My Gold F",
+    "marca": "Paco Rabanne",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "474",
+    "contratipo": "Endless Euphoria F",
+    "marca": "Calvin Klein",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "475",
+    "contratipo": "Eros F",
+    "marca": "Versace",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "476",
+    "contratipo": "Escape F",
+    "marca": "Calvin Klein",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "477",
+    "contratipo": "Eternity Air F",
+    "marca": "Calvin Klein",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "478",
+    "contratipo": "Eternity F",
+    "marca": "Calvin Klein",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "479",
+    "contratipo": "Euphoria F",
+    "marca": "Calvin Klein",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "480",
+    "contratipo": "Extraordinary F",
+    "marca": "Oscar De La Renta",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "481",
+    "contratipo": "Fame F",
+    "marca": "Paco Rabanne",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "482",
+    "contratipo": "Fantasme F",
+    "marca": "Ted Lapidus",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "483",
+    "contratipo": "Fantasy F",
+    "marca": "Britney Spears",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "484",
+    "contratipo": "Feminity F",
+    "marca": "Mancera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "485",
+    "contratipo": "Fifth Avenue F",
+    "marca": "Elizabeth Arden",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "486",
+    "contratipo": "First Love F",
+    "marca": "Victorias Secret",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "487",
+    "contratipo": "Flor Del Sol F",
+    "marca": "Escada",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "488",
+    "contratipo": "Flower De Kenzo F",
+    "marca": "Kenzo",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "489",
+    "contratipo": "Flowerbomb F",
+    "marca": "Viktor&Rolf",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "490",
+    "contratipo": "Forever and Ever F",
+    "marca": "Dior",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "491",
+    "contratipo": "Gabrielle F",
+    "marca": "Chanel",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "492",
+    "contratipo": "Glow F",
+    "marca": "Jennifer Lopez",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "493",
+    "contratipo": "Gold Rush F",
+    "marca": "Paris Hilton",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "494",
+    "contratipo": "Good Girl Blush F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "495",
+    "contratipo": "Good Girl F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "496",
+    "contratipo": "Good Girl Legere F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "497",
+    "contratipo": "Good Girl Midnight F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "498",
+    "contratipo": "Good Girl Supreme F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "499",
+    "contratipo": "Guess By Marciano F",
+    "marca": "Guess",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "500",
+    "contratipo": "Guess F",
+    "marca": "Guess",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "501",
+    "contratipo": "Guess Girl F",
+    "marca": "Guess",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "502",
+    "contratipo": "Guilty F",
+    "marca": "Gucci",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "503",
+    "contratipo": "Halloween F",
+    "marca": "Jesus Del Pozo",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "504",
+    "contratipo": "Halloween Fever",
+    "marca": "Jesus Del Pozo",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "505",
+    "contratipo": "Halloween Fleur",
+    "marca": "Jesus Del Pozo",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "506",
+    "contratipo": "Halloween Freesia F",
+    "marca": "Jesus Del Pozo",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "507",
+    "contratipo": "Halloween Kiss",
+    "marca": "Jesus Del Pozo",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "508",
+    "contratipo": "Halloween Kiss Sexy F",
+    "marca": "Jesus Del Pozo",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "509",
+    "contratipo": "Halloween Magic F",
+    "marca": "Jesus Del Pozo",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "510",
+    "contratipo": "Halloween Shot F",
+    "marca": "Jesus Del Pozo",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "511",
+    "contratipo": "Halloween Tattoo F",
+    "marca": "Jesus Del Pozo",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "512",
+    "contratipo": "Happy F",
+    "marca": "Clinique",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "513",
+    "contratipo": "Heiress F",
+    "marca": "Paris Hilton",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "514",
+    "contratipo": "Hipnotic Poison F",
+    "marca": "Dior",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "515",
+    "contratipo": "Hugo Boss F 2015",
+    "marca": "Hugo Boss",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "516",
+    "contratipo": "Hugo XX F",
+    "marca": "Hugo Boss",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "517",
+    "contratipo": "Hypnose F",
+    "marca": "Lancome",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "518",
+    "contratipo": "I Am Juicy Couture F",
+    "marca": "Juicy Couture",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "519",
+    "contratipo": "Idole F",
+    "marca": "Lancome",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "520",
+    "contratipo": "Jadore F",
+    "marca": "Dior",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "521",
+    "contratipo": "Jean Paul F",
+    "marca": "Jean Paul Gaultier",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "522",
+    "contratipo": "Joop F",
+    "marca": "Joop",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "523",
+    "contratipo": "Joy F",
+    "marca": "Dior",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "524",
+    "contratipo": "Just Me F",
+    "marca": "Paris Hilton",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "525",
+    "contratipo": "Killer Queen F",
+    "marca": "Katy Perry",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "526",
+    "contratipo": "Kim F",
+    "marca": "Kim Kardashian",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "527",
+    "contratipo": "L De Lolita F",
+    "marca": "Lolita Lempicka",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "528",
+    "contratipo": "L1212 Green F",
+    "marca": "Lacoste",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "529",
+    "contratipo": "L1212 Magnetic F",
+    "marca": "Lacoste",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "530",
+    "contratipo": "L1212 Pink F",
+    "marca": "Lacoste",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "531",
+    "contratipo": "La Belle F",
+    "marca": "Jean Paul Gaultier",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "532",
+    "contratipo": "La Petite Robe Noire F",
+    "marca": "Guerlain",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "533",
+    "contratipo": "La Tentation F",
+    "marca": "Nina Ricci",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "534",
+    "contratipo": "La Vida Es Bella",
+    "marca": "Lancome",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "535",
+    "contratipo": "La Vida Es Bella Bouquet",
+    "marca": "Lancome",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "536",
+    "contratipo": "La Vida Es Bella En Rose",
+    "marca": "Lacome",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "537",
+    "contratipo": "La Vida Es Bella Intense",
+    "marca": "Lancome",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "538",
+    "contratipo": "Lacoste F",
+    "marca": "Lacoste",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "539",
+    "contratipo": "Lacoste Intense F",
+    "marca": "Lacoste",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "540",
+    "contratipo": "Lacoste Pour Femme 2003 F",
+    "marca": "Lacoste",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "541",
+    "contratipo": "Lady Million Empire F",
+    "marca": "Paco Rabanne",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "542",
+    "contratipo": "Lady Million F",
+    "marca": "Paco Rabanne",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "543",
+    "contratipo": "Lady Million Lucky F",
+    "marca": "Paco Rabanne",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "544",
+    "contratipo": "Lady Million Privé F",
+    "marca": "Paco Rabanne",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "545",
+    "contratipo": "L'Air De Nina Ricci F",
+    "marca": "Nina Ricci",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "546",
+    "contratipo": "Le Parfum F",
+    "marca": "Lolita Lempicka",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "547",
+    "contratipo": "Libre F",
+    "marca": "Yves Saint Laurent",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "548",
+    "contratipo": "Libre Intense F",
+    "marca": "Yves Saint Laurent",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "549",
+    "contratipo": "Light Blue F",
+    "marca": "Dolce & Gabbana",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "550",
+    "contratipo": "Light Blue Intense F",
+    "marca": "Dolce & Gabbana",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "551",
+    "contratipo": "Live F",
+    "marca": "Jennifer Lopez",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "552",
+    "contratipo": "Lolita Lempika F",
+    "marca": "Lolita Lempicka",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "553",
+    "contratipo": "Love F",
+    "marca": "By Kilian",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "554",
+    "contratipo": "Love F",
+    "marca": "Perry Ellis",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "555",
+    "contratipo": "Love V.S. F",
+    "marca": "Victorias Secret",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "556",
+    "contratipo": "Magia Negra F",
+    "marca": "Lancome",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "557",
+    "contratipo": "Meow",
+    "marca": "Katy Perry",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "558",
+    "contratipo": "Michael Kors F",
+    "marca": "Michael Kors",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "559",
+    "contratipo": "Midnight Fantasy F",
+    "marca": "Britney Spears",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "560",
+    "contratipo": "Midnight Romance F",
+    "marca": "Ralph Lauren",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "561",
+    "contratipo": "Miracle F",
+    "marca": "Lancome",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "562",
+    "contratipo": "Miss Dior Cherie F",
+    "marca": "Dior",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "563",
+    "contratipo": "Miss Dior F",
+    "marca": "Dior",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "564",
+    "contratipo": "Miu Miu F",
+    "marca": "Miu Miu",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "565",
+    "contratipo": "Mon Guerlain F",
+    "marca": "Guerlain",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "566",
+    "contratipo": "Mon Paris F",
+    "marca": "Guerlain",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "567",
+    "contratipo": "Moon Sparkle F",
+    "marca": "Escada",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "568",
+    "contratipo": "Mousuf F",
+    "marca": "Ard Al Zaafaran",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "569",
+    "contratipo": "My Way F",
+    "marca": "Giorgio Armani",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "570",
+    "contratipo": "Narcisse Chloe F",
+    "marca": "Chloe",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "571",
+    "contratipo": "Nautica F",
+    "marca": "Nautica",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "572",
+    "contratipo": "Nina Luna F",
+    "marca": "Nina Ricci",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "573",
+    "contratipo": "Nina Ricci F",
+    "marca": "Nina Ricci",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "574",
+    "contratipo": "Nina Rouge F",
+    "marca": "Nina Ricci",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "575",
+    "contratipo": "O Lancome F",
+    "marca": "Lancome",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "576",
+    "contratipo": "O Oui De Lancome",
+    "marca": "Lancome",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "577",
+    "contratipo": "Obsession F",
+    "marca": "Calvin Klein",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "578",
+    "contratipo": "Olympea",
+    "marca": "Paco Rabanne",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "579",
+    "contratipo": "Olympea Aqua",
+    "marca": "Paco Rabanne",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "580",
+    "contratipo": "Olympea Intense",
+    "marca": "Paco Rabanne",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "581",
+    "contratipo": "Olympea Legend",
+    "marca": "Paco Rabanne",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "582",
+    "contratipo": "Olympea Onyx",
+    "marca": "Paco Rabanne",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "583",
+    "contratipo": "Omnia Coral",
+    "marca": "Bvlgari",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "584",
+    "contratipo": "Organza F",
+    "marca": "Givenchy",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "585",
+    "contratipo": "Oscar De La Renta F",
+    "marca": "Oscar De La Renta",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "586",
+    "contratipo": "Our Moment",
+    "marca": "One Direction",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "587",
+    "contratipo": "Paloma Picasso F",
+    "marca": "Paloma Picaso",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "588",
+    "contratipo": "Paris Hilton F",
+    "marca": "Paris Hilton",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "589",
+    "contratipo": "Passion F",
+    "marca": "Elizabeth Taylor",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "590",
+    "contratipo": "Perfect F",
+    "marca": "Marc Jacobs",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "591",
+    "contratipo": "Pink Friday F",
+    "marca": "Nicky Minaj",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "592",
+    "contratipo": "Pink Honey F",
+    "marca": "Marc Jacobs",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "593",
+    "contratipo": "Pink Sugar Cotton F",
+    "marca": "Aquolina",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "594",
+    "contratipo": "Pink Sugar F",
+    "marca": "Aquolina",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "595",
+    "contratipo": "Play For Her F",
+    "marca": "Givenchy",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "596",
+    "contratipo": "Pleasure F",
+    "marca": "Estee Lauder",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "597",
+    "contratipo": "Poison F",
+    "marca": "Dior",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "598",
+    "contratipo": "Poison Girl F",
+    "marca": "Dior",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "599",
+    "contratipo": "Polo Sport F",
+    "marca": "Ralph Lauren",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "600",
+    "contratipo": "Portfolio F",
+    "marca": "Perry Ellis",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "601",
+    "contratipo": "Provocative",
+    "marca": "Argeville",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "602",
+    "contratipo": "Pure XS F",
+    "marca": "Paco Rabanne",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "603",
+    "contratipo": "Purr F",
+    "marca": "Katy Perry",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "604",
+    "contratipo": "Q F",
+    "marca": "Dolce & Gabbana",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "605",
+    "contratipo": "Radiance F",
+    "marca": "Britney Spears",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "606",
+    "contratipo": "Rainbow Fantasy F",
+    "marca": "Britney Spears",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "607",
+    "contratipo": "Ralph Lauren F",
+    "marca": "Ralph Lauren",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "608",
+    "contratipo": "Red Door F",
+    "marca": "Elizabeth Arden",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "609",
+    "contratipo": "Reveal F",
+    "marca": "Calvin Klein",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "610",
+    "contratipo": "Ricci Ricci F",
+    "marca": "Nina Ricci",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "611",
+    "contratipo": "Riri F",
+    "marca": "Rihanna",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "612",
+    "contratipo": "Rise",
+    "marca": "Beyonce",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "613",
+    "contratipo": "Rock F",
+    "marca": "Shakira",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "614",
+    "contratipo": "Rose et Reine F",
+    "marca": "L'Occitane",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "615",
+    "contratipo": "Rumba F",
+    "marca": "Balenciaga",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "616",
+    "contratipo": "S Shakira F",
+    "marca": "Shakira",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "617",
+    "contratipo": "Scandal F",
+    "marca": "Jean Paul Gaultier",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "618",
+    "contratipo": "Selena Gomez",
+    "marca": "Selena Gomez",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "619",
+    "contratipo": "Shakira Elixir F",
+    "marca": "Shakira",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "620",
+    "contratipo": "Shakira Florale F",
+    "marca": "Shakira",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "621",
+    "contratipo": "Si Giorgio Armani F",
+    "marca": "Giorgio Armani",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "622",
+    "contratipo": "Signature F",
+    "marca": "Montblanc",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "623",
+    "contratipo": "Sofia F",
+    "marca": "Sofia Vergara",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "624",
+    "contratipo": "Sorbetto Rosso F",
+    "marca": "Escada",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "625",
+    "contratipo": "Sunflowers F",
+    "marca": "Elizabeth Arden",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "626",
+    "contratipo": "Sweet Like Candy F",
+    "marca": "Ariana Grande",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "627",
+    "contratipo": "Swiss F",
+    "marca": "Victorinox Swiss Army",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "628",
+    "contratipo": "Terre De Lumiere F",
+    "marca": "L'Occitane",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "629",
+    "contratipo": "The Icon F",
+    "marca": "Antonio Banderas",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "630",
+    "contratipo": "The One F",
+    "marca": "Dolce & Gabbana",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "631",
+    "contratipo": "The Scent F",
+    "marca": "Hugo Boss",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "632",
+    "contratipo": "Tommy F",
+    "marca": "Tommy Hilfiger",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "633",
+    "contratipo": "Touch of Pink F",
+    "marca": "Lacoste",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "634",
+    "contratipo": "Touch of Sun F",
+    "marca": "Lacoste",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "635",
+    "contratipo": "Tous Neon Candy F",
+    "marca": "Tous",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "636",
+    "contratipo": "Toy 2 Bubble Gum F",
+    "marca": "Moschino",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "637",
+    "contratipo": "Toy 2 F",
+    "marca": "Moschino",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "638",
+    "contratipo": "Tresor F",
+    "marca": "Lancome",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "639",
+    "contratipo": "Tribu F",
+    "marca": "Benetton",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "640",
+    "contratipo": "Ultraviolet F",
+    "marca": "Paco Rabanne",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "641",
+    "contratipo": "Very Good Glam F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "642",
+    "contratipo": "Very Irresistible F",
+    "marca": "Givenchy",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "643",
+    "contratipo": "Very Sexy Now 2017",
+    "marca": "Victorias Secret",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "644",
+    "contratipo": "Viva La Juicy",
+    "marca": "Juicy Couture",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "645",
+    "contratipo": "Volupte F",
+    "marca": "Oscar De La Renta",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "646",
+    "contratipo": "Wanted Girl F",
+    "marca": "Azzaro",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "647",
+    "contratipo": "White Diamond F",
+    "marca": "Elizabeth Taylor",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "648",
+    "contratipo": "XO Victoria",
+    "marca": "Victorias Secret",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "649",
+    "contratipo": "Xs Black F",
+    "marca": "Paco Rabanne",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "650",
+    "contratipo": "Xs Black Lexces F",
+    "marca": "Paco Rabanne",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "651",
+    "contratipo": "Yara F",
+    "marca": "Lattafa",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "652",
+    "contratipo": "Yara Moi F",
+    "marca": "Lattafa",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "653",
+    "contratipo": "Yara Tous F",
+    "marca": "Lattafa",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "654",
+    "contratipo": "Yellow Diamond",
+    "marca": "Versace",
+    "genero": "Dama",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "655",
+    "contratipo": "Amber Oud",
+    "marca": "Al Haramain",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "656",
+    "contratipo": "America",
+    "marca": "Perry Ellis",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "657",
+    "contratipo": "Angel's share",
+    "marca": "By Kilian",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "658",
+    "contratipo": "Baccarat Rouge",
+    "marca": "Maison Francis Kurkdjian",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "659",
+    "contratipo": "Black Phantom",
+    "marca": "By Kilian",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "660",
+    "contratipo": "Born to be Unforgettable",
+    "marca": "By Kilian",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "661",
+    "contratipo": "Casamorati 1888",
+    "marca": "Xerjoff",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "662",
+    "contratipo": "Ck Be",
+    "marca": "Calvin Klein",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "663",
+    "contratipo": "Ck One",
+    "marca": "Calvin Klein",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "664",
+    "contratipo": "Costa Azzurra",
+    "marca": "Tom Ford",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "665",
+    "contratipo": "Eilish N3",
+    "marca": "Billie Eilish",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "667",
+    "contratipo": "Italian Cypress",
+    "marca": "Tom Ford",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "668",
+    "contratipo": "Khamrah",
+    "marca": "Lattafa",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "669",
+    "contratipo": "Layton",
+    "marca": "Parfums de Marly",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "670",
+    "contratipo": "Lost Cherry",
+    "marca": "Tom Ford",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "671",
+    "contratipo": "Mandarino di Amalfi",
+    "marca": "Tom Ford",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "672",
+    "contratipo": "Naxos",
+    "marca": "Xerjoff",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "673",
+    "contratipo": "Neroli Portofino",
+    "marca": "Tom Ford",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "674",
+    "contratipo": "Ombre Leather",
+    "marca": "Tom Ford",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "675",
+    "contratipo": "Oud For Glory",
+    "marca": "Lattafa",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "676",
+    "contratipo": "Oud Sublime",
+    "marca": "Lattafa",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "677",
+    "contratipo": "Oud Wood",
+    "marca": "Tom Ford",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "678",
+    "contratipo": "Red Tobacco",
+    "marca": "Mancera",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "679",
+    "contratipo": "Santal 33",
+    "marca": "Le Labo",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "680",
+    "contratipo": "Soleil Blanc",
+    "marca": "Tom Ford",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "681",
+    "contratipo": "Tobacco Vainilla",
+    "marca": "Tom Ford",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "682",
+    "contratipo": "Toy 2 Pearl",
+    "marca": "Moschino",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "683",
+    "contratipo": "Tuscan Leather",
+    "marca": "Tom Ford",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "684",
+    "contratipo": "Verveine Agrumes",
+    "marca": "L'Occitane",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "689",
+    "contratipo": "Erba pura",
+    "marca": "",
+    "genero": "Unisex",
+    "estado": "Activo"
+  },
+  {
+    "kodigo": "690",
+    "contratipo": "Mandarin Sky",
+    "marca": "Armaf",
+    "genero": "Masculino",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "691",
+    "contratipo": "Hawas",
+    "marca": "Kobra",
+    "genero": "Masculino",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "798",
+    "contratipo": "Armani Code Profumo",
+    "marca": "Armani",
+    "genero": "H",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "766",
+    "contratipo": "Pure XS Night",
+    "marca": "Rabanne",
+    "genero": "H",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "900",
+    "contratipo": "By the Fire place",
+    "marca": "replika",
+    "genero": "unisex",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "700",
+    "contratipo": "Odisey",
+    "marca": "Bahammas",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "Kadabra1",
+    "contratipo": "Peine alisador",
+    "marca": "Kadabra",
+    "genero": "K",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "1",
+    "contratipo": "Very Pink",
+    "marca": "Perry Ellis",
+    "genero": "Dama",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "2",
+    "contratipo": "Born in Roma Intense",
+    "marca": "Valentino",
+    "genero": "Caballero",
+    "estado": ""
+  },
+  {
+    "kodigo": "4",
+    "contratipo": "Azzaro Most Wanted",
+    "marca": "Azzaro",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "692",
+    "contratipo": "Imagination",
+    "marca": "Louis Vuitton",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "10001",
+    "contratipo": "Invictus Victory Elixir",
+    "marca": "Paco Rabanne",
+    "genero": "Masculino",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "693",
+    "contratipo": "Green Irish Tweed",
+    "marca": "Creed",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "694",
+    "contratipo": "Eros Energy",
+    "marca": "Versace",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "1002",
+    "contratipo": "Nina",
+    "marca": "Nina Ricci",
+    "genero": "Dama",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "1006",
+    "contratipo": "Invictus EDT",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "6",
+    "contratipo": "Club de Nuit Intense Woman Extrait de Parfum",
+    "marca": "Armaf",
+    "genero": "Dama",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "695",
+    "contratipo": "La Bomba",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "696",
+    "contratipo": "The Scent Magnetic",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "698",
+    "contratipo": "K Eau de Parfum",
+    "marca": "Dolce Gabanna",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "697",
+    "contratipo": "Y Eau de Parfum H",
+    "marca": "Yves Saint Laurent",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "699",
+    "contratipo": "The Scent Elixir",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "701",
+    "contratipo": "Le Beau Paradise Garden",
+    "marca": "Jean Paul Gaultier",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "708",
+    "contratipo": "Born in Roma Donna",
+    "marca": "Valentino",
+    "genero": "Dama",
+    "estado": ""
+  },
+  {
+    "kodigo": "702",
+    "contratipo": "Le Beau Eau de Parfum",
+    "marca": "Jean Paul Gaultier",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "704",
+    "contratipo": "Club de Nuit Woman",
+    "marca": "Armaf",
+    "genero": "Dama",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "710",
+    "contratipo": "Irresistible",
+    "marca": "Givenchy",
+    "genero": "Dama",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "709",
+    "contratipo": "Tommy Girl",
+    "marca": "Tommy Hilfiger",
+    "genero": "Dama",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "703",
+    "contratipo": "Miss Dior Cherrie",
+    "marca": "Dior",
+    "genero": "Dama",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "705",
+    "contratipo": "Born in Roma Extradose",
+    "marca": "Valentino",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "809",
+    "contratipo": "360 Perry Ellis EDT",
+    "marca": "Perry Ellis",
+    "genero": "Dama",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "825",
+    "contratipo": "212 VIP MEN NYC",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "801",
+    "contratipo": "Oud Wood Intense",
+    "marca": "",
+    "genero": "",
+    "estado": ""
+  },
+  {
+    "kodigo": "666",
+    "contratipo": "P*rnStar - Fucking Fabulous",
+    "marca": "KODE",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "707",
+    "contratipo": "Angel's Share On The Rocks",
+    "marca": "Killian Paris",
+    "genero": "Unisex",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "711",
+    "contratipo": "Born in Roma Coral Fantasy",
+    "marca": "Valentino",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "780",
+    "contratipo": "Armani Code",
+    "marca": "Armani",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "712",
+    "contratipo": "God of Fire",
+    "marca": "Stéphane Humbert Lucas",
+    "genero": "Unisex",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "713",
+    "contratipo": "Spicebomb Extreme",
+    "marca": "Viktor&Rolf",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "714",
+    "contratipo": "Black Opium Over Red",
+    "marca": "Yves Saint Laurent",
+    "genero": "Unisex",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "729",
+    "contratipo": "Le beau Le Parfum",
+    "marca": "Jean Paul Gaultier",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "728",
+    "contratipo": "Herloss",
+    "marca": "Top shelf",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "790",
+    "contratipo": "Pour Homme",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "791",
+    "contratipo": "Ombre Nomade",
+    "marca": "Louis Vuitton",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "820",
+    "contratipo": "Afternoon Swim",
+    "marca": "Louis Vuitton",
+    "genero": "Unisex",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "830",
+    "contratipo": "Hugo boss bottled Elixir",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "715",
+    "contratipo": "Jadore Eau de Parfum",
+    "marca": "Dior",
+    "genero": "Dama",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "716",
+    "contratipo": "Boss Bottled Parfum",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "717",
+    "contratipo": "Hawas for Him",
+    "marca": "Rasasi",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "718",
+    "contratipo": "Vainilla 28",
+    "marca": "Kayali",
+    "genero": "Unisex",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "719",
+    "contratipo": "L'Immensité",
+    "marca": "Louis Vuitton",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "720",
+    "contratipo": "Stronger With You Intensely",
+    "marca": "Giorgio Armani",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "721",
+    "contratipo": "Yara Candy",
+    "marca": "Lataffa",
+    "genero": "Dama",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "744",
+    "contratipo": "Myself Absolu",
+    "marca": "Yves Saint Laurent",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "850",
+    "contratipo": "Tommy Impact",
+    "marca": "Tommy Hilfiger",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "722",
+    "contratipo": "I Want Choo",
+    "marca": "Jimmy Choo",
+    "genero": "Dama",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "799",
+    "contratipo": "Versace Pour Homme",
+    "marca": "Versace",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "723",
+    "contratipo": "Hawas Ice",
+    "marca": "Rasasi",
+    "genero": "Caballero",
+    "estado": "Activa"
+  }
+]

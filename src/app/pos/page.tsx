@@ -19,23 +19,34 @@ import {
   FileCheck,
   Building,
   User,
-  ExternalLink
+  Sparkle,
+  Droplets,
+  Tag
 } from 'lucide-react';
-import { INITIAL_PRODUCTS, ProductItem, CartItem, SaleRecord } from '@/lib/store';
+import { INITIAL_PRODUCTS, ProductItem, CartItem, SaleRecord, PERFUME_CATEGORIES } from '@/lib/store';
 
 export default function PosPage() {
   const [products, setProducts] = useState<ProductItem[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('kodelocal_products');
       if (saved) {
-        try { return JSON.parse(saved); } catch (e) {}
+        try {
+          const parsed = JSON.parse(saved);
+          // Si tiene los productos viejos de tecnología, reiniciamos a esencias de perfumería
+          if (parsed.length < 50 || parsed[0]?.category === 'Audio') {
+            localStorage.setItem('kodelocal_products', JSON.stringify(INITIAL_PRODUCTS));
+            return INITIAL_PRODUCTS;
+          }
+          return parsed;
+        } catch (e) {}
       }
     }
     return INITIAL_PRODUCTS;
   });
 
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
+  const [selectedCategory, setSelectedCategory] = useState<string>('Esencias para Perfume');
+  const [selectedGender, setSelectedGender] = useState<string>('Todos');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [barcodeInput, setBarcodeInput] = useState<string>('');
   
@@ -56,28 +67,39 @@ export default function PosPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [completedSale, setCompletedSale] = useState<SaleRecord | null>(null);
 
-  // Guardar productos en localStorage para persistencia
+  // Guardar productos en localStorage
   useEffect(() => {
     localStorage.setItem('kodelocal_products', JSON.stringify(products));
   }, [products]);
 
-  // Categorías disponibles
-  const categories = useMemo(() => {
-    const cats = new Set(products.map(p => p.category));
-    return ['Todos', ...Array.from(cats)];
-  }, [products]);
-
-  // Filtrado de productos
+  // Filtrado de productos (Optimizado para 600+ esencias)
   const filteredProducts = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
     return products.filter(product => {
+      // Filtro de categoría
       const matchesCat = selectedCategory === 'Todos' || product.category === selectedCategory;
+      
+      // Filtro de género (solo si es esencia)
+      const matchesGender = 
+        selectedGender === 'Todos' || 
+        (product.gender && product.gender.toLowerCase() === selectedGender.toLowerCase());
+
+      // Búsqueda inteligente por código, contratipo, marca o código de barras
       const matchesQuery = 
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.barcode.includes(searchQuery);
-      return matchesCat && matchesQuery;
+        !q ||
+        product.sku.toLowerCase() === q ||
+        product.name.toLowerCase().includes(q) ||
+        (product.brand && product.brand.toLowerCase().includes(q)) ||
+        product.barcode.includes(q);
+
+      return matchesCat && matchesGender && matchesQuery;
     });
-  }, [products, selectedCategory, searchQuery]);
+  }, [products, selectedCategory, selectedGender, searchQuery]);
+
+  // Mostrar un máximo de 60 productos a la vez para rendimiento ultra fluido
+  const displayedProducts = useMemo(() => {
+    return filteredProducts.slice(0, 60);
+  }, [filteredProducts]);
 
   // Totales del carrito
   const cartSubtotal = useMemo(() => {
@@ -88,7 +110,7 @@ export default function PosPage() {
     return cart.reduce((acc, item) => acc + item.quantity, 0);
   }, [cart]);
 
-  // En El Salvador los precios de consumidor ya suelen incluir IVA (13%). Calculamos el desglose.
+  // Desglose IVA 13% El Salvador
   const ivaCalculado = useMemo(() => {
     return (cartSubtotal - (cartSubtotal / 1.13));
   }, [cartSubtotal]);
@@ -100,14 +122,14 @@ export default function PosPage() {
   // Manejo del carrito
   const addToCart = (product: ProductItem) => {
     if (product.stock <= 0) {
-      alert('¡Producto agotado en almacén!');
+      alert('¡Producto sin existencias!');
       return;
     }
     setCart(prev => {
       const existing = prev.find(item => item.product.id === product.id);
       if (existing) {
         if (existing.quantity >= product.stock) {
-          alert(`No puedes añadir más de ${product.stock} unidades de este producto.`);
+          alert(`Stock máximo alcanzado (${product.stock} disponibles).`);
           return prev;
         }
         return prev.map(item =>
@@ -143,20 +165,21 @@ export default function PosPage() {
     setCart([]);
   };
 
-  // Escaneo rápido de código de barras
+  // Escaneo rápido de código o SKU
   const handleBarcodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!barcodeInput.trim()) return;
-    const found = products.find(p => p.barcode === barcodeInput.trim() || p.sku.toLowerCase() === barcodeInput.trim().toLowerCase());
+    const q = barcodeInput.trim().toLowerCase();
+    const found = products.find(p => p.barcode === q || p.sku.toLowerCase() === q);
     if (found) {
       addToCart(found);
       setBarcodeInput('');
     } else {
-      alert(`No se encontró producto con código: ${barcodeInput}`);
+      alert(`No se encontró esencia con código: ${barcodeInput}`);
     }
   };
 
-  // Cálculo del cambio en efectivo
+  // Cálculo de cambio
   const parsedCash = parseFloat(cashAmount) || 0;
   const changeAmount = parsedCash >= cartSubtotal ? (parsedCash - cartSubtotal) : 0;
 
@@ -166,10 +189,8 @@ export default function PosPage() {
     setIsProcessing(true);
 
     const saleNumber = `POS-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.floor(1000 + Math.random() * 9000)}`;
-
     let dteResponseData: any = null;
 
-    // Si es Factura (01) o Crédito Fiscal (03), llamar a Factura Llama
     if (tipoComprobante === '01' || tipoComprobante === '03') {
       try {
         const res = await fetch('/api/dte', {
@@ -180,7 +201,7 @@ export default function PosPage() {
             saleId: saleNumber,
             items: cart.map(item => ({
               sku: item.product.sku,
-              name: item.product.name,
+              name: `${item.product.name} (${item.product.unit})`,
               quantity: item.quantity,
               price: item.product.price
             })),
@@ -245,11 +266,11 @@ export default function PosPage() {
         name: i.product.name,
         quantity: i.quantity,
         price: i.product.price,
-        total: i.quantity * i.product.price
+        total: i.quantity * i.product.price,
+        unit: i.product.unit
       }))
     };
 
-    // Guardar en el historial de ventas
     const savedSales = JSON.parse(localStorage.getItem('kodelocal_sales') || '[]');
     localStorage.setItem('kodelocal_sales', JSON.stringify([newSale, ...savedSales]));
 
@@ -262,30 +283,31 @@ export default function PosPage() {
   return (
     <div className="flex flex-col lg:flex-row gap-6 pb-12">
       
-      {/* ================= COLUMNA IZQUIERDA: CATÁLOGO Y BÚSQUEDA ================= */}
-      <div className="flex-1 flex flex-col gap-6">
+      {/* ================= COLUMNA IZQUIERDA: CATÁLOGO DE PERFUMERÍA ================= */}
+      <div className="flex-1 flex flex-col gap-5">
         
-        {/* Barra superior de herramientas y búsqueda */}
+        {/* Barra superior de Búsqueda y Cotizador Rápido */}
         <div className="clay-card p-4 sm:p-5 flex flex-col sm:flex-row gap-3 items-center justify-between">
           
-          {/* Buscador de texto */}
+          {/* Buscador inteligente */}
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input
               type="text"
-              placeholder="Buscar por nombre, SKU o código..."
+              placeholder="Buscar por código (ej. 100), contratipo (ej. 1 Million) o marca..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="clay-input w-full pl-11 pr-4 py-2.5 text-sm"
+              autoFocus
             />
           </div>
 
-          {/* Lector de código de barras rápido */}
-          <form onSubmit={handleBarcodeSubmit} className="relative w-full sm:w-64">
+          {/* Lector o código rápido */}
+          <form onSubmit={handleBarcodeSubmit} className="relative w-full sm:w-56">
             <Barcode className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-500" />
             <input
               type="text"
-              placeholder="Escanear código..."
+              placeholder="Código o SKU..."
               value={barcodeInput}
               onChange={(e) => setBarcodeInput(e.target.value)}
               className="clay-input w-full pl-11 pr-4 py-2.5 text-sm font-mono border-indigo-200"
@@ -293,9 +315,9 @@ export default function PosPage() {
           </form>
         </div>
 
-        {/* Filtro de Categorías en Clay Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-          {categories.map((cat) => (
+        {/* Filtro de Categorías */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {['Todos', ...PERFUME_CATEGORIES].map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
@@ -310,71 +332,100 @@ export default function PosPage() {
           ))}
         </div>
 
+        {/* Subfiltro de Género (Especial para Esencias) */}
+        {selectedCategory === 'Esencias para Perfume' && (
+          <div className="flex items-center justify-between p-2.5 rounded-2xl bg-white/70 border border-white shadow-[inset_1px_1px_3px_rgba(164,177,198,0.2)]">
+            <div className="flex items-center gap-1 text-xs text-slate-500 font-bold px-2">
+              <Droplets className="w-3.5 h-3.5 text-indigo-500" />
+              <span>Género:</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {[
+                { label: 'Todos', val: 'Todos' },
+                { label: '👨 Caballero', val: 'Caballero' },
+                { label: '👩 Dama', val: 'Dama' },
+                { label: '⚥ Unisex', val: 'Unisex' }
+              ].map(g => (
+                <button
+                  key={g.val}
+                  onClick={() => setSelectedGender(g.val)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    selectedGender === g.val
+                      ? 'bg-indigo-600 text-white shadow-[2px_3px_6px_rgba(99,102,241,0.3)]'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {g.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Indicador de resultados */}
+        <div className="flex items-center justify-between text-xs text-slate-500 px-1 font-medium">
+          <span>
+            Mostrando <strong>{displayedProducts.length}</strong> de <strong>{filteredProducts.length}</strong> productos
+          </span>
+          <span className="text-indigo-600 font-bold">
+            Precio Esencia: $3.25 / Onza
+          </span>
+        </div>
+
         {/* Cuadrícula de Productos */}
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-          {filteredProducts.map((product) => {
+          {displayedProducts.map((product) => {
             const isOutOfStock = product.stock <= 0;
-            const isLowStock = product.stock > 0 && product.stock <= product.minStock;
 
             return (
               <div
                 key={product.id}
                 onClick={() => !isOutOfStock && addToCart(product)}
-                className={`clay-card p-3 sm:p-4 flex flex-col justify-between cursor-pointer transition-all ${
+                className={`clay-card p-3.5 flex flex-col justify-between cursor-pointer transition-all ${
                   isOutOfStock 
                     ? 'opacity-60 grayscale cursor-not-allowed' 
                     : 'clay-card-interactive active:scale-[0.98]'
                 }`}
               >
-                {/* Imagen del producto */}
-                <div className="relative aspect-square w-full rounded-2xl overflow-hidden mb-3 bg-slate-100 shadow-[inset_2px_2px_4px_rgba(164,177,198,0.3)]">
-                  <img
-                    src={product.imageUrl}
-                    alt={product.name}
-                    className="w-full h-full object-cover object-center"
-                    loading="lazy"
-                  />
-                  {/* Badge de Stock */}
-                  <div className="absolute top-2 right-2">
-                    {isOutOfStock ? (
-                      <span className="clay-badge bg-rose-50 text-rose-700 border border-rose-200 text-[10px]">
-                        Agotado
-                      </span>
-                    ) : isLowStock ? (
-                      <span className="clay-badge bg-amber-50 text-amber-700 border border-amber-200 text-[10px]">
-                        ¡Últimos {product.stock}!
-                      </span>
-                    ) : (
-                      <span className="clay-badge bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px]">
-                        {product.stock} disp.
+                <div>
+                  {/* Header de la tarjeta con Código y Género */}
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="clay-badge bg-indigo-50 text-indigo-700 border border-indigo-200 font-mono text-[11px] py-0.5 px-2">
+                      #{product.sku}
+                    </span>
+                    {product.gender && (
+                      <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                        {product.gender}
                       </span>
                     )}
                   </div>
+
+                  {/* Marca comercial inspirada */}
+                  {product.brand && (
+                    <span className="text-[11px] font-bold text-indigo-500 block truncate">
+                      {product.brand}
+                    </span>
+                  )}
+
+                  {/* Nombre del contratipo */}
+                  <h3 className="font-extrabold text-sm text-slate-800 line-clamp-2 leading-snug mt-0.5">
+                    {product.name}
+                  </h3>
                 </div>
 
-                {/* Info del producto */}
-                <div className="flex-1 flex flex-col justify-between">
+                {/* Footer: Unidad, Precio y Botón Agregar */}
+                <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-100">
                   <div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                      {product.sku}
+                    <span className="text-[10px] text-slate-400 block font-semibold">
+                      Por {product.unit}
                     </span>
-                    <h3 className="font-bold text-sm text-slate-800 line-clamp-2 leading-tight mt-0.5">
-                      {product.name}
-                    </h3>
+                    <span className="text-lg font-black text-indigo-600">
+                      ${product.price.toFixed(2)}
+                    </span>
                   </div>
 
-                  {/* Precio y Botón Agregar */}
-                  <div className="flex items-center justify-between mt-3 pt-2 border-t border-slate-100">
-                    <div>
-                      <span className="text-xs text-slate-400 block -mb-1">Precio</span>
-                      <span className="text-lg font-black text-indigo-600">
-                        ${product.price.toFixed(2)}
-                      </span>
-                    </div>
-
-                    <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shadow-[2px_3px_6px_rgba(99,102,241,0.2),inset_1px_1px_2px_rgba(255,255,255,0.8)]">
-                      <Plus className="w-4 h-4" />
-                    </div>
+                  <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shadow-[2px_3px_6px_rgba(99,102,241,0.2),inset_1px_1px_2px_rgba(255,255,255,0.8)] hover:bg-indigo-600 hover:text-white transition-colors">
+                    <Plus className="w-4 h-4" />
                   </div>
                 </div>
               </div>
@@ -385,23 +436,27 @@ export default function PosPage() {
         {filteredProducts.length === 0 && (
           <div className="clay-card p-12 text-center text-slate-400">
             <Search className="w-12 h-12 mx-auto mb-3 opacity-40" />
-            <p className="font-semibold">No se encontraron productos con ese criterio</p>
+            <p className="font-bold text-base text-slate-700">No se encontró ninguna esencia o producto</p>
+            <p className="text-xs mt-1">Prueba buscando por número de código (ej. 100) o parte del nombre.</p>
           </div>
         )}
       </div>
 
-      {/* ================= COLUMNA DERECHA: TICKET Y CARRITO ================= */}
+      {/* ================= COLUMNA DERECHA: ORDEN DE VENTA Y COTIZACIÓN ================= */}
       <div className="w-full lg:w-96 flex flex-col gap-4">
         
         <div className="clay-card p-5 flex flex-col h-[calc(100vh-140px)] sticky top-24">
           
-          {/* Header del Ticket */}
+          {/* Header del Carrito */}
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shadow-[inset_1px_1px_2px_rgba(255,255,255,0.8)]">
                 <ShoppingCart className="w-4 h-4" />
               </div>
-              <h2 className="font-extrabold text-base text-slate-800">Orden de Venta</h2>
+              <div>
+                <h2 className="font-extrabold text-base text-slate-800 leading-none">Orden Actual</h2>
+                <span className="text-[11px] text-slate-400 font-medium">{totalItemsCount} unidades</span>
+              </div>
             </div>
             {cart.length > 0 && (
               <button
@@ -413,38 +468,41 @@ export default function PosPage() {
             )}
           </div>
 
-          {/* Lista de productos en el carrito */}
+          {/* Lista de productos en la orden */}
           <div className="flex-1 overflow-y-auto py-3 space-y-2.5 pr-1">
             {cart.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-slate-400 text-center p-4">
-                <ShoppingCart className="w-12 h-12 mb-2 opacity-30 stroke-[1.5]" />
-                <p className="font-medium text-sm">El carrito está vacío</p>
-                <p className="text-xs mt-1">Haz clic en los productos para agregarlos a la venta</p>
+                <Droplets className="w-12 h-12 mb-2 opacity-30 stroke-[1.5] text-indigo-400" />
+                <p className="font-bold text-sm text-slate-600">Cotización Vacía</p>
+                <p className="text-xs mt-1">Selecciona esencias, botes o empaque para cotizar y cobrar</p>
               </div>
             ) : (
               cart.map((item) => (
                 <div 
                   key={item.product.id}
-                  className="p-3 rounded-2xl bg-slate-50/80 border border-white flex items-center justify-between gap-3 shadow-[inset_1px_1px_3px_rgba(164,177,198,0.2),inset_-1px_-1px_3px_rgba(255,255,255,0.8)]"
+                  className="p-3 rounded-2xl bg-slate-50/80 border border-white flex items-center justify-between gap-2.5 shadow-[inset_1px_1px_3px_rgba(164,177,198,0.2),inset_-1px_-1px_3px_rgba(255,255,255,0.8)]"
                 >
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-xs text-slate-800 truncate">
+                    <span className="text-[10px] font-bold text-indigo-600 font-mono">
+                      #{item.product.sku}
+                    </span>
+                    <h4 className="font-bold text-xs text-slate-800 truncate leading-tight">
                       {item.product.name}
                     </h4>
                     <p className="text-[11px] text-slate-500 font-medium">
-                      ${item.product.price.toFixed(2)} c/u
+                      ${item.product.price.toFixed(2)} por {item.product.unit}
                     </p>
                   </div>
 
                   {/* Controles de cantidad */}
-                  <div className="flex items-center gap-1.5 bg-white px-2 py-1 rounded-xl shadow-[2px_2px_5px_rgba(164,177,198,0.3)]">
+                  <div className="flex items-center gap-1.5 bg-white px-2 py-1 rounded-xl shadow-[2px_2px_5px_rgba(164,177,198,0.25)]">
                     <button
                       onClick={() => updateQuantity(item.product.id, -1)}
                       className="w-5 h-5 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center active:scale-90"
                     >
                       <Minus className="w-3 h-3" />
                     </button>
-                    <span className="text-xs font-black w-5 text-center text-slate-800">
+                    <span className="text-xs font-black w-6 text-center text-slate-800">
                       {item.quantity}
                     </span>
                     <button
@@ -466,7 +524,7 @@ export default function PosPage() {
             )}
           </div>
 
-          {/* Desglose de Totales e Impuestos de El Salvador */}
+          {/* Desglose de Totales e Impuestos */}
           {cart.length > 0 && (
             <div className="pt-3 border-t border-slate-200/80 flex flex-col gap-1.5">
               <div className="flex justify-between text-xs text-slate-500 font-medium">
@@ -487,7 +545,7 @@ export default function PosPage() {
               {/* Botón de Cobro Claymórfico */}
               <button
                 onClick={() => setIsCheckoutOpen(true)}
-                className="clay-btn clay-btn-success w-full py-3.5 text-base mt-3 rounded-2xl shadow-[4px_6px_16px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2"
+                className="clay-btn clay-btn-success w-full py-3.5 text-base mt-2.5 rounded-2xl shadow-[4px_6px_16px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2"
               >
                 <Banknote className="w-5 h-5" />
                 <span>Cobrar ${cartSubtotal.toFixed(2)}</span>
@@ -509,10 +567,10 @@ export default function PosPage() {
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-xl font-black text-slate-800 mb-1">Finalizar Venta</h3>
-            <p className="text-xs text-slate-500 mb-5">Selecciona el método de pago y tipo de comprobante legal.</p>
+            <h3 className="text-xl font-black text-slate-800 mb-1">Finalizar Venta de Perfumería</h3>
+            <p className="text-xs text-slate-500 mb-5">Selecciona el comprobante legal y método de pago.</p>
 
-            {/* Selector de Comprobante (Ticket, Factura 01, Crédito Fiscal 03) */}
+            {/* Selector de Comprobante */}
             <div className="mb-5">
               <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block mb-2">
                 Tipo de Comprobante
@@ -522,31 +580,25 @@ export default function PosPage() {
                   type="button"
                   onClick={() => setTipoComprobante('TICKET')}
                   className={`p-2.5 rounded-xl text-xs font-bold text-center transition-all ${
-                    tipoComprobante === 'TICKET'
-                      ? 'clay-btn-primary'
-                      : 'clay-btn-light'
+                    tipoComprobante === 'TICKET' ? 'clay-btn-primary' : 'clay-btn-light'
                   }`}
                 >
-                  Ticket Simple
+                  Ticket Local
                 </button>
                 <button
                   type="button"
                   onClick={() => setTipoComprobante('01')}
                   className={`p-2.5 rounded-xl text-xs font-bold text-center transition-all ${
-                    tipoComprobante === '01'
-                      ? 'clay-btn-primary'
-                      : 'clay-btn-light'
+                    tipoComprobante === '01' ? 'clay-btn-primary' : 'clay-btn-light'
                   }`}
                 >
-                  Factura (DTE-01)
+                  Factura (01)
                 </button>
                 <button
                   type="button"
                   onClick={() => setTipoComprobante('03')}
                   className={`p-2.5 rounded-xl text-xs font-bold text-center transition-all ${
-                    tipoComprobante === '03'
-                      ? 'clay-btn-primary'
-                      : 'clay-btn-light'
+                    tipoComprobante === '03' ? 'clay-btn-primary' : 'clay-btn-light'
                   }`}
                 >
                   Crédito Fiscal (03)
@@ -554,12 +606,12 @@ export default function PosPage() {
               </div>
             </div>
 
-            {/* Datos del Cliente si es DTE */}
+            {/* Datos del Cliente */}
             {(tipoComprobante === '01' || tipoComprobante === '03') && (
               <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 mb-5 space-y-3">
                 <div className="flex items-center gap-2 text-indigo-700 font-bold text-xs">
                   <FileCheck className="w-4 h-4" />
-                  <span>Datos para Factura Llama (Hacienda El Salvador)</span>
+                  <span>Datos Fiscales (Factura Llama - El Salvador)</span>
                 </div>
                 
                 <div>
@@ -570,7 +622,7 @@ export default function PosPage() {
                     type="text"
                     value={clienteNombre}
                     onChange={(e) => setClienteNombre(e.target.value)}
-                    placeholder="Ej. Juan Pérez o Soluciones S.A. de C.V."
+                    placeholder="Ej. Juan Pérez o Distribuidora S.A. de C.V."
                     className="clay-input w-full text-xs py-2"
                   />
                 </div>
@@ -592,7 +644,7 @@ export default function PosPage() {
                   {tipoComprobante === '03' && (
                     <div>
                       <label className="text-[11px] font-semibold text-slate-600 block mb-1">
-                        NRC (Registro) *
+                        NRC *
                       </label>
                       <input
                         type="text"
@@ -606,7 +658,7 @@ export default function PosPage() {
 
                   <div className={tipoComprobante === '03' ? 'col-span-2' : ''}>
                     <label className="text-[11px] font-semibold text-slate-600 block mb-1">
-                      Correo Electrónico (Envío PDF/DTE)
+                      Correo Electrónico
                     </label>
                     <input
                       type="email"
@@ -669,7 +721,7 @@ export default function PosPage() {
               </div>
             </div>
 
-            {/* Calculadora de Cambio para Efectivo */}
+            {/* Calculadora de Efectivo */}
             {paymentMethod === 'CASH' && (
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 mb-5">
                 <div className="flex items-center justify-between mb-2">
@@ -685,12 +737,11 @@ export default function PosPage() {
                   value={cashAmount}
                   onChange={(e) => setCashAmount(e.target.value)}
                   placeholder="0.00"
-                  className="clay-input w-full text-xl font-bold py-2.5 text-center text-slate-800"
+                  className="clay-input w-full text-xl font-bold py-2 text-center text-slate-800"
                 />
 
-                {/* Billetes rápidos */}
                 <div className="flex gap-2 mt-2">
-                  {[cartSubtotal, 10, 20, 50, 100].map((amt, i) => (
+                  {[cartSubtotal, 5, 10, 20, 50].map((amt, i) => (
                     <button
                       key={i}
                       type="button"
@@ -713,7 +764,7 @@ export default function PosPage() {
               </div>
             )}
 
-            {/* Botón de Confirmación */}
+            {/* Botones */}
             <div className="flex gap-3">
               <button
                 type="button"
@@ -747,7 +798,7 @@ export default function PosPage() {
         </div>
       )}
 
-      {/* ================= MODAL DE RECIBO / COMPROBANTE FINALIZADO ================= */}
+      {/* ================= MODAL DE RECIBO FINALIZADO ================= */}
       {completedSale && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
           <div className="clay-card w-full max-w-md p-6 relative animate-in fade-in zoom-in-95">
@@ -760,7 +811,6 @@ export default function PosPage() {
               <p className="text-xs text-slate-500 font-mono mt-0.5">{completedSale.saleNumber}</p>
             </div>
 
-            {/* Si tiene DTE de Factura Llama */}
             {completedSale.dteInfo && (
               <div className="my-4 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs">
                 <div className="flex items-center justify-between mb-1.5">
@@ -782,7 +832,6 @@ export default function PosPage() {
               </div>
             )}
 
-            {/* Resumen del Ticket */}
             <div className="py-3 text-xs space-y-2 border-b border-dashed border-slate-200">
               <div className="flex justify-between font-medium text-slate-600">
                 <span>Cliente:</span>
@@ -800,7 +849,6 @@ export default function PosPage() {
               )}
             </div>
 
-            {/* Total */}
             <div className="flex justify-between items-center py-4">
               <span className="text-sm font-bold text-slate-700">Total Cobrado:</span>
               <span className="text-2xl font-black text-indigo-600">
@@ -808,7 +856,6 @@ export default function PosPage() {
               </span>
             </div>
 
-            {/* Botones de acción */}
             <div className="flex gap-3">
               <button
                 onClick={() => window.print()}

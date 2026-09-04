@@ -24,14 +24,17 @@ model Category {
 
 model Product {
   id                 String          @id @default(cuid())
-  sku                String?         @unique
+  sku                String?         @unique // Código de esencia (ej. 100, 101)
   barcode            String?         @unique
-  name               String
+  name               String          // Nombre del contratipo (ej. 1 Million Elixir H)
+  brand              String?         // Marca inspirada (ej. Paco Rabanne, Carolina Herrera)
+  gender             String?         // Caballero, Dama, Unisex, Niños
+  unit               String?         @default("Onza") // Onza, Unidad, Paquete, Litro
   description        String?
-  price              Decimal         @db.Decimal(10, 2)
-  cost               Decimal?        @db.Decimal(10, 2)
-  stock              Int             @default(0)
-  minStock           Int             @default(5)
+  price              Decimal         @db.Decimal(10, 2) @default(3.25) // Precio venta ($3.25 para esencias)
+  cost               Decimal?        @db.Decimal(10, 2) @default(1.95) // Costo compra ($1.95 para esencias)
+  stock              Int             @default(50)
+  minStock           Int             @default(10)
   imageUrl           String?
   isActive           Boolean         @default(true)
   isAvailableOnline  Boolean         @default(true)
@@ -43,7 +46,10 @@ model Product {
   updatedAt          DateTime        @updatedAt
 
   @@index([barcode])
+  @@index([sku])
   @@index([name])
+  @@index([brand])
+  @@index([gender])
 }
 
 model Customer {
