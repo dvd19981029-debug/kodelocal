@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
+import StorageInitializer from "@/components/StorageInitializer";
 
 export const metadata: Metadata = {
   title: "KodeLocal - Punto de Venta, Inventario y Facturación Electrónica",
@@ -15,6 +16,7 @@ export default function RootLayout({
   return (
     <html lang="es" className="h-full">
       <body className="min-h-full flex flex-col bg-[#f1f4f9] text-slate-800 antialiased">
+        <StorageInitializer />
         <Navbar />
         <main className="flex-1 max-w-[1600px] w-full mx-auto p-3 sm:p-5 lg:p-6">
           {children}

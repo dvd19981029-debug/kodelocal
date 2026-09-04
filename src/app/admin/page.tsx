@@ -33,7 +33,8 @@ import {
   Box,
   Check,
   ShoppingCart,
-  History
+  History,
+  RotateCcw
 } from 'lucide-react';
 import { 
   getStoredUsers, 
@@ -44,7 +45,7 @@ import {
   CustomRole, 
   SYSTEM_VIEWS 
 } from '@/lib/auth';
-import { INITIAL_PRODUCTS, ProductItem, PERFUME_CATEGORIES, SaleRecord } from '@/lib/store';
+import { INITIAL_PRODUCTS, ProductItem, PERFUME_CATEGORIES, SaleRecord, resetDatabaseToZeroStock } from '@/lib/store';
 import ComprasModule from '@/components/admin/ComprasModule';
 import KardexModule from '@/components/admin/KardexModule';
 import {
@@ -369,6 +370,17 @@ export default function AdminPage() {
     });
   };
 
+  const handleResetToZeroStock = () => {
+    if (confirm('⚠️ ¿Estás seguro de reiniciar los movimientos y poner stock en cero?\n\n- Se pondrán las existencias de todos los productos en 0.\n- Se eliminarán las compras registradas.\n- Se eliminarán las ventas registradas.\n- El Kárdex quedará en cero.\n\nEl catálogo de fragancias, botes e insumos se mantendrá intacto con stock 0.')) {
+      const resetProds = resetDatabaseToZeroStock();
+      setProducts(resetProds);
+      setPurchases([]);
+      setSales([]);
+      setKardexMovements([]);
+      alert('✅ Base de datos limpia:\n\n- Todo el catálogo tiene stock 0.\n- Sin ventas, compras ni movimientos en Kárdex.\nListo para simular compras y ventas desde cero.');
+    }
+  };
+
   return (
     <div className="flex flex-col md:flex-row gap-4 pb-20 items-start w-full">
       
@@ -596,6 +608,18 @@ export default function AdminPage() {
             >
               <Settings className="w-4 h-4" />
               <span>Factura Llama & Negocio</span>
+            </button>
+          </div>
+
+          {/* HERRAMIENTA: LIMPIAR MOVIMIENTOS A CEROS */}
+          <div className="pt-2 border-t border-slate-200/80">
+            <button
+              onClick={handleResetToZeroStock}
+              className="w-full flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-[10.5px] font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all text-center shadow-sm"
+              title="Pone el catálogo en stock 0 y borra ventas, compras y kardex para iniciar pruebas limpias"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Limpiar Movimientos a Cero</span>
             </button>
           </div>
 

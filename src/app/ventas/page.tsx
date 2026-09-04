@@ -26,64 +26,7 @@ export default function VentasPage() {
         try { return JSON.parse(saved); } catch (e) {}
       }
     }
-    // Datos semilla para ver el historial
-    return [
-      {
-        id: 'sale-1',
-        saleNumber: 'POS-20260903-8821',
-        createdAt: new Date().toISOString(),
-        total: 55.00,
-        subtotal: 48.67,
-        ivaTotal: 6.33,
-        paymentMethod: 'CASH',
-        cashReceived: 60.00,
-        cashChange: 5.00,
-        tipoComprobante: '01',
-        cliente: {
-          nombre: 'Carlos Mendoza',
-          numDocumento: '04829102-3',
-          correo: 'carlos.mendoza@gmail.com'
-        },
-        dteInfo: {
-          codigoGeneracion: '3B8888D1-3312-4BD1-9EE8-39F229AA1B12',
-          numeroControl: 'DTE-01-M001P001-000000000000042',
-          selloRecepcion: '20260178EFA091B33',
-          estado: 'PROCESADO',
-          simulated: true,
-          mensaje: 'DTE-01 emitido exitosamente (Modo Simulación Activo).'
-        },
-        items: [
-          { productId: 'prod-2', name: 'Teclado Mecánico RGB Switch Red', quantity: 1, price: 55.00, total: 55.00 }
-        ]
-      },
-      {
-        id: 'sale-2',
-        saleNumber: 'POS-20260903-8820',
-        createdAt: new Date(Date.now() - 3600000).toISOString(),
-        total: 70.00,
-        subtotal: 61.95,
-        ivaTotal: 8.05,
-        paymentMethod: 'CARD',
-        tipoComprobante: '03',
-        cliente: {
-          nombre: 'Tecnología y Redes S.A. de C.V.',
-          numDocumento: '0614-230912-102-4',
-          nrc: '293810-2',
-          correo: 'compras@tecred.com.sv'
-        },
-        dteInfo: {
-          codigoGeneracion: '7F1199A2-8821-4CA2-88E1-291AA019BC44',
-          numeroControl: 'DTE-03-M001P001-000000000000018',
-          selloRecepcion: '20260388AA0191B99',
-          estado: 'PROCESADO',
-          simulated: true,
-          mensaje: 'DTE-03 Crédito Fiscal procesado.'
-        },
-        items: [
-          { productId: 'prod-1', name: 'Audífonos Inalámbricos Pro ANC', quantity: 2, price: 35.00, total: 70.00 }
-        ]
-      }
-    ];
+    return [];
   });
 
   const [searchQuery, setSearchQuery] = useState('');

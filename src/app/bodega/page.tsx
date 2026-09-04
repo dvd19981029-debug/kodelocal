@@ -25,43 +25,7 @@ export default function BodegaPage() {
         try { return JSON.parse(saved); } catch (e) {}
       }
     }
-    // Comandas de demostración iniciales
-    return [
-      {
-        id: 'ord-demo-1',
-        saleNumber: 'CMD-1081',
-        createdAt: new Date(Date.now() - 360000).toISOString(),
-        total: 13.00,
-        subtotal: 11.50,
-        ivaTotal: 1.50,
-        paymentMethod: 'CASH',
-        tipoComprobante: 'TICKET',
-        status: 'PENDING_PREPARATION',
-        vendedor: 'Ana Martínez (Caja 1)',
-        cliente: { nombre: 'Cliente en Mostrador' },
-        items: [
-          { productId: '344', name: 'Sauvage H', quantity: 2, price: 3.25, total: 6.50, unit: 'Onza', puesto: 'A1' },
-          { productId: '100', name: '1 Million Elixir H', quantity: 1, price: 3.75, total: 3.75, unit: 'Onza', puesto: 'A2' },
-          { productId: 'bote-1', name: 'Frasco Perfume Vidrio 50ml Spray', quantity: 2, price: 1.50, total: 3.00, unit: 'Unidad', puesto: 'B1' }
-        ]
-      },
-      {
-        id: 'ord-demo-2',
-        saleNumber: 'CMD-1080',
-        createdAt: new Date(Date.now() - 900000).toISOString(),
-        total: 9.75,
-        subtotal: 8.63,
-        ivaTotal: 1.12,
-        paymentMethod: 'CARD',
-        tipoComprobante: '01',
-        status: 'READY_AT_WINDOW',
-        vendedor: 'Carlos Rivas (Caja 2)',
-        cliente: { nombre: 'Beatriz Morales' },
-        items: [
-          { productId: '105', name: '1 Million Parfum H', quantity: 3, price: 3.25, total: 9.75, unit: 'Onza', puesto: 'A2' }
-        ]
-      }
-    ];
+    return [];
   });
 
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'PENDING' | 'READY'>('PENDING');

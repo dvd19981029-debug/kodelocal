@@ -81,7 +81,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -97,7 +97,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -113,7 +113,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -129,7 +129,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -145,7 +145,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -161,7 +161,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -177,7 +177,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -193,7 +193,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -209,7 +209,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -225,7 +225,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -241,7 +241,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -257,7 +257,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -273,7 +273,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -289,7 +289,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -305,7 +305,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -321,7 +321,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -337,7 +337,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -353,7 +353,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -369,7 +369,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -385,7 +385,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -401,7 +401,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -417,7 +417,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -433,7 +433,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -449,7 +449,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -465,7 +465,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -481,7 +481,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -497,7 +497,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -513,7 +513,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -529,7 +529,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -545,7 +545,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -561,7 +561,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -577,7 +577,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -593,7 +593,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -609,7 +609,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -625,7 +625,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -641,7 +641,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -657,7 +657,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -673,7 +673,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -689,7 +689,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -705,7 +705,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -721,7 +721,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -737,7 +737,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -753,7 +753,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -769,7 +769,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -785,7 +785,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -801,7 +801,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -817,7 +817,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -833,7 +833,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -849,7 +849,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -865,7 +865,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -881,7 +881,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -897,7 +897,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -913,7 +913,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -929,7 +929,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -945,7 +945,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -961,7 +961,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -977,7 +977,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -993,7 +993,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -1009,7 +1009,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -1025,7 +1025,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -1041,7 +1041,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -1057,7 +1057,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -1073,7 +1073,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -1089,7 +1089,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -1105,7 +1105,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -1121,7 +1121,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -1137,7 +1137,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -1153,7 +1153,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -1169,7 +1169,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -1185,7 +1185,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -1201,7 +1201,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -1217,7 +1217,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -1233,7 +1233,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -1249,7 +1249,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -1265,7 +1265,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -1281,7 +1281,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -1297,7 +1297,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -1313,7 +1313,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -1329,7 +1329,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -1345,7 +1345,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -1361,7 +1361,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -1377,7 +1377,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -1393,7 +1393,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -1409,7 +1409,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -1425,7 +1425,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -1441,7 +1441,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -1457,7 +1457,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -1473,7 +1473,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -1489,7 +1489,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -1505,7 +1505,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -1521,7 +1521,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -1537,7 +1537,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -1553,7 +1553,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -1569,7 +1569,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -1585,7 +1585,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -1601,7 +1601,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -1617,7 +1617,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -1633,7 +1633,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -1649,7 +1649,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -1665,7 +1665,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -1681,7 +1681,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -1697,7 +1697,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -1713,7 +1713,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -1729,7 +1729,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -1745,7 +1745,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -1761,7 +1761,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -1777,7 +1777,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -1793,7 +1793,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -1809,7 +1809,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -1825,7 +1825,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -1841,7 +1841,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -1857,7 +1857,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -1873,7 +1873,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -1889,7 +1889,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -1905,7 +1905,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -1921,7 +1921,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -1937,7 +1937,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -1953,7 +1953,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -1969,7 +1969,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -1985,7 +1985,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -2001,7 +2001,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -2017,7 +2017,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -2033,7 +2033,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -2049,7 +2049,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -2065,7 +2065,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -2081,7 +2081,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -2097,7 +2097,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -2113,7 +2113,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -2129,7 +2129,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -2145,7 +2145,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -2161,7 +2161,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -2177,7 +2177,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -2193,7 +2193,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -2209,7 +2209,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -2225,7 +2225,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -2241,7 +2241,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -2257,7 +2257,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -2273,7 +2273,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -2289,7 +2289,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -2305,7 +2305,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -2321,7 +2321,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -2337,7 +2337,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -2353,7 +2353,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -2369,7 +2369,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -2385,7 +2385,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -2401,7 +2401,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -2417,7 +2417,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -2433,7 +2433,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -2449,7 +2449,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -2465,7 +2465,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -2481,7 +2481,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -2497,7 +2497,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -2513,7 +2513,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -2529,7 +2529,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -2545,7 +2545,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -2561,7 +2561,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -2577,7 +2577,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -2593,7 +2593,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -2609,7 +2609,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -2625,7 +2625,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -2641,7 +2641,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -2657,7 +2657,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -2673,7 +2673,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -2689,7 +2689,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -2705,7 +2705,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -2721,7 +2721,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -2737,7 +2737,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -2753,7 +2753,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -2769,7 +2769,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -2785,7 +2785,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -2801,7 +2801,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -2817,7 +2817,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -2833,7 +2833,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -2849,7 +2849,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -2865,7 +2865,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -2881,7 +2881,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -2897,7 +2897,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -2913,7 +2913,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -2929,7 +2929,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -2945,7 +2945,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -2961,7 +2961,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -2977,7 +2977,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -2993,7 +2993,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -3009,7 +3009,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -3025,7 +3025,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -3041,7 +3041,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -3057,7 +3057,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -3073,7 +3073,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -3089,7 +3089,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -3105,7 +3105,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -3121,7 +3121,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -3137,7 +3137,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -3153,7 +3153,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -3169,7 +3169,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -3185,7 +3185,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -3201,7 +3201,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -3217,7 +3217,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -3233,7 +3233,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -3249,7 +3249,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -3265,7 +3265,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -3281,7 +3281,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -3297,7 +3297,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -3313,7 +3313,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -3329,7 +3329,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -3345,7 +3345,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -3361,7 +3361,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -3377,7 +3377,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -3393,7 +3393,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -3409,7 +3409,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -3425,7 +3425,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -3441,7 +3441,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -3457,7 +3457,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -3473,7 +3473,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -3489,7 +3489,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -3505,7 +3505,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -3521,7 +3521,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -3537,7 +3537,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -3553,7 +3553,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -3569,7 +3569,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -3585,7 +3585,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -3601,7 +3601,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -3617,7 +3617,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -3633,7 +3633,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -3649,7 +3649,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -3665,7 +3665,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -3681,7 +3681,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -3697,7 +3697,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -3713,7 +3713,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -3729,7 +3729,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -3745,7 +3745,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -3761,7 +3761,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -3777,7 +3777,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -3793,7 +3793,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -3809,7 +3809,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -3825,7 +3825,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -3841,7 +3841,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -3857,7 +3857,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -3873,7 +3873,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -3889,7 +3889,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -3905,7 +3905,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -3921,7 +3921,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -3937,7 +3937,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -3953,7 +3953,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -3969,7 +3969,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true,
@@ -3986,7 +3986,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -4002,7 +4002,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -4018,7 +4018,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -4034,7 +4034,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -4050,7 +4050,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -4066,7 +4066,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -4082,7 +4082,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -4098,7 +4098,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -4114,7 +4114,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -4130,7 +4130,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -4146,7 +4146,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -4162,7 +4162,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -4178,7 +4178,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -4194,7 +4194,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -4210,7 +4210,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -4226,7 +4226,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -4242,7 +4242,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -4258,7 +4258,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -4274,7 +4274,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -4290,7 +4290,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -4306,7 +4306,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -4322,7 +4322,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -4338,7 +4338,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -4354,7 +4354,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -4370,7 +4370,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -4386,7 +4386,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -4402,7 +4402,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -4418,7 +4418,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -4434,7 +4434,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -4450,7 +4450,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -4466,7 +4466,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -4482,7 +4482,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -4498,7 +4498,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -4514,7 +4514,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -4530,7 +4530,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -4546,7 +4546,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -4562,7 +4562,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -4578,7 +4578,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -4594,7 +4594,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -4610,7 +4610,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -4626,7 +4626,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -4642,7 +4642,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -4658,7 +4658,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -4674,7 +4674,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -4690,7 +4690,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -4706,7 +4706,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -4722,7 +4722,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -4738,7 +4738,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -4754,7 +4754,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -4770,7 +4770,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -4786,7 +4786,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -4802,7 +4802,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -4818,7 +4818,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -4834,7 +4834,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -4850,7 +4850,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -4866,7 +4866,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -4882,7 +4882,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -4898,7 +4898,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -4914,7 +4914,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -4930,7 +4930,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -4946,7 +4946,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -4962,7 +4962,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -4978,7 +4978,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -4994,7 +4994,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -5010,7 +5010,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -5026,7 +5026,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -5042,7 +5042,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -5058,7 +5058,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -5074,7 +5074,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -5090,7 +5090,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -5106,7 +5106,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -5122,7 +5122,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -5138,7 +5138,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -5154,7 +5154,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -5170,7 +5170,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -5186,7 +5186,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -5202,7 +5202,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -5218,7 +5218,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -5234,7 +5234,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -5250,7 +5250,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -5266,7 +5266,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -5282,7 +5282,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -5298,7 +5298,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -5314,7 +5314,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -5330,7 +5330,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -5346,7 +5346,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -5362,7 +5362,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -5378,7 +5378,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -5394,7 +5394,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -5410,7 +5410,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -5426,7 +5426,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -5442,7 +5442,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -5458,7 +5458,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -5474,7 +5474,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -5490,7 +5490,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -5506,7 +5506,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -5522,7 +5522,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -5538,7 +5538,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -5554,7 +5554,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -5570,7 +5570,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -5586,7 +5586,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -5602,7 +5602,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -5618,7 +5618,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -5634,7 +5634,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -5650,7 +5650,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -5666,7 +5666,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -5682,7 +5682,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -5698,7 +5698,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -5714,7 +5714,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -5730,7 +5730,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -5746,7 +5746,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -5762,7 +5762,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -5778,7 +5778,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -5794,7 +5794,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -5810,7 +5810,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -5826,7 +5826,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -5842,7 +5842,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -5858,7 +5858,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -5874,7 +5874,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -5890,7 +5890,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -5906,7 +5906,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -5922,7 +5922,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -5938,7 +5938,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -5954,7 +5954,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -5970,7 +5970,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -5986,7 +5986,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -6002,7 +6002,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -6018,7 +6018,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -6034,7 +6034,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -6050,7 +6050,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -6066,7 +6066,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -6082,7 +6082,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -6098,7 +6098,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -6114,7 +6114,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -6130,7 +6130,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -6146,7 +6146,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -6162,7 +6162,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -6178,7 +6178,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -6194,7 +6194,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -6210,7 +6210,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -6226,7 +6226,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -6242,7 +6242,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -6258,7 +6258,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -6274,7 +6274,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -6290,7 +6290,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -6306,7 +6306,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -6322,7 +6322,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -6338,7 +6338,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -6354,7 +6354,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -6370,7 +6370,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -6386,7 +6386,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -6402,7 +6402,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -6418,7 +6418,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -6434,7 +6434,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -6450,7 +6450,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -6466,7 +6466,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -6482,7 +6482,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -6498,7 +6498,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -6514,7 +6514,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -6530,7 +6530,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -6546,7 +6546,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -6562,7 +6562,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -6578,7 +6578,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -6594,7 +6594,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -6610,7 +6610,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -6626,7 +6626,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -6642,7 +6642,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -6658,7 +6658,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -6674,7 +6674,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -6690,7 +6690,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -6706,7 +6706,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -6722,7 +6722,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -6738,7 +6738,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -6754,7 +6754,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -6770,7 +6770,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -6786,7 +6786,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -6802,7 +6802,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -6818,7 +6818,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -6834,7 +6834,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -6850,7 +6850,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -6866,7 +6866,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -6882,7 +6882,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -6898,7 +6898,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -6914,7 +6914,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -6930,7 +6930,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -6946,7 +6946,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -6962,7 +6962,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -6978,7 +6978,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -6994,7 +6994,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -7010,7 +7010,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -7026,7 +7026,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -7042,7 +7042,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -7058,7 +7058,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -7074,7 +7074,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -7090,7 +7090,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -7106,7 +7106,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -7122,7 +7122,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -7138,7 +7138,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -7154,7 +7154,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -7170,7 +7170,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -7186,7 +7186,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -7202,7 +7202,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -7218,7 +7218,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -7234,7 +7234,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -7250,7 +7250,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -7266,7 +7266,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -7282,7 +7282,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -7298,7 +7298,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -7314,7 +7314,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -7330,7 +7330,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -7346,7 +7346,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -7362,7 +7362,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -7378,7 +7378,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -7394,7 +7394,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -7410,7 +7410,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -7426,7 +7426,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -7442,7 +7442,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -7458,7 +7458,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -7474,7 +7474,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -7490,7 +7490,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -7506,7 +7506,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -7522,7 +7522,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -7538,7 +7538,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -7554,7 +7554,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -7570,7 +7570,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -7586,7 +7586,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -7602,7 +7602,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -7618,7 +7618,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -7634,7 +7634,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -7650,7 +7650,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -7666,7 +7666,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -7682,7 +7682,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -7698,7 +7698,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -7714,7 +7714,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -7730,7 +7730,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -7746,7 +7746,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -7762,7 +7762,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -7778,7 +7778,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -7794,7 +7794,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -7810,7 +7810,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -7826,7 +7826,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -7842,7 +7842,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -7858,7 +7858,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -7874,7 +7874,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -7890,7 +7890,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -7906,7 +7906,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -7922,7 +7922,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -7938,7 +7938,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -7954,7 +7954,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -7970,7 +7970,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -7986,7 +7986,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -8002,7 +8002,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -8018,7 +8018,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -8034,7 +8034,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -8050,7 +8050,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -8066,7 +8066,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -8082,7 +8082,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -8098,7 +8098,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -8114,7 +8114,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -8130,7 +8130,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -8146,7 +8146,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -8162,7 +8162,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -8178,7 +8178,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -8194,7 +8194,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -8210,7 +8210,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -8226,7 +8226,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -8242,7 +8242,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -8258,7 +8258,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -8274,7 +8274,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -8290,7 +8290,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -8306,7 +8306,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -8322,7 +8322,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -8338,7 +8338,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -8354,7 +8354,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -8370,7 +8370,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -8386,7 +8386,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -8402,7 +8402,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -8418,7 +8418,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -8434,7 +8434,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -8450,7 +8450,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -8466,7 +8466,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -8482,7 +8482,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -8498,7 +8498,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -8514,7 +8514,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -8530,7 +8530,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -8546,7 +8546,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -8562,7 +8562,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -8578,7 +8578,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -8594,7 +8594,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -8610,7 +8610,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -8626,7 +8626,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -8642,7 +8642,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -8658,7 +8658,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -8674,7 +8674,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -8690,7 +8690,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -8706,7 +8706,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -8722,7 +8722,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -8738,7 +8738,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -8754,7 +8754,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -8770,7 +8770,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -8786,7 +8786,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -8802,7 +8802,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -8818,7 +8818,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -8834,7 +8834,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -8850,7 +8850,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -8866,7 +8866,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -8882,7 +8882,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -8898,7 +8898,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -8914,7 +8914,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -8930,7 +8930,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -8946,7 +8946,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -8962,7 +8962,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -8978,7 +8978,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -8994,7 +8994,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -9010,7 +9010,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -9026,7 +9026,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -9042,7 +9042,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -9058,7 +9058,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -9074,7 +9074,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -9090,7 +9090,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -9106,7 +9106,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -9122,7 +9122,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -9138,7 +9138,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -9154,7 +9154,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -9170,7 +9170,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -9186,7 +9186,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -9202,7 +9202,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -9218,7 +9218,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -9234,7 +9234,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -9250,7 +9250,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -9266,7 +9266,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -9282,7 +9282,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -9298,7 +9298,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -9314,7 +9314,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -9330,7 +9330,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -9346,7 +9346,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -9362,7 +9362,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -9378,7 +9378,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -9394,7 +9394,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -9410,7 +9410,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -9426,7 +9426,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -9442,7 +9442,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -9458,7 +9458,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -9474,7 +9474,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -9490,7 +9490,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -9506,7 +9506,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -9522,7 +9522,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -9538,7 +9538,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -9554,7 +9554,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -9570,7 +9570,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -9586,7 +9586,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -9602,7 +9602,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -9618,7 +9618,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -9634,7 +9634,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -9650,7 +9650,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -9666,7 +9666,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -9682,7 +9682,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -9698,7 +9698,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -9714,7 +9714,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -9730,7 +9730,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -9746,7 +9746,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -9762,7 +9762,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -9778,7 +9778,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -9794,7 +9794,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -9810,7 +9810,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -9826,7 +9826,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -9842,7 +9842,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -9858,7 +9858,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -9874,7 +9874,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -9890,7 +9890,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -9906,7 +9906,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -9922,7 +9922,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -9938,7 +9938,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -9954,7 +9954,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -9970,7 +9970,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -9986,7 +9986,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -10002,7 +10002,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -10018,7 +10018,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -10034,7 +10034,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -10050,7 +10050,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -10066,7 +10066,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -10082,7 +10082,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -10098,7 +10098,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -10114,7 +10114,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -10130,7 +10130,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -10146,7 +10146,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -10162,7 +10162,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -10178,7 +10178,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -10194,7 +10194,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -10210,7 +10210,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -10226,7 +10226,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -10242,7 +10242,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -10258,7 +10258,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -10274,7 +10274,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     "isAvailableOnline": true
@@ -10290,7 +10290,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80",
     "isAvailableOnline": true
@@ -10306,7 +10306,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&q=80",
     "isAvailableOnline": true
@@ -10322,7 +10322,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.25,
     "cost": 1.95,
-    "stock": 100,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -10338,7 +10338,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 1.5,
     "cost": 0.75,
-    "stock": 250,
+    "stock": 0,
     "minStock": 50,
     "imageUrl": "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
     "isAvailableOnline": true
@@ -10354,7 +10354,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 1.9,
     "cost": 0.95,
-    "stock": 180,
+    "stock": 0,
     "minStock": 40,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -10370,7 +10370,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 2.5,
     "cost": 1.2,
-    "stock": 120,
+    "stock": 0,
     "minStock": 30,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true
@@ -10386,7 +10386,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 0.65,
     "cost": 0.25,
-    "stock": 500,
+    "stock": 0,
     "minStock": 100,
     "imageUrl": "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=400&q=80",
     "isAvailableOnline": true
@@ -10402,7 +10402,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 0.85,
     "cost": 0.35,
-    "stock": 400,
+    "stock": 0,
     "minStock": 80,
     "imageUrl": "https://images.unsplash.com/photo-1544816155-12df9643f363?w=400&q=80",
     "isAvailableOnline": true
@@ -10418,7 +10418,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 0.5,
     "cost": 0.2,
-    "stock": 350,
+    "stock": 0,
     "minStock": 50,
     "imageUrl": "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=400&q=80",
     "isAvailableOnline": true
@@ -10434,7 +10434,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Galón",
     "price": 18.0,
     "cost": 11.5,
-    "stock": 40,
+    "stock": 0,
     "minStock": 10,
     "imageUrl": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&q=80",
     "isAvailableOnline": true
@@ -10450,9 +10450,53 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 12.5,
     "cost": 7.0,
-    "stock": 25,
+    "stock": 0,
     "minStock": 5,
     "imageUrl": "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400&q=80",
     "isAvailableOnline": true
   }
 ];
+
+export const DATA_VERSION = '2026_zero_stock_v1';
+
+export function resetDatabaseToZeroStock(): ProductItem[] {
+  if (typeof window === 'undefined') return INITIAL_PRODUCTS;
+  
+  let baseProducts: ProductItem[] = INITIAL_PRODUCTS;
+  const savedProds = localStorage.getItem('kodelocal_products');
+  if (savedProds) {
+    try {
+      const parsed = JSON.parse(savedProds);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        baseProducts = parsed;
+      }
+    } catch (e) {}
+  }
+
+  const zeroStockProducts: ProductItem[] = baseProducts.map(p => ({
+    ...p,
+    stock: 0
+  }));
+
+  localStorage.setItem('kodelocal_products', JSON.stringify(zeroStockProducts));
+  localStorage.setItem('kodelocal_sales', JSON.stringify([]));
+  localStorage.setItem('kodelocal_purchases', JSON.stringify([]));
+  localStorage.setItem('kodelocal_kardex', JSON.stringify([]));
+  localStorage.setItem('kodelocal_data_version', DATA_VERSION);
+
+  return zeroStockProducts;
+}
+
+export function checkAndMigrateToZeroStock(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const currentVersion = localStorage.getItem('kodelocal_data_version');
+    if (currentVersion !== DATA_VERSION) {
+      resetDatabaseToZeroStock();
+      return true;
+    }
+  } catch (e) {
+    console.error('Error in checkAndMigrateToZeroStock:', e);
+  }
+  return false;
+}
