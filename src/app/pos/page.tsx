@@ -376,25 +376,45 @@ export default function PosPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
           {displayedProducts.map((product) => {
             const isOutOfStock = product.stock <= 0;
+            const itemInCart = cart.find(ci => ci.product.id === product.id);
+            const cartQty = itemInCart ? itemInCart.quantity : 0;
+            const availableRemaining = Math.max(0, product.stock - cartQty);
+            const isLowStock = availableRemaining > 0 && availableRemaining <= product.minStock;
 
             return (
               <div
                 key={product.id}
-                onClick={() => !isOutOfStock && addToCart(product)}
+                onClick={() => !isOutOfStock && availableRemaining > 0 && addToCart(product)}
                 className={`clay-card p-3.5 flex flex-col justify-between cursor-pointer transition-all ${
-                  isOutOfStock 
+                  isOutOfStock || availableRemaining <= 0
                     ? 'opacity-60 grayscale cursor-not-allowed' 
                     : 'clay-card-interactive active:scale-[0.98]'
                 }`}
               >
                 <div>
-                  {/* Header de la tarjeta con Código y Género */}
-                  <div className="flex items-center justify-between mb-2">
+                  {/* Header de la tarjeta con Código, Stock Badge y Género */}
+                  <div className="flex items-center justify-between gap-1 mb-2">
                     <span className="clay-badge bg-indigo-50 text-indigo-700 border border-indigo-200 font-mono text-[11px] py-0.5 px-2">
                       #{product.sku}
                     </span>
+
+                    {/* Stock disponible en tiempo real */}
+                    {isOutOfStock || availableRemaining <= 0 ? (
+                      <span className="clay-badge bg-rose-50 text-rose-700 border border-rose-200 text-[10px] py-0.5 px-2 font-bold">
+                        Agotado
+                      </span>
+                    ) : isLowStock ? (
+                      <span className="clay-badge bg-amber-50 text-amber-700 border border-amber-200 text-[10px] py-0.5 px-2 font-bold">
+                        ¡{availableRemaining} {product.unit.toLowerCase()}s!
+                      </span>
+                    ) : (
+                      <span className="clay-badge bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] py-0.5 px-2 font-bold">
+                        {availableRemaining} {product.unit.toLowerCase()}s
+                      </span>
+                    )}
+
                     {product.gender && (
-                      <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                      <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md">
                         {product.gender}
                       </span>
                     )}
@@ -416,15 +436,26 @@ export default function PosPage() {
                 {/* Footer: Unidad, Precio y Botón Agregar */}
                 <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-100">
                   <div>
-                    <span className="text-[10px] text-slate-400 block font-semibold">
-                      Por {product.unit}
-                    </span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] text-slate-400 block font-semibold">
+                        Por {product.unit}
+                      </span>
+                      {cartQty > 0 && (
+                        <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-100">
+                          {cartQty} en orden
+                        </span>
+                      )}
+                    </div>
                     <span className="text-lg font-black text-indigo-600">
                       ${product.price.toFixed(2)}
                     </span>
                   </div>
 
-                  <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shadow-[2px_3px_6px_rgba(99,102,241,0.2),inset_1px_1px_2px_rgba(255,255,255,0.8)] hover:bg-indigo-600 hover:text-white transition-colors">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold transition-colors ${
+                    availableRemaining <= 0
+                      ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                      : 'bg-indigo-50 text-indigo-600 shadow-[2px_3px_6px_rgba(99,102,241,0.2),inset_1px_1px_2px_rgba(255,255,255,0.8)] hover:bg-indigo-600 hover:text-white'
+                  }`}>
                     <Plus className="w-4 h-4" />
                   </div>
                 </div>
