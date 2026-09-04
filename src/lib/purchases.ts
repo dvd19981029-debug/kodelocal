@@ -37,6 +37,14 @@ export interface PurchasePayment {
   notes?: string;
 }
 
+export interface PurchaseItemReception {
+  productId: string;
+  expectedQty: number;
+  receivedQty: number;
+  matched: boolean;
+  notes?: string;
+}
+
 export interface PurchaseRecord {
   id: string;
   purchaseNumber: string; // Ej: CMP-0012
@@ -59,6 +67,12 @@ export interface PurchaseRecord {
   payments?: PurchasePayment[];
   notes?: string;
   createdAt: string;
+  // Recepción en Bodega (confrontación física vs sistema)
+  receptionStatus?: 'PENDIENTE' | 'RECIBIDO' | 'PARCIAL';
+  receivedAt?: string;
+  receivedBy?: string;
+  receivedNotes?: string;
+  receivedItems?: PurchaseItemReception[];
 }
 
 export const INITIAL_SUPPLIERS: Supplier[] = [
@@ -161,6 +175,7 @@ export function getStoredPurchases(): PurchaseRecord[] {
 export function saveStoredPurchases(purchases: PurchaseRecord[]): void {
   if (typeof window === 'undefined') return;
   localStorage.setItem('kodelocal_purchases', JSON.stringify(purchases));
+  window.dispatchEvent(new Event('kodelocal_purchases_updated'));
 }
 
 /**
@@ -191,3 +206,38 @@ export function applyPurchaseToProducts(purchase: PurchaseRecord, currentProduct
     };
   });
 }
+
+/**
+ * Aplica el ingreso de mercadería confrontada físicamente en bodega al stock de productos.
+ * Utiliza las cantidades reales recibidas que confirmó el bodeguero.
+ */
+export function applyBodegaReceptionToProducts(
+  purchase: PurchaseRecord,
+  receivedQuantities: Record<string, number>,
+  currentProducts: ProductItem[]
+): ProductItem[] {
+  const isNC = purchase.tipoDte === 'NC';
+
+  return currentProducts.map(prod => {
+    if (receivedQuantities[prod.id] !== undefined) {
+      const qtyReceived = receivedQuantities[prod.id];
+      const matchedItem = purchase.items.find(it => it.productId === prod.id);
+
+      const newStock = isNC
+        ? Math.max(0, (prod.stock || 0) - qtyReceived)
+        : (prod.stock || 0) + qtyReceived;
+
+      const newCost = (!isNC && matchedItem && matchedItem.costPrice > 0)
+        ? matchedItem.costPrice
+        : prod.cost;
+
+      return {
+        ...prod,
+        stock: newStock,
+        cost: newCost
+      };
+    }
+    return prod;
+  });
+}
+

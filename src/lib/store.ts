@@ -10514,3 +10514,10 @@ export function checkAndMigrateToZeroStock(): boolean {
   }
   return false;
 }
+
+export function saveStoredProducts(products: ProductItem[]): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem('kodelocal_products', JSON.stringify(products));
+  window.dispatchEvent(new Event('kodelocal_products_updated'));
+}
+

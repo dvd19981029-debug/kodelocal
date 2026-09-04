@@ -113,9 +113,11 @@ export default function KardexModule({
           dteNumber: dteDisplay,
           dteTipo: pur.tipoDte,
           sourceCategory: 'COMPRA' as const,
-          notes: pur.notes || `Recepción de mercadería en bodega`,
-          user: 'Gerente General',
-          createdAt: pur.createdAt || `${pur.purchaseDate}T10:00:00.000Z`
+          notes: pur.receptionStatus === 'PENDIENTE'
+            ? `⚠️ Compra DTE registrada • Pendiente de recepción física en bodega`
+            : (pur.receivedNotes ? `Recepción confirmada en bodega (${pur.receivedNotes})` : `Recepción física confirmada y aplicada en bodega`),
+          user: pur.receptionStatus === 'RECIBIDO' ? (pur.receivedBy || 'Bodega') : 'Compras / Administración',
+          createdAt: pur.receivedAt || pur.createdAt || `${pur.purchaseDate}T10:00:00.000Z`
         };
       });
     });

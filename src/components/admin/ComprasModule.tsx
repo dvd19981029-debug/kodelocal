@@ -342,21 +342,28 @@ export default function ComprasModule({
         notes: `Liquidación al contado mediante ${formPaymentMethod}.`
       }] : [],
       notes: formNotes.trim() || undefined,
+      receptionStatus: 'PENDIENTE',
       createdAt: new Date().toISOString()
     };
 
-    // 1. Actualizar el inventario (stock y costo de adquisición)
-    const updatedProducts = applyPurchaseToProducts(newPurchase, products);
-    onUpdateProducts(updatedProducts);
+    // 1. Si no ha sido recibida en bodega, el stock no se incrementa aún (lo aplica Bodega al confrontar),
+    // pero actualizamos los costos de compra en el catálogo para fines de cálculo comercial:
+    const updatedProductsWithCosts = products.map(prod => {
+      const it = newPurchase.items.find(item => item.productId === prod.id);
+      if (it && it.costPrice > 0) {
+        return { ...prod, cost: it.costPrice };
+      }
+      return prod;
+    });
+    onUpdateProducts(updatedProductsWithCosts);
 
     // 2. Movimientos en Kárdex:
     // Se generan de forma reactiva y automática en el Kárdex a partir del historial oficial de compras (purchases).
-    // No se inserta movimiento manual duplicado para evitar doble conteo.
 
-    // 3. Guardar la compra en el historial
+    // 3. Guardar la compra en el historial (se sincroniza automáticamente con Bodega e inventario)
     onUpdatePurchases([newPurchase, ...purchases]);
 
-    // 3. Limpiar formulario y regresar a la vista de historial
+    // 4. Limpiar formulario y regresar a la vista de historial
     setFormDocNumber('');
     setFormControlNumber('');
     setFormNotes('');
@@ -372,7 +379,7 @@ export default function ComprasModule({
       }
     ]);
     setSubTab('historial');
-    showToast(`✅ Factura ${newPurchase.purchaseNumber} registrada. Se actualizó el stock y costo de los productos.`);
+    showToast(`✅ Factura ${newPurchase.purchaseNumber} registrada. Enviada a Bodega para confrontación física e ingreso.`);
   };
 
   // Abrir modal de abono
@@ -782,13 +789,22 @@ export default function ComprasModule({
                             )}
                           </td>
                           <td className="py-3.5 px-4 text-center">
-                            <span className={`clay-badge text-[10px] font-bold py-0.5 px-2.5 ${
-                              pur.paymentStatus === 'PAGADO' 
-                                ? 'bg-emerald-100 text-emerald-800' 
-                                : 'bg-amber-100 text-amber-800'
-                            }`}>
-                              {pur.paymentStatus}
-                            </span>
+                            <div className="flex flex-col items-center gap-1">
+                              <span className={`clay-badge text-[10px] font-bold py-0.5 px-2.5 ${
+                                pur.paymentStatus === 'PAGADO' 
+                                  ? 'bg-emerald-100 text-emerald-800' 
+                                  : 'bg-amber-100 text-amber-800'
+                              }`}>
+                                {pur.paymentStatus}
+                              </span>
+                              <span className={`text-[9.5px] font-extrabold px-2 py-0.5 rounded-full ${
+                                pur.receptionStatus === 'RECIBIDO'
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  : 'bg-amber-50 text-amber-700 border border-amber-200 animate-pulse'
+                              }`}>
+                                {pur.receptionStatus === 'RECIBIDO' ? '🟢 En Bodega' : '🟡 Pend. Bodega'}
+                              </span>
+                            </div>
                           </td>
                           <td className="py-3.5 px-4 text-center">
                             <div className="flex items-center justify-center gap-1.5">
