@@ -39,10 +39,15 @@ import {
   FileText,
   Flame,
   Box,
-  ExternalLink
+  ExternalLink,
+  Copy,
+  Send,
+  CheckCheck,
+  RotateCw
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { INITIAL_PRODUCTS, ProductItem, CartItem, SaleRecord, PERFUME_CATEGORIES, getStoredProducts } from '@/lib/store';
+import CotizacionModal from '@/components/pos/CotizacionModal';
 import { 
   CustomerRecord, 
   TipoPersona, 
@@ -59,11 +64,27 @@ export default function PosPage() {
   const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
   
   // Pestaña activa en el menú lateral de Punto de Venta:
-  // 'pos': Terminal de venta
-  // 'clientes': Módulo de clientes para FC y CCF
-  // 'ventas': Resumen del día y onzas vendidas
-  // 'bodega_ordenes': Monitoreo en tiempo real de pedidos en bodega y ventanilla
-  const [posTab, setPosTab] = useState<'pos' | 'clientes' | 'ventas' | 'bodega_ordenes'>('pos');
+  // 'nueva_orden' (o 'pos'): Terminal de venta / Cotizador
+  // 'caja_facturacion': Módulo de Caja (Órdenes listas en ventanilla y DTEs emitidos)
+  // 'clientes': Directorio y registro fiscal para FC y CCF
+  // 'ventas': Resumen de onzas vendidas en el turno
+  // 'bodega_ordenes': Monitoreo de comandas en preparación
+  const [posTab, setPosTab] = useState<'nueva_orden' | 'caja_facturacion' | 'clientes' | 'ventas' | 'bodega_ordenes' | 'pos'>('nueva_orden');
+
+  // Subpestañas en Caja & Facturación (Estilo Mecanic OS)
+  const [cajaSubTab, setCajaSubTab] = useState<'listas_facturar' | 'dtes_emitidos'>('listas_facturar');
+  const [dteFilterType, setDteFilterType] = useState<'ALL' | '01' | '03' | 'TICKET'>('ALL');
+  const [dteSearchQuery, setDteSearchQuery] = useState('');
+
+  // Cotización / Prefactura Modal
+  const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  const [activeQuoteSale, setActiveQuoteSale] = useState<SaleRecord | null>(null);
+
+  // Orden activa que se está cobrando/facturando en Caja
+  const [orderToInvoice, setOrderToInvoice] = useState<SaleRecord | null>(null);
+
+  // Toast de retroalimentación de orden enviada
+  const [orderSentToast, setOrderSentToast] = useState<{ orderNumber: string; itemCount: number } | null>(null);
 
   // Historial de ventas
   const [sales, setSales] = useState<SaleRecord[]>(() => {
@@ -484,100 +505,83 @@ export default function PosPage() {
     setIsCustomerModalOpen(false);
   };
 
-  // Finalizar venta y emitir DTE
-  const handleCompleteSale = async () => {
-    if (cart.length === 0) return;
-
-    if (paymentMethod === 'CASH') {
-      const parsed = parseFloat(cashAmount);
-      if (isNaN(parsed) || parsed < cartSubtotal) {
-        alert('El monto en efectivo ingresado es insuficiente.');
-        return;
-      }
+  // Iniciar cotización en PDF / Prefactura
+  const handleOpenQuoteModal = () => {
+    if (cart.length === 0) {
+      alert('Agrega al menos una fragancia o producto al pedido para generar la cotización.');
+      return;
     }
+    const clientObj = customers.find(c => c.id === selectedCustomerId);
+    const ordNum = `COT-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    setIsProcessing(true);
+    const quoteSale: SaleRecord = {
+      id: `quote-${Date.now()}`,
+      orderNumber: ordNum,
+      saleNumber: ordNum,
+      createdAt: new Date().toISOString(),
+      cotizacionDate: new Date().toLocaleDateString('es-SV', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      total: cartSubtotal,
+      subtotal: subtotalNeto,
+      ivaTotal: ivaCalculado,
+      tipoComprobante,
+      cliente: {
+        nombre: clienteNombre || 'Consumidor Final',
+        numDocumento: clienteDoc || undefined,
+        nrc: clienteNrc || undefined,
+        correo: clienteEmail || undefined,
+        telefono: clientObj?.phone || undefined,
+        direccion: clientObj?.direccion || undefined,
+        actividadEconomica: clienteGiro || undefined,
+        categoriaContribuyente: clientObj?.categoriaContribuyente || undefined
+      },
+      status: 'PREFACTURA',
+      vendedor: 'Vendedora Mostrador',
+      items: cart.map(i => ({
+        productId: i.product.id,
+        name: i.product.name,
+        quantity: i.quantity,
+        price: i.product.price,
+        total: i.quantity * i.product.price,
+        unit: i.product.unit,
+        puesto: i.product.puesto
+      }))
+    };
 
-    const saleNumber = `CMD-${Math.floor(1000 + Math.random() * 9000)}`;
-    const parsedCash = paymentMethod === 'CASH' ? parseFloat(cashAmount) : undefined;
-    const changeAmount = parsedCash ? parsedCash - cartSubtotal : undefined;
+    setActiveQuoteSale(quoteSale);
+    setIsQuoteModalOpen(true);
+  };
 
-    let dteResponseData = null;
-    if (tipoComprobante === '01' || tipoComprobante === '03') {
-      try {
-        const res = await fetch('/api/dte', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            tipoDte: tipoComprobante,
-            saleId: `sale-${Date.now()}`,
-            cliente: {
-              nombre: clienteNombre,
-              numDocumento: clienteDoc,
-              nrc: clienteNrc,
-              email: clienteEmail,
-              giro: clienteGiro
-            },
-            items: cart.map(i => ({
-              nombre: i.product.name,
-              cantidad: i.quantity,
-              precioUnitario: i.product.price,
-              total: i.product.price * i.quantity,
-              unit: i.product.unit
-            })),
-            total: cartSubtotal,
-            subtotal: subtotalNeto,
-            iva: ivaCalculado,
-            metodoPago: paymentMethod
-          })
-        });
-        const data = await res.json();
-        if (data.success && data.dte) {
-          dteResponseData = data.dte;
-        }
-      } catch (err) {
-        console.error('Error al emitir DTE:', err);
-      }
+  // Enviar comanda a Bodega para preparación física
+  const handleSendOrderToBodega = () => {
+    if (cart.length === 0) {
+      alert('Agrega al menos una fragancia o producto al pedido para enviar a Bodega.');
+      return;
     }
+    const ordNum = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
+    const cmdNum = `CMD-${Math.floor(1000 + Math.random() * 9000)}`;
+    const clientObj = customers.find(c => c.id === selectedCustomerId);
 
-    // Descontar inventario
-    setProducts(prev => {
-      const updated = prev.map(prod => {
-        const itemInCart = cart.find(ci => ci.product.id === prod.id);
-        if (itemInCart) {
-          return { ...prod, stock: Math.max(0, prod.stock - itemInCart.quantity) };
-        }
-        return prod;
-      });
-      return updated;
-    });
-
-    const newSale: SaleRecord = {
-      id: `sale-${Date.now()}`,
-      saleNumber,
+    const newOrder: SaleRecord = {
+      id: `ord-${Date.now()}`,
+      orderNumber: ordNum,
+      saleNumber: cmdNum,
       createdAt: new Date().toISOString(),
       total: cartSubtotal,
       subtotal: subtotalNeto,
       ivaTotal: ivaCalculado,
-      paymentMethod,
-      cashReceived: paymentMethod === 'CASH' ? parsedCash : undefined,
-      cashChange: paymentMethod === 'CASH' ? changeAmount : undefined,
       tipoComprobante,
       cliente: {
-        nombre: clienteNombre,
-        numDocumento: clienteDoc,
-        nrc: clienteNrc,
-        correo: clienteEmail
+        nombre: clienteNombre || 'Consumidor Final',
+        numDocumento: clienteDoc || undefined,
+        nrc: clienteNrc || undefined,
+        correo: clienteEmail || undefined,
+        telefono: clientObj?.phone || undefined,
+        direccion: clientObj?.direccion || undefined,
+        actividadEconomica: clienteGiro || undefined,
+        categoriaContribuyente: clientObj?.categoriaContribuyente || undefined
       },
-      dteInfo: dteResponseData ? {
-        codigoGeneracion: dteResponseData.codigoGeneracion,
-        numeroControl: dteResponseData.numeroControl,
-        selloRecepcion: dteResponseData.selloRecepcion,
-        estado: dteResponseData.estado,
-        simulated: dteResponseData.simulated,
-        mensaje: dteResponseData.mensaje
-      } : undefined,
       status: 'PENDING_PREPARATION',
+      vendedor: 'Vendedora Mostrador',
       items: cart.map(i => ({
         productId: i.product.id,
         name: i.product.name,
@@ -590,15 +594,205 @@ export default function PosPage() {
     };
 
     const savedSales = JSON.parse(localStorage.getItem('kodelocal_sales') || '[]');
-    const updatedSales = [newSale, ...savedSales];
+    const updatedSales = [newOrder, ...savedSales];
     localStorage.setItem('kodelocal_sales', JSON.stringify(updatedSales));
     window.dispatchEvent(new Event('kodelocal_sales_updated'));
     setSales(updatedSales);
 
+    const totalQty = cart.reduce((acc, i) => acc + i.quantity, 0);
+    clearCart();
+    setOrderSentToast({ orderNumber: ordNum, itemCount: totalQty });
+    setTimeout(() => {
+      setOrderSentToast(null);
+    }, 7000);
+  };
+
+  // Iniciar cobro de orden lista en ventanilla (desde Caja)
+  const handleStartInvoiceOrder = (order: SaleRecord) => {
+    setOrderToInvoice(order);
+    setClienteNombre(order.cliente.nombre);
+    setClienteDoc(order.cliente.numDocumento || '');
+    setClienteNrc(order.cliente.nrc || '');
+    setClienteEmail(order.cliente.correo || '');
+    setClienteGiro(order.cliente.actividadEconomica || '');
+    setTipoComprobante(order.tipoComprobante || (order.cliente.nrc ? '03' : '01'));
+    setPaymentMethod('CASH');
+    setCashAmount('');
+    setIsCheckoutOpen(true);
+  };
+
+  // Finalizar venta, emitir DTE oficial ante Hacienda y descontar stock
+  const handleCompleteSale = async () => {
+    const isOrderFromWindow = !!orderToInvoice;
+    const itemsToBill = isOrderFromWindow ? orderToInvoice.items : cart.map(i => ({
+      productId: i.product.id,
+      name: i.product.name,
+      quantity: i.quantity,
+      price: i.product.price,
+      total: i.quantity * i.product.price,
+      unit: i.product.unit,
+      puesto: i.product.puesto
+    }));
+    const totalToBill = isOrderFromWindow ? orderToInvoice.total : cartSubtotal;
+    const subtotalToBill = isOrderFromWindow ? orderToInvoice.subtotal : subtotalNeto;
+    const ivaToBill = isOrderFromWindow ? orderToInvoice.ivaTotal : ivaCalculado;
+
+    if (itemsToBill.length === 0) return;
+
+    if (paymentMethod === 'CASH') {
+      const parsed = parseFloat(cashAmount);
+      if (isNaN(parsed) || parsed < totalToBill) {
+        alert('El monto en efectivo ingresado es insuficiente para cubrir el total.');
+        return;
+      }
+    }
+
+    setIsProcessing(true);
+
+    const parsedCash = paymentMethod === 'CASH' ? parseFloat(cashAmount) : undefined;
+    const changeAmount = parsedCash ? parsedCash - totalToBill : undefined;
+
+    let dteResponseData = null;
+    if (tipoComprobante === '01' || tipoComprobante === '03') {
+      try {
+        const res = await fetch('/api/dte', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tipoDte: tipoComprobante,
+            saleId: isOrderFromWindow ? orderToInvoice.id : `sale-${Date.now()}`,
+            cliente: {
+              nombre: clienteNombre,
+              numDocumento: clienteDoc,
+              nrc: clienteNrc,
+              email: clienteEmail,
+              giro: clienteGiro
+            },
+            items: itemsToBill.map(i => ({
+              nombre: i.name,
+              cantidad: i.quantity,
+              precioUnitario: i.price,
+              total: i.total,
+              unit: i.unit
+            })),
+            total: totalToBill,
+            subtotal: subtotalToBill,
+            iva: ivaToBill,
+            metodoPago: paymentMethod
+          })
+        });
+        const data = await res.json();
+        if (data.success && data.dte) {
+          dteResponseData = data.dte;
+        }
+      } catch (err) {
+        console.error('Error al emitir DTE:', err);
+      }
+    }
+
+    // Descontar inventario oficial
+    setProducts(prev => {
+      const updated = prev.map(prod => {
+        const itemInBill = itemsToBill.find(ci => ci.productId === prod.id);
+        if (itemInBill) {
+          return { ...prod, stock: Math.max(0, prod.stock - itemInBill.quantity) };
+        }
+        return prod;
+      });
+      localStorage.setItem('kodelocal_products', JSON.stringify(updated));
+      window.dispatchEvent(new Event('kodelocal_products_updated'));
+      return updated;
+    });
+
+    let completedRecord: SaleRecord;
+
+    if (isOrderFromWindow) {
+      // Actualizar la orden existente a COMPLETED
+      const savedSales: SaleRecord[] = JSON.parse(localStorage.getItem('kodelocal_sales') || '[]');
+      const updatedSales = savedSales.map(s => {
+        if (s.id === orderToInvoice.id) {
+          const updated: SaleRecord = {
+            ...s,
+            status: 'COMPLETED',
+            invoicedAt: new Date().toISOString(),
+            cajero: 'Caja 1',
+            paymentMethod,
+            cashReceived: parsedCash,
+            cashChange: changeAmount,
+            tipoComprobante,
+            cliente: {
+              ...s.cliente,
+              nombre: clienteNombre,
+              numDocumento: clienteDoc || undefined,
+              nrc: clienteNrc || undefined,
+              correo: clienteEmail || undefined,
+              actividadEconomica: clienteGiro || undefined
+            },
+            dteInfo: dteResponseData ? {
+              codigoGeneracion: dteResponseData.codigoGeneracion,
+              numeroControl: dteResponseData.numeroControl,
+              selloRecepcion: dteResponseData.selloRecepcion,
+              estado: dteResponseData.estado,
+              simulated: dteResponseData.simulated,
+              mensaje: dteResponseData.mensaje
+            } : undefined
+          };
+          completedRecord = updated;
+          return updated;
+        }
+        return s;
+      });
+
+      localStorage.setItem('kodelocal_sales', JSON.stringify(updatedSales));
+      window.dispatchEvent(new Event('kodelocal_sales_updated'));
+      setSales(updatedSales);
+    } else {
+      // Venta directa desde el mostrador
+      const saleNumber = `CMD-${Math.floor(1000 + Math.random() * 9000)}`;
+      const newSale: SaleRecord = {
+        id: `sale-${Date.now()}`,
+        saleNumber,
+        createdAt: new Date().toISOString(),
+        invoicedAt: new Date().toISOString(),
+        total: cartSubtotal,
+        subtotal: subtotalNeto,
+        ivaTotal: ivaCalculado,
+        paymentMethod,
+        cashReceived: parsedCash,
+        cashChange: changeAmount,
+        tipoComprobante,
+        cliente: {
+          nombre: clienteNombre,
+          numDocumento: clienteDoc,
+          nrc: clienteNrc,
+          correo: clienteEmail
+        },
+        dteInfo: dteResponseData ? {
+          codigoGeneracion: dteResponseData.codigoGeneracion,
+          numeroControl: dteResponseData.numeroControl,
+          selloRecepcion: dteResponseData.selloRecepcion,
+          estado: dteResponseData.estado,
+          simulated: dteResponseData.simulated,
+          mensaje: dteResponseData.mensaje
+        } : undefined,
+        status: 'COMPLETED',
+        cajero: 'Caja 1',
+        items: itemsToBill
+      };
+
+      const savedSales = JSON.parse(localStorage.getItem('kodelocal_sales') || '[]');
+      const updatedSales = [newSale, ...savedSales];
+      localStorage.setItem('kodelocal_sales', JSON.stringify(updatedSales));
+      window.dispatchEvent(new Event('kodelocal_sales_updated'));
+      setSales(updatedSales);
+      completedRecord = newSale;
+      clearCart();
+    }
+
     setIsProcessing(false);
     setIsCheckoutOpen(false);
-    setCompletedSale(newSale);
-    clearCart();
+    setOrderToInvoice(null);
+    setCompletedSale(completedRecord!);
   };
 
   // Filtrado de clientes
@@ -618,6 +812,39 @@ export default function PosPage() {
       );
     });
   }, [customers, customerSearch, customerFilterType]);
+
+  // Órdenes listas en ventanilla preparadas por Bodega
+  const readyInWindowOrders = useMemo(() => {
+    return sales.filter(s => s.status === 'READY_AT_WINDOW');
+  }, [sales]);
+
+  // Listado de DTEs y comprobantes emitidos en Caja
+  const completedDteSales = useMemo(() => {
+    return sales.filter(s => s.status === 'COMPLETED' || !!s.dteInfo || !!s.invoicedAt);
+  }, [sales]);
+
+  // Filtro para la pestaña de DTEs emitidos
+  const filteredDteSales = useMemo(() => {
+    return completedDteSales.filter(sale => {
+      if (dteFilterType === '01' && sale.tipoComprobante !== '01') return false;
+      if (dteFilterType === '03' && sale.tipoComprobante !== '03') return false;
+      if (dteFilterType === 'TICKET' && sale.tipoComprobante !== 'TICKET') return false;
+      if (!dteSearchQuery.trim()) return true;
+      const q = dteSearchQuery.toLowerCase().trim();
+      return (
+        sale.saleNumber.toLowerCase().includes(q) ||
+        (sale.orderNumber && sale.orderNumber.toLowerCase().includes(q)) ||
+        (sale.cliente?.nombre && sale.cliente.nombre.toLowerCase().includes(q)) ||
+        (sale.dteInfo?.numeroControl && sale.dteInfo.numeroControl.toLowerCase().includes(q)) ||
+        (sale.dteInfo?.codigoGeneracion && sale.dteInfo.codigoGeneracion.toLowerCase().includes(q))
+      );
+    });
+  }, [completedDteSales, dteFilterType, dteSearchQuery]);
+
+  // Monto total a cobrar (depende de si se factura comanda de ventanilla o carrito directo)
+  const currentBillingTotal = useMemo(() => {
+    return orderToInvoice ? orderToInvoice.total : cartSubtotal;
+  }, [orderToInvoice, cartSubtotal]);
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 pb-16 max-w-[1650px] mx-auto items-start">
@@ -639,33 +866,58 @@ export default function PosPage() {
 
         <div className="clay-card p-2.5 space-y-1.5">
           <p className="px-2.5 text-[9.5px] font-bold text-slate-400 uppercase tracking-wider">
-            Operaciones de Caja
+            Módulos de Atención
           </p>
 
-          {/* Botón 1: Punto de Venta (El punto de venta que ya tenemos) */}
+          {/* Botón 1: Nueva Orden / Cotizador */}
           <button
             type="button"
-            onClick={() => setPosTab('pos')}
+            onClick={() => setPosTab('nueva_orden')}
             className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
-              posTab === 'pos'
+              posTab === 'nueva_orden' || posTab === 'pos'
                 ? 'clay-btn-primary !shadow-[3px_4px_10px_rgba(79,70,229,0.35)]'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <div className="flex items-center gap-2">
               <Store className="w-4 h-4" />
-              <span>Punto de Venta</span>
+              <span>Cotizador / Orden</span>
             </div>
             {totalItemsCount > 0 && (
               <span className={`clay-badge text-[10px] font-black px-2 py-0.5 ${
-                posTab === 'pos' ? 'bg-white text-indigo-900' : 'bg-indigo-100 text-indigo-800'
+                posTab === 'nueva_orden' || posTab === 'pos' ? 'bg-white text-indigo-900' : 'bg-indigo-100 text-indigo-800'
               }`}>
                 {totalItemsCount}
               </span>
             )}
           </button>
 
-          {/* Botón 2: Clientes (Módulo estilo Mecanic OS para FC y CCF) */}
+          {/* Botón 2: Caja & Facturación (Estilo Mecanic OS) */}
+          <button
+            type="button"
+            onClick={() => setPosTab('caja_facturacion')}
+            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+              posTab === 'caja_facturacion'
+                ? 'clay-btn-primary !shadow-[3px_4px_10px_rgba(79,70,229,0.35)]'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <ReceiptText className="w-4 h-4 text-emerald-600" />
+              <span>Caja & Facturación</span>
+            </div>
+            {readyInWindowCount > 0 ? (
+              <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500 text-white animate-pulse shadow-sm" title="Órdenes listas en ventanilla para facturar">
+                {readyInWindowCount} listo{readyInWindowCount > 1 ? 's' : ''}
+              </span>
+            ) : (
+              <span className="text-[10px] text-slate-400 font-mono font-bold">
+                {completedDteSales.length} DTE
+              </span>
+            )}
+          </button>
+
+          {/* Botón 3: Clientes (Módulo estilo Mecanic OS para FC y CCF) */}
           <button
             type="button"
             onClick={() => setPosTab('clientes')}
@@ -684,7 +936,34 @@ export default function PosPage() {
             </span>
           </button>
 
-          {/* Botón 3: Ventas (Resumen diario de onzas vendidas) */}
+          {/* Botón 4: Estado de Pedidos en Bodega */}
+          <button
+            type="button"
+            onClick={() => setPosTab('bodega_ordenes')}
+            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+              posTab === 'bodega_ordenes'
+                ? 'clay-btn-primary !shadow-[3px_4px_10px_rgba(79,70,229,0.35)]'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Box className="w-4 h-4 text-amber-500" />
+              <span>Pedidos en Bodega</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {pendingPreparationCount > 0 ? (
+                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full ${
+                  posTab === 'bodega_ordenes' ? 'bg-white text-indigo-900' : 'bg-amber-100 text-amber-900'
+                }`} title="Pedidos en preparación en bodega">
+                  {pendingPreparationCount} prep.
+                </span>
+              ) : (
+                <span className="text-[10px] text-slate-400 font-mono">0</span>
+              )}
+            </div>
+          </button>
+
+          {/* Botón 5: Ventas (Resumen diario de onzas vendidas) */}
           <button
             type="button"
             onClick={() => setPosTab('ventas')}
@@ -705,38 +984,7 @@ export default function PosPage() {
             </span>
           </button>
 
-          {/* Botón 4: Estado de Pedidos en Bodega */}
-          <button
-            type="button"
-            onClick={() => setPosTab('bodega_ordenes')}
-            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
-              posTab === 'bodega_ordenes'
-                ? 'clay-btn-primary !shadow-[3px_4px_10px_rgba(79,70,229,0.35)]'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <Box className="w-4 h-4 text-amber-500" />
-              <span>Pedidos en Bodega</span>
-            </div>
-            <div className="flex items-center gap-1">
-              {readyInWindowCount > 0 ? (
-                <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500 text-white animate-pulse shadow-sm" title="Pedidos listos en ventanilla">
-                  {readyInWindowCount} {readyInWindowCount === 1 ? 'listo' : 'listos'}
-                </span>
-              ) : pendingPreparationCount > 0 ? (
-                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full ${
-                  posTab === 'bodega_ordenes' ? 'bg-white text-indigo-900' : 'bg-amber-100 text-amber-900'
-                }`} title="Pedidos en preparación">
-                  {pendingPreparationCount} prep.
-                </span>
-              ) : (
-                <span className="text-[10px] text-slate-400 font-mono">0</span>
-              )}
-            </div>
-          </button>
-
-          {/* Botón 5: Envíos & Domicilio */}
+          {/* Botón 6: Envíos & Domicilio */}
           <button
             type="button"
             onClick={() => router.push('/logistica')}
@@ -788,9 +1036,9 @@ export default function PosPage() {
       <div className="flex-1 w-full min-w-0">
 
         {/* ======================================================================= */}
-        {/* PESTAÑA 1: PUNTO DE VENTA (EL PUNTO DE VENTA QUE YA TENEMOS)             */}
+        {/* PESTAÑA 1: NUEVA ORDEN / COTIZADOR Y TERMINAL DE VENTA                   */}
         {/* ======================================================================= */}
-        {posTab === 'pos' && (
+        {(posTab === 'nueva_orden' || posTab === 'pos') && (
           <div className="flex flex-col xl:flex-row gap-6">
             
             {/* Columna Izquierda del POS: Buscador y Catálogo */}
@@ -976,6 +1224,28 @@ export default function PosPage() {
                   )}
                 </div>
 
+                {/* Toast de Orden Enviada a Bodega */}
+                {orderSentToast && (
+                  <div className="mb-3 p-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg animate-in fade-in flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                        <Box className="w-4 h-4 text-amber-300" />
+                      </div>
+                      <div>
+                        <p className="font-black text-xs">¡Orden #{orderSentToast.orderNumber} enviada!</p>
+                        <p className="text-[10px] text-emerald-100">Bodega la preparará y la pondrá en ventanilla para cobro.</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setPosTab('caja_facturacion')}
+                      className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-white text-emerald-800 shadow-sm hover:bg-emerald-50 whitespace-nowrap"
+                    >
+                      Ver en Caja
+                    </button>
+                  </div>
+                )}
+
                 {/* Lista de productos en el carrito */}
                 <div className="flex-1 overflow-y-auto py-3 space-y-2 pr-1">
                   {cart.length === 0 ? (
@@ -1046,23 +1316,516 @@ export default function PosPage() {
                       <span>${ivaCalculado.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-slate-100">
-                      <span>Total a Cobrar:</span>
+                      <span>Total Estimado:</span>
                       <span className="text-indigo-600 text-xl font-extrabold">
                         ${cartSubtotal.toFixed(2)}
                       </span>
                     </div>
 
+                    {/* Botón Principal: Mandar a Bodega */}
                     <button
-                      onClick={() => setIsCheckoutOpen(true)}
-                      className="clay-btn clay-btn-success w-full py-3.5 text-base mt-2 rounded-2xl shadow-[4px_6px_16px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2 font-black"
+                      type="button"
+                      onClick={handleSendOrderToBodega}
+                      className="clay-btn clay-btn-primary w-full py-3 text-sm mt-2 rounded-2xl shadow-[4px_6px_16px_rgba(79,70,229,0.4)] flex items-center justify-center gap-2 font-black !bg-gradient-to-r !from-indigo-600 !to-indigo-800 text-white hover:brightness-110"
                     >
-                      <Banknote className="w-5 h-5" />
-                      <span>Cobrar ${cartSubtotal.toFixed(2)}</span>
+                      <Box className="w-4 h-4 text-amber-300" />
+                      <span>Mandar a Preparar (Enviar a Bodega)</span>
                     </button>
+
+                    {/* Fila de Botones Secundarios: Cotización PDF y Cobro Directo */}
+                    <div className="grid grid-cols-2 gap-2 mt-1">
+                      <button
+                        type="button"
+                        onClick={handleOpenQuoteModal}
+                        className="clay-btn clay-btn-light py-2 px-2 text-xs rounded-xl flex items-center justify-center gap-1.5 font-bold text-slate-700 hover:text-indigo-700 hover:bg-indigo-50 border border-slate-200"
+                        title="Generar cotización o prefactura en PDF para compartir"
+                      >
+                        <FileText className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>Cotización (PDF)</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOrderToInvoice(null);
+                          setIsCheckoutOpen(true);
+                        }}
+                        className="clay-btn clay-btn-success py-2 px-2 text-xs rounded-xl flex items-center justify-center gap-1.5 font-black text-emerald-800 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300"
+                        title="Cobrar directamente sin enviar a bodega"
+                      >
+                        <Banknote className="w-3.5 h-3.5 text-emerald-700" />
+                        <span>Cobro Directo</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
+
+          </div>
+        )}
+
+        {/* ======================================================================= */}
+        {/* PESTAÑA: CAJA & FACTURACIÓN (ESTILO MECANIC OS)                         */}
+        {/* ======================================================================= */}
+        {posTab === 'caja_facturacion' && (
+          <div className="space-y-6 animate-in fade-in">
+            
+            {/* Encabezado y Selector de Subpestañas (Estilo Mecanic OS) */}
+            <div className="clay-card p-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white relative overflow-hidden shadow-xl">
+              <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 opacity-10 pointer-events-none">
+                <ReceiptText className="w-64 h-64" />
+              </div>
+
+              <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-black uppercase tracking-wider backdrop-blur-sm">
+                      🏛️ Módulo de Caja & DTE
+                    </span>
+                    <span className="text-xs text-indigo-200">Facturación Electrónica El Salvador</span>
+                  </div>
+                  <h2 className="text-xl md:text-2xl font-black">
+                    Caja, Ventanilla & Facturación DTE
+                  </h2>
+                  <p className="text-xs text-indigo-100/90 mt-1 max-w-xl">
+                    Flujo centralizado: Cobra las órdenes preparadas por Bodega y emite los documentos electrónicos tributarios (Facturas y Créditos Fiscales).
+                  </p>
+                </div>
+
+                {/* Switcher de Subpestañas */}
+                <div className="flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20">
+                  <button
+                    type="button"
+                    onClick={() => setCajaSubTab('listas_facturar')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                      cajaSubTab === 'listas_facturar'
+                        ? 'bg-emerald-500 text-white shadow-md'
+                        : 'text-slate-200 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <CheckCheck className="w-4 h-4" />
+                    <span>Órdenes Listas ({readyInWindowOrders.length})</span>
+                    {readyInWindowOrders.length > 0 && (
+                      <span className="w-2 h-2 rounded-full bg-amber-300 animate-ping" />
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setCajaSubTab('dtes_emitidos')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                      cajaSubTab === 'dtes_emitidos'
+                        ? 'bg-indigo-600 text-white shadow-md'
+                        : 'text-slate-200 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <FileCheck className="w-4 h-4" />
+                    <span>DTEs Emitidos ({completedDteSales.length})</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* SUBPESTAÑA 1: ÓRDENES LISTAS PARA FACTURAR */}
+            {cajaSubTab === 'listas_facturar' && (
+              <div className="space-y-4">
+                
+                {/* Métricas rápidas de ventanilla */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                  <div className={`clay-card p-4 flex items-center justify-between border-l-4 border-emerald-500 ${readyInWindowOrders.length > 0 ? 'bg-emerald-50/40 ring-1 ring-emerald-300' : ''}`}>
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Listas en Ventanilla</span>
+                      <div className="text-2xl font-black text-emerald-700 font-mono mt-0.5">
+                        {readyInWindowOrders.length}
+                      </div>
+                      <span className="text-[10px] text-emerald-800 font-medium">Listas para cobro inmediato</span>
+                    </div>
+                    <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                      <CheckCircle2 className="w-5 h-5" />
+                    </div>
+                  </div>
+
+                  <div className="clay-card p-4 flex items-center justify-between border-l-4 border-amber-500">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">En Preparación (Bodega)</span>
+                      <div className="text-2xl font-black text-amber-600 font-mono mt-0.5">
+                        {pendingPreparationCount}
+                      </div>
+                      <span className="text-[10px] text-slate-500 font-medium">Siendo alistadas en estantería</span>
+                    </div>
+                    <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
+                      <Clock className="w-5 h-5" />
+                    </div>
+                  </div>
+
+                  <div className="clay-card p-4 flex items-center justify-between border-l-4 border-indigo-500">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Facturadas Hoy</span>
+                      <div className="text-2xl font-black text-indigo-600 font-mono mt-0.5">
+                        {completedDteSales.length}
+                      </div>
+                      <span className="text-[10px] text-slate-500 font-medium">Comprobantes DTE con sello</span>
+                    </div>
+                    <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+                      <ReceiptText className="w-5 h-5" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Listado de Órdenes Listas en Ventanilla */}
+                {readyInWindowOrders.length === 0 ? (
+                  <div className="clay-card p-12 text-center flex flex-col items-center justify-center space-y-3">
+                    <div className="w-16 h-16 rounded-3xl bg-amber-100/70 text-amber-600 flex items-center justify-center shadow-inner">
+                      <Clock className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-black text-slate-800">
+                        No hay órdenes en ventanilla en este momento
+                      </h4>
+                      <p className="text-xs text-slate-500 max-w-md mt-1">
+                        Cuando las vendedoras creen órdenes desde el Cotizador y el equipo de Bodega termine de prepararlas y presione <strong>"Poner en Ventanilla"</strong>, aparecerán aquí para cobro y emisión oficial de DTE.
+                      </p>
+                    </div>
+                    {pendingPreparationCount > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => setPosTab('bodega_ordenes')}
+                        className="clay-btn clay-btn-light px-4 py-2 text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200 mt-2 flex items-center gap-1.5"
+                      >
+                        <Box className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Ver {pendingPreparationCount} {pendingPreparationCount === 1 ? 'orden' : 'órdenes'} en preparación en Bodega</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setPosTab('nueva_orden')}
+                        className="clay-btn clay-btn-primary px-4 py-2 text-xs font-bold mt-2 flex items-center gap-1.5"
+                      >
+                        <Store className="w-3.5 h-3.5" />
+                        <span>Crear Nueva Orden en Cotizador</span>
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    {readyInWindowOrders.map((order) => (
+                      <div 
+                        key={order.id} 
+                        className="clay-card p-5 bg-white border-2 border-emerald-400 shadow-[0_8px_24px_rgba(16,185,129,0.15)] flex flex-col justify-between space-y-4"
+                      >
+                        <div>
+                          {/* Encabezado de la Tarjeta */}
+                          <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono font-black text-sm text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-lg">
+                                  #{order.orderNumber || order.saleNumber}
+                                </span>
+                                <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500 text-white flex items-center gap-1 shadow-sm">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                                  <span>Listo en Ventanilla</span>
+                                </span>
+                              </div>
+                              <span className="text-[10.5px] text-slate-400 font-sans mt-1 block">
+                                Creado: {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • Vendedor: {order.vendedor || 'Mostrador'}
+                              </span>
+                            </div>
+
+                            <div className="text-right">
+                              <span className="text-[10px] uppercase font-bold text-slate-400 block">Total a Cobrar</span>
+                              <span className="text-2xl font-black font-mono text-emerald-600">
+                                ${order.total.toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Datos del Cliente */}
+                          <div className="my-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
+                            <div>
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Cliente</span>
+                              <strong className="text-slate-800 text-sm">{order.cliente.nombre}</strong>
+                              {order.cliente.numDocumento && (
+                                <span className="text-[11px] text-slate-500 font-mono block">Doc: {order.cliente.numDocumento}</span>
+                              )}
+                            </div>
+
+                            <div className="flex flex-col sm:items-end gap-1">
+                              <span className={`clay-badge text-[10.5px] font-bold py-0.5 px-2 ${
+                                order.tipoComprobante === '03' || order.cliente.nrc
+                                  ? 'bg-purple-100 text-purple-800 border border-purple-200'
+                                  : 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                              }`}>
+                                {order.tipoComprobante === '03' || order.cliente.nrc ? 'Crédito Fiscal (CCF-03)' : 'Factura (FC-01)'}
+                              </span>
+                              {order.cliente.nrc && (
+                                <span className="text-[10px] font-mono text-purple-700 font-bold">NRC: {order.cliente.nrc}</span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Desglose de Productos Preparados por Bodega */}
+                          <div className="space-y-1.5">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                              Items Preparados ({order.items.length})
+                            </span>
+                            <div className="divide-y divide-slate-100 border border-slate-200/80 rounded-2xl p-2.5 max-h-44 overflow-y-auto bg-slate-50/40">
+                              {order.items.map((it, idx) => (
+                                <div key={idx} className="py-1.5 flex items-center justify-between text-xs gap-2">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="font-bold text-slate-800 truncate block">{it.name}</span>
+                                      {it.puesto && (
+                                        <span className="clay-badge text-[9px] font-mono font-black bg-amber-100 text-amber-900 px-1 py-0.2 border border-amber-200">
+                                          📍{it.puesto}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span className="text-[10.5px] text-slate-500">
+                                      {it.quantity} {it.unit || 'Oz'} x ${it.price.toFixed(2)}
+                                    </span>
+                                  </div>
+                                  <span className="font-mono font-black text-slate-800">
+                                    ${it.total.toFixed(2)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Pie de tarjeta con Botón de Cobro */}
+                        <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-2.5">
+                          <div className="text-xs text-slate-500 font-medium">
+                            Subtotal: <strong className="font-mono text-slate-700">${order.subtotal.toFixed(2)}</strong> • IVA (13%): <strong className="font-mono text-slate-700">${order.ivaTotal.toFixed(2)}</strong>
+                          </div>
+
+                          <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveQuoteSale(order);
+                                setIsQuoteModalOpen(true);
+                              }}
+                              className="clay-btn clay-btn-light px-3 py-2 text-xs font-bold text-slate-700 hover:text-indigo-700 flex items-center justify-center gap-1"
+                              title="Ver comanda / cotización en PDF"
+                            >
+                              <FileText className="w-3.5 h-3.5 text-indigo-600" />
+                              <span className="hidden sm:inline">Comanda</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleStartInvoiceOrder(order)}
+                              className="clay-btn clay-btn-success flex-1 sm:flex-none px-4 py-2.5 text-xs font-black flex items-center justify-center gap-1.5 shadow-[2px_4px_12px_rgba(16,185,129,0.35)]"
+                            >
+                              <Banknote className="w-4 h-4" />
+                              <span>Cobrar y Facturar DTE</span>
+                            </button>
+                          </div>
+                        </div>
+
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+              </div>
+            )}
+
+            {/* SUBPESTAÑA 2: DTES EMITIDOS (HISTORIAL OFICIAL ANTE HACIENDA) */}
+            {cajaSubTab === 'dtes_emitidos' && (
+              <div className="space-y-4">
+                
+                {/* Barra de Búsqueda y Filtros de DTE */}
+                <div className="clay-card p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                  <div className="relative flex-1 w-full">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Buscar por N° de Control (DTE-01-...), Código de Generación, cliente u orden..."
+                      value={dteSearchQuery}
+                      onChange={(e) => setDteSearchQuery(e.target.value)}
+                      className="clay-input w-full pl-9 pr-3 py-2 text-xs font-bold"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto">
+                    <button
+                      type="button"
+                      onClick={() => setDteFilterType('ALL')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                        dteFilterType === 'ALL'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      Todos ({completedDteSales.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDteFilterType('01')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                        dteFilterType === '01'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      Factura (01)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDteFilterType('03')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                        dteFilterType === '03'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      Crédito Fiscal (03)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDteFilterType('TICKET')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                        dteFilterType === 'TICKET'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      Tickets
+                    </button>
+                  </div>
+                </div>
+
+                {/* Tabla de Auditoría de DTEs Emitidos */}
+                <div className="clay-card p-5 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-sm font-black text-slate-800 flex items-center gap-2">
+                      <FileCheck className="w-4 h-4 text-emerald-600" />
+                      <span>Registro Oficial de Documentos Tributarios Electrónicos</span>
+                    </h3>
+                    <span className="clay-badge text-[10px] bg-slate-100 text-slate-700 font-bold">
+                      {filteredDteSales.length} documentos
+                    </span>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-200 bg-slate-50/70 text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+                          <th className="py-2.5 px-3">N° Control / Código Generación</th>
+                          <th className="py-2.5 px-3">Fecha & Hora</th>
+                          <th className="py-2.5 px-3">Tipo DTE</th>
+                          <th className="py-2.5 px-3">Cliente</th>
+                          <th className="py-2.5 px-3">Método</th>
+                          <th className="py-2.5 px-3 text-right">Total ($)</th>
+                          <th className="py-2.5 px-3 text-center">Estado Hacienda</th>
+                          <th className="py-2.5 px-3 text-center">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {filteredDteSales.length === 0 ? (
+                          <tr>
+                            <td colSpan={8} className="py-10 text-center text-slate-400">
+                              <ReceiptText className="w-10 h-10 mx-auto mb-2 opacity-30 text-indigo-500" />
+                              <p className="font-bold text-sm text-slate-600">No se encontraron DTEs emitidos</p>
+                              <p className="text-xs text-slate-400 mt-0.5">Los comprobantes facturados en ventanilla se registrarán aquí.</p>
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredDteSales.map((sale) => (
+                            <tr key={sale.id} className="hover:bg-slate-50/80 transition-colors">
+                              <td className="py-2.5 px-3 font-mono">
+                                {sale.dteInfo?.numeroControl ? (
+                                  <div className="font-bold text-emerald-700 text-xs truncate max-w-[170px]" title={sale.dteInfo.numeroControl}>
+                                    {sale.dteInfo.numeroControl}
+                                  </div>
+                                ) : (
+                                  <div className="font-bold text-slate-700 text-xs">
+                                    #{sale.saleNumber}
+                                  </div>
+                                )}
+                                {sale.dteInfo?.codigoGeneracion && (
+                                  <span className="text-[9.5px] text-slate-400 truncate block max-w-[170px]" title={sale.dteInfo.codigoGeneracion}>
+                                    UUID: {sale.dteInfo.codigoGeneracion.slice(0, 18)}...
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-2.5 px-3 text-slate-600">
+                                <div>{new Date(sale.invoicedAt || sale.createdAt).toLocaleDateString('es-SV')}</div>
+                                <span className="text-[10px] text-slate-400 font-sans">
+                                  {new Date(sale.invoicedAt || sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </td>
+                              <td className="py-2.5 px-3">
+                                <span className={`clay-badge text-[10px] font-bold py-0.5 px-2 ${
+                                  sale.tipoComprobante === '03'
+                                    ? 'bg-purple-100 text-purple-800 border border-purple-200'
+                                    : sale.tipoComprobante === '01'
+                                    ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                                    : 'bg-slate-100 text-slate-700'
+                                }`}>
+                                  {sale.tipoComprobante === '03' ? 'Crédito Fiscal (03)' : sale.tipoComprobante === '01' ? 'Factura (01)' : 'Ticket'}
+                                </span>
+                              </td>
+                              <td className="py-2.5 px-3">
+                                <span className="font-extrabold text-slate-800 block text-xs truncate max-w-[160px]">
+                                  {sale.cliente.nombre}
+                                </span>
+                                {sale.cliente.numDocumento && (
+                                  <span className="text-[10px] font-mono text-slate-400">
+                                    Doc: {sale.cliente.numDocumento}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-2.5 px-3 text-slate-600 font-bold text-[11px]">
+                                {sale.paymentMethod === 'CASH' ? 'Efectivo' : sale.paymentMethod === 'CARD' ? 'Tarjeta' : sale.paymentMethod === 'TRANSFER' ? 'Transferencia' : 'Bitcoin'}
+                              </td>
+                              <td className="py-2.5 px-3 text-right font-mono font-black text-xs text-indigo-700">
+                                ${sale.total.toFixed(2)}
+                              </td>
+                              <td className="py-2.5 px-3 text-center">
+                                {sale.dteInfo ? (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                    <span>{sale.dteInfo.simulated ? 'Aprobado (Test)' : 'Sello Hacienda'}</span>
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] text-slate-400 font-medium">Ticket Local</span>
+                                )}
+                              </td>
+                              <td className="py-2.5 px-3 text-center">
+                                <div className="flex items-center justify-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedSaleDetail(sale)}
+                                    className="clay-btn clay-btn-light px-2.5 py-1 text-[11px] font-bold text-indigo-700 inline-flex items-center gap-1"
+                                    title="Ver detalle del comprobante"
+                                  >
+                                    <Eye className="w-3 h-3" />
+                                    <span>Ver</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setCompletedSale(sale)}
+                                    className="clay-btn clay-btn-light px-2 py-1 text-[11px] font-bold text-slate-700 hover:text-indigo-700 inline-flex items-center gap-1"
+                                    title="Reimprimir Ticket"
+                                  >
+                                    <Printer className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+              </div>
+            )}
 
           </div>
         )}
@@ -2079,8 +2842,37 @@ export default function PosPage() {
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-xl font-black text-slate-800 mb-1">Finalizar Venta de Perfumería</h3>
-            <p className="text-xs text-slate-500 mb-4">Selecciona el cliente y comprobante legal a emitir.</p>
+            <div className="mb-4">
+              <h3 className="text-xl font-black text-slate-800 mb-0.5">
+                {orderToInvoice ? `Facturar Orden #${orderToInvoice.orderNumber || orderToInvoice.saleNumber}` : 'Finalizar Venta de Perfumería'}
+              </h3>
+              <p className="text-xs text-slate-500">
+                {orderToInvoice ? 'Orden preparada en ventanilla lista para emisión oficial de DTE' : 'Selecciona el cliente y comprobante legal a emitir.'}
+              </p>
+            </div>
+
+            {/* Resumen de items si se factura orden de ventanilla */}
+            {orderToInvoice && (
+              <div className="mb-4 p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200">
+                <div className="flex items-center justify-between text-xs font-bold text-emerald-900 mb-1.5">
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>Items preparados en comanda ({orderToInvoice.items.length})</span>
+                  </span>
+                  <span className="font-mono font-black text-emerald-800">
+                    Total: ${orderToInvoice.total.toFixed(2)}
+                  </span>
+                </div>
+                <div className="space-y-1 max-h-28 overflow-y-auto divide-y divide-emerald-100/80 text-[11px]">
+                  {orderToInvoice.items.map((it, idx) => (
+                    <div key={idx} className="pt-1 first:pt-0 flex justify-between items-center text-slate-700">
+                      <span className="truncate max-w-[260px] font-medium">{it.name} ({it.quantity} {it.unit || 'Oz'})</span>
+                      <span className="font-mono font-bold text-slate-900">${it.total.toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Selector Rápido de Clientes Registrados */}
             <div className="mb-4 p-3 rounded-2xl bg-indigo-50/60 border border-indigo-100">
@@ -2277,17 +3069,17 @@ export default function PosPage() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setCashAmount(cartSubtotal.toFixed(2))}
+                    onClick={() => setCashAmount(currentBillingTotal.toFixed(2))}
                     className="clay-btn clay-btn-light px-3 text-xs font-bold whitespace-nowrap"
                   >
-                    Exacto (${cartSubtotal.toFixed(2)})
+                    Exacto (${currentBillingTotal.toFixed(2)})
                   </button>
                 </div>
-                {parseFloat(cashAmount) >= cartSubtotal && (
+                {parseFloat(cashAmount) >= currentBillingTotal && (
                   <div className="flex justify-between items-center text-xs font-bold text-emerald-800 pt-1">
                     <span>Cambio a devolver:</span>
                     <span className="font-mono text-base font-black">
-                      ${(parseFloat(cashAmount) - cartSubtotal).toFixed(2)}
+                      ${(parseFloat(cashAmount) - currentBillingTotal).toFixed(2)}
                     </span>
                   </div>
                 )}
@@ -2299,14 +3091,17 @@ export default function PosPage() {
               <div>
                 <span className="text-xs text-slate-500 block">Total a Pagar:</span>
                 <span className="text-2xl font-black text-indigo-600 font-mono">
-                  ${cartSubtotal.toFixed(2)}
+                  ${currentBillingTotal.toFixed(2)}
                 </span>
               </div>
 
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setIsCheckoutOpen(false)}
+                  onClick={() => {
+                    setIsCheckoutOpen(false);
+                    setOrderToInvoice(null);
+                  }}
                   className="clay-btn clay-btn-light px-4 py-2.5 text-xs font-bold"
                 >
                   Cancelar
@@ -2319,7 +3114,9 @@ export default function PosPage() {
                   className="clay-btn clay-btn-success px-5 py-2.5 text-xs font-black flex items-center gap-1.5"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>{isProcessing ? 'Emitiendo DTE...' : 'Completar Venta'}</span>
+                  <span>
+                    {isProcessing ? 'Emitiendo DTE...' : orderToInvoice ? 'Cobrar y Emitir DTE' : 'Completar Venta'}
+                  </span>
                 </button>
               </div>
             </div>
@@ -2465,6 +3262,15 @@ export default function PosPage() {
           </div>
         </div>
       )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 5: COTIZACIÓN / PREFACTURA (EXPORTAR PDF Y WHATSAPP)                 */}
+      {/* ========================================================================= */}
+      <CotizacionModal
+        isOpen={isQuoteModalOpen}
+        onClose={() => setIsQuoteModalOpen(false)}
+        sale={activeQuoteSale}
+      />
 
     </div>
   );

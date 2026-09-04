@@ -26,20 +26,26 @@ export interface CartItem {
 export interface SaleRecord {
   id: string;
   saleNumber: string;
+  orderNumber?: string;
   createdAt: string;
+  cotizacionDate?: string;
+  invoicedAt?: string;
   total: number;
   subtotal: number;
   ivaTotal: number;
-  paymentMethod: 'CASH' | 'CARD' | 'TRANSFER' | 'BITCOIN';
+  paymentMethod?: 'CASH' | 'CARD' | 'TRANSFER' | 'BITCOIN';
   cashReceived?: number;
   cashChange?: number;
-  tipoComprobante: 'TICKET' | '01' | '03';
+  tipoComprobante?: 'TICKET' | '01' | '03';
   cliente: {
     nombre: string;
     numDocumento?: string;
     nrc?: string;
     correo?: string;
     direccion?: string;
+    telefono?: string;
+    actividadEconomica?: string;
+    categoriaContribuyente?: string;
   };
   dteInfo?: {
     codigoGeneracion?: string;
@@ -49,8 +55,9 @@ export interface SaleRecord {
     simulated?: boolean;
     mensaje?: string;
   };
-  status?: 'PENDING_PREPARATION' | 'READY_AT_WINDOW' | 'COMPLETED' | 'CANCELLED';
+  status?: 'PREFACTURA' | 'PENDING_PREPARATION' | 'READY_AT_WINDOW' | 'COMPLETED' | 'CANCELLED';
   vendedor?: string;
+  cajero?: string;
   items: {
     productId: string;
     name: string;
