@@ -370,19 +370,19 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 pb-20 items-start">
+    <div className="flex flex-col md:flex-row gap-4 pb-20 items-start w-full">
       
       {/* ================= BARRA LATERAL IZQUIERDA (MENU FORMAL ERP) ================= */}
-      <aside className="w-full md:w-64 lg:w-72 shrink-0 flex flex-col gap-5 sticky top-24">
+      <aside className="w-full md:w-56 lg:w-60 shrink-0 flex flex-col gap-4 sticky top-20">
         
         {/* Encabezado del Menú Lateral */}
-        <div className="clay-card p-4 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-[3px_4px_10px_rgba(79,70,229,0.35)]">
+        <div className="clay-card p-3.5 flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-lg shadow-[2px_3px_8px_rgba(79,70,229,0.35)] shrink-0">
             👑
           </div>
           <div>
-            <h2 className="font-extrabold text-sm text-slate-800 leading-tight">Mando Gerencial</h2>
-            <p className="text-[11px] text-slate-500 font-medium">Control de Operaciones</p>
+            <h2 className="font-extrabold text-xs text-slate-800 leading-tight">Mando Gerencial</h2>
+            <p className="text-[10px] text-slate-500 font-medium">Control de Operaciones</p>
           </div>
         </div>
 

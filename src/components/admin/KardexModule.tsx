@@ -435,7 +435,7 @@ export default function KardexModule({
       <div className="flex flex-wrap items-center gap-1.5 bg-slate-100/90 p-1 rounded-xl border border-slate-200/80">
         <button
           onClick={() => setActiveCategoryFilter('ALL')}
-          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5 ${
+          className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition-all flex items-center gap-1.5 ${
             activeCategoryFilter === 'ALL'
               ? 'clay-btn-primary !shadow-sm'
               : 'text-slate-600 hover:text-slate-900'
@@ -443,14 +443,14 @@ export default function KardexModule({
         >
           <History className="w-3 h-3" />
           <span>Todos los Movimientos</span>
-          <span className="text-[10px] ml-0.5 px-1.5 py-0.2 rounded-full bg-white/30 text-white font-mono">
+          <span className="text-[9.5px] ml-0.5 px-1.5 py-0.2 rounded-full bg-white/30 text-white font-mono">
             {allKardexMovements.length}
           </span>
         </button>
 
         <button
           onClick={() => setActiveCategoryFilter('COMPRA')}
-          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5 ${
+          className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition-all flex items-center gap-1.5 ${
             activeCategoryFilter === 'COMPRA'
               ? 'clay-btn-primary !shadow-sm'
               : 'text-slate-600 hover:text-slate-900'
@@ -458,14 +458,14 @@ export default function KardexModule({
         >
           <ShoppingCart className="w-3 h-3 text-emerald-500" />
           <span>📥 DTEs de Compra</span>
-          <span className="text-[10px] ml-0.5 px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 font-mono font-bold">
+          <span className="text-[9.5px] ml-0.5 px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 font-mono font-bold">
             {countCompras}
           </span>
         </button>
 
         <button
           onClick={() => setActiveCategoryFilter('VENTA')}
-          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5 ${
+          className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition-all flex items-center gap-1.5 ${
             activeCategoryFilter === 'VENTA'
               ? 'clay-btn-primary !shadow-sm'
               : 'text-slate-600 hover:text-slate-900'
@@ -473,14 +473,14 @@ export default function KardexModule({
         >
           <Receipt className="w-3 h-3 text-blue-500" />
           <span>📤 DTEs de Venta (POS)</span>
-          <span className="text-[10px] ml-0.5 px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-800 font-mono font-bold">
+          <span className="text-[9.5px] ml-0.5 px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-800 font-mono font-bold">
             {countVentas}
           </span>
         </button>
 
         <button
           onClick={() => setActiveCategoryFilter('AJUSTE')}
-          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5 ${
+          className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition-all flex items-center gap-1.5 ${
             activeCategoryFilter === 'AJUSTE'
               ? 'clay-btn-primary !shadow-sm'
               : 'text-slate-600 hover:text-slate-900'
@@ -488,24 +488,24 @@ export default function KardexModule({
         >
           <SlidersHorizontal className="w-3 h-3 text-purple-500" />
           <span>⚖️ Ajustes & Mermas</span>
-          <span className="text-[10px] ml-0.5 px-1.5 py-0.2 rounded-full bg-purple-100 text-purple-800 font-mono font-bold">
+          <span className="text-[9.5px] ml-0.5 px-1.5 py-0.2 rounded-full bg-purple-100 text-purple-800 font-mono font-bold">
             {countAjustes}
           </span>
         </button>
       </div>
 
       {/* Barra de Filtros Compacta */}
-      <div className="clay-card p-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+      <div className="clay-card p-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
           {/* Selector de Producto */}
           <div>
-            <label className="text-[10px] font-bold text-slate-500 block mb-0.5">
+            <label className="text-[9.5px] font-bold text-slate-500 block mb-0.5">
               Producto / Contratipo
             </label>
             <select
               value={selectedProductId}
               onChange={(e) => setSelectedProductId(e.target.value)}
-              className="clay-input w-full text-[11px] font-bold py-1 px-2"
+              className="clay-input w-full text-[10.5px] font-bold py-1 px-2"
             >
               <option value="ALL">📦 Todos los Productos e Insumos</option>
               {products.map(p => (
@@ -518,13 +518,13 @@ export default function KardexModule({
 
           {/* Tipo de Movimiento */}
           <div>
-            <label className="text-[10px] font-bold text-slate-500 block mb-0.5">
+            <label className="text-[9.5px] font-bold text-slate-500 block mb-0.5">
               Operación
             </label>
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="clay-input w-full text-[11px] font-bold py-1 px-2"
+              className="clay-input w-full text-[10.5px] font-bold py-1 px-2"
             >
               <option value="ALL">Todas las Operaciones</option>
               <option value="IN_PURCHASE">📥 Entrada (Compra DTE)</option>
@@ -537,13 +537,13 @@ export default function KardexModule({
 
           {/* Período */}
           <div>
-            <label className="text-[10px] font-bold text-slate-500 block mb-0.5">
-              Fecha
+            <label className="text-[9.5px] font-bold text-slate-500 block mb-0.5">
+              Período
             </label>
             <select
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value as any)}
-              className="clay-input w-full text-[11px] font-bold py-1 px-2"
+              className="clay-input w-full text-[10.5px] font-bold py-1 px-2"
             >
               <option value="ALL">Todo el Historial</option>
               <option value="TODAY">Solo Hoy</option>
@@ -554,17 +554,17 @@ export default function KardexModule({
 
           {/* Buscador de Texto */}
           <div>
-            <label className="text-[10px] font-bold text-slate-500 block mb-0.5">
-              Buscar DTE / Referencia / Cliente
+            <label className="text-[9.5px] font-bold text-slate-500 block mb-0.5">
+              Buscar DTE / Referencia / SKU
             </label>
             <div className="relative">
-              <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 placeholder="DTE-01..., SKU, Proveedor..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="clay-input w-full pl-7 pr-2.5 py-1 text-[11px]"
+                className="clay-input w-full pl-6 pr-2 py-1 text-[10.5px]"
               />
             </div>
           </div>
@@ -572,22 +572,22 @@ export default function KardexModule({
       </div>
 
       {/* ========================================================================= */}
-      {/* TABLA PRINCIPAL DEL KÁRDEX (Compacta, Basada en Mecanic OS)              */}
+      {/* TABLA PRINCIPAL DEL KÁRDEX (Ultra-Compacta, Basada en Mecanic OS)         */}
       {/* ========================================================================= */}
       <div className="clay-card overflow-hidden">
-        <div className="overflow-x-auto max-h-[620px] overflow-y-auto">
-          <table className="w-full text-left border-collapse text-[11px]">
-            <thead className="text-[10px] font-black uppercase tracking-wider text-slate-500 border-b border-slate-200/90 bg-slate-50/90 sticky top-0 z-10 shadow-sm">
+        <div className="overflow-x-auto max-h-[640px] overflow-y-auto">
+          <table className="w-full text-left border-collapse text-[10.5px]">
+            <thead className="text-[9.5px] font-black uppercase tracking-wider text-slate-500 border-b border-slate-200/90 bg-slate-50/95 sticky top-0 z-10 shadow-sm">
               <tr>
-                <th className="py-2.5 px-3">Fecha Movimiento</th>
-                <th className="py-2.5 px-2.5">Código (SKU)</th>
-                <th className="py-2.5 px-3">Descripción</th>
-                <th className="py-2.5 px-2.5 text-center">Tipo</th>
-                <th className="py-2.5 px-2.5 text-center">Cantidad</th>
-                <th className="py-2.5 px-2.5 text-right">Costo / Valor ($)</th>
-                <th className="py-2.5 px-2.5 text-right">Monto Total ($)</th>
-                <th className="py-2.5 px-3">Observación / Concepto</th>
-                <th className="py-2.5 px-3">Número DTE / Referencia</th>
+                <th className="py-2 px-2.5 whitespace-nowrap">Fecha / Hora</th>
+                <th className="py-2 px-2 whitespace-nowrap">Código / Puesto</th>
+                <th className="py-2 px-2.5 whitespace-nowrap">Descripción</th>
+                <th className="py-2 px-2 text-center whitespace-nowrap">Tipo</th>
+                <th className="py-2 px-2 text-center whitespace-nowrap">Cant.</th>
+                <th className="py-2 px-2 text-right whitespace-nowrap">Costo Unit. ($)</th>
+                <th className="py-2 px-2 text-right whitespace-nowrap">Total ($)</th>
+                <th className="py-2 px-2.5 whitespace-nowrap">Concepto / Motivo</th>
+                <th className="py-2 px-2.5 whitespace-nowrap">Documento / DTE</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -619,7 +619,7 @@ export default function KardexModule({
                   const dateStr = new Date(mov.createdAt).toLocaleString('es-SV', {
                     day: '2-digit',
                     month: '2-digit',
-                    year: 'numeric',
+                    year: '2-digit',
                     hour: '2-digit',
                     minute: '2-digit'
                   });
@@ -627,18 +627,18 @@ export default function KardexModule({
                   return (
                     <tr key={mov.id} className="hover:bg-indigo-50/20 transition-colors">
                       {/* Fecha Movimiento */}
-                      <td className="py-2 px-3 font-mono text-[10px] text-slate-600 font-semibold whitespace-nowrap">
+                      <td className="py-1.5 px-2.5 font-mono text-[9.5px] text-slate-600 font-semibold whitespace-nowrap">
                         {dateStr}
                       </td>
 
                       {/* Código Producto (SKU) & Puesto */}
-                      <td className="py-2 px-2.5 whitespace-nowrap">
+                      <td className="py-1.5 px-2 whitespace-nowrap">
                         <div className="flex items-center gap-1">
-                          <code className="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50/80 px-1.5 py-0.5 rounded border border-indigo-100">
+                          <code className="text-[9.5px] font-mono font-bold text-indigo-700 bg-indigo-50/90 px-1 py-0.5 rounded border border-indigo-100">
                             #{mov.productSku || 'S/N'}
                           </code>
                           {mov.puesto && (
-                            <span className="text-[9px] font-mono font-black text-amber-900 bg-amber-50 px-1 py-0.2 rounded border border-amber-200">
+                            <span className="text-[8.5px] font-mono font-black text-amber-900 bg-amber-50 px-1 py-0.5 rounded border border-amber-200" title={`Puesto / Estante: ${mov.puesto}`}>
                               📍{mov.puesto}
                             </span>
                           )}
@@ -646,71 +646,71 @@ export default function KardexModule({
                       </td>
 
                       {/* Descripción */}
-                      <td className="py-2 px-3">
-                        <span className="font-bold text-slate-800 line-clamp-1 max-w-[200px]" title={mov.productName}>
+                      <td className="py-1.5 px-2.5 whitespace-nowrap">
+                        <span className="font-bold text-slate-800 text-[10.5px] block truncate max-w-[150px] xl:max-w-[190px]" title={mov.productName}>
                           {mov.productName}
                         </span>
                       </td>
 
                       {/* Tipo */}
-                      <td className="py-2 px-2.5 text-center whitespace-nowrap">
-                        <span className={`inline-block text-[9px] font-black py-0.5 px-2 rounded-full border ${badgeTag.bg}`}>
+                      <td className="py-1.5 px-2 text-center whitespace-nowrap">
+                        <span className={`inline-block text-[8.5px] font-black py-0.5 px-1.5 rounded border ${badgeTag.bg}`}>
                           {badgeTag.text}
                         </span>
                       </td>
 
                       {/* Cantidad */}
-                      <td className="py-2 px-2.5 text-center font-mono font-black whitespace-nowrap">
+                      <td className="py-1.5 px-2 text-center font-mono font-black text-[10.5px] whitespace-nowrap">
                         <span className={isIncoming ? 'text-emerald-600' : isSale ? 'text-rose-600' : 'text-slate-700'}>
                           {isIncoming ? '+' : '-'}{mov.quantity}
                         </span>
-                        <span className="text-[9px] text-slate-400 font-sans ml-1">
+                        <span className="text-[8.5px] text-slate-400 font-sans ml-0.5">
                           {mov.unit === 'Onza' ? 'Oz' : mov.unit === 'Galón' ? 'Gal' : 'Un.'}
                         </span>
                       </td>
 
                       {/* Costo / Valor Unitario ($) */}
-                      <td className="py-2 px-2.5 text-right font-mono text-slate-600 whitespace-nowrap">
+                      <td className="py-1.5 px-2 text-right font-mono text-[9.5px] text-slate-600 whitespace-nowrap">
                         ${val.toFixed(2)}
                       </td>
 
                       {/* Monto Total ($) */}
-                      <td className="py-2 px-2.5 text-right font-mono font-black text-slate-800 whitespace-nowrap">
+                      <td className="py-1.5 px-2 text-right font-mono font-black text-[10.5px] text-slate-800 whitespace-nowrap">
                         ${total.toFixed(2)}
                       </td>
 
                       {/* Observación / Concepto */}
-                      <td className="py-2 px-3">
-                        <span className="text-[10px] text-slate-600 block line-clamp-1 max-w-[240px]" title={mov.reference}>
+                      <td className="py-1.5 px-2.5 whitespace-nowrap">
+                        <span className="text-[9.5px] text-slate-600 block truncate max-w-[150px] xl:max-w-[200px]" title={mov.reference}>
                           {mov.reference}
                         </span>
                         {mov.notes && mov.notes !== mov.reference && (
-                          <span className="text-[9px] text-slate-400 italic block truncate max-w-[240px]">
+                          <span className="text-[8.5px] text-slate-400 italic block truncate max-w-[150px] xl:max-w-[200px]">
                             {mov.notes}
                           </span>
                         )}
                       </td>
 
                       {/* Número DTE */}
-                      <td className="py-2 px-3 whitespace-nowrap">
+                      <td className="py-1.5 px-2.5 whitespace-nowrap">
                         {mov.dteNumber && mov.dteNumber !== 'N/A' ? (
-                          <div className="flex items-center gap-1.5">
-                            <span className={`text-[9px] font-black uppercase px-1.5 py-0.2 rounded font-mono ${
+                          <div className="flex items-center gap-1">
+                            <span className={`text-[8px] font-black uppercase px-1 py-0.2 rounded font-mono border ${
                               mov.sourceCategory === 'COMPRA'
-                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
                                 : mov.sourceCategory === 'VENTA'
-                                ? 'bg-blue-100 text-blue-800 border border-blue-200'
-                                : 'bg-slate-100 text-slate-700'
+                                ? 'bg-blue-100 text-blue-800 border-blue-200'
+                                : 'bg-slate-100 text-slate-700 border-slate-200'
                             }`}>
                               {mov.sourceCategory === 'COMPRA' ? 'DTE COMPRA' : mov.sourceCategory === 'VENTA' ? 'DTE VENTA' : 'INT'}
                             </span>
-                            <span className="text-[10px] font-mono font-bold text-slate-800 truncate max-w-[160px]" title={mov.dteNumber}>
+                            <span className="text-[9.5px] font-mono font-bold text-slate-800 truncate max-w-[130px] xl:max-w-[170px]" title={mov.dteNumber}>
                               {mov.dteNumber}
                             </span>
                           </div>
                         ) : (
-                          <span className="text-[10px] text-slate-400 italic font-mono">
-                            N/A (Ajuste Interno)
+                          <span className="text-[9px] text-slate-400 italic font-mono">
+                            N/A (Interno)
                           </span>
                         )}
                       </td>
@@ -723,7 +723,7 @@ export default function KardexModule({
         </div>
 
         {/* Footer Informativo */}
-        <div className="p-2.5 bg-slate-50 border-t border-slate-200/80 flex flex-col sm:flex-row justify-between items-center text-[10px] text-slate-500 gap-2">
+        <div className="p-2 bg-slate-50 border-t border-slate-200/80 flex flex-col sm:flex-row justify-between items-center text-[9.5px] text-slate-500 gap-2">
           <div>
             Mostrando <strong>{filteredMovements.length}</strong> movimientos de Kárdex registrados
           </div>
