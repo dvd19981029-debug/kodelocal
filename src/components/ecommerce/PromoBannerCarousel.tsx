@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Sparkles, Droplets, Truck, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Sparkles, Droplets, Truck, ShoppingBag, ArrowRight } from 'lucide-react';
 
 interface PromoSlide {
   id: string;
@@ -229,23 +229,6 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
           </div>
         );
       })}
-
-      {/* Flechas de Navegación Estilo Botón Clay Claro */}
-      <button
-        onClick={handlePrev}
-        className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 hover:bg-white text-slate-700 hover:text-indigo-600 shadow-md border border-white flex items-center justify-center transition-all opacity-80 sm:opacity-0 group-hover:opacity-100 active:scale-90 cursor-pointer"
-        aria-label="Diapositiva anterior"
-      >
-        <ChevronLeft className="w-4 h-4" />
-      </button>
-
-      <button
-        onClick={handleNext}
-        className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 hover:bg-white text-slate-700 hover:text-indigo-600 shadow-md border border-white flex items-center justify-center transition-all opacity-80 sm:opacity-0 group-hover:opacity-100 active:scale-90 cursor-pointer"
-        aria-label="Diapositiva siguiente"
-      >
-        <ChevronRight className="w-4 h-4" />
-      </button>
 
       {/* Indicadores / Puntos Inferiores estilo Clay */}
       <div className="absolute bottom-2.5 right-4 z-20 flex items-center gap-1.5 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-full border border-white/80 shadow-2xs">
