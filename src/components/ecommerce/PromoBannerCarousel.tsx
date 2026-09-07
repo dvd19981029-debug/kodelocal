@@ -23,9 +23,10 @@ interface PromoSlide {
 interface PromoBannerCarouselProps {
   onExploreCatalog?: () => void;
   onFilterCategory?: (category: string) => void;
+  onOpenKitBuilder?: () => void;
 }
 
-export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory }: PromoBannerCarouselProps) {
+export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory, onOpenKitBuilder }: PromoBannerCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const touchStartX = useRef<number | null>(null);
@@ -34,17 +35,21 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
   const slides: PromoSlide[] = [
     {
       id: 'promo-preparado',
-      badge: 'Promoción Exclusiva',
+      badge: 'Kit Preparado · $15.00',
       badgeIcon: <Sparkles className="w-3.5 h-3.5 text-amber-600" />,
       badgeStyle: 'bg-amber-50 text-amber-800 border-amber-200/80 shadow-2xs',
-      title: 'Perfume Preparado',
+      title: 'Kit Perfume Preparado',
       highlightText: 'por solo $15.00',
       highlightGradient: 'from-indigo-600 via-purple-600 to-pink-600',
-      subtitle: 'Tu contratipo favorito con 100% esencia pura + Frasco de vidrio con atomizador de lujo',
-      ctaText: 'Ver Fragancias',
+      subtitle: 'Tu contratipo favorito con 1 oz pura + frasco a elegir + fijador de 8-12h + etiqueta opcional gratis (¡Opción PLUS por +$3!)',
+      ctaText: 'Armar mi Kit ($15)',
       ctaAction: () => {
-        if (onFilterCategory) onFilterCategory('Esencias para Perfume');
-        if (onExploreCatalog) onExploreCatalog();
+        if (onOpenKitBuilder) {
+          onOpenKitBuilder();
+        } else {
+          if (onFilterCategory) onFilterCategory('Esencias para Perfume');
+          if (onExploreCatalog) onExploreCatalog();
+        }
       },
       ctaBtnClass: 'clay-btn clay-btn-primary',
       pastelBg: 'bg-gradient-to-r from-indigo-50/90 via-purple-50/50 to-pink-50/30',

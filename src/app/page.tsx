@@ -18,6 +18,8 @@ import { ProductItem, INITIAL_PRODUCTS, getStoredProducts } from '@/lib/store';
 import ProductCard from '@/components/ecommerce/ProductCard';
 import PromoBannerCarousel from '@/components/ecommerce/PromoBannerCarousel';
 import ReactiveSearchBar from '@/components/ecommerce/ReactiveSearchBar';
+import PerfumeKitBanner from '@/components/ecommerce/PerfumeKitBanner';
+import PerfumeKitBuilderModal from '@/components/ecommerce/PerfumeKitBuilderModal';
 
 export default function EcommerceHomePage() {
   const [products, setProducts] = useState<ProductItem[]>(() => INITIAL_PRODUCTS);
@@ -27,6 +29,7 @@ export default function EcommerceHomePage() {
   const [selectedStockFilter, setSelectedStockFilter] = useState<'Todos' | 'Disponibles' | 'Agotados'>('Todos');
   const [isLoadingCatalog, setIsLoadingCatalog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isKitModalOpen, setIsKitModalOpen] = useState(false);
   const itemsPerPage = 36;
 
   useEffect(() => {
@@ -101,12 +104,57 @@ export default function EcommerceHomePage() {
     return INITIAL_PRODUCTS.filter(p => p.category === 'Botes');
   }, [products]);
 
+  // Lista de esencias disponibles para el Kit
+  const availableEssences = useMemo(() => {
+    return products.filter(p => p.category === 'Esencias para Perfume');
+  }, [products]);
+
   // Paginación
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage) || 1;
   const paginatedProducts = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredProducts.slice(start, start + itemsPerPage);
   }, [filteredProducts, currentPage]);
+
+  // Generador de paginación inteligente: Siempre muestra la página 1, la última página y las páginas vecinas
+  const paginationItems = useMemo(() => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    const items: (number | string)[] = [];
+
+    // Siempre página 1
+    items.push(1);
+
+    let start = Math.max(2, currentPage - 1);
+    let end = Math.min(totalPages - 1, currentPage + 1);
+
+    if (currentPage <= 3) {
+      start = 2;
+      end = 4;
+    } else if (currentPage >= totalPages - 2) {
+      start = totalPages - 3;
+      end = totalPages - 1;
+    }
+
+    if (start > 2) {
+      items.push('ellipsis-start');
+    }
+
+    for (let p = start; p <= end; p++) {
+      items.push(p);
+    }
+
+    if (end < totalPages - 1) {
+      items.push('ellipsis-end');
+    }
+
+    // Siempre última página
+    items.push(totalPages);
+
+    return items;
+  }, [totalPages, currentPage]);
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
@@ -137,10 +185,11 @@ export default function EcommerceHomePage() {
         setCurrentPage={setCurrentPage}
       />
 
-      {/* ================= CARRUSEL PROMOCIONAL FORMATO VIDEO (SE OCULTA AUTOMÁTICAMENTE AL BUSCAR) ================= */}
+      {/* ================= CARRUSEL PROMOCIONAL Y BANNER DEL KIT (SE OCULTA AUTOMÁTICAMENTE AL BUSCAR) ================= */}
       {!isSearching && (
-        <section className="pt-0 animate-in fade-in duration-300">
+        <section className="pt-0 animate-in fade-in duration-300 space-y-3 sm:space-y-3.5">
           <PromoBannerCarousel 
+            onOpenKitBuilder={() => setIsKitModalOpen(true)}
             onExploreCatalog={() => {
               const el = document.getElementById('catalogo');
               if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -152,8 +201,11 @@ export default function EcommerceHomePage() {
             }}
           />
 
+          {/* Banner Principal del Kit de Perfume Preparado Completo ($15.00) */}
+          <PerfumeKitBanner onOpenKitBuilder={() => setIsKitModalOpen(true)} />
+
           {/* Tira compacta de beneficios clave */}
-          <div className="grid grid-cols-3 gap-2 mt-2.5 sm:mt-3 text-center">
+          <div className="grid grid-cols-3 gap-2 text-center">
             <div className="clay-card flex items-center justify-center gap-1.5 py-2 px-2 text-[9px] sm:text-xs text-slate-700 font-bold border border-white/80">
               <Truck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
               <span className="truncate">Envíos C807 Todo el País</span>
@@ -226,7 +278,7 @@ export default function EcommerceHomePage() {
           </div>
         )}
 
-        {/* ================= PAGINACIÓN ================= */}
+        {/* ================= PAGINACIÓN CON PÁGINA 1 Y ÚLTIMA SIEMPRE FIJAS ================= */}
         {totalPages > 1 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6 border-t border-slate-200/80">
             <span className="text-xs text-slate-500 font-semibold">
@@ -237,28 +289,32 @@ export default function EcommerceHomePage() {
               <button
                 onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors shadow-2xs"
+                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
               >
                 Anterior
               </button>
 
-              {/* Páginas numéricas */}
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum = i + 1;
-                if (totalPages > 5 && currentPage > 3) {
-                  pageNum = Math.min(totalPages - 4 + i, currentPage - 2 + i);
+              {/* Páginas numéricas con página 1 y última siempre fijas para saltar fácilmente */}
+              {paginationItems.map((item, idx) => {
+                if (typeof item === 'string') {
+                  return (
+                    <span key={`ellipsis-${idx}`} className="w-5 text-center text-xs font-bold text-slate-400 select-none">
+                      ...
+                    </span>
+                  );
                 }
+
                 return (
                   <button
-                    key={pageNum}
-                    onClick={() => handlePageChange(pageNum)}
-                    className={`w-8 h-8 rounded-xl text-xs font-black transition-all ${
-                      currentPage === pageNum
-                        ? 'clay-btn-primary text-white shadow-xs'
+                    key={item}
+                    onClick={() => handlePageChange(item)}
+                    className={`w-8 h-8 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                      currentPage === item
+                        ? 'clay-btn-primary text-white shadow-xs scale-105'
                         : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-2xs'
                     }`}
                   >
-                    {pageNum}
+                    {item}
                   </button>
                 );
               })}
@@ -266,7 +322,7 @@ export default function EcommerceHomePage() {
               <button
                 onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors shadow-2xs"
+                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
               >
                 Siguiente
               </button>
@@ -296,9 +352,9 @@ export default function EcommerceHomePage() {
             <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 font-black text-sm flex items-center justify-center">
               1
             </div>
-            <h4 className="font-extrabold text-xs text-slate-900">Elige tu fragancia</h4>
+            <h4 className="font-extrabold text-xs text-slate-900">Elige tu fragancia o Kit</h4>
             <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-              Selecciona tu contratipo favorito y el tamaño deseado: 30ml, 50ml, 100ml o por onzas puras.
+              Selecciona tu contratipo favorito por onzas puras o arma tu kit completo preparado por $15.
             </p>
           </div>
 
@@ -326,14 +382,22 @@ export default function EcommerceHomePage() {
             <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 font-black text-sm flex items-center justify-center">
               4
             </div>
-            <h4 className="font-extrabold text-xs text-slate-900">Recibe y paga</h4>
+            <h4 className="font-extrabold text-xs text-slate-900">Recibe con C807</h4>
             <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-              El mensajero te entrega tu pedido y pagas en efectivo o mediante transferencia bancaria.
+              El mensajero de C807 te entrega tu pedido directamente en tus manos en cualquier departamento.
             </p>
           </div>
 
         </div>
       </section>
+
+      {/* ================= MODAL DEL CONFIGURADOR DEL KIT DE PERFUME ($15 / $18 PLUS) ================= */}
+      <PerfumeKitBuilderModal
+        isOpen={isKitModalOpen}
+        onClose={() => setIsKitModalOpen(false)}
+        availableEssences={availableEssences}
+        availableBottles={availableBottles}
+      />
 
     </div>
   );

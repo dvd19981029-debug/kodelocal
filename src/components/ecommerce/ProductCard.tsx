@@ -4,14 +4,13 @@ import React, { useState } from 'react';
 import { ShoppingBag, Check, Sparkles, Plus, Minus } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS } from '@/lib/store';
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation } from '@/context/EcommerceCartContext';
-import BottleSelectionModal from './BottleSelectionModal';
 
 interface ProductCardProps {
   product: ProductItem;
   availableBottles?: ProductItem[];
 }
 
-export default function ProductCard({ product, availableBottles }: ProductCardProps) {
+export default function ProductCard({ product }: ProductCardProps) {
   const { cart, addToCart, updateQuantity } = useEcommerceCart();
   const presentations = getPresentationsForProduct(product);
   
@@ -23,7 +22,6 @@ export default function ProductCard({ product, availableBottles }: ProductCardPr
   const [selectedPresentation, setSelectedPresentation] = useState<ProductPresentation>(defaultPres);
   const [justAdded, setJustAdded] = useState(false);
   const [isCardPulsing, setIsCardPulsing] = useState(false);
-  const [isBottleModalOpen, setIsBottleModalOpen] = useState(false);
 
   const activeOption = presentations.find(p => p.id === selectedPresentation) || presentations[0];
 
@@ -34,7 +32,7 @@ export default function ProductCard({ product, availableBottles }: ProductCardPr
     .filter(item => item.product.id === product.id)
     .reduce((acc, item) => {
       if (item.presentation === 'MEDIA_ONZA') return acc + item.quantity * 0.5;
-      if (item.presentation === 'ONZA_COMPLETA' || item.presentation === 'PERFUME_PREPARADO') return acc + item.quantity * 1.0;
+      if (item.presentation === 'ONZA_COMPLETA') return acc + item.quantity * 1.0;
       return acc + item.quantity;
     }, 0);
 
@@ -80,30 +78,11 @@ export default function ProductCard({ product, availableBottles }: ProductCardPr
     }
   };
 
-  // Frascos utilizables para el modal
-  const bottlesToUse = (availableBottles && availableBottles.length > 0)
-    ? availableBottles
-    : INITIAL_PRODUCTS.filter(p => p.category === 'Botes');
-
   const handleAdd = () => {
     if (isOutOfStock || !canAddMore) return;
 
-    // Si seleccionó Perfume Preparado, abrir modal obligatorio para elegir bote
-    if (selectedPresentation === 'PERFUME_PREPARADO') {
-      setIsBottleModalOpen(true);
-      return;
-    }
-
     // Onza completa, media onza u otros productos individuales
     addToCart(product, selectedPresentation, 1);
-    setJustAdded(true);
-    triggerCardPulse();
-    setTimeout(() => setJustAdded(false), 1200);
-  };
-
-  const handleConfirmBottle = (chosenBottle: ProductItem) => {
-    addToCart(product, 'PERFUME_PREPARADO', 1, chosenBottle);
-    setIsBottleModalOpen(false);
     setJustAdded(true);
     triggerCardPulse();
     setTimeout(() => setJustAdded(false), 1200);
@@ -136,8 +115,6 @@ export default function ProductCard({ product, availableBottles }: ProductCardPr
   // Nombre oficial (si no tiene, usa el nombre del contratipo)
   const displayName = product.officialName?.trim() ? product.officialName : product.name;
   const productImage = product.imageUrl || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=500&q=80';
-
-  const isPerfumePreparado = selectedPresentation === 'PERFUME_PREPARADO';
 
   return (
     <>
@@ -243,15 +220,14 @@ export default function ProductCard({ product, availableBottles }: ProductCardPr
                 </span>
               </div>
 
-              {/* Botonera de Presentaciones Segmentada 100% personalizada */}
-              <div className="grid grid-cols-3 gap-1 p-0.5 bg-slate-100/90 rounded-xl border border-slate-200/80 shadow-2xs">
+              {/* Botonera de Presentaciones Segmentada (1 Onza y ½ Onza) */}
+              <div className="grid grid-cols-2 gap-1 p-0.5 bg-slate-100/90 rounded-xl border border-slate-200/80 shadow-2xs">
                 {presentations.map((opt) => {
                   const isSelected = selectedPresentation === opt.id;
                   
                   // Verificar si la opción está disponible según stock
                   const isOptOutOfStock = 
                     (opt.id === 'ONZA_COMPLETA' && remainingStock < 1.0) ||
-                    (opt.id === 'PERFUME_PREPARADO' && remainingStock < 1.0) ||
                     (opt.id === 'MEDIA_ONZA' && remainingStock < 0.5);
 
                   return (
@@ -267,14 +243,10 @@ export default function ProductCard({ product, availableBottles }: ProductCardPr
                           : 'bg-white hover:bg-indigo-50/60 text-slate-700 border border-slate-200/70 shadow-2xs font-bold'
                       }`}
                     >
-                      <span className="text-[9.5px] sm:text-[10px] leading-tight flex items-center gap-0.5">
-                        {opt.id === 'MEDIA_ONZA' 
-                          ? '½ Onza' 
-                          : opt.id === 'ONZA_COMPLETA' 
-                          ? '1 Onza' 
-                          : 'Preparado'}
+                      <span className="text-[10px] sm:text-[11px] leading-tight flex items-center gap-0.5">
+                        {opt.id === 'MEDIA_ONZA' ? '½ Onza' : '1 Onza'}
                       </span>
-                      <span className={`text-[8px] sm:text-[9px] font-mono leading-tight mt-0.5 ${
+                      <span className={`text-[8.5px] sm:text-[9.5px] font-mono leading-tight mt-0.5 ${
                         isSelected ? 'text-indigo-100' : isOptOutOfStock ? 'text-slate-400 line-through' : 'text-slate-500'
                       }`}>
                         ${opt.price.toFixed(2)}
@@ -289,17 +261,6 @@ export default function ProductCard({ product, availableBottles }: ProductCardPr
                   );
                 })}
               </div>
-
-              {/* Mensaje Informativo para Perfume Preparado ($15) */}
-              {isPerfumePreparado && (
-                <div className="mt-1 p-1.5 rounded-lg bg-indigo-50/90 border border-indigo-200/80 text-indigo-950 flex items-start gap-1.5 animate-in fade-in">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-                  <div className="leading-tight text-[8.5px] sm:text-[9px]">
-                    <strong className="font-extrabold text-indigo-900 block">Perfume Preparado ($15.00)</strong>
-                    <span className="text-indigo-800">Incluye esencia pura, fijador de 8-12h y frasco a elegir.</span>
-                  </div>
-                </div>
-              )}
             </div>
           ) : (
             <div className="mt-1.5 flex items-center justify-between text-[9px] text-slate-500 font-medium px-0.5">
@@ -379,16 +340,6 @@ export default function ProductCard({ product, availableBottles }: ProductCardPr
                   Máximo disponible alcanzado ({remainingStock} oz restantes)
                 </p>
               )}
-
-              {/* Opción adicional para Perfume Preparado: si desea agregar otro frasco */}
-              {isPerfumePreparado && (
-                <button
-                  onClick={() => setIsBottleModalOpen(true)}
-                  className="w-full text-center text-[9px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline py-0.5 cursor-pointer"
-                >
-                  + Agregar con otro frasco
-                </button>
-              )}
             </div>
           ) : (
             /* AÚN NO EN EL CARRITO: Botón de agregar normal */
@@ -400,8 +351,6 @@ export default function ProductCard({ product, availableBottles }: ProductCardPr
                   ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
                   : justAdded 
                   ? 'bg-emerald-500 text-white shadow-md' 
-                  : isPerfumePreparado
-                  ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-[2px_3px_8px_rgba(99,102,241,0.3)] active:scale-95 cursor-pointer'
                   : 'clay-btn-primary !shadow-[2px_3px_8px_rgba(99,102,241,0.3)] active:scale-95 cursor-pointer'
               }`}
             >
@@ -412,15 +361,10 @@ export default function ProductCard({ product, availableBottles }: ProductCardPr
                   <Check className="w-3.5 h-3.5" />
                   <span>¡Agregado!</span>
                 </>
-              ) : isPerfumePreparado ? (
-                <>
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Elegir Bote ($15)</span>
-                </>
               ) : (
                 <>
                   <ShoppingBag className="w-3.5 h-3.5" />
-                  <span>Agregar {selectedPresentation === 'MEDIA_ONZA' ? '½ Onza' : '1 Onza'}</span>
+                  <span>Agregar {selectedPresentation === 'MEDIA_ONZA' ? '½ Onza' : selectedPresentation === 'ONZA_COMPLETA' ? '1 Onza' : 'al carrito'}</span>
                 </>
               )}
             </button>
@@ -428,17 +372,6 @@ export default function ProductCard({ product, availableBottles }: ProductCardPr
         </div>
 
       </div>
-
-      {/* Modal de Selección de Bote / Frasco */}
-      {isBottleModalOpen && (
-        <BottleSelectionModal
-          isOpen={isBottleModalOpen}
-          onClose={() => setIsBottleModalOpen(false)}
-          product={product}
-          availableBottles={bottlesToUse}
-          onConfirm={handleConfirmBottle}
-        />
-      )}
     </>
   );
 }

@@ -6,7 +6,8 @@ import { ProductItem } from '@/lib/store';
 export type ProductPresentation = 
   | 'ONZA_COMPLETA'      // 1 Onza Completa (Precio por onza del sistema)
   | 'MEDIA_ONZA'         // Media Onza (Precio por onza / 2)
-  | 'PERFUME_PREPARADO'  // Perfume Preparado ($15)
+  | 'KIT_PREPARADO'      // Kit Perfume Preparado Completo ($15.00)
+  | 'KIT_PREPARADO_PLUS' // Kit Perfume Preparado PLUS ($18.00)
   | '1_OZ'               // Compatibilidad previa
   | '2_OZ'
   | 'PERFUME_30ML'
@@ -37,12 +38,6 @@ export function getPresentationsForProduct(product: ProductItem): PresentationOp
         name: '½ Onza',
         description: 'Media onza de esencia pura (0.5 oz)',
         price: mediaOnzaPrice
-      },
-      {
-        id: 'PERFUME_PREPARADO',
-        name: 'Perfume Preparado',
-        description: 'Perfume preparado con atomizador y fijador ($15.00) — Requiere elegir bote',
-        price: 15.00
       }
     ];
   }
@@ -58,7 +53,7 @@ export function getPresentationsForProduct(product: ProductItem): PresentationOp
 }
 
 export interface EcommerceCartItem {
-  id: string; // `${productId}-${presentation}`
+  id: string; // `${productId}-${presentation}` o `kit-${...}`
   product: ProductItem;
   presentation: ProductPresentation;
   presentationName: string;
@@ -71,6 +66,18 @@ export interface EcommerceCartItem {
     price: number;
     imageUrl?: string;
   };
+  kitDetails?: {
+    essenceId: string;
+    essenceName: string;
+    essenceSku?: string;
+    essenceBrand?: string;
+    bottleId: string;
+    bottleName: string;
+    bottleImageUrl?: string;
+    hasLabel: boolean;
+    isPlus: boolean;
+    ouncesText: string;
+  };
 }
 
 interface EcommerceCartContextType {
@@ -81,6 +88,13 @@ interface EcommerceCartContextType {
     quantity?: number,
     selectedBottle?: ProductItem
   ) => void;
+  addKitToCart: (config: {
+    essence: ProductItem;
+    bottle: ProductItem;
+    hasLabel: boolean;
+    isPlus: boolean;
+    quantity?: number;
+  }) => void;
   updateQuantity: (id: string, quantity: number) => void;
   removeFromCart: (id: string) => void;
   clearCart: () => void;
@@ -205,6 +219,83 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     triggerCartPulse();
   };
 
+  const addKitToCart = ({
+    essence,
+    bottle,
+    hasLabel,
+    isPlus,
+    quantity = 1,
+  }: {
+    essence: ProductItem;
+    bottle: ProductItem;
+    hasLabel: boolean;
+    isPlus: boolean;
+    quantity?: number;
+  }) => {
+    // Precio fijo $15.00 base, o $18.00 si seleccionó versión PLUS (+½ oz extra)
+    const unitPrice = isPlus ? 18.00 : 15.00;
+    const presentation: ProductPresentation = isPlus ? 'KIT_PREPARADO_PLUS' : 'KIT_PREPARADO';
+    const presentationName = isPlus ? 'Kit Preparado PLUS (1.5 oz)' : 'Kit Preparado (1 oz)';
+    const itemId = `kit-${essence.id}-${bottle.id}-${hasLabel ? 'label' : 'nolabel'}-${isPlus ? 'plus' : 'std'}`;
+
+    const kitProduct: ProductItem = {
+      ...essence,
+      id: itemId,
+      name: `Kit Perfume: ${essence.officialName || essence.name}`,
+      category: 'Kit de Perfumes',
+      price: unitPrice,
+      imageUrl: bottle.imageUrl || essence.imageUrl,
+    };
+
+    setCart(prev => {
+      const existing = prev.find(item => item.id === itemId);
+      if (existing) {
+        return prev.map(item =>
+          item.id === itemId
+            ? {
+                ...item,
+                quantity: item.quantity + quantity,
+                totalPrice: Number(((item.quantity + quantity) * item.unitPrice).toFixed(2))
+              }
+            : item
+        );
+      }
+
+      return [
+        ...prev,
+        {
+          id: itemId,
+          product: kitProduct,
+          presentation,
+          presentationName,
+          unitPrice,
+          quantity,
+          totalPrice: Number((unitPrice * quantity).toFixed(2)),
+          selectedBottle: {
+            id: bottle.id,
+            name: bottle.name,
+            price: 0, // Ya incluido en los $15
+            imageUrl: bottle.imageUrl
+          },
+          kitDetails: {
+            essenceId: essence.id,
+            essenceName: essence.officialName || essence.name,
+            essenceSku: essence.sku,
+            essenceBrand: essence.brand,
+            bottleId: bottle.id,
+            bottleName: bottle.name,
+            bottleImageUrl: bottle.imageUrl,
+            hasLabel,
+            isPlus,
+            ouncesText: isPlus ? '1.5 Onzas (1 oz base + ½ oz extra PLUS)' : '1 Onza Estándar'
+          }
+        }
+      ];
+    });
+
+    triggerCartPulse();
+  };
+
   const updateQuantity = (id: string, quantity: number) => {
     if (quantity <= 0) {
       removeFromCart(id);
@@ -238,6 +329,7 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     <EcommerceCartContext.Provider value={{
       cart,
       addToCart,
+      addKitToCart,
       updateQuantity,
       removeFromCart,
       clearCart,

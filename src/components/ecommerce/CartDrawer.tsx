@@ -97,14 +97,33 @@ export default function CartDrawer() {
                       <p className="text-[11px] font-semibold text-indigo-600 mt-0.5">
                         {item.presentationName}
                       </p>
-                      {item.selectedBottle && (
+
+                      {/* Detalles del Kit Personalizado */}
+                      {item.kitDetails ? (
+                        <div className="mt-1.5 p-2 rounded-xl bg-gradient-to-r from-indigo-50/90 to-purple-50/90 border border-indigo-100 text-[10px] space-y-1 text-slate-800 shadow-2xs">
+                          <div className="flex items-center justify-between font-bold text-indigo-900">
+                            <span>✨ Kit Completo Preparado</span>
+                            <span className="text-[9px] bg-indigo-100 text-indigo-800 px-1.5 py-0.2 rounded-md font-extrabold">
+                              {item.kitDetails.isPlus ? 'PLUS 1.5 oz (+½ oz)' : '1 Onza Estándar'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 text-slate-600">
+                            <span>🧴 Frasco:</span>
+                            <strong className="font-semibold text-slate-800 truncate">{item.kitDetails.bottleName} (Incluido)</strong>
+                          </div>
+                          <div className="flex items-center justify-between text-slate-600 text-[9.5px]">
+                            <span>🏷️ {item.kitDetails.hasLabel ? 'Con Etiqueta Aromaniak' : 'Sin Etiqueta'}</span>
+                            <span className="text-emerald-700 font-bold">🧪 Fijador Incluido</span>
+                          </div>
+                        </div>
+                      ) : item.selectedBottle ? (
                         <div className="mt-1 p-1.5 rounded-lg bg-indigo-50/70 border border-indigo-100 text-[10px] text-indigo-950 flex items-center gap-1.5">
                           <span>🧴</span>
                           <span className="font-medium truncate">
-                            Bote: <strong className="font-bold">{item.selectedBottle.name}</strong> (+${item.selectedBottle.price.toFixed(2)})
+                            Bote: <strong className="font-bold">{item.selectedBottle.name}</strong>
                           </span>
                         </div>
-                      )}
+                      ) : null}
                     </div>
 
                     <button
