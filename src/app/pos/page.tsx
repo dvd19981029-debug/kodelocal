@@ -224,6 +224,56 @@ export default function PosPage() {
         }
       })
       .catch(err => console.error('Error sincronizando productos con Supabase:', err));
+
+    fetch('/api/ecommerce/orders')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.orders)) {
+          const webSales: SaleRecord[] = data.orders.map((o: any) => ({
+            id: o.id,
+            saleNumber: o.orderNumber,
+            orderNumber: o.orderNumber,
+            createdAt: o.createdAt,
+            channel: 'ONLINE',
+            total: o.total,
+            subtotal: o.subtotal,
+            ivaTotal: 0,
+            shippingCost: o.shippingCost,
+            deliveryNotes: o.deliveryReference ? `Entrega: ${o.shippingAddress} (Ref: ${o.deliveryReference})` : `Entrega: ${o.shippingAddress}`,
+            status: o.orderStatus === 'NUEVO' || o.orderStatus === 'EN_PREPARACION'
+              ? 'PENDING_PREPARATION'
+              : o.orderStatus === 'EN_RUTA'
+              ? 'READY_AT_WINDOW'
+              : 'COMPLETED',
+            vendedor: 'Tienda Online (aromaniaksv.com)',
+            cliente: {
+              nombre: o.customerName,
+              telefono: o.customerPhone,
+              correo: o.customerEmail || undefined,
+              direccion: `${o.shippingAddress}, ${o.municipality}, ${o.department}`,
+            },
+            items: o.items.map((it: any) => ({
+              productId: it.productId,
+              name: `${it.productName} (${it.presentation})`,
+              quantity: it.quantity,
+              price: it.unitPrice,
+              total: it.total,
+              unit: it.presentation,
+              puesto: it.product?.puesto || 'A1',
+            }))
+          }));
+
+          setSales(prev => {
+            const localNonWeb = prev.filter(s => s.channel !== 'ONLINE' && !webSales.some(w => w.saleNumber === s.saleNumber));
+            const merged = [...webSales, ...localNonWeb];
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('kodelocal_sales', JSON.stringify(merged));
+            }
+            return merged;
+          });
+        }
+      })
+      .catch(err => console.error('Error sincronizando pedidos ecommerce en POS:', err));
   }, []);
 
   // Filtrado de productos

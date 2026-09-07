@@ -25,7 +25,74 @@ export async function GET(request: Request) {
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json({ success: true, orders });
+    const formatted = orders.map((o) => ({
+      id: o.id,
+      orderNumber: o.orderNumber,
+      customerId: o.customerId,
+      customerName: o.customerName,
+      customerEmail: o.customerEmail,
+      customerPhone: o.customerPhone,
+      department: o.department,
+      municipality: o.municipality,
+      shippingAddress: o.shippingAddress,
+      deliveryReference: o.deliveryReference,
+      subtotal: Number(o.subtotal || 0),
+      shippingCost: Number(o.shippingCost || 0),
+      total: Number(o.total || 0),
+      paymentMethod: o.paymentMethod,
+      paymentStatus: o.paymentStatus,
+      orderStatus: o.orderStatus,
+      trackingNumber: o.trackingNumber,
+      courierName: o.courierName,
+      whatsappNotified: o.whatsappNotified,
+      notes: o.notes,
+      createdAt: o.createdAt.toISOString(),
+      updatedAt: o.updatedAt.toISOString(),
+      customer: o.customer,
+      items: (o.items || []).map((it) => ({
+        id: it.id,
+        orderId: it.orderId,
+        productId: it.productId,
+        productName: it.productName,
+        presentation: it.presentation,
+        unitPrice: Number(it.unitPrice || 0),
+        quantity: Number(it.quantity || 1),
+        total: Number(it.total || 0),
+        product: it.product ? {
+          ...it.product,
+          price: Number(it.product.price || 0),
+          cost: Number(it.product.cost || 0),
+        } : null,
+      })),
+    }));
+
+    return NextResponse.json({ success: true, orders: formatted });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const { orderId, orderStatus, paymentStatus, courierName, trackingNumber } = body;
+
+    if (!orderId) {
+      return NextResponse.json({ success: false, error: 'orderId es requerido' }, { status: 400 });
+    }
+
+    const updated = await prisma.ecommerceOrder.update({
+      where: { id: orderId },
+      data: {
+        ...(orderStatus ? { orderStatus } : {}),
+        ...(paymentStatus ? { paymentStatus } : {}),
+        ...(courierName ? { courierName } : {}),
+        ...(trackingNumber ? { trackingNumber } : {}),
+      },
+      include: { items: true, customer: true },
+    });
+
+    return NextResponse.json({ success: true, order: updated });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

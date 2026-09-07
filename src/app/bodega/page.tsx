@@ -143,6 +143,61 @@ export default function BodegaPage() {
         }
       })
       .catch(err => console.error('Error sincronizando compras con Supabase en Bodega:', err));
+
+    // Cargar pedidos de la tienda online (Ecommerce) desde Supabase
+    const fetchEcommerceOrders = () => {
+      fetch('/api/ecommerce/orders')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.orders)) {
+            const webSales: SaleRecord[] = data.orders.map((o: any) => ({
+              id: o.id,
+              saleNumber: o.orderNumber,
+              orderNumber: o.orderNumber,
+              createdAt: o.createdAt,
+              channel: 'ONLINE',
+              total: o.total,
+              subtotal: o.subtotal,
+              ivaTotal: 0,
+              shippingCost: o.shippingCost,
+              deliveryNotes: o.deliveryReference ? `Entrega: ${o.shippingAddress} (Ref: ${o.deliveryReference})` : `Entrega: ${o.shippingAddress}`,
+              status: o.orderStatus === 'NUEVO' || o.orderStatus === 'EN_PREPARACION'
+                ? 'PENDING_PREPARATION'
+                : o.orderStatus === 'EN_RUTA'
+                ? 'READY_AT_WINDOW'
+                : 'COMPLETED',
+              vendedor: 'Tienda Online (aromaniaksv.com)',
+              cliente: {
+                nombre: o.customerName,
+                telefono: o.customerPhone,
+                correo: o.customerEmail || undefined,
+                direccion: `${o.shippingAddress}, ${o.municipality}, ${o.department}`,
+              },
+              items: o.items.map((it: any) => ({
+                productId: it.productId,
+                name: `${it.productName} (${it.presentation})`,
+                quantity: it.quantity,
+                price: it.unitPrice,
+                total: it.total,
+                unit: it.presentation,
+                puesto: it.product?.puesto || 'A1',
+              }))
+            }));
+
+            setSales(prev => {
+              const localNonWeb = prev.filter(s => s.channel !== 'ONLINE' && !webSales.some(w => w.saleNumber === s.saleNumber));
+              const merged = [...webSales, ...localNonWeb];
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('kodelocal_sales', JSON.stringify(merged));
+              }
+              return merged;
+            });
+          }
+        })
+        .catch(err => console.error('Error sincronizando pedidos ecommerce en Bodega:', err));
+    };
+
+    fetchEcommerceOrders();
   }, []);
 
   const showToast = (msg: string) => {
@@ -158,6 +213,13 @@ export default function BodegaPage() {
 
   // Marcar pedido como listo para ventanilla
   const handleMarkAsReady = (orderId: string) => {
+    // Si es pedido web, actualizar en Supabase
+    fetch('/api/ecommerce/orders', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId, orderStatus: 'EN_RUTA' })
+    }).catch(() => {});
+
     setSales(prev => {
       const updated = prev.map(s => {
         if (s.id === orderId) {
@@ -169,11 +231,18 @@ export default function BodegaPage() {
       window.dispatchEvent(new Event('kodelocal_sales_updated'));
       return updated;
     });
-    showToast('✅ Pedido preparado y enviado a Ventanilla.');
+    showToast('✅ Pedido preparado y enviado a Ventanilla / Despacho.');
   };
 
   // Marcar pedido como entregado
   const handleMarkAsCompleted = (orderId: string) => {
+    // Si es pedido web, actualizar en Supabase
+    fetch('/api/ecommerce/orders', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId, orderStatus: 'ENTREGADO', paymentStatus: 'COMPLETED' })
+    }).catch(() => {});
+
     setSales(prev => {
       const updated = prev.map(s => {
         if (s.id === orderId) {
