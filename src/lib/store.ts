@@ -10356,7 +10356,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 1.5,
     "cost": 0.75,
-    "stock": 0,
+    "stock": 100,
     "minStock": 50,
     "imageUrl": "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
     "isAvailableOnline": true
@@ -10372,7 +10372,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 1.9,
     "cost": 0.95,
-    "stock": 0,
+    "stock": 100,
     "minStock": 40,
     "imageUrl": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     "isAvailableOnline": true
@@ -10388,7 +10388,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 2.5,
     "cost": 1.2,
-    "stock": 0,
+    "stock": 100,
     "minStock": 30,
     "imageUrl": "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=400&q=80",
     "isAvailableOnline": true

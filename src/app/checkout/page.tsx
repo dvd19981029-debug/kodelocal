@@ -667,8 +667,13 @@ export default function CheckoutPage() {
                   <div key={it.id} className="pt-2 first:pt-0 flex items-start justify-between gap-2 text-xs">
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-slate-800 truncate">
-                        {it.product.name}
+                        {it.product.officialName || it.product.name}
                       </p>
+                      {it.product.officialName && (
+                        <p className="text-[9.5px] text-slate-400 font-medium truncate">
+                          Inspirado en {it.product.name}
+                        </p>
+                      )}
                       <p className="text-[10.5px] text-indigo-600 font-semibold">
                         {it.quantity}x {it.presentationName}
                       </p>

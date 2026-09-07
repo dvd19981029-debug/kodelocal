@@ -4,12 +4,14 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ProductItem } from '@/lib/store';
 
 export type ProductPresentation = 
-  | '1_OZ'            // 1 Onza pura ($3.25)
-  | '2_OZ'            // 2 Onzas puras ($6.50)
-  | 'PERFUME_30ML'    // Perfume preparado 30ml ($6.50)
-  | 'PERFUME_50ML'    // Perfume preparado 50ml ($9.50)
-  | 'PERFUME_100ML'   // Perfume preparado 100ml ($14.99)
-  | 'UNIDAD';         // Para botes, empaque, alcohol
+  | 'ONZA_COMPLETA'      // Onza Completa (Precio por onza del sistema)
+  | 'PERFUME_PREPARADO'  // Perfume Preparado ($15)
+  | '1_OZ'               // Compatibilidad previa
+  | '2_OZ'
+  | 'PERFUME_30ML'
+  | 'PERFUME_50ML'
+  | 'PERFUME_100ML'
+  | 'UNIDAD';            // Para botes, empaque, alcohol
 
 export interface PresentationOption {
   id: ProductPresentation;
@@ -22,34 +24,16 @@ export function getPresentationsForProduct(product: ProductItem): PresentationOp
   if (product.category === 'Esencias para Perfume') {
     return [
       {
-        id: 'PERFUME_50ML',
-        name: 'Perfume Preparado 50ml',
-        description: 'Frasco de vidrio + atomizador + esencia al 33% concentración',
-        price: 9.50
-      },
-      {
-        id: 'PERFUME_100ML',
-        name: 'Perfume Preparado 100ml Premium',
-        description: 'Frasco de lujo 100ml + atomizador + máxima duración',
-        price: 14.99
-      },
-      {
-        id: 'PERFUME_30ML',
-        name: 'Perfume de Bolsillo 30ml',
-        description: 'Frasco portátil compacto con spray',
-        price: 6.50
-      },
-      {
-        id: '1_OZ',
-        name: '1 Onza de Esencia Pura',
-        description: 'Esencia pura concentrada para reenvase',
+        id: 'ONZA_COMPLETA',
+        name: 'Onza Completa',
+        description: 'Esencia pura concentrada (precio por onza del sistema)',
         price: product.price || 3.25
       },
       {
-        id: '2_OZ',
-        name: '2 Onzas de Esencia Pura',
-        description: '2 Onzas puras de contratipo fino',
-        price: Number(((product.price || 3.25) * 2).toFixed(2))
+        id: 'PERFUME_PREPARADO',
+        name: 'Perfume Preparado',
+        description: 'Perfume preparado con atomizador y fijador ($15.00) — Requiere elegir bote',
+        price: 15.00
       }
     ];
   }
@@ -72,11 +56,22 @@ export interface EcommerceCartItem {
   unitPrice: number;
   quantity: number;
   totalPrice: number;
+  selectedBottle?: {
+    id: string;
+    name: string;
+    price: number;
+    imageUrl?: string;
+  };
 }
 
 interface EcommerceCartContextType {
   cart: EcommerceCartItem[];
-  addToCart: (product: ProductItem, presentation?: ProductPresentation, quantity?: number) => void;
+  addToCart: (
+    product: ProductItem, 
+    presentation?: ProductPresentation, 
+    quantity?: number,
+    selectedBottle?: ProductItem
+  ) => void;
   updateQuantity: (id: string, quantity: number) => void;
   removeFromCart: (id: string) => void;
   clearCart: () => void;
@@ -113,18 +108,24 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
 
   const addToCart = (
     product: ProductItem, 
-    presentation: ProductPresentation = product.category === 'Esencias para Perfume' ? 'PERFUME_50ML' : 'UNIDAD',
-    quantity: number = 1
+    presentation: ProductPresentation = product.category === 'Esencias para Perfume' ? 'ONZA_COMPLETA' : 'UNIDAD',
+    quantity: number = 1,
+    selectedBottle?: ProductItem
   ) => {
     const presentations = getPresentationsForProduct(product);
     const selectedOption = presentations.find(p => p.id === presentation) || presentations[0];
     const unitPrice = selectedOption.price;
-    const itemId = `${product.id}-${presentation}`;
+    const itemId = selectedBottle 
+      ? `${product.id}-${presentation}-${selectedBottle.id}` 
+      : `${product.id}-${presentation}`;
 
     setCart(prev => {
-      const existing = prev.find(item => item.id === itemId);
-      if (existing) {
-        return prev.map(item => 
+      let updatedCart = [...prev];
+
+      // 1. Agregar el Perfume
+      const existingPerfume = updatedCart.find(item => item.id === itemId);
+      if (existingPerfume) {
+        updatedCart = updatedCart.map(item => 
           item.id === itemId
             ? { 
                 ...item, 
@@ -134,19 +135,51 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
             : item
         );
       } else {
-        return [
-          ...prev,
-          {
-            id: itemId,
-            product,
-            presentation,
-            presentationName: selectedOption.name,
-            unitPrice,
-            quantity,
-            totalPrice: Number((unitPrice * quantity).toFixed(2))
-          }
-        ];
+        updatedCart.push({
+          id: itemId,
+          product,
+          presentation,
+          presentationName: selectedOption.name,
+          unitPrice,
+          quantity,
+          totalPrice: Number((unitPrice * quantity).toFixed(2)),
+          selectedBottle: selectedBottle ? {
+            id: selectedBottle.id,
+            name: selectedBottle.name,
+            price: selectedBottle.price,
+            imageUrl: selectedBottle.imageUrl
+          } : undefined
+        });
       }
+
+      // 2. Si eligió un bote para el perfume preparado, sumarlo también al carrito
+      if (selectedBottle) {
+        const bottleItemId = `${selectedBottle.id}-BOTE-${product.id}`;
+        const existingBottle = updatedCart.find(item => item.id === bottleItemId);
+        if (existingBottle) {
+          updatedCart = updatedCart.map(item =>
+            item.id === bottleItemId
+              ? {
+                  ...item,
+                  quantity: item.quantity + quantity,
+                  totalPrice: Number(((item.quantity + quantity) * item.unitPrice).toFixed(2))
+                }
+              : item
+          );
+        } else {
+          updatedCart.push({
+            id: bottleItemId,
+            product: selectedBottle,
+            presentation: 'UNIDAD',
+            presentationName: `Bote para ${product.officialName || product.name}`,
+            unitPrice: selectedBottle.price,
+            quantity,
+            totalPrice: Number((selectedBottle.price * quantity).toFixed(2))
+          });
+        }
+      }
+
+      return updatedCart;
     });
 
     setIsCartOpen(true);

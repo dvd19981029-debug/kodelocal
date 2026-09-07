@@ -91,6 +91,13 @@ export default function EcommerceHomePage() {
     });
   }, [products, searchQuery, selectedGender, selectedCategory, selectedStockFilter]);
 
+  // Lista de botes disponibles para preparar perfumes
+  const availableBottles = useMemo(() => {
+    const list = products.filter(p => p.category === 'Botes' || p.category === 'Botes & Envases');
+    if (list.length > 0) return list;
+    return INITIAL_PRODUCTS.filter(p => p.category === 'Botes');
+  }, [products]);
+
   // Paginación
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage) || 1;
   const paginatedProducts = useMemo(() => {
@@ -358,7 +365,7 @@ export default function EcommerceHomePage() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4">
             {paginatedProducts.map((prod) => (
-              <ProductCard key={prod.id} product={prod} />
+              <ProductCard key={prod.id} product={prod} availableBottles={availableBottles} />
             ))}
           </div>
         )}

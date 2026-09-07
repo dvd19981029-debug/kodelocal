@@ -87,11 +87,24 @@ export default function CartDrawer() {
                         )}
                       </div>
                       <h4 className="font-bold text-xs text-slate-900 leading-snug truncate">
-                        {item.product.name}
+                        {item.product.officialName || item.product.name}
                       </h4>
+                      {item.product.officialName && (
+                        <p className="text-[10px] text-slate-400 font-medium truncate">
+                          Inspirado en {item.product.name}
+                        </p>
+                      )}
                       <p className="text-[11px] font-semibold text-indigo-600 mt-0.5">
                         {item.presentationName}
                       </p>
+                      {item.selectedBottle && (
+                        <div className="mt-1 p-1.5 rounded-lg bg-indigo-50/70 border border-indigo-100 text-[10px] text-indigo-950 flex items-center gap-1.5">
+                          <span>🧴</span>
+                          <span className="font-medium truncate">
+                            Bote: <strong className="font-bold">{item.selectedBottle.name}</strong> (+${item.selectedBottle.price.toFixed(2)})
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     <button
