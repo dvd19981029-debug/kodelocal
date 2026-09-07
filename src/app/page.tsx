@@ -116,24 +116,12 @@ export default function EcommerceHomePage() {
     }
   };
 
+  const isSearching = searchQuery.trim().length > 0;
+
   return (
     <div className="space-y-4 sm:space-y-6 pb-16">
       
-      {/* ================= LOGO OFICIAL CENTRADO Y PROTAGONISTA ================= */}
-      <div className="flex flex-col items-center justify-center pt-2 sm:pt-4 pb-2 text-center animate-in fade-in zoom-in-95 duration-300">
-        <Link href="/" className="inline-block transition-transform hover:scale-105 active:scale-95">
-          <img
-            src="/images/logo.png"
-            alt="Aromaniak"
-            className="h-16 sm:h-20 md:h-24 lg:h-28 w-auto object-contain drop-shadow-md"
-          />
-        </Link>
-        <p className="text-[10.5px] sm:text-xs font-black text-slate-500 tracking-widest uppercase mt-1">
-          Perfumería Fina • El Salvador
-        </p>
-      </div>
-
-      {/* ================= BARRA DE BÚSQUEDA REACTIVA (ARRIBA DEL BANNER) ================= */}
+      {/* ================= BARRA DE BÚSQUEDA REACTIVA STICKY ================= */}
       <section className="pt-0.5">
         <ReactiveSearchBar
           searchQuery={searchQuery}
@@ -151,36 +139,38 @@ export default function EcommerceHomePage() {
         />
       </section>
 
-      {/* ================= CARRUSEL PROMOCIONAL FORMATO VIDEO ================= */}
-      <section className="pt-0">
-        <PromoBannerCarousel 
-          onExploreCatalog={() => {
-            const el = document.getElementById('catalogo');
-            if (el) el.scrollIntoView({ behavior: 'smooth' });
-          }}
-          onFilterCategory={(cat) => {
-            setSelectedCategory(cat);
-            const el = document.getElementById('catalogo');
-            if (el) el.scrollIntoView({ behavior: 'smooth' });
-          }}
-        />
+      {/* ================= CARRUSEL PROMOCIONAL FORMATO VIDEO (SE OCULTA AUTOMÁTICAMENTE AL BUSCAR) ================= */}
+      {!isSearching && (
+        <section className="pt-0 animate-in fade-in duration-300">
+          <PromoBannerCarousel 
+            onExploreCatalog={() => {
+              const el = document.getElementById('catalogo');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            onFilterCategory={(cat) => {
+              setSelectedCategory(cat);
+              const el = document.getElementById('catalogo');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+          />
 
-        {/* Tira compacta de beneficios clave */}
-        <div className="grid grid-cols-3 gap-2 mt-2.5 sm:mt-3 text-center">
-          <div className="clay-card flex items-center justify-center gap-1.5 py-2 px-2 text-[9px] sm:text-xs text-slate-700 font-bold border border-white/80">
-            <Truck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-            <span className="truncate">Envíos Todo El Salvador</span>
+          {/* Tira compacta de beneficios clave */}
+          <div className="grid grid-cols-3 gap-2 mt-2.5 sm:mt-3 text-center">
+            <div className="clay-card flex items-center justify-center gap-1.5 py-2 px-2 text-[9px] sm:text-xs text-slate-700 font-bold border border-white/80">
+              <Truck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+              <span className="truncate">Envíos Todo El Salvador</span>
+            </div>
+            <div className="clay-card flex items-center justify-center gap-1.5 py-2 px-2 text-[9px] sm:text-xs text-slate-700 font-bold border border-white/80">
+              <Droplets className="w-3.5 h-3.5 text-pink-600 shrink-0" />
+              <span className="truncate">Concentración 33%</span>
+            </div>
+            <div className="clay-card flex items-center justify-center gap-1.5 py-2 px-2 text-[9px] sm:text-xs text-slate-700 font-bold border border-white/80">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span className="truncate">Pago Contra Entrega</span>
+            </div>
           </div>
-          <div className="clay-card flex items-center justify-center gap-1.5 py-2 px-2 text-[9px] sm:text-xs text-slate-700 font-bold border border-white/80">
-            <Droplets className="w-3.5 h-3.5 text-pink-600 shrink-0" />
-            <span className="truncate">Concentración 33%</span>
-          </div>
-          <div className="clay-card flex items-center justify-center gap-1.5 py-2 px-2 text-[9px] sm:text-xs text-slate-700 font-bold border border-white/80">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <span className="truncate">Pago Contra Entrega</span>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ================= CATÁLOGO DE PRODUCTOS ================= */}
       <section id="catalogo" className="space-y-3.5 scroll-mt-20">

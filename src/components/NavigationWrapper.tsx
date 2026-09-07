@@ -4,6 +4,7 @@ import React from 'react';
 import { usePathname } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
 import EcommerceHeader from '@/components/ecommerce/EcommerceHeader';
+import PromoTickerBar from '@/components/ecommerce/PromoTickerBar';
 import EcommerceFooter from '@/components/ecommerce/EcommerceFooter';
 import CartDrawer from '@/components/ecommerce/CartDrawer';
 import CustomerAuthModal from '@/components/ecommerce/CustomerAuthModal';
@@ -42,9 +43,10 @@ export default function NavigationWrapper({ children }: { children: React.ReactN
           </main>
         </>
       ) : (
-        // En la tienda pública (E-commerce) se muestra la cabecera y pie de Aromaniak
+        // En la tienda pública (E-commerce) se muestra la cabecera, barra de promociones y pie de Aromaniak
         <div className="flex flex-col min-h-screen">
           <EcommerceHeader />
+          <PromoTickerBar />
           <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 lg:p-8">
             {children}
           </main>
