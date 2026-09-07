@@ -11,7 +11,7 @@ export default function BuildYourPerfumeCard({ onOpenBuilder }: BuildYourPerfume
   return (
     <div
       onClick={onOpenBuilder}
-      className="col-span-2 clay-card bg-white rounded-2xl sm:rounded-3xl border-2 border-amber-400 ring-2 ring-amber-300/40 shadow-[0_4px_24px_rgba(245,158,11,0.22)] hover:shadow-[0_6px_30px_rgba(245,158,11,0.35)] p-4 sm:p-5 relative overflow-hidden group cursor-pointer hover:scale-[1.01] hover:border-amber-500 transition-all duration-300 flex items-center justify-between gap-4 sm:gap-6 min-h-[160px] sm:min-h-[175px]"
+      className="w-full clay-card bg-white rounded-2xl sm:rounded-3xl border-2 border-amber-400 ring-2 ring-amber-300/40 shadow-[0_4px_24px_rgba(245,158,11,0.22)] hover:shadow-[0_6px_30px_rgba(245,158,11,0.35)] p-4 sm:p-5 relative overflow-hidden group cursor-pointer hover:scale-[1.005] hover:border-amber-500 transition-all duration-300 flex items-center justify-between gap-4 sm:gap-6 min-h-[160px] sm:min-h-[175px]"
     >
       {/* Resplandor áureo sutil de fondo */}
       <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-amber-300/20 blur-2xl pointer-events-none" />
@@ -60,6 +60,9 @@ export default function BuildYourPerfumeCard({ onOpenBuilder }: BuildYourPerfume
           <img
             src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=300&q=80"
             alt="Frasco de perfume 100ml"
+            onError={(e) => {
+              e.currentTarget.src = 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=300&q=80';
+            }}
             className="w-full h-full object-cover object-center"
           />
           <div className="absolute bottom-1.5 bg-slate-950/75 backdrop-blur-xs text-[9px] sm:text-[10px] font-black text-amber-300 px-2 py-0.5 rounded-full border border-amber-400/30">

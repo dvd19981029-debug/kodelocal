@@ -128,15 +128,12 @@ export default function EcommerceHomePage() {
 
   // Paginación: Exactamente 7 filas por página según el número de columnas del dispositivo
   const targetRows = 7;
-  const standardPageSize = targetRows * columns;
-  // En la página 1, la tarjeta especial 'Arma tu propio perfume' ocupa 2 espacios (col-span-2)
-  const page1ProductsCount = Math.max(1, standardPageSize - 2);
+  const pageSize = targetRows * columns;
 
   const totalPages = useMemo(() => {
-    if (filteredProducts.length <= page1ProductsCount) return 1;
-    const remaining = filteredProducts.length - page1ProductsCount;
-    return 1 + Math.ceil(remaining / standardPageSize);
-  }, [filteredProducts.length, page1ProductsCount, standardPageSize]);
+    if (filteredProducts.length === 0) return 1;
+    return Math.ceil(filteredProducts.length / pageSize);
+  }, [filteredProducts.length, pageSize]);
 
   // Si se filtran productos y la página actual excede el nuevo total, reajustar a la última válida
   useEffect(() => {
@@ -146,12 +143,9 @@ export default function EcommerceHomePage() {
   }, [totalPages, currentPage]);
 
   const paginatedProducts = useMemo(() => {
-    if (currentPage === 1) {
-      return filteredProducts.slice(0, page1ProductsCount);
-    }
-    const start = page1ProductsCount + (currentPage - 2) * standardPageSize;
-    return filteredProducts.slice(start, start + standardPageSize);
-  }, [filteredProducts, currentPage, page1ProductsCount, standardPageSize]);
+    const start = (currentPage - 1) * pageSize;
+    return filteredProducts.slice(start, start + pageSize);
+  }, [filteredProducts, currentPage, pageSize]);
 
   // Generador de paginación inteligente: Siempre muestra la página 1, la última página y las páginas vecinas
   const paginationItems = useMemo(() => {
@@ -267,7 +261,10 @@ export default function EcommerceHomePage() {
           )}
         </div>
 
-        {/* ================= REJILLA DE PRODUCTOS ================= */}
+        {/* ================= TARJETA DESTACADA: ARMA TU PROPIO PERFUME (SIEMPRE DISPONIBLE) ================= */}
+        <BuildYourPerfumeCard onOpenBuilder={() => setIsKitModalOpen(true)} />
+
+        {/* ================= REJILLA DE PRODUCTOS (EXACTAMENTE 7 FILAS POR PÁGINA) ================= */}
         {paginatedProducts.length === 0 ? (
           <div className="clay-card p-12 text-center space-y-3">
             <div className="w-14 h-14 mx-auto rounded-2xl bg-indigo-50 text-indigo-400 flex items-center justify-center">
@@ -290,11 +287,6 @@ export default function EcommerceHomePage() {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4">
-            {/* Si está en la página 1, mostrar la tarjeta especial "Arma tu propio perfume" ocupando 2 espacios con brillo dorado */}
-            {currentPage === 1 && (
-              <BuildYourPerfumeCard onOpenBuilder={() => setIsKitModalOpen(true)} />
-            )}
-
             {paginatedProducts.map((prod) => (
               <ProductCard key={prod.id} product={prod} />
             ))}

@@ -40,17 +40,19 @@ export default function PerfumeKitBuilderModal({
   
   // Usar los frascos de 100ml variados
   const bottlesList = useMemo(() => {
-    const existing100ml = (availableBottles || []).filter(b => b.name.toLowerCase().includes('100'));
+    const existing100ml = (availableBottles || []).filter(b => (b.name || '').toLowerCase().includes('100'));
     const combined = [...MOCK_100ML_BOTTLES];
     existing100ml.forEach(eb => {
       if (!combined.some(b => b.id === eb.id)) {
         combined.unshift(eb);
       }
     });
-    return combined.sort((a, b) => (b.stock || 0) - (a.stock || 0));
+    return combined;
   }, [availableBottles]);
 
-  const [selectedBottle, setSelectedBottle] = useState<ProductItem>(bottlesList[0]);
+  const [selectedBottle, setSelectedBottle] = useState<ProductItem | null>(null);
+  const activeBottle: ProductItem = selectedBottle || bottlesList[0] || MOCK_100ML_BOTTLES[0];
+
   const [hasLabel, setHasLabel] = useState<boolean>(true);
   const [isPlus, setIsPlus] = useState<boolean>(false);
   const [justAdded, setJustAdded] = useState(false);
@@ -59,12 +61,14 @@ export default function PerfumeKitBuilderModal({
   const [essenceSearch, setEssenceSearch] = useState('');
   const [essenceGenderFilter, setEssenceGenderFilter] = useState<'Todos' | 'Caballero' | 'Dama' | 'Unisex'>('Todos');
 
-  // Filtrado de esencias en tiempo real
+  // Filtrado de esencias en tiempo real (seguro con o sin stock inicial)
   const filteredEssences = useMemo(() => {
     const q = essenceSearch.toLowerCase().trim();
-    return availableEssences.filter((item) => {
-      if (!item.stock || item.stock < (isPlus ? 1.5 : 1.0)) return false;
+    const source = (availableEssences && availableEssences.length > 0) 
+      ? availableEssences 
+      : [];
 
+    return source.filter((item) => {
       if (essenceGenderFilter !== 'Todos') {
         const g = (item.gender || '').toLowerCase();
         if (!g.includes(essenceGenderFilter.toLowerCase())) return false;
@@ -78,7 +82,7 @@ export default function PerfumeKitBuilderModal({
 
       return name.includes(q) || official.includes(q) || brand.includes(q) || sku.includes(q);
     });
-  }, [availableEssences, essenceSearch, essenceGenderFilter, isPlus]);
+  }, [availableEssences, essenceSearch, essenceGenderFilter]);
 
   if (!isOpen) return null;
 
@@ -87,11 +91,11 @@ export default function PerfumeKitBuilderModal({
   const totalPrice = basePrice + plusCost;
 
   const handleConfirmKit = () => {
-    if (!selectedEssence || !selectedBottle) return;
+    if (!selectedEssence || !activeBottle) return;
 
     addKitToCart({
       essence: selectedEssence,
-      bottle: selectedBottle,
+      bottle: activeBottle,
       hasLabel,
       isPlus,
       quantity: 1,
@@ -110,27 +114,15 @@ export default function PerfumeKitBuilderModal({
     setCurrentStep(1);
   };
 
-  // Bloquear el scroll de la página de fondo mientras el modal esté abierto
+  // Bloquear el scroll de la página de fondo mientras el modal esté abierto sin romper iOS
   useEffect(() => {
     if (!isOpen) return;
 
     const originalOverflow = document.body.style.overflow;
-    const originalPosition = document.body.style.position;
-    const originalTop = document.body.style.top;
-    const originalWidth = document.body.style.width;
-    const scrollY = window.scrollY;
-
     document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = '100%';
 
     return () => {
       document.body.style.overflow = originalOverflow;
-      document.body.style.position = originalPosition;
-      document.body.style.top = originalTop;
-      document.body.style.width = originalWidth;
-      window.scrollTo(0, scrollY);
     };
   }, [isOpen]);
 
@@ -200,7 +192,7 @@ export default function PerfumeKitBuilderModal({
             className={`py-2 px-2 transition-all flex items-center justify-center gap-1.5 border-b-2 ${
               currentStep === 2
                 ? 'border-indigo-600 text-indigo-700 bg-white font-black'
-                : selectedBottle
+                : activeBottle
                 ? 'border-emerald-500 text-emerald-700 bg-emerald-50/40'
                 : 'border-transparent text-slate-400 opacity-60 cursor-not-allowed'
             }`}
@@ -217,8 +209,8 @@ export default function PerfumeKitBuilderModal({
 
           <button
             type="button"
-            onClick={() => selectedEssence && selectedBottle && setCurrentStep(3)}
-            disabled={!selectedEssence || !selectedBottle}
+            onClick={() => selectedEssence && activeBottle && setCurrentStep(3)}
+            disabled={!selectedEssence || !activeBottle}
             className={`py-2 px-2 transition-all flex items-center justify-center gap-1.5 border-b-2 ${
               currentStep === 3
                 ? 'border-indigo-600 text-indigo-700 bg-white font-black'
@@ -381,7 +373,7 @@ export default function PerfumeKitBuilderModal({
               <div className="flex-1 min-h-[320px] max-h-[50vh] sm:max-h-[54vh] overflow-y-auto pr-1 p-1">
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
                   {bottlesList.map((bottle) => {
-                    const isChosen = selectedBottle.id === bottle.id;
+                    const isChosen = activeBottle.id === bottle.id;
 
                     return (
                       <div
@@ -397,6 +389,9 @@ export default function PerfumeKitBuilderModal({
                           <img
                             src={bottle.imageUrl || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=300&q=80'}
                             alt={bottle.name}
+                            onError={(e) => {
+                              e.currentTarget.src = 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=300&q=80';
+                            }}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -410,7 +405,7 @@ export default function PerfumeKitBuilderModal({
                             100 ml
                           </span>
                           <span className="text-[8.5px] font-bold text-emerald-700 bg-emerald-50 px-1 rounded">
-                            {bottle.stock} disp.
+                            {bottle.stock || 50} disp.
                           </span>
                         </div>
 
@@ -430,15 +425,18 @@ export default function PerfumeKitBuilderModal({
                 <div className="flex items-center gap-2 min-w-0">
                   <div className="w-8 h-8 rounded-lg overflow-hidden bg-white border border-indigo-200 shrink-0">
                     <img
-                      src={selectedBottle.imageUrl || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=300&q=80'}
-                      alt={selectedBottle.name}
+                      src={activeBottle.imageUrl || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=300&q=80'}
+                      alt={activeBottle.name}
+                      onError={(e) => {
+                        e.currentTarget.src = 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=300&q=80';
+                      }}
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="min-w-0">
                     <span className="text-[9px] text-indigo-700 font-bold uppercase tracking-wider block">Frasco seleccionado:</span>
                     <strong className="text-xs sm:text-sm font-black text-indigo-900 truncate block">
-                      {selectedBottle.name} (100 ml)
+                      {activeBottle.name} (100 ml)
                     </strong>
                   </div>
                 </div>
@@ -558,7 +556,7 @@ export default function PerfumeKitBuilderModal({
                   <div>
                     <span className="text-[10px] text-slate-400 block font-bold">Frasco:</span>
                     <strong className="text-slate-900 font-black truncate block">
-                      {selectedBottle.name} (100 ml)
+                      {activeBottle.name} (100 ml)
                     </strong>
                   </div>
                   <div>
