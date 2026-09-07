@@ -116,6 +116,7 @@ model Sale {
   customerId    String?
   customer      Customer?     @relation(fields: [customerId], references: [id])
   items         SaleItem[]
+  payments      SalePayment[]
   dteDocument   DteDocument?
   shiftId       String?
   shift         CashShift?    @relation(fields: [shiftId], references: [id])
@@ -137,6 +138,22 @@ model SaleItem {
   ivaRate     Decimal  @db.Decimal(4, 2) @default(0.13)
   total       Decimal  @db.Decimal(10, 2)
   createdAt   DateTime @default(now())
+}
+
+model SalePayment {
+  id            String        @id @default(cuid())
+  saleId        String
+  sale          Sale          @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  amount        Decimal       @db.Decimal(10, 2)
+  paymentMethod PaymentMethod @default(CASH)
+  reference     String?
+  notes         String?
+  cashierName   String?
+  shiftId       String?
+  createdAt     DateTime      @default(now())
+
+  @@index([saleId])
+  @@index([createdAt])
 }
 
 enum DteType {
