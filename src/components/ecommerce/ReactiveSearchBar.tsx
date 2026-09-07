@@ -109,62 +109,89 @@ export default function ReactiveSearchBar({
     selectedStockFilter !== 'Todos';
 
   return (
-    <div className="sticky top-[60px] sm:top-[76px] md:top-[84px] z-30 pointer-events-none py-1 transition-all">
+    <div className="sticky top-[74px] sm:top-[90px] md:top-[98px] z-30 pointer-events-none pt-1.5 pb-1 transition-all">
       
-      {/* Contenedor reactivo animado: morphing de barra completa a botoncito en esquina superior derecha */}
-      <div className="flex justify-end w-full">
+      {/* Contenedor reactivo animado: morphing fluido continuo sin desmontarse */}
+      <div className="flex justify-end w-full pr-1 sm:pr-2">
         
-        {isCollapsed ? (
-          /* ================= BOTONCITO EN ESQUINA SUPERIOR DERECHA (ANIMADO) ================= */
-          <button
-            onClick={handleExpandAndFocus}
-            className="pointer-events-auto w-11 h-11 sm:w-12 sm:h-12 rounded-full clay-card bg-white/95 border-2 border-white text-indigo-600 flex items-center justify-center shadow-[3px_6px_20px_rgba(99,102,241,0.35)] hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer relative group animate-in zoom-in-75 duration-200"
-            title="Abrir buscador"
-            aria-label="Buscar fragancias"
-          >
-            <Search className="w-5 h-5 text-indigo-600 group-hover:scale-110 transition-transform" />
-            {hasActiveFilters && (
-              <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-pink-500 ring-2 ring-white animate-pulse" />
-            )}
-          </button>
-        ) : (
-          /* ================= BARRA DE BÚSQUEDA NORMAL COMPLETA CLAYMORPHIC ================= */
-          <div className="pointer-events-auto w-full clay-card bg-[#f8fafc]/95 backdrop-blur-md border border-white/90 shadow-md p-2 sm:p-2.5 rounded-2xl space-y-2 animate-in fade-in zoom-in-95 duration-200">
-            
-            {/* Input de Búsqueda Claymorphic */}
-            <div className="relative w-full">
-              <Search className="w-4 h-4 sm:w-5 sm:h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
-              <input
-                ref={inputRef}
-                type="text"
-                placeholder="Buscar perfume: Sauvage, 212, Baccarat, One Million, Carolina Herrera..."
-                value={searchQuery}
-                onFocus={() => setIsInputFocused(true)}
-                onBlur={() => setIsInputFocused(false)}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="clay-input has-icon w-full pr-10 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-800 placeholder-slate-400 bg-white/95 shadow-2xs rounded-xl transition-all focus:ring-2 focus:ring-indigo-500/20"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => {
-                    setSearchQuery('');
-                    setCurrentPage(1);
-                    inputRef.current?.focus();
-                  }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer"
-                  title="Limpiar búsqueda"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
+        {/* Elemento unificado con morphing físico de ancho, alto, bordes y opacidad */}
+        <div
+          onClick={isCollapsed ? handleExpandAndFocus : undefined}
+          className={`pointer-events-auto transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] relative overflow-hidden ${
+            isCollapsed
+              ? 'w-12 h-12 rounded-full clay-card bg-white/95 border-2 border-white shadow-[0_8px_24px_rgba(99,102,241,0.35)] cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center'
+              : 'w-full clay-card bg-[#f8fafc]/95 backdrop-blur-md border border-white/90 shadow-md p-2 sm:p-2.5 rounded-2xl'
+          }`}
+        >
+          {/* Fila del Input y Botón de Lupa */}
+          <div className={`relative w-full flex items-center transition-all duration-300 ${
+            isCollapsed ? 'justify-center h-full' : ''
+          }`}>
+            {/* Ícono de Búsqueda */}
+            <button
+              type="button"
+              onClick={isCollapsed ? handleExpandAndFocus : undefined}
+              aria-label={isCollapsed ? "Abrir buscador de fragancias" : undefined}
+              className={`flex items-center justify-center transition-all duration-300 ${
+                isCollapsed 
+                  ? 'w-12 h-12 cursor-pointer' 
+                  : 'absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10 p-0'
+              }`}
+            >
+              <Search className={`transition-all duration-300 ${
+                isCollapsed ? 'w-5 h-5 text-indigo-600' : 'w-4 h-4 sm:w-5 sm:h-5 text-slate-400'
+              }`} />
+            </button>
 
-            {/* Línea Única Delgada de Opciones con Arrastre Horizontal */}
+            {/* Input de Búsqueda */}
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder="Buscar perfume: Sauvage, 212, Baccarat, One Million, Carolina Herrera..."
+              value={searchQuery}
+              onFocus={() => setIsInputFocused(true)}
+              onBlur={() => setIsInputFocused(false)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className={`transition-all duration-300 ${
+                isCollapsed
+                  ? 'opacity-0 w-0 h-0 p-0 pointer-events-none border-none overflow-hidden m-0'
+                  : 'clay-input has-icon w-full pr-10 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-800 placeholder-slate-400 bg-white/95 shadow-2xs rounded-xl focus:ring-2 focus:ring-indigo-500/20 opacity-100'
+              }`}
+            />
+
+            {/* Botón de Limpiar Búsqueda */}
+            {searchQuery && !isCollapsed && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSearchQuery('');
+                  setCurrentPage(1);
+                  inputRef.current?.focus();
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer z-10"
+                title="Limpiar búsqueda"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+
+            {/* Badge de Filtros Activos cuando está colapsado en bolita */}
+            {isCollapsed && hasActiveFilters && (
+              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-pink-500 ring-2 ring-white animate-pulse pointer-events-none z-20" />
+            )}
+          </div>
+
+          {/* Línea Única Delgada de Opciones con Arrastre Horizontal (Colapso suave) */}
+          <div className={`transition-all duration-400 ease-[cubic-bezier(0.25,1,0.5,1)] overflow-hidden ${
+            isCollapsed 
+              ? 'max-h-0 opacity-0 -translate-y-2 pointer-events-none mt-0' 
+              : 'max-h-16 opacity-100 translate-y-0 mt-2'
+          }`}>
             <div className="relative">
-              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-1 px-0.5 touch-pan-x select-none">
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-0.5 px-0.5 touch-pan-x select-none">
                 
                 {/* Opción: Ver Todo */}
                 <button
@@ -295,10 +322,9 @@ export default function ReactiveSearchBar({
 
               </div>
             </div>
-
           </div>
-        )}
 
+        </div>
       </div>
     </div>
   );
