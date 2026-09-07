@@ -80,15 +80,10 @@ export default function ProductCard({ product }: ProductCardProps) {
               <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
               Agotado
             </span>
-          ) : isLowStock ? (
-            <span className="clay-badge bg-amber-50 text-amber-800 border border-amber-200/90 text-[9px] font-black py-0.5 px-2 rounded-lg flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-              ¡Solo {product.stock} {product.unit || 'oz'}!
-            </span>
           ) : (
             <span className="clay-badge bg-emerald-50 text-emerald-700 border border-emerald-200/90 text-[9px] font-extrabold py-0.5 px-2 rounded-lg flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              Disponible ({product.stock})
+              Disponible
             </span>
           )}
         </div>
