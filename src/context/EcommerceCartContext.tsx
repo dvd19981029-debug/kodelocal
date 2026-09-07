@@ -4,7 +4,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ProductItem } from '@/lib/store';
 
 export type ProductPresentation = 
-  | 'ONZA_COMPLETA'      // Onza Completa (Precio por onza del sistema)
+  | 'ONZA_COMPLETA'      // 1 Onza Completa (Precio por onza del sistema)
+  | 'MEDIA_ONZA'         // Media Onza (Precio por onza / 2)
   | 'PERFUME_PREPARADO'  // Perfume Preparado ($15)
   | '1_OZ'               // Compatibilidad previa
   | '2_OZ'
@@ -22,12 +23,20 @@ export interface PresentationOption {
 
 export function getPresentationsForProduct(product: ProductItem): PresentationOption[] {
   if (product.category === 'Esencias para Perfume') {
+    const onzaPrice = Number((product.price || 3.25).toFixed(2));
+    const mediaOnzaPrice = Number((onzaPrice / 2).toFixed(2));
     return [
       {
         id: 'ONZA_COMPLETA',
-        name: 'Onza Completa',
-        description: 'Esencia pura concentrada (precio por onza del sistema)',
-        price: product.price || 3.25
+        name: '1 Onza',
+        description: 'Esencia pura concentrada (1 oz)',
+        price: onzaPrice
+      },
+      {
+        id: 'MEDIA_ONZA',
+        name: '½ Onza',
+        description: 'Media onza de esencia pura (0.5 oz)',
+        price: mediaOnzaPrice
       },
       {
         id: 'PERFUME_PREPARADO',
