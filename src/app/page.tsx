@@ -17,7 +17,7 @@ import { ProductItem, INITIAL_PRODUCTS, getStoredProducts } from '@/lib/store';
 import ProductCard from '@/components/ecommerce/ProductCard';
 
 export default function EcommerceHomePage() {
-  const [products, setProducts] = useState<ProductItem[]>([]);
+  const [products, setProducts] = useState<ProductItem[]>(() => INITIAL_PRODUCTS);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGender, setSelectedGender] = useState<'Todos' | 'Caballero' | 'Dama' | 'Unisex'>('Todos');
   const [selectedCategory, setSelectedCategory] = useState<string>('Esencias para Perfume');
@@ -43,13 +43,18 @@ export default function EcommerceHomePage() {
         matchesGender = p.gender ? p.gender.toLowerCase().includes(selectedGender.toLowerCase()) : false;
       }
 
-      // Filtro de búsqueda
+      // Filtro de búsqueda seguro
+      const skuStr = String(p.sku || '').toLowerCase();
+      const nameStr = String(p.name || '').toLowerCase();
+      const brandStr = String(p.brand || '').toLowerCase();
+      const barcodeStr = String(p.barcode || '');
+
       const matchesSearch = 
         !q ||
-        p.sku.toLowerCase() === q ||
-        p.name.toLowerCase().includes(q) ||
-        (p.brand && p.brand.toLowerCase().includes(q)) ||
-        p.barcode.includes(q);
+        skuStr === q ||
+        nameStr.includes(q) ||
+        brandStr.includes(q) ||
+        barcodeStr.includes(q);
 
       return matchesCategory && matchesGender && matchesSearch;
     });
