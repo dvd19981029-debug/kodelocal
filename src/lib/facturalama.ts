@@ -40,13 +40,18 @@ export class FacturaLlamaClient {
   private baseUrl: string;
 
   constructor() {
-    this.apiKey = process.env.FACTURALLAMA_API_KEY || 'simulado_kodelocal_dev';
+    this.apiKey = process.env.FACTURALLAMA_API_KEY || '';
     this.apiVersion = process.env.FACTURALLAMA_API_VERSION || '1';
     this.baseUrl = process.env.FACTURALLAMA_BASE_URL || 'https://api.facturallama.com';
   }
 
+  getApiKey(): string {
+    return process.env.FACTURALLAMA_API_KEY || this.apiKey || '';
+  }
+
   isSimulated(): boolean {
-    return !this.apiKey || this.apiKey.startsWith('simulado_') || this.apiKey.trim() === '';
+    const key = this.getApiKey();
+    return !key || key.startsWith('simulado_') || key.trim() === '';
   }
 
   /**
@@ -111,7 +116,7 @@ export class FacturaLlamaClient {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': this.apiKey,
+          'X-API-Key': this.getApiKey(),
           'X-API-Version': this.apiVersion
         },
         body: JSON.stringify(payload)

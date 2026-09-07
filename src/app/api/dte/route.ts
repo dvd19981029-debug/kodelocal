@@ -19,19 +19,20 @@ export async function POST(request: Request) {
       tipoDte: tipoDte === '03' ? '03' : '01',
       saleId: saleId || `POS-${Date.now()}`,
       items: items.map((it: any) => ({
-        codigo: it.codigo || it.sku,
-        descripcion: it.name || it.descripcion,
-        cantidad: Number(it.quantity || it.cantidad),
-        precioUnitario: Number(it.price || it.precioUnitario),
+        codigo: it.codigo || it.sku || it.productId || 'GEN-01',
+        descripcion: it.name || it.nombre || it.descripcion || 'Producto',
+        cantidad: Number(it.quantity || it.cantidad || 1),
+        precioUnitario: Number(it.price || it.precioUnitario || 0),
       })),
       cliente: cliente
         ? {
-            nombre: cliente.nombre,
-            numDocumento: cliente.numDocumento || cliente.dui || cliente.nit,
+            nombre: cliente.nombre || 'Consumidor Final',
+            numDocumento: cliente.numDocumento || cliente.dui || cliente.nit || '',
             nrc: cliente.nrc,
-            correo: cliente.correo,
+            correo: cliente.correo || cliente.email,
             telefono: cliente.telefono,
             direccion: cliente.direccion,
+            descActividad: cliente.giro || cliente.descActividad,
           }
         : undefined,
       metodoPago,
