@@ -43,6 +43,7 @@ model Product {
   saleItems          SaleItem[]
   stockMovements     StockMovement[]
   ecommerceItems     EcommerceOrderItem[]
+  reviews            ProductReview[]
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
 
@@ -74,6 +75,7 @@ model Customer {
   credits         CustomerCredit[]
   addresses       CustomerAddress[]
   ecommerceOrders EcommerceOrder[]
+  reviews         ProductReview[]
   createdAt       DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -120,6 +122,7 @@ model Sale {
   customer      Customer?     @relation(fields: [customerId], references: [id])
   items         SaleItem[]
   payments      SalePayment[]
+  shipments     Shipment[]
   dteDocument   DteDocument?
   shiftId       String?
   shift         CashShift?    @relation(fields: [shiftId], references: [id])
@@ -404,6 +407,7 @@ model EcommerceOrder {
   whatsappNotified  Boolean              @default(false)
   notes             String?
   items             EcommerceOrderItem[]
+  shipments         Shipment[]
   saleId            String?
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
@@ -429,4 +433,120 @@ model EcommerceOrderItem {
 
   @@index([orderId])
   @@index([productId])
+}
+
+enum ShipmentStatus {
+  PREPARING
+  IN_TRANSIT
+  DELIVERED
+  FAILED
+  RETURNED
+}
+
+model Shipment {
+  id             String         @id @default(cuid())
+  trackingNumber String         @unique
+  orderId        String?
+  order          EcommerceOrder? @relation(fields: [orderId], references: [id])
+  saleId         String?
+  sale           Sale?          @relation(fields: [saleId], references: [id])
+  customerName   String
+  phone          String
+  address        String
+  department     String
+  municipality   String?
+  carrier        String         @default("Mensajero Propio") // Mensajero Propio, Cargo Expreso, etc.
+  status         ShipmentStatus @default(PREPARING)
+  orderTotal     Decimal        @db.Decimal(10, 2)
+  deliveryCost   Decimal        @db.Decimal(10, 2) @default(3.50)
+  deliveryNotes  String?
+  deliveredAt    DateTime?
+  receivedBy     String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([trackingNumber])
+  @@index([status])
+  @@index([department])
+}
+
+model ProductReview {
+  id           String    @id @default(cuid())
+  productId    String
+  product      Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customerId   String?
+  customer     Customer? @relation(fields: [customerId], references: [id])
+  customerName String
+  rating       Int       @default(5)
+  comment      String
+  isApproved   Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+
+  @@index([productId])
+  @@index([customerId])
+}
+
+model ProductFormula {
+  id                String   @id @default(cuid())
+  name              String   // Ej: "Fórmula de Lujo 33% Fijación"
+  essencePercentage Decimal  @db.Decimal(5, 2) @default(33.00)
+  alcoholPercentage Decimal  @db.Decimal(5, 2) @default(67.00)
+  fixativeMl        Decimal  @db.Decimal(5, 2) @default(1.00)
+  description       String?
+  isDefault         Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+}
+
+model Promotion {
+  id            String       @id @default(cuid())
+  code          String       @unique
+  description   String?
+  discountType  DiscountType @default(PERCENTAGE)
+  discountValue Decimal      @db.Decimal(10, 2)
+  minPurchase   Decimal?     @db.Decimal(10, 2)
+  maxUses       Int?
+  usedCount     Int          @default(0)
+  startDate     DateTime?
+  endDate       DateTime?
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([code])
+}
+
+model StaffUser {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  pin          String?   // PIN de 4 dígitos para caja
+  role         String    @default("CASHIER") // ADMIN, CASHIER, BODEGA, DESPACHO
+  cashRegister String?   @default("Caja 1")
+  isActive     Boolean   @default(true)
+  lastLogin    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([email])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String   // AJUSTE_STOCK, ANULACION_VENTA, CAMBIO_PRECIO, CORTE_CAJA
+  userName    String
+  userRole    String?
+  details     String?  @db.Text
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  @@index([action])
+  @@index([createdAt])
 }
