@@ -102,29 +102,23 @@ export default function ReactiveSearchBar({
     }
   };
 
-  const hasActiveFilters = 
-    Boolean(searchQuery) || 
-    selectedCategory !== 'Todos' || 
-    selectedGender !== 'Todos' || 
-    selectedStockFilter !== 'Todos';
-
   return (
-    <div className="sticky top-[74px] sm:top-[90px] md:top-[98px] z-30 pointer-events-none pt-1.5 pb-1 transition-all">
+    <div className="sticky top-[52px] sm:top-[68px] md:top-[76px] z-30 pointer-events-none py-0.5 transition-all">
       
       {/* Contenedor reactivo animado: morphing fluido continuo sin desmontarse */}
-      <div className="flex justify-end w-full pr-1 sm:pr-2">
+      <div className="flex justify-end w-full pr-2 sm:pr-4">
         
-        {/* Elemento unificado con morphing físico de ancho, alto, bordes y opacidad */}
+        {/* Elemento unificado con morphing físico de ancho, alto, bordes y posición */}
         <div
           onClick={isCollapsed ? handleExpandAndFocus : undefined}
-          className={`pointer-events-auto transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] relative overflow-hidden ${
+          className={`pointer-events-auto transition-all duration-700 ease-[cubic-bezier(0.3,1,0.3,1)] relative overflow-hidden ${
             isCollapsed
-              ? 'w-12 h-12 rounded-full clay-card bg-white/95 border-2 border-white shadow-[0_8px_24px_rgba(99,102,241,0.35)] cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center'
-              : 'w-full clay-card bg-[#f8fafc]/95 backdrop-blur-md border border-white/90 shadow-md p-2 sm:p-2.5 rounded-2xl'
+              ? 'w-12 h-12 rounded-full clay-card bg-white/95 border-2 border-white shadow-[0_8px_24px_rgba(99,102,241,0.35)] cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center mt-3 sm:mt-3.5'
+              : 'w-full clay-card bg-[#f8fafc]/95 backdrop-blur-md border border-white/90 shadow-md p-2 sm:p-2.5 rounded-2xl mt-0'
           }`}
         >
           {/* Fila del Input y Botón de Lupa */}
-          <div className={`relative w-full flex items-center transition-all duration-300 ${
+          <div className={`relative w-full flex items-center transition-all duration-500 ${
             isCollapsed ? 'justify-center h-full' : ''
           }`}>
             {/* Ícono de Búsqueda */}
@@ -132,13 +126,13 @@ export default function ReactiveSearchBar({
               type="button"
               onClick={isCollapsed ? handleExpandAndFocus : undefined}
               aria-label={isCollapsed ? "Abrir buscador de fragancias" : undefined}
-              className={`flex items-center justify-center transition-all duration-300 ${
+              className={`flex items-center justify-center transition-all duration-500 ${
                 isCollapsed 
                   ? 'w-12 h-12 cursor-pointer' 
                   : 'absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10 p-0'
               }`}
             >
-              <Search className={`transition-all duration-300 ${
+              <Search className={`transition-all duration-500 ${
                 isCollapsed ? 'w-5 h-5 text-indigo-600' : 'w-4 h-4 sm:w-5 sm:h-5 text-slate-400'
               }`} />
             </button>
@@ -155,7 +149,7 @@ export default function ReactiveSearchBar({
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className={`transition-all duration-300 ${
+              className={`transition-all duration-500 ${
                 isCollapsed
                   ? 'opacity-0 w-0 h-0 p-0 pointer-events-none border-none overflow-hidden m-0'
                   : 'clay-input has-icon w-full pr-10 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-800 placeholder-slate-400 bg-white/95 shadow-2xs rounded-xl focus:ring-2 focus:ring-indigo-500/20 opacity-100'
@@ -177,15 +171,10 @@ export default function ReactiveSearchBar({
                 <X className="w-4 h-4" />
               </button>
             )}
-
-            {/* Badge de Filtros Activos cuando está colapsado en bolita */}
-            {isCollapsed && hasActiveFilters && (
-              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-pink-500 ring-2 ring-white animate-pulse pointer-events-none z-20" />
-            )}
           </div>
 
           {/* Línea Única Delgada de Opciones con Arrastre Horizontal (Colapso suave) */}
-          <div className={`transition-all duration-400 ease-[cubic-bezier(0.25,1,0.5,1)] overflow-hidden ${
+          <div className={`transition-all duration-600 ease-[cubic-bezier(0.3,1,0.3,1)] overflow-hidden ${
             isCollapsed 
               ? 'max-h-0 opacity-0 -translate-y-2 pointer-events-none mt-0' 
               : 'max-h-16 opacity-100 translate-y-0 mt-2'
