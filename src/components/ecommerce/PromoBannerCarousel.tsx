@@ -41,7 +41,7 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
       title: 'Arma tu propio perfume',
       highlightText: 'por solo $15.00',
       highlightGradient: 'from-indigo-600 via-purple-600 to-pink-600',
-      subtitle: 'Tu contratipo favorito con 1 oz pura + frasco de 100ml a elegir + fijador de 8-12h + etiqueta gratis (¡Opción PLUS por +$3!)',
+      subtitle: 'Tu contratipo favorito con 1 oz pura + frasco de 100ml a elegir + alcohol con fijador + etiqueta gratis (¡Opción PLUS por +$3!)',
       ctaText: 'Armar mi perfume ($15)',
       ctaAction: () => {
         if (onOpenKitBuilder) {

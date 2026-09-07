@@ -47,7 +47,7 @@ const TICKER_ITEMS: TickerItem[] = [
     content: (
       <div className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 shrink-0">
         <Droplets className="w-3.5 h-3.5 text-indigo-600" />
-        <span>Esencias <strong className="text-indigo-700">100% Puras</strong> de Alta Concentración (Fijación 8-12 horas)</span>
+        <span>Esencias <strong className="text-indigo-700">100% Puras</strong> de Máxima Calidad y Concentración</span>
       </div>
     ),
   },
