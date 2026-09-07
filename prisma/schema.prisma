@@ -70,6 +70,7 @@ model Customer {
   googleId     String?
   avatarUrl    String?
   sales        Sale[]
+  credits      CustomerCredit[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -211,4 +212,101 @@ model CashShift {
   totalSales    Decimal?    @db.Decimal(10, 2) @default(0.00)
   status        ShiftStatus @default(OPEN)
   sales         Sale[]
+}
+
+model Supplier {
+  id            String     @id @default(cuid())
+  name          String
+  contactPerson String?
+  nit           String?
+  nrc           String?
+  phone         String?
+  email         String?
+  address       String?
+  category      String?    @default("Esencias & Fragancias")
+  creditDays    Int        @default(0)
+  notes         String?
+  purchases     Purchase[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Purchase {
+  id              String            @id @default(cuid())
+  purchaseNumber  String            @unique
+  tipoDte         String            @default("CCF")
+  supplierId      String
+  supplier        Supplier          @relation(fields: [supplierId], references: [id])
+  supplierName    String
+  purchaseDate    DateTime          @default(now())
+  dueDate         DateTime?
+  creditDays      Int               @default(0)
+  docNumber       String
+  controlNumber   String?
+  condicion       String            @default("CONTADO")
+  paymentMethod   String?           @default("EFECTIVO")
+  paymentStatus   String            @default("PAGADO")
+  subtotalNeto    Decimal           @db.Decimal(10, 2)
+  iva             Decimal           @db.Decimal(10, 2) @default(0.00)
+  total           Decimal           @db.Decimal(10, 2)
+  saldoPendiente  Decimal           @db.Decimal(10, 2) @default(0.00)
+  notes           String?
+  receptionStatus String?           @default("PENDIENTE")
+  receivedAt      DateTime?
+  receivedBy      String?
+  items           PurchaseItem[]
+  payments        PurchasePayment[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+model PurchaseItem {
+  id          String   @id @default(cuid())
+  purchaseId  String
+  purchase    Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  productId   String?
+  productName String
+  productSku  String?
+  unit        String   @default("Onza")
+  quantity    Int
+  costPrice   Decimal  @db.Decimal(10, 2)
+  subtotal    Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+}
+
+model PurchasePayment {
+  id            String   @id @default(cuid())
+  purchaseId    String
+  purchase      Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  date          DateTime @default(now())
+  amount        Decimal  @db.Decimal(10, 2)
+  paymentMethod String   @default("EFECTIVO")
+  reference     String?
+  notes         String?
+  createdAt     DateTime @default(now())
+}
+
+model CustomerCredit {
+  id          String          @id @default(cuid())
+  customerId  String
+  customer    Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  creditLimit Decimal         @db.Decimal(10, 2) @default(0.00)
+  balance     Decimal         @db.Decimal(10, 2) @default(0.00)
+  creditDays  Int             @default(30)
+  status      String          @default("ACTIVO")
+  notes       String?
+  payments    CreditPayment[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model CreditPayment {
+  id            String         @id @default(cuid())
+  creditId      String
+  credit        CustomerCredit @relation(fields: [creditId], references: [id], onDelete: Cascade)
+  amount        Decimal        @db.Decimal(10, 2)
+  paymentMethod String         @default("EFECTIVO")
+  receiptNumber String?
+  notes         String?
+  createdAt     DateTime       @default(now())
 }
