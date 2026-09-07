@@ -54,6 +54,9 @@ export interface SaleRecord {
     estado?: string;
     simulated?: boolean;
     mensaje?: string;
+    mhDteUrl?: string;
+    pdfUrl?: string;
+    jsonUrl?: string;
   };
   status?: 'PREFACTURA' | 'PENDING_PREPARATION' | 'READY_AT_WINDOW' | 'COMPLETED' | 'CANCELLED';
   channel?: 'POS' | 'ONLINE';

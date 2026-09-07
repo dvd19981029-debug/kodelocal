@@ -23,6 +23,7 @@ export async function POST(request: Request) {
         descripcion: it.name || it.nombre || it.descripcion || 'Producto',
         cantidad: Number(it.quantity || it.cantidad || 1),
         precioUnitario: Number(it.price || it.precioUnitario || 0),
+        tipoItem: it.tipoItem,
       })),
       cliente: cliente
         ? {
@@ -32,25 +33,60 @@ export async function POST(request: Request) {
             correo: cliente.correo || cliente.email,
             telefono: cliente.telefono,
             direccion: cliente.direccion,
+            codActividad: cliente.codActividad,
             descActividad: cliente.giro || cliente.descActividad,
+            departamento: cliente.departamento,
+            municipio: cliente.municipio,
           }
         : undefined,
       metodoPago,
     });
 
+    // Enlace interno local para proxy de PDF y JSON
+    const enhancedDte = {
+      ...dteResult,
+      pdfUrl: `/api/dte/${dteResult.codigoGeneracion}/pdf`,
+      jsonUrl: `/api/dte/${dteResult.codigoGeneracion}/json`,
+    };
+
     // 2. Intentar registrar en base de datos si Prisma está conectado
     try {
       if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('placeholder')) {
-        // En producción guardará en Prisma
-        console.log('Guardando DTE en base de datos Supabase...');
+        // En producción guardará en Prisma si existe la venta
+        const saleExists = saleId ? await prisma.sale.findUnique({ where: { id: saleId } }) : null;
+        if (saleExists) {
+          await prisma.dteDocument.upsert({
+            where: { saleId: saleExists.id },
+            create: {
+              saleId: saleExists.id,
+              tipoDte: tipoDte === '03' ? 'CREDITO_FISCAL_03' : 'FACTURA_01',
+              codigoGeneracion: dteResult.codigoGeneracion,
+              numeroControl: dteResult.numeroControl,
+              selloRecepcion: dteResult.selloRecepcion,
+              estado: dteResult.estado === 'PROCESADO' ? 'PROCESADO' : dteResult.simulated ? 'SIMULADO' : 'RECHAZADO',
+              fhProcesamiento: new Date(dteResult.fhProcesamiento),
+              mensajeRespuesta: dteResult.mensaje,
+              responseJson: JSON.stringify(dteResult.rawResponse || {}),
+            },
+            update: {
+              codigoGeneracion: dteResult.codigoGeneracion,
+              numeroControl: dteResult.numeroControl,
+              selloRecepcion: dteResult.selloRecepcion,
+              estado: dteResult.estado === 'PROCESADO' ? 'PROCESADO' : dteResult.simulated ? 'SIMULADO' : 'RECHAZADO',
+              mensajeRespuesta: dteResult.mensaje,
+            },
+          });
+        }
       }
     } catch (dbError) {
-      console.warn('DB not connected yet, proceeding with in-memory log', dbError);
+      console.warn('DB recording skipped:', dbError);
     }
 
     return NextResponse.json({
-      success: true,
-      dte: dteResult,
+      success: dteResult.success,
+      dte: enhancedDte,
+    }, {
+      status: dteResult.success ? 200 : 400,
     });
   } catch (error: any) {
     console.error('Error procesando DTE:', error);

@@ -40,6 +40,7 @@ import {
   Flame,
   Box,
   ExternalLink,
+  FileDown,
   Copy,
   Send,
   CheckCheck,
@@ -837,7 +838,11 @@ export default function PosPage() {
               numDocumento: clienteDoc,
               nrc: clienteNrc,
               email: clienteEmail,
-              giro: clienteGiro
+              giro: clienteGiro,
+              telefono: selectedCustomerObj?.phone,
+              direccion: selectedCustomerObj?.direccion,
+              departamento: selectedCustomerObj?.departamento || '06',
+              municipio: selectedCustomerObj?.municipio || '14',
             },
             items: itemsToBill.map(i => ({
               nombre: i.name,
@@ -853,8 +858,13 @@ export default function PosPage() {
           })
         });
         const data = await res.json();
-        if (data.success && data.dte) {
+        if (data.dte) {
           dteResponseData = data.dte;
+          if (data.dte.estado === 'RECHAZADO') {
+            alert(`Aviso DTE Factura Llama: ${data.dte.mensaje}`);
+          }
+        } else if (!data.success) {
+          alert(`Error al emitir DTE: ${data.error || 'No se pudo emitir en Factura Llama'}`);
         }
       } catch (err) {
         console.error('Error al emitir DTE:', err);
@@ -905,7 +915,10 @@ export default function PosPage() {
               selloRecepcion: dteResponseData.selloRecepcion,
               estado: dteResponseData.estado,
               simulated: dteResponseData.simulated,
-              mensaje: dteResponseData.mensaje
+              mensaje: dteResponseData.mensaje,
+              mhDteUrl: dteResponseData.mhDteUrl,
+              pdfUrl: dteResponseData.pdfUrl,
+              jsonUrl: dteResponseData.jsonUrl,
             } : undefined
           };
           completedRecord = updated;
@@ -944,7 +957,10 @@ export default function PosPage() {
           selloRecepcion: dteResponseData.selloRecepcion,
           estado: dteResponseData.estado,
           simulated: dteResponseData.simulated,
-          mensaje: dteResponseData.mensaje
+          mensaje: dteResponseData.mensaje,
+          mhDteUrl: dteResponseData.mhDteUrl,
+          pdfUrl: dteResponseData.pdfUrl,
+          jsonUrl: dteResponseData.jsonUrl,
         } : undefined,
         status: 'COMPLETED',
         cajero: 'Caja 1',
@@ -2317,6 +2333,18 @@ export default function PosPage() {
                                     <Eye className="w-3 h-3" />
                                     <span>Ver</span>
                                   </button>
+                                  {sale.dteInfo?.codigoGeneracion && (
+                                    <a
+                                      href={`/api/dte/${sale.dteInfo.codigoGeneracion}/pdf`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="clay-btn clay-btn-light px-2 py-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-800 inline-flex items-center gap-1"
+                                      title="Descargar PDF oficial DTE"
+                                    >
+                                      <FileDown className="w-3 h-3" />
+                                      <span>PDF</span>
+                                    </a>
+                                  )}
                                   <button
                                     type="button"
                                     onClick={() => setCompletedSale(sale)}
@@ -3786,6 +3814,56 @@ export default function PosPage() {
               </div>
             </div>
 
+            {completedSale.dteInfo && (
+              <div className="mb-4 p-3 rounded-2xl bg-emerald-50/80 border border-emerald-200 text-left text-xs space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-emerald-800 flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    DTE Transmitido a Factura Llama
+                  </span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-200/60 text-emerald-800">
+                    {completedSale.dteInfo.simulated ? 'Ambiente Test' : 'Hacienda OK'}
+                  </span>
+                </div>
+                {completedSale.dteInfo.numeroControl && (
+                  <div className="text-[11px] font-mono text-emerald-900 truncate" title={completedSale.dteInfo.numeroControl}>
+                    <span className="text-emerald-700 font-semibold">Control: </span>
+                    {completedSale.dteInfo.numeroControl}
+                  </div>
+                )}
+                {completedSale.dteInfo.codigoGeneracion && (
+                  <div className="text-[10px] font-mono text-slate-500 truncate" title={completedSale.dteInfo.codigoGeneracion}>
+                    <span className="text-slate-400">UUID: </span>
+                    {completedSale.dteInfo.codigoGeneracion}
+                  </div>
+                )}
+
+                <div className="pt-2 flex gap-1.5">
+                  <a
+                    href={`/api/dte/${completedSale.dteInfo.codigoGeneracion}/pdf`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 py-1.5 px-2 text-center rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                  >
+                    <FileDown className="w-3.5 h-3.5" />
+                    <span>Descargar PDF</span>
+                  </a>
+                  {completedSale.dteInfo.mhDteUrl && (
+                    <a
+                      href={completedSale.dteInfo.mhDteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-1.5 px-2 text-center rounded-lg bg-white border border-emerald-300 hover:bg-emerald-100/50 text-emerald-800 font-bold text-[11px] inline-flex items-center justify-center gap-1 transition-all"
+                      title="Ver consulta pública en Ministerio de Hacienda"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Hacienda</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-2">
               <button
                 type="button"
@@ -3870,6 +3948,61 @@ export default function PosPage() {
                   <span className="font-mono text-indigo-600">${selectedSaleDetail.total.toFixed(2)}</span>
                 </div>
               </div>
+
+              {selectedSaleDetail.dteInfo && (
+                <div className="p-3 rounded-2xl bg-emerald-50/80 border border-emerald-200 text-xs space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-emerald-800 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      DTE Certificado por Factura Llama
+                    </span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-200/60 text-emerald-800">
+                      {selectedSaleDetail.dteInfo.simulated ? 'Test' : 'Hacienda OK'}
+                    </span>
+                  </div>
+                  {selectedSaleDetail.dteInfo.numeroControl && (
+                    <div className="text-[11px] font-mono text-emerald-900 truncate" title={selectedSaleDetail.dteInfo.numeroControl}>
+                      <span className="text-emerald-700 font-semibold">Control: </span>
+                      {selectedSaleDetail.dteInfo.numeroControl}
+                    </div>
+                  )}
+                  {selectedSaleDetail.dteInfo.selloRecepcion && (
+                    <div className="text-[10px] font-mono text-emerald-900 truncate" title={selectedSaleDetail.dteInfo.selloRecepcion}>
+                      <span className="text-emerald-700 font-semibold">Sello: </span>
+                      {selectedSaleDetail.dteInfo.selloRecepcion}
+                    </div>
+                  )}
+                  {selectedSaleDetail.dteInfo.codigoGeneracion && (
+                    <div className="text-[10px] font-mono text-slate-500 truncate" title={selectedSaleDetail.dteInfo.codigoGeneracion}>
+                      <span className="text-slate-400">UUID: </span>
+                      {selectedSaleDetail.dteInfo.codigoGeneracion}
+                    </div>
+                  )}
+                  <div className="pt-2 flex gap-1.5">
+                    <a
+                      href={`/api/dte/${selectedSaleDetail.dteInfo.codigoGeneracion}/pdf`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 py-1.5 px-2 text-center rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                    >
+                      <FileDown className="w-3.5 h-3.5" />
+                      <span>Descargar PDF</span>
+                    </a>
+                    {selectedSaleDetail.dteInfo.mhDteUrl && (
+                      <a
+                        href={selectedSaleDetail.dteInfo.mhDteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="py-1.5 px-2 text-center rounded-lg bg-white border border-emerald-300 hover:bg-emerald-100/50 text-emerald-800 font-bold text-[11px] inline-flex items-center justify-center gap-1 transition-all"
+                        title="Ver consulta pública en Ministerio de Hacienda"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Hacienda</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex gap-2">
