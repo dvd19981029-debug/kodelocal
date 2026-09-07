@@ -98,15 +98,7 @@ export default function EcommerceFooter() {
         {/* Separador y Copyright */}
         <div className="pt-6 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-400 text-[11px] font-semibold">
           <p>© 2026 Aromaniak SV. Todos los derechos reservados.</p>
-          <div className="flex items-center gap-4">
-            <Link href="/pos" className="hover:text-indigo-600 transition-colors">
-              Portal Empleados (POS)
-            </Link>
-            <span>•</span>
-            <Link href="/admin" className="hover:text-indigo-600 transition-colors">
-              Administración
-            </Link>
-          </div>
+          <p className="text-slate-400">San Salvador, El Salvador • Fragancias & Contratipos</p>
         </div>
 
       </div>

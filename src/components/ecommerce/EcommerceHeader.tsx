@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ShoppingBag, Sparkles, Phone, Store } from 'lucide-react';
+import { ShoppingBag, Sparkles, Phone } from 'lucide-react';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 
 export default function EcommerceHeader() {
@@ -93,15 +93,6 @@ export default function EcommerceHeader() {
               </span>
             )}
           </button>
-
-          {/* Enlace para empleados / POS */}
-          <Link
-            href="/pos"
-            className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-white/80 rounded-xl transition-all border border-transparent hover:border-white shadow-2xs"
-            title="Portal Empleados (POS & Bodega)"
-          >
-            <Store className="w-4 h-4" />
-          </Link>
         </div>
 
       </div>
