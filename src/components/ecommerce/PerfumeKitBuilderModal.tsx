@@ -329,7 +329,7 @@ export default function PerfumeKitBuilderModal({
               {selectedEssence && (
                 <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">🌸</span>
+                    <span className="text-lg">💧</span>
                     <div>
                       <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider block">Esencia elegida:</span>
                       <strong className="text-xs sm:text-sm font-black text-emerald-900">

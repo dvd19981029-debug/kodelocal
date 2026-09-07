@@ -114,14 +114,14 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
     },
   ];
 
-  // Auto-slide cada 5.5 segundos
+  // Auto-slide cada 5.5 segundos (se reinicia el temporizador ante cualquier cambio manual o automático)
   useEffect(() => {
     if (isPaused) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % slides.length);
     }, 5500);
     return () => clearInterval(interval);
-  }, [isPaused, slides.length]);
+  }, [currentIndex, isPaused, slides.length]);
 
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);

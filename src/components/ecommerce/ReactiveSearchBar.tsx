@@ -218,7 +218,7 @@ export default function ReactiveSearchBar({
                 : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
             }`}
           >
-            🌸 Esencias
+            💧 Esencias
           </button>
 
           {/* Opción: Hombres */}

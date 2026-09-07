@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Sparkles, MapPin } from 'lucide-react';
+import { Sparkles, MapPin, Wand2, Droplets } from 'lucide-react';
 
 interface TickerItem {
   id: string;
@@ -46,7 +46,7 @@ const TICKER_ITEMS: TickerItem[] = [
     id: 'esencias',
     content: (
       <div className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 shrink-0">
-        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+        <Droplets className="w-3.5 h-3.5 text-indigo-600" />
         <span>Esencias <strong className="text-indigo-700">100% Puras</strong> de Alta Concentración (Fijación 8-12 horas)</span>
       </div>
     ),
@@ -55,7 +55,7 @@ const TICKER_ITEMS: TickerItem[] = [
     id: 'arma-perfume',
     content: (
       <div className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 shrink-0">
-        <span className="text-sm">✨</span>
+        <Wand2 className="w-3.5 h-3.5 text-amber-500" />
         <span>Arma tu propio perfume con frasco de 100ml por solo <strong className="text-indigo-600 font-black">$15.00</strong></span>
       </div>
     ),
@@ -75,8 +75,8 @@ export default function PromoTickerBar() {
   return (
     <div className="w-full bg-gradient-to-r from-indigo-50/90 via-purple-50/90 to-pink-50/90 border-b border-white/80 shadow-2xs overflow-hidden relative py-1.5 select-none backdrop-blur-xs">
       
-      {/* Contenedor del Ticker Marquee Continuo con inicio pausado para lectura clara */}
-      <div className="flex items-center gap-8 whitespace-nowrap animate-marquee pl-4 sm:pl-8">
+      {/* Contenedor del Ticker: Inicia desde la derecha de la pantalla y se desplaza de continuo */}
+      <div className="flex items-center gap-8 whitespace-nowrap animate-marquee">
         {/* Set 1 */}
         {TICKER_ITEMS.map((item) => (
           <React.Fragment key={`first-${item.id}`}>
@@ -84,7 +84,7 @@ export default function PromoTickerBar() {
             <span className="text-indigo-300 font-bold">•</span>
           </React.Fragment>
         ))}
-        {/* Set 2 (duplicado completo idéntico para que el bucle -50% sea continuo y perfecto) */}
+        {/* Set 2 */}
         {TICKER_ITEMS.map((item) => (
           <React.Fragment key={`second-${item.id}`}>
             {item.content}
@@ -95,16 +95,17 @@ export default function PromoTickerBar() {
 
       <style jsx>{`
         @keyframes marquee {
-          0%, 8% {
-            transform: translateX(0%);
+          0% {
+            transform: translateX(100vw);
           }
           100% {
-            transform: translateX(-50%);
+            transform: translateX(-100%);
           }
         }
         .animate-marquee {
           display: inline-flex;
-          animation: marquee 34s linear infinite;
+          animation: marquee 28s linear infinite;
+          will-change: transform;
         }
         .animate-marquee:hover {
           animation-play-state: paused;
