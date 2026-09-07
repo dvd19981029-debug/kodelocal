@@ -1817,36 +1817,39 @@ export default function PosPage() {
           <div className="space-y-6 animate-in fade-in">
             
             {/* Encabezado y Selector de Subpestañas (Estilo Mecanic OS) */}
-            <div className="clay-card p-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white relative overflow-hidden shadow-xl">
+            <div
+              className="clay-card-dark p-5 text-white relative overflow-hidden shadow-xl"
+              style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)' }}
+            >
               <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 opacity-10 pointer-events-none">
-                <ReceiptText className="w-64 h-64" />
+                <ReceiptText className="w-64 h-64 text-indigo-200" />
               </div>
 
               <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-black uppercase tracking-wider backdrop-blur-sm">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-black uppercase tracking-wider backdrop-blur-sm">
                       🏛️ Módulo de Caja & DTE
                     </span>
-                    <span className="text-xs text-indigo-200">Facturación Electrónica El Salvador</span>
+                    <span className="text-xs text-indigo-200 font-medium">Facturación Electrónica El Salvador</span>
                   </div>
-                  <h2 className="text-xl md:text-2xl font-black">
+                  <h2 className="text-xl md:text-2xl font-black text-white tracking-tight">
                     Caja, Ventanilla & Facturación DTE
                   </h2>
-                  <p className="text-xs text-indigo-100/90 mt-1 max-w-xl">
+                  <p className="text-xs text-slate-300 mt-1 max-w-xl font-normal leading-relaxed">
                     Flujo centralizado: Cobra las órdenes preparadas por Bodega y emite los documentos electrónicos tributarios (Facturas y Créditos Fiscales).
                   </p>
                 </div>
 
                 {/* Switcher de Subpestañas */}
-                <div className="flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20">
+                <div className="flex bg-slate-800/90 backdrop-blur-md p-1.5 rounded-2xl border border-slate-700/80 shadow-inner">
                   <button
                     type="button"
                     onClick={() => setCajaSubTab('listas_facturar')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
                       cajaSubTab === 'listas_facturar'
-                        ? 'bg-emerald-500 text-white shadow-md'
-                        : 'text-slate-200 hover:text-white hover:bg-white/10'
+                        ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-950/50 ring-1 ring-emerald-300'
+                        : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
                     }`}
                   >
                     <CheckCheck className="w-4 h-4" />
@@ -1861,8 +1864,8 @@ export default function PosPage() {
                     onClick={() => setCajaSubTab('dtes_emitidos')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
                       cajaSubTab === 'dtes_emitidos'
-                        ? 'bg-indigo-600 text-white shadow-md'
-                        : 'text-slate-200 hover:text-white hover:bg-white/10'
+                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-950/50 ring-1 ring-indigo-300'
+                        : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
                     }`}
                   >
                     <FileCheck className="w-4 h-4" />
@@ -2488,7 +2491,10 @@ export default function PosPage() {
           <div className="space-y-6 animate-in fade-in">
             
             {/* KPI PRINCIPAL: TOTAL DE ONZAS VENDIDAS EN EL DÍA */}
-            <div className="clay-card p-6 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 text-white relative overflow-hidden shadow-xl">
+            <div
+              className="clay-card-dark p-6 text-white relative overflow-hidden shadow-xl"
+              style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #4338ca 50%, #6d28d9 100%)' }}
+            >
               <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 opacity-10 pointer-events-none">
                 <Droplets className="w-64 h-64" />
               </div>
@@ -2736,7 +2742,10 @@ export default function PosPage() {
           <div className="space-y-6 animate-in fade-in">
             
             {/* Cabecera & Métricas de Órdenes */}
-            <div className="clay-card p-5 bg-gradient-to-r from-amber-500 via-amber-600 to-indigo-700 text-white relative overflow-hidden shadow-xl">
+            <div
+              className="clay-card-dark p-5 text-white relative overflow-hidden shadow-xl"
+              style={{ background: 'linear-gradient(135deg, #d97706 0%, #b45309 50%, #4338ca 100%)' }}
+            >
               <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 opacity-10 pointer-events-none">
                 <Box className="w-64 h-64" />
               </div>
