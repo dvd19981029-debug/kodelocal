@@ -36,11 +36,13 @@ model Product {
   stock              Int             @default(50)
   minStock           Int             @default(10)
   imageUrl           String?
+  puesto             String?         // Ubicación física en estante de bodega (ej. A1, B3)
   isActive           Boolean         @default(true)
   isAvailableOnline  Boolean         @default(true)
   categoryId         String?
   category           Category?       @relation(fields: [categoryId], references: [id])
   saleItems          SaleItem[]
+  purchaseItems      PurchaseItem[]
   stockMovements     StockMovement[]
   ecommerceItems     EcommerceOrderItem[]
   reviews            ProductReview[]
@@ -61,8 +63,11 @@ model Customer {
   documentNum  String?
   nrc          String?
   businessName String?
+  tradeName    String?   // Nombre comercial
   activityCode String?
   activityDesc String?
+  taxCategory  String?   @default("OTRO") // OTRO, MEDIANO, GRANDE
+  preferredDoc String?   @default("TICKET") // 01, 03, TICKET
   email        String?   @unique
   phone        String?
   address      String?
@@ -71,6 +76,7 @@ model Customer {
   passwordHash String?
   googleId     String?
   avatarUrl    String?
+  notes        String?
   sales           Sale[]
   credits         CustomerCredit[]
   addresses       CustomerAddress[]
@@ -115,21 +121,29 @@ model Sale {
   paymentMethod PaymentMethod @default(CASH)
   paymentStatus SaleStatus    @default(COMPLETED)
   cashReceived  Decimal?      @db.Decimal(10, 2)
-  cashChange    Decimal?      @db.Decimal(10, 2)
-  notes         String?
-  cashierName   String?       @default("Caja 1")
-  customerId    String?
-  customer      Customer?     @relation(fields: [customerId], references: [id])
-  items         SaleItem[]
-  payments      SalePayment[]
-  shipments     Shipment[]
-  dteDocument   DteDocument?
-  shiftId       String?
-  shift         CashShift?    @relation(fields: [shiftId], references: [id])
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  cashChange      Decimal?      @db.Decimal(10, 2)
+  shippingCost    Decimal?      @db.Decimal(10, 2) @default(0.00)
+  sellerName      String?
+  cashierName     String?       @default("Caja 1")
+  tipoComprobante String?       @default("TICKET") // TICKET, 01 (Factura), 03 (CCF)
+  orderStatus     String?       @default("COMPLETED") // PREFACTURA, PENDING_PREPARATION, READY_AT_WINDOW, COMPLETED, CANCELLED
+  notes           String?
+  customerId      String?
+  customer        Customer?     @relation(fields: [customerId], references: [id])
+  items           SaleItem[]
+  payments        SalePayment[]
+  shipments       Shipment[]
+  ecommerceOrders EcommerceOrder[]
+  dteDocument     DteDocument?
+  shiftId         String?
+  shift           CashShift?    @relation(fields: [shiftId], references: [id])
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
+  @@index([saleNumber])
   @@index([createdAt])
+  @@index([customerId])
+  @@index([shiftId])
 }
 
 model SaleItem {
@@ -139,11 +153,16 @@ model SaleItem {
   productId   String
   product     Product  @relation(fields: [productId], references: [id])
   productName String
+  unit        String?  @default("Onza")
+  puesto      String?
   quantity    Int      @default(1)
   unitPrice   Decimal  @db.Decimal(10, 2)
   ivaRate     Decimal  @db.Decimal(4, 2) @default(0.13)
   total       Decimal  @db.Decimal(10, 2)
   createdAt   DateTime @default(now())
+
+  @@index([saleId])
+  @@index([productId])
 }
 
 model SalePayment {
@@ -212,11 +231,15 @@ model StockMovement {
   quantity      Int
   previousStock Int
   newStock      Int
+  costPrice     Decimal?     @db.Decimal(10, 2)
+  unitPrice     Decimal?     @db.Decimal(10, 2)
   reference     String?
   notes         String?
+  userName      String?
   createdAt     DateTime     @default(now())
 
   @@index([productId])
+  @@index([type])
   @@index([createdAt])
 }
 
@@ -311,6 +334,7 @@ model PurchaseItem {
   purchaseId  String
   purchase    Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
   productId   String?
+  product     Product? @relation(fields: [productId], references: [id])
   productName String
   productSku  String?
   unit        String   @default("Onza")
@@ -318,6 +342,9 @@ model PurchaseItem {
   costPrice   Decimal  @db.Decimal(10, 2)
   subtotal    Decimal  @db.Decimal(10, 2)
   createdAt   DateTime @default(now())
+
+  @@index([purchaseId])
+  @@index([productId])
 }
 
 model PurchasePayment {
@@ -409,11 +436,13 @@ model EcommerceOrder {
   items             EcommerceOrderItem[]
   shipments         Shipment[]
   saleId            String?
+  sale              Sale?                @relation(fields: [saleId], references: [id])
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
 
   @@index([orderNumber])
   @@index([customerId])
+  @@index([saleId])
   @@index([createdAt])
   @@index([orderStatus])
 }

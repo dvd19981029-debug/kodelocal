@@ -54,6 +54,7 @@ export async function GET(request: Request) {
       minStock: p.minStock,
       imageUrl: p.imageUrl || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80',
       isAvailableOnline: p.isAvailableOnline,
+      puesto: (p as any).puesto || '',
     }));
 
     const total = formatted.length;
@@ -89,7 +90,7 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
-    const { id, stock, isAvailableOnline, price } = body;
+    const { id, stock, isAvailableOnline, price, puesto } = body;
 
     if (!id) {
       return NextResponse.json({ success: false, error: 'Product ID required' }, { status: 400 });
@@ -101,6 +102,7 @@ export async function PATCH(request: Request) {
         ...(typeof stock === 'number' ? { stock } : {}),
         ...(typeof isAvailableOnline === 'boolean' ? { isAvailableOnline } : {}),
         ...(typeof price === 'number' ? { price } : {}),
+        ...(typeof puesto === 'string' ? { puesto } : {}),
       },
     });
 
