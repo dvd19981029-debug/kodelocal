@@ -1,28 +1,51 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { ShoppingBag, Sparkles, Phone, User, LogOut, ChevronDown } from 'lucide-react';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 
 export default function EcommerceHeader() {
+  const pathname = usePathname();
+  const isHomePage = pathname === '/';
+  const [hasScrolled, setHasScrolled] = useState(false);
   const { totalItems, setIsCartOpen } = useEcommerceCart();
   const { customer, isLoggedIn, openAuthModal, logout } = useCustomerAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
+  useEffect(() => {
+    if (!isHomePage) {
+      setHasScrolled(true);
+      return;
+    }
+    const handleScroll = () => {
+      setHasScrolled(window.scrollY > 120);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isHomePage]);
+
   return (
-    <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-[#f1f4f9]/85 border-b border-white/70 px-4 sm:px-8 py-3.5 transition-all">
+    <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-[#f1f4f9]/85 border-b border-white/70 px-4 sm:px-8 py-3 transition-all">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
         
-        {/* Logo oficial de Aromaniak */}
-        <Link href="/" className="flex items-center group transition-transform active:scale-95 py-0.5">
-          <img
-            src="/images/logo.png"
-            alt="Aromaniak"
-            className="h-8 sm:h-10 md:h-11 w-auto object-contain drop-shadow-xs"
-          />
-        </Link>
+        {/* Logo oficial de Aromaniak (en la página principal se oculta arriba para dar protagonismo al logo central) */}
+        <div className={`transition-all duration-300 flex items-center ${
+          isHomePage && !hasScrolled 
+            ? 'opacity-0 pointer-events-none -translate-x-2 w-0 overflow-hidden' 
+            : 'opacity-100 translate-x-0 w-auto'
+        }`}>
+          <Link href="/" className="flex items-center group transition-transform active:scale-95 py-0.5">
+            <img
+              src="/images/logo.png"
+              alt="Aromaniak"
+              className="h-8 sm:h-9 md:h-10 w-auto object-contain drop-shadow-xs"
+            />
+          </Link>
+        </div>
 
         {/* Enlaces de Navegación Rápida */}
         <nav className="hidden lg:flex items-center gap-1.5 p-1 rounded-2xl bg-white/60 shadow-[inset_2px_2px_5px_rgba(164,177,198,0.2),inset_-2px_-2px_5px_rgba(255,255,255,0.8)] border border-white/80">

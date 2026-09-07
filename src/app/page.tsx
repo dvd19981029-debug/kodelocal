@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
+import Link from 'next/link';
 import { 
   Search, 
   Sparkles, 
@@ -118,6 +119,20 @@ export default function EcommerceHomePage() {
   return (
     <div className="space-y-4 sm:space-y-6 pb-16">
       
+      {/* ================= LOGO OFICIAL CENTRADO Y PROTAGONISTA ================= */}
+      <div className="flex flex-col items-center justify-center pt-2 sm:pt-4 pb-2 text-center animate-in fade-in zoom-in-95 duration-300">
+        <Link href="/" className="inline-block transition-transform hover:scale-105 active:scale-95">
+          <img
+            src="/images/logo.png"
+            alt="Aromaniak"
+            className="h-16 sm:h-20 md:h-24 lg:h-28 w-auto object-contain drop-shadow-md"
+          />
+        </Link>
+        <p className="text-[10.5px] sm:text-xs font-black text-slate-500 tracking-widest uppercase mt-1">
+          Perfumería Fina • El Salvador
+        </p>
+      </div>
+
       {/* ================= BARRA DE BÚSQUEDA REACTIVA (ARRIBA DEL BANNER) ================= */}
       <section className="pt-0.5">
         <ReactiveSearchBar
