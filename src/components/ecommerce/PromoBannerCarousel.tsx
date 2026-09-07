@@ -40,7 +40,7 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
       title: 'Perfume Preparado',
       highlightText: 'por solo $15.00',
       highlightGradient: 'from-indigo-600 via-purple-600 to-pink-600',
-      subtitle: 'Tu contratipo favorito (33% concentración) + Frasco de vidrio con atomizador de lujo',
+      subtitle: 'Tu contratipo favorito con 100% esencia pura + Frasco de vidrio con atomizador de lujo',
       ctaText: 'Ver Fragancias',
       ctaAction: () => {
         if (onFilterCategory) onFilterCategory('Esencias para Perfume');
@@ -53,7 +53,7 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
     },
     {
       id: 'promo-esencias',
-      badge: 'Fijación 8 a 12 Horas',
+      badge: '100% Esencia Pura',
       badgeIcon: <Droplets className="w-3.5 h-3.5 text-indigo-600" />,
       badgeStyle: 'bg-indigo-50 text-indigo-800 border-indigo-200/80 shadow-2xs',
       title: 'Esencias Puras por Onza',
@@ -72,13 +72,13 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
     },
     {
       id: 'promo-envios',
-      badge: 'Envíos Nacionales',
+      badge: 'Envíos Nacionales C807',
       badgeIcon: <Truck className="w-3.5 h-3.5 text-emerald-600" />,
       badgeStyle: 'bg-emerald-50 text-emerald-800 border-emerald-200/80 shadow-2xs',
-      title: 'Pago Contra Entrega',
-      highlightText: 'en Todo El Salvador',
+      title: 'Envíos a Todo El Salvador',
+      highlightText: 'con C807 a tu Puerta',
       highlightGradient: 'from-emerald-600 to-teal-600',
-      subtitle: 'Pide con total tranquilidad y paga en efectivo al recibir en tu puerta en los 14 departamentos',
+      subtitle: 'Entregas a domicilio rápidas y seguras en los 14 departamentos del país',
       ctaText: 'Comprar Ahora',
       ctaAction: () => {
         if (onExploreCatalog) onExploreCatalog();
@@ -86,7 +86,7 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
       ctaBtnClass: 'clay-btn clay-btn-success',
       pastelBg: 'bg-gradient-to-r from-emerald-50/90 via-teal-50/50 to-slate-50/30',
       imageUrl: 'https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=900&q=85',
-      imageAlt: 'Envíos seguros a domicilio',
+      imageAlt: 'Envíos seguros con C807',
     },
     {
       id: 'promo-envases',

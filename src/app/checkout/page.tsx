@@ -48,7 +48,7 @@ export default function CheckoutPage() {
   }, [customer]);
 
   // Método de pago
-  const [metodoPago, setMetodoPago] = useState<'CASH' | 'TRANSFER' | 'BITCOIN'>('CASH');
+  const [metodoPago, setMetodoPago] = useState<'TRANSFER' | 'BITCOIN'>('TRANSFER');
 
   // Tipo de comprobante
   const [tipoComprobante, setTipoComprobante] = useState<'TICKET' | '01' | '03'>('01');
@@ -214,7 +214,7 @@ export default function CheckoutPage() {
       `\n\n*Subtotal:* $${completedOrder.subtotal.toFixed(2)}\n` +
       `*Envío:* $${completedOrder.shippingCost?.toFixed(2)}\n` +
       `*Total a Pagar:* $${completedOrder.total.toFixed(2)}\n` +
-      `*Método de Pago:* ${completedOrder.paymentMethod === 'CASH' ? 'Pago contra entrega (Efectivo)' : completedOrder.paymentMethod === 'TRANSFER' ? 'Transferencia Bancaria' : 'Bitcoin / Chivo'}\n\n` +
+      `*Método de Pago:* ${completedOrder.paymentMethod === 'TRANSFER' ? 'Transferencia Bancaria' : 'Bitcoin / Chivo'}\n\n` +
       `Quedo atento a la confirmación de la entrega. ¡Muchas gracias!`
     );
 
@@ -255,7 +255,7 @@ export default function CheckoutPage() {
             <div className="flex justify-between font-bold text-slate-700">
               <span>Forma de pago:</span>
               <span className="text-slate-900">
-                {completedOrder.paymentMethod === 'CASH' ? 'Efectivo al recibir' : completedOrder.paymentMethod === 'TRANSFER' ? 'Transferencia bancaria' : 'Chivo Wallet'}
+                {completedOrder.paymentMethod === 'TRANSFER' ? 'Transferencia bancaria' : 'Chivo Wallet / Bitcoin'}
               </span>
             </div>
             <div className="flex justify-between font-extrabold text-sm text-slate-900 pt-2 border-t border-slate-200/70">
@@ -507,30 +507,12 @@ export default function CheckoutPage() {
                 </h3>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-                <label className={`clay-card p-3 flex flex-col justify-between gap-2 cursor-pointer transition-all ${
-                  metodoPago === 'CASH' ? 'border-2 border-indigo-500 bg-indigo-50/50' : 'hover:bg-slate-50'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <span className="font-black text-slate-800">Contra Entrega</span>
-                    <input
-                      type="radio"
-                      name="metodoPago"
-                      checked={metodoPago === 'CASH'}
-                      onChange={() => setMetodoPago('CASH')}
-                      className="text-indigo-600"
-                    />
-                  </div>
-                  <p className="text-[10.5px] text-slate-500 font-medium">
-                    Paga en efectivo en mano al recibir tu paquete.
-                  </p>
-                </label>
-
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
                 <label className={`clay-card p-3 flex flex-col justify-between gap-2 cursor-pointer transition-all ${
                   metodoPago === 'TRANSFER' ? 'border-2 border-indigo-500 bg-indigo-50/50' : 'hover:bg-slate-50'
                 }`}>
                   <div className="flex items-center justify-between">
-                    <span className="font-black text-slate-800">Transferencia</span>
+                    <span className="font-black text-slate-800">Transferencia Bancaria</span>
                     <input
                       type="radio"
                       name="metodoPago"

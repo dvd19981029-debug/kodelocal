@@ -26,7 +26,7 @@ export default function EcommerceFooter() {
             </p>
             <div className="flex items-center gap-2 pt-1 text-slate-700 font-bold">
               <Sparkles className="w-4 h-4 text-amber-500" />
-              <span>Esencias Grado Premium 33%</span>
+              <span>Esencias 100% Puras de Alta Concentración</span>
             </div>
           </div>
 
@@ -38,11 +38,11 @@ export default function EcommerceFooter() {
             <ul className="space-y-2 text-slate-500 font-medium">
               <li className="flex items-center gap-2">
                 <Truck className="w-4 h-4 text-indigo-500 shrink-0" />
-                <span>San Salvador & La Libertad (24 horas)</span>
+                <span>Envíos a los 14 departamentos con C807</span>
               </li>
               <li className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-indigo-500 shrink-0" />
-                <span>Envíos a los 14 departamentos de El Salvador</span>
+                <span>San Salvador & La Libertad (24-48 horas)</span>
               </li>
               <li className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-indigo-500 shrink-0" />
@@ -59,11 +59,11 @@ export default function EcommerceFooter() {
             <ul className="space-y-2 text-slate-500 font-medium">
               <li className="flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Pago Contra Entrega (Efectivo)</span>
+                <span>Transferencia Bancaria Inmediata</span>
               </li>
               <li className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-blue-500 shrink-0" />
-                <span>Transferencia (Agrícola, BAC, Cuscatlán)</span>
+                <span>Banco Agrícola, BAC & Cuscatlán</span>
               </li>
               <li className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-purple-500 shrink-0" />

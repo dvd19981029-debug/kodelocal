@@ -158,15 +158,15 @@ export default function EcommerceHomePage() {
           <div className="grid grid-cols-3 gap-2 mt-2.5 sm:mt-3 text-center">
             <div className="clay-card flex items-center justify-center gap-1.5 py-2 px-2 text-[9px] sm:text-xs text-slate-700 font-bold border border-white/80">
               <Truck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-              <span className="truncate">Envíos Todo El Salvador</span>
+              <span className="truncate">Envíos C807 Todo el País</span>
             </div>
             <div className="clay-card flex items-center justify-center gap-1.5 py-2 px-2 text-[9px] sm:text-xs text-slate-700 font-bold border border-white/80">
               <Droplets className="w-3.5 h-3.5 text-pink-600 shrink-0" />
-              <span className="truncate">Concentración 33%</span>
+              <span className="truncate">100% Esencias Puras</span>
             </div>
             <div className="clay-card flex items-center justify-center gap-1.5 py-2 px-2 text-[9px] sm:text-xs text-slate-700 font-bold border border-white/80">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span className="truncate">Pago Contra Entrega</span>
+              <span className="truncate">Fijación 8 a 12 Horas</span>
             </div>
           </div>
         </section>
