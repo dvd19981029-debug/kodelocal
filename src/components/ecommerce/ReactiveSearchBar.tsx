@@ -35,52 +35,31 @@ export default function ReactiveSearchBar({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const lastScrollY = useRef(0);
-  const scrollDownAccumulator = useRef(0);
-  const scrollUpAccumulator = useRef(0);
-
-  // Detección reactiva de scroll con acumulación suave (evita parpadeos o animaciones bruscas)
+  // Detección reactiva de scroll: se oculta al bajar y reaparece DE INMEDIATO al subir
   useEffect(() => {
-    let ticking = false;
+    let lastY = window.scrollY;
 
     const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          // Si el input está enfocado para escribir, mantener expandido para no interrumpir
-          if (isInputFocused) {
-            ticking = false;
-            return;
-          }
+      // Si el input está enfocado para escribir, mantener expandido para no interrumpir
+      if (isInputFocused) return;
 
-          const currentScrollY = window.scrollY;
-          const diff = currentScrollY - lastScrollY.current;
+      const currentY = window.scrollY;
+      const diff = currentY - lastY;
 
-          // Cerca de la parte superior de la página, siempre completamente expandida
-          if (currentScrollY <= 70) {
-            setIsCollapsed(false);
-            scrollDownAccumulator.current = 0;
-            scrollUpAccumulator.current = 0;
-          } else if (diff > 0) {
-            // Desplazamiento hacia abajo: requiere scroll intencional y haber pasado la cabecera
-            scrollDownAccumulator.current += diff;
-            scrollUpAccumulator.current = 0;
-            if (currentScrollY > 100 && scrollDownAccumulator.current > 25) {
-              setIsCollapsed(true);
-            }
-          } else if (diff < 0) {
-            // Desplazamiento hacia arriba: requiere arrastre intencional para no abrirse por rebotes
-            scrollUpAccumulator.current += Math.abs(diff);
-            scrollDownAccumulator.current = 0;
-            if (scrollUpAccumulator.current > 50 || currentScrollY <= 90) {
-              setIsCollapsed(false);
-            }
-          }
-
-          lastScrollY.current = currentScrollY;
-          ticking = false;
-        });
-        ticking = true;
+      // 1. Cerca de la parte superior de la página, siempre completamente abierta
+      if (currentY <= 60) {
+        setIsCollapsed(false);
+      } 
+      // 2. Desplazamiento hacia abajo intencional y habiendo pasado la cabecera: colapsar a burbuja
+      else if (diff > 6 && currentY > 100) {
+        setIsCollapsed(true);
+      } 
+      // 3. Desplazamiento hacia arriba: reabrir DE INMEDIATO la barra al menor movimiento hacia arriba
+      else if (diff < -4) {
+        setIsCollapsed(false);
       }
+
+      lastY = Math.max(0, currentY);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
