@@ -222,6 +222,14 @@ export default function CheckoutPage() {
       <div className="max-w-2xl mx-auto py-8 sm:py-12 px-4">
         <div className="clay-card p-6 sm:p-10 text-center space-y-6 bg-white/90">
           
+          <div className="flex justify-center mb-1">
+            <img
+              src="/images/logo.png"
+              alt="Aromaniak"
+              className="h-9 w-auto object-contain drop-shadow-xs"
+            />
+          </div>
+
           <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
             <CheckCircle2 className="w-10 h-10" />
           </div>

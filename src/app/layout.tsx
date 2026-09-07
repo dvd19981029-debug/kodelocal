@@ -6,6 +6,10 @@ import NavigationWrapper from "@/components/NavigationWrapper";
 export const metadata: Metadata = {
   title: "Aromaniak SV - Perfumería Fina & Contratipos de Lujo",
   description: "Tienda online de fragancias y contratipos finos con fijación de 8 a 12 horas en El Salvador. Envíos a todo el país y pago contra entrega.",
+  icons: {
+    icon: "/images/logo.png",
+    apple: "/images/logo.png",
+  },
 };
 
 export default function RootLayout({

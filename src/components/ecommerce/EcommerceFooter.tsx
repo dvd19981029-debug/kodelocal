@@ -14,13 +14,12 @@ export default function EcommerceFooter() {
           
           {/* Col 1: Marca & Misión */}
           <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center text-white font-black text-base shadow-md">
-                A
-              </div>
-              <span className="font-black text-lg text-slate-900 tracking-tight">
-                Aromaniak SV
-              </span>
+            <div className="flex items-center">
+              <img
+                src="/images/logo.png"
+                alt="Aromaniak"
+                className="h-8 sm:h-9 w-auto object-contain drop-shadow-xs"
+              />
             </div>
             <p className="text-slate-500 leading-relaxed font-medium">
               Especialistas en contratipos de alta gama e inspiración olfativa con fijación prolongada. Más de 600 fragancias para damas, caballeros y unisex en El Salvador.

@@ -15,24 +15,13 @@ export default function EcommerceHeader() {
     <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-[#f1f4f9]/85 border-b border-white/70 px-4 sm:px-8 py-3.5 transition-all">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
         
-        {/* Logo de Aromaniak */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center text-white font-black text-xl shadow-[4px_6px_14px_rgba(99,102,241,0.35),inset_2px_2px_3px_rgba(255,255,255,0.6),inset_-2px_-2px_4px_rgba(0,0,0,0.2)] group-hover:scale-105 transition-transform">
-            A
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-black text-xl tracking-tight text-slate-900">
-                Aromaniak
-              </span>
-              <span className="clay-badge bg-pink-50 text-pink-700 text-[10px] px-2 py-0.5 border border-pink-100 font-extrabold tracking-tight">
-                SV
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 font-semibold tracking-wide">
-              Perfumería Fina • Contratipos de Lujo
-            </p>
-          </div>
+        {/* Logo oficial de Aromaniak */}
+        <Link href="/" className="flex items-center group transition-transform active:scale-95 py-0.5">
+          <img
+            src="/images/logo.png"
+            alt="Aromaniak"
+            className="h-8 sm:h-10 md:h-11 w-auto object-contain drop-shadow-xs"
+          />
         </Link>
 
         {/* Enlaces de Navegación Rápida */}

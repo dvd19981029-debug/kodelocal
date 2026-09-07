@@ -144,10 +144,12 @@ export default function CustomerAuthModal() {
 
         {/* Encabezado */}
         <div className="text-center space-y-2 mb-6">
-          <div className="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center text-white font-black text-2xl shadow-[4px_6px_14px_rgba(99,102,241,0.35)]">
-            A
-          </div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+          <img
+            src="/images/logo.png"
+            alt="Aromaniak"
+            className="h-9 sm:h-10 w-auto mx-auto object-contain drop-shadow-xs mb-2"
+          />
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
             {authModalTab === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
           </h2>
           <p className="text-xs text-slate-500 font-medium">
