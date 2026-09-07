@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   X, 
   Check, 
@@ -110,11 +110,42 @@ export default function PerfumeKitBuilderModal({
     setCurrentStep(1);
   };
 
+  // Bloquear el scroll de la página de fondo mientras el modal esté abierto
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    const originalPosition = document.body.style.position;
+    const originalTop = document.body.style.top;
+    const originalWidth = document.body.style.width;
+    const scrollY = window.scrollY;
+
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.position = originalPosition;
+      document.body.style.top = originalTop;
+      document.body.style.width = originalWidth;
+      window.scrollTo(0, scrollY);
+    };
+  }, [isOpen]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/70 backdrop-blur-xs overscroll-contain animate-in fade-in duration-200"
+      onTouchMove={(e) => {
+        if (e.target === e.currentTarget) {
+          e.preventDefault();
+        }
+      }}
+    >
       {/* Contenedor Modal estilo Claymorphic amplio y optimizado */}
       <div 
-        className="clay-card w-full max-w-4xl max-h-[94vh] bg-white rounded-2xl sm:rounded-3xl relative shadow-2xl flex flex-col border border-white/90 overflow-hidden"
+        className="clay-card w-full max-w-4xl max-h-[94vh] bg-white rounded-2xl sm:rounded-3xl relative shadow-2xl flex flex-col border border-white/90 overflow-hidden overscroll-contain"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ================= CABECERA DEL MODAL COMPACTA ================= */}
@@ -605,7 +636,7 @@ export default function PerfumeKitBuilderModal({
                     ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
                     : justAdded
                     ? 'bg-emerald-600 text-white'
-                    : 'clay-btn bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 !text-white active:scale-95 cursor-pointer shadow-[0_4px_16px_rgba(99,102,241,0.4)]'
+                    : 'clay-btn bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 !text-white active:scale-95 cursor-pointer shadow-[0_4px_18px_rgba(16,185,129,0.45)] hover:brightness-105'
                 }`}
               >
                 {justAdded ? (
