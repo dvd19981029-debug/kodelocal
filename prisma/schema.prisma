@@ -42,6 +42,7 @@ model Product {
   category           Category?       @relation(fields: [categoryId], references: [id])
   saleItems          SaleItem[]
   stockMovements     StockMovement[]
+  ecommerceItems     EcommerceOrderItem[]
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
 
@@ -69,9 +70,11 @@ model Customer {
   passwordHash String?
   googleId     String?
   avatarUrl    String?
-  sales        Sale[]
-  credits      CustomerCredit[]
-  createdAt    DateTime  @default(now())
+  sales           Sale[]
+  credits         CustomerCredit[]
+  addresses       CustomerAddress[]
+  ecommerceOrders EcommerceOrder[]
+  createdAt       DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
   @@index([documentNum])
@@ -349,4 +352,81 @@ model CreditPayment {
   receiptNumber String?
   notes         String?
   createdAt     DateTime       @default(now())
+}
+
+model CustomerAddress {
+  id            String    @id @default(cuid())
+  customerId    String
+  customer      Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  title         String    @default("Principal")
+  recipientName String
+  phone         String
+  department    String
+  municipality  String
+  address       String
+  reference     String?
+  isDefault     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([customerId])
+}
+
+enum EcommerceOrderStatus {
+  NUEVO
+  CONFIRMADO
+  EN_PREPARACION
+  EN_RUTA
+  ENTREGADO
+  CANCELADO
+}
+
+model EcommerceOrder {
+  id                String               @id @default(cuid())
+  orderNumber       String               @unique
+  customerId        String?
+  customer          Customer?            @relation(fields: [customerId], references: [id])
+  customerName      String
+  customerEmail     String?
+  customerPhone     String
+  department        String
+  municipality      String
+  shippingAddress   String
+  deliveryReference String?
+  subtotal          Decimal              @db.Decimal(10, 2)
+  shippingCost      Decimal              @db.Decimal(10, 2) @default(3.50)
+  total             Decimal              @db.Decimal(10, 2)
+  paymentMethod     PaymentMethod        @default(CASH)
+  paymentStatus     SaleStatus           @default(PENDING)
+  orderStatus       EcommerceOrderStatus @default(NUEVO)
+  trackingNumber    String?
+  courierName       String?
+  whatsappNotified  Boolean              @default(false)
+  notes             String?
+  items             EcommerceOrderItem[]
+  saleId            String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  @@index([orderNumber])
+  @@index([customerId])
+  @@index([createdAt])
+  @@index([orderStatus])
+}
+
+model EcommerceOrderItem {
+  id           String         @id @default(cuid())
+  orderId      String
+  order        EcommerceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product        @relation(fields: [productId], references: [id])
+  productName  String
+  presentation String         @default("50ml")
+  unitPrice    Decimal        @db.Decimal(10, 2)
+  quantity     Int            @default(1)
+  total        Decimal        @db.Decimal(10, 2)
+  createdAt    DateTime       @default(now())
+
+  @@index([orderId])
+  @@index([productId])
 }

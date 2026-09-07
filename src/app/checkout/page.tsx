@@ -153,6 +153,40 @@ export default function CheckoutPage() {
         }
       } catch (e) {}
 
+      // Guardar pedido permanentemente en Supabase
+      try {
+        await fetch('/api/ecommerce/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderNumber,
+            customerId: customer?.id || null,
+            customerName: nombre,
+            customerEmail: email || null,
+            customerPhone: telefono,
+            department: departamento,
+            municipality: municipio,
+            shippingAddress: direccion,
+            deliveryReference: referencia,
+            subtotal,
+            shippingCost,
+            total: totalConEnvio,
+            paymentMethod: metodoPago,
+            items: cart.map(it => ({
+              productId: it.product.id,
+              productName: it.product.name,
+              presentation: it.presentationName,
+              unitPrice: it.unitPrice,
+              quantity: it.quantity,
+              total: it.totalPrice,
+            })),
+            notes: `Doc: ${tipoComprobante} - Ref: ${referencia || 'N/A'}`
+          })
+        });
+      } catch (err) {
+        console.error('Error guardando pedido en Supabase:', err);
+      }
+
       // Limpiar carrito del cliente
       clearCart();
       setCompletedOrder(newOrder);
