@@ -180,7 +180,11 @@ export default function CheckoutPage() {
               quantity: it.quantity,
               total: it.totalPrice,
             })),
-            notes: `Doc: ${tipoComprobante} - Ref: ${referencia || 'N/A'}`
+            notes: `Doc: ${tipoComprobante} - Ref: ${referencia || 'N/A'}`,
+            numDoc: numDoc || null,
+            nrc: nrc || null,
+            giro: giro || null,
+            tipoComprobante: tipoComprobante || '01',
           })
         });
       } catch (err) {

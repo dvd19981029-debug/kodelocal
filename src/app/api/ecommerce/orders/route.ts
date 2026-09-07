@@ -117,12 +117,66 @@ export async function POST(request: Request) {
       paymentMethod,
       items,
       notes,
+      numDoc,
+      nrc,
+      giro,
+      tipoComprobante,
     } = body;
+
+    let resolvedCustomerId = customerId;
+    if (!resolvedCustomerId && (customerEmail || customerPhone || customerName)) {
+      try {
+        const normalizedEmail = customerEmail?.trim()?.toLowerCase();
+        let cust = await prisma.customer.findFirst({
+          where: {
+            OR: [
+              ...(normalizedEmail ? [{ email: normalizedEmail }] : []),
+              ...(customerPhone ? [{ phone: customerPhone.trim() }] : []),
+            ],
+          },
+        });
+
+        if (cust) {
+          cust = await prisma.customer.update({
+            where: { id: cust.id },
+            data: {
+              ...(numDoc ? { documentNum: numDoc } : {}),
+              ...(nrc ? { nrc } : {}),
+              ...(giro ? { activityDesc: giro } : {}),
+              ...(tipoComprobante ? { preferredDoc: tipoComprobante } : {}),
+              ...(shippingAddress && !cust.address ? { address: shippingAddress } : {}),
+              ...(department && !cust.department ? { department } : {}),
+              ...(municipality && !cust.municipality ? { municipality } : {}),
+            },
+          });
+          resolvedCustomerId = cust.id;
+        } else {
+          cust = await prisma.customer.create({
+            data: {
+              name: customerName || 'Cliente Online',
+              email: normalizedEmail || null,
+              phone: customerPhone?.trim() || null,
+              documentType: tipoComprobante === '03' ? 'NIT' : 'DUI',
+              documentNum: numDoc?.trim() || '00000000-0',
+              nrc: nrc?.trim() || null,
+              activityDesc: giro?.trim() || null,
+              preferredDoc: tipoComprobante || '01',
+              department: department || 'San Salvador',
+              municipality: municipality || 'San Salvador',
+              address: shippingAddress || null,
+            },
+          });
+          resolvedCustomerId = cust.id;
+        }
+      } catch (custErr) {
+        console.error('Error asociando cliente a la orden:', custErr);
+      }
+    }
 
     const newOrder = await prisma.ecommerceOrder.create({
       data: {
         orderNumber: orderNumber || `WEB-${Math.floor(1000 + Math.random() * 9000)}`,
-        customerId: customerId || null,
+        customerId: resolvedCustomerId || null,
         customerName: customerName || 'Cliente Online',
         customerEmail: customerEmail || null,
         customerPhone: customerPhone || '',

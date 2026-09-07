@@ -215,6 +215,17 @@ export default function PosPage() {
   }, []);
 
   useEffect(() => {
+    // Sincronizar clientes centralizados desde Supabase
+    fetch('/api/customers')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.customers) && data.customers.length > 0) {
+          setCustomers(data.customers);
+          saveStoredCustomers(data.customers);
+        }
+      })
+      .catch(err => console.error('Error sincronizando clientes con Supabase:', err));
+
     fetch('/api/products')
       .then(res => res.json())
       .then(data => {
@@ -246,11 +257,15 @@ export default function PosPage() {
               ? 'READY_AT_WINDOW'
               : 'COMPLETED',
             vendedor: 'Tienda Online (aromaniaksv.com)',
+            tipoComprobante: o.customer?.preferredDoc || (o.customer?.nrc ? '03' : '01'),
             cliente: {
               nombre: o.customerName,
               telefono: o.customerPhone,
-              correo: o.customerEmail || undefined,
+              correo: o.customerEmail || o.customer?.email || undefined,
               direccion: `${o.shippingAddress}, ${o.municipality}, ${o.department}`,
+              numDocumento: o.customer?.documentNum || undefined,
+              nrc: o.customer?.nrc || undefined,
+              actividadEconomica: o.customer?.activityDesc || undefined,
             },
             items: o.items.map((it: any) => ({
               productId: it.productId,
@@ -559,54 +574,63 @@ export default function PosPage() {
       return;
     }
 
+    const customerPayload = {
+      tipoPersona: custTipoPersona,
+      name: custName.trim(),
+      nombreComercial: custNombreComercial.trim() || undefined,
+      tipoDocumento: custTipoDocumento,
+      numDocumento: custNumDocumento.trim() || '00000000-0',
+      nrc: custNrc.trim() || undefined,
+      actividadEconomica: custGiro.trim() || undefined,
+      categoriaContribuyente: custCategoria,
+      documentoPreferido: custDocumentoPreferido,
+      email: custEmail.trim(),
+      phone: custPhone.trim(),
+      departamento: custDepartamento,
+      municipio: custMunicipio.trim() || undefined,
+      direccion: custDireccion.trim() || undefined,
+      notas: custNotas.trim() || undefined,
+    };
+
+    // Guardar en Supabase PostgreSQL
+    fetch('/api/customers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: editingCustomerId || undefined,
+        ...customerPayload,
+      }),
+    }).catch(err => console.error('Error guardando cliente en Supabase:', err));
+
     if (editingCustomerId) {
-      setCustomers(prev => prev.map(c => {
-        if (c.id === editingCustomerId) {
-          return {
-            ...c,
-            tipoPersona: custTipoPersona,
-            name: custName.trim(),
-            nombreComercial: custNombreComercial.trim() || undefined,
-            tipoDocumento: custTipoDocumento,
-            numDocumento: custNumDocumento.trim(),
-            nrc: custNrc.trim() || undefined,
-            actividadEconomica: custGiro.trim() || undefined,
-            categoriaContribuyente: custCategoria,
-            documentoPreferido: custDocumentoPreferido,
-            email: custEmail.trim(),
-            phone: custPhone.trim(),
-            departamento: custDepartamento,
-            municipio: custMunicipio.trim() || undefined,
-            direccion: custDireccion.trim() || undefined,
-            notas: custNotas.trim() || undefined
-          };
-        }
-        return c;
-      }));
+      setCustomers(prev => {
+        const updated = prev.map(c => {
+          if (c.id === editingCustomerId) {
+            return {
+              ...c,
+              ...customerPayload,
+              id: c.id,
+            };
+          }
+          return c;
+        });
+        saveStoredCustomers(updated);
+        return updated;
+      });
       if (selectedCustomerId === editingCustomerId) {
         handleSelectCustomer(editingCustomerId);
       }
     } else {
       const newCust: CustomerRecord = {
         id: `cli-${Date.now()}`,
-        tipoPersona: custTipoPersona,
-        name: custName.trim(),
-        nombreComercial: custNombreComercial.trim() || undefined,
-        tipoDocumento: custTipoDocumento,
-        numDocumento: custNumDocumento.trim(),
-        nrc: custNrc.trim() || undefined,
-        actividadEconomica: custGiro.trim() || undefined,
-        categoriaContribuyente: custCategoria,
-        documentoPreferido: custDocumentoPreferido,
-        email: custEmail.trim(),
-        phone: custPhone.trim(),
-        departamento: custDepartamento,
-        municipio: custMunicipio.trim() || undefined,
-        direccion: custDireccion.trim() || undefined,
-        notas: custNotas.trim() || undefined,
+        ...customerPayload,
         createdAt: new Date().toISOString()
       };
-      setCustomers(prev => [newCust, ...prev]);
+      setCustomers(prev => {
+        const updated = [newCust, ...prev];
+        saveStoredCustomers(updated);
+        return updated;
+      });
       handleSelectCustomer(newCust.id);
     }
 
@@ -718,12 +742,35 @@ export default function PosPage() {
   // Iniciar cobro de orden lista en ventanilla (desde Caja)
   const handleStartInvoiceOrder = (order: SaleRecord) => {
     setOrderToInvoice(order);
-    setClienteNombre(order.cliente.nombre);
-    setClienteDoc(order.cliente.numDocumento || '');
-    setClienteNrc(order.cliente.nrc || '');
-    setClienteEmail(order.cliente.correo || '');
-    setClienteGiro(order.cliente.actividadEconomica || '');
-    setTipoComprobante(order.tipoComprobante || (order.cliente.nrc ? '03' : '01'));
+
+    // Buscar si el cliente ya está registrado en la base de datos de clientes
+    const normName = order.cliente?.nombre?.toLowerCase().trim();
+    const normEmail = order.cliente?.correo?.toLowerCase().trim();
+    const cleanPhone = order.cliente?.telefono?.replace(/\D/g, '');
+
+    const matchedCust = customers.find(c => {
+      if (normEmail && c.email && c.email.toLowerCase().trim() === normEmail) return true;
+      if (cleanPhone && c.phone && c.phone.replace(/\D/g, '') === cleanPhone) return true;
+      if (normName && c.name && c.name.toLowerCase().trim() === normName) return true;
+      return false;
+    });
+
+    const nombre = order.cliente?.nombre || matchedCust?.name || 'Consumidor Final';
+    const doc = order.cliente?.numDocumento || matchedCust?.numDocumento || '';
+    const nrc = order.cliente?.nrc || matchedCust?.nrc || '';
+    const email = order.cliente?.correo || matchedCust?.email || '';
+    const giro = order.cliente?.actividadEconomica || matchedCust?.actividadEconomica || '';
+    const tipo = order.tipoComprobante || matchedCust?.documentoPreferido || (nrc ? '03' : '01');
+
+    setClienteNombre(nombre);
+    setClienteDoc(doc);
+    setClienteNrc(nrc);
+    setClienteEmail(email);
+    setClienteGiro(giro);
+    setTipoComprobante(tipo);
+    if (matchedCust) {
+      setSelectedCustomerId(matchedCust.id);
+    }
     setPaymentMethod('CASH');
     setCashAmount('');
     setIsCheckoutOpen(true);
@@ -3503,9 +3550,30 @@ export default function PosPage() {
                 </div>
                 
                 <div>
-                  <label className="text-[10.5px] font-semibold text-slate-600 block mb-0.5">
-                    {tipoComprobante === '03' ? 'Razón Social *' : 'Nombre del Cliente'}
-                  </label>
+                  <div className="flex justify-between items-center mb-0.5">
+                    <label className="text-[10.5px] font-semibold text-slate-600 block">
+                      {tipoComprobante === '03' ? 'Razón Social *' : 'Nombre del Cliente'}
+                    </label>
+                    {customers.length > 0 && (
+                      <select
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            handleSelectCustomer(e.target.value);
+                          }
+                        }}
+                        defaultValue=""
+                        className="text-[10.5px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg px-2 py-0.5 outline-none cursor-pointer hover:bg-indigo-100"
+                        title="Autocompletar con cliente registrado"
+                      >
+                        <option value="" disabled>🔍 Cargar cliente registrado...</option>
+                        {customers.map(c => (
+                          <option key={c.id} value={c.id}>
+                            {c.name} {c.numDocumento && c.numDocumento !== '00000000-0' ? `(${c.numDocumento})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
                   <input
                     type="text"
                     value={clienteNombre}
@@ -3605,26 +3673,29 @@ export default function PosPage() {
 
             {/* Efectivo recibido */}
             {paymentMethod === 'CASH' && (
-              <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200 mb-4 space-y-1.5">
-                <label className="text-xs font-bold text-amber-900 block">
-                  Efectivo Recibido ($)
+              <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200 mb-4 space-y-2 shadow-sm">
+                <label className="text-xs font-bold text-amber-950 block">
+                  Efectivo Recibido
                 </label>
                 <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                  <div className="flex-1 flex items-center rounded-xl bg-white border border-amber-300 shadow-inner overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition-all">
+                    <span className="px-3.5 py-2.5 bg-amber-100/90 border-r border-amber-200 text-amber-950 font-black text-sm select-none">
+                      $
+                    </span>
                     <input
                       type="number"
-                      step="any"
+                      step="0.01"
+                      min="0"
                       placeholder="0.00"
                       value={cashAmount}
                       onChange={(e) => setCashAmount(e.target.value)}
-                      className="clay-input w-full pl-7 pr-3 py-2 text-sm font-mono font-bold bg-white"
+                      className="w-full px-3 py-2 text-base font-mono font-bold text-slate-900 bg-transparent outline-none placeholder:text-slate-400"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={() => setCashAmount(currentBillingTotal.toFixed(2))}
-                    className="clay-btn clay-btn-light px-3 text-xs font-bold whitespace-nowrap"
+                    className="clay-btn clay-btn-light px-3.5 text-xs font-bold whitespace-nowrap text-amber-950 bg-amber-100/70 border border-amber-200 hover:bg-amber-100"
                   >
                     Exacto (${currentBillingTotal.toFixed(2)})
                   </button>
