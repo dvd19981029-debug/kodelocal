@@ -220,15 +220,38 @@ enum ShiftStatus {
 }
 
 model CashShift {
-  id            String      @id @default(cuid())
-  cashierName   String
-  openedAt      DateTime    @default(now())
-  closedAt      DateTime?
-  initialAmount Decimal     @db.Decimal(10, 2)
-  finalAmount   Decimal?    @db.Decimal(10, 2)
-  totalSales    Decimal?    @db.Decimal(10, 2) @default(0.00)
-  status        ShiftStatus @default(OPEN)
-  sales         Sale[]
+  id             String         @id @default(cuid())
+  cashierName    String
+  openedAt       DateTime       @default(now())
+  closedAt       DateTime?
+  initialAmount  Decimal        @db.Decimal(10, 2) // Fondo inicial de caja
+  finalAmount    Decimal?       @db.Decimal(10, 2) // Monto físico contado al cerrar
+  expectedAmount Decimal?       @db.Decimal(10, 2) // Monto esperado según sistema
+  difference     Decimal?       @db.Decimal(10, 2) // Faltante (-) o Sobrante (+)
+  totalSales     Decimal?       @db.Decimal(10, 2) @default(0.00)
+  totalCash      Decimal?       @db.Decimal(10, 2) @default(0.00) // Ventas en efectivo
+  totalCard      Decimal?       @db.Decimal(10, 2) @default(0.00) // Ventas con tarjeta
+  totalTransfer  Decimal?       @db.Decimal(10, 2) @default(0.00) // Ventas con transferencia
+  totalBitcoin   Decimal?       @db.Decimal(10, 2) @default(0.00) // Ventas con Bitcoin
+  status         ShiftStatus    @default(OPEN)
+  notes          String?
+  sales          Sale[]
+  movements      CashMovement[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model CashMovement {
+  id          String    @id @default(cuid())
+  shiftId     String
+  shift       CashShift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  type        String    @default("EGRESO") // INGRESO, EGRESO
+  amount      Decimal   @db.Decimal(10, 2)
+  reason      String
+  performedBy String?
+  createdAt   DateTime  @default(now())
+
+  @@index([shiftId])
 }
 
 model Supplier {
