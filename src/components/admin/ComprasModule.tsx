@@ -149,17 +149,17 @@ export default function ComprasModule({
   const totalComprado = useMemo(() => {
     return purchases
       .filter(p => p.paymentStatus !== 'ANULADO')
-      .reduce((sum, p) => sum + (p.tipoDte === 'NC' ? -p.total : p.total), 0);
+      .reduce((sum, p) => sum + (p.tipoDte === 'NC' ? -Number(p.total || 0) : Number(p.total || 0)), 0);
   }, [purchases]);
 
   const totalDeudaCxP = useMemo(() => {
     return purchases
       .filter(p => p.paymentStatus === 'PENDIENTE')
-      .reduce((sum, p) => sum + p.saldoPendiente, 0);
+      .reduce((sum, p) => sum + Number(p.saldoPendiente || 0), 0);
   }, [purchases]);
 
   const totalPagadoReal = useMemo(() => {
-    return totalComprado - totalDeudaCxP;
+    return Number(totalComprado || 0) - Number(totalDeudaCxP || 0);
   }, [totalComprado, totalDeudaCxP]);
 
   // Filtrado de compras
@@ -432,7 +432,7 @@ export default function ComprasModule({
   // Abrir modal de abono
   const handleOpenAbono = (purchase: PurchaseRecord) => {
     setActiveAbonoPurchase(purchase);
-    setAbonoAmount(purchase.saldoPendiente.toFixed(2));
+    setAbonoAmount(Number(purchase.saldoPendiente || 0).toFixed(2));
     setAbonoDate(new Date().toISOString().split('T')[0]);
     setAbonoRef('');
     setAbonoNotes('');
@@ -824,12 +824,12 @@ export default function ComprasModule({
                             )}
                           </td>
                           <td className="py-3.5 px-4 text-right font-mono font-black text-slate-800">
-                            {isNC ? '-' : ''}${Math.abs(pur.total).toFixed(2)}
+                            {isNC ? '-' : ''}${Math.abs(Number(pur.total || 0)).toFixed(2)}
                           </td>
                           <td className="py-3.5 px-4 text-right font-mono font-bold">
-                            {pur.saldoPendiente > 0 ? (
+                            {Number(pur.saldoPendiente || 0) > 0 ? (
                               <span className="text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 font-black">
-                                ${pur.saldoPendiente.toFixed(2)}
+                                ${Number(pur.saldoPendiente || 0).toFixed(2)}
                               </span>
                             ) : (
                               <span className="text-emerald-600 font-medium">$0.00</span>
@@ -1485,10 +1485,10 @@ export default function ComprasModule({
                         {it.quantity} {it.unit === 'Onza' ? 'Oz' : 'Un.'}
                       </td>
                       <td className="p-2.5 text-right font-mono text-slate-700">
-                        ${it.costPrice.toFixed(2)}
+                        ${Number(it.costPrice || 0).toFixed(2)}
                       </td>
                       <td className="p-2.5 text-right font-mono font-black text-slate-800">
-                        ${it.subtotal.toFixed(2)}
+                        ${Number(it.subtotal || 0).toFixed(2)}
                       </td>
                     </tr>
                   ))}
@@ -1501,20 +1501,20 @@ export default function ComprasModule({
               <div className="w-64 p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1 text-xs">
                 <div className="flex justify-between text-slate-600">
                   <span>Subtotal Neto:</span>
-                  <strong className="font-mono text-slate-800">${selectedPurchaseDetail.subtotalNeto.toFixed(2)}</strong>
+                  <strong className="font-mono text-slate-800">${Number(selectedPurchaseDetail.subtotalNeto || 0).toFixed(2)}</strong>
                 </div>
                 <div className="flex justify-between text-slate-600">
                   <span>IVA Crédito Fiscal (13%):</span>
-                  <strong className="font-mono text-slate-800">${selectedPurchaseDetail.iva.toFixed(2)}</strong>
+                  <strong className="font-mono text-slate-800">${Number(selectedPurchaseDetail.iva || 0).toFixed(2)}</strong>
                 </div>
                 <div className="flex justify-between pt-1 border-t border-slate-200 font-black text-slate-800 text-sm">
                   <span>Total Factura:</span>
-                  <strong className="font-mono text-indigo-600">${selectedPurchaseDetail.total.toFixed(2)}</strong>
+                  <strong className="font-mono text-indigo-600">${Number(selectedPurchaseDetail.total || 0).toFixed(2)}</strong>
                 </div>
                 <div className="flex justify-between text-xs pt-1 border-t border-slate-100">
                   <span>Saldo Pendiente:</span>
-                  <strong className={`font-mono ${selectedPurchaseDetail.saldoPendiente > 0 ? 'text-rose-600 font-black' : 'text-emerald-600'}`}>
-                    ${selectedPurchaseDetail.saldoPendiente.toFixed(2)}
+                  <strong className={`font-mono ${Number(selectedPurchaseDetail.saldoPendiente || 0) > 0 ? 'text-rose-600 font-black' : 'text-emerald-600'}`}>
+                    ${Number(selectedPurchaseDetail.saldoPendiente || 0).toFixed(2)}
                   </strong>
                 </div>
               </div>
@@ -1537,7 +1537,7 @@ export default function ComprasModule({
                         <span className="text-slate-600">{p.paymentMethod}</span>
                         {p.reference && <span className="text-[10px] text-slate-400 ml-1.5 font-mono">Ref: {p.reference}</span>}
                       </div>
-                      <strong className="font-mono font-black text-emerald-600">+${p.amount.toFixed(2)}</strong>
+                      <strong className="font-mono font-black text-emerald-600">+${Number(p.amount || 0).toFixed(2)}</strong>
                     </div>
                   ))}
                 </div>
@@ -1577,7 +1577,7 @@ export default function ComprasModule({
             <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 mb-4 flex justify-between items-center">
               <span>Saldo Pendiente Actual:</span>
               <strong className="font-mono text-base text-rose-600 font-black">
-                ${activeAbonoPurchase.saldoPendiente.toFixed(2)}
+                ${Number(activeAbonoPurchase.saldoPendiente || 0).toFixed(2)}
               </strong>
             </div>
 
@@ -1587,7 +1587,7 @@ export default function ComprasModule({
                   <label className="text-xs font-bold text-slate-700">Monto a Abonar ($) *</label>
                   <button
                     type="button"
-                    onClick={() => setAbonoAmount(activeAbonoPurchase.saldoPendiente.toFixed(2))}
+                    onClick={() => setAbonoAmount(Number(activeAbonoPurchase.saldoPendiente || 0).toFixed(2))}
                     className="text-[10px] font-bold text-indigo-600 hover:underline"
                   >
                     Pagar Deuda Total

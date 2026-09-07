@@ -181,15 +181,15 @@ export default function AdminPage() {
 
   // Cálculos Financieros
   const totalEsencias = useMemo(() => products.filter(p => p.category === 'Esencias para Perfume').length, [products]);
-  const totalStockOnzas = useMemo(() => products.filter(p => p.category === 'Esencias para Perfume').reduce((a, b) => a + b.stock, 0), [products]);
-  const valorVentaTotal = useMemo(() => products.reduce((acc, p) => acc + (p.price * p.stock), 0), [products]);
-  const valorCostoTotal = useMemo(() => products.reduce((acc, p) => acc + (p.cost * p.stock), 0), [products]);
+  const totalStockOnzas = useMemo(() => products.filter(p => p.category === 'Esencias para Perfume').reduce((a, b) => a + Number(b.stock || 0), 0), [products]);
+  const valorVentaTotal = useMemo(() => products.reduce((acc, p) => acc + (Number(p.price || 0) * Number(p.stock || 0)), 0), [products]);
+  const valorCostoTotal = useMemo(() => products.reduce((acc, p) => acc + (Number(p.cost || 0) * Number(p.stock || 0)), 0), [products]);
   const gananciaPotencial = valorVentaTotal - valorCostoTotal;
   const margenPorcentual = valorVentaTotal > 0 ? ((gananciaPotencial / valorVentaTotal) * 100) : 0;
 
   // Cálculos de Ventas
-  const totalVentasMonto = useMemo(() => sales.reduce((acc, s) => acc + s.total, 0), [sales]);
-  const totalIvaFiscal = useMemo(() => sales.reduce((acc, s) => acc + s.ivaTotal, 0), [sales]);
+  const totalVentasMonto = useMemo(() => sales.reduce((acc, s) => acc + Number(s.total || 0), 0), [sales]);
+  const totalIvaFiscal = useMemo(() => sales.reduce((acc, s) => acc + Number(s.ivaTotal || 0), 0), [sales]);
   const totalDteCount = useMemo(() => sales.filter(s => s.tipoComprobante === '01' || s.tipoComprobante === '03').length, [sales]);
 
   // Filtrado de Productos para la tabla

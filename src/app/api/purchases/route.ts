@@ -14,7 +14,51 @@ export async function GET() {
       orderBy: { purchaseDate: 'desc' },
     });
 
-    return NextResponse.json({ success: true, purchases });
+    const formatted = purchases.map((p) => ({
+      id: p.id,
+      purchaseNumber: p.purchaseNumber,
+      tipoDte: p.tipoDte,
+      supplierId: p.supplierId,
+      supplierName: p.supplierName,
+      purchaseDate: p.purchaseDate ? p.purchaseDate.toISOString().split('T')[0] : '',
+      dueDate: p.dueDate ? p.dueDate.toISOString().split('T')[0] : undefined,
+      creditDays: Number(p.creditDays || 0),
+      docNumber: p.docNumber,
+      controlNumber: p.controlNumber || undefined,
+      condicion: p.condicion,
+      paymentMethod: p.paymentMethod || undefined,
+      paymentStatus: p.paymentStatus,
+      subtotalNeto: Number(p.subtotalNeto || 0),
+      iva: Number(p.iva || 0),
+      total: Number(p.total || 0),
+      saldoPendiente: Number(p.saldoPendiente || 0),
+      notes: p.notes || undefined,
+      receptionStatus: p.receptionStatus || 'RECIBIDO',
+      receivedAt: p.receivedAt ? p.receivedAt.toISOString() : undefined,
+      receivedBy: p.receivedBy || undefined,
+      items: (p.items || []).map((it) => ({
+        id: it.id,
+        purchaseId: it.purchaseId,
+        productId: it.productId || '',
+        productName: it.productName,
+        productSku: it.productSku || '',
+        unit: it.unit || 'Onza',
+        quantity: Number(it.quantity || 0),
+        costPrice: Number(it.costPrice || 0),
+        subtotal: Number(it.subtotal || 0),
+      })),
+      payments: (p.payments || []).map((pay) => ({
+        id: pay.id,
+        purchaseId: pay.purchaseId,
+        date: pay.date ? pay.date.toISOString().split('T')[0] : '',
+        amount: Number(pay.amount || 0),
+        paymentMethod: pay.paymentMethod,
+        reference: pay.reference || undefined,
+        notes: pay.notes || undefined,
+      })),
+    }));
+
+    return NextResponse.json({ success: true, purchases: formatted });
   } catch (error: any) {
     console.error('Error fetching purchases from Supabase:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
