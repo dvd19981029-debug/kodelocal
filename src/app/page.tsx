@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS, getStoredProducts } from '@/lib/store';
 import ProductCard from '@/components/ecommerce/ProductCard';
+import PromoBannerCarousel from '@/components/ecommerce/PromoBannerCarousel';
 
 export default function EcommerceHomePage() {
   const [products, setProducts] = useState<ProductItem[]>(() => INITIAL_PRODUCTS);
@@ -114,71 +115,36 @@ export default function EcommerceHomePage() {
   };
 
   return (
-    <div className="space-y-12 pb-16">
+    <div className="space-y-6 sm:space-y-8 pb-16">
       
-      {/* ================= HERO SECTION ================= */}
-      <section className="relative overflow-hidden rounded-3xl clay-card p-6 sm:p-10 lg:p-12 border border-white/80 bg-gradient-to-br from-indigo-50/70 via-purple-50/50 to-pink-50/40">
-        
-        {/* Glow decorativo de fondo */}
-        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 bg-purple-200/40 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -mb-12 -ml-12 w-96 h-96 bg-indigo-200/30 rounded-full blur-3xl pointer-events-none" />
+      {/* ================= CARRUSEL PROMOCIONAL FORMATO VIDEO ================= */}
+      <section className="pt-1">
+        <PromoBannerCarousel 
+          onExploreCatalog={() => {
+            const el = document.getElementById('catalogo');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
+          onFilterCategory={(cat) => {
+            setSelectedCategory(cat);
+            const el = document.getElementById('catalogo');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
+        />
 
-        <div className="relative z-10 max-w-3xl mx-auto text-center space-y-5">
-          
-          {/* Badge superior */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 border border-indigo-100 shadow-sm text-xs font-black text-indigo-700">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>Aromaniak El Salvador • Fragancias Finas</span>
+        {/* Tira compacta de beneficios clave */}
+        <div className="grid grid-cols-3 gap-2 mt-2.5 sm:mt-3 text-center">
+          <div className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl bg-white/70 border border-white/80 shadow-2xs text-[9px] sm:text-xs text-slate-700 font-bold">
+            <Truck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <span className="truncate">Envíos Todo El Salvador</span>
           </div>
-
-          {/* Título Principal */}
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-            Tus Fragancias Favoritas Inspiradas en las{' '}
-            <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Mejores Marcas
-            </span>
-          </h1>
-
-          {/* Descripción */}
-          <p className="text-sm sm:text-base text-slate-600 font-medium leading-relaxed max-w-2xl mx-auto">
-            Más de 600 contratipos finos con fijación de 8 a 12 horas. Elige tu perfume preparado en frasco de lujo con atomizador o adquiere onzas puras para tu negocio o rellenado.
-          </p>
-
-          {/* Píldoras de beneficios */}
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 pt-2">
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/80 border border-white text-slate-700 text-xs font-bold shadow-2xs">
-              <Truck className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Envíos a Todo El Salvador</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/80 border border-white text-slate-700 text-xs font-bold shadow-2xs">
-              <Droplets className="w-3.5 h-3.5 text-pink-600" />
-              <span>Concentración Premium 33%</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/80 border border-white text-slate-700 text-xs font-bold shadow-2xs">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Pago Contra Entrega</span>
-            </div>
+          <div className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl bg-white/70 border border-white/80 shadow-2xs text-[9px] sm:text-xs text-slate-700 font-bold">
+            <Droplets className="w-3.5 h-3.5 text-pink-600 shrink-0" />
+            <span className="truncate">Concentración 33%</span>
           </div>
-
-          {/* Botones de acción */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-            <a 
-              href="#catalogo" 
-              className="clay-btn clay-btn-primary px-7 py-3 text-sm font-black rounded-2xl flex items-center gap-2 !shadow-[3px_5px_15px_rgba(99,102,241,0.4)] w-full sm:w-auto justify-center"
-            >
-              <span>Explorar Catálogo ({products.length > 0 ? products.length : '640+'})</span>
-              <ArrowDown className="w-4 h-4" />
-            </a>
-            <a 
-              href="https://wa.me/50370000000?text=Hola%20Aromaniak,%20deseo%20asesoria%20para%20elegir%20un%20perfume" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="clay-btn px-6 py-3 text-sm font-black rounded-2xl text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 w-full sm:w-auto justify-center"
-            >
-              Pedir Asesoría por WhatsApp
-            </a>
+          <div className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl bg-white/70 border border-white/80 shadow-2xs text-[9px] sm:text-xs text-slate-700 font-bold">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span className="truncate">Pago Contra Entrega</span>
           </div>
-
         </div>
       </section>
 
