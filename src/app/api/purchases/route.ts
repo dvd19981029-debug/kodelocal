@@ -86,6 +86,7 @@ export async function POST(request: Request) {
       total,
       saldoPendiente,
       notes,
+      receptionStatus,
       items,
     } = body;
 
@@ -111,8 +112,8 @@ export async function POST(request: Request) {
           total: Number(total || 0),
           saldoPendiente: Number(saldoPendiente || 0),
           notes: notes || null,
-          receptionStatus: 'RECIBIDO',
-          receivedAt: new Date(),
+          receptionStatus: receptionStatus || 'PENDIENTE',
+          receivedAt: receptionStatus === 'RECIBIDO' ? new Date() : null,
           items: {
             create: (items || []).map((it: any) => ({
               productId: it.productId || null,
@@ -131,8 +132,8 @@ export async function POST(request: Request) {
         },
       });
 
-      // 2. Aumentar stock de productos y actualizar costo en Supabase
-      if (items && Array.isArray(items)) {
+      // 2. Si la compra es de ingreso directo (RECIBIDO), aumentar stock y Kardex de una vez
+      if (receptionStatus === 'RECIBIDO' && items && Array.isArray(items)) {
         for (const it of items) {
           if (it.productId) {
             const product = await tx.product.findUnique({ where: { id: it.productId } });
@@ -165,6 +166,16 @@ export async function POST(request: Request) {
             }
           }
         }
+      } else if (items && Array.isArray(items)) {
+        // Si queda PENDIENTE de bodega, actualizamos solo el costo de compra en catálogo
+        for (const it of items) {
+          if (it.productId && Number(it.costPrice) > 0) {
+            await tx.product.update({
+              where: { id: it.productId },
+              data: { cost: Number(it.costPrice) },
+            });
+          }
+        }
       }
 
       return createdPurchase;
@@ -173,6 +184,93 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, purchase: result });
   } catch (error: any) {
     console.error('Error saving purchase to Supabase:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const { purchaseId, action, receivedBy, receivedNotes, items } = body;
+
+    if (!purchaseId) {
+      return NextResponse.json({ success: false, error: 'purchaseId es requerido' }, { status: 400 });
+    }
+
+    if (action === 'receive') {
+      const result = await prisma.$transaction(async (tx) => {
+        const purchase = await tx.purchase.findUnique({
+          where: { id: purchaseId },
+          include: { items: true },
+        });
+
+        if (!purchase) {
+          throw new Error('Compra no encontrada en Supabase');
+        }
+
+        if (purchase.receptionStatus === 'RECIBIDO') {
+          return { purchase, alreadyReceived: true };
+        }
+
+        // 1. Actualizar estado de compra a RECIBIDO con firma del bodeguero
+        const updatedPurchase = await tx.purchase.update({
+          where: { id: purchaseId },
+          data: {
+            receptionStatus: 'RECIBIDO',
+            receivedAt: new Date(),
+            receivedBy: receivedBy || 'Bodeguero en Turno',
+            notes: receivedNotes ? `${purchase.notes || ''}\n[Bodega]: ${receivedNotes}`.trim() : purchase.notes,
+          },
+          include: { items: true, supplier: true, payments: true },
+        });
+
+        // 2. Incrementar stock de productos e ingresar a Kardex
+        const itemsToProcess = items && Array.isArray(items) ? items : purchase.items;
+
+        for (const it of itemsToProcess) {
+          const prodId = it.productId;
+          if (prodId) {
+            const product = await tx.product.findUnique({ where: { id: prodId } });
+            if (product) {
+              const prevStock = product.stock;
+              const addedQty = Number(it.receivedQty ?? it.quantity ?? 0);
+              const newStock = prevStock + addedQty;
+              const costPrice = Number(it.costPrice || product.cost || 0);
+
+              await tx.product.update({
+                where: { id: product.id },
+                data: {
+                  stock: newStock,
+                  ...(costPrice > 0 ? { cost: costPrice } : {}),
+                },
+              });
+
+              await tx.stockMovement.create({
+                data: {
+                  productId: product.id,
+                  type: 'IN_PURCHASE',
+                  quantity: addedQty,
+                  previousStock: prevStock,
+                  newStock: newStock,
+                  costPrice: costPrice,
+                  userName: receivedBy || 'Bodeguero',
+                  reference: `Ingreso a Bodega #${purchase.purchaseNumber} (Doc: ${purchase.docNumber})`,
+                  notes: `Confrontado y recibido físicamente por ${receivedBy || 'Bodeguero'}`,
+                },
+              });
+            }
+          }
+        }
+
+        return { purchase: updatedPurchase };
+      });
+
+      return NextResponse.json({ success: true, ...result });
+    }
+
+    return NextResponse.json({ success: false, error: 'Acción no soportada' }, { status: 400 });
+  } catch (error: any) {
+    console.error('Error aplicando ingreso a bodega en Supabase:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

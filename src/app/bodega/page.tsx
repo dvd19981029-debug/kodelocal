@@ -313,6 +313,46 @@ export default function BodegaPage() {
     setPurchases(updatedPurchases);
     saveStoredPurchases(updatedPurchases);
 
+    // 2.1 Sincronizar recepción física con Supabase (ingreso a inventario y Kardex oficial)
+    fetch('/api/purchases', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        purchaseId: activeConfrontationPurchase.id,
+        action: 'receive',
+        receivedBy: receivedByPerson.trim() || currentUser?.name || 'Bodeguero en Turno',
+        receivedNotes: receptionNotes.trim() || 'Ingreso verificado y aplicado en bodega',
+        items: activeConfrontationPurchase.items.map(it => ({
+          productId: it.productId,
+          quantity: it.quantity,
+          receivedQty: receivedQuantities[it.productId] ?? it.quantity,
+          costPrice: it.costPrice,
+        })),
+      }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          fetch('/api/products')
+            .then(r => r.json())
+            .then(pData => {
+              if (pData.success && Array.isArray(pData.products)) {
+                setProducts(pData.products);
+                localStorage.setItem('kodelocal_products', JSON.stringify(pData.products));
+              }
+            });
+          fetch('/api/purchases')
+            .then(r => r.json())
+            .then(purData => {
+              if (purData.success && Array.isArray(purData.purchases)) {
+                setPurchases(purData.purchases);
+                localStorage.setItem('kodelocal_purchases', JSON.stringify(purData.purchases));
+              }
+            });
+        }
+      })
+      .catch(err => console.error('Error aplicando ingreso a bodega en Supabase:', err));
+
     // 3. Cerrar panel y notificar
     setActiveConfrontationPurchase(null);
     setComprasSubTab('historial');
