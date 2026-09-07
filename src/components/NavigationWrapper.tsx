@@ -6,7 +6,9 @@ import { Navbar } from '@/components/Navbar';
 import EcommerceHeader from '@/components/ecommerce/EcommerceHeader';
 import EcommerceFooter from '@/components/ecommerce/EcommerceFooter';
 import CartDrawer from '@/components/ecommerce/CartDrawer';
+import CustomerAuthModal from '@/components/ecommerce/CustomerAuthModal';
 import { EcommerceCartProvider } from '@/context/EcommerceCartContext';
+import { CustomerAuthProvider } from '@/context/CustomerAuthContext';
 
 export default function NavigationWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -23,8 +25,10 @@ export default function NavigationWrapper({ children }: { children: React.ReactN
   const isLoginPage = pathname === '/login';
 
   return (
-    <EcommerceCartProvider>
-      <CartDrawer />
+    <CustomerAuthProvider>
+      <EcommerceCartProvider>
+        <CartDrawer />
+        <CustomerAuthModal />
 
       {isLoginPage ? (
         // En login solo se muestra el contenido limpio
@@ -47,6 +51,7 @@ export default function NavigationWrapper({ children }: { children: React.ReactN
           <EcommerceFooter />
         </div>
       )}
-    </EcommerceCartProvider>
+      </EcommerceCartProvider>
+    </CustomerAuthProvider>
   );
 }

@@ -23,7 +23,11 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const activeOption = presentations.find(p => p.id === selectedPresentation) || presentations[0];
 
+  const isOutOfStock = !product.stock || product.stock <= 0;
+  const isLowStock = !isOutOfStock && product.stock <= (product.minStock || 5);
+
   const handleAdd = () => {
+    if (isOutOfStock) return;
     addToCart(product, selectedPresentation, 1);
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1200);
@@ -54,15 +58,39 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <div className="clay-card p-3.5 sm:p-4 flex flex-col justify-between transition-all duration-200 hover:scale-[1.015] hover:shadow-[4px_6px_16px_rgba(99,102,241,0.18)] group">
+    <div className={`clay-card p-3.5 sm:p-4 flex flex-col justify-between transition-all duration-200 group ${
+      isOutOfStock 
+        ? 'opacity-85 border-slate-200/90 bg-[#f4f6fa]' 
+        : 'hover:scale-[1.015] hover:shadow-[4px_6px_16px_rgba(99,102,241,0.18)]'
+    }`}>
       
       {/* Encabezado de la Tarjeta */}
       <div>
         <div className="flex items-center justify-between gap-1.5 mb-2">
-          <span className="clay-badge font-mono font-black text-[9px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md border border-slate-200">
-            #{product.sku}
-          </span>
-          {getGenderBadge(product.gender)}
+          <div className="flex items-center gap-1.5">
+            <span className="clay-badge font-mono font-black text-[9px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md border border-slate-200">
+              #{product.sku}
+            </span>
+            {getGenderBadge(product.gender)}
+          </div>
+
+          {/* Badge de Disponibilidad de Inventario */}
+          {isOutOfStock ? (
+            <span className="clay-badge bg-rose-50 text-rose-700 border border-rose-200/90 text-[9px] font-black py-0.5 px-2 rounded-lg flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+              Agotado
+            </span>
+          ) : isLowStock ? (
+            <span className="clay-badge bg-amber-50 text-amber-800 border border-amber-200/90 text-[9px] font-black py-0.5 px-2 rounded-lg flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+              ¡Solo {product.stock} {product.unit || 'oz'}!
+            </span>
+          ) : (
+            <span className="clay-badge bg-emerald-50 text-emerald-700 border border-emerald-200/90 text-[9px] font-extrabold py-0.5 px-2 rounded-lg flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              Disponible ({product.stock})
+            </span>
+          )}
         </div>
 
         {/* Marca inspirada */}
@@ -116,26 +144,35 @@ export default function ProductCard({ product }: ProductCardProps) {
           </span>
         </div>
 
-        <button
-          onClick={handleAdd}
-          className={`clay-btn px-3.5 py-2 text-xs font-black rounded-xl flex items-center gap-1.5 transition-all active:scale-95 ${
-            justAdded 
-              ? 'bg-emerald-500 text-white shadow-md' 
-              : 'clay-btn-primary !shadow-[3px_4px_10px_rgba(99,102,241,0.35)]'
-          }`}
-        >
-          {justAdded ? (
-            <>
-              <Check className="w-3.5 h-3.5" />
-              <span>¡Agregado!</span>
-            </>
-          ) : (
-            <>
-              <ShoppingBag className="w-3.5 h-3.5" />
-              <span>Agregar</span>
-            </>
-          )}
-        </button>
+        {isOutOfStock ? (
+          <button
+            disabled
+            className="px-3.5 py-2 text-xs font-black rounded-xl bg-slate-200/90 text-slate-400 cursor-not-allowed flex items-center gap-1.5 shadow-inner"
+          >
+            <span>Agotado</span>
+          </button>
+        ) : (
+          <button
+            onClick={handleAdd}
+            className={`clay-btn px-3.5 py-2 text-xs font-black rounded-xl flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer ${
+              justAdded 
+                ? 'bg-emerald-500 text-white shadow-md' 
+                : 'clay-btn-primary !shadow-[3px_4px_10px_rgba(99,102,241,0.35)]'
+            }`}
+          >
+            {justAdded ? (
+              <>
+                <Check className="w-3.5 h-3.5" />
+                <span>¡Agregado!</span>
+              </>
+            ) : (
+              <>
+                <ShoppingBag className="w-3.5 h-3.5" />
+                <span>Agregar</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
 
     </div>

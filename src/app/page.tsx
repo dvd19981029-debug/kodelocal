@@ -21,13 +21,34 @@ export default function EcommerceHomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGender, setSelectedGender] = useState<'Todos' | 'Caballero' | 'Dama' | 'Unisex'>('Todos');
   const [selectedCategory, setSelectedCategory] = useState<string>('Esencias para Perfume');
+  const [selectedStockFilter, setSelectedStockFilter] = useState<'Todos' | 'Disponibles' | 'Agotados'>('Todos');
+  const [isLoadingCatalog, setIsLoadingCatalog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 36;
 
   useEffect(() => {
-    // Cargar productos del catálogo inicial / almacenado
-    const loaded = getStoredProducts();
-    setProducts(loaded && loaded.length > 0 ? loaded : INITIAL_PRODUCTS);
+    // 1. Cargar catálogo desde /api/products con existencias reales de Supabase
+    const loadCatalog = async () => {
+      try {
+        setIsLoadingCatalog(true);
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        if (data.success && data.products && data.products.length > 0) {
+          setProducts(data.products);
+          return;
+        }
+      } catch (err) {
+        console.error('Error conectando a /api/products, usando fallback:', err);
+      } finally {
+        setIsLoadingCatalog(false);
+      }
+
+      // Fallback local
+      const loaded = getStoredProducts();
+      setProducts(loaded && loaded.length > 0 ? loaded : INITIAL_PRODUCTS);
+    };
+
+    loadCatalog();
   }, []);
 
   // Filtrado reactivo de productos
@@ -43,6 +64,14 @@ export default function EcommerceHomePage() {
         matchesGender = p.gender ? p.gender.toLowerCase().includes(selectedGender.toLowerCase()) : false;
       }
 
+      // Filtro de disponibilidad / existencias
+      let matchesStock = true;
+      if (selectedStockFilter === 'Disponibles') {
+        matchesStock = p.stock > 0;
+      } else if (selectedStockFilter === 'Agotados') {
+        matchesStock = !p.stock || p.stock <= 0;
+      }
+
       // Filtro de búsqueda seguro
       const skuStr = String(p.sku || '').toLowerCase();
       const nameStr = String(p.name || '').toLowerCase();
@@ -56,9 +85,9 @@ export default function EcommerceHomePage() {
         brandStr.includes(q) ||
         barcodeStr.includes(q);
 
-      return matchesCategory && matchesGender && matchesSearch;
+      return matchesCategory && matchesGender && matchesStock && matchesSearch;
     });
-  }, [products, searchQuery, selectedGender, selectedCategory]);
+  }, [products, searchQuery, selectedGender, selectedCategory, selectedStockFilter]);
 
   // Paginación
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage) || 1;
@@ -180,10 +209,70 @@ export default function EcommerceHomePage() {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
+            )}
+          </div>
+
+          {/* Filtros de Disponibilidad de Inventario */}
+          <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1 pb-2 border-b border-slate-200/60">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[10.5px] font-black uppercase tracking-wider text-slate-400 mr-1">
+                Disponibilidad:
+              </span>
+              {[
+                { 
+                  id: 'Todos', 
+                  label: 'Todos', 
+                  count: products.length, 
+                  icon: '✨', 
+                  activeClass: 'bg-indigo-600 text-white shadow-xs' 
+                },
+                { 
+                  id: 'Disponibles', 
+                  label: 'En Existencia', 
+                  count: products.filter(p => p.stock > 0).length, 
+                  icon: '✅', 
+                  activeClass: 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-300' 
+                },
+                { 
+                  id: 'Agotados', 
+                  label: 'Agotados', 
+                  count: products.filter(p => p.stock <= 0).length, 
+                  icon: '❌', 
+                  activeClass: 'bg-rose-600 text-white shadow-xs ring-2 ring-rose-300' 
+                },
+              ].map((filter) => (
+                <button
+                  key={filter.id}
+                  onClick={() => {
+                    setSelectedStockFilter(filter.id as any);
+                    setCurrentPage(1);
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+                    selectedStockFilter === filter.id
+                      ? filter.activeClass
+                      : 'bg-white/80 hover:bg-white text-slate-600 border border-slate-200'
+                  }`}
+                >
+                  <span>{filter.icon}</span>
+                  <span>{filter.label}</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-md font-extrabold ${
+                    selectedStockFilter === filter.id ? 'bg-black/20 text-white' : 'bg-slate-100 text-slate-500'
+                  }`}>
+                    {filter.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {isLoadingCatalog && (
+              <span className="text-[11px] font-bold text-indigo-500 animate-pulse flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
+                Actualizando existencias...
+              </span>
             )}
           </div>
 
