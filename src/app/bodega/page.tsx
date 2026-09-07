@@ -603,12 +603,22 @@ export default function BodegaPage() {
                                 <span className="clay-badge text-[10px] font-black py-0.5 px-2 bg-rose-100 text-rose-900 border border-rose-200">
                                   ⏳ Por Preparar
                                 </span>
+                                {order.channel === 'ONLINE' && (
+                                  <span className="clay-badge text-[9.5px] font-black py-0.5 px-2 bg-purple-100 text-purple-900 border border-purple-200">
+                                    🌐 Tienda Online
+                                  </span>
+                                )}
                               </div>
                               <div className="flex items-center gap-2 text-[10.5px] text-slate-400 mt-0.5 font-medium">
                                 <span>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                 <span>•</span>
                                 <span>{order.cliente?.nombre || 'Consumidor Final'}</span>
                               </div>
+                              {order.deliveryNotes && (
+                                <p className="text-[10px] text-indigo-700 font-semibold mt-1 bg-indigo-50/70 p-1.5 rounded-lg border border-indigo-100">
+                                  📍 {order.deliveryNotes}
+                                </p>
+                              )}
                             </div>
 
                             <div className="text-right">
@@ -743,10 +753,20 @@ export default function BodegaPage() {
                               <span className="clay-badge text-[10px] font-black py-0.5 px-2 bg-emerald-100 text-emerald-900 border border-emerald-200">
                                 ✅ Listo en Ventanilla
                               </span>
+                              {order.channel === 'ONLINE' && (
+                                <span className="clay-badge text-[9.5px] font-black py-0.5 px-2 bg-purple-100 text-purple-900 border border-purple-200">
+                                  🌐 Tienda Online
+                                </span>
+                              )}
                             </div>
                             <span className="text-[10.5px] text-slate-400 font-medium block mt-0.5">
                               Cliente: <strong>{order.cliente?.nombre || 'Consumidor Final'}</strong>
                             </span>
+                            {order.deliveryNotes && (
+                              <p className="text-[10px] text-emerald-800 font-semibold mt-1 bg-emerald-50/70 p-1.5 rounded-lg border border-emerald-100">
+                                📍 {order.deliveryNotes}
+                              </p>
+                            )}
                           </div>
 
                           <div className="text-right">

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Navbar } from "@/components/Navbar";
 import StorageInitializer from "@/components/StorageInitializer";
+import NavigationWrapper from "@/components/NavigationWrapper";
 
 export const metadata: Metadata = {
-  title: "KodeLocal - Punto de Venta, Inventario y Facturación Electrónica",
-  description: "Sistema de gestión empresarial con estética Claymorphism, POS, inventario y DTE con Factura Llama.",
+  title: "Aromaniak SV - Perfumería Fina & Contratipos de Lujo",
+  description: "Tienda online de fragancias y contratipos finos con fijación de 8 a 12 horas en El Salvador. Envíos a todo el país y pago contra entrega.",
 };
 
 export default function RootLayout({
@@ -17,10 +17,9 @@ export default function RootLayout({
     <html lang="es" className="h-full">
       <body className="min-h-full flex flex-col bg-[#f1f4f9] text-slate-800 antialiased">
         <StorageInitializer />
-        <Navbar />
-        <main className="flex-1 max-w-[1600px] w-full mx-auto p-3 sm:p-5 lg:p-6">
+        <NavigationWrapper>
           {children}
-        </main>
+        </NavigationWrapper>
       </body>
     </html>
   );

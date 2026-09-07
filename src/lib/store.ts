@@ -56,6 +56,9 @@ export interface SaleRecord {
     mensaje?: string;
   };
   status?: 'PREFACTURA' | 'PENDING_PREPARATION' | 'READY_AT_WINDOW' | 'COMPLETED' | 'CANCELLED';
+  channel?: 'POS' | 'ONLINE';
+  shippingCost?: number;
+  deliveryNotes?: string;
   vendedor?: string;
   cajero?: string;
   items: {
