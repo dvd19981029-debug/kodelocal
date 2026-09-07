@@ -109,7 +109,7 @@ export default function ReactiveSearchBar({
     selectedStockFilter !== 'Todos';
 
   return (
-    <div className="sticky top-[53px] sm:top-[69px] md:top-[77px] z-30 pointer-events-none py-1 transition-all">
+    <div className="sticky top-[60px] sm:top-[76px] md:top-[84px] z-30 pointer-events-none py-1 transition-all">
       
       {/* Contenedor reactivo animado: morphing de barra completa a botoncito en esquina superior derecha */}
       <div className="flex justify-end w-full">

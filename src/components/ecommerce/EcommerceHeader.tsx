@@ -91,7 +91,7 @@ export default function EcommerceHeader() {
             <img
               src="/images/logo.png"
               alt="Aromaniak"
-              className="h-9 sm:h-12 md:h-14 w-auto object-contain drop-shadow-sm group-hover:scale-105 transition-transform"
+              className="h-11 sm:h-14 md:h-16 w-auto object-contain drop-shadow-sm group-hover:scale-105 transition-transform"
             />
           </Link>
         </div>
