@@ -7,7 +7,8 @@ const OPERATIONAL_ROUTES = [
   '/bodega',
   '/ventas',
   '/inventario',
-  '/logistica'
+  '/logistica',
+  '/login'
 ];
 
 export function middleware(request: NextRequest) {
@@ -21,9 +22,16 @@ export function middleware(request: NextRequest) {
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
 
-  // 1. En el subdominio de empleados (pos.aromaniaksv.com), la raíz abre directo el Punto de Venta
-  if (isPosSubdomain && pathname === '/') {
-    return NextResponse.redirect(new URL('/pos', request.url));
+  // 1. En el subdominio de empleados (pos.aromaniaksv.com)
+  if (isPosSubdomain) {
+    // Si entran a la raíz de pos.aromaniaksv.com, abrir directo el POS
+    if (pathname === '/') {
+      return NextResponse.redirect(new URL('/pos', request.url));
+    }
+    // Si intentan entrar a rutas de tienda (ej: /checkout) en el subdominio pos, mandar a la tienda oficial
+    if (!isOperational) {
+      return NextResponse.redirect(new URL(`https://aromaniaksv.com${pathname}`, request.url));
+    }
   }
 
   // 2. En el dominio de clientes (aromaniaksv.com), bloquear todo acceso a rutas de empleados
