@@ -100,10 +100,10 @@ export default function CartDrawer() {
 
                       {/* Detalles del Kit Personalizado */}
                       {item.kitDetails ? (
-                        <div className="mt-1.5 p-2 rounded-xl bg-gradient-to-r from-indigo-50/90 to-purple-50/90 border border-indigo-100 text-[10px] space-y-1 text-slate-800 shadow-2xs">
+                        <div className="mt-1.5 p-2 rounded-xl bg-gradient-to-r from-indigo-50/90 via-purple-50/90 to-amber-50/90 border border-amber-200 text-[10px] space-y-1 text-slate-800 shadow-2xs">
                           <div className="flex items-center justify-between font-bold text-indigo-900">
-                            <span>✨ Kit Completo Preparado</span>
-                            <span className="text-[9px] bg-indigo-100 text-indigo-800 px-1.5 py-0.2 rounded-md font-extrabold">
+                            <span>✨ Arma tu propio perfume</span>
+                            <span className="text-[9px] bg-amber-100 text-amber-900 border border-amber-300 px-1.5 py-0.2 rounded-md font-black">
                               {item.kitDetails.isPlus ? 'PLUS 1.5 oz (+½ oz)' : '1 Onza Estándar'}
                             </span>
                           </div>

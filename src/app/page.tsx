@@ -18,7 +18,7 @@ import { ProductItem, INITIAL_PRODUCTS, getStoredProducts } from '@/lib/store';
 import ProductCard from '@/components/ecommerce/ProductCard';
 import PromoBannerCarousel from '@/components/ecommerce/PromoBannerCarousel';
 import ReactiveSearchBar from '@/components/ecommerce/ReactiveSearchBar';
-import PerfumeKitBanner from '@/components/ecommerce/PerfumeKitBanner';
+import BuildYourPerfumeCard from '@/components/ecommerce/BuildYourPerfumeCard';
 import PerfumeKitBuilderModal from '@/components/ecommerce/PerfumeKitBuilderModal';
 
 export default function EcommerceHomePage() {
@@ -201,9 +201,6 @@ export default function EcommerceHomePage() {
             }}
           />
 
-          {/* Banner Principal del Kit de Perfume Preparado Completo ($15.00) */}
-          <PerfumeKitBanner onOpenKitBuilder={() => setIsKitModalOpen(true)} />
-
           {/* Tira compacta de beneficios clave */}
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className="clay-card flex items-center justify-center gap-1.5 py-2 px-2 text-[9px] sm:text-xs text-slate-700 font-bold border border-white/80">
@@ -272,8 +269,13 @@ export default function EcommerceHomePage() {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4">
+            {/* Si está en la página 1, mostrar la tarjeta especial "Arma tu propio perfume" ocupando 2 espacios con brillo dorado */}
+            {currentPage === 1 && (
+              <BuildYourPerfumeCard onOpenBuilder={() => setIsKitModalOpen(true)} />
+            )}
+
             {paginatedProducts.map((prod) => (
-              <ProductCard key={prod.id} product={prod} availableBottles={availableBottles} />
+              <ProductCard key={prod.id} product={prod} />
             ))}
           </div>
         )}

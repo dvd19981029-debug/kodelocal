@@ -235,14 +235,14 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     // Precio fijo $15.00 base, o $18.00 si seleccionó versión PLUS (+½ oz extra)
     const unitPrice = isPlus ? 18.00 : 15.00;
     const presentation: ProductPresentation = isPlus ? 'KIT_PREPARADO_PLUS' : 'KIT_PREPARADO';
-    const presentationName = isPlus ? 'Kit Preparado PLUS (1.5 oz)' : 'Kit Preparado (1 oz)';
+    const presentationName = isPlus ? 'Arma tu propio perfume PLUS (1.5 oz)' : 'Arma tu propio perfume (1 oz)';
     const itemId = `kit-${essence.id}-${bottle.id}-${hasLabel ? 'label' : 'nolabel'}-${isPlus ? 'plus' : 'std'}`;
 
     const kitProduct: ProductItem = {
       ...essence,
       id: itemId,
-      name: `Kit Perfume: ${essence.officialName || essence.name}`,
-      category: 'Kit de Perfumes',
+      name: `Arma tu propio perfume: ${essence.officialName || essence.name}`,
+      category: 'Arma tu propio perfume',
       price: unitPrice,
       imageUrl: bottle.imageUrl || essence.imageUrl,
     };

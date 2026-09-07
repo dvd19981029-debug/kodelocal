@@ -35,14 +35,14 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
   const slides: PromoSlide[] = [
     {
       id: 'promo-preparado',
-      badge: 'Kit Preparado · $15.00',
+      badge: '✨ Servicio Especial · $15.00',
       badgeIcon: <Sparkles className="w-3.5 h-3.5 text-amber-600" />,
       badgeStyle: 'bg-amber-50 text-amber-800 border-amber-200/80 shadow-2xs',
-      title: 'Kit Perfume Preparado',
+      title: 'Arma tu propio perfume',
       highlightText: 'por solo $15.00',
       highlightGradient: 'from-indigo-600 via-purple-600 to-pink-600',
-      subtitle: 'Tu contratipo favorito con 1 oz pura + frasco a elegir + fijador de 8-12h + etiqueta opcional gratis (¡Opción PLUS por +$3!)',
-      ctaText: 'Armar mi Kit ($15)',
+      subtitle: 'Tu contratipo favorito con 1 oz pura + frasco de 100ml a elegir + fijador de 8-12h + etiqueta gratis (¡Opción PLUS por +$3!)',
+      ctaText: 'Armar mi perfume ($15)',
       ctaAction: () => {
         if (onOpenKitBuilder) {
           onOpenKitBuilder();
