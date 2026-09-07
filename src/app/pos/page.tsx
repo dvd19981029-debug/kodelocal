@@ -214,6 +214,18 @@ export default function PosPage() {
     };
   }, []);
 
+  useEffect(() => {
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.products) && data.products.length > 0) {
+          setProducts(data.products);
+          localStorage.setItem('kodelocal_products', JSON.stringify(data.products));
+        }
+      })
+      .catch(err => console.error('Error sincronizando productos con Supabase:', err));
+  }, []);
+
   // Filtrado de productos
   const filteredProducts = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
@@ -839,6 +851,47 @@ export default function PosPage() {
     setIsCheckoutOpen(false);
     setOrderToInvoice(null);
     setCompletedSale(completedRecord!);
+
+    // Sincronizar venta y descuento de existencias con Supabase en tiempo real
+    if (completedRecord!) {
+      fetch('/api/sales', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          saleNumber: completedRecord.saleNumber,
+          channel: 'POS',
+          subtotal: completedRecord.subtotal,
+          ivaTotal: completedRecord.ivaTotal,
+          total: completedRecord.total,
+          paymentMethod: completedRecord.paymentMethod || 'CASH',
+          cashReceived: completedRecord.cashReceived,
+          cashChange: completedRecord.cashChange,
+          notes: completedRecord.tipoComprobante,
+          cashierName: completedRecord.cajero || 'Caja 1',
+          items: completedRecord.items.map(it => ({
+            productId: it.productId,
+            name: it.name,
+            quantity: it.quantity,
+            price: it.price,
+            total: it.total,
+          })),
+        }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            fetch('/api/products')
+              .then(r => r.json())
+              .then(pData => {
+                if (pData.success && Array.isArray(pData.products)) {
+                  setProducts(pData.products);
+                  localStorage.setItem('kodelocal_products', JSON.stringify(pData.products));
+                }
+              });
+          }
+        })
+        .catch(err => console.error('Error enviando venta a Supabase:', err));
+    }
   };
 
   // Filtrado de clientes

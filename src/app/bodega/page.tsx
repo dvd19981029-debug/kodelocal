@@ -124,6 +124,27 @@ export default function BodegaPage() {
     }
   }, [sales]);
 
+  useEffect(() => {
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.products) && data.products.length > 0) {
+          setProducts(data.products);
+          localStorage.setItem('kodelocal_products', JSON.stringify(data.products));
+        }
+      })
+      .catch(err => console.error('Error sincronizando productos con Supabase en Bodega:', err));
+
+    fetch('/api/purchases')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.purchases)) {
+          setPurchases(data.purchases);
+        }
+      })
+      .catch(err => console.error('Error sincronizando compras con Supabase en Bodega:', err));
+  }, []);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);

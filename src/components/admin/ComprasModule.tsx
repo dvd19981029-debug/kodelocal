@@ -363,6 +363,53 @@ export default function ComprasModule({
     // 3. Guardar la compra en el historial (se sincroniza automáticamente con Bodega e inventario)
     onUpdatePurchases([newPurchase, ...purchases]);
 
+    // 3.1 Sincronizar en tiempo real con Supabase (ingreso a tabla Purchase, actualización de stock y Kardex)
+    fetch('/api/purchases', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        purchaseNumber: newPurchase.purchaseNumber,
+        tipoDte: newPurchase.tipoDte,
+        supplierId: newPurchase.supplierId,
+        supplierName: newPurchase.supplierName,
+        purchaseDate: newPurchase.purchaseDate,
+        dueDate: newPurchase.dueDate,
+        creditDays: newPurchase.creditDays,
+        docNumber: newPurchase.docNumber,
+        controlNumber: newPurchase.controlNumber,
+        condicion: newPurchase.condicion,
+        paymentMethod: newPurchase.paymentMethod,
+        paymentStatus: newPurchase.paymentStatus,
+        subtotalNeto: newPurchase.subtotalNeto,
+        iva: newPurchase.iva,
+        total: newPurchase.total,
+        saldoPendiente: newPurchase.saldoPendiente,
+        notes: newPurchase.notes,
+        items: newPurchase.items.map(it => ({
+          productId: it.productId,
+          productName: it.productName,
+          productSku: it.productSku,
+          unit: it.unit,
+          quantity: it.quantity,
+          costPrice: it.costPrice,
+          subtotal: it.subtotal,
+        })),
+      }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          fetch('/api/products')
+            .then(r => r.json())
+            .then(pData => {
+              if (pData.success && Array.isArray(pData.products)) {
+                onUpdateProducts(pData.products);
+              }
+            });
+        }
+      })
+      .catch(err => console.error('Error guardando compra en Supabase:', err));
+
     // 4. Limpiar formulario y regresar a la vista de historial
     setFormDocNumber('');
     setFormControlNumber('');

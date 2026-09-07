@@ -146,6 +146,27 @@ export default function AdminPage() {
     saveStoredSuppliers(suppliers);
   }, [suppliers]);
 
+  useEffect(() => {
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.products) && data.products.length > 0) {
+          setProducts(data.products);
+          localStorage.setItem('kodelocal_products', JSON.stringify(data.products));
+        }
+      })
+      .catch(err => console.error('Error sincronizando productos con Supabase:', err));
+
+    fetch('/api/purchases')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.purchases)) {
+          setPurchases(data.purchases);
+        }
+      })
+      .catch(err => console.error('Error sincronizando compras con Supabase:', err));
+  }, []);
+
   // Kárdex de Inventario
   const [kardexMovements, setKardexMovements] = useState<KardexMovement[]>(() => getStoredKardex());
   const [kardexFilterProduct, setKardexFilterProduct] = useState<string | null>(null);
