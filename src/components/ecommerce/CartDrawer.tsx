@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import Link from 'next/link';
-import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, ShieldCheck } from 'lucide-react';
+import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 
 export default function CartDrawer() {
@@ -24,26 +24,36 @@ export default function CartDrawer() {
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
+    // Cerrar al presionar la tecla Escape
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsCartOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
     return () => {
       document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isCartOpen]);
+  }, [isCartOpen, setIsCartOpen]);
 
   if (!isCartOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden animate-in fade-in duration-200">
-      {/* Backdrop oscuro con desenfoque suave */}
+      {/* Backdrop oscuro con clic para cerrar */}
       <div 
         onClick={() => setIsCartOpen(false)}
-        className="absolute inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity"
+        className="absolute inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity cursor-pointer"
+        title="Clic fuera para cerrar y seguir comprando"
       />
 
       {/* Contenedor del Drawer pegado a la derecha sin desbordes */}
       <div className="fixed inset-y-0 right-0 w-full sm:w-[420px] max-w-full flex">
         <div className="w-full h-full bg-[#f1f4f9] shadow-2xl flex flex-col border-l border-white/80 relative z-10 overscroll-contain">
           
-          {/* Header del Carrito */}
+          {/* Header del Carrito con botón Cerrar evidente */}
           <div className="p-3.5 sm:p-5 border-b border-slate-200/80 flex items-center justify-between bg-white/70 backdrop-blur-sm shrink-0">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shadow-2xs">
@@ -55,12 +65,14 @@ export default function CartDrawer() {
               </div>
             </div>
 
+            {/* Botón de Cerrar claro y visible con texto e icono */}
             <button
               onClick={() => setIsCartOpen(false)}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-white transition-colors cursor-pointer"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200/80 text-slate-700 hover:text-slate-900 text-xs font-black transition-all cursor-pointer shadow-2xs active:scale-95"
               aria-label="Cerrar carrito"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 text-slate-500" />
+              <span>Cerrar</span>
             </button>
           </div>
 
@@ -186,9 +198,9 @@ export default function CartDrawer() {
             )}
           </div>
 
-          {/* Footer del Carrito con Subtotal y Checkout */}
+          {/* Footer del Carrito con Subtotal, Checkout y botón Seguir Comprando */}
           {cart.length > 0 && (
-            <div className="p-3.5 sm:p-5 border-t border-slate-200/80 bg-white/90 backdrop-blur-sm space-y-3 shrink-0">
+            <div className="p-3.5 sm:p-5 border-t border-slate-200/80 bg-white/95 backdrop-blur-sm space-y-2.5 shrink-0">
               <div className="space-y-1.5 text-xs">
                 <div className="flex items-center justify-between text-slate-600 font-medium">
                   <span>Subtotal:</span>
@@ -198,22 +210,33 @@ export default function CartDrawer() {
                   <span>Envío nacional C807:</span>
                   <span className="text-emerald-700 font-bold">Calculado al pagar</span>
                 </div>
-                <div className="flex items-center justify-between text-sm font-extrabold text-slate-900 pt-2 border-t border-slate-200/70">
+                <div className="flex items-center justify-between text-sm font-extrabold text-slate-900 pt-1.5 border-t border-slate-200/70">
                   <span>Total estimado:</span>
                   <span className="font-mono font-black text-indigo-700 text-base">${subtotal.toFixed(2)}</span>
                 </div>
               </div>
 
+              {/* Botón Principal: Proceder al Checkout */}
               <Link
                 href="/checkout"
                 onClick={() => setIsCartOpen(false)}
-                className="clay-btn clay-btn-primary w-full py-3 text-xs font-black rounded-xl flex items-center justify-center gap-2 !shadow-[0_4px_16px_rgba(99,102,241,0.4)] tracking-wide cursor-pointer"
+                className="clay-btn clay-btn-primary w-full py-3 text-xs sm:text-sm font-black rounded-xl flex items-center justify-center gap-2 !shadow-[0_4px_16px_rgba(99,102,241,0.4)] tracking-wide cursor-pointer active:scale-95"
               >
                 <span>Proceder al Checkout</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
 
-              <div className="flex items-center justify-center gap-1.5 text-[10px] font-semibold text-slate-400">
+              {/* Botón Explícito: Seguir Comprando / Agregar más */}
+              <button
+                type="button"
+                onClick={() => setIsCartOpen(false)}
+                className="w-full py-2.5 rounded-xl text-xs font-black text-slate-700 bg-white hover:bg-slate-50 border-2 border-slate-200/80 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs active:scale-95"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Seguir Comprando (Agregar más)</span>
+              </button>
+
+              <div className="flex items-center justify-center gap-1.5 text-[10px] font-semibold text-slate-400 pt-0.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                 <span>Compra segura con envíos C807 en El Salvador</span>
               </div>
