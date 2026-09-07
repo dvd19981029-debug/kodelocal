@@ -133,15 +133,15 @@ export default function EcommerceHomePage() {
 
         {/* Tira compacta de beneficios clave */}
         <div className="grid grid-cols-3 gap-2 mt-2.5 sm:mt-3 text-center">
-          <div className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl bg-white/70 border border-white/80 shadow-2xs text-[9px] sm:text-xs text-slate-700 font-bold">
+          <div className="clay-card flex items-center justify-center gap-1.5 py-2 px-2 text-[9px] sm:text-xs text-slate-700 font-bold border border-white/80">
             <Truck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
             <span className="truncate">Envíos Todo El Salvador</span>
           </div>
-          <div className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl bg-white/70 border border-white/80 shadow-2xs text-[9px] sm:text-xs text-slate-700 font-bold">
+          <div className="clay-card flex items-center justify-center gap-1.5 py-2 px-2 text-[9px] sm:text-xs text-slate-700 font-bold border border-white/80">
             <Droplets className="w-3.5 h-3.5 text-pink-600 shrink-0" />
             <span className="truncate">Concentración 33%</span>
           </div>
-          <div className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl bg-white/70 border border-white/80 shadow-2xs text-[9px] sm:text-xs text-slate-700 font-bold">
+          <div className="clay-card flex items-center justify-center gap-1.5 py-2 px-2 text-[9px] sm:text-xs text-slate-700 font-bold border border-white/80">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
             <span className="truncate">Pago Contra Entrega</span>
           </div>
