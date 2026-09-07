@@ -16,6 +16,7 @@ import {
 import { ProductItem, INITIAL_PRODUCTS, getStoredProducts } from '@/lib/store';
 import ProductCard from '@/components/ecommerce/ProductCard';
 import PromoBannerCarousel from '@/components/ecommerce/PromoBannerCarousel';
+import ReactiveSearchBar from '@/components/ecommerce/ReactiveSearchBar';
 
 export default function EcommerceHomePage() {
   const [products, setProducts] = useState<ProductItem[]>(() => INITIAL_PRODUCTS);
@@ -115,10 +116,28 @@ export default function EcommerceHomePage() {
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8 pb-16">
+    <div className="space-y-4 sm:space-y-6 pb-16">
       
+      {/* ================= BARRA DE BÚSQUEDA REACTIVA (ARRIBA DEL BANNER) ================= */}
+      <section className="pt-0.5">
+        <ReactiveSearchBar
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          selectedGender={selectedGender}
+          setSelectedGender={setSelectedGender}
+          selectedStockFilter={selectedStockFilter}
+          setSelectedStockFilter={setSelectedStockFilter}
+          totalProducts={products.length}
+          inStockCount={products.filter(p => p.stock > 0).length}
+          outOfStockCount={products.filter(p => p.stock <= 0).length}
+          setCurrentPage={setCurrentPage}
+        />
+      </section>
+
       {/* ================= CARRUSEL PROMOCIONAL FORMATO VIDEO ================= */}
-      <section className="pt-1">
+      <section className="pt-0">
         <PromoBannerCarousel 
           onExploreCatalog={() => {
             const el = document.getElementById('catalogo');
@@ -148,163 +167,31 @@ export default function EcommerceHomePage() {
         </div>
       </section>
 
-      {/* ================= BARRA DE BÚSQUEDA Y FILTROS ================= */}
-      <section id="catalogo" className="space-y-5 scroll-mt-20">
+      {/* ================= CATÁLOGO DE PRODUCTOS ================= */}
+      <section id="catalogo" className="space-y-3.5 scroll-mt-20">
         
-        {/* Encabezado del catálogo */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-              <span>Catálogo de Fragancias & Productos</span>
-              <span className="clay-badge text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-lg font-black">
-                {filteredProducts.length}
-              </span>
+        {/* Encabezado limpio del catálogo */}
+        <div className="flex items-center justify-between gap-2 px-1">
+          <div className="flex items-center gap-2">
+            <h2 className="text-base sm:text-xl font-black text-slate-900 tracking-tight">
+              {selectedCategory === 'Todos' ? 'Catálogo Completo' : selectedCategory}
+              {selectedCategory === 'Esencias para Perfume' && selectedGender !== 'Todos' && (
+                <span className="text-indigo-600 font-black ml-1.5">
+                  • {selectedGender === 'Caballero' ? '🧔 Caballero' : selectedGender === 'Dama' ? '👩 Dama' : '⚧ Unisex'}
+                </span>
+              )}
             </h2>
-            <p className="text-xs text-slate-500 font-medium">
-              Escribe el nombre de tu perfume favorito, la casa diseñadora o el código
-            </p>
-          </div>
-        </div>
-
-        {/* Caja de Búsqueda Grande Claymorphism */}
-        <div className="clay-card p-3 sm:p-4 space-y-3">
-          
-          <div className="relative">
-            <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
-            <input
-              type="text"
-              placeholder="Buscar perfume: Sauvage, 212, Baccarat, One Million, Carolina Herrera, #100..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="clay-input has-icon w-full pr-10 py-3 text-sm sm:text-base font-bold text-slate-800 placeholder-slate-400 bg-white"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
+            <span className="clay-badge text-[10px] sm:text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-2 py-0.5 rounded-lg font-black">
+              {filteredProducts.length}
+            </span>
           </div>
 
-          {/* Filtros de Disponibilidad de Inventario */}
-          <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1 pb-2 border-b border-slate-200/60">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[10.5px] font-black uppercase tracking-wider text-slate-400 mr-1">
-                Disponibilidad:
-              </span>
-              {[
-                { 
-                  id: 'Todos', 
-                  label: 'Todos', 
-                  count: products.length, 
-                  icon: '✨', 
-                  activeClass: 'bg-indigo-600 text-white shadow-xs' 
-                },
-                { 
-                  id: 'Disponibles', 
-                  label: 'En Existencia', 
-                  count: products.filter(p => p.stock > 0).length, 
-                  icon: '✅', 
-                  activeClass: 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-300' 
-                },
-                { 
-                  id: 'Agotados', 
-                  label: 'Agotados', 
-                  count: products.filter(p => p.stock <= 0).length, 
-                  icon: '❌', 
-                  activeClass: 'bg-rose-600 text-white shadow-xs ring-2 ring-rose-300' 
-                },
-              ].map((filter) => (
-                <button
-                  key={filter.id}
-                  onClick={() => {
-                    setSelectedStockFilter(filter.id as any);
-                    setCurrentPage(1);
-                  }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
-                    selectedStockFilter === filter.id
-                      ? filter.activeClass
-                      : 'bg-white/80 hover:bg-white text-slate-600 border border-slate-200'
-                  }`}
-                >
-                  <span>{filter.icon}</span>
-                  <span>{filter.label}</span>
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-md font-extrabold ${
-                    selectedStockFilter === filter.id ? 'bg-black/20 text-white' : 'bg-slate-100 text-slate-500'
-                  }`}>
-                    {filter.count}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            {isLoadingCatalog && (
-              <span className="text-[11px] font-bold text-indigo-500 animate-pulse flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
-                Actualizando existencias...
-              </span>
-            )}
-          </div>
-
-          {/* Filtros de Categorías & Género */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-            
-            {/* Categorías */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              {[
-                { id: 'Esencias para Perfume', label: '🌸 Esencias de Perfume' },
-                { id: 'Botes', label: '🧴 Botes & Envases' },
-                { id: 'Empaque', label: '🎁 Cajas & Bolsas' },
-                { id: 'Insumos y Materia Prima', label: '🧪 Alcohol & Fijador' },
-                { id: 'Todos', label: 'Ver Todo' }
-              ].map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    setSelectedCategory(cat.id);
-                    setCurrentPage(1);
-                  }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all ${
-                    selectedCategory === cat.id
-                      ? 'clay-btn-primary text-white shadow-sm'
-                      : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200/70'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Género (solo si son esencias) */}
-            {selectedCategory === 'Esencias para Perfume' && (
-              <div className="flex items-center gap-1 bg-white/70 p-1 rounded-xl border border-slate-200/80">
-                <span className="text-[10px] font-black uppercase text-slate-400 px-2">Género:</span>
-                {(['Todos', 'Caballero', 'Dama', 'Unisex'] as const).map((g) => (
-                  <button
-                    key={g}
-                    onClick={() => {
-                      setSelectedGender(g);
-                      setCurrentPage(1);
-                    }}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
-                      selectedGender === g
-                        ? 'bg-indigo-600 text-white shadow-xs'
-                        : 'text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    {g === 'Todos' ? 'Todos' : g === 'Caballero' ? '🧔 Hombre' : g === 'Dama' ? '👩 Mujer' : '⚧ Unisex'}
-                  </button>
-                ))}
-              </div>
-            )}
-
-          </div>
-
+          {isLoadingCatalog && (
+            <span className="text-[10px] sm:text-xs font-bold text-indigo-500 animate-pulse flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping"></span>
+              Sincronizando existencias...
+            </span>
+          )}
         </div>
 
         {/* ================= REJILLA DE PRODUCTOS ================= */}
