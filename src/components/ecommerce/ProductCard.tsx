@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { ShoppingBag, Check, Sparkles, Plus, Minus } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS } from '@/lib/store';
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation } from '@/context/EcommerceCartContext';
+import { getProductImage } from '@/lib/perfumeImages';
 
 interface ProductCardProps {
   product: ProductItem;
@@ -114,7 +115,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   // Nombre oficial (si no tiene, usa el nombre del contratipo)
   const displayName = product.officialName?.trim() ? product.officialName : product.name;
-  const productImage = product.imageUrl || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=500&q=80';
+  const productImage = getProductImage(product);
 
   return (
     <>

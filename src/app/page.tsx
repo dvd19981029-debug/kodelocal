@@ -30,7 +30,24 @@ export default function EcommerceHomePage() {
   const [isLoadingCatalog, setIsLoadingCatalog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isKitModalOpen, setIsKitModalOpen] = useState(false);
-  const itemsPerPage = 36;
+  // Columnas dinámicas según el tamaño de pantalla para calcular exactamente 7 filas
+  const [columns, setColumns] = useState(2);
+
+  useEffect(() => {
+    const updateColumns = () => {
+      if (window.innerWidth >= 1280) {
+        setColumns(4);
+      } else if (window.innerWidth >= 768) {
+        setColumns(3);
+      } else {
+        setColumns(2);
+      }
+    };
+
+    updateColumns();
+    window.addEventListener('resize', updateColumns);
+    return () => window.removeEventListener('resize', updateColumns);
+  }, []);
 
   useEffect(() => {
     // 1. Cargar catálogo desde /api/products con existencias reales de Supabase
@@ -109,12 +126,32 @@ export default function EcommerceHomePage() {
     return products.filter(p => p.category === 'Esencias para Perfume');
   }, [products]);
 
-  // Paginación
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage) || 1;
+  // Paginación: Exactamente 7 filas por página según el número de columnas del dispositivo
+  const targetRows = 7;
+  const standardPageSize = targetRows * columns;
+  // En la página 1, la tarjeta especial 'Arma tu propio perfume' ocupa 2 espacios (col-span-2)
+  const page1ProductsCount = Math.max(1, standardPageSize - 2);
+
+  const totalPages = useMemo(() => {
+    if (filteredProducts.length <= page1ProductsCount) return 1;
+    const remaining = filteredProducts.length - page1ProductsCount;
+    return 1 + Math.ceil(remaining / standardPageSize);
+  }, [filteredProducts.length, page1ProductsCount, standardPageSize]);
+
+  // Si se filtran productos y la página actual excede el nuevo total, reajustar a la última válida
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(Math.max(1, totalPages));
+    }
+  }, [totalPages, currentPage]);
+
   const paginatedProducts = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredProducts.slice(start, start + itemsPerPage);
-  }, [filteredProducts, currentPage]);
+    if (currentPage === 1) {
+      return filteredProducts.slice(0, page1ProductsCount);
+    }
+    const start = page1ProductsCount + (currentPage - 2) * standardPageSize;
+    return filteredProducts.slice(start, start + standardPageSize);
+  }, [filteredProducts, currentPage, page1ProductsCount, standardPageSize]);
 
   // Generador de paginación inteligente: Siempre muestra la página 1, la última página y las páginas vecinas
   const paginationItems = useMemo(() => {
