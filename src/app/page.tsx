@@ -121,23 +121,21 @@ export default function EcommerceHomePage() {
   return (
     <div className="space-y-4 sm:space-y-6 pb-16">
       
-      {/* ================= BARRA DE BÚSQUEDA REACTIVA STICKY ================= */}
-      <section className="pt-0.5">
-        <ReactiveSearchBar
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
-          selectedGender={selectedGender}
-          setSelectedGender={setSelectedGender}
-          selectedStockFilter={selectedStockFilter}
-          setSelectedStockFilter={setSelectedStockFilter}
-          totalProducts={products.length}
-          inStockCount={products.filter(p => p.stock > 0).length}
-          outOfStockCount={products.filter(p => p.stock <= 0).length}
-          setCurrentPage={setCurrentPage}
-        />
-      </section>
+      {/* ================= BARRA DE BÚSQUEDA REACTIVA PERMANENTEMENTE STICKY ================= */}
+      <ReactiveSearchBar
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+        selectedGender={selectedGender}
+        setSelectedGender={setSelectedGender}
+        selectedStockFilter={selectedStockFilter}
+        setSelectedStockFilter={setSelectedStockFilter}
+        totalProducts={products.length}
+        inStockCount={products.filter(p => p.stock > 0).length}
+        outOfStockCount={products.filter(p => p.stock <= 0).length}
+        setCurrentPage={setCurrentPage}
+      />
 
       {/* ================= CARRUSEL PROMOCIONAL FORMATO VIDEO (SE OCULTA AUTOMÁTICAMENTE AL BUSCAR) ================= */}
       {!isSearching && (

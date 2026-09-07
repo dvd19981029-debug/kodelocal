@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ShoppingBag, Check, Sparkles } from 'lucide-react';
+import { ShoppingBag, Check, Sparkles, Plus, Minus } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS } from '@/lib/store';
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation } from '@/context/EcommerceCartContext';
 import BottleSelectionModal from './BottleSelectionModal';
@@ -12,7 +12,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, availableBottles }: ProductCardProps) {
-  const { addToCart } = useEcommerceCart();
+  const { cart, addToCart, updateQuantity } = useEcommerceCart();
   const presentations = getPresentationsForProduct(product);
   
   // Presentación por defecto (Onza Completa para esencias, o UNIDAD para suministros)
@@ -22,10 +22,40 @@ export default function ProductCard({ product, availableBottles }: ProductCardPr
 
   const [selectedPresentation, setSelectedPresentation] = useState<ProductPresentation>(defaultPres);
   const [justAdded, setJustAdded] = useState(false);
+  const [isCardPulsing, setIsCardPulsing] = useState(false);
   const [isBottleModalOpen, setIsBottleModalOpen] = useState(false);
 
   const activeOption = presentations.find(p => p.id === selectedPresentation) || presentations[0];
   const isOutOfStock = !product.stock || product.stock <= 0;
+
+  // Buscar si esta presentación específica ya está en el carrito
+  const matchingCartItems = cart.filter(item => 
+    item.product.id === product.id && item.presentation === selectedPresentation
+  );
+  const currentQuantity = matchingCartItems.reduce((acc, it) => acc + it.quantity, 0);
+
+  const triggerCardPulse = () => {
+    setIsCardPulsing(true);
+    setTimeout(() => setIsCardPulsing(false), 700);
+  };
+
+  const handleIncrement = () => {
+    if (matchingCartItems.length > 0) {
+      const target = matchingCartItems[0];
+      updateQuantity(target.id, target.quantity + 1);
+      triggerCardPulse();
+    } else {
+      handleAdd();
+    }
+  };
+
+  const handleDecrement = () => {
+    if (matchingCartItems.length > 0) {
+      const target = matchingCartItems[matchingCartItems.length - 1];
+      updateQuantity(target.id, target.quantity - 1);
+      triggerCardPulse();
+    }
+  };
 
   // Frascos utilizables para el modal
   const bottlesToUse = (availableBottles && availableBottles.length > 0)
@@ -44,6 +74,7 @@ export default function ProductCard({ product, availableBottles }: ProductCardPr
     // Onza completa u otros productos individuales
     addToCart(product, selectedPresentation, 1);
     setJustAdded(true);
+    triggerCardPulse();
     setTimeout(() => setJustAdded(false), 1200);
   };
 
@@ -51,6 +82,7 @@ export default function ProductCard({ product, availableBottles }: ProductCardPr
     addToCart(product, 'PERFUME_PREPARADO', 1, chosenBottle);
     setIsBottleModalOpen(false);
     setJustAdded(true);
+    triggerCardPulse();
     setTimeout(() => setJustAdded(false), 1200);
   };
 
@@ -86,9 +118,13 @@ export default function ProductCard({ product, availableBottles }: ProductCardPr
 
   return (
     <>
-      <div className={`clay-card p-2 sm:p-3 flex flex-col justify-between transition-all duration-200 group rounded-2xl ${
+      <div className={`clay-card p-2 sm:p-3 flex flex-col justify-between transition-all duration-300 group rounded-2xl relative ${
         isOutOfStock 
           ? 'opacity-85 border-slate-200/90 bg-[#f8fafc]' 
+          : isCardPulsing
+          ? 'scale-[1.03] ring-4 ring-emerald-400/70 shadow-[0_0_22px_rgba(16,185,129,0.35)]'
+          : currentQuantity > 0
+          ? 'border-emerald-300/80 bg-white shadow-[0_4px_16px_rgba(16,185,129,0.12)]'
           : 'hover:scale-[1.015] hover:shadow-[4px_6px_16px_rgba(99,102,241,0.18)]'
       }`}>
         
@@ -112,11 +148,18 @@ export default function ProductCard({ product, availableBottles }: ProductCardPr
               {getGenderBadge(product.gender)}
             </div>
 
-            {/* Badge Sold Out / Agotado estilo Klone Scents */}
+            {/* Badge Sold Out o Badge de Unidades en Carrito */}
             {isOutOfStock ? (
               <div className="absolute top-1.5 right-1.5 z-10">
                 <span className="bg-slate-900 text-white text-[8px] sm:text-[9.5px] font-black py-0.5 px-2 rounded-md shadow-md tracking-wider uppercase">
                   Agotado
+                </span>
+              </div>
+            ) : currentQuantity > 0 ? (
+              <div className="absolute top-1.5 right-1.5 z-10 animate-in zoom-in-75 duration-200">
+                <span className="bg-emerald-600 text-white text-[8px] sm:text-[9px] font-black py-0.5 px-1.5 rounded-md shadow-md flex items-center gap-1">
+                  <Check className="w-2.5 h-2.5" />
+                  <span>{currentQuantity} en carrito</span>
                 </span>
               </div>
             ) : (
@@ -188,7 +231,7 @@ export default function ProductCard({ product, availableBottles }: ProductCardPr
           )}
         </div>
 
-        {/* Botón Agregar al Carrito */}
+        {/* ================= CONTROLES DE CARRITO EN TARJETA ================= */}
         <div className="mt-2 pt-2 border-t border-slate-100">
           {isOutOfStock ? (
             <button
@@ -197,7 +240,58 @@ export default function ProductCard({ product, availableBottles }: ProductCardPr
             >
               Agotado
             </button>
+          ) : currentQuantity > 0 ? (
+            /* YA ESTÁ EN EL CARRITO: Mostrar "Llevas X unidad(es)" y controles de [+] [-] */
+            <div className={`space-y-1.5 transition-all duration-300 ${isCardPulsing ? 'scale-[1.02]' : ''}`}>
+              {/* Indicador de unidades en carrito */}
+              <div className="flex items-center justify-between px-0.5">
+                <span className="text-[10px] sm:text-[11px] font-black text-emerald-700 flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-xs shrink-0"></span>
+                  <span>Llevas {currentQuantity} {currentQuantity === 1 ? 'unidad' : 'unidades'}</span>
+                </span>
+                <span className="text-[9.5px] font-mono font-bold text-slate-500">
+                  ${(activeOption.price * currentQuantity).toFixed(2)}
+                </span>
+              </div>
+
+              {/* Controles interactivos de cantidad [-] [cant] [+] */}
+              <div className="flex items-center justify-between gap-1 w-full bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 shadow-2xs">
+                <button
+                  onClick={handleDecrement}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-600 font-black text-xs flex items-center justify-center transition-all shadow-xs active:scale-90 cursor-pointer"
+                  title="Disminuir unidad"
+                  aria-label="Disminuir unidad"
+                >
+                  <Minus className="w-3.5 h-3.5" />
+                </button>
+
+                <div className="flex-1 text-center font-black text-xs sm:text-sm text-slate-900 leading-tight">
+                  <span className="text-indigo-700 font-mono font-extrabold">{currentQuantity}</span>
+                  <span className="text-[8px] sm:text-[9px] text-slate-400 font-medium block">en carrito</span>
+                </div>
+
+                <button
+                  onClick={handleIncrement}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs flex items-center justify-center transition-all shadow-xs active:scale-90 cursor-pointer"
+                  title="Aumentar unidad"
+                  aria-label="Aumentar unidad"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Opción adicional para Perfume Preparado: si desea agregar otro bote */}
+              {isPerfumePreparado && (
+                <button
+                  onClick={() => setIsBottleModalOpen(true)}
+                  className="w-full text-center text-[9px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline py-0.5 cursor-pointer"
+                >
+                  + Agregar con otro frasco
+                </button>
+              )}
+            </div>
           ) : (
+            /* AÚN NO EN EL CARRITO: Botón de agregar normal */
             <button
               onClick={handleAdd}
               className={`w-full clay-btn py-1.5 sm:py-2 text-[9.5px] sm:text-xs font-black rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer ${

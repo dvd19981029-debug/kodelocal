@@ -77,6 +77,8 @@ interface EcommerceCartContextType {
   clearCart: () => void;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
+  isCartPulsing: boolean;
+  triggerCartPulse: () => void;
   totalItems: number;
   subtotal: number;
 }
@@ -86,7 +88,15 @@ const EcommerceCartContext = createContext<EcommerceCartContextType | undefined>
 export function EcommerceCartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<EcommerceCartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isCartPulsing, setIsCartPulsing] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+
+  const triggerCartPulse = () => {
+    setIsCartPulsing(true);
+    setTimeout(() => {
+      setIsCartPulsing(false);
+    }, 800);
+  };
 
   useEffect(() => {
     setIsMounted(true);
@@ -182,7 +192,8 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
       return updatedCart;
     });
 
-    setIsCartOpen(true);
+    // En lugar de abrir la pestaña del carrito automáticamente, activamos la palpitación visual
+    triggerCartPulse();
   };
 
   const updateQuantity = (id: string, quantity: number) => {
@@ -190,11 +201,17 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
       removeFromCart(id);
       return;
     }
-    setCart(prev => prev.map(item => 
-      item.id === id 
-        ? { ...item, quantity, totalPrice: Number((item.unitPrice * quantity).toFixed(2)) }
-        : item
-    ));
+    setCart(prev => {
+      const current = prev.find(item => item.id === id);
+      if (current && quantity > current.quantity) {
+        triggerCartPulse();
+      }
+      return prev.map(item => 
+        item.id === id 
+          ? { ...item, quantity, totalPrice: Number((item.unitPrice * quantity).toFixed(2)) }
+          : item
+      );
+    });
   };
 
   const removeFromCart = (id: string) => {
@@ -217,6 +234,8 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
       clearCart,
       isCartOpen,
       setIsCartOpen,
+      isCartPulsing,
+      triggerCartPulse,
       totalItems,
       subtotal
     }}>

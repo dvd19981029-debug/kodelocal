@@ -7,7 +7,7 @@ import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 
 export default function EcommerceHeader() {
-  const { totalItems, setIsCartOpen } = useEcommerceCart();
+  const { totalItems, setIsCartOpen, isCartPulsing } = useEcommerceCart();
   const { customer, isLoggedIn, openAuthModal, logout } = useCustomerAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
@@ -109,17 +109,27 @@ export default function EcommerceHeader() {
             <Phone className="w-3.5 h-3.5" />
           </a>
 
-          {/* Botón Carrito de Compras */}
+          {/* Botón Carrito de Compras con Palpitación Animada */}
           <button
             onClick={() => setIsCartOpen(true)}
-            className="clay-btn clay-btn-primary px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl flex items-center gap-1.5 sm:gap-2 relative !shadow-[2px_4px_12px_rgba(99,102,241,0.35)] active:scale-95 transition-transform cursor-pointer"
+            className={`clay-btn clay-btn-primary px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl flex items-center gap-1.5 sm:gap-2 relative transition-all duration-300 cursor-pointer ${
+              isCartPulsing
+                ? 'scale-110 !bg-gradient-to-r !from-pink-500 !via-purple-600 !to-indigo-600 !shadow-[0_0_24px_rgba(236,72,153,0.7)] ring-4 ring-pink-300/80 animate-pulse'
+                : '!shadow-[2px_4px_12px_rgba(99,102,241,0.35)] active:scale-95'
+            }`}
           >
-            <ShoppingBag className="w-4 h-4 text-white" />
+            <ShoppingBag className={`w-4 h-4 text-white transition-transform ${isCartPulsing ? 'scale-125 rotate-12' : ''}`} />
             <span className="text-xs font-black hidden sm:inline">Carrito</span>
             {totalItems > 0 && (
-              <span className="w-5 h-5 rounded-full bg-pink-500 text-white text-[10px] font-black flex items-center justify-center shadow-md animate-in zoom-in">
+              <span className={`w-5 h-5 rounded-full bg-pink-500 text-white text-[10px] font-black flex items-center justify-center shadow-md transition-all ${
+                isCartPulsing ? 'scale-125 bg-pink-600 ring-2 ring-white' : ''
+              }`}>
                 {totalItems}
               </span>
+            )}
+            {/* Onda expansiva de palpitación al añadir producto */}
+            {isCartPulsing && (
+              <span className="absolute inset-0 rounded-xl bg-pink-400/40 animate-ping pointer-events-none" />
             )}
           </button>
         </div>

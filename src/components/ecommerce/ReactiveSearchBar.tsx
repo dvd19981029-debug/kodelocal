@@ -37,24 +37,39 @@ export default function ReactiveSearchBar({
   const inputRef = useRef<HTMLInputElement>(null);
   const lastScrollY = useRef(0);
 
-  // Detección reactiva de scroll
+  // Detección reactiva de scroll con requestAnimationFrame
   useEffect(() => {
+    let ticking = false;
+
     const handleScroll = () => {
-      // Si el input está enfocado o el usuario está escribiendo, no colapsar para no interrumpir
-      if (isInputFocused) return;
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          // Si el input está enfocado, no colapsar para no interrumpir al usuario
+          if (isInputFocused) {
+            ticking = false;
+            return;
+          }
 
-      const currentScrollY = window.scrollY;
+          const currentScrollY = window.scrollY;
 
-      // Al desplazarse hacia abajo más de 70px -> activar animación de encogimiento a botoncito en esquina superior derecha
-      if (currentScrollY > 75 && currentScrollY > lastScrollY.current + 5) {
-        setIsCollapsed(true);
-      } 
-      // Al arrastrar hacia arriba -> expandir suavemente a barra normal completa
-      else if (currentScrollY < lastScrollY.current - 6 || currentScrollY <= 40) {
-        setIsCollapsed(false);
+          // En la parte superior de la página, siempre expandida
+          if (currentScrollY <= 40) {
+            setIsCollapsed(false);
+          } 
+          // Al desplazarse hacia abajo más de 70px -> activar animación de encogimiento a botoncito en esquina superior derecha
+          else if (currentScrollY > 70 && currentScrollY > lastScrollY.current + 5) {
+            setIsCollapsed(true);
+          } 
+          // Al arrastrar hacia arriba -> expandir suavemente a barra normal completa
+          else if (currentScrollY < lastScrollY.current - 5) {
+            setIsCollapsed(false);
+          }
+
+          lastScrollY.current = currentScrollY;
+          ticking = false;
+        });
+        ticking = true;
       }
-
-      lastScrollY.current = currentScrollY;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -65,7 +80,7 @@ export default function ReactiveSearchBar({
     setIsCollapsed(false);
     setTimeout(() => {
       inputRef.current?.focus();
-    }, 200);
+    }, 150);
   };
 
   const handleSelectFilter = (type: 'all' | 'stock' | 'cat' | 'gender', value?: string) => {
@@ -94,31 +109,27 @@ export default function ReactiveSearchBar({
     selectedStockFilter !== 'Todos';
 
   return (
-    <div className="sticky top-[54px] sm:top-[62px] z-30 transition-all duration-300 pointer-events-auto py-1">
+    <div className="sticky top-[53px] sm:top-[69px] md:top-[77px] z-30 pointer-events-none py-1 transition-all">
       
       {/* Contenedor reactivo animado: morphing de barra completa a botoncito en esquina superior derecha */}
-      <div className={`transition-all duration-400 ease-out ${
-        isCollapsed 
-          ? 'flex justify-end' 
-          : 'w-full'
-      }`}>
+      <div className="flex justify-end w-full">
         
         {isCollapsed ? (
           /* ================= BOTONCITO EN ESQUINA SUPERIOR DERECHA (ANIMADO) ================= */
           <button
             onClick={handleExpandAndFocus}
-            className="w-11 h-11 rounded-full clay-card bg-white/95 border-2 border-white text-indigo-600 flex items-center justify-center shadow-[3px_5px_18px_rgba(99,102,241,0.4)] hover:scale-110 active:scale-95 transition-all cursor-pointer relative animate-in zoom-in-75 duration-200"
+            className="pointer-events-auto w-11 h-11 sm:w-12 sm:h-12 rounded-full clay-card bg-white/95 border-2 border-white text-indigo-600 flex items-center justify-center shadow-[3px_6px_20px_rgba(99,102,241,0.35)] hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer relative group animate-in zoom-in-75 duration-200"
             title="Abrir buscador"
             aria-label="Buscar fragancias"
           >
-            <Search className="w-5 h-5 text-indigo-600" />
+            <Search className="w-5 h-5 text-indigo-600 group-hover:scale-110 transition-transform" />
             {hasActiveFilters && (
-              <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-pink-500 ring-2 ring-white animate-pulse" />
+              <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-pink-500 ring-2 ring-white animate-pulse" />
             )}
           </button>
         ) : (
-          /* ================= BARRA DE BÚSQUEDA NORMAL COMPLETA ================= */
-          <div className="w-full space-y-2 animate-in fade-in zoom-in-95 duration-200">
+          /* ================= BARRA DE BÚSQUEDA NORMAL COMPLETA CLAYMORPHIC ================= */
+          <div className="pointer-events-auto w-full clay-card bg-[#f8fafc]/95 backdrop-blur-md border border-white/90 shadow-md p-2 sm:p-2.5 rounded-2xl space-y-2 animate-in fade-in zoom-in-95 duration-200">
             
             {/* Input de Búsqueda Claymorphic */}
             <div className="relative w-full">
@@ -134,7 +145,7 @@ export default function ReactiveSearchBar({
                   setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="clay-input has-icon w-full pr-10 py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-slate-800 placeholder-slate-400 bg-white/95 shadow-sm rounded-2xl transition-all focus:ring-2 focus:ring-indigo-500/20"
+                className="clay-input has-icon w-full pr-10 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-800 placeholder-slate-400 bg-white/95 shadow-2xs rounded-xl transition-all focus:ring-2 focus:ring-indigo-500/20"
               />
               {searchQuery && (
                 <button
