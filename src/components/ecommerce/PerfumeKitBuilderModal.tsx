@@ -84,6 +84,18 @@ export default function PerfumeKitBuilderModal({
     });
   }, [availableEssences, essenceSearch, essenceGenderFilter]);
 
+  // Bloquear el scroll de la página de fondo mientras el modal esté abierto sin romper iOS
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const basePrice = 15.00;
@@ -113,18 +125,6 @@ export default function PerfumeKitBuilderModal({
     onClose();
     setCurrentStep(1);
   };
-
-  // Bloquear el scroll de la página de fondo mientras el modal esté abierto sin romper iOS
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, [isOpen]);
 
   return (
     <div 

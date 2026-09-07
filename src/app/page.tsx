@@ -252,13 +252,6 @@ export default function EcommerceHomePage() {
               {filteredProducts.length}
             </span>
           </div>
-
-          {isLoadingCatalog && (
-            <span className="text-[10px] sm:text-xs font-bold text-indigo-500 animate-pulse flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping"></span>
-              Sincronizando existencias...
-            </span>
-          )}
         </div>
 
         {/* ================= TARJETA DESTACADA: ARMA TU PROPIO PERFUME (SIEMPRE DISPONIBLE) ================= */}
