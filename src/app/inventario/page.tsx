@@ -29,6 +29,7 @@ export default function InventarioPage() {
   // Form State
   const [formData, setFormData] = useState<Partial<ProductItem>>({
     name: '',
+    officialName: '',
     sku: '',
     barcode: '',
     brand: '',
@@ -59,6 +60,7 @@ export default function InventarioPage() {
       const matchCat = selectedCategory === 'Todos' || p.category === selectedCategory;
       const matchSearch = 
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.officialName && p.officialName.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (p.brand && p.brand.toLowerCase().includes(searchQuery.toLowerCase())) ||
         p.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.barcode.includes(searchQuery);
@@ -85,6 +87,7 @@ export default function InventarioPage() {
       const newProduct: ProductItem = {
         id: `prod-${Date.now()}`,
         name: formData.name || 'Nuevo Producto',
+        officialName: formData.officialName || '',
         sku: formData.sku || `SKU-${Math.floor(1000 + Math.random() * 9000)}`,
         barcode: formData.barcode || `${Math.floor(741000000000 + Math.random() * 99999999)}`,
         brand: formData.brand || 'Kode',
@@ -194,6 +197,7 @@ export default function InventarioPage() {
             setEditingProduct(null);
             setFormData({
               name: '',
+              officialName: '',
               sku: '',
               barcode: '',
               category: 'General',
@@ -220,7 +224,9 @@ export default function InventarioPage() {
           <table className="w-full text-left text-sm">
             <thead className="text-xs uppercase text-slate-400 font-bold border-b border-slate-200">
               <tr>
-                <th className="py-3 px-4">Producto</th>
+                <th className="py-3 px-3 text-center">Imagen</th>
+                <th className="py-3 px-4">Nombre Oficial</th>
+                <th className="py-3 px-4">Inspirado en</th>
                 <th className="py-3 px-4">SKU / Código</th>
                 <th className="py-3 px-4">Categoría</th>
                 <th className="py-3 px-4">Precio</th>
@@ -237,17 +243,36 @@ export default function InventarioPage() {
                 return (
                   <tr key={p.id} className="hover:bg-slate-50/60 transition-colors">
                     
-                    {/* Nombre e Imagen */}
-                    <td className="py-3 px-4 flex items-center gap-3">
-                      <img 
-                        src={p.imageUrl} 
-                        alt={p.name} 
-                        className="w-10 h-10 rounded-xl object-cover shadow-[1px_2px_4px_rgba(164,177,198,0.3)]" 
-                      />
-                      <div>
-                        <span className="font-bold text-slate-800 block">{p.name}</span>
-                        <span className="text-xs text-slate-400">Costo: ${p.cost.toFixed(2)}</span>
+                    {/* Columna Imagen */}
+                    <td className="py-3 px-3 text-center">
+                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 border border-slate-200/80 mx-auto flex items-center justify-center shrink-0 shadow-2xs">
+                        <img 
+                          src={p.imageUrl || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=100&q=80'} 
+                          alt={p.name} 
+                          className="w-full h-full object-cover" 
+                        />
                       </div>
+                    </td>
+
+                    {/* Nombre Oficial */}
+                    <td className="py-3 px-4">
+                      {p.officialName ? (
+                        <span className="font-black text-slate-900 text-sm block">
+                          {p.officialName}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 text-xs italic">
+                          Sin asignar
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Inspirado en (Contratipo y Marca) */}
+                    <td className="py-3 px-4">
+                      <span className="font-bold text-slate-800 block text-xs">{p.name}</span>
+                      <span className="text-xs text-slate-400">
+                        Inspirado en {p.brand || 'Marca'} • Costo: ${p.cost.toFixed(2)}
+                      </span>
                     </td>
 
                     {/* SKU y Código */}
@@ -362,59 +387,93 @@ export default function InventarioPage() {
             </p>
 
             <form onSubmit={handleSaveProduct} className="space-y-4">
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Nombre del Producto *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Ej. Teclado Inalámbrico"
-                  className="clay-input w-full text-xs"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">SKU</label>
-                  <input
-                    type="text"
-                    value={formData.sku}
-                    onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                    placeholder="TEC-001"
-                    className="clay-input w-full text-xs font-mono"
-                  />
+              {/* Imagen y Vista Previa */}
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <div className="sm:col-span-3 flex flex-col items-center">
+                  <div className="w-16 h-16 rounded-xl overflow-hidden bg-white border border-slate-200 shadow-sm flex items-center justify-center">
+                    {formData.imageUrl ? (
+                      <img src={formData.imageUrl} alt="Vista previa" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-[10px] text-slate-400 font-bold text-center px-1">Sin Imagen</span>
+                    )}
+                  </div>
+                  <span className="text-[9px] text-slate-400 font-semibold mt-1">Vista previa</span>
                 </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">Código de Barras</label>
+                <div className="sm:col-span-9">
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    URL de Imagen del Producto
+                  </label>
                   <input
-                    type="text"
-                    value={formData.barcode}
-                    onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                    placeholder="741001234509"
-                    className="clay-input w-full text-xs font-mono"
+                    type="url"
+                    value={formData.imageUrl || ''}
+                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                    placeholder="https://images.unsplash.com/... o enlace de foto"
+                    className="clay-input w-full text-xs"
                   />
+                  <span className="text-[10px] text-slate-400 mt-1 block">Foto oficial del frasco de perfume</span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              {/* Nombre Oficial y Contratipo */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">Categoría</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Nombre Oficial de la Fragancia
+                  </label>
                   <input
                     type="text"
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    placeholder="Audio, Periféricos, etc."
+                    value={formData.officialName || ''}
+                    onChange={(e) => setFormData({ ...formData, officialName: e.target.value })}
+                    placeholder="Ej. Hombre Salvaje"
+                    className="clay-input w-full text-xs font-black text-indigo-950 bg-indigo-50/30"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">Nombre de tu marca (ej. Hombre Salvaje)</span>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Inspirado en (Contratipo) <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name || ''}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Ej. Sauvage H"
+                    className="clay-input w-full text-xs font-bold"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">Nombre del contratipo / esencia</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Marca / Diseñador</label>
+                  <input
+                    type="text"
+                    value={formData.brand || ''}
+                    onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                    placeholder="Ej. Dior"
                     className="clay-input w-full text-xs"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">URL de Imagen</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">SKU / Código</label>
                   <input
                     type="text"
-                    value={formData.imageUrl}
-                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                    placeholder="https://..."
+                    value={formData.sku || ''}
+                    onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                    placeholder="100"
+                    className="clay-input w-full text-xs font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Categoría</label>
+                  <input
+                    type="text"
+                    value={formData.category || ''}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    placeholder="Esencias para Perfume"
                     className="clay-input w-full text-xs"
                   />
                 </div>

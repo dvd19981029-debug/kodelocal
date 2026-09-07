@@ -78,10 +78,12 @@ export default function EcommerceHomePage() {
       const brandStr = String(p.brand || '').toLowerCase();
       const barcodeStr = String(p.barcode || '');
 
+      const officialStr = (p.officialName || '').toLowerCase();
       const matchesSearch = 
         !q ||
         skuStr === q ||
         nameStr.includes(q) ||
+        officialStr.includes(q) ||
         brandStr.includes(q) ||
         barcodeStr.includes(q);
 

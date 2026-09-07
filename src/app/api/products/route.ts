@@ -44,6 +44,7 @@ export async function GET(request: Request) {
       sku: p.sku || '',
       barcode: p.barcode || '',
       name: p.name,
+      officialName: (p as any).officialName || '',
       brand: p.brand || '',
       gender: p.gender || 'Unisex',
       category: p.category?.name || 'Esencias para Perfume',
@@ -90,7 +91,7 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
-    const { id, stock, isAvailableOnline, price, puesto } = body;
+    const { id, stock, isAvailableOnline, price, puesto, officialName, imageUrl } = body;
 
     if (!id) {
       return NextResponse.json({ success: false, error: 'Product ID required' }, { status: 400 });
@@ -103,6 +104,8 @@ export async function PATCH(request: Request) {
         ...(typeof isAvailableOnline === 'boolean' ? { isAvailableOnline } : {}),
         ...(typeof price === 'number' ? { price } : {}),
         ...(typeof puesto === 'string' ? { puesto } : {}),
+        ...(typeof officialName === 'string' ? { officialName } : {}),
+        ...(typeof imageUrl === 'string' ? { imageUrl } : {}),
       },
     });
 

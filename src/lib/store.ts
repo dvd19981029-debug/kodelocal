@@ -5,6 +5,7 @@ export interface ProductItem {
   sku: string;
   barcode: string;
   name: string;
+  officialName?: string; // Nombre comercial oficial (ej. Hombre Salvaje)
   brand?: string;
   gender?: string; // Caballero, Dama, Unisex
   category: string;
@@ -88,6 +89,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "sku": "100",
     "barcode": "741000000100",
     "name": "1 Million Elixir H",
+    "officialName": "Elixir Dorado",
     "brand": "Paco Rabanne",
     "gender": "Caballero",
     "category": "Esencias para Perfume",
@@ -104,6 +106,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "sku": "101",
     "barcode": "741000000101",
     "name": "1 Million Golden Oud",
+    "officialName": "Oud Real",
     "brand": "Paco Rabanne",
     "gender": "Caballero",
     "category": "Esencias para Perfume",
@@ -120,6 +123,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "sku": "102",
     "barcode": "741000000102",
     "name": "1 Million H",
+    "officialName": "Un Millón",
     "brand": "Paco Rabanne",
     "gender": "Caballero",
     "category": "Esencias para Perfume",
@@ -3976,6 +3980,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "sku": "344",
     "barcode": "741000000344",
     "name": "Sauvage H",
+    "officialName": "Hombre Salvaje",
     "brand": "Dior",
     "gender": "Caballero",
     "category": "Esencias para Perfume",

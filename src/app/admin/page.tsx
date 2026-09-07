@@ -197,7 +197,12 @@ export default function AdminPage() {
     const q = prodSearch.toLowerCase().trim();
     return products.filter(p => {
       const matchCat = prodCatFilter === 'Todos' || p.category === prodCatFilter;
-      const matchQ = !q || p.name.toLowerCase().includes(q) || (p.brand && p.brand.toLowerCase().includes(q)) || p.sku.toLowerCase() === q || (p.puesto && p.puesto.toLowerCase().includes(q));
+      const matchQ = !q || 
+        p.name.toLowerCase().includes(q) || 
+        (p.officialName && p.officialName.toLowerCase().includes(q)) ||
+        (p.brand && p.brand.toLowerCase().includes(q)) || 
+        p.sku.toLowerCase() === q || 
+        (p.puesto && p.puesto.toLowerCase().includes(q));
       return matchCat && matchQ;
     });
   }, [products, prodCatFilter, prodSearch]);
@@ -293,6 +298,7 @@ export default function AdminPage() {
       sku: nextSku,
       barcode: '',
       name: '',
+      officialName: '',
       brand: '',
       puesto: '',
       gender: 'Unisex',
@@ -851,10 +857,11 @@ export default function AdminPage() {
                 <table className="w-full text-left text-xs">
                   <thead className="text-[11px] uppercase text-slate-400 font-bold border-b border-slate-200 sticky top-0 bg-white">
                     <tr>
+                      <th className="py-3 px-3 text-center">Imagen</th>
                       <th className="py-3 px-3">Código</th>
                       <th className="py-3 px-3">Puesto</th>
-                      <th className="py-3 px-3">Producto / Contratipo</th>
-                      <th className="py-3 px-3">Marca</th>
+                      <th className="py-3 px-3">Nombre Oficial</th>
+                      <th className="py-3 px-3">Inspirado en</th>
                       <th className="py-3 px-3">Categoría</th>
                       <th className="py-3 px-3">Costo ($)</th>
                       <th className="py-3 px-3">PVP Venta ($)</th>
@@ -868,9 +875,23 @@ export default function AdminPage() {
                       const margen = p.price - p.cost;
                       return (
                         <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
+                          {/* Columna Imagen */}
+                          <td className="py-2.5 px-3 text-center">
+                            <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 border border-slate-200/80 mx-auto flex items-center justify-center shrink-0 shadow-2xs">
+                              <img
+                                src={p.imageUrl || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=100&q=80'}
+                                alt={p.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          </td>
+
+                          {/* Código SKU */}
                           <td className="py-2.5 px-3 font-mono font-bold text-indigo-600">
                             #{p.sku}
                           </td>
+
+                          {/* Puesto */}
                           <td className="py-2.5 px-3">
                             {p.puesto ? (
                               <span className="clay-badge bg-amber-50 text-amber-900 border border-amber-200/80 font-mono font-black text-xs py-0.5 px-2 inline-flex items-center gap-1 shadow-sm" title="Ubicación física en estante">
@@ -882,12 +903,28 @@ export default function AdminPage() {
                               </span>
                             )}
                           </td>
-                          <td className="py-2.5 px-3 font-bold text-slate-800">
-                            {p.name}
+
+                          {/* Nombre Oficial */}
+                          <td className="py-2.5 px-3">
+                            {p.officialName ? (
+                              <span className="font-black text-slate-900 text-xs block">
+                                {p.officialName}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 text-xs italic">
+                                Sin asignar
+                              </span>
+                            )}
                           </td>
-                          <td className="py-2.5 px-3 text-slate-500">
-                            {p.brand || 'Kode'}
+
+                          {/* Inspirado en (Contratipo y Marca) */}
+                          <td className="py-2.5 px-3">
+                            <div className="font-bold text-slate-800 text-xs">{p.name}</div>
+                            <div className="text-[10px] text-slate-400 font-medium">
+                              Inspirado en {p.brand || 'Marca'}
+                            </div>
                           </td>
+
                           <td className="py-2.5 px-3">
                             <span className="clay-badge bg-slate-100 text-slate-600 text-[10px] py-0.5 px-2">
                               {p.category}
@@ -1755,11 +1792,52 @@ export default function AdminPage() {
             </p>
 
             <form onSubmit={handleSaveProduct} className="space-y-4">
-              {/* Nombre, Marca y Puesto */}
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                <div className="sm:col-span-5">
+              {/* Imagen y Vista Previa */}
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <div className="sm:col-span-3 flex flex-col items-center">
+                  <div className="w-16 h-16 rounded-xl overflow-hidden bg-white border border-slate-200 shadow-sm flex items-center justify-center">
+                    {editingProduct.imageUrl ? (
+                      <img src={editingProduct.imageUrl} alt="Vista previa" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-[10px] text-slate-400 font-bold text-center px-1">Sin Imagen</span>
+                    )}
+                  </div>
+                  <span className="text-[9px] text-slate-400 font-semibold mt-1">Vista previa</span>
+                </div>
+                <div className="sm:col-span-9">
                   <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Nombre / Fragancia Contratipo <span className="text-rose-500">*</span>
+                    URL de Imagen del Producto
+                  </label>
+                  <input
+                    type="url"
+                    value={editingProduct.imageUrl || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, imageUrl: e.target.value })}
+                    placeholder="https://images.unsplash.com/... o enlace de foto"
+                    className="clay-input w-full text-xs"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-1 block">Foto oficial del frasco de perfume</span>
+                </div>
+              </div>
+
+              {/* Nombre Oficial, Contratipo, Marca y Puesto */}
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                <div className="sm:col-span-6">
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Nombre Oficial de la Fragancia
+                  </label>
+                  <input
+                    type="text"
+                    value={editingProduct.officialName || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, officialName: e.target.value })}
+                    placeholder="Ej. Hombre Salvaje"
+                    className="clay-input w-full text-xs font-black text-indigo-950 bg-indigo-50/30"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">Nombre de tu marca (ej. Hombre Salvaje)</span>
+                </div>
+
+                <div className="sm:col-span-6">
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Inspirado en (Contratipo) <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -1769,10 +1847,14 @@ export default function AdminPage() {
                     placeholder="Ej. Sauvage H"
                     className="clay-input w-full text-xs font-bold"
                   />
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">Nombre del contratipo / esencia</span>
                 </div>
-                <div className="sm:col-span-4">
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                <div className="sm:col-span-7">
                   <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Marca / Casa
+                    Marca / Casa Diseñadora
                   </label>
                   <input
                     type="text"
@@ -1782,7 +1864,7 @@ export default function AdminPage() {
                     className="clay-input w-full text-xs"
                   />
                 </div>
-                <div className="sm:col-span-3">
+                <div className="sm:col-span-5">
                   <label className="text-xs font-bold text-slate-700 block mb-1">
                     Puesto / Estante
                   </label>
@@ -1793,7 +1875,7 @@ export default function AdminPage() {
                     placeholder="Ej. A1"
                     className="clay-input w-full text-xs font-mono font-black text-amber-900 bg-amber-50/40 uppercase"
                   />
-                  <span className="text-[10px] text-slate-400 mt-1 block">Ej: A1 = Estante A, Nivel 1</span>
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">Ubicación en bodega (A1)</span>
                 </div>
               </div>
 

@@ -27,6 +27,7 @@ model Product {
   sku                String?         @unique // Código de esencia (ej. 100, 101)
   barcode            String?         @unique
   name               String          // Nombre del contratipo (ej. 1 Million Elixir H)
+  officialName       String?         // Nombre comercial oficial de la fragancia (ej. Hombre Salvaje)
   brand              String?         // Marca inspirada (ej. Paco Rabanne, Carolina Herrera)
   gender             String?         // Caballero, Dama, Unisex, Niños
   unit               String?         @default("Onza") // Onza, Unidad, Paquete, Litro

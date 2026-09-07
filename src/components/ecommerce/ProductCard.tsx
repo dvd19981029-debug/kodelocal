@@ -22,7 +22,6 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [justAdded, setJustAdded] = useState(false);
 
   const activeOption = presentations.find(p => p.id === selectedPresentation) || presentations[0];
-
   const isOutOfStock = !product.stock || product.stock <= 0;
 
   const handleAdd = () => {
@@ -37,78 +36,106 @@ export default function ProductCard({ product }: ProductCardProps) {
     const g = gender.toLowerCase();
     if (g.includes('caballero') || g.includes('hombre')) {
       return (
-        <span className="clay-badge bg-blue-50 text-blue-700 border border-blue-200/80 text-[8.5px] sm:text-[9.5px] font-bold py-0.5 px-1.5 rounded-md sm:rounded-lg shrink-0">
-          🧔 <span className="hidden xs:inline">Caballero</span>
+        <span className="bg-white/90 backdrop-blur-xs text-blue-800 text-[8px] sm:text-[9px] font-black py-0.5 px-1 rounded shadow-xs shrink-0">
+          🧔 Cab.
         </span>
       );
     }
     if (g.includes('dama') || g.includes('mujer')) {
       return (
-        <span className="clay-badge bg-pink-50 text-pink-700 border border-pink-200/80 text-[8.5px] sm:text-[9.5px] font-bold py-0.5 px-1.5 rounded-md sm:rounded-lg shrink-0">
-          👩 <span className="hidden xs:inline">Dama</span>
+        <span className="bg-white/90 backdrop-blur-xs text-pink-800 text-[8px] sm:text-[9px] font-black py-0.5 px-1 rounded shadow-xs shrink-0">
+          👩 Dama
         </span>
       );
     }
     return (
-      <span className="clay-badge bg-purple-50 text-purple-700 border border-purple-200/80 text-[8.5px] sm:text-[9.5px] font-bold py-0.5 px-1.5 rounded-md sm:rounded-lg shrink-0">
-        ⚧ <span className="hidden xs:inline">Unisex</span>
+      <span className="bg-white/90 backdrop-blur-xs text-purple-800 text-[8px] sm:text-[9px] font-black py-0.5 px-1 rounded shadow-xs shrink-0">
+        ⚧ Uni.
       </span>
     );
   };
 
+  // Nombre oficial (si no tiene, usa el nombre del contratipo)
+  const displayName = product.officialName?.trim() ? product.officialName : product.name;
+  const productImage = product.imageUrl || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=500&q=80';
+
   return (
-    <div className={`clay-card p-2.5 sm:p-4 flex flex-col justify-between transition-all duration-200 group rounded-2xl ${
+    <div className={`clay-card p-2 sm:p-3 flex flex-col justify-between transition-all duration-200 group rounded-2xl ${
       isOutOfStock 
-        ? 'opacity-85 border-slate-200/90 bg-[#f4f6fa]' 
+        ? 'opacity-85 border-slate-200/90 bg-[#f8fafc]' 
         : 'hover:scale-[1.015] hover:shadow-[4px_6px_16px_rgba(99,102,241,0.18)]'
     }`}>
       
-      {/* Encabezado de la Tarjeta */}
       <div>
-        <div className="flex items-center justify-between gap-1 mb-1.5">
-          <div className="flex items-center gap-1 min-w-0">
-            <span className="clay-badge font-mono font-black text-[8.5px] sm:text-[9px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded border border-slate-200 shrink-0">
+        {/* Contenedor de Imagen de Frasco (Estilo Klone Scents) */}
+        <div className="relative w-full aspect-[4/5] rounded-xl overflow-hidden bg-slate-100/90 mb-2 flex items-center justify-center border border-slate-100">
+          <img
+            src={productImage}
+            alt={displayName}
+            loading="lazy"
+            className={`w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105 ${
+              isOutOfStock ? 'grayscale-[35%]' : ''
+            }`}
+          />
+
+          {/* Badges superiores sobre la foto */}
+          <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 items-start z-10">
+            <span className="font-mono font-black text-[7.5px] sm:text-[8.5px] bg-slate-900/80 text-white px-1.5 py-0.5 rounded shadow-xs">
               #{product.sku}
             </span>
             {getGenderBadge(product.gender)}
           </div>
 
-          {/* Badge de Disponibilidad de Inventario */}
+          {/* Badge Sold Out / Agotado estilo Klone Scents */}
           {isOutOfStock ? (
-            <span className="clay-badge bg-rose-50 text-rose-700 border border-rose-200/90 text-[8px] sm:text-[9px] font-black py-0.5 px-1.5 sm:px-2 rounded-md sm:rounded-lg flex items-center gap-1 shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-              <span>Agotado</span>
-            </span>
+            <div className="absolute top-1.5 right-1.5 z-10">
+              <span className="bg-slate-900 text-white text-[8px] sm:text-[9.5px] font-black py-0.5 px-2 rounded-md shadow-md tracking-wider uppercase">
+                Agotado
+              </span>
+            </div>
           ) : (
-            <span className="clay-badge bg-emerald-50 text-emerald-700 border border-emerald-200/90 text-[8px] sm:text-[9px] font-extrabold py-0.5 px-1.5 sm:px-2 rounded-md sm:rounded-lg flex items-center gap-1 shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              <span>Disp.</span>
-            </span>
+            <div className="absolute bottom-1.5 right-1.5 z-10">
+              <span className="bg-emerald-500/90 backdrop-blur-xs text-white text-[7.5px] sm:text-[8.5px] font-bold py-0.5 px-1.5 rounded shadow-xs">
+                Disponible
+              </span>
+            </div>
           )}
         </div>
 
-        {/* Marca inspirada */}
-        {product.brand && (
-          <span className="text-[8.5px] sm:text-[10px] font-black uppercase tracking-wider text-indigo-500 block truncate">
-            {product.brand}
-          </span>
-        )}
-
-        {/* Nombre de la fragancia */}
-        <h3 className="font-extrabold text-[11px] sm:text-sm text-slate-900 line-clamp-2 leading-tight min-h-[28px] sm:min-h-[36px] mt-0.5" title={product.name}>
-          {product.name}
+        {/* Nombre Oficial de la Fragancia */}
+        <h3 className="font-black text-xs sm:text-base text-slate-900 line-clamp-1 leading-snug" title={displayName}>
+          {displayName}
         </h3>
 
-        {/* Selector de Presentación (50ml, 100ml, 1 Oz, etc.) */}
+        {/* Precio Prominente */}
+        <div className="mt-0.5 flex items-baseline gap-1.5">
+          <span className="text-sm sm:text-lg font-black text-indigo-700 font-mono leading-tight">
+            ${activeOption.price.toFixed(2)}
+          </span>
+          <span className="text-[8.5px] sm:text-[10px] text-slate-400 font-semibold truncate">
+            ({activeOption.name})
+          </span>
+        </div>
+
+        {/* Inspirado en [Contratipo] de [Marca] (SIN ESTRELLAS DE RESEÑAS) */}
+        <div className="text-[10px] sm:text-xs text-slate-600 mt-1 leading-tight min-h-[26px] sm:min-h-[30px] line-clamp-2">
+          <span className="text-slate-400 font-normal">Inspirado en </span>
+          <span className="font-bold text-slate-800">{product.name}</span>
+          {product.brand && (
+            <span className="text-slate-500 font-medium"> de {product.brand}</span>
+          )}
+        </div>
+
+        {/* Selector de Presentación */}
         {presentations.length > 1 ? (
-          <div className="mt-2 sm:mt-3">
-            <label className="text-[8px] sm:text-[9.5px] font-extrabold uppercase tracking-wide text-slate-400 block mb-0.5">
-              Presentación:
+          <div className="mt-1.5">
+            <label className="text-[7.5px] sm:text-[8.5px] font-extrabold uppercase tracking-wide text-slate-400 block mb-0.5">
+              Tamaño:
             </label>
             <select
               value={selectedPresentation}
               onChange={(e) => setSelectedPresentation(e.target.value as ProductPresentation)}
-              className="w-full text-[10px] sm:text-xs font-bold py-1 sm:py-1.5 px-1.5 sm:px-2 rounded-lg sm:rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 shadow-2xs truncate"
+              className="w-full text-[9.5px] sm:text-xs font-bold py-1 px-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 shadow-2xs truncate"
             >
               {presentations.map((opt) => (
                 <option key={opt.id} value={opt.id}>
@@ -116,39 +143,27 @@ export default function ProductCard({ product }: ProductCardProps) {
                 </option>
               ))}
             </select>
-            <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium mt-0.5 truncate hidden sm:block">
-              {activeOption.description}
-            </p>
           </div>
         ) : (
-          <p className="text-[9.5px] sm:text-[11px] text-slate-400 font-medium mt-1 truncate">
+          <div className="mt-1.5 text-[9px] text-slate-400 font-medium truncate">
             {activeOption.description}
-          </p>
+          </div>
         )}
       </div>
 
-      {/* Pie con Precio y Botón Agregar */}
-      <div className="flex items-center justify-between mt-2.5 sm:mt-4 pt-2 sm:pt-3 border-t border-slate-100/90 gap-1">
-        <div className="min-w-0">
-          <span className="text-[7.5px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-wider block leading-none">
-            Total
-          </span>
-          <span className="text-xs sm:text-lg font-black font-mono text-indigo-700 leading-tight">
-            ${activeOption.price.toFixed(2)}
-          </span>
-        </div>
-
+      {/* Botón Agregar al Carrito */}
+      <div className="mt-2 pt-2 border-t border-slate-100">
         {isOutOfStock ? (
           <button
             disabled
-            className="px-2 sm:px-3.5 py-1.5 sm:py-2 text-[10px] sm:text-xs font-black rounded-lg sm:rounded-xl bg-slate-200/90 text-slate-400 cursor-not-allowed flex items-center gap-1 shadow-inner shrink-0"
+            className="w-full py-1.5 text-[9.5px] sm:text-xs font-black rounded-xl bg-slate-100 text-slate-400 cursor-not-allowed text-center"
           >
-            <span>Agotado</span>
+            Agotado
           </button>
         ) : (
           <button
             onClick={handleAdd}
-            className={`clay-btn px-2 sm:px-3.5 py-1.5 sm:py-2 text-[10px] sm:text-xs font-black rounded-lg sm:rounded-xl flex items-center gap-1 transition-all active:scale-95 cursor-pointer shrink-0 ${
+            className={`w-full clay-btn py-1.5 sm:py-2 text-[9.5px] sm:text-xs font-black rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer ${
               justAdded 
                 ? 'bg-emerald-500 text-white shadow-md' 
                 : 'clay-btn-primary !shadow-[2px_3px_8px_rgba(99,102,241,0.3)]'
@@ -157,7 +172,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             {justAdded ? (
               <>
                 <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                <span className="hidden xs:inline">¡Listo!</span>
+                <span>¡Agregado!</span>
               </>
             ) : (
               <>
