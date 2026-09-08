@@ -35,14 +35,23 @@ export const UNISEX_PERFUME_IMAGES = [
 ];
 
 /**
- * Retorna una imagen determinista y variada para cada perfume según su ID y género.
+ * Retorna la imagen oficial del producto.
+ * Para todas las esencias (onzas y medias onzas), genera dinámicamente
+ * la fotografía del frasco de onza con el nombre del contratipo impreso en la etiqueta.
  */
 export function getProductImage(product: ProductItem): string {
+  // Para todas las esencias de perfume (onzas y medias onzas)
+  if (!product.category || product.category === 'Esencias para Perfume') {
+    const contratipoName = product.name || 'Esencia Pura';
+    return `/api/bottle-image?name=${encodeURIComponent(contratipoName)}`;
+  }
+
+  // Si tiene imagen asignada (frascos, envases o suministros)
   if (product.imageUrl && product.imageUrl.trim() !== '') {
     return product.imageUrl;
   }
 
-  // Generar semilla determinista a partir del SKU o ID del producto
+  // Generar semilla determinista para suministros sin imagen
   const seedString = product.sku || product.id || product.name || '0';
   let hash = 0;
   for (let i = 0; i < seedString.length; i++) {
