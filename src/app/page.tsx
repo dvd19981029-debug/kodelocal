@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { 
   Search, 
@@ -201,6 +201,29 @@ export default function EcommerceHomePage() {
   };
 
   const isSearching = searchQuery.trim().length > 0;
+
+  // Al buscar en modo sticky, llevar al usuario a ver los resultados desde la primera línea
+  const prevQueryRef = useRef(searchQuery);
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    const prevTrimmed = prevQueryRef.current.trim();
+    if (trimmed.length > 0 && trimmed !== prevTrimmed) {
+      const catalogEl = document.getElementById('catalogo');
+      if (catalogEl && window.scrollY > 100) {
+        const offset = 70;
+        const bodyRect = document.body.getBoundingClientRect().top;
+        const elementRect = catalogEl.getBoundingClientRect().top;
+        const elementPosition = elementRect - bodyRect;
+        const offsetPosition = elementPosition - offset;
+
+        window.scrollTo({
+          top: Math.max(0, offsetPosition),
+          behavior: 'smooth'
+        });
+      }
+    }
+    prevQueryRef.current = searchQuery;
+  }, [searchQuery]);
 
   return (
     <div className="space-y-4 sm:space-y-6 pb-16">

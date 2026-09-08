@@ -69,10 +69,10 @@ export default function ReactiveSearchBar({
             
             {/* Cápsula de Búsqueda Flotante (se adapta suavemente por la derecha con rebote) */}
             <div
-              className={`flex-1 min-w-0 pointer-events-auto h-11 sm:h-12 clay-card bg-[#f8fafc]/95 backdrop-blur-md border border-white/90 rounded-2xl px-3 flex items-center gap-2.5 transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+              className={`flex-1 min-w-0 pointer-events-auto h-11 sm:h-12 clay-card bg-[#f8fafc]/95 backdrop-blur-md rounded-2xl px-3 flex items-center gap-2.5 transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
                 isScrolled
-                  ? 'shadow-[0_8px_24px_rgba(0,0,0,0.08)]'
-                  : 'shadow-sm'
+                  ? 'border border-slate-800/35 shadow-[0_4px_16px_rgba(0,0,0,0.06)]'
+                  : 'border border-white/90 shadow-sm'
               }`}
             >
               {/* Ícono de Búsqueda Permanente */}
@@ -113,7 +113,7 @@ export default function ReactiveSearchBar({
               </div>
             </div>
 
-            {/* Botón del Carrito: 100% IDÉNTICO en diseño, dimensiones y clases al botón original del Header */}
+            {/* Botón del Carrito: Sin sombras cuando flota junto a la barra de búsqueda */}
             <div
               className={`transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden shrink-0 flex items-center ${
                 isScrolled
@@ -124,10 +124,10 @@ export default function ReactiveSearchBar({
               <button
                 type="button"
                 onClick={() => setIsCartOpen(true)}
-                className={`clay-btn clay-btn-primary px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl flex items-center gap-1.5 sm:gap-2 relative transition-all duration-300 cursor-pointer ${
+                className={`clay-btn clay-btn-primary px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl flex items-center gap-1.5 sm:gap-2 relative transition-all duration-300 cursor-pointer !shadow-none ${
                   isCartPulsing
-                    ? 'scale-105 ring-4 ring-purple-300 shadow-[0_4px_20px_rgba(124,58,237,0.45)]'
-                    : '!shadow-[2px_4px_12px_rgba(124,58,237,0.3)] active:scale-95'
+                    ? 'scale-105 ring-4 ring-purple-300'
+                    : 'active:scale-95'
                 }`}
               >
                 <ShoppingBag className={`w-4 h-4 text-white transition-transform duration-300 ${isCartPulsing ? '-translate-y-0.5 scale-110' : ''}`} />
