@@ -120,21 +120,23 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <>
-      <div className={`clay-card p-2 sm:p-3 flex flex-col justify-between transition-all duration-300 group rounded-2xl relative ${
-        isOutOfStock 
-          ? 'opacity-85 border-slate-200/90 bg-[#f8fafc]' 
-          : isCardPulsing
-          ? 'scale-[1.03] ring-4 ring-emerald-400/70 shadow-[0_0_22px_rgba(16,185,129,0.35)]'
-          : currentQuantity > 0
-          ? 'border-emerald-300/80 bg-white shadow-[0_4px_16px_rgba(16,185,129,0.12)]'
-          : 'hover:scale-[1.015] hover:shadow-[4px_6px_16px_rgba(99,102,241,0.18)]'
+      <div className={`flex flex-col justify-between transition-all duration-300 group relative ${
+        isOutOfStock ? 'opacity-85' : ''
       }`}>
         
         <div>
-          {/* Contenedor de Imagen de Frasco (Estilo Klone Scents) con enlace al detalle */}
+          {/* Contenedor de Imagen de Frasco con estilo Tarjeta Burbuja Claymórfica */}
           <Link 
             href={`/producto/${product.id}`}
-            className="block relative w-full aspect-[4/5] rounded-xl overflow-hidden bg-slate-100/90 mb-2 flex items-center justify-center border border-slate-100 cursor-pointer"
+            className={`block relative w-full aspect-[4/5] clay-card overflow-hidden mb-2.5 flex items-center justify-center cursor-pointer transition-all duration-300 ${
+              isOutOfStock 
+                ? 'opacity-85 border-slate-200/90 bg-[#f8fafc]' 
+                : isCardPulsing
+                ? 'scale-[1.03] ring-4 ring-emerald-400/80 shadow-[0_0_24px_rgba(16,185,129,0.35)]'
+                : currentQuantity > 0
+                ? 'ring-2 ring-emerald-400/80 shadow-[0_4px_16px_rgba(16,185,129,0.18)]'
+                : 'hover:scale-[1.02] hover:shadow-[6px_10px_20px_rgba(99,102,241,0.2)]'
+            }`}
           >
             <img
               src={productImage}
@@ -143,19 +145,19 @@ export default function ProductCard({ product }: ProductCardProps) {
               onError={(e) => {
                 e.currentTarget.src = 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80';
               }}
-              className={`w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105 ${
+              className={`w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-108 ${
                 isOutOfStock ? 'grayscale-[35%]' : ''
               }`}
             />
 
             {/* Badge de género limpio sobre la foto (sin número ni emojis) */}
-            <div className="absolute top-1.5 left-1.5 z-10">
+            <div className="absolute top-2 left-2 z-10">
               {getGenderBadge(product.gender)}
             </div>
 
             {/* Badge Agotado en esquina superior derecha */}
             {isOutOfStock && (
-              <div className="absolute top-1.5 right-1.5 z-10">
+              <div className="absolute top-2 right-2 z-10">
                 <span className="bg-slate-900 text-white text-[8px] sm:text-[9px] font-black py-0.5 px-2 rounded-md shadow-md tracking-wider uppercase">
                   Agotado
                 </span>
@@ -164,14 +166,14 @@ export default function ProductCard({ product }: ProductCardProps) {
 
             {/* Indicador en esquina inferior derecha: en carrito o disponible (nunca tapa el género) */}
             {cartEssenceUsed > 0 ? (
-              <div className="absolute bottom-1.5 right-1.5 z-10 animate-in zoom-in-75 duration-200">
+              <div className="absolute bottom-2 right-2 z-10 animate-in zoom-in-75 duration-200">
                 <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-[8px] sm:text-[9px] font-black py-0.5 px-1.5 rounded-md shadow-md flex items-center gap-1">
                   <Check className="w-2.5 h-2.5 stroke-[3]" />
                   <span>{isEssence ? `${cartEssenceUsed} oz en carrito` : `${cartEssenceUsed} en carrito`}</span>
                 </span>
               </div>
             ) : !isOutOfStock ? (
-              <div className="absolute bottom-1.5 right-1.5 z-10">
+              <div className="absolute bottom-2 right-2 z-10">
                 <span className="bg-white/90 backdrop-blur-xs text-slate-700 text-[7.5px] sm:text-[8.5px] font-bold py-0.5 px-1.5 rounded shadow-xs">
                   Disponible
                 </span>
