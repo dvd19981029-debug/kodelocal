@@ -1,7 +1,15 @@
 import type { Metadata, Viewport } from "next";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import StorageInitializer from "@/components/StorageInitializer";
 import NavigationWrapper from "@/components/NavigationWrapper";
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-plus-jakarta",
+  display: "swap",
+});
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -27,8 +35,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="h-full touch-manipulation">
-      <body className="min-h-full flex flex-col bg-[#f1f4f9] text-slate-800 antialiased touch-manipulation">
+    <html lang="es" className={`h-full touch-manipulation ${plusJakartaSans.variable}`}>
+      <body className={`${plusJakartaSans.className} min-h-full flex flex-col bg-[#f1f4f9] text-slate-800 antialiased touch-manipulation font-sans`}>
         <StorageInitializer />
         <NavigationWrapper>
           {children}
