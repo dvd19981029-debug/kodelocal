@@ -22,8 +22,8 @@ const TICKER_ITEMS: TickerItem[] = [
             xmlns="http://www.w3.org/2000/svg"
           >
             <ellipse cx="24" cy="30" rx="20" ry="2" fill="rgba(0,0,0,0.3)" />
-            <rect x="2" y="6" width="30" height="19" rx="4" fill="#7c3aed" />
-            <path d="M30 11H40C42.2091 11 44 12.7909 44 15V25H30V11Z" fill="#6d28d9" />
+            <rect x="2" y="6" width="30" height="19" rx="4" fill="#8b5cf6" />
+            <path d="M30 11H40C42.2091 11 44 12.7909 44 15V25H30V11Z" fill="#7c3aed" />
             <path d="M32 13H39C40.1046 13 41 13.8954 41 15V18H32V13Z" fill="#ede9fe" />
             <circle cx="11" cy="25" r="4.5" fill="#1e1b4b" />
             <circle cx="11" cy="25" r="2" fill="#ede9fe" />
@@ -31,14 +31,14 @@ const TICKER_ITEMS: TickerItem[] = [
             <circle cx="35" cy="25" r="2" fill="#ede9fe" />
             <rect x="42" y="19" width="3" height="3" rx="1.5" fill="#fde047" />
             <rect x="8" y="10" width="16" height="7" rx="2" fill="#ffffff" />
-            <text x="10" y="15.5" fill="#581c87" fontSize="5.5" fontWeight="900" fontFamily="sans-serif">C807</text>
+            <text x="10" y="15.5" fill="#6d28d9" fontSize="5.5" fontWeight="900" fontFamily="sans-serif">C807</text>
           </svg>
         </div>
         
-        <span className="bg-white text-[#581c87] text-[10px] font-black px-2 py-0.5 rounded-full shadow-2xs uppercase tracking-wider">
+        <span className="bg-white text-[#7c3aed] text-[10px] font-black px-2 py-0.5 rounded-full shadow-2xs uppercase tracking-wider">
           C807
         </span>
-        <span>Entregas a todo El Salvador con <strong className="text-purple-200">C807</strong> <span className="text-purple-300/90 font-medium">(a los 14 departamentos)</span></span>
+        <span>Entregas a todo El Salvador con <strong className="text-purple-100 font-black">C807</strong> <span className="text-purple-200 font-semibold">(en serio, a todo el país)</span></span>
       </div>
     ),
   },
@@ -46,8 +46,8 @@ const TICKER_ITEMS: TickerItem[] = [
     id: 'esencias',
     content: (
       <div className="inline-flex items-center gap-1.5 text-xs font-bold text-white shrink-0">
-        <Droplets className="w-3.5 h-3.5 text-purple-300" />
-        <span>Esencias <strong className="text-purple-200 font-black">100% Puras</strong> de Máxima Calidad y Concentración</span>
+        <Droplets className="w-3.5 h-3.5 text-purple-200" />
+        <span>Esencias <strong className="text-purple-100 font-black">100% Puras</strong> de Máxima Calidad y Concentración</span>
       </div>
     ),
   },
@@ -65,7 +65,7 @@ const TICKER_ITEMS: TickerItem[] = [
     content: (
       <div className="inline-flex items-center gap-1.5 text-xs font-bold text-white shrink-0">
         <MapPin className="w-3.5 h-3.5 text-rose-300" />
-        <span>Envíos rápidos a domicilio en todo el país</span>
+        <span>Llegamos a los 14 departamentos de El Salvador</span>
       </div>
     ),
   },
