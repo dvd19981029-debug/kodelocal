@@ -69,22 +69,73 @@ html, body {
   transform: scale(0.96);
 }
 
-/* Primary Button (Indigo / Violet 3D Clay) */
+/* Primary Button (Royal Purple 3D Clay) */
 .clay-btn-primary {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%);
   color: #ffffff;
   box-shadow: 
-    5px 7px 16px rgba(79, 70, 229, 0.38),
-    -2px -2px 8px rgba(255, 255, 255, 0.3),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.45),
-    inset -3px -3px 6px rgba(30, 27, 75, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+    5px 7px 16px rgba(124, 58, 237, 0.38),
+    -2px -2px 8px rgba(255, 255, 255, 0.4),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.5),
+    inset -3px -3px 6px rgba(76, 29, 149, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .clay-btn-primary:active {
   box-shadow: 
-    inset 4px 4px 8px rgba(30, 27, 75, 0.5),
+    inset 4px 4px 8px rgba(76, 29, 149, 0.6),
     inset -2px -2px 5px rgba(255, 255, 255, 0.2);
+}
+
+/* Claymorphic Tabs System */
+.clay-tabs-track {
+  background: #eef2f7;
+  border-radius: 1.25rem;
+  box-shadow: 
+    inset 3px 3px 7px rgba(164, 177, 198, 0.45),
+    inset -3px -3px 7px rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  padding: 0.3rem;
+  display: flex;
+  position: relative;
+}
+
+.clay-tab-item {
+  position: relative;
+  user-select: none;
+  border-radius: 1rem;
+  font-weight: 800;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.clay-tab-active {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: #ffffff;
+  box-shadow: 
+    4px 6px 14px rgba(124, 58, 237, 0.35),
+    -2px -2px 6px rgba(255, 255, 255, 0.35),
+    inset 1.5px 1.5px 3px rgba(255, 255, 255, 0.5),
+    inset -2px -2px 4px rgba(76, 29, 149, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  transform: scale(1.02);
+}
+
+.clay-tab-inactive {
+  background: transparent;
+  color: #64748b;
+}
+
+.clay-tab-inactive:hover {
+  color: #1e293b;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.clay-tab-inactive:active {
+  transform: scale(0.96);
 }
 
 /* Success Button (Emerald / Green 3D Clay) */

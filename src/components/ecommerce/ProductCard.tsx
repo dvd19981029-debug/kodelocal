@@ -234,7 +234,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                       onClick={() => setSelectedPresentation(opt.id)}
                       className={`py-1.5 px-1.5 rounded-lg text-center transition-all cursor-pointer select-none flex items-center justify-center min-h-[32px] sm:min-h-[34px] relative ${
                         isSelected
-                          ? 'bg-[#581c87] text-white shadow-xs font-black scale-[1.02]'
+                          ? 'bg-[#7c3aed] text-white shadow-xs font-black scale-[1.02]'
                           : isOptOutOfStock
                           ? 'bg-white/50 text-slate-400 opacity-60 hover:bg-white/80 font-medium'
                           : 'bg-white hover:bg-purple-50 text-slate-700 border border-slate-200/70 shadow-2xs font-bold'
@@ -295,7 +295,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                   </button>
 
                   <div className="flex-1 text-center font-black text-xs sm:text-sm text-slate-900 leading-tight">
-                    <span className="text-indigo-700 font-mono font-extrabold">{currentQuantity}</span>
+                    <span className="text-purple-700 font-mono font-extrabold">{currentQuantity}</span>
                     <span className="text-[8px] sm:text-[9px] text-slate-400 font-medium block">
                       {selectedPresentation === 'MEDIA_ONZA' ? '½ oz' : selectedPresentation === 'ONZA_COMPLETA' ? '1 oz' : 'en carrito'}
                     </span>
@@ -306,7 +306,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                     disabled={!canAddMore}
                     className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg font-black text-xs flex items-center justify-center transition-all shadow-xs ${
                       canAddMore
-                        ? 'bg-[#581c87] hover:bg-[#4a1572] text-white active:scale-90 cursor-pointer'
+                        ? 'bg-[#7c3aed] hover:bg-[#6d28d9] text-white active:scale-90 cursor-pointer'
                         : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                     }`}
                     title={canAddMore ? "Aumentar una unidad" : "Máximo disponible en inventario"}
@@ -325,8 +325,8 @@ export default function ProductCard({ product }: ProductCardProps) {
                   !canAddMore
                     ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
                     : justAdded 
-                    ? 'bg-[#581c87] text-white shadow-md scale-[1.02]' 
-                    : 'bg-[#581c87] hover:bg-[#4a1572] text-white shadow-sm active:scale-95 cursor-pointer'
+                    ? 'bg-[#7c3aed] text-white shadow-md scale-[1.02]' 
+                    : 'bg-[#7c3aed] hover:bg-[#6d28d9] text-white shadow-sm active:scale-95 cursor-pointer'
                 }`}
               >
                 {justAdded ? (

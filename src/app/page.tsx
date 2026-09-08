@@ -242,9 +242,9 @@ export default function EcommerceHomePage() {
       {/* ================= CATÁLOGO DE PRODUCTOS ================= */}
       <section id="catalogo" className="space-y-4 scroll-mt-20">
         
-        {/* Selector de Sección Claymorfista: Esencias, Botes, Alcohol y Materiales (Sin Emojis) */}
+        {/* Selector de Sección Claymorfista Responsivo y Discreto con Animación de Estiramiento */}
         <div className="w-full">
-          <div className="clay-card p-1.5 bg-slate-100/90 border border-white/80 rounded-2xl flex items-stretch gap-1 sm:gap-2 shadow-inner">
+          <div className="clay-tabs-track max-w-xl mx-auto">
             
             {/* Pestaña: Esencias */}
             <button
@@ -253,13 +253,13 @@ export default function EcommerceHomePage() {
                 setSelectedCategory('Esencias para Perfume');
                 setCurrentPage(1);
               }}
-              className={`flex-1 py-2.5 sm:py-3 px-2 rounded-xl font-black text-xs sm:text-sm tracking-tight transition-all duration-300 text-center cursor-pointer ${
+              className={`clay-tab-item py-2 sm:py-2.5 px-3 sm:px-5 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
                 selectedCategory === 'Esencias para Perfume'
-                  ? 'bg-[#581c87] text-white shadow-md scale-[1.01]'
-                  : 'bg-white/70 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/60'
+                  ? 'clay-tab-active flex-[1.4] sm:flex-[1.5]'
+                  : 'clay-tab-inactive flex-1'
               }`}
             >
-              Esencias
+              <span>Esencias</span>
             </button>
 
             {/* Pestaña: Botes */}
@@ -270,13 +270,13 @@ export default function EcommerceHomePage() {
                 setSelectedGender('Todos');
                 setCurrentPage(1);
               }}
-              className={`flex-1 py-2.5 sm:py-3 px-2 rounded-xl font-black text-xs sm:text-sm tracking-tight transition-all duration-300 text-center cursor-pointer ${
+              className={`clay-tab-item py-2 sm:py-2.5 px-3 sm:px-5 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
                 selectedCategory === 'Botes'
-                  ? 'bg-[#581c87] text-white shadow-md scale-[1.01]'
-                  : 'bg-white/70 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/60'
+                  ? 'clay-tab-active flex-[1.4] sm:flex-[1.5]'
+                  : 'clay-tab-inactive flex-1'
               }`}
             >
-              Botes
+              <span>Botes</span>
             </button>
 
             {/* Pestaña: Alcohol y Materiales */}
@@ -287,13 +287,13 @@ export default function EcommerceHomePage() {
                 setSelectedGender('Todos');
                 setCurrentPage(1);
               }}
-              className={`flex-1 py-2.5 sm:py-3 px-2 rounded-xl font-black text-xs sm:text-sm tracking-tight transition-all duration-300 text-center cursor-pointer ${
+              className={`clay-tab-item py-2 sm:py-2.5 px-3 sm:px-5 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
                 selectedCategory === 'Alcohol y Materiales'
-                  ? 'bg-[#581c87] text-white shadow-md scale-[1.01]'
-                  : 'bg-white/70 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/60'
+                  ? 'clay-tab-active flex-[1.5] sm:flex-[1.6]'
+                  : 'clay-tab-inactive flex-1'
               }`}
             >
-              Alcohol y Materiales
+              <span className="truncate">Alcohol y Materiales</span>
             </button>
 
           </div>

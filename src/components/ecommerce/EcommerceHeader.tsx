@@ -92,14 +92,14 @@ export default function EcommerceHeader() {
             onClick={() => setIsCartOpen(true)}
             className={`clay-btn clay-btn-primary px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl flex items-center gap-1.5 sm:gap-2 relative transition-all duration-300 cursor-pointer ${
               isCartPulsing
-                ? 'scale-105 ring-4 ring-purple-300 shadow-[0_4px_20px_rgba(88,28,135,0.4)]'
-                : '!shadow-[2px_4px_12px_rgba(99,102,241,0.35)] active:scale-95'
+                ? 'scale-105 ring-4 ring-purple-300 shadow-[0_4px_20px_rgba(124,58,237,0.45)]'
+                : '!shadow-[2px_4px_12px_rgba(124,58,237,0.3)] active:scale-95'
             }`}
           >
             <ShoppingBag className={`w-4 h-4 text-white transition-transform duration-300 ${isCartPulsing ? '-translate-y-0.5 scale-110' : ''}`} />
             <span className="text-xs font-black hidden sm:inline">Carrito</span>
             {totalItems > 0 && (
-              <span className={`min-w-[20px] h-5 px-1 rounded-full bg-purple-900 text-white text-[10px] font-black flex items-center justify-center shadow-md transition-all duration-300 ${
+              <span className={`min-w-[20px] h-5 px-1 rounded-full bg-purple-950/80 text-white text-[10px] font-black flex items-center justify-center shadow-md transition-all duration-300 ${
                 isCartPulsing ? 'scale-115 ring-2 ring-white' : ''
               }`}>
                 {totalItems}

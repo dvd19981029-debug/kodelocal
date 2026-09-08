@@ -73,7 +73,7 @@ const TICKER_ITEMS: TickerItem[] = [
 
 export default function PromoTickerBar() {
   return (
-    <div className="w-full bg-[#581c87] border-b border-purple-900 shadow-xs overflow-hidden relative py-1.5 select-none">
+    <div className="w-full bg-[#7c3aed] border-b border-purple-600 shadow-sm overflow-hidden relative py-1.5 select-none">
       
       {/* Contenedor del Ticker: Inicia desde la derecha de la pantalla y se desplaza de continuo */}
       <div className="flex items-center gap-8 whitespace-nowrap animate-marquee">
@@ -81,7 +81,7 @@ export default function PromoTickerBar() {
         {TICKER_ITEMS.map((item) => (
           <React.Fragment key={`first-${item.id}`}>
             {item.content}
-            <span className="text-purple-400/80 font-bold">•</span>
+            <span className="text-purple-200 font-bold">•</span>
           </React.Fragment>
         ))}
         {/* Set 2 */}

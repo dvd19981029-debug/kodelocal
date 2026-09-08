@@ -165,7 +165,7 @@ export default function ReactiveSearchBar({
             onClick={() => handleSelectFilter('all')}
             className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
               selectedGender === 'Todos'
-                ? 'bg-[#581c87] text-white shadow-sm'
+                ? 'bg-[#7c3aed] text-white shadow-sm'
                 : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
             }`}
           >
@@ -177,7 +177,7 @@ export default function ReactiveSearchBar({
             onClick={() => handleSelectFilter('gender', 'Caballero')}
             className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
               selectedGender === 'Caballero'
-                ? 'bg-[#581c87] text-white shadow-sm'
+                ? 'bg-[#7c3aed] text-white shadow-sm'
                 : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
             }`}
           >
@@ -189,7 +189,7 @@ export default function ReactiveSearchBar({
             onClick={() => handleSelectFilter('gender', 'Dama')}
             className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
               selectedGender === 'Dama'
-                ? 'bg-[#581c87] text-white shadow-sm'
+                ? 'bg-[#7c3aed] text-white shadow-sm'
                 : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
             }`}
           >
@@ -201,7 +201,7 @@ export default function ReactiveSearchBar({
             onClick={() => handleSelectFilter('gender', 'Unisex')}
             className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
               selectedGender === 'Unisex'
-                ? 'bg-[#581c87] text-white shadow-sm'
+                ? 'bg-[#7c3aed] text-white shadow-sm'
                 : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
             }`}
           >
