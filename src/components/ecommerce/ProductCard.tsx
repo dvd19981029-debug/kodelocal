@@ -197,27 +197,8 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           {/* Selector de Presentación y Disponibilidad */}
           {presentations.length > 1 ? (
-            <div className="mt-1.5 space-y-1">
-              {/* Indicador de existencias en tiempo real sin palabra presentación ni onza completa */}
-              <div className="flex items-center justify-end px-0.5">
-                <span className={`text-[8.5px] sm:text-[9.5px] font-bold ${
-                  remainingStock <= 1 && remainingStock > 0 
-                    ? 'text-amber-600' 
-                    : remainingStock === 0 
-                    ? 'text-rose-600' 
-                    : 'text-slate-500'
-                }`}>
-                  {remainingStock === 0 ? (
-                    'Sin existencias'
-                  ) : selectedPresentation === 'MEDIA_ONZA' ? (
-                    `Disponible: ${Math.floor(remainingStock / 0.5)} medias oz`
-                  ) : (
-                    `Disponible: ${Math.floor(remainingStock)} oz`
-                  )}
-                </span>
-              </div>
-
-              {/* Botonera de Presentaciones Segmentada (1 Onza y ½ Onza) */}
+            <div className="mt-1 space-y-1">
+              {/* Botonera de Presentaciones Segmentada (1 Onza y ½ Onza) más arriba */}
               <div className="grid grid-cols-2 gap-1 p-0.5 bg-slate-100/90 rounded-xl border border-slate-200/80 shadow-2xs">
                 {presentations.map((opt) => {
                   const isSelected = selectedPresentation === opt.id;
@@ -247,11 +228,30 @@ export default function ProductCard({ product }: ProductCardProps) {
                   );
                 })}
               </div>
+
+              {/* Indicador de disponibilidad abajo del botón seleccionado (arriba del botón de agregar al carrito) */}
+              <div className="flex items-center justify-end px-0.5 pt-0.5">
+                <span className={`text-[8.5px] sm:text-[9.5px] font-bold ${
+                  remainingStock <= 1 && remainingStock > 0 
+                    ? 'text-amber-600' 
+                    : remainingStock === 0 
+                    ? 'text-rose-600' 
+                    : 'text-slate-500'
+                }`}>
+                  {remainingStock === 0 ? (
+                    'Sin existencias'
+                  ) : selectedPresentation === 'MEDIA_ONZA' ? (
+                    `Disp: ${Math.floor(remainingStock / 0.5)} medias oz`
+                  ) : (
+                    `Disp: ${Math.floor(remainingStock)} oz`
+                  )}
+                </span>
+              </div>
             </div>
           ) : (
             <div className="mt-1 flex items-center justify-between text-[9px] text-slate-500 font-medium px-0.5">
               <span>{presentations[0]?.description}</span>
-              <span className="font-bold text-slate-700">Disponible: {Math.floor(remainingStock)} unid</span>
+              <span className="font-bold text-slate-700">Disp: {Math.floor(remainingStock)} unid</span>
             </div>
           )}
 
