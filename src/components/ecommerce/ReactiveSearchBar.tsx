@@ -156,68 +156,40 @@ export default function ReactiveSearchBar({
         </div>
       </div>
 
-      {/* ================= LÍNEA DE FILTROS EN FLUJO NATURAL (se desplaza fluidamente sin encogerse hacia arriba) ================= */}
+      {/* ================= LÍNEA DE FILTROS LIMPIA SIN EMOJIS ================= */}
       <div className="w-full mt-2 sm:mt-2.5 px-0.5 sm:px-2">
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-0.5 px-0.5 touch-pan-x select-none">
           
-          {/* Opción: Ver Todo */}
+          {/* Opción: Más Vendidas (Por defecto) */}
           <button
             onClick={() => handleSelectFilter('all')}
-            className={`px-3 py-1 rounded-xl text-[11px] font-black transition-all shrink-0 cursor-pointer flex items-center gap-1 ${
-              selectedCategory === 'Todos' && selectedGender === 'Todos' && selectedStockFilter === 'Todos'
-                ? 'clay-btn-primary text-white shadow-xs'
+            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
+              selectedGender === 'Todos'
+                ? 'bg-[#581c87] text-white shadow-sm'
                 : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
             }`}
           >
-            <span>✨ Todo</span>
-            <span className="text-[9.5px] opacity-80">({totalProducts})</span>
+            Más Vendidas
           </button>
 
-          {/* Opción: En Existencia */}
-          <button
-            onClick={() => handleSelectFilter('stock', 'Disponibles')}
-            className={`px-2.5 py-1 rounded-xl text-[11px] font-black transition-all shrink-0 cursor-pointer flex items-center gap-1 ${
-              selectedStockFilter === 'Disponibles'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'bg-white/90 hover:bg-white text-emerald-800 border border-emerald-200/80 shadow-2xs'
-            }`}
-          >
-            <span>✅ En Existencia</span>
-            <span className="text-[9.5px] px-1.5 py-0.2 rounded-md bg-emerald-100 text-emerald-900 font-extrabold">
-              {inStockCount}
-            </span>
-          </button>
-
-          {/* Opción: Esencias */}
-          <button
-            onClick={() => handleSelectFilter('cat', 'Esencias para Perfume')}
-            className={`px-2.5 py-1 rounded-xl text-[11px] font-black transition-all shrink-0 cursor-pointer ${
-              selectedCategory === 'Esencias para Perfume' && selectedGender === 'Todos'
-                ? 'clay-btn-primary text-white shadow-xs'
-                : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
-            }`}
-          >
-            💧 Esencias
-          </button>
-
-          {/* Opción: Hombres */}
+          {/* Opción: Caballero */}
           <button
             onClick={() => handleSelectFilter('gender', 'Caballero')}
-            className={`px-2.5 py-1 rounded-xl text-[11px] font-black transition-all shrink-0 cursor-pointer ${
-              selectedCategory === 'Esencias para Perfume' && selectedGender === 'Caballero'
-                ? 'bg-indigo-600 text-white shadow-xs'
+            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
+              selectedGender === 'Caballero'
+                ? 'bg-[#581c87] text-white shadow-sm'
                 : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
             }`}
           >
             Caballero
           </button>
 
-          {/* Opción: Mujeres */}
+          {/* Opción: Dama */}
           <button
             onClick={() => handleSelectFilter('gender', 'Dama')}
-            className={`px-2.5 py-1 rounded-xl text-[11px] font-black transition-all shrink-0 cursor-pointer ${
-              selectedCategory === 'Esencias para Perfume' && selectedGender === 'Dama'
-                ? 'bg-pink-600 text-white shadow-xs'
+            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
+              selectedGender === 'Dama'
+                ? 'bg-[#581c87] text-white shadow-sm'
                 : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
             }`}
           >
@@ -227,64 +199,13 @@ export default function ReactiveSearchBar({
           {/* Opción: Unisex */}
           <button
             onClick={() => handleSelectFilter('gender', 'Unisex')}
-            className={`px-2.5 py-1 rounded-xl text-[11px] font-black transition-all shrink-0 cursor-pointer ${
-              selectedCategory === 'Esencias para Perfume' && selectedGender === 'Unisex'
-                ? 'bg-purple-600 text-white shadow-xs'
+            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
+              selectedGender === 'Unisex'
+                ? 'bg-[#581c87] text-white shadow-sm'
                 : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
             }`}
           >
             Unisex
-          </button>
-
-          {/* Opción: Botes & Envases */}
-          <button
-            onClick={() => handleSelectFilter('cat', 'Botes')}
-            className={`px-2.5 py-1 rounded-xl text-[11px] font-black transition-all shrink-0 cursor-pointer ${
-              selectedCategory === 'Botes'
-                ? 'clay-btn-primary text-white shadow-xs'
-                : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
-            }`}
-          >
-            🧴 Botes & Envases
-          </button>
-
-          {/* Opción: Cajas & Bolsas */}
-          <button
-            onClick={() => handleSelectFilter('cat', 'Empaque')}
-            className={`px-2.5 py-1 rounded-xl text-[11px] font-black transition-all shrink-0 cursor-pointer ${
-              selectedCategory === 'Empaque'
-                ? 'clay-btn-primary text-white shadow-xs'
-                : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
-            }`}
-          >
-            🎁 Cajas & Bolsas
-          </button>
-
-          {/* Opción: Alcohol & Fijador */}
-          <button
-            onClick={() => handleSelectFilter('cat', 'Insumos y Materia Prima')}
-            className={`px-2.5 py-1 rounded-xl text-[11px] font-black transition-all shrink-0 cursor-pointer ${
-              selectedCategory === 'Insumos y Materia Prima'
-                ? 'clay-btn-primary text-white shadow-xs'
-                : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
-            }`}
-          >
-            🧪 Alcohol & Fijador
-          </button>
-
-          {/* Opción: Agotados */}
-          <button
-            onClick={() => handleSelectFilter('stock', 'Agotados')}
-            className={`px-2.5 py-1 rounded-xl text-[11px] font-black transition-all shrink-0 cursor-pointer flex items-center gap-1 ${
-              selectedStockFilter === 'Agotados'
-                ? 'bg-rose-600 text-white shadow-xs'
-                : 'bg-white/90 hover:bg-white text-rose-800 border border-rose-200/80 shadow-2xs'
-            }`}
-          >
-            <span>❌ Agotados</span>
-            <span className="text-[9.5px] px-1.5 py-0.2 rounded-md bg-rose-100 text-rose-900 font-extrabold">
-              {outOfStockCount}
-            </span>
           </button>
 
         </div>

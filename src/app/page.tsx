@@ -79,7 +79,12 @@ export default function EcommerceHomePage() {
     const q = searchQuery.toLowerCase().trim();
     return products.filter((p) => {
       // Filtro de categoría
-      const matchesCategory = selectedCategory === 'Todos' || p.category === selectedCategory;
+      let matchesCategory = true;
+      if (selectedCategory === 'Alcohol y Materiales') {
+        matchesCategory = p.category === 'Insumos y Materia Prima' || p.category === 'Empaque';
+      } else if (selectedCategory !== 'Todos') {
+        matchesCategory = p.category === selectedCategory;
+      }
 
       // Filtro de género (solo si es categoría de esencias)
       let matchesGender = true;
@@ -235,21 +240,79 @@ export default function EcommerceHomePage() {
       )}
 
       {/* ================= CATÁLOGO DE PRODUCTOS ================= */}
-      <section id="catalogo" className="space-y-3.5 scroll-mt-20">
+      <section id="catalogo" className="space-y-4 scroll-mt-20">
         
-        {/* Encabezado limpio del catálogo */}
+        {/* Selector de Sección Claymorfista: Esencias, Botes, Alcohol y Materiales (Sin Emojis) */}
+        <div className="w-full">
+          <div className="clay-card p-1.5 bg-slate-100/90 border border-white/80 rounded-2xl flex items-stretch gap-1 sm:gap-2 shadow-inner">
+            
+            {/* Pestaña: Esencias */}
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCategory('Esencias para Perfume');
+                setCurrentPage(1);
+              }}
+              className={`flex-1 py-2.5 sm:py-3 px-2 rounded-xl font-black text-xs sm:text-sm tracking-tight transition-all duration-300 text-center cursor-pointer ${
+                selectedCategory === 'Esencias para Perfume'
+                  ? 'bg-[#581c87] text-white shadow-md scale-[1.01]'
+                  : 'bg-white/70 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/60'
+              }`}
+            >
+              Esencias
+            </button>
+
+            {/* Pestaña: Botes */}
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCategory('Botes');
+                setSelectedGender('Todos');
+                setCurrentPage(1);
+              }}
+              className={`flex-1 py-2.5 sm:py-3 px-2 rounded-xl font-black text-xs sm:text-sm tracking-tight transition-all duration-300 text-center cursor-pointer ${
+                selectedCategory === 'Botes'
+                  ? 'bg-[#581c87] text-white shadow-md scale-[1.01]'
+                  : 'bg-white/70 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/60'
+              }`}
+            >
+              Botes
+            </button>
+
+            {/* Pestaña: Alcohol y Materiales */}
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCategory('Alcohol y Materiales');
+                setSelectedGender('Todos');
+                setCurrentPage(1);
+              }}
+              className={`flex-1 py-2.5 sm:py-3 px-2 rounded-xl font-black text-xs sm:text-sm tracking-tight transition-all duration-300 text-center cursor-pointer ${
+                selectedCategory === 'Alcohol y Materiales'
+                  ? 'bg-[#581c87] text-white shadow-md scale-[1.01]'
+                  : 'bg-white/70 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/60'
+              }`}
+            >
+              Alcohol y Materiales
+            </button>
+
+          </div>
+        </div>
+
+        {/* Encabezado informativo del catálogo */}
         <div className="flex items-center justify-between gap-2 px-1">
           <div className="flex items-center gap-2">
             <h2 className="text-base sm:text-xl font-black text-slate-900 tracking-tight">
-              {selectedCategory === 'Todos' ? 'Catálogo Completo' : selectedCategory}
-              {selectedCategory === 'Esencias para Perfume' && selectedGender !== 'Todos' && (
-                <span className="text-indigo-600 font-black ml-1.5">
-                  • {selectedGender === 'Caballero' ? 'Caballero' : selectedGender === 'Dama' ? 'Dama' : 'Unisex'}
-                </span>
-              )}
+              {selectedCategory === 'Esencias para Perfume' 
+                ? (selectedGender === 'Todos' ? 'Esencias de Perfume' : `Esencias • ${selectedGender}`) 
+                : selectedCategory === 'Botes' 
+                  ? 'Botes y Frascos' 
+                  : selectedCategory === 'Alcohol y Materiales'
+                    ? 'Alcohol, Fijador y Materiales'
+                    : selectedCategory}
             </h2>
-            <span className="clay-badge text-[10px] sm:text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-2 py-0.5 rounded-lg font-black">
-              {filteredProducts.length}
+            <span className="clay-badge text-[10px] sm:text-xs bg-purple-50 text-purple-900 border border-purple-200 px-2.5 py-0.5 rounded-lg font-black">
+              {filteredProducts.length} disponibles
             </span>
           </div>
         </div>
