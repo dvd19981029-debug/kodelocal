@@ -76,7 +76,7 @@ export const INITIAL_CUSTOMERS: CustomerRecord[] = [
     email: 'beatriz.morales@gmail.com',
     phone: '7722-1133',
     departamento: 'San Salvador',
-    municipio: 'San Salvador',
+    municipio: 'San Salvador Centro',
     direccion: 'Colonia Escalón, Calle El Mirador #42',
     documentoPreferido: '01',
     createdAt: '2026-09-02T10:30:00.000Z'
@@ -94,7 +94,7 @@ export const INITIAL_CUSTOMERS: CustomerRecord[] = [
     email: 'facturacion@eleganceperfumes.sv',
     phone: '2288-4455',
     departamento: 'La Libertad',
-    municipio: 'Santa Tecla',
+    municipio: 'La Libertad Sur',
     direccion: 'Centro Comercial Multiplaza, Nivel 2, Local 45',
     documentoPreferido: '03',
     notas: 'Cliente corporativo de fragancias en onzas al por mayor para reenvase.',
@@ -109,7 +109,7 @@ export const INITIAL_CUSTOMERS: CustomerRecord[] = [
     email: 'roberto.fuentes@hotmail.com',
     phone: '7890-4411',
     departamento: 'La Libertad',
-    municipio: 'Santa Tecla',
+    municipio: 'La Libertad Sur',
     direccion: 'Residencial Santa Teresa, Senda 4, Polígono B, Casa #15',
     documentoPreferido: '01',
     createdAt: '2026-09-03T16:20:00.000Z'

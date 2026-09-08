@@ -15,23 +15,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
-
-const DEPARTAMENTOS_SV = [
-  'San Salvador',
-  'La Libertad',
-  'Santa Ana',
-  'San Miguel',
-  'Sonsonate',
-  'Ahuachapán',
-  'Usulután',
-  'La Paz',
-  'Cuscatlán',
-  'Chalatenango',
-  'Morazán',
-  'San Vicente',
-  'Cabañas',
-  'La Unión',
-];
+import { DEPARTAMENTOS_CATALOG, getMunicipiosByDepartamento } from '@/lib/svTerritory';
 
 export default function CustomerAuthModal() {
   const { 
@@ -54,6 +38,7 @@ export default function CustomerAuthModal() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [department, setDepartment] = useState('San Salvador');
+  const [municipality, setMunicipality] = useState('San Salvador Centro');
   const [address, setAddress] = useState('');
 
   if (!isAuthModalOpen) return null;
@@ -117,6 +102,7 @@ export default function CustomerAuthModal() {
         password,
         phone,
         department,
+        municipality,
         address,
       });
       if (!res.success) {
@@ -313,19 +299,43 @@ export default function CustomerAuthModal() {
                 </div>
               </div>
 
-              <div>
-                <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
-                  Departamento de Entrega:
-                </label>
-                <select
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                  className="w-full py-2 px-3 text-xs font-bold rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 shadow-2xs"
-                >
-                  {DEPARTAMENTOS_SV.map((dep) => (
-                    <option key={dep} value={dep}>{dep}</option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                    Departamento:
+                  </label>
+                  <select
+                    value={department}
+                    onChange={(e) => {
+                      const newDept = e.target.value;
+                      setDepartment(newDept);
+                      const munis = getMunicipiosByDepartamento(newDept);
+                      if (munis.length > 0) {
+                        setMunicipality(munis[0].nombre);
+                      }
+                    }}
+                    className="w-full py-2 px-3 text-xs font-bold rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 shadow-2xs"
+                  >
+                    {DEPARTAMENTOS_CATALOG.map((dep) => (
+                      <option key={dep.id} value={dep.nombre}>{dep.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                    Municipio (MH):
+                  </label>
+                  <select
+                    value={municipality}
+                    onChange={(e) => setMunicipality(e.target.value)}
+                    className="w-full py-2 px-3 text-xs font-bold rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 shadow-2xs"
+                  >
+                    {getMunicipiosByDepartamento(department).map((m) => (
+                      <option key={m.id} value={m.nombre}>{m.nombre}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div>

@@ -23,7 +23,7 @@ export async function GET() {
       email: c.email || '',
       phone: c.phone || '',
       departamento: c.department || 'San Salvador',
-      municipio: c.municipality || 'San Salvador',
+      municipio: c.municipality || 'San Salvador Centro',
       direccion: c.address || '',
       notas: c.notes || '',
       createdAt: c.createdAt.toISOString(),
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
       email: email?.trim()?.toLowerCase() || null,
       phone: phone?.trim() || null,
       department: departamento || 'San Salvador',
-      municipality: municipio?.trim() || 'San Salvador',
+      municipality: municipio?.trim() || 'San Salvador Centro',
       address: direccion?.trim() || null,
       notes: notas?.trim() || null,
     };

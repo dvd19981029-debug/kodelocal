@@ -1,5 +1,6 @@
 // src/lib/facturalama.ts
 import { randomUUID } from 'crypto';
+import { resolveDepartamentoCode, resolveMunicipioCode } from './svTerritory';
 
 export interface DteItemInput {
   codigo?: string;
@@ -250,11 +251,13 @@ export class FacturaLlamaClient {
         }
       }
 
-      if (cliente?.direccion?.trim()) {
+      if (cliente?.direccion?.trim() || cliente?.departamento || cliente?.municipio) {
+        const deptCode = resolveDepartamentoCode(cliente?.departamento);
+        const muniCode = resolveMunicipioCode(deptCode, cliente?.municipio);
         recipient.address = {
-          department: cliente.departamento || '06',
-          municipality: cliente.municipio || '14',
-          complement: cliente.direccion.trim(),
+          department: deptCode,
+          municipality: muniCode,
+          complement: cliente?.direccion?.trim() || 'San Salvador, El Salvador',
         };
       }
 
@@ -280,6 +283,9 @@ export class FacturaLlamaClient {
     const rawDoc = (cliente?.numDocumento || '').replace(/\D/g, '');
     const cleanNrc = (cliente?.nrc || '').replace(/\D/g, '') || '1234567';
 
+    const deptCodeCCF = resolveDepartamentoCode(cliente?.departamento);
+    const muniCodeCCF = resolveMunicipioCode(deptCodeCCF, cliente?.municipio);
+
     const recipientCCF: any = {
       name: cliente?.nombre?.trim() || 'Empresa Cliente S.A. de C.V.',
       nrc: cleanNrc.slice(0, 8),
@@ -293,8 +299,8 @@ export class FacturaLlamaClient {
         number: rawDoc.length === 9 ? rawDoc : (rawDoc.length === 14 ? rawDoc : '06140101901011'),
       },
       address: {
-        department: cliente?.departamento || '06',
-        municipality: cliente?.municipio || '14',
+        department: deptCodeCCF,
+        municipality: muniCodeCCF,
         complement: cliente?.direccion?.trim() || 'San Salvador, El Salvador',
       },
     };

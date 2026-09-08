@@ -61,6 +61,10 @@ import {
   DEPARTAMENTOS_SV,
   GIROS_COMUNES_SV
 } from '@/lib/customers';
+import { 
+  DEPARTAMENTOS_CATALOG, 
+  getMunicipiosByDepartamento 
+} from '@/lib/svTerritory';
 
 export default function PosPage() {
   const router = useRouter();
@@ -133,8 +137,8 @@ export default function PosPage() {
   const [custDocumentoPreferido, setCustDocumentoPreferido] = useState<'01' | '03' | 'TICKET'>('01');
   const [custEmail, setCustEmail] = useState('');
   const [custPhone, setCustPhone] = useState('');
-  const [custDepartamento, setCustDepartamento] = useState(DEPARTAMENTOS_SV[0]);
-  const [custMunicipio, setCustMunicipio] = useState('');
+  const [custDepartamento, setCustDepartamento] = useState('San Salvador');
+  const [custMunicipio, setCustMunicipio] = useState('San Salvador Centro');
   const [custDireccion, setCustDireccion] = useState('');
   const [custNotas, setCustNotas] = useState('');
 
@@ -158,6 +162,9 @@ export default function PosPage() {
   const [clienteNrc, setClienteNrc] = useState('');
   const [clienteEmail, setClienteEmail] = useState('');
   const [clienteGiro, setClienteGiro] = useState('');
+  const [clienteDepartamento, setClienteDepartamento] = useState('San Salvador');
+  const [clienteMunicipio, setClienteMunicipio] = useState('San Salvador Centro');
+  const [clienteDireccion, setClienteDireccion] = useState('');
 
   // Buscador interactivo de clientes en Carrito (Combobox)
   const [cartCustomerQuery, setCartCustomerQuery] = useState('');
@@ -513,6 +520,12 @@ export default function PosPage() {
       setClienteNrc(found.nrc || '');
       setClienteEmail(found.email || '');
       setClienteGiro(found.actividadEconomica || '');
+      const dept = found.departamento || 'San Salvador';
+      setClienteDepartamento(dept);
+      const munis = getMunicipiosByDepartamento(dept);
+      const muniMatch = munis.find(m => m.nombre.toLowerCase() === (found.municipio || '').toLowerCase());
+      setClienteMunicipio(muniMatch ? muniMatch.nombre : (munis[0]?.nombre || 'San Salvador Centro'));
+      setClienteDireccion(found.direccion || '');
       if (found.documentoPreferido) {
         setTipoComprobante(found.documentoPreferido);
       } else if (found.nrc || found.tipoPersona === 'JURIDICA') {
@@ -526,6 +539,9 @@ export default function PosPage() {
       setClienteNrc('');
       setClienteEmail('');
       setClienteGiro('');
+      setClienteDepartamento('San Salvador');
+      setClienteMunicipio('San Salvador Centro');
+      setClienteDireccion('');
       setTipoComprobante('01');
     }
   };
@@ -550,8 +566,9 @@ export default function PosPage() {
     setCustDocumentoPreferido('01');
     setCustEmail('');
     setCustPhone('');
-    setCustDepartamento(DEPARTAMENTOS_SV[0]);
-    setCustMunicipio('');
+    setCustDepartamento('San Salvador');
+    const munis = getMunicipiosByDepartamento('San Salvador');
+    setCustMunicipio(munis[0]?.nombre || 'San Salvador Centro');
     setCustDireccion('');
     setCustNotas('');
     setIsCustomerModalOpen(true);
@@ -571,8 +588,11 @@ export default function PosPage() {
     setCustDocumentoPreferido(cust.documentoPreferido || (cust.nrc || cust.tipoPersona === 'JURIDICA' ? '03' : '01'));
     setCustEmail(cust.email);
     setCustPhone(cust.phone);
-    setCustDepartamento(cust.departamento || DEPARTAMENTOS_SV[0]);
-    setCustMunicipio(cust.municipio || '');
+    const dept = cust.departamento || 'San Salvador';
+    setCustDepartamento(dept);
+    const munis = getMunicipiosByDepartamento(dept);
+    const muniMatch = munis.find(m => m.nombre.toLowerCase() === (cust.municipio || '').toLowerCase());
+    setCustMunicipio(muniMatch ? muniMatch.nombre : (munis[0]?.nombre || 'San Salvador Centro'));
     setCustDireccion(cust.direccion || '');
     setCustNotas(cust.notas || '');
     setIsCustomerModalOpen(true);
@@ -840,9 +860,9 @@ export default function PosPage() {
               email: clienteEmail,
               giro: clienteGiro,
               telefono: selectedCustomerObj?.phone,
-              direccion: selectedCustomerObj?.direccion,
-              departamento: selectedCustomerObj?.departamento || '06',
-              municipio: selectedCustomerObj?.municipio || '14',
+              direccion: clienteDireccion || selectedCustomerObj?.direccion,
+              departamento: clienteDepartamento || selectedCustomerObj?.departamento || 'San Salvador',
+              municipio: clienteMunicipio || selectedCustomerObj?.municipio || 'San Salvador Centro',
             },
             items: itemsToBill.map(i => ({
               nombre: i.name,
@@ -2529,8 +2549,8 @@ export default function PosPage() {
                               <span title={cust.email || ''}>{cust.email || '—'}</span>
                             </td>
                             <td className="py-1.5 px-2.5 text-[11px] text-slate-600 max-w-[180px] truncate">
-                              <span title={cust.actividadEconomica || cust.direccion || cust.departamento || ''}>
-                                {cust.actividadEconomica || (cust.direccion ? `${cust.direccion}, ${cust.departamento || ''}` : cust.departamento || '—')}
+                              <span title={`${cust.actividadEconomica ? `${cust.actividadEconomica} • ` : ''}${cust.municipio ? `${cust.municipio}, ` : ''}${cust.departamento || ''}`}>
+                                {cust.actividadEconomica || `${cust.municipio ? `${cust.municipio}, ` : ''}${cust.departamento || cust.direccion || '—'}`}
                               </span>
                             </td>
                             <td className="py-1.5 px-2.5 text-center whitespace-nowrap">
@@ -3405,26 +3425,35 @@ export default function PosPage() {
                   </label>
                   <select
                     value={custDepartamento}
-                    onChange={(e) => setCustDepartamento(e.target.value)}
+                    onChange={(e) => {
+                      const newDept = e.target.value;
+                      setCustDepartamento(newDept);
+                      const munis = getMunicipiosByDepartamento(newDept);
+                      if (munis.length > 0) {
+                        setCustMunicipio(munis[0].nombre);
+                      }
+                    }}
                     className="clay-input w-full text-xs font-bold"
                   >
-                    {DEPARTAMENTOS_SV.map(dep => (
-                      <option key={dep} value={dep}>{dep}</option>
+                    {DEPARTAMENTOS_CATALOG.map(dep => (
+                      <option key={dep.id} value={dep.nombre}>{dep.nombre}</option>
                     ))}
                   </select>
                 </div>
 
                 <div className="sm:col-span-2">
                   <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Municipio / Distrito
+                    Municipio / Distrito (Oficial MH)
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Ej. San Salvador Centro o Santa Tecla"
+                  <select
                     value={custMunicipio}
                     onChange={(e) => setCustMunicipio(e.target.value)}
-                    className="clay-input w-full text-xs"
-                  />
+                    className="clay-input w-full text-xs font-bold"
+                  >
+                    {getMunicipiosByDepartamento(custDepartamento).map(m => (
+                      <option key={m.id} value={m.nombre}>{m.nombre}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -3670,6 +3699,58 @@ export default function PosPage() {
                     onChange={(e) => setClienteEmail(e.target.value)}
                     placeholder="correo@cliente.com"
                     className="clay-input w-full text-xs py-1.5 font-mono"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10.5px] font-semibold text-slate-600 block mb-0.5">
+                      Departamento *
+                    </label>
+                    <select
+                      value={clienteDepartamento}
+                      onChange={(e) => {
+                        const newDept = e.target.value;
+                        setClienteDepartamento(newDept);
+                        const munis = getMunicipiosByDepartamento(newDept);
+                        if (munis.length > 0) {
+                          setClienteMunicipio(munis[0].nombre);
+                        }
+                      }}
+                      className="clay-input w-full text-xs py-1.5 font-bold"
+                    >
+                      {DEPARTAMENTOS_CATALOG.map(dep => (
+                        <option key={dep.id} value={dep.nombre}>{dep.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10.5px] font-semibold text-slate-600 block mb-0.5">
+                      Municipio / Distrito (MH) *
+                    </label>
+                    <select
+                      value={clienteMunicipio}
+                      onChange={(e) => setClienteMunicipio(e.target.value)}
+                      className="clay-input w-full text-xs py-1.5 font-bold"
+                    >
+                      {getMunicipiosByDepartamento(clienteDepartamento).map(m => (
+                        <option key={m.id} value={m.nombre}>{m.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10.5px] font-semibold text-slate-600 block mb-0.5">
+                    Dirección (Calle, Colonia o Local)
+                  </label>
+                  <input
+                    type="text"
+                    value={clienteDireccion}
+                    onChange={(e) => setClienteDireccion(e.target.value)}
+                    placeholder="Ej. Colonia Escalón, Calle El Mirador #42"
+                    className="clay-input w-full text-xs py-1.5"
                   />
                 </div>
               </div>

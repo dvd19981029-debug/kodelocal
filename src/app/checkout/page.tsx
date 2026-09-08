@@ -20,6 +20,7 @@ import {
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { DEPARTAMENTOS_SV, CustomerRecord, getStoredCustomers, saveStoredCustomers } from '@/lib/customers';
+import { DEPARTAMENTOS_CATALOG, getMunicipiosByDepartamento } from '@/lib/svTerritory';
 import { SaleRecord } from '@/lib/store';
 
 export default function CheckoutPage() {
@@ -444,11 +445,18 @@ export default function CheckoutPage() {
                   </label>
                   <select
                     value={departamento}
-                    onChange={(e) => setDepartamento(e.target.value)}
+                    onChange={(e) => {
+                      const newDept = e.target.value;
+                      setDepartamento(newDept);
+                      const munis = getMunicipiosByDepartamento(newDept);
+                      if (munis.length > 0) {
+                        setMunicipio(munis[0].nombre);
+                      }
+                    }}
                     className="clay-input w-full font-bold"
                   >
-                    {DEPARTAMENTOS_SV.map((dep) => (
-                      <option key={dep} value={dep}>{dep}</option>
+                    {DEPARTAMENTOS_CATALOG.map((dep) => (
+                      <option key={dep.id} value={dep.nombre}>{dep.nombre}</option>
                     ))}
                   </select>
                 </div>
@@ -457,14 +465,16 @@ export default function CheckoutPage() {
                   <label className="font-bold text-slate-700 block mb-1">
                     Municipio / Distrito <span className="text-rose-500">*</span>
                   </label>
-                  <input
-                    type="text"
+                  <select
                     required
-                    placeholder="Ej. Santa Tecla, San Salvador..."
                     value={municipio}
                     onChange={(e) => setMunicipio(e.target.value)}
-                    className="clay-input w-full font-medium"
-                  />
+                    className="clay-input w-full font-bold"
+                  >
+                    {getMunicipiosByDepartamento(departamento).map((m) => (
+                      <option key={m.id} value={m.nombre}>{m.nombre}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="sm:col-span-2">
