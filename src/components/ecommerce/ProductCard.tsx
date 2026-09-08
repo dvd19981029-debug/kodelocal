@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { ShoppingBag, Check, Sparkles, Plus, Minus } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS } from '@/lib/store';
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation } from '@/context/EcommerceCartContext';
@@ -130,12 +131,18 @@ export default function ProductCard({ product }: ProductCardProps) {
       }`}>
         
         <div>
-          {/* Contenedor de Imagen de Frasco (Estilo Klone Scents) */}
-          <div className="relative w-full aspect-[4/5] rounded-xl overflow-hidden bg-slate-100/90 mb-2 flex items-center justify-center border border-slate-100">
+          {/* Contenedor de Imagen de Frasco (Estilo Klone Scents) con enlace al detalle */}
+          <Link 
+            href={`/producto/${product.id}`}
+            className="block relative w-full aspect-[4/5] rounded-xl overflow-hidden bg-slate-100/90 mb-2 flex items-center justify-center border border-slate-100 cursor-pointer"
+          >
             <img
               src={productImage}
               alt={displayName}
               loading="lazy"
+              onError={(e) => {
+                e.currentTarget.src = 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80';
+              }}
               className={`w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105 ${
                 isOutOfStock ? 'grayscale-[35%]' : ''
               }`}
@@ -170,12 +177,14 @@ export default function ProductCard({ product }: ProductCardProps) {
                 </span>
               </div>
             )}
-          </div>
+          </Link>
 
           {/* Nombre Oficial de la Fragancia */}
-          <h3 className="font-black text-xs sm:text-base text-slate-900 line-clamp-1 leading-snug" title={displayName}>
-            {displayName}
-          </h3>
+          <Link href={`/producto/${product.id}`} className="block group/title">
+            <h3 className="font-black text-xs sm:text-base text-slate-900 line-clamp-1 leading-snug group-hover/title:text-indigo-600 transition-colors" title={displayName}>
+              {displayName}
+            </h3>
+          </Link>
 
           {/* Precio Prominente según Presentación Seleccionada */}
           <div className="mt-0.5 flex items-baseline gap-1.5">
