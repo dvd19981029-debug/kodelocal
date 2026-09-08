@@ -1016,6 +1016,8 @@ export default function PosPage() {
           cashReceived: completedRecord.cashReceived,
           cashChange: completedRecord.cashChange,
           notes: completedRecord.tipoComprobante,
+          tipoComprobante: completedRecord.tipoComprobante,
+          codigoGeneracion: completedRecord.dteInfo?.codigoGeneracion,
           cashierName: completedRecord.cajero || 'Caja 1',
           items: completedRecord.items.map(it => ({
             productId: it.productId,
@@ -4116,6 +4118,126 @@ export default function PosPage() {
         onClose={() => setIsQuoteModalOpen(false)}
         sale={activeQuoteSale}
       />
+
+      {/* ========================================================================= */}
+      {/* TICKET TÉRMICO 80MM FORMATEADO PARA IMPRESIÓN (WINDOW.PRINT)              */}
+      {/* ========================================================================= */}
+      {(completedSale || selectedSaleDetail) && (() => {
+        const currentTicket = completedSale || selectedSaleDetail;
+        if (!currentTicket) return null;
+        return (
+          <div id="printable-thermal-ticket" aria-hidden="true">
+            <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '13px', textTransform: 'uppercase', marginBottom: '2px' }}>
+              Aromaniak SV / Kode Local
+            </div>
+            <div style={{ textAlign: 'center', fontSize: '10px', lineHeight: '1.2', marginBottom: '6px' }}>
+              <div>VENTA DE PERFUMERÍA Y FRAGANCIAS</div>
+              <div>NIT: 0614-120590-101-2 • NRC: 245678-9</div>
+              <div>San Salvador, El Salvador</div>
+              <div>Tel: +503 2245-8800</div>
+            </div>
+
+            <div style={{ borderTop: '1px dashed #000', borderBottom: '1px dashed #000', padding: '4px 0', margin: '4px 0', textAlign: 'center', fontWeight: 'bold', fontSize: '11px' }}>
+              {currentTicket.dteInfo ? (
+                currentTicket.tipoComprobante === '03' ? 'COMPROBANTE DE CRÉDITO FISCAL' : 'FACTURA ELECTRÓNICA'
+              ) : (
+                'TICKET DE VENTA'
+              )}
+            </div>
+
+            {currentTicket.dteInfo && (
+              <div style={{ fontSize: '9px', lineHeight: '1.3', margin: '4px 0', paddingBottom: '4px', borderBottom: '1px dashed #000', wordBreak: 'break-all' }}>
+                <div style={{ fontWeight: 'bold' }}>DATOS FISCALES HACIENDA (DTE):</div>
+                <div><strong>CÓD. GENERACIÓN:</strong><br/>{currentTicket.dteInfo.codigoGeneracion}</div>
+                {currentTicket.dteInfo.numeroControl && (
+                  <div><strong>N° CONTROL:</strong> {currentTicket.dteInfo.numeroControl}</div>
+                )}
+                {currentTicket.dteInfo.selloRecepcion && (
+                  <div><strong>SELLO MH:</strong><br/>{currentTicket.dteInfo.selloRecepcion}</div>
+                )}
+                <div><strong>ESTADO:</strong> {currentTicket.dteInfo.simulated ? 'SIMULACIÓN / PRUEBAS' : 'CERTIFICADO HACIENDA'}</div>
+              </div>
+            )}
+
+            <div style={{ fontSize: '10px', lineHeight: '1.3', margin: '4px 0', paddingBottom: '4px', borderBottom: '1px dashed #000' }}>
+              <div><strong>VENTA #:</strong> {currentTicket.saleNumber}</div>
+              <div><strong>FECHA:</strong> {currentTicket.createdAt ? new Date(currentTicket.createdAt).toLocaleString('es-SV') : new Date().toLocaleString('es-SV')}</div>
+              <div><strong>CAJERO:</strong> {currentTicket.cajero || 'Caja 1'}</div>
+              <div style={{ marginTop: '2px' }}><strong>CLIENTE:</strong> {currentTicket.cliente?.nombre || 'Consumidor Final'}</div>
+              {currentTicket.cliente?.numDocumento && (
+                <div><strong>DOC:</strong> {currentTicket.cliente.numDocumento}</div>
+              )}
+              {currentTicket.cliente?.nrc && (
+                <div><strong>NRC:</strong> {currentTicket.cliente.nrc}</div>
+              )}
+              {currentTicket.cliente?.direccion && (
+                <div><strong>DIRECCIÓN:</strong> {currentTicket.cliente.direccion}{currentTicket.cliente.municipio ? `, ${currentTicket.cliente.municipio}` : ''}</div>
+              )}
+            </div>
+
+            <div style={{ margin: '6px 0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '10px', borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '4px' }}>
+                <span style={{ width: '28px' }}>CANT</span>
+                <span style={{ flex: 1, textAlign: 'left', padding: '0 4px' }}>PRODUCTO</span>
+                <span style={{ width: '45px', textAlign: 'right' }}>P.U.</span>
+                <span style={{ width: '48px', textAlign: 'right' }}>TOTAL</span>
+              </div>
+              {currentTicket.items.map((it: any, idx: number) => (
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', lineHeight: '1.25', marginBottom: '3px' }}>
+                  <span style={{ width: '28px', fontFamily: 'monospace' }}>{it.quantity}</span>
+                  <span style={{ flex: 1, textAlign: 'left', padding: '0 4px', wordBreak: 'break-word' }}>
+                    {it.name} {it.unit ? `(${it.unit})` : ''}
+                  </span>
+                  <span style={{ width: '45px', textAlign: 'right', fontFamily: 'monospace' }}>${Number(it.price).toFixed(2)}</span>
+                  <span style={{ width: '48px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 'bold' }}>${Number(it.total).toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ borderTop: '1px dashed #000', paddingTop: '4px', fontSize: '10px', lineHeight: '1.4' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>SUBTOTAL NETO:</span>
+                <span style={{ fontFamily: 'monospace' }}>${Number(currentTicket.subtotal).toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>IVA (13%):</span>
+                <span style={{ fontFamily: 'monospace' }}>${Number(currentTicket.ivaTotal).toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '12px', borderTop: '1px solid #000', paddingTop: '3px', marginTop: '2px' }}>
+                <span>TOTAL A PAGAR:</span>
+                <span style={{ fontFamily: 'monospace' }}>${Number(currentTicket.total).toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3px' }}>
+                <span>FORMA PAGO:</span>
+                <span>{currentTicket.paymentMethod || 'EFECTIVO'}</span>
+              </div>
+              {currentTicket.cashReceived != null && Number(currentTicket.cashReceived) > 0 && (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>RECIBIDO:</span>
+                    <span style={{ fontFamily: 'monospace' }}>${Number(currentTicket.cashReceived).toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>CAMBIO:</span>
+                    <span style={{ fontFamily: 'monospace' }}>${Number(currentTicket.cashChange || 0).toFixed(2)}</span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div style={{ borderTop: '1px dashed #000', marginTop: '8px', paddingTop: '6px', textAlign: 'center', fontSize: '9px', lineHeight: '1.3' }}>
+              {currentTicket.dteInfo?.codigoGeneracion && (
+                <div style={{ wordBreak: 'break-all', fontFamily: 'monospace', marginBottom: '4px' }}>
+                  Consulta tu DTE en:<br/>
+                  https://admin.factura.gob.sv/consultaPublica
+                </div>
+              )}
+              <div style={{ fontWeight: 'bold' }}>¡GRACIAS POR SU PREFERENCIA!</div>
+              <div>Aromaniak SV • Pasión por las mejores fragancias</div>
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
   );

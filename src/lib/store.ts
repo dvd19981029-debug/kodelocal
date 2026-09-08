@@ -44,6 +44,8 @@ export interface SaleRecord {
     nrc?: string;
     correo?: string;
     direccion?: string;
+    departamento?: string;
+    municipio?: string;
     telefono?: string;
     actividadEconomica?: string;
     categoriaContribuyente?: string;

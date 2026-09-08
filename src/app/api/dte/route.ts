@@ -49,37 +49,54 @@ export async function POST(request: Request) {
       jsonUrl: `/api/dte/${dteResult.codigoGeneracion}/json`,
     };
 
-    // 2. Intentar registrar en base de datos si Prisma está conectado
+    // 2. Registrar en base de datos en la tabla DteDocument (con TODO el Json de request y response)
     try {
       if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('placeholder')) {
-        // En producción guardará en Prisma si existe la venta
-        const saleExists = saleId ? await prisma.sale.findUnique({ where: { id: saleId } }) : null;
-        if (saleExists) {
-          await prisma.dteDocument.upsert({
-            where: { saleId: saleExists.id },
-            create: {
-              saleId: saleExists.id,
-              tipoDte: tipoDte === '03' ? 'CREDITO_FISCAL_03' : 'FACTURA_01',
-              codigoGeneracion: dteResult.codigoGeneracion,
-              numeroControl: dteResult.numeroControl,
-              selloRecepcion: dteResult.selloRecepcion,
-              estado: dteResult.estado === 'PROCESADO' ? 'PROCESADO' : dteResult.simulated ? 'SIMULADO' : 'RECHAZADO',
-              fhProcesamiento: new Date(dteResult.fhProcesamiento),
-              mensajeRespuesta: dteResult.mensaje,
-              responseJson: JSON.stringify(dteResult.rawResponse || {}),
-            },
-            update: {
-              codigoGeneracion: dteResult.codigoGeneracion,
-              numeroControl: dteResult.numeroControl,
-              selloRecepcion: dteResult.selloRecepcion,
-              estado: dteResult.estado === 'PROCESADO' ? 'PROCESADO' : dteResult.simulated ? 'SIMULADO' : 'RECHAZADO',
-              mensajeRespuesta: dteResult.mensaje,
-            },
-          });
-        }
+        const saleExists = saleId
+          ? await prisma.sale.findFirst({
+              where: {
+                OR: [{ id: saleId }, { saleNumber: saleId }],
+              },
+            })
+          : null;
+        const finalSaleId = saleExists ? saleExists.id : null;
+
+        const fullRequestData = {
+          clientRequest: body,
+          facturaLlamaPayload: dteResult.sentPayload || null,
+        };
+        const fullResponseData = dteResult.rawResponse || dteResult;
+
+        await prisma.dteDocument.upsert({
+          where: { codigoGeneracion: dteResult.codigoGeneracion },
+          create: {
+            saleId: finalSaleId,
+            tipoDte: tipoDte === '03' ? 'CREDITO_FISCAL_03' : 'FACTURA_01',
+            codigoGeneracion: dteResult.codigoGeneracion,
+            numeroControl: dteResult.numeroControl || null,
+            selloRecepcion: dteResult.selloRecepcion || null,
+            estado: dteResult.estado === 'PROCESADO' ? 'PROCESADO' : dteResult.simulated ? 'SIMULADO' : 'RECHAZADO',
+            fhProcesamiento: dteResult.fhProcesamiento ? new Date(dteResult.fhProcesamiento) : new Date(),
+            mensajeRespuesta: dteResult.mensaje || null,
+            observaciones: dteResult.rawResponse?.mhResponse?.observaciones ? JSON.stringify(dteResult.rawResponse.mhResponse.observaciones) : null,
+            requestJson: JSON.stringify(fullRequestData, null, 2),
+            responseJson: JSON.stringify(fullResponseData, null, 2),
+          },
+          update: {
+            saleId: finalSaleId || undefined,
+            numeroControl: dteResult.numeroControl || null,
+            selloRecepcion: dteResult.selloRecepcion || null,
+            estado: dteResult.estado === 'PROCESADO' ? 'PROCESADO' : dteResult.simulated ? 'SIMULADO' : 'RECHAZADO',
+            fhProcesamiento: dteResult.fhProcesamiento ? new Date(dteResult.fhProcesamiento) : new Date(),
+            mensajeRespuesta: dteResult.mensaje || null,
+            observaciones: dteResult.rawResponse?.mhResponse?.observaciones ? JSON.stringify(dteResult.rawResponse.mhResponse.observaciones) : null,
+            requestJson: JSON.stringify(fullRequestData, null, 2),
+            responseJson: JSON.stringify(fullResponseData, null, 2),
+          },
+        });
       }
     } catch (dbError) {
-      console.warn('DB recording skipped:', dbError);
+      console.error('Error guardando DTE en base de datos:', dbError);
     }
 
     return NextResponse.json({

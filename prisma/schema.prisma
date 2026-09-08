@@ -199,8 +199,8 @@ enum DteStatus {
 
 model DteDocument {
   id               String    @id @default(cuid())
-  saleId           String    @unique
-  sale             Sale      @relation(fields: [saleId], references: [id])
+  saleId           String?   @unique
+  sale             Sale?     @relation(fields: [saleId], references: [id])
   tipoDte          DteType   @default(FACTURA_01)
   version          Int       @default(1)
   codigoGeneracion String    @unique

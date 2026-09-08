@@ -42,6 +42,8 @@ export async function POST(request: Request) {
       shiftId,
       items,
       paymentReference,
+      tipoComprobante,
+      codigoGeneracion,
     } = body;
 
     const result = await prisma.$transaction(async (tx) => {
@@ -50,6 +52,7 @@ export async function POST(request: Request) {
         data: {
           saleNumber: saleNumber || `VEN-${Date.now().toString().slice(-6)}`,
           channel: channel || 'POS',
+          tipoComprobante: tipoComprobante || (notes === '01' || notes === '03' ? notes : 'TICKET'),
           subtotal: Number(subtotal || 0),
           ivaTotal: Number(ivaTotal || 0),
           discountTotal: Number(discountTotal || 0),
@@ -76,8 +79,17 @@ export async function POST(request: Request) {
         include: {
           items: true,
           customer: true,
+          dteDocument: true,
         },
       });
+
+      // 1.1 Si vino código de generación de DTE, vincularlo a esta venta
+      if (codigoGeneracion) {
+        await tx.dteDocument.updateMany({
+          where: { codigoGeneracion },
+          data: { saleId: createdSale.id },
+        });
+      }
 
       // 2. Registrar el PAGO RECIBIDO en la tabla SalePayment
       const paymentRecord = await tx.salePayment.create({

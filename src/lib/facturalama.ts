@@ -38,6 +38,7 @@ export interface DteEmissionResult {
   pdfUrl?: string;
   jsonUrl?: string;
   rawResponse?: any;
+  sentPayload?: any;
 }
 
 export class FacturaLlamaClient {
@@ -149,6 +150,7 @@ export class FacturaLlamaClient {
           estado: 'RECHAZADO',
           mensaje: errorDetail,
           rawResponse: data,
+          sentPayload: payload,
         };
       }
 
@@ -184,6 +186,7 @@ export class FacturaLlamaClient {
         pdfUrl,
         jsonUrl,
         rawResponse: data,
+        sentPayload: payload,
       };
     } catch (error: any) {
       console.error('[FacturaLlama Network Error]', error);

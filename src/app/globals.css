@@ -192,3 +192,51 @@ html, body {
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* ================= REGLAS DE IMPRESIÓN PARA TICKET TÉRMICO ================= */
+#printable-thermal-ticket {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 0;
+    size: 80mm auto;
+  }
+  
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Ocultar todo el árbol de React por defecto al imprimir */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Mostrar exclusivamente el ticket térmico */
+  #printable-thermal-ticket,
+  #printable-thermal-ticket * {
+    visibility: visible !important;
+  }
+
+  #printable-thermal-ticket {
+    display: block !important;
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 74mm !important;
+    max-width: 80mm !important;
+    margin: 0 auto !important;
+    padding: 3mm 2mm 12mm 2mm !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+    color: #000000 !important;
+    background: #ffffff !important;
+    z-index: 99999999 !important;
+  }
+}
