@@ -128,7 +128,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           {/* Contenedor de Imagen de Frasco con estilo Tarjeta Burbuja Claymórfica */}
           <Link 
             href={`/producto/${product.id}`}
-            className={`block relative w-full aspect-[4/5] clay-card overflow-hidden mb-2.5 flex items-center justify-center cursor-pointer transition-all duration-300 ${
+            className={`block relative w-full aspect-square clay-card overflow-hidden mb-2 sm:mb-2.5 flex items-center justify-center cursor-pointer transition-all duration-300 ${
               isOutOfStock 
                 ? 'opacity-85 border-slate-200/90 bg-[#f8fafc]' 
                 : isCardPulsing
@@ -255,39 +255,22 @@ export default function ProductCard({ product }: ProductCardProps) {
             </div>
           )}
 
-          {/* Botón de Agregar al Carrito SÓLIDO (no difuminado) colocado directamente abajo */}
+          {/* Botón de Agregar al Carrito SÓLIDO colocado directamente abajo con altura fija para no desalinear */}
           <div className="mt-2">
             {isOutOfStock ? (
               <button
                 disabled
-                className="w-full py-2 text-[9.5px] sm:text-xs font-black rounded-xl bg-slate-100 text-slate-400 cursor-not-allowed text-center"
+                className="w-full h-[38px] sm:h-[40px] text-[9.5px] sm:text-xs font-black rounded-xl bg-slate-100 text-slate-400 cursor-not-allowed text-center flex items-center justify-center"
               >
                 Agotado
               </button>
             ) : currentQuantity > 0 ? (
-              /* YA ESTÁ EN EL CARRITO */
-              <div className={`space-y-1 transition-all duration-300 ${isCardPulsing ? 'scale-[1.02]' : ''}`}>
-                <div className="flex items-center justify-between px-0.5">
-                  <span className="text-[9.5px] sm:text-[10.5px] font-black text-emerald-700 flex items-center gap-1">
-                    <span>
-                      Llevas {currentQuantity} {
-                        selectedPresentation === 'MEDIA_ONZA' 
-                          ? (currentQuantity === 1 ? 'media oz' : 'medias oz') 
-                          : selectedPresentation === 'ONZA_COMPLETA' 
-                          ? 'oz' 
-                          : (currentQuantity === 1 ? 'unidad' : 'unidades')
-                      }
-                    </span>
-                  </span>
-                  <span className="text-[9.5px] font-mono font-bold text-slate-500">
-                    ${(activeOption.price * currentQuantity).toFixed(2)}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between gap-1 w-full bg-slate-100/90 p-0.5 rounded-xl border border-slate-200/80 shadow-2xs">
+              /* YA ESTÁ EN EL CARRITO: Misma altura fija de 38px/40px sin texto que empuje hacia abajo */
+              <div className={`transition-all duration-300 ${isCardPulsing ? 'scale-[1.02]' : ''}`}>
+                <div className="flex items-center justify-between gap-1 w-full bg-slate-100/90 p-0.5 rounded-xl border border-slate-200/80 shadow-2xs h-[38px] sm:h-[40px]">
                   <button
                     onClick={handleDecrement}
-                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-600 font-black text-xs flex items-center justify-center transition-all shadow-xs active:scale-90 cursor-pointer"
+                    className="w-8 h-full rounded-lg bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-600 font-black text-xs flex items-center justify-center transition-all shadow-xs active:scale-90 cursor-pointer"
                     title="Disminuir una unidad"
                     aria-label="Disminuir unidad"
                   >
@@ -304,7 +287,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                   <button
                     onClick={handleIncrement}
                     disabled={!canAddMore}
-                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg font-black text-xs flex items-center justify-center transition-all shadow-xs ${
+                    className={`w-8 h-full rounded-lg font-black text-xs flex items-center justify-center transition-all shadow-xs ${
                       canAddMore
                         ? 'bg-[#7c3aed] hover:bg-[#6d28d9] text-white active:scale-90 cursor-pointer'
                         : 'bg-slate-200 text-slate-400 cursor-not-allowed'
@@ -317,11 +300,11 @@ export default function ProductCard({ product }: ProductCardProps) {
                 </div>
               </div>
             ) : (
-              /* AÚN NO EN EL CARRITO: Botón sólido y no difuminado */
+              /* AÚN NO EN EL CARRITO */
               <button
                 onClick={handleAdd}
                 disabled={isOutOfStock || !canAddMore}
-                className={`w-full py-2.5 text-[10.5px] sm:text-xs font-black rounded-xl flex items-center justify-center gap-1.5 transition-all duration-300 select-none ${
+                className={`w-full h-[38px] sm:h-[40px] text-[10.5px] sm:text-xs font-black rounded-xl flex items-center justify-center gap-1.5 transition-all duration-300 select-none ${
                   !canAddMore
                     ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
                     : justAdded 

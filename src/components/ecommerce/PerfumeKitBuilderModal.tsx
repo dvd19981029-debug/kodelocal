@@ -384,7 +384,7 @@ export default function PerfumeKitBuilderModal({
                             : 'bg-white hover:bg-slate-50 border-slate-200/80 shadow-2xs'
                         }`}
                       >
-                        <div className="w-full aspect-[4/5] max-h-32 rounded-xl overflow-hidden bg-slate-100 mb-2 flex items-center justify-center border border-slate-100">
+                        <div className="w-full aspect-square max-h-28 rounded-xl overflow-hidden bg-slate-100 mb-2 flex items-center justify-center border border-slate-100">
                           <img
                             src={bottle.imageUrl || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=300&q=80'}
                             alt={bottle.name}

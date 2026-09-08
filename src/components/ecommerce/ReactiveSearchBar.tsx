@@ -35,7 +35,7 @@ export default function ReactiveSearchBar({
   setCurrentPage,
 }: ReactiveSearchBarProps) {
   const isScrolled = useScrolled(75);
-  const { totalItems, setIsCartOpen, isCartPulsing } = useEcommerceCart();
+  const { totalItems, subtotal, setIsCartOpen, isCartPulsing } = useEcommerceCart();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSelectFilter = (type: 'all' | 'stock' | 'cat' | 'gender', value?: string) => {
@@ -134,10 +134,10 @@ export default function ReactiveSearchBar({
                 <ShoppingBag className={`w-4 h-4 text-white transition-transform duration-300 ${isCartPulsing ? '-translate-y-0.5 scale-110' : ''}`} />
                 <span className="text-xs font-black hidden sm:inline text-white">Carrito</span>
                 {totalItems > 0 && (
-                  <span className={`min-w-[20px] h-5 px-1 rounded-full bg-purple-950/80 text-white text-[10px] font-black flex items-center justify-center transition-all duration-300 ${
+                  <span className={`px-2 h-5 rounded-full bg-purple-950/85 text-white text-[10px] sm:text-[11px] font-black font-mono flex items-center justify-center transition-all duration-300 ${
                     isCartPulsing ? 'scale-115' : ''
                   }`}>
-                    {totalItems}
+                    ${subtotal.toFixed(2)}
                   </span>
                 )}
               </button>
