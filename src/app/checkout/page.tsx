@@ -7,7 +7,6 @@ import {
   ShoppingBag, 
   Truck, 
   CreditCard, 
-  ShieldCheck, 
   CheckCircle2, 
   ArrowLeft, 
   Phone, 
@@ -732,11 +731,6 @@ export default function CheckoutPage() {
                   </>
                 )}
               </button>
-
-              <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 font-semibold pt-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                <span>Garantía de satisfacción y calidad de esencias Aromaniak</span>
-              </div>
             </div>
 
           </div>

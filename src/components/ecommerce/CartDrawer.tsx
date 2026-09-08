@@ -156,9 +156,15 @@ export default function CartDrawer() {
                         {item.kitDetails ? (
                           <div className="mt-1.5 p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[10px] space-y-0.5 text-slate-700">
                             <div className="flex items-center justify-between font-bold">
-                              <span className="text-indigo-700">Perfume Preparado (100ml)</span>
-                              <span className="text-[9px] bg-indigo-100 text-indigo-800 font-black px-1.5 py-0.2 rounded-md">
-                                {item.kitDetails.isPlus ? '1.5 Onzas' : '1 Onza'}
+                              <span className="text-indigo-700">
+                                {item.kitDetails.isPlus ? 'Perfume Preparado PLUS (100ml)' : 'Perfume Preparado (100ml)'}
+                              </span>
+                              <span className={`text-[9px] font-black px-1.5 py-0.2 rounded-md ${
+                                item.kitDetails.isPlus 
+                                  ? 'bg-amber-100 text-amber-900 border border-amber-300/60' 
+                                  : 'bg-indigo-100 text-indigo-800'
+                              }`}>
+                                {item.kitDetails.isPlus ? '1.5 Onzas PLUS' : '1 Onza'}
                               </span>
                             </div>
                             <p className="text-[9.5px] text-slate-500 truncate">

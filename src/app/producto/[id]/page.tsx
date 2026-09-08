@@ -9,7 +9,6 @@ import {
   ShoppingBag, 
   Truck, 
   Droplets, 
-  ShieldCheck, 
   Wand2, 
   Plus, 
   Minus, 
@@ -232,18 +231,14 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Tira rápida de beneficios visuales */}
-          <div className="grid grid-cols-3 gap-2 text-center select-none">
+          <div className="grid grid-cols-2 gap-2 text-center select-none">
             <div className="clay-card py-2.5 px-2 rounded-2xl bg-white border border-slate-100 flex flex-col items-center justify-center gap-1 text-[11px] font-bold text-slate-700 shadow-2xs">
               <Truck className="w-4 h-4 text-indigo-600" />
               <span>Envíos C807 Todo el País</span>
             </div>
             <div className="clay-card py-2.5 px-2 rounded-2xl bg-white border border-slate-100 flex flex-col items-center justify-center gap-1 text-[11px] font-bold text-slate-700 shadow-2xs">
               <Droplets className="w-4 h-4 text-pink-600" />
-              <span>Esencia Pura de Calidad</span>
-            </div>
-            <div className="clay-card py-2.5 px-2 rounded-2xl bg-white border border-slate-100 flex flex-col items-center justify-center gap-1 text-[11px] font-bold text-slate-700 shadow-2xs">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>Garantía de Satisfacción</span>
+              <span>Esencia Pura Concentrada</span>
             </div>
           </div>
         </div>
@@ -345,7 +340,7 @@ export default function ProductDetailPage() {
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-600 font-medium leading-tight mt-0.5">
-                  1 oz pura de este contratipo + frasco de 100ml a elegir + fijador + etiqueta gratis.
+                  1 oz pura de este contratipo (u opción PLUS de 1.5 oz) + frasco de 100ml a elegir + fijador + etiqueta gratis.
                 </p>
               </div>
             </div>
