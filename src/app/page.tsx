@@ -340,8 +340,10 @@ export default function EcommerceHomePage() {
           </div>
         </div>
 
-        {/* ================= TARJETA DESTACADA: ARMA TU PROPIO PERFUME (SIEMPRE DISPONIBLE) ================= */}
-        <BuildYourPerfumeCard onOpenBuilder={() => setIsKitModalOpen(true)} />
+        {/* ================= TARJETA DESTACADA: ARMA TU PROPIO PERFUME (SOLO ARRIBA SI NO SE ESTÁ BUSCANDO) ================= */}
+        {!isSearching && (
+          <BuildYourPerfumeCard onOpenBuilder={() => setIsKitModalOpen(true)} />
+        )}
 
         {/* ================= REJILLA DE PRODUCTOS (EXACTAMENTE 7 FILAS POR PÁGINA) ================= */}
         {paginatedProducts.length === 0 ? (
@@ -366,9 +368,25 @@ export default function EcommerceHomePage() {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 sm:gap-x-4 md:gap-x-5 gap-y-7 sm:gap-y-9">
-            {paginatedProducts.map((prod) => (
-              <ProductCard key={prod.id} product={prod} />
-            ))}
+            {isSearching ? (
+              <>
+                {paginatedProducts.slice(0, 4).map((prod) => (
+                  <ProductCard key={prod.id} product={prod} />
+                ))}
+                {currentPage === 1 && (
+                  <div className="col-span-full">
+                    <BuildYourPerfumeCard onOpenBuilder={() => setIsKitModalOpen(true)} />
+                  </div>
+                )}
+                {paginatedProducts.slice(4).map((prod) => (
+                  <ProductCard key={prod.id} product={prod} />
+                ))}
+              </>
+            ) : (
+              paginatedProducts.map((prod) => (
+                <ProductCard key={prod.id} product={prod} />
+              ))
+            )}
           </div>
         )}
 
