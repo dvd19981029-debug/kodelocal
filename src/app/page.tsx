@@ -279,7 +279,7 @@ export default function EcommerceHomePage() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 sm:gap-x-4 md:gap-x-5 gap-y-7 sm:gap-y-9">
             {paginatedProducts.map((prod) => (
               <ProductCard key={prod.id} product={prod} />
             ))}
