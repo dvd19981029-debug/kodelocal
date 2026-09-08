@@ -152,18 +152,43 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
       ? `${product.id}-${presentation}-${selectedBottle.id}` 
       : `${product.id}-${presentation}`;
 
+    const totalStock = typeof product.stock === 'number' ? product.stock : 0;
+    const isEssence = product.category === 'Esencias para Perfume';
+
     setCart(prev => {
+      // 1. Calcular consumo actual de este producto en el carrito excluyendo este item en particular
+      const otherEssenceUsed = prev
+        .filter(item => item.product.id === product.id && item.id !== itemId)
+        .reduce((acc, item) => {
+          if (item.presentation === 'MEDIA_ONZA') return acc + item.quantity * 0.5;
+          if (item.presentation === 'ONZA_COMPLETA') return acc + item.quantity * 1.0;
+          return acc + item.quantity;
+        }, 0);
+
+      const existingPerfume = prev.find(item => item.id === itemId);
+      const currentQty = existingPerfume ? existingPerfume.quantity : 0;
+      const desiredQty = currentQty + quantity;
+
+      // Calcular inventario requerido para la nueva cantidad deseada
+      const requiredOuncesForDesired = isEssence
+        ? (presentation === 'MEDIA_ONZA' ? desiredQty * 0.5 : desiredQty * 1.0)
+        : desiredQty;
+
+      // Si excede el inventario total disponible, bloquear la adición
+      if (otherEssenceUsed + requiredOuncesForDesired > totalStock) {
+        return prev;
+      }
+
       let updatedCart = [...prev];
 
-      // 1. Agregar el Perfume
-      const existingPerfume = updatedCart.find(item => item.id === itemId);
+      // Agregar o actualizar el Perfume
       if (existingPerfume) {
         updatedCart = updatedCart.map(item => 
           item.id === itemId
             ? { 
                 ...item, 
-                quantity: item.quantity + quantity,
-                totalPrice: Number(((item.quantity + quantity) * item.unitPrice).toFixed(2))
+                quantity: desiredQty,
+                totalPrice: Number((desiredQty * item.unitPrice).toFixed(2))
               }
             : item
         );
@@ -174,8 +199,8 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
           presentation,
           presentationName: selectedOption.name,
           unitPrice,
-          quantity,
-          totalPrice: Number((unitPrice * quantity).toFixed(2)),
+          quantity: desiredQty,
+          totalPrice: Number((unitPrice * desiredQty).toFixed(2)),
           selectedBottle: selectedBottle ? {
             id: selectedBottle.id,
             name: selectedBottle.name,
@@ -194,8 +219,8 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
             item.id === bottleItemId
               ? {
                   ...item,
-                  quantity: item.quantity + quantity,
-                  totalPrice: Number(((item.quantity + quantity) * item.unitPrice).toFixed(2))
+                  quantity: desiredQty,
+                  totalPrice: Number((desiredQty * item.unitPrice).toFixed(2))
                 }
               : item
           );
@@ -206,8 +231,8 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
             presentation: 'UNIDAD',
             presentationName: `Bote para ${product.officialName || product.name}`,
             unitPrice: selectedBottle.price,
-            quantity,
-            totalPrice: Number((selectedBottle.price * quantity).toFixed(2))
+            quantity: desiredQty,
+            totalPrice: Number((selectedBottle.price * desiredQty).toFixed(2))
           });
         }
       }
@@ -215,7 +240,6 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
       return updatedCart;
     });
 
-    // En lugar de abrir la pestaña del carrito automáticamente, activamos la palpitación visual
     triggerCartPulse();
   };
 
@@ -238,6 +262,9 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     const presentationName = isPlus ? 'Arma tu propio perfume PLUS (1.5 oz)' : 'Arma tu propio perfume (1 oz)';
     const itemId = `kit-${essence.id}-${bottle.id}-${hasLabel ? 'label' : 'nolabel'}-${isPlus ? 'plus' : 'std'}`;
 
+    const totalEssenceStock = typeof essence.stock === 'number' ? essence.stock : 0;
+    const ozPerKit = isPlus ? 1.5 : 1.0;
+
     const kitProduct: ProductItem = {
       ...essence,
       id: itemId,
@@ -248,14 +275,33 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     };
 
     setCart(prev => {
+      // Calcular consumo actual de la esencia en el carrito
+      const currentEssenceUsed = prev
+        .filter(item => item.product.id === essence.id || (item.kitDetails && item.kitDetails.essenceId === essence.id))
+        .reduce((acc, item) => {
+          if (item.kitDetails) {
+            return acc + (item.kitDetails.isPlus ? item.quantity * 1.5 : item.quantity * 1.0);
+          }
+          if (item.presentation === 'MEDIA_ONZA') return acc + item.quantity * 0.5;
+          if (item.presentation === 'ONZA_COMPLETA') return acc + item.quantity * 1.0;
+          return acc + item.quantity;
+        }, 0);
+
       const existing = prev.find(item => item.id === itemId);
+      const desiredQty = (existing ? existing.quantity : 0) + quantity;
+      const additionalOz = ozPerKit * quantity;
+
+      if (currentEssenceUsed + additionalOz > totalEssenceStock) {
+        return prev;
+      }
+
       if (existing) {
         return prev.map(item =>
           item.id === itemId
             ? {
                 ...item,
-                quantity: item.quantity + quantity,
-                totalPrice: Number(((item.quantity + quantity) * item.unitPrice).toFixed(2))
+                quantity: desiredQty,
+                totalPrice: Number((desiredQty * item.unitPrice).toFixed(2))
               }
             : item
         );
@@ -269,12 +315,12 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
           presentation,
           presentationName,
           unitPrice,
-          quantity,
-          totalPrice: Number((unitPrice * quantity).toFixed(2)),
+          quantity: desiredQty,
+          totalPrice: Number((unitPrice * desiredQty).toFixed(2)),
           selectedBottle: {
             id: bottle.id,
             name: bottle.name,
-            price: 0, // Ya incluido en los $15
+            price: 0,
             imageUrl: bottle.imageUrl
           },
           kitDetails: {
@@ -301,11 +347,53 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
       removeFromCart(id);
       return;
     }
+
     setCart(prev => {
       const current = prev.find(item => item.id === id);
-      if (current && quantity > current.quantity) {
+      if (!current) return prev;
+
+      // Validar inventario si es un aumento de cantidad
+      if (quantity > current.quantity) {
+        const prod = current.product;
+        const totalStock = typeof prod.stock === 'number' ? prod.stock : 0;
+        const isEssence = prod.category === 'Esencias para Perfume';
+
+        if (current.kitDetails) {
+          const ozPerKit = current.kitDetails.isPlus ? 1.5 : 1.0;
+          const otherUsed = prev
+            .filter(item => item.id !== id && (item.product.id === current.kitDetails?.essenceId || item.kitDetails?.essenceId === current.kitDetails?.essenceId))
+            .reduce((acc, item) => {
+              if (item.kitDetails) return acc + (item.kitDetails.isPlus ? item.quantity * 1.5 : item.quantity * 1.0);
+              if (item.presentation === 'MEDIA_ONZA') return acc + item.quantity * 0.5;
+              if (item.presentation === 'ONZA_COMPLETA') return acc + item.quantity * 1.0;
+              return acc + item.quantity;
+            }, 0);
+
+          if (otherUsed + (ozPerKit * quantity) > totalStock) {
+            return prev; // Bloquear aumento más allá del stock
+          }
+        } else if (isEssence) {
+          const otherUsed = prev
+            .filter(item => item.id !== id && item.product.id === prod.id)
+            .reduce((acc, item) => {
+              if (item.presentation === 'MEDIA_ONZA') return acc + item.quantity * 0.5;
+              if (item.presentation === 'ONZA_COMPLETA') return acc + item.quantity * 1.0;
+              return acc + item.quantity;
+            }, 0);
+
+          const desiredOz = current.presentation === 'MEDIA_ONZA' ? quantity * 0.5 : quantity * 1.0;
+          if (otherUsed + desiredOz > totalStock) {
+            return prev; // Bloquear aumento más allá del stock
+          }
+        } else {
+          if (quantity > totalStock) {
+            return prev; // Bloquear aumento más allá del stock
+          }
+        }
+
         triggerCartPulse();
       }
+
       return prev.map(item => 
         item.id === id 
           ? { ...item, quantity, totalPrice: Number((item.unitPrice * quantity).toFixed(2)) }

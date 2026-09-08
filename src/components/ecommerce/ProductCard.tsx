@@ -132,10 +132,10 @@ export default function ProductCard({ product }: ProductCardProps) {
               isOutOfStock 
                 ? 'opacity-85 border-slate-200/90 bg-[#f8fafc]' 
                 : isCardPulsing
-                ? 'scale-[1.03] ring-4 ring-emerald-400/80 shadow-[0_0_24px_rgba(16,185,129,0.35)]'
+                ? 'scale-[1.02] ring-3 ring-purple-500/70 shadow-[0_6px_20px_rgba(88,28,135,0.25)]'
                 : currentQuantity > 0
-                ? 'ring-2 ring-emerald-400/80 shadow-[0_4px_16px_rgba(16,185,129,0.18)]'
-                : 'hover:scale-[1.02] hover:shadow-[6px_10px_20px_rgba(99,102,241,0.2)]'
+                ? 'ring-1.5 ring-purple-400/60 shadow-[0_4px_14px_rgba(88,28,135,0.12)]'
+                : 'hover:scale-[1.015] hover:shadow-[4px_8px_16px_rgba(88,28,135,0.15)]'
             }`}
           >
             <img
@@ -234,21 +234,15 @@ export default function ProductCard({ product }: ProductCardProps) {
                       onClick={() => setSelectedPresentation(opt.id)}
                       className={`py-1.5 px-1.5 rounded-lg text-center transition-all cursor-pointer select-none flex items-center justify-center min-h-[32px] sm:min-h-[34px] relative ${
                         isSelected
-                          ? 'bg-indigo-600 text-white shadow-xs font-black scale-[1.02]'
+                          ? 'bg-[#581c87] text-white shadow-xs font-black scale-[1.02]'
                           : isOptOutOfStock
                           ? 'bg-white/50 text-slate-400 opacity-60 hover:bg-white/80 font-medium'
-                          : 'bg-white hover:bg-indigo-50/60 text-slate-700 border border-slate-200/70 shadow-2xs font-bold'
+                          : 'bg-white hover:bg-purple-50 text-slate-700 border border-slate-200/70 shadow-2xs font-bold'
                       }`}
                     >
                       <span className="text-[10.5px] sm:text-[11.5px] leading-tight font-extrabold">
                         {opt.id === 'MEDIA_ONZA' ? '½ Onza' : '1 Onza'}
                       </span>
-                      {/* Indicador sutil si ya tiene de esta presentación en carrito */}
-                      {cart.some(it => it.product.id === product.id && it.presentation === opt.id) && (
-                        <span className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full ${
-                          isSelected ? 'bg-pink-400 ring-2 ring-white' : 'bg-emerald-500 ring-1 ring-white'
-                        }`} />
-                      )}
                     </button>
                   );
                 })}
@@ -275,7 +269,6 @@ export default function ProductCard({ product }: ProductCardProps) {
               <div className={`space-y-1 transition-all duration-300 ${isCardPulsing ? 'scale-[1.02]' : ''}`}>
                 <div className="flex items-center justify-between px-0.5">
                   <span className="text-[9.5px] sm:text-[10.5px] font-black text-emerald-700 flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-xs shrink-0"></span>
                     <span>
                       Llevas {currentQuantity} {
                         selectedPresentation === 'MEDIA_ONZA' 
@@ -313,7 +306,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                     disabled={!canAddMore}
                     className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg font-black text-xs flex items-center justify-center transition-all shadow-xs ${
                       canAddMore
-                        ? 'bg-indigo-600 hover:bg-indigo-700 text-white active:scale-90 cursor-pointer'
+                        ? 'bg-[#581c87] hover:bg-[#4a1572] text-white active:scale-90 cursor-pointer'
                         : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                     }`}
                     title={canAddMore ? "Aumentar una unidad" : "Máximo disponible en inventario"}
@@ -328,17 +321,17 @@ export default function ProductCard({ product }: ProductCardProps) {
               <button
                 onClick={handleAdd}
                 disabled={isOutOfStock || !canAddMore}
-                className={`w-full py-2 text-[10px] sm:text-xs font-black rounded-xl flex items-center justify-center gap-1.5 transition-all select-none ${
+                className={`w-full py-2.5 text-[10.5px] sm:text-xs font-black rounded-xl flex items-center justify-center gap-1.5 transition-all duration-300 select-none ${
                   !canAddMore
                     ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
                     : justAdded 
-                    ? 'bg-emerald-600 text-white shadow-xs' 
-                    : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs active:scale-95 cursor-pointer'
+                    ? 'bg-[#581c87] text-white shadow-md scale-[1.02]' 
+                    : 'bg-[#581c87] hover:bg-[#4a1572] text-white shadow-sm active:scale-95 cursor-pointer'
                 }`}
               >
                 {justAdded ? (
                   <>
-                    <Check className="w-3.5 h-3.5" />
+                    <Check className="w-3.5 h-3.5 stroke-[3]" />
                     <span>¡Agregado!</span>
                   </>
                 ) : !canAddMore ? (

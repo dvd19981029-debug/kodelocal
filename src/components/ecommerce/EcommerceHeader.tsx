@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, Phone, User, LogOut, ChevronDown } from 'lucide-react';
+import { ShoppingBag, User, LogOut, ChevronDown } from 'lucide-react';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 
@@ -72,20 +72,9 @@ export default function EcommerceHeader() {
               <span className="hidden sm:inline font-black">Mi Cuenta</span>
             </button>
           )}
-
-          {/* Asesoría por WhatsApp en pantallas medianas / grandes */}
-          <a
-            href="https://wa.me/50370000000?text=Hola%20Aromaniak,%20deseo%20consultar%20por%20una%20fragancia"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-all shadow-2xs"
-          >
-            <Phone className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Asesoría</span>
-          </a>
         </div>
 
-        {/* ================= CENTRO: Logo oficial de Aromaniak MÁS GRANDE Y CENTRADO ================= */}
+        {/* ================= CENTRO: Logo oficial de Aromaniak ================= */}
         <div className="flex items-center justify-center">
           <Link href="/" className="inline-flex items-center justify-center group transition-transform active:scale-95 py-0.5">
             <img
@@ -96,40 +85,25 @@ export default function EcommerceHeader() {
           </Link>
         </div>
 
-        {/* ================= LADO DERECHO: Botón de Carrito (+ WhatsApp en móvil) ================= */}
-        <div className="flex items-center justify-end gap-2">
-          {/* Asesoría WhatsApp en móvil */}
-          <a
-            href="https://wa.me/50370000000?text=Hola%20Aromaniak,%20deseo%20consultar%20por%20una%20fragancia"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex md:hidden items-center justify-center p-2 text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl shadow-2xs active:scale-95 transition-transform"
-            title="Asesoría WhatsApp"
-          >
-            <Phone className="w-3.5 h-3.5" />
-          </a>
-
-          {/* Botón Carrito de Compras con Palpitación Animada */}
+        {/* ================= LADO DERECHO: Botón de Carrito ================= */}
+        <div className="flex items-center justify-end">
+          {/* Botón Carrito de Compras con Animación Suave y Elegante */}
           <button
             onClick={() => setIsCartOpen(true)}
             className={`clay-btn clay-btn-primary px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl flex items-center gap-1.5 sm:gap-2 relative transition-all duration-300 cursor-pointer ${
               isCartPulsing
-                ? 'scale-110 !bg-gradient-to-r !from-pink-500 !via-purple-600 !to-indigo-600 !shadow-[0_0_24px_rgba(236,72,153,0.7)] ring-4 ring-pink-300/80 animate-pulse'
+                ? 'scale-105 ring-4 ring-purple-300 shadow-[0_4px_20px_rgba(88,28,135,0.4)]'
                 : '!shadow-[2px_4px_12px_rgba(99,102,241,0.35)] active:scale-95'
             }`}
           >
-            <ShoppingBag className={`w-4 h-4 text-white transition-transform ${isCartPulsing ? 'scale-125 rotate-12' : ''}`} />
+            <ShoppingBag className={`w-4 h-4 text-white transition-transform duration-300 ${isCartPulsing ? '-translate-y-0.5 scale-110' : ''}`} />
             <span className="text-xs font-black hidden sm:inline">Carrito</span>
             {totalItems > 0 && (
-              <span className={`w-5 h-5 rounded-full bg-pink-500 text-white text-[10px] font-black flex items-center justify-center shadow-md transition-all ${
-                isCartPulsing ? 'scale-125 bg-pink-600 ring-2 ring-white' : ''
+              <span className={`min-w-[20px] h-5 px-1 rounded-full bg-purple-900 text-white text-[10px] font-black flex items-center justify-center shadow-md transition-all duration-300 ${
+                isCartPulsing ? 'scale-115 ring-2 ring-white' : ''
               }`}>
                 {totalItems}
               </span>
-            )}
-            {/* Onda expansiva de palpitación al añadir producto */}
-            {isCartPulsing && (
-              <span className="absolute inset-0 rounded-xl bg-pink-400/40 animate-ping pointer-events-none" />
             )}
           </button>
         </div>

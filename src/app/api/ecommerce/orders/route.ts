@@ -173,44 +173,74 @@ export async function POST(request: Request) {
       }
     }
 
-    const newOrder = await prisma.ecommerceOrder.create({
-      data: {
-        orderNumber: orderNumber || `WEB-${Math.floor(1000 + Math.random() * 9000)}`,
-        customerId: resolvedCustomerId || null,
-        customerName: customerName || 'Cliente Online',
-        customerEmail: customerEmail || null,
-        customerPhone: customerPhone || '',
-        department: department || 'San Salvador',
-        municipality: municipality || 'San Salvador',
-        shippingAddress: shippingAddress || '',
-        deliveryReference: deliveryReference || null,
-        subtotal: Number(subtotal || 0),
-        shippingCost: Number(shippingCost || 3.50),
-        total: Number(total || 0),
-        paymentMethod: paymentMethod || 'CASH',
-        paymentStatus: 'PENDING',
-        orderStatus: 'NUEVO',
-        notes: notes || null,
-        items: {
-          create: (items || []).map((it: any) => ({
-            productId: it.productId,
-            productName: it.productName || it.name || 'Perfume',
-            presentation: it.presentation || it.presentationName || '50ml',
-            unitPrice: Number(it.unitPrice || it.price || 0),
-            quantity: Number(it.quantity || 1),
-            total: Number(it.total || 0),
-          })),
+    const newOrder = await prisma.$transaction(async (tx) => {
+      // 1. Validar que no se venda más de lo que hay en inventario
+      for (const it of (items || [])) {
+        if (!it.productId || it.productId.startsWith('kit-')) continue;
+
+        const prod = await tx.product.findUnique({
+          where: { id: it.productId },
+        });
+
+        if (prod) {
+          const qtyRequested = Number(it.quantity || 1);
+          const pres = (it.presentation || '').toLowerCase();
+          const stockToDeduct = pres.includes('media') ? Math.ceil(qtyRequested * 0.5) : qtyRequested;
+
+          if (prod.stock < stockToDeduct) {
+            throw new Error(`Inventario insuficiente para ${prod.officialName || prod.name}. Disponibles: ${prod.stock}`);
+          }
+
+          // Descontar inventario en la base de datos
+          await tx.product.update({
+            where: { id: it.productId },
+            data: {
+              stock: Math.max(0, prod.stock - stockToDeduct),
+            },
+          });
+        }
+      }
+
+      // 2. Crear la orden de ecommerce
+      return await tx.ecommerceOrder.create({
+        data: {
+          orderNumber: orderNumber || `WEB-${Math.floor(1000 + Math.random() * 9000)}`,
+          customerId: resolvedCustomerId || null,
+          customerName: customerName || 'Cliente Online',
+          customerEmail: customerEmail || null,
+          customerPhone: customerPhone || '',
+          department: department || 'San Salvador',
+          municipality: municipality || 'San Salvador',
+          shippingAddress: shippingAddress || '',
+          deliveryReference: deliveryReference || null,
+          subtotal: Number(subtotal || 0),
+          shippingCost: Number(shippingCost || 3.50),
+          total: Number(total || 0),
+          paymentMethod: paymentMethod || 'CASH',
+          paymentStatus: 'PENDING',
+          orderStatus: 'NUEVO',
+          notes: notes || null,
+          items: {
+            create: (items || []).map((it: any) => ({
+              productId: it.productId && !it.productId.startsWith('kit-') ? it.productId : null,
+              productName: it.productName || it.name || 'Perfume',
+              presentation: it.presentation || it.presentationName || '1 Onza',
+              unitPrice: Number(it.unitPrice || it.price || 0),
+              quantity: Number(it.quantity || 1),
+              total: Number(it.total || 0),
+            })),
+          },
         },
-      },
-      include: {
-        items: true,
-        customer: true,
-      },
+        include: {
+          items: true,
+          customer: true,
+        },
+      });
     });
 
     return NextResponse.json({ success: true, order: newOrder });
   } catch (error: any) {
     console.error('Error creating ecommerce order:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 400 });
   }
 }

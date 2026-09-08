@@ -154,50 +154,51 @@ export default function CheckoutPage() {
         }
       } catch (e) {}
 
-      // Guardar pedido permanentemente en Supabase
-      try {
-        await fetch('/api/ecommerce/orders', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            orderNumber,
-            customerId: customer?.id || null,
-            customerName: nombre,
-            customerEmail: email || null,
-            customerPhone: telefono,
-            department: departamento,
-            municipality: municipio,
-            shippingAddress: direccion,
-            deliveryReference: referencia,
-            subtotal,
-            shippingCost,
-            total: totalConEnvio,
-            paymentMethod: metodoPago,
-            items: cart.map(it => ({
-              productId: it.product.id,
-              productName: it.product.name,
-              presentation: it.presentationName,
-              unitPrice: it.unitPrice,
-              quantity: it.quantity,
-              total: it.totalPrice,
-            })),
-            notes: `Doc: ${tipoComprobante} - Ref: ${referencia || 'N/A'}`,
-            numDoc: numDoc || null,
-            nrc: nrc || null,
-            giro: giro || null,
-            tipoComprobante: tipoComprobante || '01',
-          })
-        });
-      } catch (err) {
-        console.error('Error guardando pedido en Supabase:', err);
+      // Guardar pedido permanentemente en Supabase y descontar inventario
+      const orderRes = await fetch('/api/ecommerce/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderNumber,
+          customerId: customer?.id || null,
+          customerName: nombre,
+          customerEmail: email || null,
+          customerPhone: telefono,
+          department: departamento,
+          municipality: municipio,
+          shippingAddress: direccion,
+          deliveryReference: referencia,
+          subtotal,
+          shippingCost,
+          total: totalConEnvio,
+          paymentMethod: metodoPago,
+          items: cart.map(it => ({
+            productId: it.product.id,
+            productName: it.product.name,
+            presentation: it.presentationName,
+            unitPrice: it.unitPrice,
+            quantity: it.quantity,
+            total: it.totalPrice,
+          })),
+          notes: `Doc: ${tipoComprobante} - Ref: ${referencia || 'N/A'}`,
+          numDoc: numDoc || null,
+          nrc: nrc || null,
+          giro: giro || null,
+          tipoComprobante: tipoComprobante || '01',
+        })
+      });
+
+      const orderData = await orderRes.json();
+      if (!orderRes.ok || !orderData.success) {
+        throw new Error(orderData.error || 'No fue posible confirmar el pedido');
       }
 
       // Limpiar carrito del cliente
       clearCart();
       setCompletedOrder(newOrder);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error procesando pedido online:', error);
-      alert('Hubo un inconveniente al procesar tu pedido. Por favor intenta de nuevo o escríbenos a WhatsApp.');
+      alert(error.message || 'Hubo un inconveniente al procesar tu pedido. Por favor verifica las existencias o escríbenos.');
     } finally {
       setIsSubmitting(false);
     }

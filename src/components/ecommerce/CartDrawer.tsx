@@ -193,13 +193,53 @@ export default function CartDrawer() {
                         <span className="text-xs font-mono font-black text-slate-800 w-5 text-center">
                           {item.quantity}
                         </span>
-                        <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="w-5 h-5 rounded flex items-center justify-center text-slate-600 hover:bg-white font-bold cursor-pointer transition-colors"
-                          aria-label="Aumentar una unidad"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
+                        {(() => {
+                          const prod = item.product;
+                          const totalStock = typeof prod.stock === 'number' ? prod.stock : 0;
+                          const isEssence = prod.category === 'Esencias para Perfume';
+                          let canAddMoreInDrawer = true;
+
+                          if (item.kitDetails) {
+                            const ozPerKit = item.kitDetails.isPlus ? 1.5 : 1.0;
+                            const otherUsed = cart
+                              .filter(it => it.id !== item.id && (it.product.id === item.kitDetails?.essenceId || it.kitDetails?.essenceId === item.kitDetails?.essenceId))
+                              .reduce((acc, it) => {
+                                if (it.kitDetails) return acc + (it.kitDetails.isPlus ? it.quantity * 1.5 : it.quantity * 1.0);
+                                if (it.presentation === 'MEDIA_ONZA') return acc + it.quantity * 0.5;
+                                if (it.presentation === 'ONZA_COMPLETA') return acc + it.quantity * 1.0;
+                                return acc + it.quantity;
+                              }, 0);
+                            canAddMoreInDrawer = otherUsed + (ozPerKit * (item.quantity + 1)) <= totalStock;
+                          } else if (isEssence) {
+                            const otherUsed = cart
+                              .filter(it => it.id !== item.id && it.product.id === prod.id)
+                              .reduce((acc, it) => {
+                                if (it.presentation === 'MEDIA_ONZA') return acc + it.quantity * 0.5;
+                                if (it.presentation === 'ONZA_COMPLETA') return acc + it.quantity * 1.0;
+                                return acc + it.quantity;
+                              }, 0);
+                            const nextOz = item.presentation === 'MEDIA_ONZA' ? (item.quantity + 1) * 0.5 : (item.quantity + 1) * 1.0;
+                            canAddMoreInDrawer = otherUsed + nextOz <= totalStock;
+                          } else {
+                            canAddMoreInDrawer = item.quantity + 1 <= totalStock;
+                          }
+
+                          return (
+                            <button
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              disabled={!canAddMoreInDrawer}
+                              className={`w-5 h-5 rounded flex items-center justify-center font-bold transition-colors ${
+                                canAddMoreInDrawer 
+                                  ? 'text-slate-600 hover:bg-white cursor-pointer' 
+                                  : 'text-slate-300 cursor-not-allowed opacity-40'
+                              }`}
+                              title={canAddMoreInDrawer ? "Aumentar una unidad" : "Inventario máximo alcanzado"}
+                              aria-label="Aumentar una unidad"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          );
+                        })()}
                       </div>
 
                       {/* Precio alineado */}
