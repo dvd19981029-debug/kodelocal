@@ -17,6 +17,7 @@ export interface ProductItem {
   imageUrl: string;
   isAvailableOnline: boolean;
   puesto?: string; // Ubicación física en estante (Ej: A1 = Estante A, Nivel 1)
+  supplier?: string; // Proveedor (ej. APAESA GUATEMALA)
 }
 
 export interface CartItem {

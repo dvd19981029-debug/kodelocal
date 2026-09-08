@@ -38,6 +38,7 @@ model Product {
   minStock           Int             @default(10)
   imageUrl           String?
   puesto             String?         // Ubicación física en estante de bodega (ej. A1, B3)
+  supplier           String?         @default("APAESA GUATEMALA") // Proveedor (ej. APAESA GUATEMALA)
   isActive           Boolean         @default(true)
   isAvailableOnline  Boolean         @default(true)
   categoryId         String?

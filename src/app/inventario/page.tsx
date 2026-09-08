@@ -40,6 +40,7 @@ export default function InventarioPage() {
     cost: 1.95,
     stock: 50,
     minStock: 10,
+    supplier: 'APAESA GUATEMALA',
     imageUrl: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80',
     isAvailableOnline: true
   });
@@ -200,6 +201,7 @@ export default function InventarioPage() {
               officialName: '',
               sku: '',
               barcode: '',
+              supplier: 'APAESA GUATEMALA',
               category: 'General',
               price: 0,
               cost: 0,
@@ -228,6 +230,7 @@ export default function InventarioPage() {
                 <th className="py-3 px-4">Nombre Oficial</th>
                 <th className="py-3 px-4">Inspirado en</th>
                 <th className="py-3 px-4">SKU / Código</th>
+                <th className="py-3 px-4">Proveedor</th>
                 <th className="py-3 px-4">Categoría</th>
                 <th className="py-3 px-4">Precio</th>
                 <th className="py-3 px-4">Stock Actual</th>
@@ -279,6 +282,13 @@ export default function InventarioPage() {
                     <td className="py-3 px-4 font-mono text-xs text-slate-600">
                       <div>{p.sku}</div>
                       <div className="text-[11px] text-slate-400">{p.barcode}</div>
+                    </td>
+
+                    {/* Proveedor */}
+                    <td className="py-3 px-4">
+                      <span className="clay-badge bg-indigo-50/80 text-indigo-700 border border-indigo-200/60 text-[11px] font-bold py-0.5 px-2.5 rounded-lg inline-block truncate max-w-[150px]">
+                        {p.supplier || 'APAESA GUATEMALA'}
+                      </span>
                     </td>
 
                     {/* Categoría */}
@@ -446,7 +456,7 @@ export default function InventarioPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">Marca / Diseñador</label>
                   <input
@@ -465,6 +475,16 @@ export default function InventarioPage() {
                     onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
                     placeholder="100"
                     className="clay-input w-full text-xs font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Proveedor</label>
+                  <input
+                    type="text"
+                    value={formData.supplier || ''}
+                    onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+                    placeholder="APAESA GUATEMALA"
+                    className="clay-input w-full text-xs font-semibold text-indigo-950 bg-indigo-50/20"
                   />
                 </div>
                 <div>
