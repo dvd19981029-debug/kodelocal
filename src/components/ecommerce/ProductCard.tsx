@@ -149,31 +149,34 @@ export default function ProductCard({ product }: ProductCardProps) {
             />
 
             {/* Badge de género limpio sobre la foto (sin número ni emojis) */}
-            <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 items-start z-10">
+            <div className="absolute top-1.5 left-1.5 z-10">
               {getGenderBadge(product.gender)}
             </div>
 
-            {/* Badge Sold Out o Badge de Unidades en Carrito */}
-            {isOutOfStock ? (
+            {/* Badge Agotado en esquina superior derecha */}
+            {isOutOfStock && (
               <div className="absolute top-1.5 right-1.5 z-10">
-                <span className="bg-slate-900 text-white text-[8px] sm:text-[9.5px] font-black py-0.5 px-2 rounded-md shadow-md tracking-wider uppercase">
+                <span className="bg-slate-900 text-white text-[8px] sm:text-[9px] font-black py-0.5 px-2 rounded-md shadow-md tracking-wider uppercase">
                   Agotado
                 </span>
               </div>
-            ) : cartEssenceUsed > 0 ? (
-              <div className="absolute top-1.5 right-1.5 z-10 animate-in zoom-in-75 duration-200">
-                <span className="bg-emerald-600 text-white text-[8px] sm:text-[9px] font-black py-0.5 px-1.5 rounded-md shadow-md flex items-center gap-1">
-                  <Check className="w-2.5 h-2.5" />
+            )}
+
+            {/* Indicador en esquina inferior derecha: en carrito o disponible (nunca tapa el género) */}
+            {cartEssenceUsed > 0 ? (
+              <div className="absolute bottom-1.5 right-1.5 z-10 animate-in zoom-in-75 duration-200">
+                <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-[8px] sm:text-[9px] font-black py-0.5 px-1.5 rounded-md shadow-md flex items-center gap-1">
+                  <Check className="w-2.5 h-2.5 stroke-[3]" />
                   <span>{isEssence ? `${cartEssenceUsed} oz en carrito` : `${cartEssenceUsed} en carrito`}</span>
                 </span>
               </div>
-            ) : (
+            ) : !isOutOfStock ? (
               <div className="absolute bottom-1.5 right-1.5 z-10">
-                <span className="bg-emerald-500/90 backdrop-blur-xs text-white text-[7.5px] sm:text-[8.5px] font-bold py-0.5 px-1.5 rounded shadow-xs">
+                <span className="bg-white/90 backdrop-blur-xs text-slate-700 text-[7.5px] sm:text-[8.5px] font-bold py-0.5 px-1.5 rounded shadow-xs">
                   Disponible
                 </span>
               </div>
-            )}
+            ) : null}
           </Link>
 
           {/* Nombre Oficial de la Fragancia */}
@@ -220,9 +223,9 @@ export default function ProductCard({ product }: ProductCardProps) {
                   {remainingStock === 0 ? (
                     'Tope en carrito'
                   ) : selectedPresentation === 'MEDIA_ONZA' ? (
-                    `Disp: ${Math.floor(remainingStock / 0.5)} medias onzas`
+                    `Disponibles: ${Math.floor(remainingStock / 0.5)} medias onzas`
                   ) : (
-                    `Disp: ${Math.floor(remainingStock)} onzas`
+                    `Disponibles: ${Math.floor(remainingStock)} onzas`
                   )}
                 </span>
               </div>
@@ -272,7 +275,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           ) : (
             <div className="mt-1.5 flex items-center justify-between text-[9px] text-slate-500 font-medium px-0.5">
               <span>{activeOption.description}</span>
-              <span className="font-bold text-slate-700">Stock: {Math.floor(remainingStock)} disp.</span>
+              <span className="font-bold text-slate-700">Disponibles: {Math.floor(remainingStock)}</span>
             </div>
           )}
         </div>

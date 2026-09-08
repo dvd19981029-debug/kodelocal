@@ -22,6 +22,7 @@ import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { DEPARTAMENTOS_SV, CustomerRecord, getStoredCustomers, saveStoredCustomers } from '@/lib/customers';
 import { DEPARTAMENTOS_CATALOG, getMunicipiosByDepartamento } from '@/lib/svTerritory';
 import { SaleRecord } from '@/lib/store';
+import { getProductImage } from '@/lib/perfumeImages';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -300,7 +301,7 @@ export default function CheckoutPage() {
         </div>
         <h2 className="text-xl font-black text-slate-900">Tu carrito está vacío</h2>
         <p className="text-xs text-slate-500">
-          Agrega tus fragancias favoritas antes de proceder al checkout.
+          Agrega tus fragancias favoritas antes de proceder al pago seguro.
         </p>
         <Link
           href="/"
@@ -326,7 +327,7 @@ export default function CheckoutPage() {
           <span>Seguir comprando</span>
         </Link>
         <span className="text-xs font-bold text-slate-400">
-          Paso 2 de 2 • Checkout Seguro
+          Paso 2 de 2 • Pago Seguro
         </span>
       </div>
 
@@ -657,14 +658,24 @@ export default function CheckoutPage() {
               <h3 className="font-extrabold text-sm text-slate-900 pb-2 border-b border-slate-100 flex items-center justify-between">
                 <span>Resumen del Pedido</span>
                 <span className="clay-badge text-[10px] bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded-md">
-                  {totalItems} items
+                  {totalItems} artículo{totalItems === 1 ? '' : 's'}
                 </span>
               </h3>
 
               {/* Lista de productos en checkout */}
               <div className="max-h-60 overflow-y-auto space-y-2.5 pr-1 divide-y divide-slate-100">
                 {cart.map((it) => (
-                  <div key={it.id} className="pt-2 first:pt-0 flex items-start justify-between gap-2 text-xs">
+                  <div key={it.id} className="pt-2 first:pt-0 flex items-start gap-2.5 text-xs">
+                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-50 border border-slate-200/70 shrink-0 flex items-center justify-center">
+                      <img
+                        src={getProductImage(it.product)}
+                        alt={it.product.name}
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=100&q=80';
+                        }}
+                        className="w-full h-full object-cover object-center"
+                      />
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-slate-800 truncate">
                         {it.product.officialName || it.product.name}
@@ -724,7 +735,7 @@ export default function CheckoutPage() {
 
               <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 font-semibold pt-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                <span>Garantía de satisfacción y fijación Aromaniak</span>
+                <span>Garantía de satisfacción y calidad de esencias Aromaniak</span>
               </div>
             </div>
 

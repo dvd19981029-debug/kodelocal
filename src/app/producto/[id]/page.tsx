@@ -444,7 +444,7 @@ export default function ProductDetailPage() {
               
               <div className="p-2.5 rounded-2xl bg-amber-50/60 border border-amber-200/70 space-y-1">
                 <span className="text-[9.5px] font-black text-amber-800 uppercase tracking-wider block">
-                  1. Salida (Top)
+                  1. Notas de Salida
                 </span>
                 <p className="text-[11px] font-bold text-slate-800 leading-tight">
                   {profile.topNotes.join(', ')}
@@ -454,7 +454,7 @@ export default function ProductDetailPage() {
 
               <div className="p-2.5 rounded-2xl bg-indigo-50/60 border border-indigo-200/70 space-y-1">
                 <span className="text-[9.5px] font-black text-indigo-800 uppercase tracking-wider block">
-                  2. Corazón (Heart)
+                  2. Notas de Corazón
                 </span>
                 <p className="text-[11px] font-bold text-slate-800 leading-tight">
                   {profile.heartNotes.join(', ')}
@@ -464,7 +464,7 @@ export default function ProductDetailPage() {
 
               <div className="p-2.5 rounded-2xl bg-slate-100/70 border border-slate-200 space-y-1">
                 <span className="text-[9.5px] font-black text-slate-700 uppercase tracking-wider block">
-                  3. Fondo (Base)
+                  3. Notas de Fondo
                 </span>
                 <p className="text-[11px] font-bold text-slate-800 leading-tight">
                   {profile.baseNotes.join(', ')}
