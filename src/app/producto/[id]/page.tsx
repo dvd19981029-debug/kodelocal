@@ -11,7 +11,6 @@ import {
   Droplets, 
   ShieldCheck, 
   Wand2, 
-  Sparkles, 
   Plus, 
   Minus, 
   ChevronRight
@@ -22,6 +21,7 @@ import { getProductImage } from '@/lib/perfumeImages';
 import { getFragranceProfile } from '@/lib/fragranceProfiles';
 import PerfumeKitBuilderModal from '@/components/ecommerce/PerfumeKitBuilderModal';
 import ProductCard from '@/components/ecommerce/ProductCard';
+import FragranceNotesVisual from '@/components/ecommerce/FragranceNotesVisual';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -420,60 +420,8 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* 5. PIRÁMIDE OLFATIVA Y NOTAS (ESTILO KLONE SCENTS) */}
-          <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-3.5 shadow-xs">
-            <h3 className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-amber-500" />
-              <span>Pirámide Olfativa (Notas del Perfume)</span>
-            </h3>
-
-            {/* Acordes principales */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {profile.accords.map((accord, idx) => (
-                <span 
-                  key={idx}
-                  className="bg-slate-100 text-slate-700 text-[10px] sm:text-[10.5px] font-bold px-2.5 py-0.5 rounded-full"
-                >
-                  {accord}
-                </span>
-              ))}
-            </div>
-
-            {/* Notas Salida / Corazón / Fondo */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-              
-              <div className="p-2.5 rounded-2xl bg-amber-50/60 border border-amber-200/70 space-y-1">
-                <span className="text-[9.5px] font-black text-amber-800 uppercase tracking-wider block">
-                  1. Notas de Salida
-                </span>
-                <p className="text-[11px] font-bold text-slate-800 leading-tight">
-                  {profile.topNotes.join(', ')}
-                </p>
-                <span className="text-[9px] text-slate-400 block">Primera impresión</span>
-              </div>
-
-              <div className="p-2.5 rounded-2xl bg-indigo-50/60 border border-indigo-200/70 space-y-1">
-                <span className="text-[9.5px] font-black text-indigo-800 uppercase tracking-wider block">
-                  2. Notas de Corazón
-                </span>
-                <p className="text-[11px] font-bold text-slate-800 leading-tight">
-                  {profile.heartNotes.join(', ')}
-                </p>
-                <span className="text-[9px] text-slate-400 block">Carácter distintivo</span>
-              </div>
-
-              <div className="p-2.5 rounded-2xl bg-slate-100/70 border border-slate-200 space-y-1">
-                <span className="text-[9.5px] font-black text-slate-700 uppercase tracking-wider block">
-                  3. Notas de Fondo
-                </span>
-                <p className="text-[11px] font-bold text-slate-800 leading-tight">
-                  {profile.baseNotes.join(', ')}
-                </p>
-                <span className="text-[9px] text-slate-400 block">Estela duradera</span>
-              </div>
-
-            </div>
-          </div>
+          {/* ================= ACORDES Y PIRÁMIDE DEL PERFUME ESTILO FRAGRANTICA ================= */}
+          <FragranceNotesVisual profile={profile} />
 
         </div>
 
