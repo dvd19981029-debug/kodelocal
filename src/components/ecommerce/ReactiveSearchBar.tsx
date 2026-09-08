@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, X } from 'lucide-react';
+import React, { useRef } from 'react';
+import { Search, X, ShoppingBag } from 'lucide-react';
+import { useScrolled } from '@/hooks/useScrolled';
+import { useEcommerceCart } from '@/context/EcommerceCartContext';
 
 interface ReactiveSearchBarProps {
   searchQuery: string;
@@ -32,46 +34,9 @@ export default function ReactiveSearchBar({
   outOfStockCount,
   setCurrentPage,
 }: ReactiveSearchBarProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isInputFocused, setIsInputFocused] = useState(false);
+  const isScrolled = useScrolled(60);
+  const { totalItems, setIsCartOpen, isCartPulsing } = useEcommerceCart();
   const inputRef = useRef<HTMLInputElement>(null);
-  // Detección reactiva de scroll: se oculta al bajar y reaparece DE INMEDIATO al subir
-  useEffect(() => {
-    let lastY = window.scrollY;
-
-    const handleScroll = () => {
-      // Si el input está enfocado para escribir, mantener expandido para no interrumpir
-      if (isInputFocused) return;
-
-      const currentY = window.scrollY;
-      const diff = currentY - lastY;
-
-      // 1. Cerca de la parte superior de la página, siempre completamente abierta
-      if (currentY <= 60) {
-        setIsCollapsed(false);
-      } 
-      // 2. Desplazamiento hacia abajo intencional y habiendo pasado la cabecera: colapsar a burbuja
-      else if (diff > 6 && currentY > 100) {
-        setIsCollapsed(true);
-      } 
-      // 3. Desplazamiento hacia arriba: reabrir DE INMEDIATO la barra al menor movimiento hacia arriba
-      else if (diff < -4) {
-        setIsCollapsed(false);
-      }
-
-      lastY = Math.max(0, currentY);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [isInputFocused]);
-
-  const handleExpandAndFocus = () => {
-    setIsCollapsed(false);
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 200);
-  };
 
   const handleSelectFilter = (type: 'all' | 'stock' | 'cat' | 'gender', value?: string) => {
     setCurrentPage(1);
@@ -94,62 +59,91 @@ export default function ReactiveSearchBar({
 
   return (
     <div className="w-full">
-      {/* ================= BARRA DE BÚSQUEDA STICKY DIRECTAMENTE DEBAJO DEL HEADER ================= */}
-      <div className="sticky top-[61px] sm:top-[77px] md:top-[85px] z-30 pointer-events-none transition-all">
-        <div className="flex justify-end w-full px-1 sm:px-3">
-          
-          {/* Contenedor Unificado: Morphing puramente horizontal (altura fija estable h-11 sm:h-12) */}
-          <div
-            onClick={isCollapsed ? handleExpandAndFocus : undefined}
-            className={`pointer-events-auto transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] relative flex items-center select-none overflow-hidden ${
-              isCollapsed
-                ? 'w-11 h-11 sm:w-12 sm:h-12 rounded-full clay-card bg-white/95 border-2 border-white shadow-[0_8px_24px_rgba(99,102,241,0.35)] cursor-pointer hover:scale-105 active:scale-95 justify-center mt-2 sm:mt-2.5 mr-1'
-                : 'w-full h-11 sm:h-12 clay-card bg-[#f8fafc]/95 backdrop-blur-md border border-white/90 shadow-sm rounded-2xl px-3 gap-2.5 mt-0'
-            }`}
-          >
-            {/* Ícono de Búsqueda Permanente (nunca desaparece; en colapso se centra en la burbuja) */}
-            <div className={`flex items-center justify-center shrink-0 transition-colors duration-300 ${
-              isCollapsed ? 'w-full h-full text-indigo-600' : 'text-slate-400'
-            }`}>
-              <Search className={`transition-all duration-300 ${
-                isCollapsed ? 'w-5 h-5 text-indigo-600 drop-shadow-xs' : 'w-4 h-4 sm:w-5 sm:h-5 text-slate-400'
-              }`} />
+      {/* ================= BARRA DE BÚSQUEDA STICKY CON ANIMACIÓN BUBBLY ================= */}
+      <div
+        className={`sticky z-35 pointer-events-none transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+          isScrolled
+            ? 'top-2 sm:top-2.5'
+            : 'top-[61px] sm:top-[77px] md:top-[85px]'
+        }`}
+      >
+        <div className="w-full px-1 sm:px-3">
+          {/* Fila Bubbly: Cápsula de Búsqueda + Burbujita del Carrito */}
+          <div className="flex items-center w-full gap-2">
+            
+            {/* Cápsula de Búsqueda Flotante (se adapta suavemente por la derecha) */}
+            <div
+              className={`flex-1 min-w-0 pointer-events-auto h-11 sm:h-12 clay-card bg-[#f8fafc]/95 backdrop-blur-md border border-white/90 rounded-2xl px-3 flex items-center gap-2.5 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+                isScrolled
+                  ? 'shadow-[0_4px_20px_rgba(0,0,0,0.07)]'
+                  : 'shadow-sm'
+              }`}
+            >
+              {/* Ícono de Búsqueda Permanente */}
+              <div className="flex items-center justify-center shrink-0 text-slate-400">
+                <Search className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
+              </div>
+
+              {/* Input de Búsqueda y Botón Limpiar */}
+              <div className="flex items-center flex-1 min-w-0">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  placeholder="Buscar perfume: Sauvage, 212, Baccarat, One Million, Carolina Herrera..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full py-1 text-xs sm:text-sm font-bold text-slate-800 placeholder-slate-400 bg-transparent outline-none truncate"
+                />
+
+                {/* Botón para Limpiar Búsqueda */}
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSearchQuery('');
+                      setCurrentPage(1);
+                      inputRef.current?.focus();
+                    }}
+                    className="p-1 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer shrink-0 transition-colors"
+                    title="Limpiar búsqueda"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
             </div>
 
-            {/* Input de Búsqueda y Botón Limpiar (desvanecimiento suave de opacidad sin colapso vertical) */}
-            <div className={`flex items-center flex-1 min-w-0 transition-all duration-300 ${
-              isCollapsed ? 'opacity-0 w-0 pointer-events-none invisible' : 'opacity-100 w-full visible'
-            }`}>
-              <input
-                ref={inputRef}
-                type="text"
-                placeholder="Buscar perfume: Sauvage, 212, Baccarat, One Million, Carolina Herrera..."
-                value={searchQuery}
-                onFocus={() => setIsInputFocused(true)}
-                onBlur={() => setIsInputFocused(false)}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full py-1 text-xs sm:text-sm font-bold text-slate-800 placeholder-slate-400 bg-transparent outline-none truncate"
-              />
-
-              {/* Botón para Limpiar Búsqueda */}
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSearchQuery('');
-                    setCurrentPage(1);
-                    inputRef.current?.focus();
-                  }}
-                  className="p-1 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer shrink-0 transition-colors"
-                  title="Limpiar búsqueda"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
+            {/* Burbujita del Carrito Flotante junto a la Cápsula de Búsqueda */}
+            <div
+              className={`transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden shrink-0 flex items-center ${
+                isScrolled
+                  ? 'w-auto opacity-100 scale-100 translate-x-0 pointer-events-auto'
+                  : 'w-0 opacity-0 scale-75 translate-x-6 pointer-events-none'
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => setIsCartOpen(true)}
+                className={`clay-btn clay-btn-primary h-11 sm:h-12 px-3 sm:px-4 rounded-2xl flex items-center justify-center gap-1.5 sm:gap-2 relative transition-all duration-300 cursor-pointer ${
+                  isCartPulsing
+                    ? 'scale-105 ring-4 ring-purple-300 shadow-[0_4px_20px_rgba(124,58,237,0.45)]'
+                    : '!shadow-[2px_4px_12px_rgba(124,58,237,0.3)] active:scale-95'
+                }`}
+              >
+                <ShoppingBag className={`w-4 h-4 sm:w-5 sm:h-5 text-white transition-transform duration-300 ${isCartPulsing ? '-translate-y-0.5 scale-110' : ''}`} />
+                <span className="text-xs font-black hidden sm:inline text-white">Carrito</span>
+                {totalItems > 0 && (
+                  <span className={`min-w-[20px] h-5 px-1 rounded-full bg-purple-950/80 text-white text-[10px] font-black flex items-center justify-center shadow-md transition-all duration-300 ${
+                    isCartPulsing ? 'scale-115 ring-2 ring-white' : ''
+                  }`}>
+                    {totalItems}
+                  </span>
+                )}
+              </button>
             </div>
 
           </div>

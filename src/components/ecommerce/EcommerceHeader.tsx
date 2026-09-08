@@ -5,14 +5,18 @@ import Link from 'next/link';
 import { ShoppingBag, User, LogOut, ChevronDown } from 'lucide-react';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
+import { useScrolled } from '@/hooks/useScrolled';
 
 export default function EcommerceHeader() {
   const { totalItems, setIsCartOpen, isCartPulsing } = useEcommerceCart();
   const { customer, isLoggedIn, openAuthModal, logout } = useCustomerAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const isScrolled = useScrolled(60);
 
   return (
-    <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-[#f1f4f9]/90 border-b border-white/80 px-3 sm:px-6 py-2 sm:py-2.5 transition-all shadow-2xs">
+    <header className={`sticky top-0 z-40 w-full backdrop-blur-md bg-[#f1f4f9]/90 border-b border-white/80 px-3 sm:px-6 py-2 sm:py-2.5 shadow-2xs transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+      isScrolled ? '-translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100 pointer-events-auto'
+    }`}>
       <div className="max-w-7xl mx-auto grid grid-cols-3 items-center">
         
         {/* ================= LADO IZQUIERDO: Botón de Usuario / Mi Cuenta ================= */}
