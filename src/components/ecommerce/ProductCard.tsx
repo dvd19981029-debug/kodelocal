@@ -16,18 +16,16 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { cart, addToCart, updateQuantity } = useEcommerceCart();
   const presentations = getPresentationsForProduct(product);
   
-  // Presentación por defecto: null para esencias para obligar selección previa sin mostrar precio
+  // Presentación por defecto: 'ONZA_COMPLETA' con el precio de una onza por defecto
   const defaultPres = product.category === 'Esencias para Perfume' 
-    ? null
+    ? 'ONZA_COMPLETA'
     : 'UNIDAD';
 
-  const [selectedPresentation, setSelectedPresentation] = useState<ProductPresentation | null>(defaultPres);
+  const [selectedPresentation, setSelectedPresentation] = useState<ProductPresentation>(defaultPres);
   const [justAdded, setJustAdded] = useState(false);
   const [isCardPulsing, setIsCardPulsing] = useState(false);
 
-  const activeOption = selectedPresentation
-    ? presentations.find(p => p.id === selectedPresentation) || presentations[0]
-    : null;
+  const activeOption = presentations.find(p => p.id === selectedPresentation) || presentations[0];
 
   // Cálculo preciso de inventario y onzas comprometidas en el carrito
   const isEssence = product.category === 'Esencias para Perfume';
@@ -184,13 +182,17 @@ export default function ProductCard({ product }: ProductCardProps) {
             </h3>
           </Link>
 
-          {/* Inspirado en [Contratipo] de [Marca] */}
-          <div className="text-[10px] sm:text-xs text-slate-600 mt-0.5 leading-tight min-h-[26px] sm:min-h-[28px] line-clamp-2">
+          {/* Precio Prominente abajo del nombre del contratipo */}
+          <div className="mt-0.5 flex items-baseline">
+            <span className="text-base sm:text-xl font-black text-indigo-700 font-mono leading-tight tracking-tight">
+              ${activeOption.price.toFixed(2)}
+            </span>
+          </div>
+
+          {/* Inspirado en [Contratipo] abajo del precio (sin mencionar marcas) */}
+          <div className="text-[10px] sm:text-xs text-slate-600 mt-0.5 leading-tight min-h-[18px] sm:min-h-[20px] line-clamp-2">
             <span className="text-slate-400 font-normal">Inspirado en </span>
             <span className="font-bold text-slate-800">{product.name}</span>
-            {product.brand && (
-              <span className="text-slate-500 font-medium"> de {product.brand}</span>
-            )}
           </div>
 
           {/* Selector de Presentación y Disponibilidad */}
@@ -215,7 +217,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 </span>
               </div>
 
-              {/* Botonera de Presentaciones Segmentada (1 Onza y ½ Onza) sin precios impresos para impedir comparación previa */}
+              {/* Botonera de Presentaciones Segmentada (1 Onza y ½ Onza) */}
               <div className="grid grid-cols-2 gap-1 p-0.5 bg-slate-100/90 rounded-xl border border-slate-200/80 shadow-2xs">
                 {presentations.map((opt) => {
                   const isSelected = selectedPresentation === opt.id;
@@ -259,25 +261,16 @@ export default function ProductCard({ product }: ProductCardProps) {
             </div>
           )}
 
-          {/* Precio mostrado abajo ÚNICAMENTE cuando se selecciona una presentación (impide comparación previa) */}
-          {selectedPresentation && activeOption && (
-            <div className="mt-1 flex items-baseline justify-between px-0.5 animate-in fade-in duration-150">
-              <span className="text-sm sm:text-base font-black text-indigo-700 font-mono leading-tight">
-                ${activeOption.price.toFixed(2)}
-              </span>
-            </div>
-          )}
-
-          {/* Botón de Agregar al Carrito colocado directamente abajo sin separación excesiva */}
-          <div className="mt-1">
+          {/* Botón de Agregar al Carrito SÓLIDO (no difuminado) colocado directamente abajo */}
+          <div className="mt-2">
             {isOutOfStock ? (
               <button
                 disabled
-                className="w-full py-1.5 text-[9.5px] sm:text-xs font-black rounded-xl bg-slate-100 text-slate-400 cursor-not-allowed text-center"
+                className="w-full py-2 text-[9.5px] sm:text-xs font-black rounded-xl bg-slate-100 text-slate-400 cursor-not-allowed text-center"
               >
                 Agotado
               </button>
-            ) : currentQuantity > 0 && selectedPresentation && activeOption ? (
+            ) : currentQuantity > 0 ? (
               /* YA ESTÁ EN EL CARRITO */
               <div className={`space-y-1 transition-all duration-300 ${isCardPulsing ? 'scale-[1.02]' : ''}`}>
                 <div className="flex items-center justify-between px-0.5">
@@ -331,28 +324,16 @@ export default function ProductCard({ product }: ProductCardProps) {
                 </div>
               </div>
             ) : (
-              /* AÚN NO EN EL CARRITO */
+              /* AÚN NO EN EL CARRITO: Botón sólido y no difuminado */
               <button
-                onClick={() => {
-                  if (!selectedPresentation) {
-                    setSelectedPresentation('ONZA_COMPLETA');
-                    addToCart(product, 'ONZA_COMPLETA', 1);
-                    setJustAdded(true);
-                    triggerCardPulse();
-                    setTimeout(() => setJustAdded(false), 1200);
-                    return;
-                  }
-                  handleAdd();
-                }}
-                disabled={isOutOfStock || (selectedPresentation ? !canAddMore : false)}
-                className={`w-full clay-btn py-1.5 sm:py-2 text-[9.5px] sm:text-xs font-black rounded-xl flex items-center justify-center gap-1.5 transition-all ${
-                  !canAddMore && selectedPresentation
+                onClick={handleAdd}
+                disabled={isOutOfStock || !canAddMore}
+                className={`w-full py-2 text-[10px] sm:text-xs font-black rounded-xl flex items-center justify-center gap-1.5 transition-all select-none ${
+                  !canAddMore
                     ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
                     : justAdded 
-                    ? 'bg-emerald-500 text-white shadow-md' 
-                    : !selectedPresentation
-                    ? 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 cursor-pointer active:scale-98'
-                    : 'clay-btn-primary !shadow-[2px_3px_8px_rgba(99,102,241,0.3)] active:scale-95 cursor-pointer'
+                    ? 'bg-emerald-600 text-white shadow-xs' 
+                    : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs active:scale-95 cursor-pointer'
                 }`}
               >
                 {justAdded ? (
@@ -360,8 +341,6 @@ export default function ProductCard({ product }: ProductCardProps) {
                     <Check className="w-3.5 h-3.5" />
                     <span>¡Agregado!</span>
                   </>
-                ) : !selectedPresentation ? (
-                  <span>Selecciona 1 Onza o ½ Onza</span>
                 ) : !canAddMore ? (
                   <span>Sin existencias</span>
                 ) : (

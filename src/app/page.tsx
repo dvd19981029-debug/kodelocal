@@ -265,7 +265,7 @@ export default function EcommerceHomePage() {
             </div>
             <h3 className="font-black text-slate-800 text-base">No encontramos resultados para tu búsqueda</h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              Intenta buscar por la marca inspirada (ej. Chanel, Paco Rabanne), o limpia los filtros de búsqueda.
+              Intenta buscar por el nombre del perfume o limpia los filtros de búsqueda.
             </p>
             <button
               onClick={() => {

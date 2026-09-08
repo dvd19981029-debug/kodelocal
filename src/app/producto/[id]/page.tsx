@@ -256,13 +256,10 @@ export default function ProductDetailPage() {
               {displayName}
             </h1>
 
-            {/* Inspiración en el diseñador */}
+            {/* Inspiración en el perfume */}
             <div className="text-xs sm:text-sm text-slate-600 font-medium flex items-center gap-1.5 flex-wrap">
               <span className="text-slate-400">Inspirado en:</span>
               <strong className="text-slate-900 font-black">{product.name}</strong>
-              {product.brand && (
-                <span className="text-indigo-600 font-bold">de {product.brand}</span>
-              )}
             </div>
 
             {/* Precio Prominente */}

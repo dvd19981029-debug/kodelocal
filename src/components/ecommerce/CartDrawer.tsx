@@ -127,11 +127,6 @@ export default function CartDrawer() {
                       <div className="flex-1 min-w-0 pr-0.5">
                         <div className="flex items-start justify-between gap-1.5">
                           <div className="min-w-0 flex-1">
-                            {item.product.brand && (
-                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block truncate">
-                                {item.product.brand}
-                              </span>
-                            )}
                             <h4 className="font-black text-xs sm:text-sm text-slate-900 leading-snug truncate" title={displayName}>
                               {displayName}
                             </h4>
