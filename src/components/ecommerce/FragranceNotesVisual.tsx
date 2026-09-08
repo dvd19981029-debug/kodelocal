@@ -72,7 +72,7 @@ export default function FragranceNotesVisual({ profile }: FragranceNotesVisualPr
                           alt={note}
                           loading="lazy"
                           onError={(e) => {
-                            e.currentTarget.src = 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=120&q=80';
+                            e.currentTarget.src = '/notes/maderas.jpg';
                           }}
                           className="w-full h-full object-cover rounded-xl"
                         />
@@ -109,7 +109,7 @@ export default function FragranceNotesVisual({ profile }: FragranceNotesVisualPr
                           alt={note}
                           loading="lazy"
                           onError={(e) => {
-                            e.currentTarget.src = 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=120&q=80';
+                            e.currentTarget.src = '/notes/maderas.jpg';
                           }}
                           className="w-full h-full object-cover rounded-xl"
                         />
@@ -146,7 +146,7 @@ export default function FragranceNotesVisual({ profile }: FragranceNotesVisualPr
                           alt={note}
                           loading="lazy"
                           onError={(e) => {
-                            e.currentTarget.src = 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=120&q=80';
+                            e.currentTarget.src = '/notes/maderas.jpg';
                           }}
                           className="w-full h-full object-cover rounded-xl"
                         />

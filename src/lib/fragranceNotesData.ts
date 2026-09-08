@@ -1,220 +1,246 @@
 // src/lib/fragranceNotesData.ts
 
 /**
- * Colores oficiales de acordes según la convención de perfumería de Fragrantica.
+ * Paleta de colores para acordes olfativos cuidadosamente armonizada
+ * con la identidad visual morada/índigo de la tienda.
+ * Tonos sofisticados (púrpura imperial, ciruela profunda, índigo vibrante, 
+ * frambuesa, amatista y lavanda) sin beiges ni marrones apagados.
  */
 export const ACCORD_COLORS: Record<string, { bg: string; text: string }> = {
-  'ámbar': { bg: '#c95a12', text: '#ffffff' },
-  'ambarado': { bg: '#c95a12', text: '#ffffff' },
-  'amaderado': { bg: '#6b4226', text: '#ffffff' },
-  'cálido especiado': { bg: '#8c2518', text: '#ffffff' },
-  'aromático': { bg: '#2d6964', text: '#ffffff' },
-  'ahumado': { bg: '#564f5c', text: '#ffffff' },
-  'cítrico': { bg: '#9ba036', text: '#ffffff' },
-  'floral blanco': { bg: '#858e99', text: '#ffffff' },
-  'rosas': { bg: '#9d1e4c', text: '#ffffff' },
-  'floral': { bg: '#b23b68', text: '#ffffff' },
-  'fresco especiado': { bg: '#5c822a', text: '#ffffff' },
-  'balsámico': { bg: '#644c38', text: '#ffffff' },
-  'marino': { bg: '#1e7a9e', text: '#ffffff' },
-  'acuático': { bg: '#2980b9', text: '#ffffff' },
-  'avainillado': { bg: '#cfa246', text: '#ffffff' },
-  'vainilla': { bg: '#cfa246', text: '#ffffff' },
-  'dulce': { bg: '#d35400', text: '#ffffff' },
-  'cuero': { bg: '#4a2c11', text: '#ffffff' },
-  'atalcado': { bg: '#ad9588', text: '#ffffff' },
-  'afrutado': { bg: '#ba2d32', text: '#ffffff' },
-  'frutal': { bg: '#ba2d32', text: '#ffffff' },
-  'fruta de la pasión': { bg: '#d35400', text: '#ffffff' },
-  'verde': { bg: '#337a37', text: '#ffffff' },
-  'almizclado': { bg: '#7b8794', text: '#ffffff' },
-  'ozónico': { bg: '#3b9296', text: '#ffffff' },
-  'terroso': { bg: '#554137', text: '#ffffff' },
-  'pachulí': { bg: '#4a3525', text: '#ffffff' },
-  'lavanda': { bg: '#6d538e', text: '#ffffff' },
-  'canela': { bg: '#994d22', text: '#ffffff' },
-  'tabaco': { bg: '#614735', text: '#ffffff' },
-  'anisado': { bg: '#496d6e', text: '#ffffff' },
-  'anís': { bg: '#496d6e', text: '#ffffff' },
-  'absenta': { bg: '#2e7d5b', text: '#ffffff' },
-  'metálico': { bg: '#6c7a89', text: '#ffffff' },
-  'musgoso': { bg: '#405d27', text: '#ffffff' },
-  'café': { bg: '#3e2723', text: '#ffffff' },
-  'cacao': { bg: '#4a2c11', text: '#ffffff' },
-  'lactónico': { bg: '#b0a495', text: '#ffffff' },
-  'fresco': { bg: '#2e7d7a', text: '#ffffff' },
-  'almendrado': { bg: '#a3845b', text: '#ffffff' },
-  'animal': { bg: '#42372f', text: '#ffffff' },
-  'licor': { bg: '#78351b', text: '#ffffff' },
-  'vodka': { bg: '#4a6572', text: '#ffffff' },
-  'mineral': { bg: '#5c6b73', text: '#ffffff' },
-  'salado': { bg: '#4682b4', text: '#ffffff' },
-  'aldehídico': { bg: '#7f8c8d', text: '#ffffff' },
-  'cereza': { bg: '#881337', text: '#ffffff' },
-  'miel': { bg: '#d97706', text: '#ffffff' },
-  'oud': { bg: '#3e2723', text: '#ffffff' }
+  // Base y Maderas (Tonos ciruela profunda y berenjena elegante)
+  'amaderado': { bg: '#4a154b', text: '#ffffff' },
+  'oud': { bg: '#1e1b4b', text: '#ffffff' },
+  'pachulí': { bg: '#581c87', text: '#ffffff' },
+  'terroso': { bg: '#2e1065', text: '#ffffff' },
+  'cuero': { bg: '#3b0764', text: '#ffffff' },
+  'tabaco': { bg: '#4c0519', text: '#ffffff' },
+
+  // Especias y Cálidos (Tonos mora madura y grosella especiada)
+  'cálido especiado': { bg: '#701a75', text: '#ffffff' },
+  'canela': { bg: '#831843', text: '#ffffff' },
+  'especias': { bg: '#701a75', text: '#ffffff' },
+  'café': { bg: '#311042', text: '#ffffff' },
+  'cacao': { bg: '#3b0764', text: '#ffffff' },
+
+  // Resinas y Dulces (Tonos amatista real y orquídea brillante)
+  'ámbar': { bg: '#86198f', text: '#ffffff' },
+  'ambarado': { bg: '#86198f', text: '#ffffff' },
+  'avainillado': { bg: '#9333ea', text: '#ffffff' },
+  'vainilla': { bg: '#9333ea', text: '#ffffff' },
+  'dulce': { bg: '#d946ef', text: '#ffffff' },
+  'miel': { bg: '#a21caf', text: '#ffffff' },
+  'caramelo': { bg: '#a855f7', text: '#ffffff' },
+  'balsámico': { bg: '#6b21a8', text: '#ffffff' },
+  'licor': { bg: '#581c87', text: '#ffffff' },
+
+  // Aromáticos e Índigo (Tonos índigo eléctrico y violeta vibrante)
+  'aromático': { bg: '#4338ca', text: '#ffffff' },
+  'fresco especiado': { bg: '#4f46e5', text: '#ffffff' },
+  'fresco': { bg: '#6366f1', text: '#ffffff' },
+  'lavanda': { bg: '#7e22ce', text: '#ffffff' },
+  'iris': { bg: '#4f46e5', text: '#ffffff' },
+  'anisado': { bg: '#3730a3', text: '#ffffff' },
+  'anís': { bg: '#3730a3', text: '#ffffff' },
+
+  // Florales y Frutales (Tonos magenta radiante, peonía y frambuesa)
+  'floral': { bg: '#c026d3', text: '#ffffff' },
+  'floral blanco': { bg: '#818cf8', text: '#ffffff' },
+  'rosas': { bg: '#be123c', text: '#ffffff' },
+  'afrutado': { bg: '#db2777', text: '#ffffff' },
+  'frutal': { bg: '#db2777', text: '#ffffff' },
+  'fruta de la pasión': { bg: '#e11d48', text: '#ffffff' },
+  'cereza': { bg: '#9f1239', text: '#ffffff' },
+  'coco': { bg: '#c084fc', text: '#ffffff' },
+
+  // Cítricos y Acuáticos (Tonos cian-índigo luminoso y violeta claro)
+  'cítrico': { bg: '#6366f1', text: '#ffffff' },
+  'marino': { bg: '#0284c7', text: '#ffffff' },
+  'acuático': { bg: '#0284c7', text: '#ffffff' },
+  'ozónico': { bg: '#38bdf8', text: '#0f172a' },
+  'vodka': { bg: '#38bdf8', text: '#0f172a' },
+
+  // Botánicos y Verdes (Tonos esmeralda-índigo profundos)
+  'verde': { bg: '#059669', text: '#ffffff' },
+  'musgoso': { bg: '#065f46', text: '#ffffff' },
+  'absenta': { bg: '#0d9488', text: '#ffffff' },
+
+  // Suaves y Texturizados (Tonos lila pastel y pizarra suave)
+  'atalcado': { bg: '#a855f7', text: '#ffffff' },
+  'lactónico': { bg: '#e9d5ff', text: '#581c87' },
+  'almizclado': { bg: '#64748b', text: '#ffffff' },
+  'ahumado': { bg: '#334155', text: '#ffffff' },
+  'mineral': { bg: '#334155', text: '#ffffff' },
+  'metálico': { bg: '#475569', text: '#ffffff' },
+  'aldehídico': { bg: '#a5b4fc', text: '#1e1b4b' },
 };
 
 /**
- * Obtiene el color de un acorde normalizando tildes y mayúsculas.
+ * Obtiene el color de un acorde normalizando tildes, mayúsculas y espacios.
  */
 export function getAccordColor(name: string): { bg: string; text: string } {
-  const norm = name.toLowerCase().trim();
-  if (ACCORD_COLORS[norm]) return ACCORD_COLORS[norm];
+  const norm = name
+    .toLowerCase()
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
 
-  // Búsqueda por subcadena
   for (const [key, val] of Object.entries(ACCORD_COLORS)) {
-    if (norm.includes(key) || key.includes(norm)) {
+    const normKey = key.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (norm === normKey || norm.includes(normKey) || normKey.includes(norm)) {
       return val;
     }
   }
 
-  return { bg: '#475569', text: '#ffffff' };
+  // Fallback con armonía índigo
+  return { bg: '#4f46e5', text: '#ffffff' };
 }
 
 /**
- * URLs de fotos reales en alta definición optimizadas (Unsplash CDN w=120&q=80)
- * para ingredientes de notas olfativas de perfumería.
+ * Reglas deterministas para mapear cualquier nota olfativa
+ * a su imagen real, fija y optimizada alojada localmente en `/notes/*.jpg`.
  */
-const INGREDIENT_IMAGES: Record<string, string> = {
+const NOTE_RULES: Array<{ pattern: RegExp; file: string }> = [
   // Cítricos
-  'bergamota': 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=120&q=80',
-  'limon': 'https://images.unsplash.com/photo-1533082606337-4c6c74988246?w=120&q=80',
-  'lima': 'https://images.unsplash.com/photo-1533082606337-4c6c74988246?w=120&q=80',
-  'mandarina': 'https://images.unsplash.com/photo-1547514701-42782101795e?w=120&q=80',
-  'naranja': 'https://images.unsplash.com/photo-1547514701-42782101795e?w=120&q=80',
-  'pomelo': 'https://images.unsplash.com/photo-1577234286642-fc512a5f8f11?w=120&q=80',
-  'toronja': 'https://images.unsplash.com/photo-1577234286642-fc512a5f8f11?w=120&q=80',
-  'yuzu': 'https://images.unsplash.com/photo-1533082606337-4c6c74988246?w=120&q=80',
-  'petit grain': 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=120&q=80',
+  { pattern: /bergamot/i, file: 'bergamota' },
+  { pattern: /lim[oó]n/i, file: 'limon' },
+  { pattern: /lima(?!\s*caviar)/i, file: 'lima' },
+  { pattern: /lima\s*caviar/i, file: 'lima' },
+  { pattern: /mandarin/i, file: 'mandarina' },
+  { pattern: /naranja/i, file: 'naranja' },
+  { pattern: /pomelo|toronja/i, file: 'pomelo' },
+  { pattern: /yuzu/i, file: 'yuzu' },
+  { pattern: /petit\s*grain/i, file: 'petitgrain' },
+  { pattern: /c[íi]tric/i, file: 'limon' },
 
   // Frutas
-  'manzana': 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=120&q=80',
-  'pera': 'https://images.unsplash.com/photo-1514756331096-242fdeb70d4a?w=120&q=80',
-  'pina': 'https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=120&q=80',
-  'piña': 'https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=120&q=80',
-  'lichi': 'https://images.unsplash.com/photo-1587393855524-087f83d95bc9?w=120&q=80',
-  'maracuya': 'https://images.unsplash.com/photo-1595155777675-2386a344933a?w=120&q=80',
-  'coco': 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=120&q=80',
-  'cereza': 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=120&q=80',
-  'grosella': 'https://images.unsplash.com/photo-1498557850523-fd3d118b962e?w=120&q=80',
-  'frambuesa': 'https://images.unsplash.com/photo-1498557850523-fd3d118b962e?w=120&q=80',
-  'frutos': 'https://images.unsplash.com/photo-1498557850523-fd3d118b962e?w=120&q=80',
-  'frut': 'https://images.unsplash.com/photo-1498557850523-fd3d118b962e?w=120&q=80',
-  'ciruela': 'https://images.unsplash.com/photo-1595155777675-2386a344933a?w=120&q=80',
-  'melocoton': 'https://images.unsplash.com/photo-1595155777675-2386a344933a?w=120&q=80',
-  'durazno': 'https://images.unsplash.com/photo-1595155777675-2386a344933a?w=120&q=80',
-  'melon': 'https://images.unsplash.com/photo-1577234286642-fc512a5f8f11?w=120&q=80',
-  'higo': 'https://images.unsplash.com/photo-1595155777675-2386a344933a?w=120&q=80',
-  'davana': 'https://images.unsplash.com/photo-1587393855524-087f83d95bc9?w=120&q=80',
+  { pattern: /manzana\s*verde/i, file: 'manzana-verde' },
+  { pattern: /manzana/i, file: 'manzana' },
+  { pattern: /pera/i, file: 'pera' },
+  { pattern: /pi[ñn]a/i, file: 'pina' },
+  { pattern: /ciruela/i, file: 'ciruela' },
+  { pattern: /coco/i, file: 'coco' },
+  { pattern: /cereza/i, file: 'cereza' },
+  { pattern: /frambuesa/i, file: 'frambuesa' },
+  { pattern: /grosella/i, file: 'grosella' },
+  { pattern: /melocot[óo]n|durazno/i, file: 'melocoton' },
+  { pattern: /granada/i, file: 'granada' },
+  { pattern: /maracuy[áa]/i, file: 'maracuya' },
+  { pattern: /lichi/i, file: 'lichi' },
+  { pattern: /higo/i, file: 'higo' },
+  { pattern: /fruto/i, file: 'frambuesa' },
 
   // Aromáticas y Hierbas
-  'lavanda': 'https://images.unsplash.com/photo-1528722828814-77b9b83aafb2?w=120&q=80',
-  'menta': 'https://images.unsplash.com/photo-1628556270448-4d4e4148e1b1?w=120&q=80',
-  'romero': 'https://images.unsplash.com/photo-1515586000433-45406d8e6662?w=120&q=80',
-  'salvia': 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=120&q=80',
-  'albahaca': 'https://images.unsplash.com/photo-1628556270448-4d4e4148e1b1?w=120&q=80',
-  'tomillo': 'https://images.unsplash.com/photo-1515586000433-45406d8e6662?w=120&q=80',
-  'enebro': 'https://images.unsplash.com/photo-1516214104703-d870798883c5?w=120&q=80',
-  'cipres': 'https://images.unsplash.com/photo-1516214104703-d870798883c5?w=120&q=80',
-  'artemisia': 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=120&q=80',
-  'absenta': 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=120&q=80',
+  { pattern: /lavanda/i, file: 'lavanda' },
+  { pattern: /menta/i, file: 'menta' },
+  { pattern: /salvia/i, file: 'salvia' },
+  { pattern: /romero/i, file: 'romero' },
+  { pattern: /albahaca/i, file: 'albahaca' },
+  { pattern: /tomillo/i, file: 'tomillo' },
+  { pattern: /enebro/i, file: 'enebro' },
+  { pattern: /cipr[ée]s/i, file: 'cipres' },
+  { pattern: /hinojo|alcaravea/i, file: 'anis' },
+  { pattern: /absenta/i, file: 'menta' },
+  { pattern: /bamb[úu]/i, file: 'notas-verdes' },
+  { pattern: /cannabis/i, file: 'notas-verdes' },
+  { pattern: /lentisco/i, file: 'notas-verdes' },
+  { pattern: /davana/i, file: 'melocoton' },
 
   // Especias
-  'pimienta': 'https://images.unsplash.com/photo-1509358271058-acd22cc93898?w=120&q=80',
-  'cardamomo': 'https://images.unsplash.com/photo-1599909682622-7935406006f1?w=120&q=80',
-  'canela': 'https://images.unsplash.com/photo-1509358740172-f77c168f6312?w=120&q=80',
-  'jengibre': 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=120&q=80',
-  'nuez moscada': 'https://images.unsplash.com/photo-1599909682622-7935406006f1?w=120&q=80',
-  'azafran': 'https://images.unsplash.com/photo-1589135233689-d56d95392f45?w=120&q=80',
-  'anis': 'https://images.unsplash.com/photo-1509358740172-f77c168f6312?w=120&q=80',
-  'clavo': 'https://images.unsplash.com/photo-1509358740172-f77c168f6312?w=120&q=80',
-  'cilantro': 'https://images.unsplash.com/photo-1628556270448-4d4e4148e1b1?w=120&q=80',
+  { pattern: /canela/i, file: 'canela' },
+  { pattern: /cardamomo/i, file: 'cardamomo' },
+  { pattern: /pimienta\s*rosa/i, file: 'pimienta-rosa' },
+  { pattern: /pimienta\s*blanca/i, file: 'pimienta-blanca' },
+  { pattern: /pimienta/i, file: 'pimienta-negra' },
+  { pattern: /jengibre/i, file: 'jengibre' },
+  { pattern: /azafr[áa]n/i, file: 'azafran' },
+  { pattern: /nuez\s*moscada/i, file: 'nuez-moscada' },
+  { pattern: /an[íi]s|regaliz/i, file: 'anis' },
+  { pattern: /clavo/i, file: 'clavo' },
+  { pattern: /cilantro/i, file: 'cilantro' },
+  { pattern: /especia/i, file: 'canela' },
 
   // Flores
-  'rosa': 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=120&q=80',
-  'jazmin': 'https://images.unsplash.com/photo-1592878904946-b3cd8ae243d0?w=120&q=80',
-  'azahar': 'https://images.unsplash.com/photo-1592878904946-b3cd8ae243d0?w=120&q=80',
-  'neroli': 'https://images.unsplash.com/photo-1592878904946-b3cd8ae243d0?w=120&q=80',
-  'flores': 'https://images.unsplash.com/photo-1592878904946-b3cd8ae243d0?w=120&q=80',
-  'tuberosa': 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=120&q=80',
-  'nardo': 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=120&q=80',
-  'iris': 'https://images.unsplash.com/photo-1550950158-d0d960dff51b?w=120&q=80',
-  'lirio': 'https://images.unsplash.com/photo-1550950158-d0d960dff51b?w=120&q=80',
-  'violeta': 'https://images.unsplash.com/photo-1550950158-d0d960dff51b?w=120&q=80',
-  'geranio': 'https://images.unsplash.com/photo-1567684014761-b65e2e59b9eb?w=120&q=80',
-  'gardenia': 'https://images.unsplash.com/photo-1592878904946-b3cd8ae243d0?w=120&q=80',
-  'peonia': 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=120&q=80',
-  'orquidea': 'https://images.unsplash.com/photo-1550950158-d0d960dff51b?w=120&q=80',
-  'ylang': 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=120&q=80',
-  'magnolia': 'https://images.unsplash.com/photo-1592878904946-b3cd8ae243d0?w=120&q=80',
-  'osmanto': 'https://images.unsplash.com/photo-1587393855524-087f83d95bc9?w=120&q=80',
+  { pattern: /rosa\s*blanca/i, file: 'rosa-blanca' },
+  { pattern: /rosa/i, file: 'rosa' },
+  { pattern: /jazm[íi]n/i, file: 'jazmin' },
+  { pattern: /azahar|neroli/i, file: 'flor-azahar' },
+  { pattern: /tuberosa|nardo/i, file: 'tuberosa' },
+  { pattern: /iris/i, file: 'iris' },
+  { pattern: /violeta/i, file: 'violeta' },
+  { pattern: /geranio/i, file: 'geranio' },
+  { pattern: /gardenia/i, file: 'gardenia' },
+  { pattern: /peon[íi]a/i, file: 'peonia' },
+  { pattern: /orqu[íi]dea/i, file: 'orquidea' },
+  { pattern: /ylang/i, file: 'ylang-ylang' },
+  { pattern: /magnolia/i, file: 'magnolia' },
+  { pattern: /loto/i, file: 'flor-loto' },
+  { pattern: /campanilla|mimosa|osmanto/i, file: 'jazmin' },
+  { pattern: /floral/i, file: 'rosa' },
 
   // Maderas
-  'cedro': 'https://images.unsplash.com/photo-1516214104703-d870798883c5?w=120&q=80',
-  'sandalo': 'https://images.unsplash.com/photo-1605807646983-377bc7a76593?w=120&q=80',
-  'pachuli': 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=120&q=80',
-  'vetiver': 'https://images.unsplash.com/photo-1509358271058-acd22cc93898?w=120&q=80',
-  'gaiac': 'https://images.unsplash.com/photo-1516214104703-d870798883c5?w=120&q=80',
-  'guayaco': 'https://images.unsplash.com/photo-1516214104703-d870798883c5?w=120&q=80',
-  'oud': 'https://images.unsplash.com/photo-1605807646983-377bc7a76593?w=120&q=80',
-  'agar': 'https://images.unsplash.com/photo-1605807646983-377bc7a76593?w=120&q=80',
-  'maderas': 'https://images.unsplash.com/photo-1516214104703-d870798883c5?w=120&q=80',
-  'abedul': 'https://images.unsplash.com/photo-1516214104703-d870798883c5?w=120&q=80',
-  'roble': 'https://images.unsplash.com/photo-1516214104703-d870798883c5?w=120&q=80',
-  'musgo': 'https://images.unsplash.com/photo-1516214104703-d870798883c5?w=120&q=80',
-  'cachemira': 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=120&q=80',
+  { pattern: /cedro/i, file: 'cedro' },
+  { pattern: /s[áa]ndalo/i, file: 'sandalo' },
+  { pattern: /vetiver/i, file: 'vetiver' },
+  { pattern: /oud|agar/i, file: 'oud' },
+  { pattern: /gaiac|guayaco/i, file: 'guayaco' },
+  { pattern: /cachemira|cashmeran/i, file: 'cachemira' },
+  { pattern: /abedul/i, file: 'abedul' },
+  { pattern: /musgo/i, file: 'musgo-roble' },
+  { pattern: /caoba|palo\s*de\s*rosa/i, file: 'cedro' },
+  { pattern: /madera/i, file: 'maderas' },
 
-  // Resinas, Dulces y Gourmand
-  'vainilla': 'https://images.unsplash.com/photo-1587486913049-53fc88980cfc?w=120&q=80',
-  'tonka': 'https://images.unsplash.com/photo-1509358740172-f77c168f6312?w=120&q=80',
-  'ambar': 'https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=120&q=80',
-  'cuero': 'https://images.unsplash.com/photo-1551232864-3f0890e580d9?w=120&q=80',
-  'almizcle': 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=120&q=80',
-  'incienso': 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=120&q=80',
-  'olibano': 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=120&q=80',
-  'benjui': 'https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=120&q=80',
-  'mirra': 'https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=120&q=80',
-  'ladano': 'https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=120&q=80',
-  'tabaco': 'https://images.unsplash.com/photo-1527061011665-3652c757a4d4?w=120&q=80',
-  'cafe': 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=120&q=80',
-  'cacao': 'https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=120&q=80',
-  'chocolate': 'https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=120&q=80',
-  'miel': 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=120&q=80',
-  'almendra': 'https://images.unsplash.com/photo-1508061253366-f7da158b6d46?w=120&q=80',
-  'avellana': 'https://images.unsplash.com/photo-1508061253366-f7da158b6d46?w=120&q=80',
-  'caramelo': 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=120&q=80',
-  'praline': 'https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=120&q=80',
-  'azucar': 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=120&q=80',
+  // Resinas y Bálsamos
+  { pattern: /[áa]mbar/i, file: 'ambar' },
+  { pattern: /pachul[íi]/i, file: 'pachuli' },
+  { pattern: /incienso|ol[íi]bano/i, file: 'incienso' },
+  { pattern: /benju[íi]/i, file: 'benjui' },
+  { pattern: /l[áa]dano/i, file: 'ladano' },
+  { pattern: /mirra/i, file: 'mirra' },
+  { pattern: /b[áa]lsamo|resina/i, file: 'incienso' },
+  { pattern: /ambroxan|amberwood/i, file: 'ambar' },
+  { pattern: /iso\s*e\s*super/i, file: 'maderas' },
 
-  // Acuático y Otros
-  'marinas': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=120&q=80',
-  'mar': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=120&q=80',
-  'calone': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=120&q=80',
-  'agua': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=120&q=80',
-  'ambroxan': 'https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=120&q=80',
-  'amberwood': 'https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=120&q=80'
-};
+  // Gourmand
+  { pattern: /vainilla/i, file: 'vainilla' },
+  { pattern: /tonka/i, file: 'haba-tonka' },
+  { pattern: /caf[ée]/i, file: 'cafe' },
+  { pattern: /cacao/i, file: 'cacao' },
+  { pattern: /chocolate/i, file: 'chocolate' },
+  { pattern: /miel/i, file: 'miel' },
+  { pattern: /caramelo/i, file: 'caramelo' },
+  { pattern: /almendra/i, file: 'almendra' },
+  { pattern: /avellana|pralin[ée]/i, file: 'avellana' },
+  { pattern: /crema\s*batida/i, file: 'crema-batida' },
 
-const DEFAULT_NOTE_IMAGE = 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=120&q=80';
+  // Cuero y Tabaco
+  { pattern: /cuero/i, file: 'cuero' },
+  { pattern: /tabaco/i, file: 'tabaco' },
+  { pattern: /almizcle|ambreta/i, file: 'almizcle' },
+
+  // Acuático, Fresco y Especial
+  { pattern: /marina|mar|aquozone|calone/i, file: 'notas-marinas' },
+  { pattern: /mineral/i, file: 'notas-minerales' },
+  { pattern: /oz[óo]nic/i, file: 'notas-ozonicas' },
+  { pattern: /verde/i, file: 'notas-verdes' },
+  { pattern: /helad|vodka|ginebra/i, file: 'ginebra-helada' },
+  { pattern: /aldeh[íi]d/i, file: 'aldehidos' }
+];
+
+const DEFAULT_NOTE_PATH = '/notes/maderas.jpg';
 
 /**
- * Resuelve la imagen fotográfica real del ingrediente mediante análisis de texto.
+ * Resuelve la imagen fotográfica local real del ingrediente.
+ * Siempre retorna la misma imagen estática de `/notes/<file>.jpg`,
+ * optimizada para cargar de inmediato (<5ms) y sin depender de servicios externos.
  */
 export function getNoteImageUrl(note: string): string {
-  if (!note) return DEFAULT_NOTE_IMAGE;
+  if (!note) return DEFAULT_NOTE_PATH;
 
-  // Normalizar: quitar tildes y caracteres especiales
-  const clean = note
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-
-  for (const [key, url] of Object.entries(INGREDIENT_IMAGES)) {
-    if (clean.includes(key)) {
-      return url;
+  for (const rule of NOTE_RULES) {
+    if (rule.pattern.test(note)) {
+      return `/notes/${rule.file}.jpg`;
     }
   }
 
-  return DEFAULT_NOTE_IMAGE;
+  return DEFAULT_NOTE_PATH;
 }
