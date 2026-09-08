@@ -20020,5 +20020,184 @@
     "heartNotes": [],
     "baseNotes": [],
     "source": "canonical_fragrantica"
+  },
+  "APAE-2154": {
+    "brand": "Dior",
+    "marca": "Dior",
+    "contratipo": "J'ADORE DIOR TYPE B",
+    "officialName": "J'Adore",
+    "family": "Floral Frutal",
+    "topNotes": [
+      "Pera",
+      "Melón",
+      "Magnolia",
+      "Melocotón",
+      "Mandarina",
+      "Bergamota"
+    ],
+    "heartNotes": [
+      "Jazmín",
+      "Lirio de los Valles",
+      "Nardo",
+      "Fresia",
+      "Rosa",
+      "Orquídea",
+      "Ciruela",
+      "Violeta"
+    ],
+    "baseNotes": [
+      "Almizcle",
+      "Vainilla",
+      "Zarzamora",
+      "Cedro"
+    ],
+    "description": "Bouquet floral majestuoso, radiante y ultrafemenino, con notas luminosas de pera y jazmín sambac.",
+    "accords": [
+      "Floral",
+      "Afrutado",
+      "Fresco",
+      "Dulce",
+      "Acuático"
+    ],
+    "source": "Fragrantica / Parfumo"
+  },
+  "APAE 2123": {
+    "brand": "Giorgio Armani",
+    "marca": "Giorgio Armani",
+    "contratipo": "ACQUA DI GIO WOMAN TYPE",
+    "officialName": "Acqua di Gioia / Acqua di Gio Woman",
+    "family": "Floral Acuática",
+    "topNotes": [
+      "Limón de Amalfi",
+      "Menta",
+      "Peonía",
+      "Piña",
+      "Melocotón"
+    ],
+    "heartNotes": [
+      "Jazmín Acuático",
+      "Lirio de los Valles",
+      "Calone",
+      "Fresia",
+      "Rosa"
+    ],
+    "baseNotes": [
+      "Cedro de Virginia",
+      "Azúcar Moreno",
+      "Ládano Francés",
+      "Almizcle"
+    ],
+    "description": "Fragancia fresca y acuática inspirada en la brisa del Mediterráneo con toques florales y cítricos cristalinos.",
+    "accords": [
+      "Cítrico",
+      "Acuático",
+      "Verde",
+      "Fresco Especiado",
+      "Floral"
+    ],
+    "source": "Fragrantica / Parfumo"
+  },
+  "APAE-3571": {
+    "brand": "Viktor & Rolf",
+    "marca": "Viktor & Rolf",
+    "contratipo": "FLOWERBOMB VIKTOR & ROLF",
+    "officialName": "Flowerbomb",
+    "family": "Ámbar Floral",
+    "topNotes": [
+      "Té",
+      "Bergamota",
+      "Osmanto"
+    ],
+    "heartNotes": [
+      "Orquídea",
+      "Jazmín Sambac",
+      "Rosa Centifolia",
+      "Fresia",
+      "Flor de Azahar"
+    ],
+    "baseNotes": [
+      "Pachulí",
+      "Almizcle",
+      "Vainilla"
+    ],
+    "description": "Explosión de notas florales voluptuosas y golosas con un fondo adictivo de pachulí y vainilla sensual.",
+    "accords": [
+      "Floral",
+      "Pachulí",
+      "Dulce",
+      "Atalcado",
+      "Cálido"
+    ],
+    "source": "Fragrantica / Parfumo"
+  },
+  "NP-31519 ENS2": {
+    "brand": "Elizabeth Arden",
+    "marca": "Elizabeth Arden",
+    "contratipo": "GREEN TEA ELIZABETH ARDEN",
+    "officialName": "Green Tea",
+    "family": "Cítrica Aromática",
+    "topNotes": [
+      "Limón",
+      "Bergamota",
+      "Menta",
+      "Cáscara de Naranja",
+      "Ruibarbo"
+    ],
+    "heartNotes": [
+      "Jazmín",
+      "Musgo de Roble",
+      "Hinojo",
+      "Almizcle",
+      "Clavel"
+    ],
+    "baseNotes": [
+      "Té Verde",
+      "Musgo de Roble",
+      "Almizcle",
+      "Semillas de Apio",
+      "Alcaravea"
+    ],
+    "description": "Fragancia energizante y refrescante con acordes chispeantes de té verde aromático, cítricos y menta.",
+    "accords": [
+      "Verde",
+      "Cítrico",
+      "Fresco Especiado",
+      "Aromático",
+      "Herbal"
+    ],
+    "source": "Fragrantica / Parfumo"
+  },
+  "APAE-3605": {
+    "brand": "Vera Wang",
+    "marca": "Vera Wang",
+    "contratipo": "PRINCESS VERA WANG",
+    "officialName": "Princess",
+    "family": "Ámbar Floral",
+    "topNotes": [
+      "Manzana",
+      "Nenúfar",
+      "Mandarina",
+      "Albaricoque"
+    ],
+    "heartNotes": [
+      "Chocolate Negro",
+      "Guayaba",
+      "Flor de Tiaré",
+      "Nardo"
+    ],
+    "baseNotes": [
+      "Vainilla",
+      "Ámbar",
+      "Notas Amaderadas"
+    ],
+    "description": "Aroma encantador y goloso que combina frutas jugosas, cacao seductor y un corazón floral embriagador.",
+    "accords": [
+      "Dulce",
+      "Cacao",
+      "Vainilla",
+      "Afrutado",
+      "Floral"
+    ],
+    "source": "Fragrantica / Parfumo"
   }
 }

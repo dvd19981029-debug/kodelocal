@@ -26,10 +26,10 @@ export interface FragranceProfile {
 }
 
 interface FragranceDbEntry {
-  kodigo: string;
+  kodigo?: string;
   contratipo: string;
   marca: string;
-  genero: string;
+  genero?: string;
   officialName: string;
   brand: string;
   family: string;
@@ -37,10 +37,11 @@ interface FragranceDbEntry {
   topNotes: string[];
   heartNotes: string[];
   baseNotes: string[];
-  source: string;
+  source?: string;
+  description?: string;
 }
 
-const fragranceDatabase = fragranceDatabaseRaw as Record<string, FragranceDbEntry>;
+const fragranceDatabase = fragranceDatabaseRaw as unknown as Record<string, FragranceDbEntry>;
 
 /**
  * Convierte los acordes de un perfil en barras porcentuales con color según la paleta armonizada.

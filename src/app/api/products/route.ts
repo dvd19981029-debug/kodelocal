@@ -56,6 +56,7 @@ export async function GET(request: Request) {
       imageUrl: p.imageUrl || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80',
       isAvailableOnline: p.isAvailableOnline,
       puesto: (p as any).puesto || '',
+      supplier: (p as any).supplier || 'APAESA GUATEMALA',
     }));
 
     const total = formatted.length;
