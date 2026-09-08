@@ -297,8 +297,7 @@ export default function PerfumeKitBuilderModal({
                           }`}
                         >
                           <div>
-                            <div className="flex items-center justify-between text-[8px] text-slate-400 font-bold mb-1">
-                              <span>#{essence.sku}</span>
+                            <div className="flex items-center justify-end text-[8px] text-slate-400 font-bold mb-1">
                               {essence.gender && (
                                 <span className="uppercase text-slate-600 font-black">
                                   {essence.gender.slice(0, 3)}

@@ -12,12 +12,9 @@ import {
   ShieldCheck, 
   Wand2, 
   Sparkles, 
-  Star, 
   Plus, 
   Minus, 
-  Share2, 
-  ChevronRight,
-  Info
+  ChevronRight
 } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS, getStoredProducts } from '@/lib/store';
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation } from '@/context/EcommerceCartContext';
@@ -36,7 +33,7 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
   const [isKitModalOpen, setIsKitModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'olfativo' | 'detalles' | 'envios'>('olfativo');
+
 
   const { cart, addToCart } = useEcommerceCart();
 
@@ -160,20 +157,20 @@ export default function ProductDetailPage() {
     if (g.includes('caballero') || g.includes('hombre')) {
       return (
         <span className="bg-indigo-50 border border-indigo-200 text-indigo-800 text-[11px] font-black px-2.5 py-1 rounded-xl shadow-2xs">
-          🧔 Caballero
+          Caballero
         </span>
       );
     }
     if (g.includes('dama') || g.includes('mujer')) {
       return (
         <span className="bg-pink-50 border border-pink-200 text-pink-800 text-[11px] font-black px-2.5 py-1 rounded-xl shadow-2xs">
-          👩 Dama
+          Dama
         </span>
       );
     }
     return (
       <span className="bg-purple-50 border border-purple-200 text-purple-800 text-[11px] font-black px-2.5 py-1 rounded-xl shadow-2xs">
-        ⚧ Unisex
+        Unisex
       </span>
     );
   };
@@ -181,24 +178,7 @@ export default function ProductDetailPage() {
   return (
     <div className="space-y-6 sm:space-y-8 pb-20 pt-1">
       
-      {/* ================= BARRA DE MIGA DE PAN ================= */}
-      <nav className="flex items-center justify-between gap-2 px-1">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-indigo-600 transition-colors py-1.5 px-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs group"
-        >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-          <span>Volver al Catálogo</span>
-        </Link>
 
-        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 truncate">
-          <span>Inicio</span>
-          <span>/</span>
-          <span>{product.category}</span>
-          <span>/</span>
-          <span className="text-slate-700 truncate max-w-[140px] sm:max-w-xs">{displayName}</span>
-        </div>
-      </nav>
 
       {/* ================= CONTENEDOR PRINCIPAL PRODUCTO (ESTILO KLONE SCENTS EN CLAYMORPHISM) ================= */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
@@ -222,11 +202,8 @@ export default function ProductDetailPage() {
                 }`}
               />
 
-              {/* Badges superiores sobre la imagen */}
-              <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start z-10">
-                <span className="font-mono font-black text-xs bg-slate-950/80 backdrop-blur-xs text-white px-2.5 py-0.5 rounded-lg shadow-xs">
-                  #{product.sku}
-                </span>
+              {/* Badge de género sobre la imagen */}
+              <div className="absolute top-3 left-3 z-10">
                 {getGenderBadge(product.gender)}
               </div>
 
@@ -277,16 +254,7 @@ export default function ProductDetailPage() {
           {/* 1. TÍTULO, CONTRATIPO Y VALORACIÓN */}
           <div className="space-y-2">
             
-            {/* Social proof estrellas */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-0.5 text-amber-400">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                ))}
-              </div>
-              <span className="text-xs font-black text-slate-800">4.9 / 5.0</span>
-              <span className="text-[11px] text-slate-500 font-medium">(40+ reseñas verificadas)</span>
-            </div>
+
 
             {/* Nombre Oficial */}
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
@@ -511,102 +479,58 @@ export default function ProductDetailPage() {
 
       </section>
 
-      {/* ================= SECCIÓN DE INFORMACIÓN DETALLADA EN PESTAÑAS ================= */}
-      <section className="clay-card p-4 sm:p-6 rounded-3xl bg-white border border-slate-100 space-y-4 shadow-sm">
-        
-        {/* Selector de pestañas */}
-        <div className="flex items-center gap-2 border-b border-slate-100 pb-2 overflow-x-auto no-scrollbar">
-          <button
-            type="button"
-            onClick={() => setActiveTab('olfativo')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
-              activeTab === 'olfativo'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            Descripción & Ocasiones
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('detalles')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
-              activeTab === 'detalles'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            Modo de Uso y Preparación
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('envios')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
-              activeTab === 'envios'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            Envíos Nacionales C807
-          </button>
+      {/* ================= DETALLES DE LA FRAGANCIA Y ENVÍO ================= */}
+      <section className="grid grid-cols-1 md:grid-cols-12 gap-4">
+        {/* Descripción de la fragancia */}
+        <div className="md:col-span-7 clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-3 shadow-xs">
+          <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider">
+            Detalles de la fragancia
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
+            {profile.description}
+          </p>
+          <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+            <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+              <span className="text-[9.5px] font-black uppercase text-slate-400 block">Estación</span>
+              <span className="text-xs font-bold text-slate-800">{profile.season}</span>
+            </div>
+            <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+              <span className="text-[9.5px] font-black uppercase text-slate-400 block">Ocasión</span>
+              <span className="text-xs font-bold text-slate-800">{profile.occasion}</span>
+            </div>
+            <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+              <span className="text-[9.5px] font-black uppercase text-slate-400 block">Intensidad</span>
+              <span className="text-xs font-bold text-indigo-700">{profile.intensity}</span>
+            </div>
+          </div>
         </div>
 
-        {/* Contenido de pestaña 1: Descripción */}
-        {activeTab === 'olfativo' && (
-          <div className="space-y-3 animate-in fade-in duration-200 text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-            <p>{profile.description}</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                <span className="text-[10px] font-black uppercase text-slate-400 block">Estación recomendada</span>
-                <strong className="text-xs sm:text-sm font-bold text-slate-800">{profile.season}</strong>
+        {/* Información de entrega C807 */}
+        <div className="md:col-span-5 clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 flex flex-col justify-between gap-3 shadow-xs">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                <Truck className="w-4 h-4" />
               </div>
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                <span className="text-[10px] font-black uppercase text-slate-400 block">Ocasión ideal</span>
-                <strong className="text-xs sm:text-sm font-bold text-slate-800">{profile.occasion}</strong>
-              </div>
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                <span className="text-[10px] font-black uppercase text-slate-400 block">Intensidad</span>
-                <strong className="text-xs sm:text-sm font-bold text-indigo-700">{profile.intensity}</strong>
+              <div>
+                <h4 className="text-xs sm:text-sm font-black text-slate-900">
+                  Envíos a todo el país
+                </h4>
+                <p className="text-[11px] text-slate-500 font-medium">
+                  Cobertura en los 14 departamentos con C807
+                </p>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Contenido de pestaña 2: Modo de uso */}
-        {activeTab === 'detalles' && (
-          <div className="space-y-3 animate-in fade-in duration-200 text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-            <h4 className="font-black text-slate-900 text-sm">¿Cómo aprovechar al máximo tu esencia pura?</h4>
-            <ul className="list-disc list-inside space-y-1.5 text-xs text-slate-600">
-              <li><strong>Para uso directo:</strong> Puedes aplicar pequeñas gotas en puntos de pulso (cuello, muñecas y tras las orejas).</li>
-              <li><strong>Para preparar tu propio perfume en spray:</strong> Combina 1 onza (30ml) de esta esencia pura con alcohol de perfumería y fijador en un frasco de 100ml.</li>
-              <li><strong>Si prefieres que te lo entreguemos listo:</strong> Selecciona nuestra opción <em>"Arma tu propio perfume por $15"</em> y te lo entregamos preparado profesionalmente.</li>
-            </ul>
-          </div>
-        )}
-
-        {/* Contenido de pestaña 3: Envíos */}
-        {activeTab === 'envios' && (
-          <div className="space-y-3 animate-in fade-in duration-200 text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-            <h4 className="font-black text-slate-900 text-sm flex items-center gap-2">
-              <Truck className="w-4 h-4 text-emerald-600" />
-              <span>Cobertura total en los 14 departamentos con C807</span>
-            </h4>
-            <p>
-              Todos nuestros envíos son gestionados a través de la red logística de <strong>C807 Courier</strong> directamente hasta tu domicilio o lugar de trabajo.
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Recibe tu paquete en tu casa u oficina. Puedes pagar en efectivo contra entrega o mediante transferencia bancaria.
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                <strong className="text-xs text-slate-900 block font-black">Pago Contra Entrega en Efectivo</strong>
-                <span className="text-[11px] text-slate-500">Pagas en tus manos cuando el mensajero te entregue el paquete.</span>
-              </div>
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                <strong className="text-xs text-slate-900 block font-black">Transferencia Bancaria Inmediata</strong>
-                <span className="text-[11px] text-slate-500">Puedes pagar previamente vía Banco Agrícola, BAC, Cuscatlán o Chivo.</span>
-              </div>
-            </div>
           </div>
-        )}
 
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500">
+            <span>✓ Pago contra entrega</span>
+            <span>✓ Envíos seguros</span>
+          </div>
+        </div>
       </section>
 
       {/* ================= FRAGANCIAS RELACIONADAS ("TAMBIÉN TE PUEDE GUSTAR") ================= */}

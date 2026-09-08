@@ -102,16 +102,13 @@ export default function CartDrawer() {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0 pr-1">
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className="clay-badge text-[9px] font-mono font-bold bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded-md">
-                          #{item.product.sku}
-                        </span>
-                        {item.product.brand && (
+                      {item.product.brand && (
+                        <div className="flex items-center gap-1.5 mb-0.5">
                           <span className="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider truncate">
                             {item.product.brand}
                           </span>
-                        )}
-                      </div>
+                        </div>
+                      )}
                       <h4 className="font-black text-xs sm:text-sm text-slate-900 leading-snug truncate">
                         {item.product.officialName || item.product.name}
                       </h4>

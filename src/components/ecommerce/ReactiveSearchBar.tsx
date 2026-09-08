@@ -209,7 +209,7 @@ export default function ReactiveSearchBar({
                 : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
             }`}
           >
-            🧔 Hombres
+            Caballero
           </button>
 
           {/* Opción: Mujeres */}
@@ -221,7 +221,7 @@ export default function ReactiveSearchBar({
                 : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
             }`}
           >
-            👩 Mujeres
+            Dama
           </button>
 
           {/* Opción: Unisex */}
@@ -233,7 +233,7 @@ export default function ReactiveSearchBar({
                 : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
             }`}
           >
-            ⚧ Unisex
+            Unisex
           </button>
 
           {/* Opción: Botes & Envases */}

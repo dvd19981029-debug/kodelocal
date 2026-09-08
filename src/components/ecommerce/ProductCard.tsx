@@ -95,21 +95,21 @@ export default function ProductCard({ product }: ProductCardProps) {
     const g = gender.toLowerCase();
     if (g.includes('caballero') || g.includes('hombre')) {
       return (
-        <span className="bg-white/90 backdrop-blur-xs text-blue-800 text-[8px] sm:text-[9px] font-black py-0.5 px-1 rounded shadow-xs shrink-0">
-          🧔 Cab.
+        <span className="bg-white/95 backdrop-blur-xs text-blue-900 text-[8.5px] sm:text-[9.5px] font-extrabold py-0.5 px-1.5 rounded-md shadow-xs shrink-0 tracking-wide uppercase">
+          Caballero
         </span>
       );
     }
     if (g.includes('dama') || g.includes('mujer')) {
       return (
-        <span className="bg-white/90 backdrop-blur-xs text-pink-800 text-[8px] sm:text-[9px] font-black py-0.5 px-1 rounded shadow-xs shrink-0">
-          👩 Dama
+        <span className="bg-white/95 backdrop-blur-xs text-pink-900 text-[8.5px] sm:text-[9.5px] font-extrabold py-0.5 px-1.5 rounded-md shadow-xs shrink-0 tracking-wide uppercase">
+          Dama
         </span>
       );
     }
     return (
-      <span className="bg-white/90 backdrop-blur-xs text-purple-800 text-[8px] sm:text-[9px] font-black py-0.5 px-1 rounded shadow-xs shrink-0">
-        ⚧ Uni.
+      <span className="bg-white/95 backdrop-blur-xs text-purple-900 text-[8.5px] sm:text-[9.5px] font-extrabold py-0.5 px-1.5 rounded-md shadow-xs shrink-0 tracking-wide uppercase">
+        Unisex
       </span>
     );
   };
@@ -148,11 +148,8 @@ export default function ProductCard({ product }: ProductCardProps) {
               }`}
             />
 
-            {/* Badges superiores sobre la foto */}
+            {/* Badge de género limpio sobre la foto (sin número ni emojis) */}
             <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 items-start z-10">
-              <span className="font-mono font-black text-[7.5px] sm:text-[8.5px] bg-slate-900/80 text-white px-1.5 py-0.5 rounded shadow-xs">
-                #{product.sku}
-              </span>
               {getGenderBadge(product.gender)}
             </div>
 

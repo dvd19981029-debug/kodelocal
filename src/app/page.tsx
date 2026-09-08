@@ -244,7 +244,7 @@ export default function EcommerceHomePage() {
               {selectedCategory === 'Todos' ? 'Catálogo Completo' : selectedCategory}
               {selectedCategory === 'Esencias para Perfume' && selectedGender !== 'Todos' && (
                 <span className="text-indigo-600 font-black ml-1.5">
-                  • {selectedGender === 'Caballero' ? '🧔 Caballero' : selectedGender === 'Dama' ? '👩 Dama' : '⚧ Unisex'}
+                  • {selectedGender === 'Caballero' ? 'Caballero' : selectedGender === 'Dama' ? 'Dama' : 'Unisex'}
                 </span>
               )}
             </h2>
