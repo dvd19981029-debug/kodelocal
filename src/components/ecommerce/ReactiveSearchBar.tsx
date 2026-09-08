@@ -34,7 +34,7 @@ export default function ReactiveSearchBar({
   outOfStockCount,
   setCurrentPage,
 }: ReactiveSearchBarProps) {
-  const isScrolled = useScrolled(60);
+  const isScrolled = useScrolled(75);
   const { totalItems, setIsCartOpen, isCartPulsing } = useEcommerceCart();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -58,24 +58,20 @@ export default function ReactiveSearchBar({
   };
 
   return (
-    <div className="w-full">
+    <>
       {/* ================= BARRA DE BÚSQUEDA STICKY CON ANIMACIÓN BUBBLY ================= */}
       <div
-        className={`sticky z-35 pointer-events-none transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
-          isScrolled
-            ? 'top-2 sm:top-2.5'
-            : 'top-[61px] sm:top-[77px] md:top-[85px]'
-        }`}
+        className="sticky top-2 sm:top-2.5 z-40 w-full pointer-events-none transition-all duration-400"
       >
-        <div className="w-full px-1 sm:px-3">
-          {/* Fila Bubbly: Cápsula de Búsqueda + Burbujita del Carrito */}
+        <div className="w-full px-1 sm:px-2">
+          {/* Fila Bubbly: Cápsula de Búsqueda + Botón del Carrito Idéntico al Original */}
           <div className="flex items-center w-full gap-2">
             
-            {/* Cápsula de Búsqueda Flotante (se adapta suavemente por la derecha) */}
+            {/* Cápsula de Búsqueda Flotante (se adapta suavemente por la derecha con rebote) */}
             <div
-              className={`flex-1 min-w-0 pointer-events-auto h-11 sm:h-12 clay-card bg-[#f8fafc]/95 backdrop-blur-md border border-white/90 rounded-2xl px-3 flex items-center gap-2.5 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+              className={`flex-1 min-w-0 pointer-events-auto h-11 sm:h-12 clay-card bg-[#f8fafc]/95 backdrop-blur-md border border-white/90 rounded-2xl px-3 flex items-center gap-2.5 transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
                 isScrolled
-                  ? 'shadow-[0_4px_20px_rgba(0,0,0,0.07)]'
+                  ? 'shadow-[0_8px_24px_rgba(0,0,0,0.08)]'
                   : 'shadow-sm'
               }`}
             >
@@ -117,24 +113,24 @@ export default function ReactiveSearchBar({
               </div>
             </div>
 
-            {/* Burbujita del Carrito Flotante junto a la Cápsula de Búsqueda */}
+            {/* Botón del Carrito: 100% IDÉNTICO en diseño, dimensiones y clases al botón original del Header */}
             <div
-              className={`transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden shrink-0 flex items-center ${
+              className={`transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden shrink-0 flex items-center ${
                 isScrolled
                   ? 'w-auto opacity-100 scale-100 translate-x-0 pointer-events-auto'
-                  : 'w-0 opacity-0 scale-75 translate-x-6 pointer-events-none'
+                  : 'w-0 opacity-0 scale-75 translate-x-4 pointer-events-none'
               }`}
             >
               <button
                 type="button"
                 onClick={() => setIsCartOpen(true)}
-                className={`clay-btn clay-btn-primary h-11 sm:h-12 px-3 sm:px-4 rounded-2xl flex items-center justify-center gap-1.5 sm:gap-2 relative transition-all duration-300 cursor-pointer ${
+                className={`clay-btn clay-btn-primary px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl flex items-center gap-1.5 sm:gap-2 relative transition-all duration-300 cursor-pointer ${
                   isCartPulsing
                     ? 'scale-105 ring-4 ring-purple-300 shadow-[0_4px_20px_rgba(124,58,237,0.45)]'
                     : '!shadow-[2px_4px_12px_rgba(124,58,237,0.3)] active:scale-95'
                 }`}
               >
-                <ShoppingBag className={`w-4 h-4 sm:w-5 sm:h-5 text-white transition-transform duration-300 ${isCartPulsing ? '-translate-y-0.5 scale-110' : ''}`} />
+                <ShoppingBag className={`w-4 h-4 text-white transition-transform duration-300 ${isCartPulsing ? '-translate-y-0.5 scale-110' : ''}`} />
                 <span className="text-xs font-black hidden sm:inline text-white">Carrito</span>
                 {totalItems > 0 && (
                   <span className={`min-w-[20px] h-5 px-1 rounded-full bg-purple-950/80 text-white text-[10px] font-black flex items-center justify-center shadow-md transition-all duration-300 ${
@@ -204,6 +200,6 @@ export default function ReactiveSearchBar({
 
         </div>
       </div>
-    </div>
+    </>
   );
 }
