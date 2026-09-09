@@ -417,12 +417,12 @@ export default function EcommerceHomePage() {
               }}
               className={`clay-tab-item py-2 sm:py-2.5 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
                 selectedCategory === 'Arma tu perfume'
-                  ? 'clay-tab-active flex-[1.5] sm:flex-[1.6] !bg-gradient-to-r !from-amber-500 !to-purple-600 !text-white !shadow-[0_4px_16px_rgba(245,158,11,0.35)]'
+                  ? 'clay-tab-active flex-[1.3] sm:flex-[1.4]'
                   : 'clay-tab-inactive flex-1 text-amber-700 hover:text-amber-800'
               }`}
             >
               <span className="truncate flex items-center justify-center gap-1">
-                <Wand2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <Wand2 className={`w-3.5 h-3.5 shrink-0 ${selectedCategory === 'Arma tu perfume' ? 'text-white' : 'text-amber-500'}`} />
                 <span>Arma tu perfume</span>
               </span>
             </button>
