@@ -15,7 +15,9 @@ interface PromoBannerCarouselProps {
 }
 
 export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory }: PromoBannerCarouselProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  // Inicializa en 1 porque el índice 0 es el clon del último slide (bucle infinito sin rebobinado)
+  const [currentIndex, setCurrentIndex] = useState(1);
+  const [isTransitionEnabled, setIsTransitionEnabled] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
@@ -47,21 +49,56 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
     },
   ];
 
-  // Auto-slide cada 5.5 segundos
+  // Diapositivas extendidas con clones en ambos extremos para bucle infinito 100% continuo
+  const extendedSlides = [
+    { ...slides[slides.length - 1], id: `${slides[slides.length - 1].id}-clone-start` },
+    ...slides,
+    { ...slides[0], id: `${slides[0].id}-clone-end` },
+  ];
+
+  // Auto-slide cada 5.5 segundos siempre hacia adelante
   useEffect(() => {
     if (isPaused) return;
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % slides.length);
+      handleNext();
     }, 5500);
     return () => clearInterval(interval);
-  }, [currentIndex, isPaused, slides.length]);
+  }, [isPaused, slides.length]);
+
+  // Al llegar al clon del extremo, resetear la posición instantáneamente sin animación
+  const handleTransitionEnd = () => {
+    if (currentIndex >= slides.length + 1) {
+      setIsTransitionEnabled(false);
+      setCurrentIndex(1);
+    } else if (currentIndex <= 0) {
+      setIsTransitionEnabled(false);
+      setCurrentIndex(slides.length);
+    }
+  };
+
+  // Re-habilitar la transición suave en el siguiente frame tras el reset instantáneo
+  useEffect(() => {
+    if (!isTransitionEnabled) {
+      const frame = requestAnimationFrame(() => {
+        setIsTransitionEnabled(true);
+      });
+      return () => cancelAnimationFrame(frame);
+    }
+  }, [isTransitionEnabled]);
 
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
+    setIsTransitionEnabled(true);
+    setCurrentIndex((prev) => (prev <= 0 ? prev : prev - 1));
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % slides.length);
+    setIsTransitionEnabled(true);
+    setCurrentIndex((prev) => (prev >= slides.length + 1 ? prev : prev + 1));
+  };
+
+  const goToSlide = (slideIndex: number) => {
+    setIsTransitionEnabled(true);
+    setCurrentIndex(slideIndex + 1);
   };
 
   // Manejo de Swipe táctil en teléfonos
@@ -109,6 +146,9 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
     }
   };
 
+  // Índice real del punto indicador activo
+  const activeDotIndex = (currentIndex - 1 + slides.length) % slides.length;
+
   return (
     <div 
       className="clay-card relative w-full overflow-hidden p-0 border border-white/90 select-none group bg-slate-900 shadow-lg rounded-3xl"
@@ -123,15 +163,21 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
         maxHeight: '260px'
       }}
     >
-      {/* Carril deslizante horizontal continuo con aceleración y desaceleración suave */}
+      {/* Carril deslizante horizontal infinito: siempre avanza hacia adelante de manera continua */}
       <div 
-        className="flex w-full h-full transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] will-change-transform"
-        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        className="flex w-full h-full will-change-transform"
+        onTransitionEnd={handleTransitionEnd}
+        style={{ 
+          transform: `translateX(-${currentIndex * 100}%)`,
+          transition: isTransitionEnabled 
+            ? 'transform 700ms cubic-bezier(0.25, 1, 0.5, 1)' 
+            : 'none'
+        }}
       >
-        {slides.map((slide) => {
+        {extendedSlides.map((slide, index) => {
           return (
             <div
-              key={slide.id}
+              key={`${slide.id}-${index}`}
               onClick={() => {
                 if (touchStartX.current !== null && touchEndX.current !== null && Math.abs(touchStartX.current - touchEndX.current) > 15) {
                   return;
@@ -159,10 +205,10 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              setCurrentIndex(idx);
+              goToSlide(idx);
             }}
             className={`transition-all duration-300 rounded-full cursor-pointer p-0 border-0 block ${
-              idx === currentIndex
+              idx === activeDotIndex
                 ? 'w-3 h-1 bg-white'
                 : 'w-1 h-1 bg-white/50 hover:bg-white/80'
             }`}
