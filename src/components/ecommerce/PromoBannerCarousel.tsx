@@ -151,8 +151,8 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
         })}
       </div>
 
-      {/* Indicadores centrados estilo Clay suave */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-white/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/80 shadow-[0_2px_10px_rgba(0,0,0,0.12)]">
+      {/* Indicadores inferiores ultra compactos y discretos */}
+      <div className="absolute bottom-1.5 sm:bottom-2 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 bg-black/20 backdrop-blur-xs px-1.5 py-0.5 rounded-full shadow-2xs">
         {slides.map((_, idx) => (
           <button
             key={idx}
@@ -161,10 +161,10 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
               e.stopPropagation();
               setCurrentIndex(idx);
             }}
-            className={`transition-all duration-400 rounded-full cursor-pointer ${
+            className={`transition-all duration-300 rounded-full cursor-pointer p-0 border-0 block ${
               idx === currentIndex
-                ? 'w-7 h-2 bg-gradient-to-r from-purple-600 to-indigo-600 shadow-xs'
-                : 'w-2 h-2 bg-slate-300/80 hover:bg-slate-400'
+                ? 'w-3 h-1 bg-white'
+                : 'w-1 h-1 bg-white/50 hover:bg-white/80'
             }`}
             aria-label={`Ir a diapositiva ${idx + 1}`}
           />
