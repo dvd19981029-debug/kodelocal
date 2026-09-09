@@ -277,215 +277,360 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* Tira rápida de beneficios visuales */}
-          <div className="grid grid-cols-2 gap-2 text-center select-none">
-            <div className="clay-card py-2.5 px-2 rounded-2xl bg-white border border-slate-100 flex flex-col items-center justify-center gap-1 text-[11px] font-bold text-slate-700 shadow-2xs">
-              <Truck className="w-4 h-4 text-indigo-600" />
-              <span>Envíos C807 Todo el País</span>
-            </div>
-            <div className="clay-card py-2.5 px-2 rounded-2xl bg-white border border-slate-100 flex flex-col items-center justify-center gap-1 text-[11px] font-bold text-slate-700 shadow-2xs">
-              {isBottle ? (
-                <>
-                  <Sparkles className="w-4 h-4 text-amber-500" />
-                  <span>Vidrio Grueso Resistente</span>
-                </>
-              ) : (
-                <>
-                  <Droplets className="w-4 h-4 text-pink-600" />
-                  <span>Esencia Pura Concentrada</span>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* COLUMNA DERECHA: INFORMACIÓN, NOTAS Y BOTÓN DE COMPRA */}
-        <div className="lg:col-span-6 space-y-4 sm:space-y-5">
-          
-          {/* 1. TÍTULO, CONTRATIPO Y VALORACIÓN */}
-          <div className="space-y-2">
-            
-            {/* Nombre Oficial (Contratipo o Bote) - en Bold */}
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight leading-tight">
-              {displayName}
-            </h1>
-
-            {/* Inspiración en el perfume original (solo para esencias) */}
-            {isEssence && (
-              <div className="text-xs sm:text-sm text-slate-600 font-medium flex items-center gap-1.5 flex-wrap">
-                <span className="text-slate-400">Inspirado en:</span>
-                <strong className="text-slate-800 font-semibold">
-                  {getOriginalPerfumeName(product)}
-                </strong>
+          {/* Tira rápida de beneficios visuales (SOLO PARA BOTES U OTROS NO-ESENCIAS) */}
+          {!isEssence && (
+            <div className="grid grid-cols-2 gap-2 text-center select-none">
+              <div className="clay-card py-2.5 px-2 rounded-2xl bg-white border border-slate-100 flex flex-col items-center justify-center gap-1 text-[11px] font-bold text-slate-700 shadow-2xs">
+                <Truck className="w-4 h-4 text-indigo-600" />
+                <span>Envíos C807 Todo el País</span>
               </div>
-            )}
-
-            {/* Subtítulo específico para botes */}
-            {isBottle && (
-              <div className="text-xs sm:text-sm text-slate-600 font-medium flex items-center gap-1.5 flex-wrap">
-                <span className="text-slate-400">Tipo de Envase:</span>
-                <strong className="text-slate-900 font-black">Frasco de Vidrio de 100ml</strong>
-                <span className="text-slate-300">•</span>
-                <span className="text-indigo-700 font-bold bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg text-xs">
-                  Atomizador Spray de Lujo
-                </span>
+              <div className="clay-card py-2.5 px-2 rounded-2xl bg-white border border-slate-100 flex flex-col items-center justify-center gap-1 text-[11px] font-bold text-slate-700 shadow-2xs">
+                {isBottle ? (
+                  <>
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <span>Vidrio Grueso Resistente</span>
+                  </>
+                ) : (
+                  <>
+                    <Droplets className="w-4 h-4 text-pink-600" />
+                    <span>Esencia Pura Concentrada</span>
+                  </>
+                )}
               </div>
-            )}
-
-            {/* Precio Prominente */}
-            <div className="pt-2 flex items-baseline gap-3">
-              <span className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                ${activeOption ? (activeOption.price * quantity).toFixed(2) : product.price.toFixed(2)}
-              </span>
-              <span className="text-xs font-bold text-slate-500">
-                {activeOption?.name} {quantity > 1 ? `(${quantity} unidades)` : ''}
-              </span>
             </div>
+          )}
 
-          </div>
+          {/* ================= SECCIÓN DE COMPRA PARA ESENCIAS DIRECTAMENTE ABAJO DE LA IMAGEN ================= */}
+          {isEssence && (
+            <div className="clay-card p-4 sm:p-6 bg-white rounded-3xl border border-slate-100 shadow-md space-y-4">
+              
+              {/* 1. Nombre del Contratipo en Grande y Moradito de la misma paleta */}
+              <div className="space-y-1">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#7c3aed] tracking-tight leading-tight">
+                  {displayName}
+                </h1>
 
-          {/* 2. SELECTOR DE PRESENTACIÓN */}
-          <div className="space-y-2 pt-1 border-t border-slate-100">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                {isEssence ? 'Elige tu presentación:' : 'Presentación:'}
-              </label>
-              {isEssence && profile && (
-                <span className="text-[11px] font-bold text-indigo-600">
-                  Familia: {profile.family}
-                </span>
-              )}
-              {isBottle && (
-                <span className="text-[11px] font-bold text-indigo-600">
-                  Capacidad: 100 ml (3.4 oz)
-                </span>
-              )}
-            </div>
+                {/* Inspiración en el perfume original */}
+                <div className="text-xs sm:text-sm text-slate-600 font-medium flex items-center gap-1.5 flex-wrap pt-0.5">
+                  <span className="text-slate-400">Inspirado en:</span>
+                  <strong className="text-slate-800 font-bold">
+                    {getOriginalPerfumeName(product)}
+                  </strong>
+                </div>
 
-            <div className={`grid ${presentations.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-2.5`}>
-              {presentations.map((pres) => {
-                const isSelected = selectedPresentation === pres.id;
-                const isPresOutOfStock = isEssence
-                  ? (pres.id === 'ONZA_COMPLETA' ? (discreteStock?.available1oz ?? 0) <= 0 : (discreteStock?.availableHalfOz ?? 0) <= 0)
-                  : availableUnits <= 0;
+                {/* Precio Prominente */}
+                <div className="pt-2 flex items-baseline gap-2.5">
+                  <span className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                    ${(activeOption.price * quantity).toFixed(2)}
+                  </span>
+                  <span className="text-xs font-bold text-slate-500">
+                    {activeOption?.name} {quantity > 1 ? `(${quantity} unidades)` : ''}
+                  </span>
+                </div>
+              </div>
 
-                return (
+              {/* 2. Selector de Presentación (Onza Completa / Media Onza) */}
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                    Elige tu presentación:
+                  </label>
+                  {profile && (
+                    <span className="text-[11px] font-bold text-indigo-600">
+                      Familia: {profile.family}
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2.5">
+                  {presentations.map((pres) => {
+                    const isSelected = selectedPresentation === pres.id;
+                    const isPresOutOfStock = pres.id === 'ONZA_COMPLETA' 
+                      ? (discreteStock?.available1oz ?? 0) <= 0 
+                      : (discreteStock?.availableHalfOz ?? 0) <= 0;
+
+                    return (
+                      <button
+                        key={pres.id}
+                        type="button"
+                        onClick={() => setSelectedPresentation(pres.id)}
+                        disabled={isPresOutOfStock}
+                        className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                          isSelected
+                            ? 'clay-card bg-indigo-50/80 border-indigo-600 ring-2 ring-indigo-400/40 shadow-xs'
+                            : isPresOutOfStock
+                            ? 'bg-slate-100/70 border-slate-200 text-slate-400 opacity-60 cursor-not-allowed'
+                            : 'bg-white border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between w-full mb-1">
+                          <span className="text-xs font-black text-slate-900">
+                            {pres.name}
+                          </span>
+                          {isSelected ? (
+                            <span className="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
+                              ✓
+                            </span>
+                          ) : isPresOutOfStock ? (
+                            <span className="text-[9px] font-bold text-slate-400">
+                              Agotado
+                            </span>
+                          ) : null}
+                        </div>
+                        <span className="text-xs font-bold text-indigo-700">
+                          ${pres.price.toFixed(2)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 3. Selector de Cantidad y Botón de Compra */}
+              <div className="space-y-2.5 pt-2">
+                <div className="flex items-center gap-3">
+                  {/* Control de cantidad */}
+                  <div className="flex items-center rounded-2xl border border-slate-200 bg-white p-1 shadow-2xs shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      disabled={quantity <= 1}
+                      className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="w-9 text-center text-xs font-black text-slate-800">
+                      {quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(quantity + 1)}
+                      disabled={!canAddMore}
+                      className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Botón Principal de Agregar al Carrito */}
                   <button
-                    key={pres.id}
                     type="button"
-                    onClick={() => setSelectedPresentation(pres.id)}
-                    disabled={isPresOutOfStock}
-                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                      isSelected
-                        ? 'clay-card bg-indigo-50/80 border-indigo-600 ring-2 ring-indigo-400/40 shadow-xs'
-                        : isPresOutOfStock
-                        ? 'bg-slate-100/70 border-slate-200 text-slate-400 opacity-60 cursor-not-allowed'
-                        : 'bg-white border-slate-200 hover:bg-slate-50'
+                    onClick={handleAddToCart}
+                    disabled={isOutOfStock || !canAddMore}
+                    className={`flex-1 py-3.5 px-6 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer ${
+                      isOutOfStock || !canAddMore
+                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
+                        : justAdded
+                        ? 'bg-emerald-600 text-white shadow-emerald-500/30'
+                        : 'clay-btn clay-btn-primary !text-white active:scale-98 shadow-indigo-500/25'
                     }`}
                   >
-                    <div className="flex items-center justify-between w-full mb-1">
-                      <span className="text-xs font-black text-slate-900">
-                        {pres.name}
-                      </span>
-                      {isSelected ? (
-                        <span className="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
-                          ✓
-                        </span>
-                      ) : isPresOutOfStock ? (
-                        <span className="text-[9px] font-bold text-slate-400">
-                          Agotado
-                        </span>
-                      ) : null}
-                    </div>
-                    <span className="text-xs font-bold text-indigo-700">
-                      ${pres.price.toFixed(2)}
-                    </span>
+                    {justAdded ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>¡Agregado al Carrito!</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingBag className="w-4 h-4" />
+                        <span>Agregar al Carrito • ${(activeOption.price * quantity).toFixed(2)}</span>
+                      </>
+                    )}
                   </button>
-                );
-              })}
-            </div>
-          </div>
+                </div>
 
-          {/* 3. SELECTOR DE CANTIDAD Y BOTÓN DE COMPRA */}
-          <div className="space-y-2.5 pt-2">
-            <div className="flex items-center gap-3">
-              
-              {/* Control de cantidad */}
-              <div className="flex items-center rounded-2xl border border-slate-200 bg-white p-1 shadow-2xs shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={quantity <= 1}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                >
-                  <Minus className="w-3.5 h-3.5" />
-                </button>
-                <span className="w-9 text-center text-xs font-black text-slate-800">
-                  {quantity}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setQuantity(quantity + 1)}
-                  disabled={!canAddMore}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                </button>
+                {/* Aviso de existencias condicionado al stock mínimo (sin revelar el stock real si supera el mínimo de alerta) */}
+                <div className="flex items-center justify-between text-[11px] px-1 font-medium">
+                  <span className="flex items-center gap-1.5 text-slate-500">
+                    <span className={`w-2 h-2 rounded-full ${availableUnits === 0 ? 'bg-slate-400' : isBelowMinAlert ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500 animate-pulse'}`} />
+                    <span>{availableUnits === 0 ? 'Temporalmente agotado' : 'En existencia para envío inmediato con'} <strong>C807</strong></span>
+                  </span>
+                  <span>
+                    {availableUnits === 0 ? (
+                      <span className="text-slate-400 font-bold">Sin existencias</span>
+                    ) : isBelowMinAlert ? (
+                      <strong className="text-amber-700 font-black">
+                        {selectedPresentation === 'MEDIA_ONZA'
+                          ? availableUnits === 1 ? '¡Solo queda 1 media onza!' : `¡Solo quedan ${availableUnits} medias onzas!`
+                          : availableUnits === 1 ? '¡Solo queda 1 onza!' : `¡Solo quedan ${availableUnits} onzas!`}
+                      </strong>
+                    ) : (
+                      <span>
+                        Estado: <strong className="text-emerald-700 font-bold">Disponible</strong>
+                      </span>
+                    )}
+                  </span>
+                </div>
               </div>
 
-              {/* Botón Principal de Agregar al Carrito */}
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={isOutOfStock || !canAddMore}
-                className={`flex-1 py-3.5 px-6 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer ${
-                  isOutOfStock || !canAddMore
-                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
-                    : justAdded
-                    ? 'bg-emerald-600 text-white shadow-emerald-500/30'
-                    : 'clay-btn clay-btn-primary !text-white active:scale-98 shadow-indigo-500/25'
-                }`}
-              >
-                {justAdded ? (
-                  <>
-                    <Check className="w-4 h-4" />
-                    <span>¡Agregado al Carrito!</span>
-                  </>
-                ) : (
-                  <>
-                    <ShoppingBag className="w-4 h-4" />
-                    <span>Agregar al Carrito • ${(activeOption.price * quantity).toFixed(2)}</span>
-                  </>
-                )}
-              </button>
-
             </div>
+          )}
+        </div>
 
-            {/* Aviso de existencias */}
-            <div className="flex items-center justify-between text-[11px] px-1 font-medium">
-              <span className="flex items-center gap-1.5 text-slate-500">
-                <span className={`w-2 h-2 rounded-full ${availableUnits === 0 ? 'bg-slate-400' : isBelowMinAlert ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500 animate-pulse'}`}></span>
-                <span>{availableUnits === 0 ? 'Temporalmente agotado' : 'En existencia para envío inmediato con'} <strong>C807</strong></span>
-              </span>
-              <span>
-                {availableUnits === 0 ? (
-                  <span className="text-slate-400 font-bold">Sin existencias</span>
-                ) : isBelowMinAlert ? (
-                  <strong className="text-amber-700 font-black">
-                    {isEssence
-                      ? selectedPresentation === 'MEDIA_ONZA'
-                        ? availableUnits === 1 ? '¡Solo queda 1 media onza!' : `¡Solo quedan ${availableUnits} medias onzas!`
-                        : availableUnits === 1 ? '¡Solo queda 1 onza!' : `¡Solo quedan ${availableUnits} onzas!`
-                      : availableUnits === 1 ? '¡Solo queda 1 unidad!' : `¡Solo quedan ${availableUnits} unidades!`}
-                  </strong>
-                ) : (
-                  <span>
-                    Estado: <strong className="text-emerald-700 font-bold">Disponible</strong>
+        {/* COLUMNA DERECHA: INFORMACIÓN, NOTAS Y BOTÓN DE COMPRA (PARA BOTES/INSUMOS O PIRÁMIDE PARA ESENCIAS) */}
+        <div className="lg:col-span-6 space-y-4 sm:space-y-5">
+          
+          {/* PARA BOTES Y OTROS PRODUCTOS: MANTIENE SU ESTRUCTURA ORIGINAL */}
+          {!isEssence && (
+            <>
+              {/* 1. TÍTULO, IDENTIFICADOR Y PRECIO */}
+              <div className="space-y-2">
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight leading-tight">
+                  {displayName}
+                </h1>
+
+                {/* Subtítulo específico para botes */}
+                {isBottle && (
+                  <div className="text-xs sm:text-sm text-slate-600 font-medium flex items-center gap-1.5 flex-wrap">
+                    <span className="text-slate-400">Tipo de Envase:</span>
+                    <strong className="text-slate-900 font-black">Frasco de Vidrio de 100ml</strong>
+                    <span className="text-slate-300">•</span>
+                    <span className="text-indigo-700 font-bold bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg text-xs">
+                      Atomizador Spray de Lujo
+                    </span>
+                  </div>
+                )}
+
+                {/* Precio Prominente */}
+                <div className="pt-2 flex items-baseline gap-3">
+                  <span className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                    ${activeOption ? (activeOption.price * quantity).toFixed(2) : product.price.toFixed(2)}
                   </span>
-                )}
-              </span>
-            </div>
-          </div>
+                  <span className="text-xs font-bold text-slate-500">
+                    {activeOption?.name} {quantity > 1 ? `(${quantity} unidades)` : ''}
+                  </span>
+                </div>
+              </div>
+
+              {/* 2. SELECTOR DE PRESENTACIÓN */}
+              <div className="space-y-2 pt-1 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                    Presentación:
+                  </label>
+                  {isBottle && (
+                    <span className="text-[11px] font-bold text-indigo-600">
+                      Capacidad: 100 ml (3.4 oz)
+                    </span>
+                  )}
+                </div>
+
+                <div className={`grid ${presentations.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-2.5`}>
+                  {presentations.map((pres) => {
+                    const isSelected = selectedPresentation === pres.id;
+                    const isPresOutOfStock = availableUnits <= 0;
+
+                    return (
+                      <button
+                        key={pres.id}
+                        type="button"
+                        onClick={() => setSelectedPresentation(pres.id)}
+                        disabled={isPresOutOfStock}
+                        className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                          isSelected
+                            ? 'clay-card bg-indigo-50/80 border-indigo-600 ring-2 ring-indigo-400/40 shadow-xs'
+                            : isPresOutOfStock
+                            ? 'bg-slate-100/70 border-slate-200 text-slate-400 opacity-60 cursor-not-allowed'
+                            : 'bg-white border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between w-full mb-1">
+                          <span className="text-xs font-black text-slate-900">
+                            {pres.name}
+                          </span>
+                          {isSelected ? (
+                            <span className="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
+                              ✓
+                            </span>
+                          ) : isPresOutOfStock ? (
+                            <span className="text-[9px] font-bold text-slate-400">
+                              Agotado
+                            </span>
+                          ) : null}
+                        </div>
+                        <span className="text-xs font-bold text-indigo-700">
+                          ${pres.price.toFixed(2)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 3. SELECTOR DE CANTIDAD Y BOTÓN DE COMPRA */}
+              <div className="space-y-2.5 pt-2">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center rounded-2xl border border-slate-200 bg-white p-1 shadow-2xs shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      disabled={quantity <= 1}
+                      className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="w-9 text-center text-xs font-black text-slate-800">
+                      {quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(quantity + 1)}
+                      disabled={!canAddMore}
+                      className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleAddToCart}
+                    disabled={isOutOfStock || !canAddMore}
+                    className={`flex-1 py-3.5 px-6 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer ${
+                      isOutOfStock || !canAddMore
+                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
+                        : justAdded
+                        ? 'bg-emerald-600 text-white shadow-emerald-500/30'
+                        : 'clay-btn clay-btn-primary !text-white active:scale-98 shadow-indigo-500/25'
+                    }`}
+                  >
+                    {justAdded ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>¡Agregado al Carrito!</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingBag className="w-4 h-4" />
+                        <span>Agregar al Carrito • ${(activeOption.price * quantity).toFixed(2)}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Aviso de existencias para botes */}
+                <div className="flex items-center justify-between text-[11px] px-1 font-medium">
+                  <span className="flex items-center gap-1.5 text-slate-500">
+                    <span className={`w-2 h-2 rounded-full ${availableUnits === 0 ? 'bg-slate-400' : isBelowMinAlert ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500 animate-pulse'}`} />
+                    <span>{availableUnits === 0 ? 'Temporalmente agotado' : 'En existencia para envío inmediato con'} <strong>C807</strong></span>
+                  </span>
+                  <span>
+                    {availableUnits === 0 ? (
+                      <span className="text-slate-400 font-bold">Sin existencias</span>
+                    ) : isBelowMinAlert ? (
+                      <strong className="text-amber-700 font-black">
+                        {availableUnits === 1 ? '¡Solo queda 1 unidad!' : `¡Solo quedan ${availableUnits} unidades!`}
+                      </strong>
+                    ) : (
+                      <span>
+                        Estado: <strong className="text-emerald-700 font-bold">Disponible</strong>
+                      </span>
+                    )}
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* ================= PIRÁMIDE OLFATIVA Y NOTAS DE LA FRAGANCIA (SOLO PARA ESENCIAS) ================= */}
           {isEssence && profile && (
