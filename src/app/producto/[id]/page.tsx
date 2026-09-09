@@ -536,12 +536,16 @@ export default function ProductDetailPage() {
               </div>
 
               {/* Aviso de existencias condicionado al stock mínimo (sin revelar el stock real si supera el mínimo de alerta) */}
-              <div className="flex items-center justify-between text-[11px] px-1 font-medium">
+              <div className="flex items-center justify-between text-[11px] px-1 font-medium gap-2">
                 <span className="flex items-center gap-1.5 text-slate-500">
-                  <span className={`w-2 h-2 rounded-full ${availableRemaining === 0 ? 'bg-slate-400' : isBelowMinAlert ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500 animate-pulse'}`} />
-                  <span>{availableRemaining === 0 ? (cartQuantity > 0 ? 'Has reservado todo el inventario disponible' : 'Temporalmente agotado') : 'En existencia para envío inmediato con'} <strong>C807</strong></span>
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${availableRemaining === 0 ? 'bg-slate-400' : isBelowMinAlert ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500 animate-pulse'}`} />
+                  <span>
+                    {availableRemaining === 0 
+                      ? (cartQuantity > 0 ? 'Has reservado todo el inventario disponible' : 'Temporalmente agotado') 
+                      : <>En existencia para envío inmediato con <strong>C807</strong> a todo El Salvador o retiro en local</>}
+                  </span>
                 </span>
-                <span>
+                <span className="shrink-0 text-right">
                   {availableRemaining === 0 ? (
                     cartQuantity > 0 ? (
                       <span className="text-indigo-600 font-bold">En tu carrito</span>
