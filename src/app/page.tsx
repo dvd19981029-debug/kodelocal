@@ -405,8 +405,13 @@ export default function EcommerceHomePage() {
           </div>
         </div>
 
+        {/* ================= TARJETA DESTACADA: ARMA TU PROPIO PERFUME (SOLO ARRIBA SI NO SE ESTÁ BUSCANDO) ================= */}
+        {!isSearching && (
+          <BuildYourPerfumeCard onOpenBuilder={() => setIsKitModalOpen(true)} />
+        )}
+
         {/* Encabezado informativo del catálogo */}
-        <div className="flex items-center justify-between gap-2 px-1">
+        <div className="flex items-center justify-between gap-2 px-1 pt-1">
           <div className="flex items-center gap-2">
             <h2 className="text-base sm:text-xl font-black text-slate-900 tracking-tight">
               {selectedCategory === 'Esencias para Perfume' 
@@ -422,11 +427,6 @@ export default function EcommerceHomePage() {
             </span>
           </div>
         </div>
-
-        {/* ================= TARJETA DESTACADA: ARMA TU PROPIO PERFUME (SOLO ARRIBA SI NO SE ESTÁ BUSCANDO) ================= */}
-        {!isSearching && (
-          <BuildYourPerfumeCard onOpenBuilder={() => setIsKitModalOpen(true)} />
-        )}
 
         {/* ================= FILTRO CLAYMÓRFICO: MÁS VENDIDAS / HOMBRE / DAMA / UNISEX ================= */}
         {selectedCategory === 'Esencias para Perfume' && (
