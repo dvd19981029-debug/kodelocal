@@ -41,7 +41,7 @@ export default function EcommerceFooter() {
               </Link>
             </div>
             <p className="text-slate-500 leading-relaxed font-medium">
-              Especialistas en contratipos de alta gama e inspiración olfativa con fijación prolongada. Más de 600 fragancias para damas, caballeros y unisex en El Salvador.
+              Especialistas en contratipos de alta gama e inspiración olfativa con fijación prolongada. Más de 600 fragancias para damas, caballeros y unisex en El Salvador. Marca registrada, propiedad de Grupo Kode SAS de C.V. El Salvador.
             </p>
             <div className="flex items-center gap-2 pt-1 text-slate-700 font-bold">
               <Sparkles className="w-4 h-4 text-amber-500" />
@@ -115,8 +115,11 @@ export default function EcommerceFooter() {
 
         {/* Separador y Copyright */}
         <div className="pt-6 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-400 text-[11px] font-semibold">
-          <p>© 2026 Aromaniak SV. Todos los derechos reservados.</p>
-          <p className="text-slate-400">San Salvador, El Salvador • Fragancias & Contratipos</p>
+          <div className="space-y-0.5 text-center sm:text-left">
+            <p>© 2026 Aromaniak SV®. Marca registrada. Todos los derechos reservados.</p>
+            <p className="text-slate-400 font-medium">Propiedad de <strong>Grupo Kode SAS de C.V.</strong> — El Salvador</p>
+          </div>
+          <p className="text-slate-400 text-center sm:text-right">San Salvador, El Salvador • Fragancias & Contratipos</p>
         </div>
 
       </div>
