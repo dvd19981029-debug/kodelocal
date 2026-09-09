@@ -19,38 +19,91 @@ function escapeXml(unsafe) {
   });
 }
 
-function createTextOverlay(contratipo) {
-  const clean = escapeXml((contratipo || 'ESENCIA').toUpperCase().trim());
+function layoutText(name) {
+  const clean = escapeXml((name || 'ESENCIA').toUpperCase().trim());
+  const words = clean.split(/\s+/);
 
-  let fontSize = 28;
-  let underlineW = 140;
+  let lines = [clean];
+  // Si tiene más de una palabra y supera 10 caracteres, dividir en 2 líneas
+  if (words.length >= 2 && clean.length > 10) {
+    if (words.length === 2) {
+      lines = [words[0], words[1]];
+    } else {
+      let bestDiff = Infinity;
+      let bestIdx = 1;
+      for (let i = 1; i < words.length; i++) {
+        const l1 = words.slice(0, i).join(' ');
+        const l2 = words.slice(i).join(' ');
+        const diff = Math.abs(l1.length - l2.length);
+        if (diff < bestDiff) {
+          bestDiff = diff;
+          bestIdx = i;
+        }
+      }
+      lines = [words.slice(0, bestIdx).join(' '), words.slice(bestIdx).join(' ')];
+    }
+  }
 
-  if (clean.length > 13) {
-    fontSize = 24;
-    underlineW = 165;
-  } else if (clean.length > 9) {
-    fontSize = 26;
-    underlineW = 150;
-  } else if (clean.length <= 6) {
-    fontSize = 32;
-    underlineW = 110;
+  const maxLineLen = Math.max(...lines.map(l => l.length));
+  let fontSize = 26;
+  let underlineW = 100;
+
+  if (lines.length === 1) {
+    if (maxLineLen > 13) fontSize = 20;
+    else if (maxLineLen > 10) fontSize = 22;
+    else if (maxLineLen > 7) fontSize = 24;
+    else fontSize = 26;
+    underlineW = Math.min(175, Math.max(75, Math.round(maxLineLen * (fontSize * 0.55))));
   } else {
-    fontSize = 28;
-    underlineW = 135;
+    if (maxLineLen > 12) fontSize = 19;
+    else if (maxLineLen > 9) fontSize = 21;
+    else fontSize = 22.5;
+    underlineW = Math.min(175, Math.max(80, Math.round(maxLineLen * (fontSize * 0.52))));
+  }
+
+  return { lines, fontSize, underlineW };
+}
+
+function createTextOverlay(contratipo) {
+  const { lines, fontSize, underlineW } = layoutText(contratipo);
+  const fontWeight = '600'; // Semibold: no en bold pero un poquitito más gruesa
+
+  let textSvg = '';
+  let underlineY = 626;
+
+  if (lines.length === 1) {
+    textSvg = `<text x="384" y="612" 
+          font-family="Arial, Helvetica, sans-serif" 
+          font-size="${fontSize}" 
+          font-weight="${fontWeight}" 
+          text-anchor="middle" 
+          fill="#111111" 
+          letter-spacing="0.6">${lines[0]}</text>`;
+    underlineY = 626;
+  } else {
+    textSvg = `
+    <text x="384" y="596" 
+          font-family="Arial, Helvetica, sans-serif" 
+          font-size="${fontSize}" 
+          font-weight="${fontWeight}" 
+          text-anchor="middle" 
+          fill="#111111" 
+          letter-spacing="0.6">${lines[0]}</text>
+    <text x="384" y="622" 
+          font-family="Arial, Helvetica, sans-serif" 
+          font-size="${fontSize}" 
+          font-weight="${fontWeight}" 
+          text-anchor="middle" 
+          fill="#111111" 
+          letter-spacing="0.6">${lines[1]}</text>
+    `;
+    underlineY = 634;
   }
 
   const svg = `
   <svg width="768" height="1024" xmlns="http://www.w3.org/2000/svg">
-    <text x="384" y="612" 
-          font-family="Arial, Helvetica, sans-serif" 
-          font-size="${fontSize}" 
-          font-weight="900" 
-          text-anchor="middle" 
-          fill="#111111" 
-          letter-spacing="0.8">
-      ${clean}
-    </text>
-    <rect x="${384 - (underlineW / 2)}" y="625" width="${underlineW}" height="3" fill="#111111" />
+    ${textSvg}
+    <rect x="${384 - (underlineW / 2)}" y="${underlineY}" width="${underlineW}" height="2.5" fill="#111111" />
   </svg>
   `;
   return Buffer.from(svg);
