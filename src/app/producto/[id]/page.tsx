@@ -339,7 +339,7 @@ export default function ProductDetailPage() {
 
             {/* Precio Prominente */}
             <div className="pt-2 flex items-baseline gap-3">
-              <span className="text-3xl sm:text-4xl font-black text-slate-900 font-mono tracking-tight">
+              <span className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
                 ${activeOption ? (activeOption.price * quantity).toFixed(2) : product.price.toFixed(2)}
               </span>
               <span className="text-xs font-bold text-slate-500">

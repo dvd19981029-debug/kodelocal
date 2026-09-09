@@ -149,7 +149,7 @@ export default function PerfumeKitBuilderModal({
             <h2 className="text-sm sm:text-lg font-black text-slate-900 flex items-center gap-1.5">
               <span>Arma tu propio perfume</span>
             </h2>
-            <span className="bg-emerald-50 text-emerald-800 border border-emerald-300/80 text-[11px] sm:text-xs font-black font-mono px-2.5 py-0.5 rounded-full shadow-2xs">
+            <span className="bg-emerald-50 text-emerald-800 border border-emerald-300/80 text-[11px] sm:text-xs font-black px-2.5 py-0.5 rounded-full shadow-2xs">
               $15.00
             </span>
           </div>
@@ -598,7 +598,7 @@ export default function PerfumeKitBuilderModal({
               Total a pagar:
             </span>
             <div className="flex items-baseline gap-2">
-              <span className="text-xl sm:text-2xl font-black text-slate-900 font-mono">
+              <span className="text-xl sm:text-2xl font-black text-slate-900">
                 ${totalPrice.toFixed(2)}
               </span>
               <span className="text-[11px] font-bold text-slate-500">

@@ -193,7 +193,7 @@ export default function CartDrawer() {
                         >
                           <Minus className="w-3 h-3" />
                         </button>
-                        <span className="text-xs font-mono font-black text-slate-800 w-5 text-center">
+                        <span className="text-xs font-black text-slate-800 w-5 text-center">
                           {item.quantity}
                         </span>
                         {(() => {
@@ -247,11 +247,11 @@ export default function CartDrawer() {
 
                       {/* Precio alineado */}
                       <div className="text-right shrink-0">
-                        <span className="text-xs sm:text-sm font-black font-mono text-slate-900">
+                        <span className="text-xs sm:text-sm font-black text-slate-900">
                           ${item.totalPrice.toFixed(2)}
                         </span>
                         {item.quantity > 1 && (
-                          <span className="text-[9.5px] text-slate-400 block font-mono">
+                          <span className="text-[9.5px] text-slate-400 block font-medium">
                             (${item.unitPrice.toFixed(2)} c/u)
                           </span>
                         )}
@@ -269,7 +269,7 @@ export default function CartDrawer() {
               <div className="space-y-1.5 text-xs">
                 <div className="flex items-center justify-between text-slate-600 font-medium">
                   <span>Subtotal:</span>
-                  <span className="font-mono font-black text-slate-900">${subtotal.toFixed(2)}</span>
+                  <span className="font-black text-slate-900">${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between text-[11px] text-slate-500">
                   <span>Envío nacional C807:</span>
@@ -277,7 +277,7 @@ export default function CartDrawer() {
                 </div>
                 <div className="flex items-center justify-between text-sm font-extrabold text-slate-900 pt-1.5 border-t border-slate-200/70">
                   <span>Total estimado:</span>
-                  <span className="font-mono font-black text-indigo-700 text-base">${subtotal.toFixed(2)}</span>
+                  <span className="font-black text-indigo-700 text-base">${subtotal.toFixed(2)}</span>
                 </div>
               </div>
 

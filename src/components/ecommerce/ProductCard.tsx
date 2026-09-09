@@ -199,10 +199,10 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
           {/* Precio Prominente a la par de Disponibilidad sutil y pequeña */}
           <div className="mt-0.5 flex items-baseline gap-1.5 sm:gap-2">
-            <span className="text-lg sm:text-2xl font-black text-indigo-700 font-mono leading-tight tracking-tight">
+            <span className="text-lg sm:text-2xl font-black text-indigo-700 leading-tight tracking-tight">
               ${activeOption.price.toFixed(2)}
             </span>
-            <span className="text-[8px] sm:text-[9px] text-slate-400 font-normal font-sans tracking-tight">
+            <span className="text-[8px] sm:text-[9px] text-slate-400 font-normal tracking-tight">
               {remainingStock === 0
                 ? 'Sin existencias'
                 : isEssence
@@ -290,7 +290,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                   </button>
 
                   <div className="flex-1 text-center font-black text-xs sm:text-sm text-slate-900 leading-tight">
-                    <span className="text-purple-700 font-mono font-extrabold">{currentQuantity}</span>
+                    <span className="text-purple-700 font-extrabold">{currentQuantity}</span>
                     <span className="text-[8px] sm:text-[9px] text-slate-400 font-medium block">
                       {selectedPresentation === 'MEDIA_ONZA' ? '½ oz' : selectedPresentation === 'ONZA_COMPLETA' ? '1 oz' : 'en carrito'}
                     </span>

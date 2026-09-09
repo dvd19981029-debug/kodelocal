@@ -26,7 +26,7 @@ export default function BuildYourPerfumeCard({ onOpenBuilder }: BuildYourPerfume
             <h2 className="text-base sm:text-xl font-black text-slate-900 tracking-tight leading-tight">
               Arma tu propio perfume
             </h2>
-            <span className="text-xs sm:text-sm font-black text-emerald-700 bg-emerald-50 border border-emerald-300/80 px-2.5 py-0.5 rounded-full shadow-2xs font-mono">
+            <span className="text-xs sm:text-sm font-black text-emerald-700 bg-emerald-50 border border-emerald-300/80 px-2.5 py-0.5 rounded-full shadow-2xs">
               por solo $15
             </span>
           </div>
