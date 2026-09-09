@@ -473,7 +473,7 @@ export default function CheckoutPage() {
                   <span>Tiempos de Despacho y Entrega a Domicilio</span>
                 </div>
                 <p className="text-[11px] text-slate-600">
-                  • Los pedidos realizados en horas laborales se despachan de inmediato y llegan de <strong>1 a 2 días hábiles</strong> (normalmente en <strong>1 día</strong>) a cualquier municipio del país.
+                  • Envíos y cobertura de <strong>24 a 48 horas para todo el país</strong> (los 14 departamentos con C807, normalmente en <strong>24 horas</strong>). Los pedidos realizados en horario laboral se despachan de inmediato.
                 </p>
                 <p className="text-[11px] text-slate-600">
                   • <strong>Domingos no laborables</strong> (paquetera y tienda): pedidos enviados el sábado llegan a partir del lunes; pedidos realizados en domingo se despachan el lunes y llegan a partir del martes.

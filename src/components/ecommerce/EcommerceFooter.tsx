@@ -43,8 +43,8 @@ export default function EcommerceFooter() {
                 <span>Envíos a los 14 departamentos con C807</span>
               </li>
               <li className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-indigo-500 shrink-0" />
-                <span>San Salvador & La Libertad (24-48 horas)</span>
+                <Clock className="w-4 h-4 text-indigo-500 shrink-0" />
+                <span>Cobertura nacional de 24 a 48 horas</span>
               </li>
               <li className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-indigo-500 shrink-0" />
@@ -61,7 +61,7 @@ export default function EcommerceFooter() {
             <ul className="space-y-2 text-slate-500 font-medium">
               <li className="flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Transferencia Bancaria Inmediata</span>
+                <span>Tarjeta de Crédito y Débito</span>
               </li>
               <li className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-blue-500 shrink-0" />
@@ -69,7 +69,7 @@ export default function EcommerceFooter() {
               </li>
               <li className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-purple-500 shrink-0" />
-                <span>Chivo Wallet & Bitcoin</span>
+                <span>Transferencia Bancaria Inmediata</span>
               </li>
             </ul>
           </div>

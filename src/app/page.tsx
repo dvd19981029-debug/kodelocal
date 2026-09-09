@@ -556,7 +556,7 @@ export default function EcommerceHomePage() {
             </div>
             <h4 className="font-extrabold text-xs sm:text-sm text-slate-900">Envío o Retiro en Local</h4>
             <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed">
-              Elige entre <strong className="text-slate-800">pasar a retirar a nuestro local en San Salvador</strong> o solicitar <strong className="text-slate-800">envío a domicilio</strong> por un costo adicional. ¡Llegamos a <strong className="text-indigo-700">absolutamente cualquier rincón de El Salvador</strong>!
+              Elige entre <strong className="text-slate-800">pasar a retirar a nuestro local en San Salvador</strong> o solicitar <strong className="text-slate-800">envío a domicilio</strong>. Envíos y cobertura de <strong className="text-indigo-700">24 a 48 horas para todo el país</strong> (normalmente en 24 horas).
             </p>
           </div>
 
@@ -578,7 +578,7 @@ export default function EcommerceHomePage() {
             </div>
             <h4 className="font-extrabold text-xs sm:text-sm text-slate-900">Entrega Rápida</h4>
             <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed">
-              Despacho inmediato en días hábiles. Tu pedido llega en <strong className="text-slate-800">1 a 2 días</strong> (normalmente en 1 día). No maceramos perfumes.
+              Despacho inmediato en días hábiles. Cobertura en los 14 departamentos de <strong className="text-slate-800">24 a 48 horas para todo el país</strong>. No maceramos perfumes.
             </p>
           </div>
 

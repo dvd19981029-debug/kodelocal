@@ -662,13 +662,13 @@ export default function ProductDetailPage() {
                   Envíos a todo El Salvador o Retiro en Local
                 </h4>
                 <p className="text-[11px] text-slate-500 font-medium">
-                  Cobertura en los 14 departamentos con C807
+                  Cobertura de 24 a 48 horas en los 14 departamentos con C807
                 </p>
               </div>
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed">
-              Llegamos a <strong className="text-indigo-700">absolutamente todas partes de El Salvador</strong> de <strong>1 a 2 días hábiles</strong> (normalmente en 1 día). También puedes optar por <strong>pasar retirando gratis en nuestro local en San Salvador</strong>.
+              Envíos y cobertura de <strong className="text-indigo-700">24 a 48 horas para todo el país</strong> (los 14 departamentos con C807, normalmente en 24 horas). También puedes optar por <strong>pasar retirando gratis en nuestro local en San Salvador</strong>.
             </p>
 
             <div className="text-[10.5px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-1">
