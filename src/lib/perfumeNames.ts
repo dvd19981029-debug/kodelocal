@@ -21,7 +21,7 @@ export const ORIGINAL_PERFUME_MAP: Record<string, string> = {
   '14': 'LIGHT BLUE',
   '15': 'BOSS BOTTLED',
   '16': 'INVICTUS',
-  '17': 'HER',
+  '17': 'Bberry Her',
   '18': '212 VIP ROSE',
   '19': 'POLO BLUE',
   '20': 'ONE MILLION',
@@ -117,5 +117,8 @@ export function getOriginalPerfumeName(product: { sku?: string; description?: st
   }
 
   text = text.replace(/\s+/g, ' ').trim();
+  if (text.toUpperCase() === 'HER' || text.toUpperCase() === 'BURBERRY HER') {
+    return 'Bberry Her';
+  }
   return text || product.name || '';
 }
