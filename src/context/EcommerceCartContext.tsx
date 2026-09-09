@@ -166,6 +166,8 @@ interface EcommerceCartContextType {
   triggerCartPulse: () => void;
   totalItems: number;
   subtotal: number;
+  isArmaTuPerfumeActive: boolean;
+  setIsArmaTuPerfumeActive: (active: boolean) => void;
 }
 
 const EcommerceCartContext = createContext<EcommerceCartContextType | undefined>(undefined);
@@ -174,6 +176,7 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
   const [cart, setCart] = useState<EcommerceCartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCartPulsing, setIsCartPulsing] = useState(false);
+  const [isArmaTuPerfumeActive, setIsArmaTuPerfumeActive] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   const triggerCartPulse = () => {
@@ -475,7 +478,9 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
       isCartPulsing,
       triggerCartPulse,
       totalItems,
-      subtotal
+      subtotal,
+      isArmaTuPerfumeActive,
+      setIsArmaTuPerfumeActive
     }}>
       {children}
     </EcommerceCartContext.Provider>

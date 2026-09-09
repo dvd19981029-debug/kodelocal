@@ -26,8 +26,10 @@ import PromoBannerCarousel from '@/components/ecommerce/PromoBannerCarousel';
 import ReactiveSearchBar from '@/components/ecommerce/ReactiveSearchBar';
 import PerfumeKitBuilderModal from '@/components/ecommerce/PerfumeKitBuilderModal';
 import { getOriginalPerfumeName } from '@/lib/perfumeNames';
+import { useEcommerceCart } from '@/context/EcommerceCartContext';
 
 export default function EcommerceHomePage() {
+  const { setIsArmaTuPerfumeActive } = useEcommerceCart();
   const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGender, setSelectedGender] = useState<'Todos' | 'Caballero' | 'Dama' | 'Unisex'>('Todos');
@@ -36,6 +38,14 @@ export default function EcommerceHomePage() {
   const [currentPage, setCurrentPage] = useState(1);
   // Columnas dinámicas según el tamaño de pantalla para calcular exactamente 7 filas
   const [columns, setColumns] = useState(2);
+
+  // Sincronizar la barra de anuncios para ocultarla en "Arma tu propio perfume" y mostrarla al regresar
+  useEffect(() => {
+    setIsArmaTuPerfumeActive(selectedCategory === 'Arma tu perfume');
+    return () => {
+      setIsArmaTuPerfumeActive(false);
+    };
+  }, [selectedCategory, setIsArmaTuPerfumeActive]);
 
   const availableEssences = useMemo(() => {
     return products.filter((p) => p.category === 'Esencias para Perfume');

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Sparkles, MapPin, Wand2, Droplets } from 'lucide-react';
+import { useEcommerceCart } from '@/context/EcommerceCartContext';
 
 interface TickerItem {
   id: string;
@@ -14,7 +15,7 @@ const TICKER_ITEMS: TickerItem[] = [
     content: (
       <div className="inline-flex items-center gap-2 text-xs font-black text-white shrink-0">
         {/* Mini Camioncito 2D Estilo Claymorphic */}
-        <div className="relative inline-flex items-center justify-center drop-shadow-xs transform hover:scale-110 transition-transform">
+        <div className="relative inline-flex items-center justify-center drop-shadow-xs">
           <svg 
             className="w-7 h-5 animate-pulse" 
             viewBox="0 0 48 32" 
@@ -72,10 +73,17 @@ const TICKER_ITEMS: TickerItem[] = [
 ];
 
 export default function PromoTickerBar() {
+  const { isArmaTuPerfumeActive } = useEcommerceCart();
+
+  // Se oculta única y exclusivamente en la sección Arma tu propio perfume
+  if (isArmaTuPerfumeActive) {
+    return null;
+  }
+
   return (
-    <div className="w-full bg-[#7c3aed] border-b border-purple-600 shadow-sm overflow-hidden relative py-1.5 select-none">
+    <div className="w-full bg-[#7c3aed] border-b border-purple-600 shadow-sm overflow-hidden relative py-1.5 select-none pointer-events-none">
       
-      {/* Contenedor del Ticker: Inicia desde la derecha de la pantalla y se desplaza de continuo */}
+      {/* Contenedor del Ticker: Inicia desde la derecha de la pantalla y se desplaza de continuo sin detenerse al tocarlo */}
       <div className="flex items-center gap-8 whitespace-nowrap animate-marquee">
         {/* Set 1 */}
         {TICKER_ITEMS.map((item) => (
@@ -106,9 +114,6 @@ export default function PromoTickerBar() {
           display: inline-flex;
           animation: marquee 28s linear infinite;
           will-change: transform;
-        }
-        .animate-marquee:hover {
-          animation-play-state: paused;
         }
       `}</style>
     </div>
