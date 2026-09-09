@@ -381,13 +381,15 @@ export default function EcommerceHomePage() {
         <section className="pt-0 animate-in fade-in duration-300 space-y-3 sm:space-y-3.5">
           <PromoBannerCarousel 
             onExploreCatalog={() => {
-              const el = document.getElementById('catalogo');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
+              handleSelectCategory('Esencias para Perfume');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             onFilterCategory={(cat) => {
               handleSelectCategory(cat);
-              const el = document.getElementById('catalogo');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
+              if (cat !== 'Arma tu perfume') {
+                const el = document.getElementById('catalogo');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }
             }}
           />
         </section>

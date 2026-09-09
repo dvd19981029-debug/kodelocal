@@ -6,6 +6,7 @@ interface PromoSlide {
   id: string;
   imageUrl: string;
   imageAlt: string;
+  action: 'aromas' | 'arma-tu-perfume' | 'botes';
 }
 
 interface PromoBannerCarouselProps {
@@ -21,24 +22,22 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
 
   const slides: PromoSlide[] = [
     {
-      id: 'promo-preparado',
-      imageUrl: '/images/promo/promo_preparado.webp',
-      imageAlt: 'Fragancias finas de alta fijación',
+      id: 'promo-aromas',
+      imageUrl: '/images/promo/banner_aromas.webp',
+      imageAlt: 'Grandes fragancias, más cerca de ti - Explora nuestros aromas',
+      action: 'aromas',
     },
     {
-      id: 'promo-esencias',
-      imageUrl: '/images/promo/promo_esencias.webp',
-      imageAlt: 'Esencias puras de contratipos',
+      id: 'promo-arma-tu-perfume',
+      imageUrl: '/images/promo/banner_arma_tu_perfume.webp',
+      imageAlt: 'Arma tu propio perfume - Crea tu fragancia',
+      action: 'arma-tu-perfume',
     },
     {
-      id: 'promo-envios',
-      imageUrl: '/images/promo/promo_envios.webp',
-      imageAlt: 'Envíos seguros con C807',
-    },
-    {
-      id: 'promo-envases',
-      imageUrl: '/images/promo/promo_envases.webp',
-      imageAlt: 'Botes y frascos de lujo con atomizador',
+      id: 'promo-botes',
+      imageUrl: '/images/promo/banner_botes.webp',
+      imageAlt: 'Botes premium para tus esencias',
+      action: 'botes',
     },
   ];
 
@@ -80,6 +79,24 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
     touchEndX.current = null;
   };
 
+  const handleSlideClick = (action: 'aromas' | 'arma-tu-perfume' | 'botes') => {
+    if (action === 'arma-tu-perfume') {
+      if (onFilterCategory) {
+        onFilterCategory('Arma tu perfume');
+      }
+    } else if (action === 'botes') {
+      if (onFilterCategory) {
+        onFilterCategory('Botes');
+      }
+    } else if (action === 'aromas') {
+      if (onExploreCatalog) {
+        onExploreCatalog();
+      } else if (onFilterCategory) {
+        onFilterCategory('Esencias para Perfume');
+      }
+    }
+  };
+
   return (
     <div 
       className="clay-card relative w-full overflow-hidden p-0 border border-white/90 select-none group bg-slate-900 shadow-lg rounded-3xl"
@@ -100,14 +117,20 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
         return (
           <div
             key={slide.id}
-            className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+            onClick={() => {
+              if (touchStartX.current !== null && touchEndX.current !== null && Math.abs(touchStartX.current - touchEndX.current) > 15) {
+                return;
+              }
+              handleSlideClick(slide.action);
+            }}
+            className={`absolute inset-0 cursor-pointer transition-opacity duration-700 ease-in-out ${
               isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
             }`}
           >
             <img
               src={slide.imageUrl}
               alt={slide.imageAlt}
-              className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700 brightness-100 contrast-100"
+              className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700"
               loading="eager"
             />
           </div>
@@ -119,7 +142,10 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
         {slides.map((_, idx) => (
           <button
             key={idx}
-            onClick={() => setCurrentIndex(idx)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setCurrentIndex(idx);
+            }}
             className={`transition-all duration-300 rounded-full cursor-pointer ${
               idx === currentIndex
                 ? 'w-6 h-1.5 bg-white shadow-xs'
