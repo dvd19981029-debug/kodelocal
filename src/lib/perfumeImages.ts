@@ -111,10 +111,10 @@ export function getProductImage(product: ProductItem): string {
   if (!product.category || product.category === 'Esencias para Perfume') {
     const sku = String(product.sku || '').trim();
     if (sku) {
-      return `/images/esencias/esencia_${sku}.webp`;
+      return `/images/esencias/esencia_${sku}.webp?v=aroma_official_v1`;
     }
     if (product.id) {
-      return `/images/esencias/${product.id}.webp`;
+      return `/images/esencias/${product.id}.webp?v=aroma_official_v1`;
     }
     return '/images/essence_bottle_blank.webp';
   }

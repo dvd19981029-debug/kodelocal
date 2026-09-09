@@ -53,7 +53,11 @@ export async function GET(request: Request) {
       cost: Number(p.cost || 0),
       stock: p.stock,
       minStock: p.minStock,
-      imageUrl: p.imageUrl || (p.category?.name === 'Botes' ? '/images/botes/bote_100ml_sauvage_degrade_negro.jpg' : 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80'),
+      imageUrl: (p.category?.name === 'Botes' || p.category?.name === 'Botes & Envases')
+        ? (p.imageUrl && p.imageUrl.startsWith('/images/botes/') ? p.imageUrl : '/images/botes/bote_100ml_sauvage_degrade_negro.jpg')
+        : (p.category?.name === 'Esencias para Perfume' || !p.category?.name)
+        ? `/images/esencias/esencia_${p.sku || p.id}.webp?v=aroma_official_v1`
+        : (p.imageUrl || '/images/essence_bottle_blank.webp'),
       description: p.description || '',
       isAvailableOnline: p.isAvailableOnline,
       puesto: (p as any).puesto || '',
