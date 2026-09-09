@@ -55,7 +55,7 @@ export default function CheckoutPage() {
     }
   }, [customer]);
 
-  // Método de pago: Tarjeta de Crédito/Débito o Transferencia Bancaria (No contraentrega)
+  // Método de pago: Tarjeta de Crédito/Débito o Transferencia Bancaria
   const [metodoPago, setMetodoPago] = useState<'CARD' | 'TRANSFER'>('CARD');
 
   // Tipo de comprobante
@@ -615,8 +615,8 @@ export default function CheckoutPage() {
                     Forma de Pago
                   </h3>
                 </div>
-                <span className="text-[10.5px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
-                  No ofrecemos contraentrega
+                <span className="text-[10.5px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                  Pago seguro en línea o transferencia
                 </span>
               </div>
 
@@ -665,7 +665,7 @@ export default function CheckoutPage() {
               </div>
 
               <p className="text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                🔒 Por seguridad y políticas de control logístico, <strong>únicamente aceptamos pagos anticipados con tarjeta o transferencia bancaria</strong>. No disponemos de modalidad de cobro contraentrega.
+                🔒 Por tu seguridad y conveniencia, puedes realizar tu pago con <strong>Tarjeta de Crédito / Débito</strong> o mediante <strong>Transferencia Bancaria</strong> (Agrícola, BAC, Cuscatlán).
               </p>
             </div>
 

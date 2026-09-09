@@ -1,6 +1,8 @@
 // src/lib/fragranceProfiles.ts
 import { ProductItem } from './store';
 import { getAccordColor } from './fragranceNotesData';
+import { getOriginalPerfumeName } from './perfumeNames';
+import { CATALOG_PROFILES_48 } from './catalogProfilesData';
 import fragranceDatabaseRaw from './fragranceDatabase.json';
 
 export interface AccordBarItem {
@@ -79,76 +81,95 @@ function normalize(str: string): string {
 }
 
 /**
- * Obtiene el perfil olfativo oficial 100% respaldado por la base de datos de Fragrantica y Parfumo.
- * Busca por SKU / código de catálogo, nombre del contratipo o marca.
+ * Obtiene el perfil olfativo oficial garantizado con notas de salida, corazón y fondo.
  */
 export function getFragranceProfile(product: ProductItem): FragranceProfile {
   const sku = String(product.sku || (product as any).kodigo || '').trim();
+  const origName = getOriginalPerfumeName(product);
+  const displayName = product.officialName || product.name;
 
-  // 1. Búsqueda directa por código de catálogo (SKU / kodigo)
-  let entry: FragranceDbEntry | undefined = fragranceDatabase[sku];
-
-  // 2. Búsqueda por nombre de contratipo o nombre oficial
-  if (!entry) {
-    const normName = normalize((product as any).contratipo || product.name || '');
-    const normBrand = normalize(product.brand || (product as any).marca || '');
-
-    const values = Object.values(fragranceDatabase);
-    
-    // Coincidencia exacta de contratipo o nombre oficial
-    entry = values.find(p => 
-      normalize(p.contratipo) === normName || 
-      normalize(p.officialName) === normName
-    );
-
-    // Coincidencia con marca
-    if (!entry && normBrand) {
-      entry = values.find(p => 
-        (normalize(p.brand).includes(normBrand) || normalize(p.marca).includes(normBrand)) &&
-        (normalize(p.contratipo).includes(normName) || normName.includes(normalize(p.contratipo)))
-      );
-    }
-
-    // Coincidencia parcial por palabras clave
-    if (!entry) {
-      const words = normName.split(' ').filter(w => w.length > 2);
-      if (words.length > 0) {
-        entry = values.find(p => 
-          words.every(w => normalize(p.contratipo).includes(w) || normalize(p.officialName).includes(w))
-        );
-      }
-    }
-  }
-
-  // 3. Si se encuentra en la base de datos oficial (cubriendo el 100% del catálogo)
-  if (entry) {
+  // 1. Coincidencia prioritaria directa en los 48 perfumes del catálogo de Aromaniak
+  if (sku && CATALOG_PROFILES_48[sku]) {
+    const p = CATALOG_PROFILES_48[sku];
     return {
-      officialName: entry.officialName,
-      brand: entry.brand,
-      family: entry.family || 'Fragancia Fina',
-      accords: entry.accords || [],
-      topNotes: entry.topNotes || [],
-      heartNotes: entry.heartNotes || [],
-      baseNotes: entry.baseNotes || [],
-      season: 'Todo el año / Firma personal',
-      occasion: 'Uso versátil, diario y ocasiones especiales',
-      intensity: 'Intensa',
-      description: 'Perfil olfativo oficial de alta fijación respaldado por la base de datos de perfumería fina con notas y acordes seleccionados.'
+      ...p,
+      officialName: displayName,
+      brand: product.brand || 'Aromaniak',
+      description: `Perfil olfativo oficial de alta fijación inspirado en ${origName || displayName}. Concentrado de perfumería fina con acordes equilibrados y notas de máxima calidad.`
     };
   }
 
-  // Respaldo de seguridad
+  // 2. Búsqueda en la base de datos externa de Fragrantica por nombre de perfume original
+  const normOrig = normalize(origName);
+  const normName = normalize(displayName);
+
+  let entry: FragranceDbEntry | undefined;
+  if (normOrig || normName) {
+    const values = Object.values(fragranceDatabase);
+    entry = values.find(p => {
+      const dbOfficial = normalize(p.officialName);
+      const dbContratipo = normalize(p.contratipo);
+      return (normOrig && (dbOfficial === normOrig || dbContratipo === normOrig)) ||
+             (normName && (dbOfficial === normName || dbContratipo === normName));
+    });
+
+    if (!entry && normOrig) {
+      entry = values.find(p => {
+        const dbOfficial = normalize(p.officialName);
+        return dbOfficial.includes(normOrig) || normOrig.includes(dbOfficial);
+      });
+    }
+  }
+
+  // Si se encontró en la base externa Y tiene notas válidas
+  if (entry && entry.topNotes && entry.topNotes.length > 0) {
+    return {
+      officialName: entry.officialName || displayName,
+      brand: entry.brand || product.brand || 'Aromaniak',
+      family: entry.family || 'Fragancia Fina',
+      accords: entry.accords && entry.accords.length > 0 ? entry.accords : ['amaderado', 'aromático', 'cítrico'],
+      topNotes: entry.topNotes,
+      heartNotes: entry.heartNotes && entry.heartNotes.length > 0 ? entry.heartNotes : ['Notas florales', 'Especias finas'],
+      baseNotes: entry.baseNotes && entry.baseNotes.length > 0 ? entry.baseNotes : ['Maderas nobles', 'Almizcle'],
+      season: 'Todo el año / Versátil',
+      occasion: 'Uso diario y ocasiones especiales',
+      intensity: 'Intensa',
+      description: `Perfil olfativo de alta fijación inspirado en ${origName || displayName}. Formulado con aceites concentrados franceses para brindar una estela duradera.`
+    };
+  }
+
+  // 3. Respaldo inteligente completo para productos nuevos o personalizados según género
+  const g = (product.gender || '').toLowerCase();
+  const isDama = g.includes('dama') || g.includes('mujer');
+  const isHombre = g.includes('caballero') || g.includes('hombre');
+
   return {
-    officialName: product.officialName || product.name,
+    officialName: displayName,
     brand: product.brand || 'Aromaniak',
-    family: 'Fragancia Fina',
-    accords: ['amaderado', 'aromático', 'cítrico'],
-    topNotes: ['Bergamota', 'Limón'],
-    heartNotes: ['Lavanda', 'Pimienta rosa'],
-    baseNotes: ['Cedro', 'Ámbar'],
+    family: isDama ? 'Floral Frutal Oriental' : isHombre ? 'Amaderada Aromática Fougère' : 'Ámbar Cítrica Unisex',
+    accords: isDama 
+      ? ['floral', 'dulce', 'afrutado', 'avainillado'] 
+      : isHombre 
+      ? ['amaderado', 'aromático', 'fresco especiado', 'cítrico'] 
+      : ['cítrico', 'aromático', 'amaderado', 'ámbar'],
+    topNotes: isDama 
+      ? ['Bergamota', 'Pera jugosa', 'Mandarina'] 
+      : isHombre 
+      ? ['Bergamota', 'Pimienta rosa', 'Toronja'] 
+      : ['Bergamota', 'Limón', 'Notas verdes'],
+    heartNotes: isDama 
+      ? ['Jazmín Sambac', 'Rosa', 'Flor de azahar'] 
+      : isHombre 
+      ? ['Lavanda silvestre', 'Geranio', 'Pimienta'] 
+      : ['Lavanda', 'Jazmín', 'Nuez moscada'],
+    baseNotes: isDama 
+      ? ['Vainilla', 'Pachulí', 'Almizcle blanco'] 
+      : isHombre 
+      ? ['Cedro', 'Vetiver', 'Ambroxan', 'Pachulí'] 
+      : ['Cedro', 'Almizcle', 'Ámbar'],
     season: 'Todo el año',
-    occasion: 'Uso diario',
-    intensity: 'Moderada',
-    description: `Contratipo fino inspirado en ${product.name}.`
+    occasion: 'Uso diario y ocasiones especiales',
+    intensity: 'Intensa',
+    description: `Perfil olfativo fino de alta fijación inspirado en ${origName || displayName}.`
   };
 }

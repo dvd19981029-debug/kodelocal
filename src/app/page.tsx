@@ -567,7 +567,7 @@ export default function EcommerceHomePage() {
             </div>
             <h4 className="font-extrabold text-xs sm:text-sm text-slate-900">Pago Seguro</h4>
             <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed">
-              Aceptamos <strong className="text-slate-800">Tarjeta de Crédito / Débito</strong> o <strong className="text-slate-800">Transferencia Bancaria</strong> (Agrícola, BAC, Cuscatlán). No ofrecemos contraentrega.
+              Aceptamos <strong className="text-slate-800">Tarjeta de Crédito / Débito</strong> o <strong className="text-slate-800">Transferencia Bancaria</strong> (Agrícola, BAC, Cuscatlán).
             </p>
           </div>
 
