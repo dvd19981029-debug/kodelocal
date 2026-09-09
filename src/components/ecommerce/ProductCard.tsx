@@ -190,41 +190,44 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             )}
           </Link>
 
-          {/* Nombre Oficial de la Fragancia (Contratipo) */}
-          <Link href={`/producto/${product.id}`} className="block group/title">
-            <h3 className="font-black text-xs sm:text-base text-slate-900 line-clamp-1 leading-snug group-hover/title:text-indigo-600 transition-colors" title={displayName}>
-              {displayName}
-            </h3>
-          </Link>
+          {/* Detalles del producto (alineados ópticamente con las esquinas redondeadas de la tarjeta superior) */}
+          <div className="px-1.5 sm:px-2">
+            {/* Nombre Oficial de la Fragancia (Contratipo) */}
+            <Link href={`/producto/${product.id}`} className="block group/title">
+              <h3 className="font-black text-xs sm:text-base text-slate-900 line-clamp-1 leading-snug group-hover/title:text-indigo-600 transition-colors" title={displayName}>
+                {displayName}
+              </h3>
+            </Link>
 
-          {/* Precio Prominente a la par de Disponibilidad sutil y pequeña */}
-          <div className="mt-0.5 flex items-baseline gap-1.5 sm:gap-2">
-            <span className="text-lg sm:text-2xl font-black text-indigo-700 leading-tight tracking-tight">
-              ${activeOption.price.toFixed(2)}
-            </span>
-            <span className="text-[8px] sm:text-[9px] text-slate-400 font-normal tracking-tight">
-              {remainingStock === 0
-                ? 'Sin existencias'
-                : isEssence
-                ? `Disp: ${remainingStock % 1 === 0 ? remainingStock : remainingStock.toFixed(1)} oz`
-                : `Disp: ${Math.floor(remainingStock)} unid`}
-            </span>
-          </div>
-
-          {/* Inspirado en el perfume original (sin marca) */}
-          <div className="text-[10px] sm:text-xs text-slate-600 mt-0.5 leading-tight min-h-[18px] sm:min-h-[20px] line-clamp-2">
-            {isEssence ? (
-              <span className="truncate block" title={`Inspirado en ${getOriginalPerfumeName(product)}`}>
-                <span className="text-slate-400 font-normal">Inspirado en </span>
-                <span className="font-bold text-slate-800">
-                  {getOriginalPerfumeName(product)}
-                </span>
+            {/* Precio Prominente a la par de Disponibilidad sutil y pequeña */}
+            <div className="mt-0.5 flex items-baseline gap-1.5 sm:gap-2">
+              <span className="text-lg sm:text-2xl font-black text-indigo-700 leading-tight tracking-tight">
+                ${activeOption.price.toFixed(2)}
               </span>
-            ) : isBottle ? (
-              <span className="text-slate-500 font-normal">Frasco de Vidrio • Atomizador de Lujo</span>
-            ) : (
-              <span className="text-slate-500 font-normal">{product.unit || 'Unidad'} • Disponible</span>
-            )}
+              <span className="text-[8px] sm:text-[9px] text-slate-400 font-normal tracking-tight">
+                {remainingStock === 0
+                  ? 'Sin existencias'
+                  : isEssence
+                  ? `Disp: ${remainingStock % 1 === 0 ? remainingStock : remainingStock.toFixed(1)} oz`
+                  : `Disp: ${Math.floor(remainingStock)} unid`}
+              </span>
+            </div>
+
+            {/* Inspirado en el perfume original (sin marca) */}
+            <div className="text-[10px] sm:text-xs text-slate-600 mt-0.5 leading-tight min-h-[18px] sm:min-h-[20px] line-clamp-2">
+              {isEssence ? (
+                <span className="truncate block" title={`Inspirado en ${getOriginalPerfumeName(product)}`}>
+                  <span className="text-slate-400 font-normal">Inspirado en </span>
+                  <span className="font-bold text-slate-800">
+                    {getOriginalPerfumeName(product)}
+                  </span>
+                </span>
+              ) : isBottle ? (
+                <span className="text-slate-500 font-normal">Frasco de Vidrio • Atomizador de Lujo</span>
+              ) : (
+                <span className="text-slate-500 font-normal">{product.unit || 'Unidad'} • Disponible</span>
+              )}
+            </div>
           </div>
 
           {/* Selector de Presentación */}
@@ -262,7 +265,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               </div>
             </div>
           ) : (
-            <div className="mt-1 text-[9px] text-slate-500 font-medium px-0.5 min-h-[14px]">
+            <div className="mt-1 text-[9px] text-slate-500 font-medium px-1.5 sm:px-2 min-h-[14px]">
               <span>{presentations[0]?.description}</span>
             </div>
           )}
