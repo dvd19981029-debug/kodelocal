@@ -98,7 +98,7 @@ export default function ReactiveSearchBar({
                 <input
                   ref={inputRef}
                   type="text"
-                  placeholder="Buscar perfume: Sauvage, 212, Baccarat, One Million, Carolina Herrera..."
+                  placeholder="Buscar perfume: Nombre del perfume..."
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
