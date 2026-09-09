@@ -6,16 +6,17 @@ import { getNoteImageUrl } from '@/lib/fragranceNotesData';
 
 interface FragranceNotesVisualProps {
   profile: FragranceProfile;
+  showAccords?: boolean;
 }
 
-export default function FragranceNotesVisual({ profile }: FragranceNotesVisualProps) {
+export default function FragranceNotesVisual({ profile, showAccords = true }: FragranceNotesVisualProps) {
   const accordBars = getFragranceAccordBars(profile);
 
   return (
-    <div className="pt-6 border-t border-slate-200/80 space-y-7 select-none">
+    <div className={`${showAccords ? 'pt-6 border-t border-slate-200/80' : ''} space-y-7 select-none`}>
       
       {/* ================= 1. ACORDES PRINCIPALES (BARRAS HORIZONTALES ESTILO FRAGRANTICA) ================= */}
-      {accordBars.length > 0 && (
+      {showAccords && accordBars.length > 0 && (
         <div className="space-y-2.5">
           <h3 className="text-xs font-black text-slate-500 uppercase tracking-wider">
             Acordes principales

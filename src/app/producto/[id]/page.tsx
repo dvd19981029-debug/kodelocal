@@ -23,7 +23,7 @@ import {
 import { ProductItem, INITIAL_PRODUCTS, getStoredProducts, saveStoredProducts } from '@/lib/store';
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
 import { getProductImage } from '@/lib/perfumeImages';
-import { getFragranceProfile } from '@/lib/fragranceProfiles';
+import { getFragranceProfile, getFragranceAccordBars } from '@/lib/fragranceProfiles';
 import ProductCard from '@/components/ecommerce/ProductCard';
 import FragranceNotesVisual from '@/components/ecommerce/FragranceNotesVisual';
 import { getOriginalPerfumeName } from '@/lib/perfumeNames';
@@ -94,6 +94,11 @@ export default function ProductDetailPage() {
     if (!product || !isEssence) return null;
     return getFragranceProfile(product);
   }, [product, isEssence]);
+
+  const accordBars = useMemo(() => {
+    if (!profile) return [];
+    return getFragranceAccordBars(profile);
+  }, [profile]);
 
   // Identificador del item en el carrito para esta presentación
   const cartItemId = `${product?.id}-${selectedPresentation}`;
@@ -562,6 +567,53 @@ export default function ProductDetailPage() {
             </div>
 
           </div>
+
+          {/* ================= ACORDES PRINCIPALES (DEBAJO DE LA TARJETA DE AGREGAR AL CARRITO) ================= */}
+          {isEssence && profile && profile.accords && profile.accords.length > 0 && (
+            <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-3 shadow-xs">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <span>Acordes principales</span>
+                </h4>
+                <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">
+                  Familia: {profile.family}
+                </span>
+              </div>
+
+              {accordBars.length > 0 ? (
+                <div className="flex flex-col gap-1 w-full pt-1">
+                  {accordBars.map((bar, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        width: `${bar.percentage}%`,
+                        backgroundColor: bar.bg,
+                        color: bar.text,
+                        minWidth: '100px'
+                      }}
+                      className="h-7 sm:h-8 rounded-r-xl rounded-l-md flex items-center justify-start px-3 shadow-[0_2px_4px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.35)] transition-all duration-300 hover:brightness-105"
+                    >
+                      <span className="text-[11px] font-black tracking-wide lowercase truncate drop-shadow-xs">
+                        {bar.name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                  {profile.accords.map((accord, idx) => (
+                    <span 
+                      key={idx}
+                      className="bg-slate-100 hover:bg-purple-50 text-slate-700 hover:text-purple-800 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-colors"
+                    >
+                      {accord}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* COLUMNA DERECHA: INFORMACIÓN TÉCNICA, PIRÁMIDE O ESPECIFICACIONES SEGÚN CATEGORÍA */}
@@ -570,72 +622,58 @@ export default function ProductDetailPage() {
           {/* ================= PIRÁMIDE OLFATIVA Y NOTAS DE LA FRAGANCIA (SOLO PARA ESENCIAS) ================= */}
           {isEssence && profile && (
             <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-4 shadow-xs">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-500" />
-                  <span>Pirámide Olfativa (Notas del Perfume)</span>
-                </h3>
-                <span className="text-[10.5px] font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">
-                  Familia: {profile.family}
-                </span>
-              </div>
+              
+              {/* Pirámide del perfume (fotos de notas e ingredientes) en la parte superior */}
+              <FragranceNotesVisual profile={profile} showAccords={false} />
 
-              {/* Acordes principales */}
-              {profile.accords && profile.accords.length > 0 && (
-                <div className="space-y-1.5">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
-                    Acordes principales
+              {/* ================= HASTA ABAJO DE LA PIRÁMIDE DEL PERFUME: NOTAS CON SU DURACIÓN Y FAMILIA ================= */}
+              <div className="pt-5 border-t border-slate-100 space-y-3.5">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                  <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <span>Pirámide Olfativa (Notas del Perfume)</span>
+                  </h3>
+                  <span className="text-[10.5px] font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">
+                    Familia: {profile.family}
                   </span>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {profile.accords.map((accord, idx) => (
-                      <span 
-                        key={idx}
-                        className="bg-slate-100 hover:bg-purple-50 text-slate-700 hover:text-purple-800 text-[10.5px] font-bold px-2.5 py-1 rounded-xl transition-colors"
-                      >
-                        {accord}
-                      </span>
-                    ))}
+                </div>
+
+                {/* Notas Salida / Corazón / Fondo en 3 tarjetas con su duración */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                  
+                  <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-1">
+                    <span className="text-[9.5px] font-black text-amber-800 uppercase tracking-wider block">
+                      1. Notas de Salida
+                    </span>
+                    <p className="text-xs font-bold text-slate-800 leading-snug">
+                      {profile.topNotes.join(', ')}
+                    </p>
+                    <span className="text-[9.5px] text-slate-400 block">Primeros 15 a 30 minutos</span>
                   </div>
-                </div>
-              )}
 
-              {/* Notas Salida / Corazón / Fondo en 3 tarjetas */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-                
-                <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-1">
-                  <span className="text-[9.5px] font-black text-amber-800 uppercase tracking-wider block">
-                    1. Notas de Salida
-                  </span>
-                  <p className="text-xs font-bold text-slate-800 leading-snug">
-                    {profile.topNotes.join(', ')}
-                  </p>
-                  <span className="text-[9.5px] text-slate-400 block">Primeros 15 a 30 minutos</span>
-                </div>
+                  <div className="p-3 rounded-2xl bg-indigo-50/70 border border-indigo-200/80 space-y-1">
+                    <span className="text-[9.5px] font-black text-indigo-800 uppercase tracking-wider block">
+                      2. Notas de Corazón
+                    </span>
+                    <p className="text-xs font-bold text-slate-800 leading-snug">
+                      {profile.heartNotes.join(', ')}
+                    </p>
+                    <span className="text-[9.5px] text-slate-400 block">El alma de la fragancia</span>
+                  </div>
 
-                <div className="p-3 rounded-2xl bg-indigo-50/70 border border-indigo-200/80 space-y-1">
-                  <span className="text-[9.5px] font-black text-indigo-800 uppercase tracking-wider block">
-                    2. Notas de Corazón
-                  </span>
-                  <p className="text-xs font-bold text-slate-800 leading-snug">
-                    {profile.heartNotes.join(', ')}
-                  </p>
-                  <span className="text-[9.5px] text-slate-400 block">El alma de la fragancia</span>
-                </div>
+                  <div className="p-3 rounded-2xl bg-slate-100/80 border border-slate-200 space-y-1">
+                    <span className="text-[9.5px] font-black text-slate-700 uppercase tracking-wider block">
+                      3. Notas de Fondo
+                    </span>
+                    <p className="text-xs font-bold text-slate-800 leading-snug">
+                      {profile.baseNotes.join(', ')}
+                    </p>
+                    <span className="text-[9.5px] text-slate-400 block">Fijación y estela duradera</span>
+                  </div>
 
-                <div className="p-3 rounded-2xl bg-slate-100/80 border border-slate-200 space-y-1">
-                  <span className="text-[9.5px] font-black text-slate-700 uppercase tracking-wider block">
-                    3. Notas de Fondo
-                  </span>
-                  <p className="text-xs font-bold text-slate-800 leading-snug">
-                    {profile.baseNotes.join(', ')}
-                  </p>
-                  <span className="text-[9.5px] text-slate-400 block">Fijación y estela duradera</span>
                 </div>
-
               </div>
 
-              {/* Pirámide visual con barras de acordes e ingredientes */}
-              <FragranceNotesVisual profile={profile} />
             </div>
           )}
 
