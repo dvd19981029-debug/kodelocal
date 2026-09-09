@@ -210,7 +210,18 @@ export default function EcommerceHomePage() {
     setCurrentPage(newPage);
     const catalogEl = document.getElementById('catalogo');
     if (catalogEl) {
-      catalogEl.scrollIntoView({ behavior: 'smooth' });
+      const offset = 75;
+      const bodyRect = document.body.getBoundingClientRect().top;
+      const elementRect = catalogEl.getBoundingClientRect().top;
+      const elementPosition = elementRect - bodyRect;
+      const offsetPosition = elementPosition - offset;
+
+      window.scrollTo({
+        top: Math.max(0, offsetPosition),
+        behavior: 'smooth'
+      });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -238,6 +249,67 @@ export default function EcommerceHomePage() {
     }
     prevQueryRef.current = searchQuery;
   }, [searchQuery]);
+
+  const renderPagination = (position: 'top' | 'bottom') => {
+    if (totalPages <= 1) return null;
+
+    return (
+      <div
+        className={`flex flex-col sm:flex-row items-center justify-between gap-3 ${
+          position === 'top'
+            ? 'pb-4 pt-1 border-b border-slate-200/80'
+            : 'pt-6 border-t border-slate-200/80'
+        }`}
+      >
+        <span className="text-xs text-slate-500 font-semibold">
+          Página <strong>{currentPage}</strong> de <strong>{totalPages}</strong> ({filteredProducts.length} productos en total)
+        </span>
+
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
+          >
+            Anterior
+          </button>
+
+          {/* Páginas numéricas con página 1 y última siempre fijas para saltar fácilmente */}
+          {paginationItems.map((item, idx) => {
+            if (typeof item === 'string') {
+              return (
+                <span key={`ellipsis-${position}-${idx}`} className="w-5 text-center text-xs font-bold text-slate-400 select-none">
+                  ...
+                </span>
+              );
+            }
+
+            return (
+              <button
+                key={`${position}-${item}`}
+                onClick={() => handlePageChange(item)}
+                className={`w-8 h-8 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                  currentPage === item
+                    ? 'clay-btn-primary text-white shadow-xs scale-105'
+                    : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-2xs'
+                }`}
+              >
+                {item}
+              </button>
+            );
+          })}
+
+          <button
+            onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
+          >
+            Siguiente
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-4 sm:space-y-6 pb-16">
@@ -359,6 +431,9 @@ export default function EcommerceHomePage() {
           <BuildYourPerfumeCard onOpenBuilder={() => setIsKitModalOpen(true)} />
         )}
 
+        {/* ================= PAGINACIÓN SUPERIOR ================= */}
+        {renderPagination('top')}
+
         {/* ================= REJILLA DE PRODUCTOS (EXACTAMENTE 7 FILAS POR PÁGINA) ================= */}
         {paginatedProducts.length === 0 ? (
           <div className="clay-card p-12 text-center space-y-3">
@@ -404,57 +479,8 @@ export default function EcommerceHomePage() {
           </div>
         )}
 
-        {/* ================= PAGINACIÓN CON PÁGINA 1 Y ÚLTIMA SIEMPRE FIJAS ================= */}
-        {totalPages > 1 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6 border-t border-slate-200/80">
-            <span className="text-xs text-slate-500 font-semibold">
-              Página <strong>{currentPage}</strong> de <strong>{totalPages}</strong> ({filteredProducts.length} productos en total)
-            </span>
-
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
-              >
-                Anterior
-              </button>
-
-              {/* Páginas numéricas con página 1 y última siempre fijas para saltar fácilmente */}
-              {paginationItems.map((item, idx) => {
-                if (typeof item === 'string') {
-                  return (
-                    <span key={`ellipsis-${idx}`} className="w-5 text-center text-xs font-bold text-slate-400 select-none">
-                      ...
-                    </span>
-                  );
-                }
-
-                return (
-                  <button
-                    key={item}
-                    onClick={() => handlePageChange(item)}
-                    className={`w-8 h-8 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                      currentPage === item
-                        ? 'clay-btn-primary text-white shadow-xs scale-105'
-                        : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-2xs'
-                    }`}
-                  >
-                    {item}
-                  </button>
-                );
-              })}
-
-              <button
-                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
-              >
-                Siguiente
-              </button>
-            </div>
-          </div>
-        )}
+        {/* ================= PAGINACIÓN INFERIOR ================= */}
+        {renderPagination('bottom')}
 
       </section>
 
