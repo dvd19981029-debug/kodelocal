@@ -179,12 +179,14 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               </div>
             )}
 
-            {/* Disponibilidad en esquina inferior izquierda (texto plano en negro con borde blanco de 1-2px, sin pastilla) */}
-            <div className="absolute bottom-2 left-2 z-10 pointer-events-none select-none">
+            {/* Disponibilidad en esquina inferior derecha (texto plano en negro con borde blanco de 1px) */}
+            <div className={`absolute bottom-2 right-2 z-10 pointer-events-none select-none flex items-center gap-1.5 ${
+              cartEssenceUsed > 0 ? 'flex-row-reverse' : ''
+            }`}>
               <span 
                 className="text-black text-[9px] sm:text-[10px] font-black tracking-tight"
                 style={{
-                  textShadow: '-1px -1px 0 #ffffff, 1px -1px 0 #ffffff, -1px 1px 0 #ffffff, 1px 1px 0 #ffffff, 0 0 2px #ffffff'
+                  textShadow: '-1px -1px 0 #ffffff, 1px -1px 0 #ffffff, -1px 1px 0 #ffffff, 1px 1px 0 #ffffff'
                 }}
               >
                 {remainingStock === 0
@@ -193,17 +195,15 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                   ? `Disp: ${remainingStock % 1 === 0 ? remainingStock : remainingStock.toFixed(1)} oz`
                   : `Disp: ${Math.floor(remainingStock)} unid`}
               </span>
-            </div>
 
-            {/* Indicador en esquina inferior derecha: solo cuando ya está en carrito (nunca tapa el género) */}
-            {cartEssenceUsed > 0 && (
-              <div className="absolute bottom-2 right-2 z-10 animate-in zoom-in-75 duration-200">
+              {/* Indicador cuando ya está en carrito */}
+              {cartEssenceUsed > 0 && (
                 <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-[8px] sm:text-[9px] font-black py-0.5 px-1.5 rounded-md shadow-md flex items-center gap-1">
                   <Check className="w-2.5 h-2.5 stroke-[3]" />
-                  <span>{isEssence ? `${cartEssenceUsed} oz en carrito` : `${cartEssenceUsed} en carrito`}</span>
+                  <span>{isEssence ? `${cartEssenceUsed} oz` : `${cartEssenceUsed}`}</span>
                 </span>
-              </div>
-            )}
+              )}
+            </div>
           </Link>
 
           {/* Nombre Oficial de la Fragancia (Contratipo) */}
