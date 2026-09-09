@@ -111,16 +111,26 @@ export default function CartDrawer() {
                       <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden bg-slate-50 border border-slate-200/70 shrink-0 flex items-center justify-center shadow-2xs">
                         {item.kitDetails ? (
                           <div className="relative w-full h-full flex items-center justify-center p-1 bg-gradient-to-br from-amber-50/60 to-purple-50/60">
-                            {/* Bote Contratipo */}
+                            {/* Bote Contratipo (Bote de Onza) */}
                             <img
-                              src={productImage}
+                              src={item.kitDetails.essenceImageUrl || (item.kitDetails.essenceSku ? `/images/esencias/esencia_${String(item.kitDetails.essenceSku).trim()}.webp?v=aroma_official_v3` : `/images/esencias/${item.kitDetails.essenceId}.webp?v=aroma_official_v3`)}
                               alt={displayName}
+                              loading="lazy"
+                              decoding="async"
+                              onError={(e) => {
+                                e.currentTarget.src = '/images/essence_bottle_blank.webp';
+                              }}
                               className="absolute left-1 top-1 w-9 h-9 sm:w-10 sm:h-10 rounded-lg object-cover border border-amber-300 z-10 shadow-xs"
                             />
                             {/* Frasco Atomizador 100ml */}
                             <img
                               src={item.kitDetails.bottleImageUrl || '/images/botes/bote_100ml_sauvage_degrade_negro.jpg'}
                               alt={item.kitDetails.bottleName}
+                              loading="lazy"
+                              decoding="async"
+                              onError={(e) => {
+                                e.currentTarget.src = '/images/botes/bote_100ml_sauvage_degrade_negro.jpg';
+                              }}
                               className="absolute right-1 bottom-1 w-9 h-9 sm:w-10 sm:h-10 rounded-lg object-cover border border-slate-300 z-20 shadow-xs"
                             />
                             <span className="absolute bottom-0 inset-x-0 bg-indigo-950/90 text-[7.5px] font-black text-amber-300 text-center py-0.2 tracking-tight z-30">

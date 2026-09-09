@@ -132,6 +132,7 @@ export interface EcommerceCartItem {
     essenceName: string;
     essenceSku?: string;
     essenceBrand?: string;
+    essenceImageUrl?: string;
     bottleId: string;
     bottleName: string;
     bottleImageUrl?: string;
@@ -324,13 +325,19 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
 
     const totalEssenceStock = typeof essence.stock === 'number' ? essence.stock : 0;
 
+    const essenceImageUrl = essence.sku 
+      ? `/images/esencias/esencia_${String(essence.sku).trim()}.webp?v=aroma_official_v3`
+      : essence.id 
+      ? `/images/esencias/${essence.id}.webp?v=aroma_official_v3`
+      : '/images/essence_bottle_blank.webp';
+
     const kitProduct: ProductItem = {
       ...essence,
       id: itemId,
       name: `Arma tu propio perfume: ${essence.officialName || essence.name}`,
       category: 'Arma tu propio perfume',
       price: unitPrice,
-      imageUrl: bottle.imageUrl || essence.imageUrl,
+      imageUrl: essenceImageUrl,
     };
 
     setCart(prev => {
@@ -380,6 +387,7 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
             essenceName: essence.officialName || essence.name,
             essenceSku: essence.sku,
             essenceBrand: essence.brand,
+            essenceImageUrl,
             bottleId: bottle.id,
             bottleName: bottle.name,
             bottleImageUrl: bottle.imageUrl,

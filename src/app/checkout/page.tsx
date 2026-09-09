@@ -806,17 +806,42 @@ export default function CheckoutPage() {
               <div className="max-h-60 overflow-y-auto space-y-2.5 pr-1 divide-y divide-slate-100">
                 {cart.map((it) => (
                   <div key={it.id} className="pt-2 first:pt-0 flex items-start gap-2.5 text-xs">
-                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-50 border border-slate-200/70 shrink-0 flex items-center justify-center">
-                      <img
-                        src={getProductImage(it.product)}
-                        alt={it.product.name}
-                        loading="lazy"
-                        decoding="async"
-                        onError={(e) => {
-                          e.currentTarget.src = '/images/essence_bottle_blank.webp';
-                        }}
-                        className="w-full h-full object-cover object-center"
-                      />
+                    <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-slate-50 border border-slate-200/70 shrink-0 flex items-center justify-center">
+                      {it.kitDetails ? (
+                        <div className="relative w-full h-full p-0.5 bg-gradient-to-br from-amber-50/60 to-purple-50/60">
+                          <img
+                            src={it.kitDetails.essenceImageUrl || (it.kitDetails.essenceSku ? `/images/esencias/esencia_${String(it.kitDetails.essenceSku).trim()}.webp?v=aroma_official_v3` : `/images/esencias/${it.kitDetails.essenceId}.webp?v=aroma_official_v3`)}
+                            alt={it.kitDetails.essenceName || it.product.name}
+                            loading="lazy"
+                            decoding="async"
+                            onError={(e) => {
+                              e.currentTarget.src = '/images/essence_bottle_blank.webp';
+                            }}
+                            className="absolute left-0.5 top-0.5 w-6 h-6 rounded object-cover border border-amber-300 z-10"
+                          />
+                          <img
+                            src={it.kitDetails.bottleImageUrl || '/images/botes/bote_100ml_sauvage_degrade_negro.jpg'}
+                            alt={it.kitDetails.bottleName}
+                            loading="lazy"
+                            decoding="async"
+                            onError={(e) => {
+                              e.currentTarget.src = '/images/botes/bote_100ml_sauvage_degrade_negro.jpg';
+                            }}
+                            className="absolute right-0.5 bottom-0.5 w-6 h-6 rounded object-cover border border-slate-300 z-20"
+                          />
+                        </div>
+                      ) : (
+                        <img
+                          src={getProductImage(it.product)}
+                          alt={it.product.name}
+                          loading="lazy"
+                          decoding="async"
+                          onError={(e) => {
+                            e.currentTarget.src = '/images/essence_bottle_blank.webp';
+                          }}
+                          className="w-full h-full object-cover object-center"
+                        />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-slate-800 truncate">

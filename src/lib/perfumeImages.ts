@@ -107,14 +107,17 @@ export function getProductImage(product: ProductItem): string {
     return '/images/botes/bote_100ml_sauvage_degrade_negro.jpg';
   }
 
-  // 2. Para todas las esencias de perfume (onzas y medias onzas): usar imagen estática pre-renderizada
-  if (!product.category || product.category === 'Esencias para Perfume') {
+  // 2. Para todas las esencias de perfume (onzas y medias onzas) y kits con esencia base: usar imagen estática pre-renderizada
+  if (!product.category || product.category === 'Esencias para Perfume' || product.category === 'Arma tu propio perfume') {
     const sku = String(product.sku || '').trim();
     if (sku) {
       return `/images/esencias/esencia_${sku}.webp?v=aroma_official_v3`;
     }
-    if (product.id) {
+    if (product.id && !product.id.startsWith('kit-')) {
       return `/images/esencias/${product.id}.webp?v=aroma_official_v3`;
+    }
+    if (product.imageUrl && product.imageUrl.trim() !== '') {
+      return product.imageUrl;
     }
     return '/images/essence_bottle_blank.webp';
   }
