@@ -80,14 +80,17 @@ export default function EcommerceHeader() {
 
         {/* ================= CENTRO: Logo oficial de Aromaniak ================= */}
         <div className="flex items-center justify-center">
-          <Link href="/" className="inline-flex items-center justify-center group transition-transform active:scale-95 py-0.5">
+          <Link href="/" className="inline-flex flex-col items-center justify-center group transition-transform active:scale-95 py-0.5">
             <img
               src="/images/logo.png"
               alt="Aromaniak"
               fetchPriority="high"
               decoding="async"
-              className="h-11 sm:h-14 md:h-16 w-auto object-contain drop-shadow-sm group-hover:scale-105 transition-transform"
+              className="h-10 sm:h-13 md:h-15 w-auto object-contain drop-shadow-sm group-hover:scale-105 transition-transform"
             />
+            <span className="text-[9px] sm:text-[10.5px] font-bold text-black tracking-wider leading-none select-none mt-0.5">
+              El Salvador
+            </span>
           </Link>
         </div>
 
