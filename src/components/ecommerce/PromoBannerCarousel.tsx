@@ -197,8 +197,8 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
         })}
       </div>
 
-      {/* Indicadores inferiores ultra compactos y discretos */}
-      <div className="absolute bottom-1.5 sm:bottom-2 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 bg-black/20 backdrop-blur-xs px-1.5 py-0.5 rounded-full shadow-2xs">
+      {/* Indicadores inferiores estilo Frosted Glass blanco con tonos púrpura de la marca */}
+      <div className="absolute bottom-1.5 sm:bottom-2 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-white/75 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/90 shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
         {slides.map((_, idx) => (
           <button
             key={idx}
@@ -209,8 +209,8 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
             }}
             className={`transition-all duration-300 rounded-full cursor-pointer p-0 border-0 block ${
               idx === activeDotIndex
-                ? 'w-3 h-1 bg-white'
-                : 'w-1 h-1 bg-white/50 hover:bg-white/80'
+                ? 'w-4 h-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 shadow-xs'
+                : 'w-1.5 h-1.5 bg-slate-300/80 hover:bg-purple-300'
             }`}
             aria-label={`Ir a diapositiva ${idx + 1}`}
           />
