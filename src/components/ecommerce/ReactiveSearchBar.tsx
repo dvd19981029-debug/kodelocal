@@ -176,7 +176,7 @@ export default function ReactiveSearchBar({
             Más Vendidas
           </button>
 
-          {/* Opción: Caballero */}
+          {/* Opción: Hombre */}
           <button
             onClick={() => handleSelectFilter('gender', 'Caballero')}
             className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
@@ -185,7 +185,7 @@ export default function ReactiveSearchBar({
                 : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
             }`}
           >
-            Caballero
+            Hombre
           </button>
 
           {/* Opción: Dama */}

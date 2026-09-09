@@ -413,7 +413,7 @@ export default function EcommerceHomePage() {
           <div className="flex items-center gap-2">
             <h2 className="text-base sm:text-xl font-black text-slate-900 tracking-tight">
               {selectedCategory === 'Esencias para Perfume' 
-                ? (selectedGender === 'Todos' ? 'Esencias de Perfume' : `Esencias • ${selectedGender}`) 
+                ? (selectedGender === 'Todos' ? 'Esencias de Perfume' : `Esencias • ${selectedGender === 'Caballero' ? 'Hombre' : selectedGender}`) 
                 : selectedCategory === 'Botes' 
                   ? 'Botes y Frascos' 
                   : selectedCategory === 'Alcohol y Materiales'

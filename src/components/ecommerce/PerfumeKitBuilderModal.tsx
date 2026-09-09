@@ -271,7 +271,7 @@ export default function PerfumeKitBuilderModal({
                           : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                       }`}
                     >
-                      {gender}
+                      {gender === 'Caballero' ? 'Hombre' : gender}
                     </button>
                   ))}
                 </div>

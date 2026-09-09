@@ -107,7 +107,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
     if (g.includes('caballero') || g.includes('hombre')) {
       return (
         <span className="bg-white/95 backdrop-blur-xs text-blue-900 text-[8.5px] sm:text-[9.5px] font-extrabold py-0.5 px-1.5 rounded-md shadow-xs shrink-0 tracking-wide uppercase">
-          Caballero
+          Hombre
         </span>
       );
     }

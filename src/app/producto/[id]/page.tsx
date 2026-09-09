@@ -188,7 +188,7 @@ export default function ProductDetailPage() {
     if (g.includes('caballero') || g.includes('hombre')) {
       return (
         <span className="bg-indigo-50 border border-indigo-200 text-indigo-800 text-[11px] font-black px-2.5 py-1 rounded-xl shadow-2xs">
-          Caballero
+          Hombre
         </span>
       );
     }
