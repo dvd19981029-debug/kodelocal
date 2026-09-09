@@ -56,12 +56,12 @@ export default function BuildYourPerfumeCard({ onOpenBuilder }: BuildYourPerfume
 
       {/* Vitrina con frasco de vidrio de 100ml proporcionalmente más alto */}
       <div className="relative z-10 shrink-0 flex items-center justify-center">
-        <div className="w-22 h-22 sm:w-26 sm:h-26 md:w-28 md:h-28 rounded-2xl overflow-hidden bg-slate-50 border border-amber-300 shadow-inner flex items-center justify-center relative group-hover:scale-105 transition-transform duration-300">
+        <div className="w-22 h-22 sm:w-26 sm:h-26 md:w-28 md:h-28 rounded-2xl overflow-hidden bg-white border border-amber-300 shadow-inner flex items-center justify-center relative group-hover:scale-105 transition-transform duration-300">
           <img
-            src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=300&q=80"
+            src="/images/botes/bote_100ml_sauvage_degrade_negro.jpg"
             alt="Frasco de perfume 100ml"
             onError={(e) => {
-              e.currentTarget.src = 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=300&q=80';
+              e.currentTarget.src = '/images/botes/bote_100ml_sauvage_degrade_negro.jpg';
             }}
             className="w-full h-full object-cover object-center"
           />

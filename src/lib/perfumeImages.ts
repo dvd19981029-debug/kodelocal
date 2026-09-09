@@ -34,19 +34,86 @@ export const UNISEX_PERFUME_IMAGES = [
   'https://images.unsplash.com/photo-1541643600914-78b084683601?w=500&q=80', // Cristal radiante
 ];
 
+export const BOTTLE_IMAGES_MAP: Record<string, string> = {
+  'BOT-100-DIA-P': '/images/botes/bote_100ml_diamante_plata.jpg',
+  'bote-100ml-diamante-plata': '/images/botes/bote_100ml_diamante_plata.jpg',
+
+  'BOT-100-SAU-N': '/images/botes/bote_100ml_sauvage_degrade_negro.jpg',
+  'bote-100ml-sauvage-degrade': '/images/botes/bote_100ml_sauvage_degrade_negro.jpg',
+
+  'BOT-100-ACA-B': '/images/botes/bote_100ml_acanalado_tapa_blanca.jpg',
+  'bote-100ml-acanalado-blanco': '/images/botes/bote_100ml_acanalado_tapa_blanca.jpg',
+
+  'BOT-100-ACA-N': '/images/botes/bote_100ml_acanalado_tapa_negra.jpg',
+  'bote-100ml-acanalado-negro': '/images/botes/bote_100ml_acanalado_tapa_negra.jpg',
+
+  'BOT-100-CUA-B': '/images/botes/bote_100ml_cuadrado_bleu_negro.jpg',
+  'bote-100ml-cuadrado-bleu': '/images/botes/bote_100ml_cuadrado_bleu_negro.jpg',
+
+  'BOT-100-FRO-EMC': '/images/botes/bote_100ml_frosted_esfera_madera_clara.jpg',
+  'bote-100ml-frosted-esfera-madera-clara': '/images/botes/bote_100ml_frosted_esfera_madera_clara.jpg',
+
+  'BOT-100-FRO-EMO': '/images/botes/bote_100ml_frosted_esfera_madera_oscura.jpg',
+  'bote-100ml-frosted-esfera-madera-oscura': '/images/botes/bote_100ml_frosted_esfera_madera_oscura.jpg',
+
+  'BOT-100-HC-B': '/images/botes/bote_100ml_cilindrico_hombro_blanco.jpg',
+  'bote-100ml-hombro-curvo-blanco': '/images/botes/bote_100ml_cilindrico_hombro_blanco.jpg',
+
+  'BOT-100-HC-N': '/images/botes/bote_100ml_cilindrico_hombro_negro.jpg',
+  'bote-100ml-hombro-curvo-negro': '/images/botes/bote_100ml_cilindrico_hombro_negro.jpg',
+
+  'BOT-100-SAN-O': '/images/botes/bote_100ml_santal_tapa_oro.jpg',
+  'bote-100ml-santal-oro': '/images/botes/bote_100ml_santal_tapa_oro.jpg',
+
+  'BOT-100-CIL-TN': '/images/botes/bote_100ml_cilindrico_tapa_negra.jpg',
+  'bote-100ml-cilindrico-tapa-negra': '/images/botes/bote_100ml_cilindrico_tapa_negra.jpg',
+
+  'BOT-100-FRO-CMC': '/images/botes/bote_100ml_frosted_cilindro_madera_clara.jpg',
+  'bote-100ml-frosted-cilindro-madera-clara': '/images/botes/bote_100ml_frosted_cilindro_madera_clara.jpg',
+
+  'BOT-100-FRO-CMM': '/images/botes/bote_100ml_frosted_cilindro_madera_media.jpg',
+  'bote-100ml-frosted-cilindro-madera-media': '/images/botes/bote_100ml_frosted_cilindro_madera_media.jpg',
+
+  'BOT-100-FRO-CMO': '/images/botes/bote_100ml_frosted_cilindro_madera_oscura.jpg',
+  'bote-100ml-frosted-cilindro-madera-oscura': '/images/botes/bote_100ml_frosted_cilindro_madera_oscura.jpg',
+
+  'BOT-100-REC-FP': '/images/botes/bote_100ml_rectangular_frosted_plata.jpg',
+  'bote-100ml-rectangular-frosted-plata': '/images/botes/bote_100ml_rectangular_frosted_plata.jpg',
+
+  'BOT-100-CHA-C': '/images/botes/bote_100ml_chanel_tapa_cristal.jpg',
+  'bote-100ml-chanel-cristal': '/images/botes/bote_100ml_chanel_tapa_cristal.jpg',
+
+  'BOT-100-ROC-N': '/images/botes/bote_100ml_rockstud_tapa_negra.jpg',
+  'bote-100ml-rockstud-tapa-negra': '/images/botes/bote_100ml_rockstud_tapa_negra.jpg',
+
+  'BOT-100-ROC-C': '/images/botes/bote_100ml_rockstud_tapa_cobre.jpg',
+  'bote-100ml-rockstud-tapa-cobre': '/images/botes/bote_100ml_rockstud_tapa_cobre.jpg',
+
+  'BOT-100-CIL-AN': '/images/botes/bote_100ml_cilindrico_alto_tapa_negra.jpg',
+  'bote-100ml-cilindrico-alto-negro': '/images/botes/bote_100ml_cilindrico_alto_tapa_negra.jpg',
+};
+
 /**
  * Retorna la imagen oficial del producto.
- * Para todas las esencias (onzas y medias onzas), genera dinámicamente
- * la fotografía del frasco de onza con el nombre del contratipo impreso en la etiqueta.
  */
 export function getProductImage(product: ProductItem): string {
-  // Para todas las esencias de perfume (onzas y medias onzas)
+  // 1. Para frascos y botes de perfume: siempre usar su fotografía oficial en fondo blanco
+  if (product.category === 'Botes' || product.category === 'Botes & Envases') {
+    if (product.imageUrl && product.imageUrl.startsWith('/images/botes/')) {
+      return product.imageUrl;
+    }
+    const mapped = BOTTLE_IMAGES_MAP[product.sku] || BOTTLE_IMAGES_MAP[product.id];
+    if (mapped) return mapped;
+    return '/images/botes/bote_100ml_sauvage_degrade_negro.jpg';
+  }
+
+  // 2. Para todas las esencias de perfume (onzas y medias onzas)
   if (!product.category || product.category === 'Esencias para Perfume') {
     const contratipoName = product.name || 'Esencia Pura';
     return `/api/bottle-image?name=${encodeURIComponent(contratipoName)}`;
   }
 
-  // Si tiene imagen asignada (frascos, envases o suministros)
+  // 3. Si tiene imagen asignada (suministros, empaques, etc.)
   if (product.imageUrl && product.imageUrl.trim() !== '') {
     return product.imageUrl;
   }

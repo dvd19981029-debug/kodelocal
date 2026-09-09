@@ -22,6 +22,7 @@ import { DEPARTAMENTOS_SV, CustomerRecord, getStoredCustomers, saveStoredCustome
 import { DEPARTAMENTOS_CATALOG, getMunicipiosByDepartamento } from '@/lib/svTerritory';
 import { SaleRecord } from '@/lib/store';
 import { getProductImage } from '@/lib/perfumeImages';
+import { getOriginalPerfumeName } from '@/lib/perfumeNames';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -680,9 +681,10 @@ export default function CheckoutPage() {
                       <p className="font-bold text-slate-800 truncate">
                         {it.product.officialName || it.product.name}
                       </p>
-                      {it.product.officialName && (
-                        <p className="text-[9.5px] text-slate-400 font-medium truncate">
-                          Inspirado en {it.product.name}
+                      {it.product.category === 'Esencias para Perfume' && (
+                        <p className="text-[10px] text-slate-500 truncate" title={`Inspirado en ${getOriginalPerfumeName(it.product)} • ${it.product.gender || ''}`}>
+                          Inspirado en {getOriginalPerfumeName(it.product)}
+                          {it.product.gender ? ` • ${it.product.gender}` : ''}
                         </p>
                       )}
                       <p className="text-[10.5px] text-indigo-600 font-semibold">

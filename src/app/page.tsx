@@ -20,6 +20,7 @@ import PromoBannerCarousel from '@/components/ecommerce/PromoBannerCarousel';
 import ReactiveSearchBar from '@/components/ecommerce/ReactiveSearchBar';
 import BuildYourPerfumeCard from '@/components/ecommerce/BuildYourPerfumeCard';
 import PerfumeKitBuilderModal from '@/components/ecommerce/PerfumeKitBuilderModal';
+import { getOriginalPerfumeName } from '@/lib/perfumeNames';
 
 export default function EcommerceHomePage() {
   const [products, setProducts] = useState<ProductItem[]>(() => INITIAL_PRODUCTS);
@@ -105,15 +106,28 @@ export default function EcommerceHomePage() {
       const nameStr = String(p.name || '').toLowerCase();
       const brandStr = String(p.brand || '').toLowerCase();
       const barcodeStr = String(p.barcode || '');
-
       const officialStr = (p.officialName || '').toLowerCase();
+      const descStr = String(p.description || '').toLowerCase();
+      const origPerfumeStr = getOriginalPerfumeName(p).toLowerCase();
+      const normDesc = descStr.replace(/acqua/g, 'aqua');
+      const normOrig = origPerfumeStr.replace(/acqua/g, 'aqua');
+
+      // Normalización inteligente (ej. acqua / aqua)
+      const normQ = q.replace(/acqua/g, 'aqua');
+      const normName = nameStr.replace(/acqua/g, 'aqua');
+
       const matchesSearch = 
         !q ||
         skuStr === q ||
         nameStr.includes(q) ||
+        normName.includes(normQ) ||
         officialStr.includes(q) ||
         brandStr.includes(q) ||
-        barcodeStr.includes(q);
+        barcodeStr.includes(q) ||
+        descStr.includes(q) ||
+        normDesc.includes(normQ) ||
+        origPerfumeStr.includes(q) ||
+        normOrig.includes(normQ);
 
       return matchesCategory && matchesGender && matchesStock && matchesSearch;
     });

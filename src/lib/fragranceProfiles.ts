@@ -133,7 +133,7 @@ export function getFragranceProfile(product: ProductItem): FragranceProfile {
       season: 'Todo el año / Firma personal',
       occasion: 'Uso versátil, diario y ocasiones especiales',
       intensity: 'Intensa',
-      description: `Inspirado en ${entry.officialName}. Perfil olfativo oficial respaldado por la base de datos de perfumería.`
+      description: 'Perfil olfativo oficial de alta fijación respaldado por la base de datos de perfumería fina con notas y acordes seleccionados.'
     };
   }
 

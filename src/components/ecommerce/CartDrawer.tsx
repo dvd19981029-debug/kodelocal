@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { getProductImage } from '@/lib/perfumeImages';
+import { getOriginalPerfumeName } from '@/lib/perfumeNames';
 
 export default function CartDrawer() {
   const { 
@@ -130,11 +131,11 @@ export default function CartDrawer() {
                             <h4 className="font-black text-xs sm:text-sm text-slate-900 leading-snug truncate" title={displayName}>
                               {displayName}
                             </h4>
-                            {item.product.officialName && (
-                              <p className="text-[10px] text-slate-400 font-medium truncate">
-                                Inspirado en {item.product.name}
-                              </p>
-                            )}
+                            <p className="text-[10px] text-slate-500 font-medium truncate" title={item.product.category === 'Esencias para Perfume' ? `Inspirado en ${getOriginalPerfumeName(item.product)} • ${item.product.gender || ''}` : ''}>
+                              {item.product.category === 'Esencias para Perfume' 
+                                ? `Inspirado en ${getOriginalPerfumeName(item.product)}${item.product.gender ? ` • ${item.product.gender}` : ''}` 
+                                : (item.product.unit || 'Unidad')}
+                            </p>
                           </div>
 
                           <button

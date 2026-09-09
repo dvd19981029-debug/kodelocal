@@ -16,6 +16,7 @@ import {
 import { ProductItem } from '@/lib/store';
 import { MOCK_100ML_BOTTLES } from '@/lib/bottles';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
+import { getOriginalPerfumeName } from '@/lib/perfumeNames';
 
 interface PerfumeKitBuilderModalProps {
   isOpen: boolean;
@@ -38,16 +39,13 @@ export default function PerfumeKitBuilderModal({
   // Estados de configuración del perfume
   const [selectedEssence, setSelectedEssence] = useState<ProductItem | null>(null);
   
-  // Usar los frascos de 100ml variados
+  // Usar los frascos de 100ml reales con fotos en fondo blanco del inventario
   const bottlesList = useMemo(() => {
-    const existing100ml = (availableBottles || []).filter(b => (b.name || '').toLowerCase().includes('100'));
-    const combined = [...MOCK_100ML_BOTTLES];
-    existing100ml.forEach(eb => {
-      if (!combined.some(b => b.id === eb.id)) {
-        combined.unshift(eb);
-      }
-    });
-    return combined;
+    const realFromCatalog = (availableBottles || []).filter(b => 
+      b.imageUrl && b.imageUrl.startsWith('/images/botes/')
+    );
+    if (realFromCatalog.length > 0) return realFromCatalog;
+    return MOCK_100ML_BOTTLES;
   }, [availableBottles]);
 
   const [selectedBottle, setSelectedBottle] = useState<ProductItem | null>(null);
@@ -79,8 +77,13 @@ export default function PerfumeKitBuilderModal({
       const official = (item.officialName || '').toLowerCase();
       const brand = (item.brand || '').toLowerCase();
       const sku = (item.sku || '').toLowerCase();
+      const desc = (item.description || '').toLowerCase();
 
-      return name.includes(q) || official.includes(q) || brand.includes(q) || sku.includes(q);
+      const normQ = q.replace(/acqua/g, 'aqua');
+      const normName = name.replace(/acqua/g, 'aqua');
+      const normDesc = desc.replace(/acqua/g, 'aqua');
+
+      return name.includes(q) || normName.includes(normQ) || official.includes(q) || brand.includes(q) || sku.includes(q) || desc.includes(q) || normDesc.includes(normQ);
     });
   }, [availableEssences, essenceSearch, essenceGenderFilter]);
 
@@ -284,7 +287,7 @@ export default function PerfumeKitBuilderModal({
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-2.5">
                     {filteredEssences.map((essence) => {
                       const isChosen = selectedEssence?.id === essence.id;
-                      const name = essence.officialName || essence.name;
+                      const name = essence.officialName?.trim() || essence.name;
 
                       return (
                         <div
@@ -307,11 +310,12 @@ export default function PerfumeKitBuilderModal({
                             <p className="text-[11px] font-black text-slate-900 leading-snug line-clamp-2">
                               {name}
                             </p>
-                            {essence.officialName && (
-                              <p className="text-[9.5px] text-slate-400 truncate mt-0.5">
-                                {essence.name}
-                              </p>
-                            )}
+                            <p className="text-[9px] text-slate-500 font-medium truncate mt-0.5" title={`Inspirado en ${getOriginalPerfumeName(essence)} • ${essence.gender || ''}`}>
+                              <span className="text-slate-400">Inspirado en: </span>
+                              <strong className="text-slate-800 font-semibold">
+                                {getOriginalPerfumeName(essence)}
+                              </strong>
+                            </p>
                           </div>
 
                           <div className="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[9px]">
@@ -341,6 +345,9 @@ export default function PerfumeKitBuilderModal({
                       <strong className="text-xs sm:text-sm font-black text-emerald-900 truncate block">
                         {selectedEssence.officialName || selectedEssence.name}
                       </strong>
+                      <span className="text-[10px] text-emerald-800 font-medium truncate block">
+                        Inspirado en: {getOriginalPerfumeName(selectedEssence)} • {selectedEssence.gender}
+                      </span>
                     </div>
                   </div>
                   <button
@@ -384,12 +391,12 @@ export default function PerfumeKitBuilderModal({
                             : 'bg-white hover:bg-slate-50 border-slate-200/80 shadow-2xs'
                         }`}
                       >
-                        <div className="w-full aspect-square max-h-28 rounded-xl overflow-hidden bg-slate-100 mb-2 flex items-center justify-center border border-slate-100">
+                        <div className="w-full aspect-square max-h-28 rounded-xl overflow-hidden bg-white mb-2 flex items-center justify-center border border-slate-100">
                           <img
-                            src={bottle.imageUrl || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=300&q=80'}
+                            src={bottle.imageUrl || '/images/botes/bote_100ml_sauvage_degrade_negro.jpg'}
                             alt={bottle.name}
                             onError={(e) => {
-                              e.currentTarget.src = 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=300&q=80';
+                              e.currentTarget.src = '/images/botes/bote_100ml_sauvage_degrade_negro.jpg';
                             }}
                             className="w-full h-full object-cover"
                           />
@@ -424,10 +431,10 @@ export default function PerfumeKitBuilderModal({
                 <div className="flex items-center gap-2 min-w-0">
                   <div className="w-8 h-8 rounded-lg overflow-hidden bg-white border border-indigo-200 shrink-0">
                     <img
-                      src={activeBottle.imageUrl || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=300&q=80'}
+                      src={activeBottle.imageUrl || '/images/botes/bote_100ml_sauvage_degrade_negro.jpg'}
                       alt={activeBottle.name}
                       onError={(e) => {
-                        e.currentTarget.src = 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=300&q=80';
+                        e.currentTarget.src = '/images/botes/bote_100ml_sauvage_degrade_negro.jpg';
                       }}
                       className="w-full h-full object-cover"
                     />

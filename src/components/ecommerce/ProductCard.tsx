@@ -6,6 +6,7 @@ import { ShoppingBag, Check, Sparkles, Plus, Minus } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS } from '@/lib/store';
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation } from '@/context/EcommerceCartContext';
 import { getProductImage } from '@/lib/perfumeImages';
+import { getOriginalPerfumeName } from '@/lib/perfumeNames';
 
 interface ProductCardProps {
   product: ProductItem;
@@ -90,7 +91,16 @@ export default function ProductCard({ product }: ProductCardProps) {
     setTimeout(() => setJustAdded(false), 1200);
   };
 
+  const isBottle = product.category === 'Botes' || product.category === 'Botes & Envases';
+
   const getGenderBadge = (gender?: string) => {
+    if (isBottle) {
+      return (
+        <span className="bg-white/95 backdrop-blur-xs text-slate-800 border border-slate-200 text-[8.5px] sm:text-[9.5px] font-extrabold py-0.5 px-1.5 rounded-md shadow-xs shrink-0 tracking-wide uppercase">
+          100 ML
+        </span>
+      );
+    }
     if (!gender) return null;
     const g = gender.toLowerCase();
     if (g.includes('caballero') || g.includes('hombre')) {
@@ -114,8 +124,8 @@ export default function ProductCard({ product }: ProductCardProps) {
     );
   };
 
-  // Nombre oficial (si no tiene, usa el nombre del contratipo)
-  const displayName = product.officialName?.trim() ? product.officialName : product.name;
+  // Nombre oficial de contratipo (muestra contratipo comercial)
+  const displayName = product.officialName?.trim() || product.name;
   const productImage = getProductImage(product);
 
   return (
@@ -143,7 +153,9 @@ export default function ProductCard({ product }: ProductCardProps) {
               alt={displayName}
               loading="lazy"
               onError={(e) => {
-                e.currentTarget.src = 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80';
+                e.currentTarget.src = product.category === 'Botes' 
+                  ? '/images/botes/bote_100ml_sauvage_degrade_negro.jpg'
+                  : 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80';
               }}
               className={`w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-108 ${
                 isOutOfStock ? 'grayscale-[35%]' : ''
@@ -175,7 +187,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             )}
           </Link>
 
-          {/* Nombre Oficial de la Fragancia */}
+          {/* Nombre Oficial de la Fragancia (Contratipo) */}
           <Link href={`/producto/${product.id}`} className="block group/title">
             <h3 className="font-black text-xs sm:text-base text-slate-900 line-clamp-1 leading-snug group-hover/title:text-indigo-600 transition-colors" title={displayName}>
               {displayName}
@@ -189,10 +201,23 @@ export default function ProductCard({ product }: ProductCardProps) {
             </span>
           </div>
 
-          {/* Inspirado en [Contratipo] abajo del precio (sin mencionar marcas) */}
+          {/* Inspirado en el perfume original (sin marca) y género */}
           <div className="text-[10px] sm:text-xs text-slate-600 mt-0.5 leading-tight min-h-[18px] sm:min-h-[20px] line-clamp-2">
-            <span className="text-slate-400 font-normal">Inspirado en </span>
-            <span className="font-bold text-slate-800">{product.name}</span>
+            {isEssence ? (
+              <span className="truncate block" title={`Inspirado en ${getOriginalPerfumeName(product)} • ${product.gender || ''}`}>
+                <span className="text-slate-400 font-normal">Inspirado en </span>
+                <span className="font-bold text-slate-800">
+                  {getOriginalPerfumeName(product)}
+                </span>
+                {product.gender && (
+                  <span className="text-indigo-600 font-semibold text-[9.5px] sm:text-[10.5px]"> • {product.gender}</span>
+                )}
+              </span>
+            ) : isBottle ? (
+              <span className="text-slate-500 font-normal">Frasco de Vidrio • Atomizador de Lujo</span>
+            ) : (
+              <span className="text-slate-500 font-normal">{product.unit || 'Unidad'} • Disponible</span>
+            )}
           </div>
 
           {/* Selector de Presentación y Disponibilidad */}

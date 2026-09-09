@@ -12,60 +12,71 @@ import {
   Wand2, 
   Plus, 
   Minus, 
-  ChevronRight
+  ChevronRight,
+  Sparkles
 } from 'lucide-react';
-import { ProductItem, INITIAL_PRODUCTS, getStoredProducts } from '@/lib/store';
+import { ProductItem, INITIAL_PRODUCTS, getStoredProducts, saveStoredProducts } from '@/lib/store';
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation } from '@/context/EcommerceCartContext';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getFragranceProfile } from '@/lib/fragranceProfiles';
 import PerfumeKitBuilderModal from '@/components/ecommerce/PerfumeKitBuilderModal';
 import ProductCard from '@/components/ecommerce/ProductCard';
 import FragranceNotesVisual from '@/components/ecommerce/FragranceNotesVisual';
+import { getOriginalPerfumeName } from '@/lib/perfumeNames';
 
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
   const productId = Array.isArray(params?.id) ? params.id[0] : params?.id;
 
-  const [products, setProducts] = useState<ProductItem[]>(() => INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedPresentation, setSelectedPresentation] = useState<ProductPresentation>('ONZA_COMPLETA');
   const [quantity, setQuantity] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
   const [isKitModalOpen, setIsKitModalOpen] = useState(false);
 
-
   const { cart, addToCart } = useEcommerceCart();
 
   // 1. Sincronización con catálogo local o API
   useEffect(() => {
+    let isMounted = true;
     const loadCatalog = async () => {
       try {
         const res = await fetch('/api/products');
         const data = await res.json();
-        if (data.success && data.products && data.products.length > 0) {
+        if (isMounted && data.success && Array.isArray(data.products) && data.products.length > 0) {
           setProducts(data.products);
-          return;
+          saveStoredProducts(data.products);
         }
       } catch (err) {
-        console.error('Error cargando catálogo, usando local:', err);
+        console.error('Error cargando catálogo:', err);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
-
-      const stored = getStoredProducts();
-      setProducts(stored && stored.length > 0 ? stored : INITIAL_PRODUCTS);
     };
 
     loadCatalog();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  // 2. Encontrar producto por ID o por SKU
+  // 2. Encontrar producto por ID o por SKU (búsqueda inmediata en catálogo local y estado)
   const product = useMemo(() => {
     if (!productId) return null;
     const decoded = decodeURIComponent(productId).toLowerCase().trim();
-    return products.find(p => 
-      p.id.toLowerCase() === decoded || 
-      String(p.sku || '').toLowerCase() === decoded
-    ) || null;
+    return (
+      products.find(p => p.id.toLowerCase() === decoded || String(p.sku || '').toLowerCase() === decoded) ||
+      INITIAL_PRODUCTS.find(p => p.id.toLowerCase() === decoded || String(p.sku || '').toLowerCase() === decoded) ||
+      null
+    );
   }, [products, productId]);
+
+  const isEssence = product?.category === 'Esencias para Perfume';
+  const isBottle = product?.category === 'Botes' || product?.category === 'Botes & Envases';
 
   const presentations = useMemo(() => {
     if (!product) return [];
@@ -77,9 +88,9 @@ export default function ProductDetailPage() {
   }, [presentations, selectedPresentation]);
 
   const profile = useMemo(() => {
-    if (!product) return null;
+    if (!product || !isEssence) return null;
     return getFragranceProfile(product);
-  }, [product]);
+  }, [product, isEssence]);
 
   // Lista de botellas para el Kit Builder
   const availableBottles = useMemo(() => {
@@ -93,13 +104,18 @@ export default function ProductDetailPage() {
     return products.filter(p => p.category === 'Esencias para Perfume');
   }, [products]);
 
-  // Perfumes relacionados
+  // Productos relacionados (esencias con esencias, botes con botes)
   const relatedProducts = useMemo(() => {
     if (!product) return [];
+    if (isBottle) {
+      return products
+        .filter(p => p.id !== product.id && (p.category === 'Botes' || p.category === 'Botes & Envases'))
+        .slice(0, 4);
+    }
     return products
       .filter(p => p.id !== product.id && p.category === 'Esencias para Perfume' && (p.gender === product.gender || p.gender === 'Unisex'))
       .slice(0, 4);
-  }, [products, product]);
+  }, [products, product, isBottle]);
 
   // Cálculo de inventario restante
   const totalStock = typeof product?.stock === 'number' ? product.stock : 0;
@@ -117,17 +133,33 @@ export default function ProductDetailPage() {
 
   const remainingStock = Math.max(0, totalStock - cartUsed);
   const requiredStock = selectedPresentation === 'MEDIA_ONZA' ? 0.5 : 1.0;
-  const canAddMore = remainingStock >= (requiredStock * quantity);
+  const canAddMore = isEssence ? remainingStock >= (requiredStock * quantity) : remainingStock >= quantity;
 
-  if (!product || !profile) {
+  // Estado de carga elegante mientras se resuelve el producto o catálogo
+  if (!product && (isLoading || !productId)) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center p-4 text-center space-y-4">
+        <div className="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-500 flex items-center justify-center shadow-xs animate-pulse">
+          <Droplets className="w-8 h-8 animate-bounce" />
+        </div>
+        <h2 className="text-xl font-black text-slate-900">Cargando producto...</h2>
+        <p className="text-xs sm:text-sm text-slate-500 max-w-sm">
+          Estamos preparando los detalles y existencias del producto.
+        </p>
+      </div>
+    );
+  }
+
+  // Únicamente si la carga terminó por completo y el producto no existe
+  if (!product) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center p-4 text-center space-y-4">
         <div className="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-500 flex items-center justify-center shadow-xs">
           <Droplets className="w-8 h-8" />
         </div>
-        <h2 className="text-xl font-black text-slate-900">Fragancia no encontrada</h2>
+        <h2 className="text-xl font-black text-slate-900">Producto no encontrado</h2>
         <p className="text-xs sm:text-sm text-slate-500 max-w-sm">
-          No pudimos localizar esta fragancia en nuestro catálogo activo. Es posible que haya cambiado de código o esté en reposición.
+          No pudimos localizar este producto en nuestro catálogo activo. Es posible que haya cambiado de código o esté en reposición.
         </p>
         <Link
           href="/"
@@ -141,7 +173,7 @@ export default function ProductDetailPage() {
   }
 
   const productImage = getProductImage(product);
-  const displayName = product.officialName?.trim() ? product.officialName : product.name;
+  const displayName = product.officialName?.trim() || product.name;
 
   const handleAddToCart = () => {
     if (isOutOfStock || !canAddMore) return;
@@ -194,16 +226,24 @@ export default function ProductDetailPage() {
                 src={productImage}
                 alt={displayName}
                 onError={(e) => {
-                  e.currentTarget.src = 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=800&q=80';
+                  e.currentTarget.src = isBottle 
+                    ? '/images/botes/bote_100ml_sauvage_degrade_negro.jpg'
+                    : 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=800&q=80';
                 }}
                 className={`w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105 ${
                   isOutOfStock ? 'grayscale-[25%]' : ''
                 }`}
               />
 
-              {/* Badge de género sobre la imagen */}
+              {/* Badge de categoría / género sobre la imagen */}
               <div className="absolute top-3 left-3 z-10">
-                {getGenderBadge(product.gender)}
+                {isBottle ? (
+                  <span className="bg-white/95 backdrop-blur-xs text-slate-800 border border-slate-200 text-[11px] font-black px-2.5 py-1 rounded-xl shadow-2xs">
+                    100 ML • Vidrio
+                  </span>
+                ) : (
+                  getGenderBadge(product.gender)
+                )}
               </div>
 
               {/* Badge Disponibilidad */}
@@ -220,11 +260,20 @@ export default function ProductDetailPage() {
                 )}
               </div>
 
-              {/* Sello de pureza */}
+              {/* Sello de pureza / calidad de frasco */}
               <div className="absolute bottom-3 left-3 z-10">
                 <span className="bg-white/90 backdrop-blur-xs text-slate-800 border border-slate-200 text-[10.5px] font-black py-1 px-2.5 rounded-lg shadow-xs flex items-center gap-1.5">
-                  <Droplets className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>100% Esencia Concentrada</span>
+                  {isBottle ? (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Atomizador de Lujo Incluido</span>
+                    </>
+                  ) : (
+                    <>
+                      <Droplets className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>100% Esencia Concentrada</span>
+                    </>
+                  )}
                 </span>
               </div>
             </div>
@@ -237,8 +286,17 @@ export default function ProductDetailPage() {
               <span>Envíos C807 Todo el País</span>
             </div>
             <div className="clay-card py-2.5 px-2 rounded-2xl bg-white border border-slate-100 flex flex-col items-center justify-center gap-1 text-[11px] font-bold text-slate-700 shadow-2xs">
-              <Droplets className="w-4 h-4 text-pink-600" />
-              <span>Esencia Pura Concentrada</span>
+              {isBottle ? (
+                <>
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <span>Vidrio Grueso Resistente</span>
+                </>
+              ) : (
+                <>
+                  <Droplets className="w-4 h-4 text-pink-600" />
+                  <span>Esencia Pura Concentrada</span>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -249,18 +307,40 @@ export default function ProductDetailPage() {
           {/* 1. TÍTULO, CONTRATIPO Y VALORACIÓN */}
           <div className="space-y-2">
             
-
-
-            {/* Nombre Oficial */}
+            {/* Nombre Oficial (Contratipo o Bote) */}
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
               {displayName}
             </h1>
 
-            {/* Inspiración en el perfume */}
-            <div className="text-xs sm:text-sm text-slate-600 font-medium flex items-center gap-1.5 flex-wrap">
-              <span className="text-slate-400">Inspirado en:</span>
-              <strong className="text-slate-900 font-black">{product.name}</strong>
-            </div>
+            {/* Inspiración en el perfume original y género (solo para esencias) */}
+            {isEssence && (
+              <div className="text-xs sm:text-sm text-slate-600 font-medium flex items-center gap-1.5 flex-wrap">
+                <span className="text-slate-400">Inspirado en:</span>
+                <strong className="text-slate-900 font-black">
+                  {getOriginalPerfumeName(product)}
+                </strong>
+                {product.gender && (
+                  <>
+                    <span className="text-slate-300">•</span>
+                    <span className="text-indigo-700 font-bold bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg text-xs">
+                      {product.gender}
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Subtítulo específico para botes */}
+            {isBottle && (
+              <div className="text-xs sm:text-sm text-slate-600 font-medium flex items-center gap-1.5 flex-wrap">
+                <span className="text-slate-400">Tipo de Envase:</span>
+                <strong className="text-slate-900 font-black">Frasco de Vidrio de 100ml</strong>
+                <span className="text-slate-300">•</span>
+                <span className="text-indigo-700 font-bold bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg text-xs">
+                  Atomizador Spray de Lujo
+                </span>
+              </div>
+            )}
 
             {/* Precio Prominente */}
             <div className="pt-2 flex items-baseline gap-3">
@@ -278,14 +358,21 @@ export default function ProductDetailPage() {
           <div className="space-y-2 pt-1 border-t border-slate-100">
             <div className="flex items-center justify-between">
               <label className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                Elige tu presentación:
+                {isEssence ? 'Elige tu presentación:' : 'Presentación:'}
               </label>
-              <span className="text-[11px] font-bold text-indigo-600">
-                Familia: {profile.family}
-              </span>
+              {isEssence && profile && (
+                <span className="text-[11px] font-bold text-indigo-600">
+                  Familia: {profile.family}
+                </span>
+              )}
+              {isBottle && (
+                <span className="text-[11px] font-bold text-indigo-600">
+                  Capacidad: 100 ml (3.4 oz)
+                </span>
+              )}
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className={`grid ${presentations.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-2.5`}>
               {presentations.map((pres) => {
                 const isSelected = selectedPresentation === pres.id;
                 return (
@@ -318,34 +405,36 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* 3. TARJETA ESPECIAL: ARMAR EN KIT DE 100ML PREPARADO ($15) */}
-          <div 
-            onClick={() => setIsKitModalOpen(true)}
-            className="clay-card p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-50/90 via-purple-50/70 to-indigo-50/80 border-2 border-amber-300 ring-2 ring-amber-200/40 cursor-pointer hover:border-amber-400 transition-all flex items-center justify-between gap-3 shadow-2xs group"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-700 flex items-center justify-center shrink-0">
-                <Wand2 className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="text-xs sm:text-sm font-black text-slate-900">
-                    ¿Lo prefieres en perfume preparado?
-                  </h4>
-                  <span className="bg-emerald-600 text-white text-[10px] font-black px-2 py-0.2 rounded-full font-mono shadow-2xs">
-                    $15.00
-                  </span>
+          {/* 3. TARJETA ESPECIAL: ARMAR EN KIT DE 100ML PREPARADO ($15) (SOLO PARA ESENCIAS) */}
+          {isEssence && (
+            <div 
+              onClick={() => setIsKitModalOpen(true)}
+              className="clay-card p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-50/90 via-purple-50/70 to-indigo-50/80 border-2 border-amber-300 ring-2 ring-amber-200/40 cursor-pointer hover:border-amber-400 transition-all flex items-center justify-between gap-3 shadow-2xs group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-700 flex items-center justify-center shrink-0">
+                  <Wand2 className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                 </div>
-                <p className="text-[11px] text-slate-600 font-medium leading-tight mt-0.5">
-                  1 oz pura de este contratipo (u opción PLUS de 1.5 oz) + frasco de 100ml a elegir + fijador + etiqueta gratis.
-                </p>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-xs sm:text-sm font-black text-slate-900">
+                      ¿Lo prefieres en perfume preparado?
+                    </h4>
+                    <span className="bg-emerald-600 text-white text-[10px] font-black px-2 py-0.2 rounded-full font-mono shadow-2xs">
+                      $15.00
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 font-medium leading-tight mt-0.5">
+                    1 oz pura de este contratipo (u opción PLUS de 1.5 oz) + frasco de 100ml a elegir + fijador + etiqueta gratis.
+                  </p>
+                </div>
               </div>
+              <span className="text-xs font-black text-indigo-700 flex items-center gap-0.5 shrink-0 group-hover:translate-x-0.5 transition-transform">
+                <span>Armar</span>
+                <ChevronRight className="w-4 h-4" />
+              </span>
             </div>
-            <span className="text-xs font-black text-indigo-700 flex items-center gap-0.5 shrink-0 group-hover:translate-x-0.5 transition-transform">
-              <span>Armar</span>
-              <ChevronRight className="w-4 h-4" />
-            </span>
-          </div>
+          )}
 
           {/* 4. SELECTOR DE CANTIDAD Y BOTÓN DE COMPRA */}
           <div className="space-y-2.5 pt-2">
@@ -408,41 +497,104 @@ export default function ProductDetailPage() {
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span>En existencia para envío inmediato con <strong>C807</strong></span>
               </span>
-              <span>Existencias: <strong>{Math.floor(remainingStock)} oz</strong></span>
+              <span>Existencias: <strong>{isEssence ? `${Math.floor(remainingStock)} oz` : `${Math.floor(remainingStock)} unidades`}</strong></span>
             </div>
           </div>
 
-          {/* ================= ACORDES Y PIRÁMIDE DEL PERFUME ESTILO FRAGRANTICA ================= */}
-          <FragranceNotesVisual profile={profile} />
+          {/* ================= ACORDES Y PIRÁMIDE DEL PERFUME (SOLO PARA ESENCIAS) ================= */}
+          {isEssence && profile && (
+            <FragranceNotesVisual profile={profile} />
+          )}
+
+          {/* ================= ESPECIFICACIONES TÉCNICAS (PARA BOTES) ================= */}
+          {isBottle && (
+            <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-4 shadow-xs">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <span>Especificaciones Técnicas del Frasco</span>
+                </h3>
+                <span className="text-[10.5px] font-bold text-slate-400 font-mono">
+                  {product.sku || '100ML'}
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                  <span className="text-[10px] font-black uppercase text-slate-400">Capacidad</span>
+                  <strong className="text-xs sm:text-sm font-bold text-slate-800">100 ml (3.4 fl oz)</strong>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                  <span className="text-[10px] font-black uppercase text-slate-400">Material</span>
+                  <strong className="text-xs sm:text-sm font-bold text-slate-800">Vidrio Grueso Premium</strong>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                  <span className="text-[10px] font-black uppercase text-slate-400">Atomizador</span>
+                  <strong className="text-xs sm:text-sm font-bold text-slate-800">Spray Fino de Lujo</strong>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                  <span className="text-[10px] font-black uppercase text-slate-400">Tipo de Tapa</span>
+                  <strong className="text-xs sm:text-sm font-bold text-slate-800">Cierre Hermético</strong>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                  <span className="text-[10px] font-black uppercase text-slate-400">Compatibilidad</span>
+                  <strong className="text-xs sm:text-sm font-bold text-slate-800">Perfumería Fina</strong>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                  <span className="text-[10px] font-black uppercase text-slate-400">Fabricante</span>
+                  <strong className="text-xs sm:text-sm font-bold text-indigo-700">{product.supplier || 'Yahua Industrial'}</strong>
+                </div>
+              </div>
+            </div>
+          )}
 
         </div>
 
       </section>
 
-      {/* ================= DETALLES DE LA FRAGANCIA Y ENVÍO ================= */}
+      {/* ================= DETALLES DE LA FRAGANCIA O ENVASE Y ENVÍO ================= */}
       <section className="grid grid-cols-1 md:grid-cols-12 gap-4">
-        {/* Descripción de la fragancia */}
+        {/* Descripción de la fragancia o envase */}
         <div className="md:col-span-7 clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-3 shadow-xs">
           <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider">
-            Detalles de la fragancia
+            {isEssence ? 'Detalles de la fragancia' : 'Detalles del envase'}
           </h3>
           <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-            {profile.description}
+            {isEssence
+              ? `Inspirado en ${getOriginalPerfumeName(product)} (${product.gender || 'Unisex'}). Perfil olfativo oficial de alta fijación respaldado por la base de datos de perfumería fina con notas y acordes seleccionados.`
+              : (product.description || 'Frasco de vidrio de 100ml de alta resistencia con atomizador de lujo y tapa hermética. Diseñado especialmente para preservar la intensidad y estela de formulaciones de alta perfumería.')}
           </p>
-          <div className="grid grid-cols-3 gap-2 pt-1 text-center">
-            <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
-              <span className="text-[9.5px] font-black uppercase text-slate-400 block">Estación</span>
-              <span className="text-xs font-bold text-slate-800">{profile.season}</span>
+          {isEssence && profile ? (
+            <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Estación</span>
+                <span className="text-xs font-bold text-slate-800">{profile.season}</span>
+              </div>
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Ocasión</span>
+                <span className="text-xs font-bold text-slate-800">{profile.occasion}</span>
+              </div>
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Intensidad</span>
+                <span className="text-xs font-bold text-indigo-700">{profile.intensity}</span>
+              </div>
             </div>
-            <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
-              <span className="text-[9.5px] font-black uppercase text-slate-400 block">Ocasión</span>
-              <span className="text-xs font-bold text-slate-800">{profile.occasion}</span>
+          ) : (
+            <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Formato</span>
+                <span className="text-xs font-bold text-slate-800">100 ml</span>
+              </div>
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Material</span>
+                <span className="text-xs font-bold text-slate-800">Vidrio</span>
+              </div>
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Acabado</span>
+                <span className="text-xs font-bold text-indigo-700">Premium</span>
+              </div>
             </div>
-            <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
-              <span className="text-[9.5px] font-black uppercase text-slate-400 block">Intensidad</span>
-              <span className="text-xs font-bold text-indigo-700">{profile.intensity}</span>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Información de entrega C807 */}
@@ -473,12 +625,12 @@ export default function ProductDetailPage() {
         </div>
       </section>
 
-      {/* ================= FRAGANCIAS RELACIONADAS ("TAMBIÉN TE PUEDE GUSTAR") ================= */}
+      {/* ================= PRODUCTOS RELACIONADOS ================= */}
       {relatedProducts.length > 0 && (
         <section className="space-y-3.5 pt-2">
           <div className="flex items-center justify-between px-1">
             <h3 className="text-base sm:text-lg font-black text-slate-900">
-              También te podría gustar
+              {isBottle ? 'Otros modelos de frascos disponibles' : 'También te podría gustar'}
             </h3>
             <Link
               href="/"
