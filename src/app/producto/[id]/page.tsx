@@ -325,10 +325,15 @@ export default function ProductDetailPage() {
                       <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                       <span>Cierre de Rosca</span>
                     </>
-                  ) : (
+                  ) : isEssence ? (
                     <>
                       <Droplets className="w-3.5 h-3.5 text-indigo-600" />
-                      <span>100% Esencia Concentrada</span>
+                      <span>100% Esencia NO diluida</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                      <span>{product.unit || 'Calidad Garantizada'}</span>
                     </>
                   )}
                 </span>
