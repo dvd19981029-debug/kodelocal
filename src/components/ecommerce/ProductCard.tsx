@@ -52,7 +52,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
     : [];
   const currentQuantity = matchingCartItems.reduce((acc, it) => acc + it.quantity, 0);
 
-  // Total de botes de esta esencia en el carrito (incluyendo kits)
+  // Total de botes de esta esencia en el carrito (entre 1 oz y ½ oz)
   const totalBotesInCart = isEssence
     ? (discreteStock ? discreteStock.used1oz + discreteStock.usedHalfOz : 0)
     : (cart.find(it => it.product.id === product.id)?.quantity || 0);

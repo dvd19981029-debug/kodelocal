@@ -52,11 +52,11 @@ const TICKER_ITEMS: TickerItem[] = [
     ),
   },
   {
-    id: 'arma-perfume',
+    id: 'productos-separados',
     content: (
       <div className="inline-flex items-center gap-1.5 text-xs font-bold text-white shrink-0">
-        <Wand2 className="w-3.5 h-3.5 text-amber-300" />
-        <span>Arma tu propio perfume con frasco de 100ml por solo <strong className="text-amber-300 font-black">$15.00</strong></span>
+        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+        <span>Fragancias por onza y media onza • Frascos e insumos <strong className="text-amber-300 font-black">por separado</strong></span>
       </div>
     ),
   },

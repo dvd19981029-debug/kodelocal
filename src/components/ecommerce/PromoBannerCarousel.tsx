@@ -11,10 +11,9 @@ interface PromoSlide {
 interface PromoBannerCarouselProps {
   onExploreCatalog?: () => void;
   onFilterCategory?: (category: string) => void;
-  onOpenKitBuilder?: () => void;
 }
 
-export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory, onOpenKitBuilder }: PromoBannerCarouselProps) {
+export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory }: PromoBannerCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const touchStartX = useRef<number | null>(null);
@@ -24,7 +23,7 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
     {
       id: 'promo-preparado',
       imageUrl: '/images/promo/promo_preparado.webp',
-      imageAlt: 'Perfume preparado con atomizador',
+      imageAlt: 'Fragancias finas de alta fijación',
     },
     {
       id: 'promo-esencias',

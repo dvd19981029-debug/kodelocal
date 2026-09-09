@@ -24,7 +24,6 @@ import { ProductItem, INITIAL_PRODUCTS, getStoredProducts, saveStoredProducts } 
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getFragranceProfile } from '@/lib/fragranceProfiles';
-import PerfumeKitBuilderModal from '@/components/ecommerce/PerfumeKitBuilderModal';
 import ProductCard from '@/components/ecommerce/ProductCard';
 import FragranceNotesVisual from '@/components/ecommerce/FragranceNotesVisual';
 import { getOriginalPerfumeName } from '@/lib/perfumeNames';
@@ -39,7 +38,6 @@ export default function ProductDetailPage() {
   const [selectedPresentation, setSelectedPresentation] = useState<ProductPresentation>('ONZA_COMPLETA');
   const [quantity, setQuantity] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
-  const [isKitModalOpen, setIsKitModalOpen] = useState(false);
 
   const { cart, addToCart } = useEcommerceCart();
 
@@ -96,18 +94,6 @@ export default function ProductDetailPage() {
     if (!product || !isEssence) return null;
     return getFragranceProfile(product);
   }, [product, isEssence]);
-
-  // Lista de botellas para el Kit Builder
-  const availableBottles = useMemo(() => {
-    const list = products.filter(p => p.category === 'Botes' || p.category === 'Botes & Envases');
-    if (list.length > 0) return list;
-    return INITIAL_PRODUCTS.filter(p => p.category === 'Botes');
-  }, [products]);
-
-  // Lista de esencias disponibles
-  const availableEssences = useMemo(() => {
-    return products.filter(p => p.category === 'Esencias para Perfume');
-  }, [products]);
 
   // Productos relacionados (esencias con esencias, botes con botes)
   const relatedProducts = useMemo(() => {
@@ -414,59 +400,7 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* 3. TARJETA ESPECIAL: ARMAR EN KIT DE 100ML PREPARADO ($15) (SOLO PARA ESENCIAS) */}
-          {isEssence && (
-            <div 
-              onClick={() => setIsKitModalOpen(true)}
-              className="clay-card p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-50/90 via-purple-50/70 to-indigo-50/80 border-2 border-amber-300 ring-2 ring-amber-200/40 cursor-pointer hover:border-amber-400 transition-all flex items-center justify-between gap-3 shadow-2xs group"
-            >
-              <div className="flex items-center gap-3">
-                {/* Vitrina dual: Bote Contratipo de este perfume + Frasco 100ml */}
-                <div className="relative flex items-center shrink-0">
-                  {/* Bote Contratipo */}
-                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-white border border-amber-300 shadow-xs relative z-10">
-                    <img
-                      src={productImage}
-                      alt={displayName}
-                      className="w-full h-full object-cover object-center"
-                    />
-                  </div>
-                  {/* Conector "+" */}
-                  <div className="relative z-20 -mx-1.5 w-4 h-4 rounded-full bg-amber-400 text-slate-950 font-black text-[9px] flex items-center justify-center shadow-xs border border-white">
-                    +
-                  </div>
-                  {/* Frasco de 100ml */}
-                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-white border border-amber-300 shadow-xs relative z-10">
-                    <img
-                      src="/images/botes/bote_100ml_sauvage_degrade_negro.jpg"
-                      alt="Frasco 100ml"
-                      className="w-full h-full object-cover object-center"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h4 className="text-xs sm:text-sm font-black text-slate-900">
-                      ¿Lo prefieres en perfume preparado?
-                    </h4>
-                    <span className="bg-emerald-600 text-white text-[10px] font-black px-2 py-0.2 rounded-full shadow-2xs">
-                      $15.00
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 font-medium leading-tight mt-0.5">
-                    1 oz pura de este contratipo (u opción PLUS de 1.5 oz) + frasco de 100ml a elegir + fijador + etiqueta gratis.
-                  </p>
-                </div>
-              </div>
-              <span className="text-xs font-black text-indigo-700 flex items-center gap-0.5 shrink-0 group-hover:translate-x-0.5 transition-transform">
-                <span>Armar</span>
-                <ChevronRight className="w-4 h-4" />
-              </span>
-            </div>
-          )}
-
-          {/* 4. SELECTOR DE CANTIDAD Y BOTÓN DE COMPRA */}
+          {/* 3. SELECTOR DE CANTIDAD Y BOTÓN DE COMPRA */}
           <div className="space-y-2.5 pt-2">
             <div className="flex items-center gap-3">
               
@@ -728,14 +662,6 @@ export default function ProductDetailPage() {
           </div>
         </section>
       )}
-
-      {/* Modal para configurar Kit Preparado con este perfume ya preseleccionado */}
-      <PerfumeKitBuilderModal
-        isOpen={isKitModalOpen}
-        onClose={() => setIsKitModalOpen(false)}
-        availableEssences={availableEssences}
-        availableBottles={availableBottles}
-      />
 
     </div>
   );
