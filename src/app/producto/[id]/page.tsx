@@ -13,7 +13,12 @@ import {
   Plus, 
   Minus, 
   ChevronRight,
-  Sparkles
+  Sparkles,
+  AlertTriangle,
+  Store,
+  CreditCard,
+  ShieldAlert,
+  Clock
 } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS, getStoredProducts, saveStoredProducts } from '@/lib/store';
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation } from '@/context/EcommerceCartContext';
@@ -415,7 +420,7 @@ export default function ProductDetailPage() {
                     <h4 className="text-xs sm:text-sm font-black text-slate-900">
                       ¿Lo prefieres en perfume preparado?
                     </h4>
-                    <span className="bg-emerald-600 text-white text-[10px] font-black px-2 py-0.2 rounded-full font-mono shadow-2xs">
+                    <span className="bg-emerald-600 text-white text-[10px] font-black px-2 py-0.2 rounded-full shadow-2xs">
                       $15.00
                     </span>
                   </div>
@@ -445,7 +450,7 @@ export default function ProductDetailPage() {
                 >
                   <Minus className="w-3.5 h-3.5" />
                 </button>
-                <span className="w-9 text-center text-xs font-black text-slate-800 font-mono">
+                <span className="w-9 text-center text-xs font-black text-slate-800">
                   {quantity}
                 </span>
                 <button
@@ -592,31 +597,74 @@ export default function ProductDetailPage() {
           )}
         </div>
 
-        {/* Información de entrega C807 */}
+        {/* Información de entrega, retiro y políticas */}
         <div className="md:col-span-5 clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 flex flex-col justify-between gap-3 shadow-xs">
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
                 <Truck className="w-4 h-4" />
               </div>
               <div>
                 <h4 className="text-xs sm:text-sm font-black text-slate-900">
-                  Envíos a todo el país
+                  Envíos a todo El Salvador o Retiro en Local
                 </h4>
                 <p className="text-[11px] text-slate-500 font-medium">
                   Cobertura en los 14 departamentos con C807
                 </p>
               </div>
             </div>
+
             <p className="text-xs text-slate-600 leading-relaxed">
-              Recibe tu paquete en tu casa u oficina. Puedes pagar en efectivo contra entrega o mediante transferencia bancaria.
+              Llegamos a <strong className="text-indigo-700">absolutamente todas partes de El Salvador</strong> de <strong>1 a 2 días hábiles</strong> (normalmente en 1 día). También puedes optar por <strong>pasar retirando gratis en nuestro local en San Salvador</strong>.
             </p>
+
+            <div className="text-[10.5px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-1">
+              <p>
+                ⏰ <strong>Horarios de entrega:</strong> Pedidos en horario laboral se despachan de inmediato. Como la paquetera y nosotros no laboramos domingos, pedidos enviados el sábado llegan a partir de lunes; pedidos de domingo se despachan lunes y llegan desde martes.
+              </p>
+              <p className="text-rose-600 font-bold pt-0.5">
+                💳 Pago exclusivo por Tarjeta o Transferencia bancaria (No ofrecemos pago contraentrega).
+              </p>
+            </div>
           </div>
 
           <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500">
-            <span>✓ Pago contra entrega</span>
-            <span>✓ Envíos seguros</span>
+            <span>✓ Retiro o Envío Nacional</span>
+            <span>✓ Pago 100% Seguro</span>
           </div>
+        </div>
+      </section>
+
+      {/* ================= AVISO DE MACERACIÓN Y ADVERTENCIAS DE SALUD ================= */}
+      <section className="space-y-3">
+        {/* Aclaración de No Maceración */}
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-indigo-50/80 border border-indigo-100 flex items-start gap-3">
+          <Droplets className="w-5 h-5 text-indigo-700 shrink-0 mt-0.5" />
+          <div className="text-xs text-slate-700 leading-relaxed">
+            <strong className="font-black text-indigo-950 block mb-0.5">Aclaración Importante de Aromaniak:</strong>
+            <p>
+              <strong>Nosotros no maceramos ningún perfume.</strong> Nuestras esencias son concentrados puros de contratipos finos listos para que prepares tu fragancia con alcohol especial de perfumería.
+            </p>
+          </div>
+        </div>
+
+        {/* Advertencias de Seguridad Médica y Uso Responsable */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/90 border border-amber-200/90 space-y-2 text-xs text-amber-950">
+          <div className="flex items-center gap-2 text-amber-900 font-black text-sm">
+            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>Aviso de Seguridad: Uso Correcto y Precauciones de Salud</span>
+          </div>
+          <ul className="space-y-1.5 pl-5 list-disc text-[11px] sm:text-xs text-amber-900/90 font-medium leading-relaxed">
+            <li>
+              <strong>No usar directamente sobre la piel:</strong> Las esencias son 100% puras y concentradas. <strong>Tienen que ser mezcladas sí o sí con alcohol especial de perfumería</strong> antes de aplicarse.
+            </li>
+            <li>
+              <strong>Bajo ningún motivo deben ser ingeridas, inhaladas directamente o tener contacto con los ojos.</strong> En caso de salpicadura en los ojos, lavar inmediatamente con abundante agua y buscar atención médica.
+            </li>
+            <li>
+              <strong>Contraindicación por alergias:</strong> No deben ser usadas por personas con alergias conocidas o experiencias previas de reacciones alérgicas a perfumes, fragancias, alcohol o cualquiera de sus componentes. Manténgase fuera del alcance de niños y mascotas.
+            </li>
+          </ul>
         </div>
       </section>
 

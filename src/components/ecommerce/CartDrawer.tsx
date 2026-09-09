@@ -272,8 +272,8 @@ export default function CartDrawer() {
                   <span className="font-black text-slate-900">${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between text-[11px] text-slate-500">
-                  <span>Envío nacional C807:</span>
-                  <span className="text-emerald-700 font-bold">Calculado al pagar</span>
+                  <span>Envío a todo el país:</span>
+                  <span className="text-emerald-700 font-bold">Calculado al pagar o Retiro Gratis</span>
                 </div>
                 <div className="flex items-center justify-between text-sm font-extrabold text-slate-900 pt-1.5 border-t border-slate-200/70">
                   <span>Total estimado:</span>

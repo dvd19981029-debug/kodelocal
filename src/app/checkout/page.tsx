@@ -14,7 +14,10 @@ import {
   FileText,
   Send,
   Building,
-  AlertCircle
+  AlertCircle,
+  Store,
+  AlertTriangle,
+  Droplets
 } from 'lucide-react';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
@@ -29,7 +32,10 @@ export default function CheckoutPage() {
   const { cart, subtotal, totalItems, clearCart } = useEcommerceCart();
   const { customer, isLoggedIn, openAuthModal } = useCustomerAuth();
 
-  // Datos de Envío
+  // Método de entrega: Envío a domicilio o Retiro en sucursal
+  const [metodoEntrega, setMetodoEntrega] = useState<'ENVIO' | 'RETIRO'>('ENVIO');
+
+  // Datos de Envío y Contacto
   const [nombre, setNombre] = useState(customer?.name || '');
   const [telefono, setTelefono] = useState(customer?.phone || '');
   const [email, setEmail] = useState(customer?.email || '');
@@ -49,8 +55,8 @@ export default function CheckoutPage() {
     }
   }, [customer]);
 
-  // Método de pago
-  const [metodoPago, setMetodoPago] = useState<'TRANSFER' | 'BITCOIN'>('TRANSFER');
+  // Método de pago: Tarjeta de Crédito/Débito o Transferencia Bancaria (No contraentrega)
+  const [metodoPago, setMetodoPago] = useState<'CARD' | 'TRANSFER'>('CARD');
 
   // Tipo de comprobante
   const [tipoComprobante, setTipoComprobante] = useState<'TICKET' | '01' | '03'>('01');
@@ -62,15 +68,20 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<SaleRecord | null>(null);
 
-  // Cálculo del costo de envío
-  const shippingCost = departamento === 'San Salvador' || departamento === 'La Libertad' ? 3.50 : 5.00;
+  // Cálculo del costo de envío: $0 si retira en local; $3.50 SS/La Libertad o $5.00 otros
+  const shippingCost = metodoEntrega === 'RETIRO' ? 0 : (departamento === 'San Salvador' || departamento === 'La Libertad' ? 3.50 : 5.00);
   const totalConEnvio = Number((subtotal + (cart.length > 0 ? shippingCost : 0)).toFixed(2));
 
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!nombre.trim() || !telefono.trim() || !direccion.trim()) {
-      alert('Por favor completa los campos obligatorios: Nombre, Teléfono y Dirección de entrega.');
+    if (!nombre.trim() || !telefono.trim()) {
+      alert('Por favor completa tu Nombre y Teléfono.');
+      return;
+    }
+
+    if (metodoEntrega === 'ENVIO' && !direccion.trim()) {
+      alert('Por favor completa tu Dirección exacta de entrega.');
       return;
     }
 
@@ -85,6 +96,9 @@ export default function CheckoutPage() {
       const orderNumber = `WEB-${Math.floor(1000 + Math.random() * 9000)}`;
       const saleId = `sale-${Date.now()}`;
       const now = new Date().toISOString();
+      const direccionFinal = metodoEntrega === 'RETIRO' 
+        ? 'Retiro en Local San Salvador - Aromaniak' 
+        : `${direccion}, ${municipio}, ${departamento}`;
 
       const newOrder: SaleRecord = {
         id: saleId,
@@ -98,14 +112,16 @@ export default function CheckoutPage() {
         tipoComprobante,
         channel: 'ONLINE',
         shippingCost,
-        deliveryNotes: `Departamento: ${departamento}, Municipio: ${municipio}. Ref: ${referencia || 'Sin referencias específicas'}`,
+        deliveryNotes: metodoEntrega === 'RETIRO'
+          ? 'Retiro en Sucursal / Local San Salvador'
+          : `Envío a domicilio - Departamento: ${departamento}, Municipio: ${municipio}. Ref: ${referencia || 'Sin referencias específicas'}`,
         status: 'PENDING_PREPARATION', // Llega directo a Bodega para preparar
         vendedor: 'Tienda Online Aromaniak',
         cliente: {
           nombre,
           telefono,
           correo: email || undefined,
-          direccion: `${direccion}, ${municipio}, ${departamento}`,
+          direccion: direccionFinal,
           numDocumento: numDoc || undefined,
           nrc: nrc || undefined,
           actividadEconomica: giro || undefined
@@ -143,9 +159,9 @@ export default function CheckoutPage() {
             numDocumento: numDoc || '00000000-0',
             email: email || '',
             phone: telefono,
-            departamento,
-            municipio,
-            direccion,
+            departamento: metodoEntrega === 'RETIRO' ? 'San Salvador' : departamento,
+            municipio: metodoEntrega === 'RETIRO' ? 'San Salvador' : municipio,
+            direccion: direccionFinal,
             documentoPreferido: tipoComprobante,
             nrc: nrc || undefined,
             actividadEconomica: giro || undefined,
@@ -165,10 +181,10 @@ export default function CheckoutPage() {
           customerName: nombre,
           customerEmail: email || null,
           customerPhone: telefono,
-          department: departamento,
-          municipality: municipio,
-          shippingAddress: direccion,
-          deliveryReference: referencia,
+          department: metodoEntrega === 'RETIRO' ? 'San Salvador' : departamento,
+          municipality: metodoEntrega === 'RETIRO' ? 'San Salvador' : municipio,
+          shippingAddress: direccionFinal,
+          deliveryReference: metodoEntrega === 'RETIRO' ? 'Retiro en Sucursal' : (referencia || 'N/A'),
           subtotal,
           shippingCost,
           total: totalConEnvio,
@@ -181,7 +197,7 @@ export default function CheckoutPage() {
             quantity: it.quantity,
             total: it.totalPrice,
           })),
-          notes: `Doc: ${tipoComprobante} - Ref: ${referencia || 'N/A'}`,
+          notes: `Entrega: ${metodoEntrega === 'RETIRO' ? 'Retiro en Local San Salvador' : 'Envío a Domicilio'} - Doc: ${tipoComprobante}`,
           numDoc: numDoc || null,
           nrc: nrc || null,
           giro: giro || null,
@@ -211,13 +227,14 @@ export default function CheckoutPage() {
       `👋 ¡Hola Aromaniak SV!\n\nAcabo de realizar mi pedido en línea:\n*Orden: #${completedOrder.orderNumber}*\n\n` +
       `*Cliente:* ${completedOrder.cliente.nombre}\n` +
       `*Teléfono:* ${completedOrder.cliente.telefono}\n` +
-      `*Dirección:* ${completedOrder.cliente.direccion}\n\n` +
+      `*Modalidad:* ${metodoEntrega === 'RETIRO' ? 'Retiro en Sucursal (San Salvador)' : 'Envío a Domicilio'}\n` +
+      `*Destino:* ${completedOrder.cliente.direccion}\n\n` +
       `*Productos:*\n` +
       completedOrder.items.map(it => `• ${it.quantity}x ${it.name} - $${it.total.toFixed(2)}`).join('\n') +
       `\n\n*Subtotal:* $${completedOrder.subtotal.toFixed(2)}\n` +
       `*Envío:* $${completedOrder.shippingCost?.toFixed(2)}\n` +
       `*Total a Pagar:* $${completedOrder.total.toFixed(2)}\n` +
-      `*Método de Pago:* ${completedOrder.paymentMethod === 'TRANSFER' ? 'Transferencia Bancaria' : 'Bitcoin / Chivo'}\n\n` +
+      `*Método de Pago:* ${completedOrder.paymentMethod === 'CARD' ? 'Tarjeta de Crédito / Débito' : 'Transferencia Bancaria'}\n\n` +
       `Quedo atento a la confirmación de la entrega. ¡Muchas gracias!`
     );
 
@@ -388,18 +405,83 @@ export default function CheckoutPage() {
           {/* ================= COLUMNA IZQUIERDA: FORMULARIOS ================= */}
           <div className="lg:col-span-7 space-y-5">
             
-            {/* 1. Datos de Envío y Contacto */}
+            {/* 1. Modalidad de Entrega, Datos de Contacto y Dirección */}
             <div className="clay-card p-5 sm:p-6 space-y-4">
-              <div className="flex items-center gap-2.5 pb-2 border-b border-slate-100">
-                <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
-                  1
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
+                    1
+                  </div>
+                  <h3 className="font-extrabold text-sm text-slate-900">
+                    Modalidad de Entrega y Contacto
+                  </h3>
                 </div>
-                <h3 className="font-extrabold text-sm text-slate-900">
-                  Datos de Contacto y Entrega
-                </h3>
+                <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">
+                  Cobertura 100% El Salvador
+                </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              {/* Selector de Método de Entrega */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                <label className={`clay-card p-3 flex flex-col justify-between gap-2 cursor-pointer transition-all ${
+                  metodoEntrega === 'ENVIO' ? 'border-2 border-indigo-500 bg-indigo-50/60 shadow-xs' : 'hover:bg-slate-50'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Truck className="w-4 h-4 text-indigo-600" />
+                      <span className="font-black text-slate-800">Envío a Domicilio</span>
+                    </div>
+                    <input
+                      type="radio"
+                      name="metodoEntrega"
+                      checked={metodoEntrega === 'ENVIO'}
+                      onChange={() => setMetodoEntrega('ENVIO')}
+                      className="text-indigo-600"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    Entregamos a <strong className="text-indigo-900 font-bold">absolutamente todas partes de El Salvador</strong> (C807).
+                  </p>
+                </label>
+
+                <label className={`clay-card p-3 flex flex-col justify-between gap-2 cursor-pointer transition-all ${
+                  metodoEntrega === 'RETIRO' ? 'border-2 border-indigo-500 bg-indigo-50/60 shadow-xs' : 'hover:bg-slate-50'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Store className="w-4 h-4 text-emerald-600" />
+                      <span className="font-black text-slate-800">Retiro en Sucursal</span>
+                    </div>
+                    <input
+                      type="radio"
+                      name="metodoEntrega"
+                      checked={metodoEntrega === 'RETIRO'}
+                      onChange={() => setMetodoEntrega('RETIRO')}
+                      className="text-indigo-600"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    Pasa a retirar gratis en nuestro local en San Salvador.
+                  </p>
+                </label>
+              </div>
+
+              {/* Cuadro de Tiempos de Envío y Despacho */}
+              <div className="p-3 rounded-2xl bg-indigo-50/70 border border-indigo-100 text-xs text-indigo-950 space-y-1.5 leading-relaxed">
+                <div className="flex items-center gap-1.5 font-black text-[11.5px] text-indigo-900">
+                  <Truck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                  <span>Tiempos de Despacho y Entrega a Domicilio</span>
+                </div>
+                <p className="text-[11px] text-slate-600">
+                  • Los pedidos realizados en horas laborales se despachan de inmediato y llegan de <strong>1 a 2 días hábiles</strong> (normalmente en <strong>1 día</strong>) a cualquier municipio del país.
+                </p>
+                <p className="text-[11px] text-slate-600">
+                  • <strong>Domingos no laborables</strong> (paquetera y tienda): pedidos enviados el sábado llegan a partir del lunes; pedidos realizados en domingo se despachan el lunes y llegan a partir del martes.
+                </p>
+              </div>
+
+              {/* Formulario de contacto y destino */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
                 <div className="sm:col-span-2">
                   <label className="font-bold text-slate-700 block mb-1">
                     Nombre Completo <span className="text-rose-500">*</span>
@@ -441,90 +523,133 @@ export default function CheckoutPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">
-                    Departamento <span className="text-rose-500">*</span>
-                  </label>
-                  <select
-                    value={departamento}
-                    onChange={(e) => {
-                      const newDept = e.target.value;
-                      setDepartamento(newDept);
-                      const munis = getMunicipiosByDepartamento(newDept);
-                      if (munis.length > 0) {
-                        setMunicipio(munis[0].nombre);
-                      }
-                    }}
-                    className="clay-input w-full font-bold"
-                  >
-                    {DEPARTAMENTOS_CATALOG.map((dep) => (
-                      <option key={dep.id} value={dep.nombre}>{dep.nombre}</option>
-                    ))}
-                  </select>
-                </div>
+                {metodoEntrega === 'ENVIO' ? (
+                  <>
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">
+                        Departamento <span className="text-rose-500">*</span>
+                      </label>
+                      <select
+                        value={departamento}
+                        onChange={(e) => {
+                          const newDept = e.target.value;
+                          setDepartamento(newDept);
+                          const munis = getMunicipiosByDepartamento(newDept);
+                          if (munis.length > 0) {
+                            setMunicipio(munis[0].nombre);
+                          }
+                        }}
+                        className="clay-input w-full font-bold"
+                      >
+                        {DEPARTAMENTOS_CATALOG.map((dep) => (
+                          <option key={dep.id} value={dep.nombre}>{dep.nombre}</option>
+                        ))}
+                      </select>
+                    </div>
 
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">
-                    Municipio / Distrito <span className="text-rose-500">*</span>
-                  </label>
-                  <select
-                    required
-                    value={municipio}
-                    onChange={(e) => setMunicipio(e.target.value)}
-                    className="clay-input w-full font-bold"
-                  >
-                    {getMunicipiosByDepartamento(departamento).map((m) => (
-                      <option key={m.id} value={m.nombre}>{m.nombre}</option>
-                    ))}
-                  </select>
-                </div>
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">
+                        Municipio / Distrito <span className="text-rose-500">*</span>
+                      </label>
+                      <select
+                        required
+                        value={municipio}
+                        onChange={(e) => setMunicipio(e.target.value)}
+                        className="clay-input w-full font-bold"
+                      >
+                        {getMunicipiosByDepartamento(departamento).map((m) => (
+                          <option key={m.id} value={m.nombre}>{m.nombre}</option>
+                        ))}
+                      </select>
+                    </div>
 
-                <div className="sm:col-span-2">
-                  <label className="font-bold text-slate-700 block mb-1">
-                    Dirección Exacta de Entrega <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Colonia, Calle, Pasaje, Número de Casa o Edificio..."
-                    value={direccion}
-                    onChange={(e) => setDireccion(e.target.value)}
-                    className="clay-input w-full font-medium"
-                  />
-                </div>
+                    <div className="sm:col-span-2">
+                      <label className="font-bold text-slate-700 block mb-1">
+                        Dirección Exacta de Entrega <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Colonia, Calle, Pasaje, Número de Casa o Edificio..."
+                        value={direccion}
+                        onChange={(e) => setDireccion(e.target.value)}
+                        className="clay-input w-full font-medium"
+                      />
+                    </div>
 
-                <div className="sm:col-span-2">
-                  <label className="font-bold text-slate-700 block mb-1">
-                    Puntos de Referencia para el Repartidor
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Ej. Frente a parque infantil, portón negro con timbre blanco..."
-                    value={referencia}
-                    onChange={(e) => setReferencia(e.target.value)}
-                    className="clay-input w-full font-medium"
-                  />
-                </div>
+                    <div className="sm:col-span-2">
+                      <label className="font-bold text-slate-700 block mb-1">
+                        Puntos de Referencia para el Repartidor
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Ej. Frente a parque infantil, portón negro con timbre blanco..."
+                        value={referencia}
+                        onChange={(e) => setReferencia(e.target.value)}
+                        className="clay-input w-full font-medium"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="sm:col-span-2 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 space-y-1">
+                    <p className="font-black flex items-center gap-1.5 text-emerald-800">
+                      <Store className="w-4 h-4" />
+                      <span>Retiro en Local Aromaniak (San Salvador)</span>
+                    </p>
+                    <p className="text-[11px] text-emerald-900 leading-relaxed">
+                      Tu pedido será preparado en nuestro punto de San Salvador sin costo de envío. Te notificaremos vía WhatsApp al <strong>{telefono || 'número proporcionado'}</strong> en cuanto esté listo para retirar.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* 2. Método de Pago */}
             <div className="clay-card p-5 sm:p-6 space-y-4">
-              <div className="flex items-center gap-2.5 pb-2 border-b border-slate-100">
-                <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
-                  2
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
+                    2
+                  </div>
+                  <h3 className="font-extrabold text-sm text-slate-900">
+                    Forma de Pago
+                  </h3>
                 </div>
-                <h3 className="font-extrabold text-sm text-slate-900">
-                  Forma de Pago
-                </h3>
+                <span className="text-[10.5px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
+                  No ofrecemos contraentrega
+                </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-                <label className={`clay-card p-3 flex flex-col justify-between gap-2 cursor-pointer transition-all ${
-                  metodoPago === 'TRANSFER' ? 'border-2 border-indigo-500 bg-indigo-50/50' : 'hover:bg-slate-50'
+                <label className={`clay-card p-3.5 flex flex-col justify-between gap-2 cursor-pointer transition-all ${
+                  metodoPago === 'CARD' ? 'border-2 border-indigo-500 bg-indigo-50/60 shadow-xs' : 'hover:bg-slate-50'
                 }`}>
                   <div className="flex items-center justify-between">
-                    <span className="font-black text-slate-800">Transferencia Bancaria</span>
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-indigo-600" />
+                      <span className="font-black text-slate-800">Tarjeta de Crédito / Débito</span>
+                    </div>
+                    <input
+                      type="radio"
+                      name="metodoPago"
+                      checked={metodoPago === 'CARD'}
+                      onChange={() => setMetodoPago('CARD')}
+                      className="text-indigo-600"
+                    />
+                  </div>
+                  <p className="text-[10.5px] text-slate-500 font-medium">
+                    Visa o Mastercard. Procesamiento 100% seguro y cifrado.
+                  </p>
+                </label>
+
+                <label className={`clay-card p-3.5 flex flex-col justify-between gap-2 cursor-pointer transition-all ${
+                  metodoPago === 'TRANSFER' ? 'border-2 border-indigo-500 bg-indigo-50/60 shadow-xs' : 'hover:bg-slate-50'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Building className="w-4 h-4 text-indigo-600" />
+                      <span className="font-black text-slate-800">Transferencia Bancaria</span>
+                    </div>
                     <input
                       type="radio"
                       name="metodoPago"
@@ -534,28 +659,14 @@ export default function CheckoutPage() {
                     />
                   </div>
                   <p className="text-[10.5px] text-slate-500 font-medium">
-                    Banco Agrícola, BAC o Cuscatlán al enviar comprobante.
-                  </p>
-                </label>
-
-                <label className={`clay-card p-3 flex flex-col justify-between gap-2 cursor-pointer transition-all ${
-                  metodoPago === 'BITCOIN' ? 'border-2 border-indigo-500 bg-indigo-50/50' : 'hover:bg-slate-50'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <span className="font-black text-slate-800">Chivo / Bitcoin</span>
-                    <input
-                      type="radio"
-                      name="metodoPago"
-                      checked={metodoPago === 'BITCOIN'}
-                      onChange={() => setMetodoPago('BITCOIN')}
-                      className="text-indigo-600"
-                    />
-                  </div>
-                  <p className="text-[10.5px] text-slate-500 font-medium">
-                    Pago mediante Lightning Network o Chivo Wallet.
+                    Banco Agrícola, BAC Credomatic o Banco Cuscatlán.
                   </p>
                 </label>
               </div>
+
+              <p className="text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                🔒 Por seguridad y políticas de control logístico, <strong>únicamente aceptamos pagos anticipados con tarjeta o transferencia bancaria</strong>. No disponemos de modalidad de cobro contraentrega.
+              </p>
             </div>
 
             {/* 3. Comprobante Fiscal */}
@@ -650,6 +761,34 @@ export default function CheckoutPage() {
               )}
             </div>
 
+            {/* Aviso de Maceración y Advertencias de Salud en Checkout */}
+            <div className="space-y-3">
+              <div className="p-3.5 rounded-2xl bg-indigo-50/80 border border-indigo-100 flex items-start gap-2.5 text-xs text-slate-700">
+                <Droplets className="w-4 h-4 text-indigo-700 shrink-0 mt-0.5" />
+                <p>
+                  <strong>Aviso: Nosotros no maceramos ningún perfume.</strong> Nuestras esencias se entregan 100% puras listas para ser combinadas con alcohol especial de perfumería.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-amber-50/90 border border-amber-200 text-xs text-amber-950 space-y-2">
+                <div className="flex items-center gap-2 font-black text-amber-900">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>Aviso Importante de Seguridad y Uso Responsable</span>
+                </div>
+                <ul className="space-y-1 pl-4 list-disc text-[11px] text-amber-900/90 font-medium leading-relaxed">
+                  <li>
+                    <strong>No usar directamente sobre la piel:</strong> Las esencias puras tienen que ser mezcladas sí o sí con alcohol especial de perfumería antes de cualquier aplicación.
+                  </li>
+                  <li>
+                    <strong>Bajo ningún motivo deben ser ingeridas, inhaladas directamente o tener contacto con los ojos.</strong>
+                  </li>
+                  <li>
+                    <strong>Uso restringido ante alergias:</strong> No deben ser usadas por personas con antecedentes o experiencias previas de alergia a los perfumes, fragancias, alcohol o sus componentes.
+                  </li>
+                </ul>
+              </div>
+            </div>
+
           </div>
 
           {/* ================= COLUMNA DERECHA: RESUMEN DEL PEDIDO ================= */}
@@ -692,7 +831,7 @@ export default function CheckoutPage() {
                         {it.quantity}x {it.presentationName}
                       </p>
                     </div>
-                    <span className="font-mono font-bold text-slate-900 shrink-0">
+                    <span className="font-bold text-slate-900 shrink-0">
                       ${it.totalPrice.toFixed(2)}
                     </span>
                   </div>
@@ -703,20 +842,31 @@ export default function CheckoutPage() {
               <div className="pt-3 border-t border-slate-100 space-y-2 text-xs">
                 <div className="flex justify-between text-slate-600">
                   <span>Subtotal productos:</span>
-                  <span className="font-mono font-bold text-slate-800">${subtotal.toFixed(2)}</span>
+                  <span className="font-bold text-slate-800">${subtotal.toFixed(2)}</span>
                 </div>
 
                 <div className="flex justify-between text-slate-600">
                   <div className="flex items-center gap-1">
-                    <Truck className="w-3.5 h-3.5 text-indigo-500" />
-                    <span>Envío a domicilio ({departamento}):</span>
+                    {metodoEntrega === 'RETIRO' ? (
+                      <>
+                        <Store className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Retiro en local (San Salvador):</span>
+                      </>
+                    ) : (
+                      <>
+                        <Truck className="w-3.5 h-3.5 text-indigo-500" />
+                        <span>Envío nacional C807 ({departamento}):</span>
+                      </>
+                    )}
                   </div>
-                  <span className="font-mono font-bold text-slate-800">${shippingCost.toFixed(2)}</span>
+                  <span className={`font-bold ${metodoEntrega === 'RETIRO' ? 'text-emerald-700' : 'text-slate-800'}`}>
+                    {metodoEntrega === 'RETIRO' ? '¡Gratis!' : `$${shippingCost.toFixed(2)}`}
+                  </span>
                 </div>
 
                 <div className="flex justify-between text-base font-black text-slate-900 pt-3 border-t border-slate-200">
                   <span>Total a Pagar:</span>
-                  <span className="font-mono text-indigo-700 text-lg">${totalConEnvio.toFixed(2)}</span>
+                  <span className="text-indigo-700 text-lg font-black">${totalConEnvio.toFixed(2)}</span>
                 </div>
               </div>
 

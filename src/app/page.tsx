@@ -12,7 +12,13 @@ import {
   ChevronRight,
   ArrowDown,
   Flame,
-  X
+  X,
+  AlertTriangle,
+  Store,
+  CreditCard,
+  ShieldAlert,
+  Clock,
+  MapPin
 } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS, getStoredProducts, saveStoredProducts } from '@/lib/store';
 import ProductCard from '@/components/ecommerce/ProductCard';
@@ -553,61 +559,99 @@ export default function EcommerceHomePage() {
       </section>
 
       {/* ================= SECCIÓN EDUCATIVA: CÓMO PEDIR ================= */}
-      <section className="clay-card p-6 sm:p-10 border border-white/90 bg-white/60 space-y-6">
-        <div className="text-center max-w-xl mx-auto space-y-2">
+      <section className="clay-card p-5 sm:p-8 md:p-10 border border-white/90 bg-white/70 space-y-6">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
           <span className="clay-badge text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg">
-            Proceso Fácil
+            Proceso de Compra
           </span>
           <h3 className="text-xl sm:text-2xl font-black text-slate-900">
             ¿Cómo pedir tu fragancia en Aromaniak?
           </h3>
-          <p className="text-xs text-slate-500 font-medium">
-            Entregas directas a tu casa u oficina en todo El Salvador
+          <p className="text-xs sm:text-sm text-slate-600 font-medium">
+            Entregamos a <strong className="text-indigo-700 font-bold">absolutamente todas partes de El Salvador</strong> o puedes retirar en nuestro local.
           </p>
         </div>
 
+        {/* 4 Pasos del Flujo */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           
-          <div className="clay-card p-4 space-y-2 bg-white/90">
-            <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 font-black text-sm flex items-center justify-center">
+          {/* Paso 1 */}
+          <div className="clay-card p-4 space-y-2.5 bg-white/95">
+            <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 font-black text-sm flex items-center justify-center shadow-xs">
               1
             </div>
-            <h4 className="font-extrabold text-xs text-slate-900">Elige tu fragancia o Kit</h4>
-            <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-              Selecciona tu contratipo favorito por onzas puras o arma tu kit completo preparado por $15.
+            <h4 className="font-extrabold text-xs sm:text-sm text-slate-900">Elige tu fragancia o Kit</h4>
+            <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed">
+              Selecciona tu contratipo favorito por onzas puras o arma tu kit completo con atomizador de lujo por $15.
             </p>
           </div>
 
-          <div className="clay-card p-4 space-y-2 bg-white/90">
-            <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 font-black text-sm flex items-center justify-center">
+          {/* Paso 2 */}
+          <div className="clay-card p-4 space-y-2.5 bg-white/95">
+            <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 font-black text-sm flex items-center justify-center shadow-xs">
               2
             </div>
-            <h4 className="font-extrabold text-xs text-slate-900">Ingresa tu dirección</h4>
-            <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-              Ve a tu carrito y coloca tu nombre, teléfono y dirección exacta en cualquier parte del país.
+            <h4 className="font-extrabold text-xs sm:text-sm text-slate-900">Envío o Retiro en Local</h4>
+            <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed">
+              Elige entre <strong className="text-slate-800">pasar a retirar a nuestro local en San Salvador</strong> o solicitar <strong className="text-slate-800">envío a domicilio</strong> por un costo adicional. ¡Llegamos a <strong className="text-indigo-700">absolutamente cualquier rincón de El Salvador</strong>!
             </p>
           </div>
 
-          <div className="clay-card p-4 space-y-2 bg-white/90">
-            <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 font-black text-sm flex items-center justify-center">
+          {/* Paso 3 */}
+          <div className="clay-card p-4 space-y-2.5 bg-white/95">
+            <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 font-black text-sm flex items-center justify-center shadow-xs">
               3
             </div>
-            <h4 className="font-extrabold text-xs text-slate-900">Bodega lo prepara</h4>
-            <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-              Nuestro laboratorio macera y envasa tu perfume con atomizador de alta difusión y sellado hermético.
+            <h4 className="font-extrabold text-xs sm:text-sm text-slate-900">Pago con Tarjeta o Transferencia</h4>
+            <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed">
+              Aceptamos pagos 100% seguros con <strong className="text-slate-800">tarjeta de crédito/débito</strong> o <strong className="text-slate-800">transferencia bancaria</strong>. <span className="text-rose-600 font-bold block mt-1">No ofrecemos pago contraentrega.</span>
             </p>
           </div>
 
-          <div className="clay-card p-4 space-y-2 bg-white/90">
-            <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 font-black text-sm flex items-center justify-center">
+          {/* Paso 4 */}
+          <div className="clay-card p-4 space-y-2.5 bg-white/95">
+            <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 font-black text-sm flex items-center justify-center shadow-xs">
               4
             </div>
-            <h4 className="font-extrabold text-xs text-slate-900">Recibe con C807</h4>
-            <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-              El mensajero de C807 te entrega tu pedido directamente en tus manos en cualquier departamento.
+            <h4 className="font-extrabold text-xs sm:text-sm text-slate-900">Entrega Rápida en 1 a 2 Días</h4>
+            <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed">
+              Pedidos en horas laborales se despachan de inmediato y llegan de <strong className="text-slate-800">1 a 2 días hábiles (normalmente 1 día)</strong>.
             </p>
+            <div className="text-[10px] text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100 leading-snug">
+              ℹ️ Domingos no laborables (nosotros y paquetería): pedidos enviados en sábado llegan desde el lunes; pedidos de domingo se despachan el lunes y llegan desde el martes.
+            </div>
           </div>
 
+        </div>
+
+        {/* Nota Importante: No maceramos ningún perfume */}
+        <div className="p-3 sm:p-4 rounded-2xl bg-indigo-50/80 border border-indigo-100 flex items-start gap-3">
+          <Droplets className="w-5 h-5 text-indigo-700 shrink-0 mt-0.5" />
+          <div className="text-xs text-slate-700 leading-relaxed">
+            <strong className="font-black text-indigo-950 block mb-0.5">Aclaración de Elaboración:</strong>
+            <p>
+              <strong>Nosotros no maceramos ningún perfume.</strong> En Aromaniak proveemos esencias concentradas 100% puras de contratipos finos y los componentes necesarios para su adecuada preparación.
+            </p>
+          </div>
+        </div>
+
+        {/* Banner de Advertencia y Uso Seguro */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/90 border border-amber-200/90 space-y-2 text-xs text-amber-950">
+          <div className="flex items-center gap-2 text-amber-900 font-black text-sm">
+            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>Aviso Importante de Seguridad y Uso Responsable</span>
+          </div>
+          <ul className="space-y-1.5 pl-5 list-disc text-[11px] sm:text-xs text-amber-900/90 font-medium leading-relaxed">
+            <li>
+              <strong>No usar directamente sobre la piel:</strong> Las esencias son concentrados puros y <strong>tienen que ser mezcladas sí o sí con alcohol especial de perfumería</strong> antes de cualquier aplicación.
+            </li>
+            <li>
+              <strong>Bajo ningún motivo deben ser ingeridas, inhaladas directamente ni tener contacto con los ojos.</strong> En caso de contacto accidental con los ojos, enjuagar con abundante agua y consultar a un médico.
+            </li>
+            <li>
+              <strong>Uso restringido ante alergias:</strong> No deben ser usadas por personas con alergias o antecedentes/experiencias previas de alergia a los perfumes, al alcohol o a cualquiera de sus componentes químicos. Mantener fuera del alcance de niños y mascotas.
+            </li>
+          </ul>
         </div>
       </section>
 
