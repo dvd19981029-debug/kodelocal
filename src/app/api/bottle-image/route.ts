@@ -44,7 +44,7 @@ function getLogoBuffer(): Buffer {
   return cachedLogoBuffer;
 }
 
-function createBottleLabelSvg(contratipo: string, originalPerfume?: string, genderCode?: string, lote = 'L260908-01', size = '1 OZ') {
+function createBottleLabelSvg(contratipo: string, originalPerfume?: string, genderCode?: string, size = '1 OZ') {
   const labelW = 304;
   const labelH = 368;
   const cleanContra = escapeXml((contratipo || 'ESENCIA').toUpperCase());
@@ -89,8 +89,7 @@ function createBottleLabelSvg(contratipo: string, originalPerfume?: string, gend
     <rect x="${122 - (underlineW / 2)}" y="208" width="${underlineW}" height="2.5" fill="#111111" />
     <line x1="16" y1="258" x2="228" y2="258" stroke="#111111" stroke-width="1" />
     <text x="122" y="278" font-family="Arial, Helvetica, sans-serif" font-size="8.5" font-weight="800" text-anchor="middle" fill="#111111" letter-spacing="0.5">ESENCIA DE PERFUMERÍA FINA EUROPEA</text>
-    <text x="16" y="326" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="900" fill="#111111">LOTE: ${lote}</text>
-    <text x="228" y="326" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="900" text-anchor="end" fill="#111111">${size}</text>
+    <text x="122" y="326" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="900" text-anchor="middle" fill="#111111" letter-spacing="1">${size}</text>
   </svg>
   `;
 }
