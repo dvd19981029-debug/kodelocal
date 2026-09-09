@@ -6,7 +6,7 @@ interface PromoSlide {
   id: string;
   imageUrl: string;
   imageAlt: string;
-  action: 'aromas' | 'arma-tu-perfume' | 'botes';
+  action: 'emprendedor' | 'aromas' | 'arma-tu-perfume' | 'botes';
 }
 
 interface PromoBannerCarouselProps {
@@ -21,6 +21,12 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
   const touchEndX = useRef<number | null>(null);
 
   const slides: PromoSlide[] = [
+    {
+      id: 'promo-emprendedor',
+      imageUrl: '/images/promo/banner_emprendedor.webp',
+      imageAlt: '¿Eres emprendedor? Opciones mayoristas para tu negocio - Aromaniak',
+      action: 'emprendedor',
+    },
     {
       id: 'promo-aromas',
       imageUrl: '/images/promo/banner_aromas.webp',
@@ -79,8 +85,14 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
     touchEndX.current = null;
   };
 
-  const handleSlideClick = (action: 'aromas' | 'arma-tu-perfume' | 'botes') => {
-    if (action === 'arma-tu-perfume') {
+  const handleSlideClick = (action: 'emprendedor' | 'aromas' | 'arma-tu-perfume' | 'botes') => {
+    if (action === 'emprendedor') {
+      window.open(
+        'https://wa.me/50370000000?text=' +
+          encodeURIComponent('¡Hola Aromaniak! Soy emprendedor y me gustaría recibir información sobre las opciones y precios mayoristas para mi negocio.'),
+        '_blank'
+      );
+    } else if (action === 'arma-tu-perfume') {
       if (onFilterCategory) {
         onFilterCategory('Arma tu perfume');
       }
@@ -111,45 +123,48 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
         maxHeight: '260px'
       }}
     >
-      {/* Diapositivas de imágenes promocionales puras */}
-      {slides.map((slide, idx) => {
-        const isActive = idx === currentIndex;
-        return (
-          <div
-            key={slide.id}
-            onClick={() => {
-              if (touchStartX.current !== null && touchEndX.current !== null && Math.abs(touchStartX.current - touchEndX.current) > 15) {
-                return;
-              }
-              handleSlideClick(slide.action);
-            }}
-            className={`absolute inset-0 cursor-pointer transition-opacity duration-700 ease-in-out ${
-              isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
-            }`}
-          >
-            <img
-              src={slide.imageUrl}
-              alt={slide.imageAlt}
-              className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700"
-              loading="eager"
-            />
-          </div>
-        );
-      })}
+      {/* Carril deslizante horizontal continuo con aceleración y desaceleración suave */}
+      <div 
+        className="flex w-full h-full transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] will-change-transform"
+        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+      >
+        {slides.map((slide) => {
+          return (
+            <div
+              key={slide.id}
+              onClick={() => {
+                if (touchStartX.current !== null && touchEndX.current !== null && Math.abs(touchStartX.current - touchEndX.current) > 15) {
+                  return;
+                }
+                handleSlideClick(slide.action);
+              }}
+              className="min-w-full w-full h-full shrink-0 relative cursor-pointer overflow-hidden"
+            >
+              <img
+                src={slide.imageUrl}
+                alt={slide.imageAlt}
+                className="w-full h-full object-cover object-center transform group-hover:scale-[1.015] transition-transform duration-700"
+                loading="eager"
+              />
+            </div>
+          );
+        })}
+      </div>
 
-      {/* Indicadores / Puntos Inferiores estilo Clay */}
-      <div className="absolute bottom-3 right-4 z-20 flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20 shadow-sm">
+      {/* Indicadores centrados estilo Clay suave */}
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-white/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/80 shadow-[0_2px_10px_rgba(0,0,0,0.12)]">
         {slides.map((_, idx) => (
           <button
             key={idx}
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               setCurrentIndex(idx);
             }}
-            className={`transition-all duration-300 rounded-full cursor-pointer ${
+            className={`transition-all duration-400 rounded-full cursor-pointer ${
               idx === currentIndex
-                ? 'w-6 h-1.5 bg-white shadow-xs'
-                : 'w-1.5 h-1.5 bg-white/50 hover:bg-white/80'
+                ? 'w-7 h-2 bg-gradient-to-r from-purple-600 to-indigo-600 shadow-xs'
+                : 'w-2 h-2 bg-slate-300/80 hover:bg-slate-400'
             }`}
             aria-label={`Ir a diapositiva ${idx + 1}`}
           />
