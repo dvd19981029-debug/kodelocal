@@ -38,6 +38,29 @@ export default function EcommerceHomePage() {
   const [currentPage, setCurrentPage] = useState(1);
   // Columnas dinámicas según el tamaño de pantalla para calcular exactamente 7 filas
   const [columns, setColumns] = useState(2);
+  const [initialEssenceId, setInitialEssenceId] = useState<string | null>(null);
+
+  // Leer parámetros de URL para activar "Arma tu perfume" y preseleccionar esencia
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const catParam = params.get('categoria') || params.get('category');
+      const essenceParam = params.get('essenceId') || params.get('esenciaId');
+
+      if (catParam === 'Arma tu perfume' || params.get('arma') === 'true' || essenceParam) {
+        setSelectedCategory('Arma tu perfume');
+        if (essenceParam) {
+          setInitialEssenceId(essenceParam);
+        }
+        setTimeout(() => {
+          const el = document.getElementById('seccion-arma-tu-perfume');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 200);
+      }
+    }
+  }, []);
 
   // Sincronizar la barra de anuncios para ocultarla en "Arma tu propio perfume" y mostrarla al regresar
   useEffect(() => {
@@ -55,8 +78,9 @@ export default function EcommerceHomePage() {
       setSelectedGender('Todos');
       setSelectedStockFilter('Todos');
       setCurrentPage(1);
+      setInitialEssenceId(null);
       if (typeof window !== 'undefined') {
-        if (window.location.hash) {
+        if (window.location.hash || window.location.search) {
           window.history.replaceState(null, '', '/');
         }
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -469,6 +493,7 @@ export default function EcommerceHomePage() {
               onClose={() => handleSelectCategory('Esencias para Perfume')}
               availableEssences={availableEssences}
               availableBottles={availableBottles}
+              initialEssenceId={initialEssenceId || undefined}
             />
           </section>
         ) : (

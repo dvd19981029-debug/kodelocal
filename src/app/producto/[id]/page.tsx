@@ -569,6 +569,49 @@ export default function ProductDetailPage() {
 
           </div>
 
+          {/* ================= TARJETA COMPACTA HORIZONTAL: PÍDELA YA ARMADA (SOLO ESENCIAS) ================= */}
+          {isEssence && (
+            <Link
+              href={discreteStock && discreteStock.available1oz > 0 ? `/?categoria=Arma+tu+perfume&essenceId=${product.id}#seccion-arma-tu-perfume` : '#'}
+              onClick={(e) => {
+                if (!discreteStock || discreteStock.available1oz <= 0) {
+                  e.preventDefault();
+                }
+              }}
+              className={`clay-card group flex items-center justify-between gap-3 p-3 sm:p-3.5 rounded-2xl border transition-all duration-200 ${
+                discreteStock && discreteStock.available1oz > 0
+                  ? 'bg-gradient-to-r from-purple-50/70 via-white to-amber-50/40 border-purple-200/80 hover:border-purple-400 hover:shadow-md cursor-pointer'
+                  : 'bg-slate-50 border-slate-200 opacity-60 cursor-not-allowed'
+              }`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                  <Wand2 className="w-4 h-4 text-purple-600" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs sm:text-[13px] font-black text-slate-900 tracking-tight">
+                      Pídela ya armada
+                    </span>
+                    <span className="text-[9.5px] font-bold text-amber-800 bg-amber-100/80 px-1.5 py-0.5 rounded-md">
+                      Bote y alcohol incluidos
+                    </span>
+                  </div>
+                  <p className="text-[10.5px] sm:text-[11px] text-slate-500 font-medium truncate">
+                    {discreteStock && discreteStock.available1oz > 0
+                      ? 'Ármala en frasco de 100ml con maceración lista'
+                      : 'Sin stock suficiente de 1 onza para armar'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1 text-purple-700 font-bold text-xs shrink-0 group-hover:translate-x-0.5 transition-transform">
+                <span className="text-[11px] font-black hidden sm:inline">Armar</span>
+                <ChevronRight className="w-4 h-4" />
+              </div>
+            </Link>
+          )}
+
           {/* ================= ACORDES PRINCIPALES (DEBAJO DE LA TARJETA DE AGREGAR AL CARRITO) ================= */}
           {isEssence && profile && profile.accords && profile.accords.length > 0 && (
             <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-3 shadow-xs">

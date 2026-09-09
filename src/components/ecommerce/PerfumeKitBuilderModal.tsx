@@ -25,6 +25,7 @@ interface PerfumeKitBuilderModalProps {
   availableEssences: ProductItem[];
   availableBottles?: ProductItem[];
   inline?: boolean;
+  initialEssenceId?: string;
 }
 
 export default function PerfumeKitBuilderModal({
@@ -33,6 +34,7 @@ export default function PerfumeKitBuilderModal({
   availableEssences,
   availableBottles,
   inline = false,
+  initialEssenceId,
 }: PerfumeKitBuilderModalProps) {
   const { addKitToCart, cart } = useEcommerceCart();
 
@@ -41,6 +43,22 @@ export default function PerfumeKitBuilderModal({
 
   // Estados de configuración del perfume
   const [selectedEssence, setSelectedEssence] = useState<ProductItem | null>(null);
+
+  // Preseleccionar la esencia si se recibe initialEssenceId con stock disponible
+  useEffect(() => {
+    if (initialEssenceId && availableEssences && availableEssences.length > 0) {
+      const found = availableEssences.find(
+        (e) => String(e.id) === String(initialEssenceId) || String(e.sku) === String(initialEssenceId)
+      );
+      if (found) {
+        const stockInfo = getEssenceDiscreteStock(found.stock || 0, cart, found.id);
+        if (stockInfo.available1oz > 0) {
+          setSelectedEssence(found);
+          setCurrentStep(2);
+        }
+      }
+    }
+  }, [initialEssenceId, availableEssences, cart]);
   
   // Usar los frascos de 100ml reales con fotos en fondo blanco del inventario
   const bottlesList = useMemo(() => {
