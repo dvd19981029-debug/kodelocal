@@ -42,18 +42,31 @@ export default function ReactiveSearchBar({
     setCurrentPage(1);
 
     if (type === 'all') {
-      setSelectedCategory('Todos');
+      setSelectedCategory('Esencias para Perfume');
       setSelectedGender('Todos');
       setSelectedStockFilter('Todos');
     } else if (type === 'stock') {
       const val = value as 'Todos' | 'Disponibles' | 'Agotados';
       setSelectedStockFilter(selectedStockFilter === val ? 'Todos' : val);
     } else if (type === 'cat') {
-      setSelectedCategory(value || 'Todos');
+      setSelectedCategory(value || 'Esencias para Perfume');
       setSelectedGender('Todos');
     } else if (type === 'gender') {
       setSelectedCategory('Esencias para Perfume');
       setSelectedGender(value as any);
+    }
+
+    const catalogEl = document.getElementById('catalogo');
+    if (catalogEl && window.scrollY > 200) {
+      const offset = 75;
+      const bodyRect = document.body.getBoundingClientRect().top;
+      const elementRect = catalogEl.getBoundingClientRect().top;
+      const elementPosition = elementRect - bodyRect;
+      const offsetPosition = elementPosition - offset;
+      window.scrollTo({
+        top: Math.max(0, offsetPosition),
+        behavior: 'smooth'
+      });
     }
   };
 
@@ -155,7 +168,7 @@ export default function ReactiveSearchBar({
           <button
             onClick={() => handleSelectFilter('all')}
             className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
-              selectedGender === 'Todos'
+              selectedCategory === 'Esencias para Perfume' && selectedGender === 'Todos'
                 ? 'bg-[#7c3aed] text-white shadow-sm'
                 : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
             }`}
