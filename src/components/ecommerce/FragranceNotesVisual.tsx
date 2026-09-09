@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { FragranceProfile, getFragranceAccordBars } from '@/lib/fragranceProfiles';
-import { getNoteImageUrl } from '@/lib/fragranceNotesData';
+import { getNoteImageUrl, NOTES_VERSION } from '@/lib/fragranceNotesData';
 
 interface FragranceNotesVisualProps {
   profile: FragranceProfile;
@@ -73,7 +73,7 @@ export default function FragranceNotesVisual({ profile, showAccords = true }: Fr
                           alt={note}
                           loading="lazy"
                           onError={(e) => {
-                            e.currentTarget.src = '/notes/maderas.jpg';
+                            e.currentTarget.src = `/notes/maderas.jpg?v=${NOTES_VERSION}`;
                           }}
                           className="w-full h-full object-cover rounded-xl"
                         />
@@ -110,7 +110,7 @@ export default function FragranceNotesVisual({ profile, showAccords = true }: Fr
                           alt={note}
                           loading="lazy"
                           onError={(e) => {
-                            e.currentTarget.src = '/notes/maderas.jpg';
+                            e.currentTarget.src = `/notes/maderas.jpg?v=${NOTES_VERSION}`;
                           }}
                           className="w-full h-full object-cover rounded-xl"
                         />
@@ -147,7 +147,7 @@ export default function FragranceNotesVisual({ profile, showAccords = true }: Fr
                           alt={note}
                           loading="lazy"
                           onError={(e) => {
-                            e.currentTarget.src = '/notes/maderas.jpg';
+                            e.currentTarget.src = `/notes/maderas.jpg?v=${NOTES_VERSION}`;
                           }}
                           className="w-full h-full object-cover rounded-xl"
                         />

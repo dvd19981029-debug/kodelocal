@@ -228,21 +228,22 @@ const NOTE_RULES: Array<{ pattern: RegExp; file: string }> = [
   { pattern: /aldeh[íi]d/i, file: 'aldehidos' }
 ];
 
+export const NOTES_VERSION = '20260909_v3';
 const DEFAULT_NOTE_PATH = '/notes/maderas.jpg';
 
 /**
  * Resuelve la imagen fotográfica local real del ingrediente.
- * Siempre retorna la misma imagen estática de `/notes/<file>.jpg`,
- * optimizada para cargar de inmediato (<5ms) y sin depender de servicios externos.
+ * Siempre retorna la imagen estática optimizada de `/notes/<file>.jpg` con control de versión
+ * para invalidar inmediatamente cualquier caché anterior del navegador.
  */
 export function getNoteImageUrl(note: string): string {
-  if (!note) return DEFAULT_NOTE_PATH;
+  if (!note) return `${DEFAULT_NOTE_PATH}?v=${NOTES_VERSION}`;
 
   for (const rule of NOTE_RULES) {
     if (rule.pattern.test(note)) {
-      return `/notes/${rule.file}.jpg`;
+      return `/notes/${rule.file}.jpg?v=${NOTES_VERSION}`;
     }
   }
 
-  return DEFAULT_NOTE_PATH;
+  return `${DEFAULT_NOTE_PATH}?v=${NOTES_VERSION}`;
 }
