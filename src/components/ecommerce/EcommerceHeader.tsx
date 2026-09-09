@@ -2,16 +2,26 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { ShoppingBag, User, LogOut, ChevronDown } from 'lucide-react';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { useScrolled } from '@/hooks/useScrolled';
 
 export default function EcommerceHeader() {
+  const pathname = usePathname();
   const { totalItems, subtotal, setIsCartOpen, isCartPulsing } = useEcommerceCart();
   const { customer, isLoggedIn, openAuthModal, logout } = useCustomerAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const isScrolled = useScrolled(75);
+
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (pathname === '/') {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent('reset-home-page'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   return (
     <header className={`sticky top-0 z-40 w-full backdrop-blur-md bg-[#f1f4f9]/90 border-b border-white/80 px-3 sm:px-6 py-2 sm:py-2.5 shadow-2xs transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${
@@ -80,7 +90,11 @@ export default function EcommerceHeader() {
 
         {/* ================= CENTRO: Logo oficial de Aromaniak ================= */}
         <div className="flex items-center justify-center">
-          <Link href="/" className="inline-flex items-center justify-center group transition-transform active:scale-95 py-0.5">
+          <Link 
+            href="/" 
+            onClick={handleLogoClick}
+            className="inline-flex items-center justify-center group transition-transform active:scale-95 py-0.5 cursor-pointer"
+          >
             <img
               src="/images/logo.png"
               alt="Aromaniak"

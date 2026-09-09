@@ -47,6 +47,28 @@ export default function EcommerceHomePage() {
     };
   }, [selectedCategory, setIsArmaTuPerfumeActive]);
 
+  // Manejar clic en el logo para regresar limpiamente al inicio
+  useEffect(() => {
+    const handleResetHome = () => {
+      setSelectedCategory('Esencias para Perfume');
+      setSearchQuery('');
+      setSelectedGender('Todos');
+      setSelectedStockFilter('Todos');
+      setCurrentPage(1);
+      if (typeof window !== 'undefined') {
+        if (window.location.hash) {
+          window.history.replaceState(null, '', '/');
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+
+    window.addEventListener('reset-home-page', handleResetHome);
+    return () => {
+      window.removeEventListener('reset-home-page', handleResetHome);
+    };
+  }, []);
+
   const availableEssences = useMemo(() => {
     return products.filter((p) => p.category === 'Esencias para Perfume');
   }, [products]);

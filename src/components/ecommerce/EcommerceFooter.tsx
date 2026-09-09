@@ -2,9 +2,20 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Sparkles, MapPin, Phone, Mail, Clock, ShieldCheck, Truck, CreditCard } from 'lucide-react';
 
 export default function EcommerceFooter() {
+  const pathname = usePathname();
+
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (pathname === '/') {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent('reset-home-page'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
     <footer className="w-full bg-[#f1f4f9] border-t border-white/80 pt-12 pb-8 px-4 sm:px-8 mt-16 text-slate-600 text-xs">
       <div className="max-w-7xl mx-auto space-y-10">
@@ -15,13 +26,19 @@ export default function EcommerceFooter() {
           {/* Col 1: Marca & Misión */}
           <div className="space-y-3">
             <div className="flex items-center">
-              <img
-                src="/images/logo.png"
-                alt="Aromaniak"
-                loading="lazy"
-                decoding="async"
-                className="h-8 sm:h-9 w-auto object-contain drop-shadow-xs"
-              />
+              <Link 
+                href="/" 
+                onClick={handleLogoClick}
+                className="inline-flex items-center cursor-pointer group transition-transform active:scale-95"
+              >
+                <img
+                  src="/images/logo.png"
+                  alt="Aromaniak"
+                  loading="lazy"
+                  decoding="async"
+                  className="h-8 sm:h-9 w-auto object-contain drop-shadow-xs group-hover:scale-105 transition-transform"
+                />
+              </Link>
             </div>
             <p className="text-slate-500 leading-relaxed font-medium">
               Especialistas en contratipos de alta gama e inspiración olfativa con fijación prolongada. Más de 600 fragancias para damas, caballeros y unisex en El Salvador.

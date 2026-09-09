@@ -243,11 +243,13 @@ export default function CheckoutPage() {
         <div className="clay-card p-6 sm:p-10 text-center space-y-6 bg-white/90">
           
           <div className="flex justify-center mb-1">
-            <img
-              src="/images/logo.png"
-              alt="Aromaniak"
-              className="h-9 w-auto object-contain drop-shadow-xs"
-            />
+            <Link href="/" className="inline-flex items-center justify-center cursor-pointer group">
+              <img
+                src="/images/logo.png"
+                alt="Aromaniak"
+                className="h-9 w-auto object-contain drop-shadow-xs group-hover:opacity-90 transition-opacity"
+              />
+            </Link>
           </div>
 
           <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
