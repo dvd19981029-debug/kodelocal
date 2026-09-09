@@ -19,17 +19,19 @@ import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { getOriginalPerfumeName } from '@/lib/perfumeNames';
 
 interface PerfumeKitBuilderModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
   availableEssences: ProductItem[];
   availableBottles?: ProductItem[];
+  inline?: boolean;
 }
 
 export default function PerfumeKitBuilderModal({
-  isOpen,
+  isOpen = true,
   onClose,
   availableEssences,
   availableBottles,
+  inline = false,
 }: PerfumeKitBuilderModalProps) {
   const { addKitToCart } = useEcommerceCart();
 
@@ -87,9 +89,9 @@ export default function PerfumeKitBuilderModal({
     });
   }, [availableEssences, essenceSearch, essenceGenderFilter]);
 
-  // Bloquear el scroll de la página de fondo mientras el modal esté abierto sin romper iOS
+  // Bloquear el scroll de la página de fondo solo cuando esté en modo modal flotante
   useEffect(() => {
-    if (!isOpen) return;
+    if (inline || !isOpen) return;
 
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -97,9 +99,9 @@ export default function PerfumeKitBuilderModal({
     return () => {
       document.body.style.overflow = originalOverflow;
     };
-  }, [isOpen]);
+  }, [isOpen, inline]);
 
-  if (!isOpen) return null;
+  if (!inline && !isOpen) return null;
 
   const basePrice = 15.00;
   const plusCost = isPlus ? 3.00 : 0.00;
@@ -119,49 +121,59 @@ export default function PerfumeKitBuilderModal({
     setJustAdded(true);
     setTimeout(() => {
       setJustAdded(false);
-      onClose();
+      if (onClose) onClose();
       setCurrentStep(1);
     }, 1100);
   };
 
   const handleClose = () => {
-    onClose();
+    if (onClose) onClose();
     setCurrentStep(1);
   };
 
-  return (
+  const builderCard = (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/70 backdrop-blur-xs overscroll-contain animate-in fade-in duration-200"
-      onTouchMove={(e) => {
-        if (e.target === e.currentTarget) {
-          e.preventDefault();
-        }
-      }}
+      className={`clay-card w-full ${
+        inline 
+          ? 'max-w-5xl mx-auto rounded-3xl shadow-xl border-2 border-amber-300/80 my-2' 
+          : 'max-w-4xl max-h-[94vh] rounded-2xl sm:rounded-3xl shadow-2xl border border-white/90 overscroll-contain'
+      } bg-white relative flex flex-col overflow-hidden`}
+      onClick={(e) => e.stopPropagation()}
     >
-      {/* Contenedor Modal estilo Claymorphic amplio y optimizado */}
-      <div 
-        className="clay-card w-full max-w-4xl max-h-[94vh] bg-white rounded-2xl sm:rounded-3xl relative shadow-2xl flex flex-col border border-white/90 overflow-hidden overscroll-contain"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* ================= CABECERA DEL MODAL COMPACTA ================= */}
-        <div className="px-4 sm:px-6 py-2.5 sm:py-3 border-b border-slate-100 bg-gradient-to-r from-amber-50/80 via-purple-50/70 to-indigo-50/80 flex items-center justify-between relative shrink-0">
-          <div className="flex items-center gap-3">
-            <h2 className="text-sm sm:text-lg font-black text-slate-900 flex items-center gap-1.5">
+      {/* ================= CABECERA COMPACTA ================= */}
+      <div className="px-4 sm:px-6 py-2.5 sm:py-3 border-b border-slate-100 bg-gradient-to-r from-amber-50/80 via-purple-50/70 to-indigo-50/80 flex items-center justify-between relative shrink-0">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black shadow-xs shrink-0">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <div>
+            <h2 className="text-sm sm:text-base md:text-lg font-black text-slate-900 flex items-center gap-1.5 leading-tight">
               <span>Arma tu propio perfume</span>
             </h2>
-            <span className="bg-emerald-50 text-emerald-800 border border-emerald-300/80 text-[11px] sm:text-xs font-black px-2.5 py-0.5 rounded-full shadow-2xs">
-              $15.00
-            </span>
+            <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium hidden sm:block">
+              1 oz pura de tu contratipo favorito, frasco de 100ml y alcohol con fijador
+            </p>
           </div>
+          <span className="bg-emerald-50 text-emerald-800 border border-emerald-300/80 text-[11px] sm:text-xs font-black px-2.5 py-0.5 rounded-full shadow-2xs shrink-0 ml-1">
+            ${totalPrice.toFixed(2)}
+          </span>
+        </div>
 
+        {onClose && (
           <button
             onClick={handleClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-white/80 transition-colors cursor-pointer"
-            title="Cerrar"
+            className={`rounded-xl text-slate-500 hover:text-slate-800 hover:bg-white/80 transition-all cursor-pointer ${
+              inline 
+                ? 'flex items-center gap-1.5 py-1 px-2.5 text-xs font-bold border border-slate-200/80 bg-white/70' 
+                : 'p-1.5 text-slate-400'
+            }`}
+            title={inline ? 'Volver a Esencias' : 'Cerrar'}
           >
-            <X className="w-5 h-5" />
+            {inline && <span className="hidden sm:inline text-[11px]">Volver a Esencias</span>}
+            <X className="w-4 h-4" />
           </button>
-        </div>
+        )}
+      </div>
 
         {/* ================= STEPPER DE PROGRESO COMPACTO ================= */}
         <div className="grid grid-cols-3 border-b border-slate-100 bg-slate-50/90 text-center select-none text-[11px] sm:text-xs font-extrabold shrink-0">
@@ -278,7 +290,7 @@ export default function PerfumeKitBuilderModal({
               </div>
 
               {/* Área Amplia y Optimizada de Selección de Esencias */}
-              <div className="flex-1 min-h-[320px] max-h-[50vh] sm:max-h-[54vh] overflow-y-auto pr-1 p-1 bg-slate-50/50 rounded-2xl border border-slate-200/80">
+              <div className={`flex-1 ${inline ? 'min-h-[380px] max-h-[580px]' : 'min-h-[320px] max-h-[50vh] sm:max-h-[54vh]'} overflow-y-auto pr-1 p-1 bg-slate-50/50 rounded-2xl border border-slate-200/80`}>
                 {filteredEssences.length === 0 ? (
                   <div className="h-full flex items-center justify-center py-12 text-center text-xs text-slate-400 font-medium">
                     No se encontraron esencias disponibles con ese criterio.
@@ -376,7 +388,7 @@ export default function PerfumeKitBuilderModal({
               </div>
 
               {/* Área Amplia y Despejada de Frascos */}
-              <div className="flex-1 min-h-[320px] max-h-[50vh] sm:max-h-[54vh] overflow-y-auto pr-1 p-1">
+              <div className={`flex-1 ${inline ? 'min-h-[380px] max-h-[580px]' : 'min-h-[320px] max-h-[50vh] sm:max-h-[54vh]'} overflow-y-auto pr-1 p-1`}>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
                   {bottlesList.map((bottle) => {
                     const isChosen = activeBottle.id === bottle.id;
@@ -665,6 +677,22 @@ export default function PerfumeKitBuilderModal({
         </div>
 
       </div>
+  );
+
+  if (inline) {
+    return builderCard;
+  }
+
+  return (
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/70 backdrop-blur-xs overscroll-contain animate-in fade-in duration-200"
+      onTouchMove={(e) => {
+        if (e.target === e.currentTarget) {
+          e.preventDefault();
+        }
+      }}
+    >
+      {builderCard}
     </div>
   );
 }

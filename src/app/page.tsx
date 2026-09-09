@@ -24,7 +24,6 @@ import { ProductItem, INITIAL_PRODUCTS, getStoredProducts, saveStoredProducts } 
 import ProductCard from '@/components/ecommerce/ProductCard';
 import PromoBannerCarousel from '@/components/ecommerce/PromoBannerCarousel';
 import ReactiveSearchBar from '@/components/ecommerce/ReactiveSearchBar';
-import BuildYourPerfumeCard from '@/components/ecommerce/BuildYourPerfumeCard';
 import PerfumeKitBuilderModal from '@/components/ecommerce/PerfumeKitBuilderModal';
 import { getOriginalPerfumeName } from '@/lib/perfumeNames';
 
@@ -35,7 +34,6 @@ export default function EcommerceHomePage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('Esencias para Perfume');
   const [selectedStockFilter, setSelectedStockFilter] = useState<'Todos' | 'Disponibles' | 'Agotados'>('Todos');
   const [currentPage, setCurrentPage] = useState(1);
-  const [isKitModalOpen, setIsKitModalOpen] = useState(false);
   // Columnas dinámicas según el tamaño de pantalla para calcular exactamente 7 filas
   const [columns, setColumns] = useState(2);
 
@@ -432,206 +430,144 @@ export default function EcommerceHomePage() {
           </div>
         </div>
 
-        {/* ================= SECCIÓN DEDICADA: ARMA TU PROPIO PERFUME ================= */}
-        <section 
-          id="seccion-arma-tu-perfume" 
-          className={`scroll-mt-24 transition-all duration-300 ${
-            selectedCategory === 'Arma tu perfume' 
-              ? 'block space-y-4 pt-1' 
-              : (!searchQuery && selectedCategory === 'Esencias para Perfume') 
-                ? 'block space-y-4' 
-                : 'hidden'
-          }`}
-        >
-          <BuildYourPerfumeCard onOpenBuilder={() => setIsKitModalOpen(true)} />
+        {/* ================= VISTA CONDICIONAL: ARMA TU PERFUME (INLINE) O CATÁLOGO ================= */}
+        {selectedCategory === 'Arma tu perfume' ? (
+          <section id="seccion-arma-tu-perfume" className="scroll-mt-24 space-y-4 pt-1">
+            <PerfumeKitBuilderModal
+              inline={true}
+              isOpen={true}
+              onClose={() => setSelectedCategory('Esencias para Perfume')}
+              availableEssences={availableEssences}
+              availableBottles={availableBottles}
+            />
+          </section>
+        ) : (
+          <>
+            {/* Encabezado informativo del catálogo */}
+            <div className="flex items-center justify-between gap-2 px-1 pt-1">
+              <div className="flex items-center gap-2">
+                <h2 className="text-base sm:text-xl font-black text-slate-900 tracking-tight">
+                  {selectedCategory === 'Esencias para Perfume' 
+                    ? (selectedGender === 'Todos' ? 'Esencias de Perfume' : `Esencias • ${selectedGender === 'Caballero' ? 'Hombre' : selectedGender}`) 
+                    : selectedCategory === 'Botes' 
+                      ? 'Botes y Frascos' 
+                      : selectedCategory === 'Insumos' || selectedCategory === 'Alcohol y Materiales'
+                        ? 'Insumos y Materiales'
+                        : selectedCategory}
+                </h2>
+                <span className="clay-badge text-[10px] sm:text-xs bg-purple-50 text-purple-900 border border-purple-200 px-2.5 py-0.5 rounded-lg font-black">
+                  {filteredProducts.length} disponibles
+                </span>
+              </div>
+            </div>
 
-          {/* Si el usuario seleccionó la pestaña 'Arma tu perfume', desplegamos la guía visual de los 3 pasos */}
-          {selectedCategory === 'Arma tu perfume' && (
-            <div className="clay-card p-4 sm:p-6 bg-gradient-to-r from-amber-50/90 via-purple-50/80 to-indigo-50/90 border border-amber-200/80 space-y-4 rounded-2xl sm:rounded-3xl shadow-xs">
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black shadow-xs">
-                    <Sparkles className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm sm:text-base font-black text-slate-900">
-                      ¿Cómo funciona Arma tu Perfume?
-                    </h3>
-                    <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
-                      Tu perfume personalizado de 100ml en 3 sencillos pasos:
-                    </p>
-                  </div>
+            {/* ================= FILTRO CLAYMÓRFICO: MÁS VENDIDAS / HOMBRE / DAMA / UNISEX ================= */}
+            {selectedCategory === 'Esencias para Perfume' && (
+              <div className="w-full">
+                <div className="clay-tabs-track max-w-xl mx-auto">
+                  {/* Pestaña: Más Vendidas */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedGender('Todos');
+                      setCurrentPage(1);
+                    }}
+                    className={`clay-tab-item py-1.5 sm:py-2 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
+                      selectedGender === 'Todos'
+                        ? 'clay-tab-active flex-[1.4] sm:flex-[1.5]'
+                        : 'clay-tab-inactive flex-1'
+                    }`}
+                  >
+                    <span className="truncate">Más Vendidas</span>
+                  </button>
+
+                  {/* Pestaña: Hombre */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedGender('Caballero');
+                      setCurrentPage(1);
+                    }}
+                    className={`clay-tab-item py-1.5 sm:py-2 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
+                      selectedGender === 'Caballero'
+                        ? 'clay-tab-active flex-[1.4] sm:flex-[1.5]'
+                        : 'clay-tab-inactive flex-1'
+                    }`}
+                  >
+                    <span>Hombre</span>
+                  </button>
+
+                  {/* Pestaña: Dama */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedGender('Dama');
+                      setCurrentPage(1);
+                    }}
+                    className={`clay-tab-item py-1.5 sm:py-2 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
+                      selectedGender === 'Dama'
+                        ? 'clay-tab-active flex-[1.4] sm:flex-[1.5]'
+                        : 'clay-tab-inactive flex-1'
+                    }`}
+                  >
+                    <span>Dama</span>
+                  </button>
+
+                  {/* Pestaña: Unisex */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedGender('Unisex');
+                      setCurrentPage(1);
+                    }}
+                    className={`clay-tab-item py-1.5 sm:py-2 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
+                      selectedGender === 'Unisex'
+                        ? 'clay-tab-active flex-[1.4] sm:flex-[1.5]'
+                        : 'clay-tab-inactive flex-1'
+                    }`}
+                  >
+                    <span>Unisex</span>
+                  </button>
                 </div>
+              </div>
+            )}
+
+            {/* ================= PAGINACIÓN SUPERIOR ================= */}
+            {renderPagination('top')}
+
+            {/* ================= REJILLA DE PRODUCTOS (EXACTAMENTE 7 FILAS POR PÁGINA) ================= */}
+            {paginatedProducts.length === 0 ? (
+              <div className="clay-card p-12 text-center space-y-3">
+                <div className="w-14 h-14 mx-auto rounded-2xl bg-indigo-50 text-indigo-400 flex items-center justify-center">
+                  <Search className="w-6 h-6" />
+                </div>
+                <h3 className="font-black text-slate-800 text-base">No encontramos resultados para tu búsqueda</h3>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  Intenta buscar por el nombre del perfume o limpia los filtros de búsqueda.
+                </p>
                 <button
-                  type="button"
-                  onClick={() => setIsKitModalOpen(true)}
-                  className="clay-btn clay-btn-primary px-4 py-2 text-xs font-black rounded-xl flex items-center gap-1.5 shadow-md active:scale-95 transition-all cursor-pointer"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedGender('Todos');
+                    setSelectedCategory('Esencias para Perfume');
+                  }}
+                  className="clay-btn clay-btn-primary px-4 py-2 text-xs rounded-xl font-bold mt-2"
                 >
-                  <Wand2 className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Configurar mi Perfume Ahora</span>
+                  Restablecer Filtros
                 </button>
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-                <div className="bg-white/95 p-3.5 rounded-2xl border border-amber-200/70 space-y-1 shadow-2xs">
-                  <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-lg bg-amber-100 text-amber-800 text-xs font-black flex items-center justify-center">1</span>
-                    <strong className="text-xs font-extrabold text-slate-900">1 Onza de Esencia Pura</strong>
-                  </div>
-                  <p className="text-[11px] text-slate-600 leading-relaxed pl-8">
-                    Elige entre más de 40 contratipos finos de diseñador (o 1.5 oz en versión PLUS por solo $18).
-                  </p>
-                </div>
-
-                <div className="bg-white/95 p-3.5 rounded-2xl border border-purple-200/70 space-y-1 shadow-2xs">
-                  <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-lg bg-purple-100 text-purple-800 text-xs font-black flex items-center justify-center">2</span>
-                    <strong className="text-xs font-extrabold text-slate-900">Frasco de 100ml de Lujo</strong>
-                  </div>
-                  <p className="text-[11px] text-slate-600 leading-relaxed pl-8">
-                    Selecciona tu diseño favorito con atomizador fino entre nuestro catálogo de frascos de vidrio.
-                  </p>
-                </div>
-
-                <div className="bg-white/95 p-3.5 rounded-2xl border border-emerald-200/70 space-y-1 shadow-2xs">
-                  <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-black flex items-center justify-center">3</span>
-                    <strong className="text-xs font-extrabold text-slate-900">Alcohol y Fijador Incluido</strong>
-                  </div>
-                  <p className="text-[11px] text-slate-600 leading-relaxed pl-8">
-                    Todo listo para tu combinación perfecta. Opción con o sin etiqueta identificadora del contratipo.
-                  </p>
-                </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 sm:gap-x-4 md:gap-x-5 gap-y-10 sm:gap-y-12">
+                {paginatedProducts.map((prod, idx) => (
+                  <ProductCard key={prod.id} product={prod} priority={currentPage === 1 && idx < 4} />
+                ))}
               </div>
-            </div>
-          )}
-        </section>
+            )}
 
-        {/* Encabezado informativo del catálogo */}
-        <div className="flex items-center justify-between gap-2 px-1 pt-1">
-          <div className="flex items-center gap-2">
-            <h2 className="text-base sm:text-xl font-black text-slate-900 tracking-tight">
-              {selectedCategory === 'Esencias para Perfume' 
-                ? (selectedGender === 'Todos' ? 'Esencias de Perfume' : `Esencias • ${selectedGender === 'Caballero' ? 'Hombre' : selectedGender}`) 
-                : selectedCategory === 'Botes' 
-                  ? 'Botes y Frascos' 
-                  : selectedCategory === 'Insumos' || selectedCategory === 'Alcohol y Materiales'
-                    ? 'Insumos y Materiales'
-                    : selectedCategory === 'Arma tu perfume'
-                      ? 'Componentes para tu Perfume'
-                      : selectedCategory}
-            </h2>
-            <span className="clay-badge text-[10px] sm:text-xs bg-purple-50 text-purple-900 border border-purple-200 px-2.5 py-0.5 rounded-lg font-black">
-              {filteredProducts.length} disponibles
-            </span>
-          </div>
-        </div>
-
-        {/* ================= FILTRO CLAYMÓRFICO: MÁS VENDIDAS / HOMBRE / DAMA / UNISEX ================= */}
-        {selectedCategory === 'Esencias para Perfume' && (
-          <div className="w-full">
-            <div className="clay-tabs-track max-w-xl mx-auto">
-              {/* Pestaña: Más Vendidas */}
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedGender('Todos');
-                  setCurrentPage(1);
-                }}
-                className={`clay-tab-item py-1.5 sm:py-2 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
-                  selectedGender === 'Todos'
-                    ? 'clay-tab-active flex-[1.4] sm:flex-[1.5]'
-                    : 'clay-tab-inactive flex-1'
-                }`}
-              >
-                <span className="truncate">Más Vendidas</span>
-              </button>
-
-              {/* Pestaña: Hombre */}
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedGender('Caballero');
-                  setCurrentPage(1);
-                }}
-                className={`clay-tab-item py-1.5 sm:py-2 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
-                  selectedGender === 'Caballero'
-                    ? 'clay-tab-active flex-[1.4] sm:flex-[1.5]'
-                    : 'clay-tab-inactive flex-1'
-                }`}
-              >
-                <span>Hombre</span>
-              </button>
-
-              {/* Pestaña: Dama */}
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedGender('Dama');
-                  setCurrentPage(1);
-                }}
-                className={`clay-tab-item py-1.5 sm:py-2 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
-                  selectedGender === 'Dama'
-                    ? 'clay-tab-active flex-[1.4] sm:flex-[1.5]'
-                    : 'clay-tab-inactive flex-1'
-                }`}
-              >
-                <span>Dama</span>
-              </button>
-
-              {/* Pestaña: Unisex */}
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedGender('Unisex');
-                  setCurrentPage(1);
-                }}
-                className={`clay-tab-item py-1.5 sm:py-2 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
-                  selectedGender === 'Unisex'
-                    ? 'clay-tab-active flex-[1.4] sm:flex-[1.5]'
-                    : 'clay-tab-inactive flex-1'
-                }`}
-              >
-                <span>Unisex</span>
-              </button>
-            </div>
-          </div>
+            {/* ================= PAGINACIÓN INFERIOR ================= */}
+            {renderPagination('bottom')}
+          </>
         )}
-
-        {/* ================= PAGINACIÓN SUPERIOR ================= */}
-        {renderPagination('top')}
-
-        {/* ================= REJILLA DE PRODUCTOS (EXACTAMENTE 7 FILAS POR PÁGINA) ================= */}
-        {paginatedProducts.length === 0 ? (
-          <div className="clay-card p-12 text-center space-y-3">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-indigo-50 text-indigo-400 flex items-center justify-center">
-              <Search className="w-6 h-6" />
-            </div>
-            <h3 className="font-black text-slate-800 text-base">No encontramos resultados para tu búsqueda</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              Intenta buscar por el nombre del perfume o limpia los filtros de búsqueda.
-            </p>
-            <button
-              onClick={() => {
-                setSearchQuery('');
-                setSelectedGender('Todos');
-                setSelectedCategory('Esencias para Perfume');
-              }}
-              className="clay-btn clay-btn-primary px-4 py-2 text-xs rounded-xl font-bold mt-2"
-            >
-              Restablecer Filtros
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 sm:gap-x-4 md:gap-x-5 gap-y-10 sm:gap-y-12">
-            {paginatedProducts.map((prod, idx) => (
-              <ProductCard key={prod.id} product={prod} priority={currentPage === 1 && idx < 4} />
-            ))}
-          </div>
-        )}
-
-        {/* ================= PAGINACIÓN INFERIOR ================= */}
-        {renderPagination('bottom')}
 
       </section>
 
@@ -717,14 +653,6 @@ export default function EcommerceHomePage() {
           </ul>
         </div>
       </section>
-
-      {/* ================= MODAL DEL CONFIGURADOR DEL KIT DE PERFUME ($15 / $18 PLUS) ================= */}
-      <PerfumeKitBuilderModal
-        isOpen={isKitModalOpen}
-        onClose={() => setIsKitModalOpen(false)}
-        availableEssences={availableEssences}
-        availableBottles={availableBottles}
-      />
 
     </div>
   );
