@@ -290,8 +290,8 @@ export default function PerfumeKitBuilderModal({
                 </div>
               </div>
 
-              {/* Área Amplia y Optimizada de Selección de Esencias */}
-              <div className={`flex-1 ${inline ? 'min-h-[380px] max-h-[580px]' : 'min-h-[320px] max-h-[50vh] sm:max-h-[54vh]'} overflow-y-auto pr-1 p-1 bg-slate-50/50 rounded-2xl border border-slate-200/80`}>
+              {/* Área Deslizante Optimizada de Selección de Esencias */}
+              <div className={`flex-1 ${inline ? 'min-h-[170px] max-h-[250px] sm:max-h-[275px]' : 'min-h-[170px] max-h-[35vh]'} overflow-y-auto pr-1 p-1 bg-slate-50/50 rounded-2xl border border-slate-200/80`}>
                 {filteredEssences.length === 0 ? (
                   <div className="h-full flex items-center justify-center py-12 text-center text-xs text-slate-400 font-medium">
                     No se encontraron esencias disponibles con ese criterio.
@@ -426,8 +426,8 @@ export default function PerfumeKitBuilderModal({
                 </span>
               </div>
 
-              {/* Área Amplia y Despejada de Frascos */}
-              <div className={`flex-1 ${inline ? 'min-h-[380px] max-h-[580px]' : 'min-h-[320px] max-h-[50vh] sm:max-h-[54vh]'} overflow-y-auto pr-1 p-1`}>
+              {/* Área Deslizante Optimizada de Frascos */}
+              <div className={`flex-1 ${inline ? 'min-h-[170px] max-h-[250px] sm:max-h-[275px]' : 'min-h-[170px] max-h-[35vh]'} overflow-y-auto pr-1 p-1`}>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
                   {bottlesList.map((bottle) => {
                     const isChosen = activeBottle.id === bottle.id;
