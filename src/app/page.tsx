@@ -310,6 +310,19 @@ export default function EcommerceHomePage() {
     );
   };
 
+  const handleSelectCategory = (cat: string) => {
+    setSelectedCategory(cat);
+    if (cat === 'Botes' || cat === 'Insumos' || cat === 'Arma tu perfume') {
+      setSelectedGender('Todos');
+    }
+    setCurrentPage(1);
+
+    // Centrar y alinear suavemente según el contenido de la página
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 40);
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6 pb-16">
       
@@ -331,8 +344,8 @@ export default function EcommerceHomePage() {
         />
       )}
 
-      {/* ================= CARRUSEL PROMOCIONAL Y BANNER DEL KIT (SE OCULTA AUTOMÁTICAMENTE AL BUSCAR) ================= */}
-      {!isSearching && (
+      {/* ================= CARRUSEL PROMOCIONAL Y BANNER DEL KIT (SE OCULTA ÚNICA Y EXCLUSIVAMENTE EN ARMA TU PERFUME O AL BUSCAR) ================= */}
+      {!isSearching && selectedCategory !== 'Arma tu perfume' && (
         <section className="pt-0 animate-in fade-in duration-300 space-y-3 sm:space-y-3.5">
           <PromoBannerCarousel 
             onExploreCatalog={() => {
@@ -340,7 +353,7 @@ export default function EcommerceHomePage() {
               if (el) el.scrollIntoView({ behavior: 'smooth' });
             }}
             onFilterCategory={(cat) => {
-              setSelectedCategory(cat);
+              handleSelectCategory(cat);
               const el = document.getElementById('catalogo');
               if (el) el.scrollIntoView({ behavior: 'smooth' });
             }}
@@ -358,10 +371,7 @@ export default function EcommerceHomePage() {
             {/* Pestaña: Esencias */}
             <button
               type="button"
-              onClick={() => {
-                setSelectedCategory('Esencias para Perfume');
-                setCurrentPage(1);
-              }}
+              onClick={() => handleSelectCategory('Esencias para Perfume')}
               className={`clay-tab-item py-2 sm:py-2.5 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
                 selectedCategory === 'Esencias para Perfume'
                   ? 'clay-tab-active flex-[1.3] sm:flex-[1.4]'
@@ -374,11 +384,7 @@ export default function EcommerceHomePage() {
             {/* Pestaña: Botes */}
             <button
               type="button"
-              onClick={() => {
-                setSelectedCategory('Botes');
-                setSelectedGender('Todos');
-                setCurrentPage(1);
-              }}
+              onClick={() => handleSelectCategory('Botes')}
               className={`clay-tab-item py-2 sm:py-2.5 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
                 selectedCategory === 'Botes'
                   ? 'clay-tab-active flex-[1.1] sm:flex-[1.2]'
@@ -391,11 +397,7 @@ export default function EcommerceHomePage() {
             {/* Pestaña: Insumos (antes Alcohol y Materiales) */}
             <button
               type="button"
-              onClick={() => {
-                setSelectedCategory('Insumos');
-                setSelectedGender('Todos');
-                setCurrentPage(1);
-              }}
+              onClick={() => handleSelectCategory('Insumos')}
               className={`clay-tab-item py-2 sm:py-2.5 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
                 selectedCategory === 'Insumos' || selectedCategory === 'Alcohol y Materiales'
                   ? 'clay-tab-active flex-[1.1] sm:flex-[1.2]'
@@ -408,15 +410,7 @@ export default function EcommerceHomePage() {
             {/* Pestaña: Arma tu perfume */}
             <button
               type="button"
-              onClick={() => {
-                setSelectedCategory('Arma tu perfume');
-                setSelectedGender('Todos');
-                setCurrentPage(1);
-                setTimeout(() => {
-                  const el = document.getElementById('seccion-arma-tu-perfume');
-                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 60);
-              }}
+              onClick={() => handleSelectCategory('Arma tu perfume')}
               className={`clay-tab-item py-2 sm:py-2.5 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
                 selectedCategory === 'Arma tu perfume'
                   ? 'clay-tab-active flex-[1.3] sm:flex-[1.4]'
@@ -434,11 +428,11 @@ export default function EcommerceHomePage() {
 
         {/* ================= VISTA CONDICIONAL: ARMA TU PERFUME (INLINE) O CATÁLOGO ================= */}
         {selectedCategory === 'Arma tu perfume' ? (
-          <section id="seccion-arma-tu-perfume" className="scroll-mt-24 space-y-4 pt-1">
+          <section id="seccion-arma-tu-perfume" className="w-full flex justify-center scroll-mt-24 space-y-4 pt-1">
             <PerfumeKitBuilderModal
               inline={true}
               isOpen={true}
-              onClose={() => setSelectedCategory('Esencias para Perfume')}
+              onClose={() => handleSelectCategory('Esencias para Perfume')}
               availableEssences={availableEssences}
               availableBottles={availableBottles}
             />
