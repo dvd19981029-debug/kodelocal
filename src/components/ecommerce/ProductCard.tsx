@@ -179,6 +179,22 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               </div>
             )}
 
+            {/* Disponibilidad en esquina inferior izquierda (texto plano en negro con borde blanco de 1-2px, sin pastilla) */}
+            <div className="absolute bottom-2 left-2 z-10 pointer-events-none select-none">
+              <span 
+                className="text-black text-[9px] sm:text-[10px] font-black tracking-tight"
+                style={{
+                  textShadow: '-1px -1px 0 #ffffff, 1px -1px 0 #ffffff, -1px 1px 0 #ffffff, 1px 1px 0 #ffffff, 0 0 2px #ffffff'
+                }}
+              >
+                {remainingStock === 0
+                  ? 'Sin existencias'
+                  : isEssence
+                  ? `Disp: ${remainingStock % 1 === 0 ? remainingStock : remainingStock.toFixed(1)} oz`
+                  : `Disp: ${Math.floor(remainingStock)} unid`}
+              </span>
+            </div>
+
             {/* Indicador en esquina inferior derecha: solo cuando ya está en carrito (nunca tapa el género) */}
             {cartEssenceUsed > 0 && (
               <div className="absolute bottom-2 right-2 z-10 animate-in zoom-in-75 duration-200">
@@ -220,9 +236,9 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             )}
           </div>
 
-          {/* Selector de Presentación y Disponibilidad */}
+          {/* Selector de Presentación */}
           {presentations.length > 1 ? (
-            <div className="mt-1 space-y-1">
+            <div className="mt-1">
               {/* Botonera de Presentaciones Segmentada (1 Onza y ½ Onza) más arriba */}
               <div className="grid grid-cols-2 gap-1 p-0.5 bg-slate-100/90 rounded-xl border border-slate-200/80 shadow-2xs">
                 {presentations.map((opt) => {
@@ -253,35 +269,15 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                   );
                 })}
               </div>
-
-              {/* Indicador de disponibilidad abajo del botón seleccionado (arriba del botón de agregar al carrito) */}
-              <div className="flex items-center justify-end px-0.5 pt-0.5">
-                <span className={`text-[8.5px] sm:text-[9.5px] font-bold ${
-                  remainingStock <= 1 && remainingStock > 0 
-                    ? 'text-amber-600' 
-                    : remainingStock === 0 
-                    ? 'text-rose-600' 
-                    : 'text-slate-500'
-                }`}>
-                  {remainingStock === 0 ? (
-                    'Sin existencias'
-                  ) : selectedPresentation === 'MEDIA_ONZA' ? (
-                    `Disp: ${Math.floor(remainingStock / 0.5)} medias oz`
-                  ) : (
-                    `Disp: ${Math.floor(remainingStock)} oz`
-                  )}
-                </span>
-              </div>
             </div>
           ) : (
-            <div className="mt-1 flex items-center justify-between text-[9px] text-slate-500 font-medium px-0.5">
+            <div className="mt-1 text-[9px] text-slate-500 font-medium px-0.5 min-h-[14px]">
               <span>{presentations[0]?.description}</span>
-              <span className="font-bold text-slate-700">Disp: {Math.floor(remainingStock)} unid</span>
             </div>
           )}
 
           {/* Botón de Agregar al Carrito SÓLIDO colocado directamente abajo con altura fija para no desalinear */}
-          <div className="mt-2">
+          <div className="mt-1.5">
             {isOutOfStock ? (
               <button
                 disabled
