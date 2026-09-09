@@ -27,6 +27,7 @@ import { getFragranceProfile, getFragranceAccordBars } from '@/lib/fragranceProf
 import ProductCard from '@/components/ecommerce/ProductCard';
 import FragranceNotesVisual from '@/components/ecommerce/FragranceNotesVisual';
 import { getOriginalPerfumeName } from '@/lib/perfumeNames';
+import { getFragranceDescription } from '@/lib/fragranceDescriptions';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -770,11 +771,11 @@ export default function ProductDetailPage() {
           </h3>
           <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
             {isEssence
-              ? `Inspirado en ${getOriginalPerfumeName(product)}. Perfil olfativo oficial de alta fijación respaldado por la base de datos de perfumería fina con notas y acordes seleccionados.`
+              ? getFragranceDescription(product, profile)
               : (product.description || 'Frasco de vidrio de 100ml de alta resistencia con atomizador de lujo y tapa hermética. Diseñado especialmente para preservar la intensidad y estela de formulaciones de alta perfumería.')}
           </p>
           {isEssence && profile ? (
-            <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+            <div className="grid grid-cols-2 gap-2.5 pt-1 text-center">
               <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
                 <span className="text-[9.5px] font-black uppercase text-slate-400 block">Estación</span>
                 <span className="text-xs font-bold text-slate-800">{profile.season}</span>
@@ -782,10 +783,6 @@ export default function ProductDetailPage() {
               <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
                 <span className="text-[9.5px] font-black uppercase text-slate-400 block">Ocasión</span>
                 <span className="text-xs font-bold text-slate-800">{profile.occasion}</span>
-              </div>
-              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
-                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Intensidad</span>
-                <span className="text-xs font-bold text-indigo-700">{profile.intensity}</span>
               </div>
             </div>
           ) : (
