@@ -62,7 +62,7 @@ export default function BuildYourPerfumeCard({ onOpenBuilder }: BuildYourPerfume
           <div className="relative z-10 -mr-2 sm:-mr-3 w-16 h-16 sm:w-20 sm:h-20 md:w-22 md:h-22 rounded-2xl overflow-hidden bg-white border-2 border-amber-300 shadow-md flex items-center justify-center">
             <img
               src="/images/esencias/esencia_1.webp"
-              alt="Bote Contratipo Esencia"
+              alt="Esencia Contratipo"
               loading="lazy"
               decoding="async"
               onError={(e) => {

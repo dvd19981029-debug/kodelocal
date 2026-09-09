@@ -545,7 +545,7 @@ export default function EcommerceHomePage() {
             </div>
             <h4 className="font-extrabold text-xs sm:text-sm text-slate-900">Elige tu fragancia e insumos</h4>
             <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed">
-              Selecciona tu fragancia favorita en botes de 1 onza o media onza, y agrega a tu pedido los frascos vacíos e insumos que necesites.
+              Selecciona tu fragancia favorita en 1 onza o media onza (½ oz), y agrega a tu pedido los frascos vacíos e insumos que necesites.
             </p>
           </div>
 
@@ -592,7 +592,7 @@ export default function EcommerceHomePage() {
           <div className="text-xs text-slate-700 leading-relaxed">
             <strong className="font-black text-slate-900 block mb-0.5">Aclaración Importante de Aromaniak:</strong>
             <p>
-              <strong>Nosotros no maceramos ningún perfume.</strong> Vendemos la fragancia terminada por onzas y medias onzas preparadas, y por separado los botes e insumos. Cada cliente arma y prepara su perfume a su gusto.
+              <strong>Nosotros no maceramos ningún perfume.</strong> Vendemos la fragancia terminada por onzas y medias onzas (½ oz), y por separado los frascos e insumos. Cada cliente arma y prepara su perfume a su gusto.
             </p>
           </div>
         </div>

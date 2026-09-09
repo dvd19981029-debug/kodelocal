@@ -30,13 +30,13 @@ export function getPresentationsForProduct(product: ProductItem): PresentationOp
       {
         id: 'ONZA_COMPLETA',
         name: '1 Onza',
-        description: 'Bote preparado de 1 oz pura de contratipo',
+        description: '1 onza de esencia pura concentrada',
         price: onzaPrice
       },
       {
         id: 'MEDIA_ONZA',
         name: '½ Onza',
-        description: 'Bote preparado de ½ oz pura de contratipo',
+        description: '½ onza de esencia pura concentrada',
         price: mediaOnzaPrice
       }
     ];

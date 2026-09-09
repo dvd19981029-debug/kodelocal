@@ -320,7 +320,7 @@ export default function PerfumeKitBuilderModal({
 
                           <div className="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[9px]">
                             <span className="text-emerald-700 font-bold">
-                              Disp: {Math.floor(essence.stock * 0.8)} botes (1 oz)
+                              Disp: {Math.floor(essence.stock * 0.8)} onzas (1 oz)
                             </span>
                             {isChosen && (
                               <span className="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-[10px]">

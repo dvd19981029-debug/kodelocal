@@ -29,8 +29,8 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
   const activeOption = presentations.find(p => p.id === selectedPresentation) || presentations[0];
 
-  // Cálculo de inventario discreto 80/20 (80% botes de 1 onza, 20% botes de ½ onza)
-  // No vendemos producto fraccionable; cada unidad es un bote ya preparado
+  // Cálculo de inventario discreto 80/20 (80% onzas completas, 20% medias onzas)
+  // No vendemos producto fraccionable; cada presentación son onzas o medias onzas ya envasadas
   const isEssence = product.category === 'Esencias para Perfume';
   const totalStock = typeof product.stock === 'number' ? product.stock : 0;
   const isOutOfStock = totalStock <= 0;
@@ -39,7 +39,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
     ? getEssenceDiscreteStock(totalStock, cart, product.id)
     : null;
 
-  // Unidades/botes disponibles según la presentación actualmente seleccionada
+  // Unidades disponibles según la presentación actualmente seleccionada
   const availableUnits = isEssence
     ? (selectedPresentation === 'MEDIA_ONZA' ? (discreteStock?.availableHalfOz ?? 0) : (discreteStock?.available1oz ?? 0))
     : Math.max(0, totalStock - (cart.find(it => it.product.id === product.id)?.quantity || 0));
@@ -52,8 +52,8 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
     : [];
   const currentQuantity = matchingCartItems.reduce((acc, it) => acc + it.quantity, 0);
 
-  // Total de botes de esta esencia en el carrito (entre 1 oz y ½ oz)
-  const totalBotesInCart = isEssence
+  // Total de unidades de esta esencia en el carrito (entre 1 oz y ½ oz)
+  const totalUnitsInCart = isEssence
     ? (discreteStock ? discreteStock.used1oz + discreteStock.usedHalfOz : 0)
     : (cart.find(it => it.product.id === product.id)?.quantity || 0);
 
@@ -192,11 +192,19 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             )}
 
             {/* Indicador en esquina inferior derecha: cuando ya está en carrito */}
-            {totalBotesInCart > 0 && (
+            {totalUnitsInCart > 0 && (
               <div className="absolute bottom-2 right-2 z-10 animate-in zoom-in-75 duration-200 pointer-events-none">
                 <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-[8px] sm:text-[9px] font-black py-0.5 px-1.5 rounded-md shadow-md flex items-center gap-1">
                   <Check className="w-2.5 h-2.5 stroke-[3]" />
-                  <span>{isEssence ? `${totalBotesInCart} ${totalBotesInCart === 1 ? 'bote' : 'botes'}` : `${totalBotesInCart}`}</span>
+                  <span>
+                    {isEssence
+                      ? (discreteStock?.used1oz && discreteStock?.usedHalfOz)
+                        ? `${discreteStock.used1oz} oz + ${discreteStock.usedHalfOz} (½)`
+                        : discreteStock?.usedHalfOz
+                        ? `${discreteStock.usedHalfOz} ${discreteStock.usedHalfOz === 1 ? '½ onza' : '½ onzas'}`
+                        : `${discreteStock?.used1oz} ${discreteStock?.used1oz === 1 ? 'onza' : 'onzas'}`
+                      : `${totalUnitsInCart}`}
+                  </span>
                 </span>
               </div>
             )}
@@ -220,7 +228,9 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                 {availableUnits === 0
                   ? 'Sin existencias'
                   : isEssence
-                  ? `Disp: ${availableUnits} botes`
+                  ? selectedPresentation === 'MEDIA_ONZA'
+                    ? `Disp: ${availableUnits} ${availableUnits === 1 ? '½ onza' : '½ onzas'}`
+                    : `Disp: ${availableUnits} ${availableUnits === 1 ? 'onza' : 'onzas'}`
                   : `Disp: ${availableUnits} unid`}
               </span>
             </div>

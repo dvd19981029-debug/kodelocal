@@ -465,7 +465,9 @@ export default function ProductDetailPage() {
                 Existencias:{' '}
                 <strong>
                   {isEssence
-                    ? `${availableUnits} botes preparados (${selectedPresentation === 'MEDIA_ONZA' ? '½ oz' : '1 oz'})`
+                    ? selectedPresentation === 'MEDIA_ONZA'
+                      ? `${availableUnits} ${availableUnits === 1 ? 'media onza (½ oz)' : 'medias onzas (½ oz)'}`
+                      : `${availableUnits} ${availableUnits === 1 ? 'onza (1 oz)' : 'onzas (1 oz)'}`
                     : `${availableUnits} unidades`}
                 </strong>
               </span>
