@@ -312,21 +312,13 @@ export default function ProductDetailPage() {
               {displayName}
             </h1>
 
-            {/* Inspiración en el perfume original y género (solo para esencias) */}
+            {/* Inspiración en el perfume original (solo para esencias) */}
             {isEssence && (
               <div className="text-xs sm:text-sm text-slate-600 font-medium flex items-center gap-1.5 flex-wrap">
                 <span className="text-slate-400">Inspirado en:</span>
                 <strong className="text-slate-900 font-black">
                   {getOriginalPerfumeName(product)}
                 </strong>
-                {product.gender && (
-                  <>
-                    <span className="text-slate-300">•</span>
-                    <span className="text-indigo-700 font-bold bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg text-xs">
-                      {product.gender}
-                    </span>
-                  </>
-                )}
               </div>
             )}
 
@@ -541,8 +533,8 @@ export default function ProductDetailPage() {
                   <strong className="text-xs sm:text-sm font-bold text-slate-800">Perfumería Fina</strong>
                 </div>
                 <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
-                  <span className="text-[10px] font-black uppercase text-slate-400">Fabricante</span>
-                  <strong className="text-xs sm:text-sm font-bold text-indigo-700">{product.supplier || 'Yahua Industrial'}</strong>
+                  <span className="text-[10px] font-black uppercase text-slate-400">Calidad</span>
+                  <strong className="text-xs sm:text-sm font-bold text-indigo-700">Grado Cosmético</strong>
                 </div>
               </div>
             </div>
@@ -561,7 +553,7 @@ export default function ProductDetailPage() {
           </h3>
           <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
             {isEssence
-              ? `Inspirado en ${getOriginalPerfumeName(product)} (${product.gender || 'Unisex'}). Perfil olfativo oficial de alta fijación respaldado por la base de datos de perfumería fina con notas y acordes seleccionados.`
+              ? `Inspirado en ${getOriginalPerfumeName(product)}. Perfil olfativo oficial de alta fijación respaldado por la base de datos de perfumería fina con notas y acordes seleccionados.`
               : (product.description || 'Frasco de vidrio de 100ml de alta resistencia con atomizador de lujo y tapa hermética. Diseñado especialmente para preservar la intensidad y estela de formulaciones de alta perfumería.')}
           </p>
           {isEssence && profile ? (

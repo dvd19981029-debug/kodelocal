@@ -201,17 +201,14 @@ export default function ProductCard({ product }: ProductCardProps) {
             </span>
           </div>
 
-          {/* Inspirado en el perfume original (sin marca) y género */}
+          {/* Inspirado en el perfume original (sin marca) */}
           <div className="text-[10px] sm:text-xs text-slate-600 mt-0.5 leading-tight min-h-[18px] sm:min-h-[20px] line-clamp-2">
             {isEssence ? (
-              <span className="truncate block" title={`Inspirado en ${getOriginalPerfumeName(product)} • ${product.gender || ''}`}>
+              <span className="truncate block" title={`Inspirado en ${getOriginalPerfumeName(product)}`}>
                 <span className="text-slate-400 font-normal">Inspirado en </span>
                 <span className="font-bold text-slate-800">
                   {getOriginalPerfumeName(product)}
                 </span>
-                {product.gender && (
-                  <span className="text-indigo-600 font-semibold text-[9.5px] sm:text-[10.5px]"> • {product.gender}</span>
-                )}
               </span>
             ) : isBottle ? (
               <span className="text-slate-500 font-normal">Frasco de Vidrio • Atomizador de Lujo</span>

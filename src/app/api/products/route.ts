@@ -45,7 +45,7 @@ export async function GET(request: Request) {
       barcode: p.barcode || '',
       name: p.name,
       officialName: (p as any).officialName || '',
-      brand: p.brand || '',
+      brand: (p.category?.name === 'Botes' || p.brand === 'Yahua Industrial' || p.brand === 'APAESA') ? '' : (p.brand || ''),
       gender: p.gender || 'Unisex',
       category: p.category?.name || 'Esencias para Perfume',
       unit: p.unit || 'Onza',
@@ -57,7 +57,6 @@ export async function GET(request: Request) {
       description: p.description || '',
       isAvailableOnline: p.isAvailableOnline,
       puesto: (p as any).puesto || '',
-      supplier: (p as any).supplier || 'APAESA GUATEMALA',
     }));
 
     const total = formatted.length;

@@ -682,9 +682,8 @@ export default function CheckoutPage() {
                         {it.product.officialName || it.product.name}
                       </p>
                       {it.product.category === 'Esencias para Perfume' && (
-                        <p className="text-[10px] text-slate-500 truncate" title={`Inspirado en ${getOriginalPerfumeName(it.product)} • ${it.product.gender || ''}`}>
+                        <p className="text-[10px] text-slate-500 truncate" title={`Inspirado en ${getOriginalPerfumeName(it.product)}`}>
                           Inspirado en {getOriginalPerfumeName(it.product)}
-                          {it.product.gender ? ` • ${it.product.gender}` : ''}
                         </p>
                       )}
                       <p className="text-[10.5px] text-indigo-600 font-semibold">
