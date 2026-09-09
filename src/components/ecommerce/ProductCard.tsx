@@ -190,16 +190,16 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             )}
           </Link>
 
-          {/* Detalles del producto (alineados ópticamente con las esquinas redondeadas de la tarjeta superior) */}
-          <div className="px-1.5 sm:px-2">
-            {/* Nombre Oficial de la Fragancia (Contratipo) - En Bold y más grande */}
+          {/* Detalles del producto (desplazados claramente a la derecha para acompañar la curva redondeada de la tarjeta) */}
+          <div className="pl-3.5 pr-2 sm:pl-4 sm:pr-2.5">
+            {/* Nombre Oficial de la Fragancia (Contratipo) - En BOLD y más grande */}
             <Link href={`/producto/${product.id}`} className="block group/title">
-              <h3 className="font-bold text-[15px] sm:text-lg text-slate-900 line-clamp-1 leading-snug group-hover/title:text-indigo-600 transition-colors" title={displayName}>
+              <h3 className="font-bold text-base sm:text-lg text-slate-900 line-clamp-1 leading-snug group-hover/title:text-indigo-600 transition-colors" title={displayName}>
                 {displayName}
               </h3>
             </Link>
 
-            {/* Precio a la par de Disponibilidad sutil y pequeña */}
+            {/* Precio en BOLD a la par de Disponibilidad */}
             <div className="mt-0.5 flex items-baseline gap-1.5 sm:gap-2">
               <span className="text-base sm:text-xl font-bold text-indigo-700 leading-tight tracking-tight">
                 ${activeOption.price.toFixed(2)}
@@ -214,11 +214,11 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             </div>
 
             {/* Inspirado en el perfume original (sin marca, no mayúsculas) */}
-            <div className="text-[10px] sm:text-xs text-slate-600 mt-0.5 leading-tight min-h-[18px] sm:min-h-[20px] line-clamp-2">
+            <div className="text-[10.5px] sm:text-xs text-slate-600 mt-0.5 leading-tight min-h-[18px] sm:min-h-[20px] line-clamp-2">
               {isEssence ? (
                 <span className="truncate block" title={`Inspirado en ${getOriginalPerfumeName(product)}`}>
                   <span className="text-slate-400 font-normal">Inspirado en </span>
-                  <span className="font-medium text-slate-600">
+                  <span className="font-semibold text-slate-700">
                     {getOriginalPerfumeName(product)}
                   </span>
                 </span>
@@ -265,7 +265,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               </div>
             </div>
           ) : (
-            <div className="mt-1 text-[9px] text-slate-500 font-medium px-1.5 sm:px-2 min-h-[14px]">
+            <div className="mt-1 text-[9px] text-slate-500 font-medium pl-3.5 pr-2 sm:pl-4 sm:pr-2.5 min-h-[14px]">
               <span>{presentations[0]?.description}</span>
             </div>
           )}
