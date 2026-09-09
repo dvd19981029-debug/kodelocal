@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { ProductItem } from '@/lib/store';
 import { MOCK_100ML_BOTTLES } from '@/lib/bottles';
-import { useEcommerceCart } from '@/context/EcommerceCartContext';
+import { useEcommerceCart, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
 import { getOriginalPerfumeName } from '@/lib/perfumeNames';
 import { getProductImage } from '@/lib/perfumeImages';
 
@@ -34,7 +34,7 @@ export default function PerfumeKitBuilderModal({
   availableBottles,
   inline = false,
 }: PerfumeKitBuilderModalProps) {
-  const { addKitToCart } = useEcommerceCart();
+  const { addKitToCart, cart } = useEcommerceCart();
 
   // Wizard de 3 pasos claros (1: Esencia, 2: Frasco 100ml, 3: Personalizar)
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
@@ -104,8 +104,23 @@ export default function PerfumeKitBuilderModal({
 
   if (!inline && !isOpen) return null;
 
+  // Cálculo de disponibilidad de medias onzas para la versión PLUS (+½ oz extra)
+  const selectedEssenceStock = useMemo(() => {
+    if (!selectedEssence) return null;
+    return getEssenceDiscreteStock(selectedEssence.stock || 0, cart, selectedEssence.id);
+  }, [selectedEssence, cart]);
+
+  const hasHalfOzAvailable = selectedEssenceStock ? selectedEssenceStock.availableHalfOz >= 1 : false;
+
+  // Si no hay medias onzas disponibles en el contratipo elegido, bloquear y desactivar versión PLUS
+  useEffect(() => {
+    if (!hasHalfOzAvailable && isPlus) {
+      setIsPlus(false);
+    }
+  }, [hasHalfOzAvailable, isPlus]);
+
   const basePrice = 15.00;
-  const plusCost = isPlus ? 3.00 : 0.00;
+  const plusCost = (isPlus && hasHalfOzAvailable) ? 3.00 : 0.00;
   const totalPrice = basePrice + plusCost;
 
   const handleConfirmKit = () => {
@@ -115,7 +130,7 @@ export default function PerfumeKitBuilderModal({
       essence: selectedEssence,
       bottle: activeBottle,
       hasLabel,
-      isPlus,
+      isPlus: isPlus && hasHalfOzAvailable,
       quantity: 1,
     });
 
@@ -302,9 +317,10 @@ export default function PerfumeKitBuilderModal({
                       const isChosen = selectedEssence?.id === essence.id;
                       const name = essence.officialName?.trim() || essence.name;
 
-                      // Regla de inventario: protección de stock basada en minStock
+                      // Regla de inventario: protección de stock basada en minStock y carrito
                       const totalStock = typeof essence.stock === 'number' ? essence.stock : 0;
-                      const available1oz = Math.floor(totalStock * 0.8);
+                      const discrete = getEssenceDiscreteStock(totalStock, cart, essence.id);
+                      const available1oz = discrete.available1oz;
                       const minStockThreshold = typeof essence.minStock === 'number' && essence.minStock > 0
                         ? essence.minStock
                         : 15;
@@ -587,19 +603,25 @@ export default function PerfumeKitBuilderModal({
 
               {/* 2. Casilla Versión PLUS (+½ Onza extra por +$3.00) */}
               <div 
-                onClick={() => setIsPlus(!isPlus)}
-                className={`p-3.5 sm:p-4 rounded-2xl border-2 transition-all cursor-pointer select-none flex items-start gap-3 ${
-                  isPlus
-                    ? 'bg-gradient-to-r from-amber-50/95 via-purple-50/90 to-indigo-50/90 border-amber-400 shadow-md ring-2 ring-amber-300/60'
-                    : 'bg-slate-50/90 border-slate-200 hover:bg-white hover:border-slate-300'
+                onClick={() => {
+                  if (!hasHalfOzAvailable) return;
+                  setIsPlus(!isPlus);
+                }}
+                className={`p-3.5 sm:p-4 rounded-2xl border-2 transition-all select-none flex items-start gap-3 ${
+                  !hasHalfOzAvailable
+                    ? 'bg-slate-50 border-slate-200 opacity-60 cursor-not-allowed'
+                    : isPlus
+                    ? 'bg-gradient-to-r from-amber-50/95 via-purple-50/90 to-indigo-50/90 border-amber-400 shadow-md ring-2 ring-amber-300/60 cursor-pointer'
+                    : 'bg-slate-50/90 border-slate-200 hover:bg-white hover:border-slate-300 cursor-pointer'
                 }`}
               >
                 <div className="pt-0.5">
                   <input
                     type="checkbox"
-                    checked={isPlus}
+                    checked={isPlus && hasHalfOzAvailable}
+                    disabled={!hasHalfOzAvailable}
                     onChange={() => {}}
-                    className="w-5 h-5 rounded-md text-indigo-600 focus:ring-indigo-500 border-slate-300 cursor-pointer"
+                    className="w-5 h-5 rounded-md text-indigo-600 focus:ring-indigo-500 border-slate-300 cursor-pointer disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -611,10 +633,23 @@ export default function PerfumeKitBuilderModal({
                     <span className="bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-2xs">
                       +$3.00
                     </span>
+                    {!hasHalfOzAvailable && (
+                      <span className="bg-rose-50 text-rose-700 border border-rose-200 text-[9.5px] font-bold px-2 py-0.5 rounded-full">
+                        Sin disponibilidad de medias onzas
+                      </span>
+                    )}
                   </div>
 
                   <p className="text-[11px] text-slate-600 font-medium mt-1 leading-relaxed">
-                    Aumenta la concentración de tu perfume a <strong>1.5 Onzas de esencia pura</strong> (1 onza base + media onza adicional) para mayor intensidad y presencia.
+                    {!hasHalfOzAvailable ? (
+                      <span className="text-rose-600 font-bold block">
+                        Opción bloqueada: No hay disponibilidad de medias onzas para convertir este contratipo en versión PLUS.
+                      </span>
+                    ) : (
+                      <>
+                        Aumenta la concentración de tu perfume a <strong>1.5 Onzas de esencia pura</strong> (1 onza base + media onza adicional) para mayor intensidad y presencia.
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
@@ -640,8 +675,8 @@ export default function PerfumeKitBuilderModal({
                   </div>
                   <div>
                     <span className="text-[10px] text-slate-400 block font-bold">Concentración:</span>
-                    <strong className={isPlus ? 'text-amber-800 font-black' : 'text-slate-700 font-bold'}>
-                      {isPlus ? '1.5 Onzas (Versión PLUS)' : '1 Onza Estándar'}
+                    <strong className={(isPlus && hasHalfOzAvailable) ? 'text-amber-800 font-black' : 'text-slate-700 font-bold'}>
+                      {(isPlus && hasHalfOzAvailable) ? '1.5 Onzas (Versión PLUS)' : '1 Onza Estándar'}
                     </strong>
                   </div>
                   <div>
@@ -671,7 +706,7 @@ export default function PerfumeKitBuilderModal({
                 ${totalPrice.toFixed(2)}
               </span>
               <span className="text-[11px] font-bold text-slate-500">
-                {isPlus ? '(Incluye +½ oz PLUS)' : '(1 Onza Estándar)'}
+                {(isPlus && hasHalfOzAvailable) ? '(Incluye +½ oz PLUS)' : '(1 Onza Estándar)'}
               </span>
             </div>
           </div>
