@@ -17,6 +17,7 @@ import { ProductItem } from '@/lib/store';
 import { MOCK_100ML_BOTTLES } from '@/lib/bottles';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { getOriginalPerfumeName } from '@/lib/perfumeNames';
+import { getProductImage } from '@/lib/perfumeImages';
 
 interface PerfumeKitBuilderModalProps {
   isOpen?: boolean;
@@ -312,16 +313,33 @@ export default function PerfumeKitBuilderModal({
                           }`}
                         >
                           <div>
-                            <div className="flex items-center justify-end text-[8px] text-slate-400 font-bold mb-1">
-                              {essence.gender && (
-                                <span className="uppercase text-slate-600 font-black">
-                                  {essence.gender.slice(0, 3)}
-                                </span>
-                              )}
+                            <div className="flex items-start gap-2 mb-1">
+                              {/* Miniatura de la esencia */}
+                              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg overflow-hidden bg-slate-50 border border-slate-200/80 shrink-0 flex items-center justify-center">
+                                <img
+                                  src={getProductImage(essence)}
+                                  alt={name}
+                                  loading="lazy"
+                                  decoding="async"
+                                  onError={(e) => {
+                                    e.currentTarget.src = '/images/essence_bottle_blank.webp';
+                                  }}
+                                  className="w-full h-full object-cover object-center"
+                                />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center justify-between text-[8px] text-slate-400 font-bold mb-0.5">
+                                  {essence.gender && (
+                                    <span className="uppercase text-slate-600 font-black">
+                                      {essence.gender.slice(0, 3)}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[11px] font-black text-slate-900 leading-snug line-clamp-2">
+                                  {name}
+                                </p>
+                              </div>
                             </div>
-                            <p className="text-[11px] font-black text-slate-900 leading-snug line-clamp-2">
-                              {name}
-                            </p>
                             <p className="text-[9px] text-slate-500 font-medium truncate mt-0.5" title={`Inspirado en ${getOriginalPerfumeName(essence)}`}>
                               <span className="text-slate-400">Inspirado en: </span>
                               <strong className="text-slate-800 font-semibold">
