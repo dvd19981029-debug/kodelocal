@@ -1,56 +1,35 @@
-import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
-import fs from 'fs';
-import sharp from 'sharp';
+const fs = require('fs');
+const path = require('path');
+const sharp = require('sharp');
 
-// Cache the base template in memory
-let cachedBaseBuffer: Buffer | null = null;
+const namesFile = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'perfumeNames.ts'), 'utf8');
+const mapMatch = namesFile.match(/export const ORIGINAL_PERFUME_MAP: Record<string, string> = {([sS]*?)};/);
+const originalMap = eval('({' + mapMatch[1] + '})');
 
-function getBaseBuffer(): Buffer {
-  if (!cachedBaseBuffer) {
-    const baseImgPath = path.join(process.cwd(), 'public', 'images', 'essence_bottle_blank.webp');
-    cachedBaseBuffer = fs.readFileSync(baseImgPath);
-  }
-  return cachedBaseBuffer;
-}
+const storeFile = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'store.ts'), 'utf8');
+const prodsMatch = storeFile.match(/INITIAL_PRODUCTS: ProductItem[] = [([sS]*?)];/);
+const items = eval('[' + prodsMatch[1] + ']').filter(p => p.category === 'Esencias para Perfume');
 
-function cleanContratipoName(raw: string): string {
-  return (raw || '')
-    .replace(/\s+[HFMU]\b/gi, '')
-    .trim()
-    .toUpperCase();
-}
-
-function escapeXml(unsafe: string): string {
-  return unsafe.replace(/[<>&'"]/g, (c) => {
+function escapeXml(unsafe) {
+  return (unsafe || '').replace(/[<>&'"]/g, (c) => {
     switch (c) {
       case '<': return '&lt;';
       case '>': return '&gt;';
       case '&': return '&amp;';
-      case '\'': return '&apos;';
+      case ''': return '&apos;';
       case '"': return '&quot;';
       default: return c;
     }
   });
 }
 
-let cachedLogoBuffer: Buffer | null = null;
-
-function getLogoBuffer(): Buffer {
-  if (!cachedLogoBuffer) {
-    const logoPath = path.join(process.cwd(), 'public', 'images', 'aromaniak_black_logo.png');
-    cachedLogoBuffer = fs.readFileSync(logoPath);
-  }
-  return cachedLogoBuffer;
-}
-
-function createBottleLabelSvg(contratipo: string, originalPerfume?: string, genderCode?: string, lote = 'L260908-01', size = '1 OZ') {
+function createBottleLabelSvg(contratipo, originalPerfume, genderCode, lote = 'L260908-01', size = '1 OZ') {
   const labelW = 304;
   const labelH = 368;
   const cleanContra = escapeXml((contratipo || 'ESENCIA').toUpperCase());
   const cleanOrig = escapeXml((originalPerfume || '').toUpperCase());
-  const genderTag = genderCode ? ` • (${genderCode})` : '';
-  const sideText = cleanOrig ? `${cleanOrig}${genderTag}` : 'INSPIRACIÓN FINA';
+  const genderTag = genderCode ? ' • (' + genderCode + ')' : '';
+  const sideText = cleanOrig ? cleanOrig + genderTag : '';
 
   let contraFontSize = 24;
   let underlineW = 100;
@@ -95,52 +74,38 @@ function createBottleLabelSvg(contratipo: string, originalPerfume?: string, gend
   `;
 }
 
-const imageCache = new Map<string, Buffer>();
+async function run() {
+  const logoBuf = await sharp(path.join(__dirname, '..', 'public', 'images', 'aromaniak_black_logo.png'))
+    .resize(140)
+    .toBuffer();
 
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const name = (searchParams.get('name') || 'ESENCIA').trim();
-    const original = (searchParams.get('original') || '').trim();
-    const gender = (searchParams.get('gender') || '').trim();
-    const cacheKey = `${name}_${original}_${gender}`;
+  const outDir = path.join(__dirname, '..', 'public', 'images', 'esencias');
+  if (!fs.existsSync(outDir)) {
+    fs.mkdirSync(outDir, { recursive: true });
+  }
 
-    if (imageCache.has(cacheKey)) {
-      return new Response(imageCache.get(cacheKey) as any, {
-        status: 200,
-        headers: {
-          'Content-Type': 'image/webp',
-          'Cache-Control': 'public, max-age=31536000, immutable',
-        },
-      });
-    }
+  const blankBottlePath = path.join(__dirname, '..', 'public', 'images', 'essence_bottle_blank.webp');
 
-    const baseBuffer = getBaseBuffer();
-    const logoBuffer = getLogoBuffer();
-    const resizedLogo = await sharp(logoBuffer).resize(140).toBuffer();
+  console.log('Generating ' + items.length + ' official essence bottle images...');
+  for (const p of items) {
+    const genderCode = p.gender === 'Caballero' ? 'H' : p.gender === 'Dama' ? 'M' : 'U';
+    const original = originalMap[p.sku] || '';
+    const contratipo = p.name || 'Esencia Pura';
 
-    const svgStr = createBottleLabelSvg(name, original, gender);
+    const svgStr = createBottleLabelSvg(contratipo, original, genderCode);
     const labelImg = await sharp(Buffer.from(svgStr))
-      .composite([{ input: resizedLogo, top: 26, left: Math.round((244 - 140) / 2) }])
+      .composite([{ input: logoBuf, top: 26, left: Math.round((244 - 140) / 2) }])
       .png()
       .toBuffer();
 
-    const compositedBuffer = await sharp(baseBuffer)
+    const finalBuffer = await sharp(blankBottlePath)
       .composite([{ input: labelImg, top: 412, left: 232 }])
       .webp({ quality: 90 })
       .toBuffer();
 
-    imageCache.set(cacheKey, compositedBuffer);
-
-    return new Response(compositedBuffer as any, {
-      status: 200,
-      headers: {
-        'Content-Type': 'image/webp',
-        'Cache-Control': 'public, max-age=31536000, immutable',
-      },
-    });
-  } catch (error) {
-    console.error('Error generating bottle image:', error);
-    return new NextResponse('Error generating bottle image', { status: 500 });
+    fs.writeFileSync(path.join(outDir, 'esencia_' + p.sku + '.webp'), finalBuffer);
+    fs.writeFileSync(path.join(outDir, p.id + '.webp'), finalBuffer);
   }
+  console.log('Done! All 48 images generated successfully.');
 }
+run();
