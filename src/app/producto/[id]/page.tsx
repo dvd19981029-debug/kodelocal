@@ -323,7 +323,7 @@ export default function ProductDetailPage() {
                   {isBottle ? (
                     <>
                       <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                      <span>Atomizador de Lujo Incluido</span>
+                      <span>Cierre de Rosca</span>
                     </>
                   ) : (
                     <>
@@ -653,11 +653,11 @@ export default function ProductDetailPage() {
                   </div>
                   <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
                     <span className="text-[10px] font-black uppercase text-slate-400">Atomizador</span>
-                    <strong className="text-xs sm:text-sm font-bold text-slate-800">Spray Fino de Lujo</strong>
+                    <strong className="text-xs sm:text-sm font-bold text-slate-800">De Rosca</strong>
                   </div>
                   <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
                     <span className="text-[10px] font-black uppercase text-slate-400">Tipo de Tapa</span>
-                    <strong className="text-xs sm:text-sm font-bold text-slate-800">Cierre Hermético</strong>
+                    <strong className="text-xs sm:text-sm font-bold text-slate-800">Cierre de Rosca Hermético</strong>
                   </div>
                   <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
                     <span className="text-[10px] font-black uppercase text-slate-400">Compatibilidad</span>
@@ -670,23 +670,23 @@ export default function ProductDetailPage() {
                 </div>
               </div>
 
-              {/* Tarjeta de Micro-Difusión y Preservación */}
+              {/* Tarjeta de Cierre de Rosca Fácil Sin Máquina */}
               <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-3 shadow-xs">
                 <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                   <Droplets className="w-4 h-4 text-indigo-600" />
-                  <span>Micro-Difusión y Preservación de Fragancia</span>
+                  <span>Cierre de Rosca Fácil — No Requiere Máquina Selladora</span>
                 </h4>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Frasco de vidrio pesado de alta densidad especialmente diseñado para perfumería fina. Su atomizador spray genera una bruma fina y homogénea que maximiza la estela y longevidad del perfume sin gotear ni desperdiciar producto.
+                  Todos nuestros botes son de rosca para que no se tenga que usar máquina selladora y que sea fácil para todos cerrarlo. Diseñados especialmente para perfumería con sellado hermético manual firme, seguro y libre de fugas ni evaporación.
                 </p>
                 <div className="grid grid-cols-2 gap-2 pt-1">
+                  <div className="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-100/80 text-[11px] font-bold text-emerald-950 flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Fácil de cerrar a mano</span>
+                  </div>
                   <div className="p-2.5 rounded-xl bg-indigo-50/60 border border-indigo-100/80 text-[11px] font-bold text-indigo-950 flex items-center gap-2">
                     <Check className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                    <span>Sin fugas ni derrames</span>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-amber-50/60 border border-amber-100/80 text-[11px] font-bold text-amber-950 flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                    <span>Sellado anti-evaporación</span>
+                    <span>Sin máquinas ni selladoras</span>
                   </div>
                 </div>
               </div>
@@ -772,7 +772,7 @@ export default function ProductDetailPage() {
           <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
             {isEssence
               ? getFragranceDescription(product, profile)
-              : (product.description || 'Frasco de vidrio de 100ml de alta resistencia con atomizador de lujo y tapa hermética. Diseñado especialmente para preservar la intensidad y estela de formulaciones de alta perfumería.')}
+              : (product.description || 'Frasco de vidrio de 100ml de alta resistencia con cierre de rosca. Todos nuestros botes son de rosca para que no se tenga que usar máquina selladora y que sea fácil para todos cerrarlo, asegurando un sellado hermético que preserva intacta la fragancia.')}
           </p>
           {isEssence && profile ? (
             <div className="grid grid-cols-2 gap-2.5 pt-1 text-center">

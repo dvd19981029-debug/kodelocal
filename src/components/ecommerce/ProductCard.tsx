@@ -255,7 +255,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                   </span>
                 </p>
               ) : isBottle ? (
-                <span className="text-[10.5px] sm:text-xs text-slate-500 font-normal truncate">Frasco de Vidrio • Atomizador de Lujo</span>
+                <span className="text-[10.5px] sm:text-xs text-slate-500 font-normal truncate">Frasco de Vidrio • Cierre de Rosca</span>
               ) : (
                 <span className="text-[10.5px] sm:text-xs text-slate-500 font-normal truncate">{product.unit || 'Unidad'} • Disponible</span>
               )}

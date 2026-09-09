@@ -435,7 +435,7 @@ export default function PerfumeKitBuilderModal({
             <div className="space-y-3 animate-in fade-in duration-200 h-full flex flex-col">
               <div className="flex items-center justify-between shrink-0">
                 <h3 className="text-xs sm:text-sm font-black text-slate-800">
-                  Elige tu modelo favorito (Todos de 100ml con atomizador de lujo incluidos):
+                  Elige tu modelo favorito (Todos de 100ml con cierre de rosca, fácil de cerrar sin máquina selladora):
                 </h3>
                 <span className="text-[11px] font-black text-indigo-600">
                   {bottlesList.length} modelos
