@@ -197,12 +197,12 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             </h3>
           </Link>
 
-          {/* Precio Prominente junto con Disponibilidad discreta */}
-          <div className="mt-0.5 flex items-baseline justify-between gap-2">
+          {/* Precio Prominente a la par de Disponibilidad sutil y pequeña */}
+          <div className="mt-0.5 flex items-baseline gap-1.5 sm:gap-2">
             <span className="text-base sm:text-xl font-black text-indigo-700 font-mono leading-tight tracking-tight">
               ${activeOption.price.toFixed(2)}
             </span>
-            <span className="text-[10px] sm:text-xs text-slate-400 font-normal font-sans tracking-tight shrink-0">
+            <span className="text-[8px] sm:text-[9px] text-slate-400 font-normal font-sans tracking-tight">
               {remainingStock === 0
                 ? 'Sin existencias'
                 : isEssence
