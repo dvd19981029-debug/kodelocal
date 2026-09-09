@@ -179,32 +179,15 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               </div>
             )}
 
-            {/* Disponibilidad en esquina inferior derecha (texto plano en negro con borde blanco de 1px) */}
-            <div className={`absolute bottom-2 right-2 z-10 pointer-events-none select-none flex items-center gap-1.5 ${
-              cartEssenceUsed > 0 ? 'flex-row-reverse' : ''
-            }`}>
-              <span 
-                className="text-black text-[9px] sm:text-[10px] font-semibold tracking-tight"
-                style={{
-                  WebkitTextStroke: '1px #ffffff',
-                  paintOrder: 'stroke fill',
-                }}
-              >
-                {remainingStock === 0
-                  ? 'Sin existencias'
-                  : isEssence
-                  ? `Disp: ${remainingStock % 1 === 0 ? remainingStock : remainingStock.toFixed(1)} oz`
-                  : `Disp: ${Math.floor(remainingStock)} unid`}
-              </span>
-
-              {/* Indicador cuando ya está en carrito */}
-              {cartEssenceUsed > 0 && (
+            {/* Indicador en esquina inferior derecha: cuando ya está en carrito */}
+            {cartEssenceUsed > 0 && (
+              <div className="absolute bottom-2 right-2 z-10 animate-in zoom-in-75 duration-200 pointer-events-none">
                 <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-[8px] sm:text-[9px] font-black py-0.5 px-1.5 rounded-md shadow-md flex items-center gap-1">
                   <Check className="w-2.5 h-2.5 stroke-[3]" />
                   <span>{isEssence ? `${cartEssenceUsed} oz` : `${cartEssenceUsed}`}</span>
                 </span>
-              )}
-            </div>
+              </div>
+            )}
           </Link>
 
           {/* Nombre Oficial de la Fragancia (Contratipo) */}
@@ -214,10 +197,17 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             </h3>
           </Link>
 
-          {/* Precio Prominente abajo del nombre del contratipo */}
-          <div className="mt-0.5 flex items-baseline">
+          {/* Precio Prominente junto con Disponibilidad discreta */}
+          <div className="mt-0.5 flex items-baseline justify-between gap-2">
             <span className="text-base sm:text-xl font-black text-indigo-700 font-mono leading-tight tracking-tight">
               ${activeOption.price.toFixed(2)}
+            </span>
+            <span className="text-[10px] sm:text-xs text-slate-400 font-normal font-sans tracking-tight shrink-0">
+              {remainingStock === 0
+                ? 'Sin existencias'
+                : isEssence
+                ? `Disp: ${remainingStock % 1 === 0 ? remainingStock : remainingStock.toFixed(1)} oz`
+                : `Disp: ${Math.floor(remainingStock)} unid`}
             </span>
           </div>
 
