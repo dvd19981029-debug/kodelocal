@@ -432,6 +432,77 @@ export default function EcommerceHomePage() {
           <BuildYourPerfumeCard onOpenBuilder={() => setIsKitModalOpen(true)} />
         )}
 
+        {/* ================= FILTRO CLAYMÓRFICO: MÁS VENDIDAS / HOMBRE / DAMA / UNISEX ================= */}
+        {selectedCategory === 'Esencias para Perfume' && (
+          <div className="w-full">
+            <div className="clay-tabs-track max-w-xl mx-auto">
+              {/* Pestaña: Más Vendidas */}
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedGender('Todos');
+                  setCurrentPage(1);
+                }}
+                className={`clay-tab-item py-1.5 sm:py-2 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
+                  selectedGender === 'Todos'
+                    ? 'clay-tab-active flex-[1.4] sm:flex-[1.5]'
+                    : 'clay-tab-inactive flex-1'
+                }`}
+              >
+                <span className="truncate">Más Vendidas</span>
+              </button>
+
+              {/* Pestaña: Hombre */}
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedGender('Caballero');
+                  setCurrentPage(1);
+                }}
+                className={`clay-tab-item py-1.5 sm:py-2 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
+                  selectedGender === 'Caballero'
+                    ? 'clay-tab-active flex-[1.4] sm:flex-[1.5]'
+                    : 'clay-tab-inactive flex-1'
+                }`}
+              >
+                <span>Hombre</span>
+              </button>
+
+              {/* Pestaña: Dama */}
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedGender('Dama');
+                  setCurrentPage(1);
+                }}
+                className={`clay-tab-item py-1.5 sm:py-2 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
+                  selectedGender === 'Dama'
+                    ? 'clay-tab-active flex-[1.4] sm:flex-[1.5]'
+                    : 'clay-tab-inactive flex-1'
+                }`}
+              >
+                <span>Dama</span>
+              </button>
+
+              {/* Pestaña: Unisex */}
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedGender('Unisex');
+                  setCurrentPage(1);
+                }}
+                className={`clay-tab-item py-1.5 sm:py-2 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
+                  selectedGender === 'Unisex'
+                    ? 'clay-tab-active flex-[1.4] sm:flex-[1.5]'
+                    : 'clay-tab-inactive flex-1'
+                }`}
+              >
+                <span>Unisex</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ================= PAGINACIÓN SUPERIOR ================= */}
         {renderPagination('top')}
 

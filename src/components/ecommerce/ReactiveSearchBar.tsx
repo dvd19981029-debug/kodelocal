@@ -159,61 +159,6 @@ export default function ReactiveSearchBar({
           </div>
         </div>
       </div>
-
-      {/* ================= LÍNEA DE FILTROS LIMPIA SIN EMOJIS ================= */}
-      <div className="w-full mt-2 sm:mt-2.5 px-0.5 sm:px-2">
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-0.5 px-0.5 touch-pan-x select-none">
-          
-          {/* Opción: Más Vendidas (Por defecto) */}
-          <button
-            onClick={() => handleSelectFilter('all')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
-              selectedCategory === 'Esencias para Perfume' && selectedGender === 'Todos'
-                ? 'bg-[#7c3aed] text-white shadow-sm'
-                : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
-            }`}
-          >
-            Más Vendidas
-          </button>
-
-          {/* Opción: Hombre */}
-          <button
-            onClick={() => handleSelectFilter('gender', 'Caballero')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
-              selectedGender === 'Caballero'
-                ? 'bg-[#7c3aed] text-white shadow-sm'
-                : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
-            }`}
-          >
-            Hombre
-          </button>
-
-          {/* Opción: Dama */}
-          <button
-            onClick={() => handleSelectFilter('gender', 'Dama')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
-              selectedGender === 'Dama'
-                ? 'bg-[#7c3aed] text-white shadow-sm'
-                : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
-            }`}
-          >
-            Dama
-          </button>
-
-          {/* Opción: Unisex */}
-          <button
-            onClick={() => handleSelectFilter('gender', 'Unisex')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
-              selectedGender === 'Unisex'
-                ? 'bg-[#7c3aed] text-white shadow-sm'
-                : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 shadow-2xs'
-            }`}
-          >
-            Unisex
-          </button>
-
-        </div>
-      </div>
     </>
   );
 }
