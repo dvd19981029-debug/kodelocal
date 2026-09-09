@@ -636,7 +636,7 @@ export default function ProductDetailPage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-3 sm:gap-x-4 gap-y-7 sm:gap-y-9">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-3 sm:gap-x-4 gap-y-10 sm:gap-y-12">
             {relatedProducts.map(rel => (
               <ProductCard key={rel.id} product={rel} />
             ))}
