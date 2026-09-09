@@ -569,7 +569,7 @@ export default function ProductDetailPage() {
 
           </div>
 
-          {/* ================= TARJETA COMPACTA HORIZONTAL: PÍDELA YA ARMADA (SOLO ESENCIAS) ================= */}
+          {/* ================= BOTÓN HORIZONTAL: PÍDELA YA ARMADA (SOLO ESENCIAS) ================= */}
           {isEssence && (
             <Link
               href={discreteStock && discreteStock.available1oz > 0 ? `/?categoria=Arma+tu+perfume&essenceId=${product.id}#seccion-arma-tu-perfume` : '#'}
@@ -578,36 +578,48 @@ export default function ProductDetailPage() {
                   e.preventDefault();
                 }
               }}
-              className={`clay-card group flex items-center justify-between gap-3 p-3 sm:p-3.5 rounded-2xl border transition-all duration-200 ${
+              className={`w-full group flex items-center justify-between gap-3 px-4 py-3 sm:py-3.5 rounded-2xl transition-all duration-200 ${
                 discreteStock && discreteStock.available1oz > 0
-                  ? 'bg-gradient-to-r from-purple-50/70 via-white to-amber-50/40 border-purple-200/80 hover:border-purple-400 hover:shadow-md cursor-pointer'
-                  : 'bg-slate-50 border-slate-200 opacity-60 cursor-not-allowed'
+                  ? 'clay-btn bg-gradient-to-r from-purple-700 via-indigo-600 to-purple-600 !text-white shadow-md shadow-purple-900/15 hover:shadow-lg hover:shadow-purple-900/25 hover:brightness-105 active:scale-[0.99] cursor-pointer'
+                  : 'bg-slate-100 border border-slate-200 text-slate-400 opacity-60 cursor-not-allowed'
               }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
-                  <Wand2 className="w-4 h-4 text-purple-600" />
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-2xs ${
+                  discreteStock && discreteStock.available1oz > 0
+                    ? 'bg-white/20 text-white backdrop-blur-xs'
+                    : 'bg-slate-200 text-slate-400'
+                }`}>
+                  <Wand2 className="w-4 h-4" />
                 </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-xs sm:text-[13px] font-black text-slate-900 tracking-tight">
+                <div className="min-w-0 text-left">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs sm:text-sm font-black tracking-tight leading-tight">
                       Pídela ya armada
                     </span>
-                    <span className="text-[9.5px] font-bold text-amber-800 bg-amber-100/80 px-1.5 py-0.5 rounded-md">
+                    <span className={`text-[9px] sm:text-[9.5px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                      discreteStock && discreteStock.available1oz > 0
+                        ? 'bg-amber-400 text-amber-950 shadow-xs'
+                        : 'bg-slate-200 text-slate-500'
+                    }`}>
                       Bote y alcohol incluidos
                     </span>
                   </div>
-                  <p className="text-[10.5px] sm:text-[11px] text-slate-500 font-medium truncate">
+                  <p className={`text-[10px] sm:text-[11px] font-medium truncate ${
+                    discreteStock && discreteStock.available1oz > 0 ? 'text-purple-100' : 'text-slate-400'
+                  }`}>
                     {discreteStock && discreteStock.available1oz > 0
-                      ? 'Ármala en frasco de 100ml con maceración lista'
+                      ? 'Ármala en frasco de 100ml listo para usar'
                       : 'Sin stock suficiente de 1 onza para armar'}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 text-purple-700 font-bold text-xs shrink-0 group-hover:translate-x-0.5 transition-transform">
-                <span className="text-[11px] font-black hidden sm:inline">Armar</span>
-                <ChevronRight className="w-4 h-4" />
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-[11px] font-black bg-white/20 hover:bg-white/30 text-white px-2.5 py-1 rounded-xl transition-colors hidden xs:inline-block">
+                  Armar perfume
+                </span>
+                <ChevronRight className="w-4 h-4 text-white/90 group-hover:translate-x-0.5 transition-transform" />
               </div>
             </Link>
           )}
