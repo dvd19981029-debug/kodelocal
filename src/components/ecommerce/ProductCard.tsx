@@ -128,6 +128,19 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   const displayName = product.officialName?.trim() || product.name;
   const productImage = getProductImage(product);
 
+  // Nombre de inspiración original y cálculo dinámico de escala de texto
+  const originalPerfumeName = getOriginalPerfumeName(product);
+  const originalNameLength = originalPerfumeName.length;
+
+  // Si el nombre es largo, reducimos el tamaño progresivamente para que quepa sin salirse de la tarjeta
+  const inspiredSizeClass = originalNameLength > 30
+    ? 'text-[8px] sm:text-[9px]'
+    : originalNameLength > 22
+    ? 'text-[9px] sm:text-[10px]'
+    : originalNameLength > 16
+    ? 'text-[10px] sm:text-[11px]'
+    : 'text-[10.5px] sm:text-xs';
+
   return (
     <>
       <div className={`flex flex-col justify-between transition-all duration-300 group relative ${
@@ -212,19 +225,22 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               </span>
             </div>
 
-            {/* Inspirado en el perfume original (sin marca, no mayúsculas) */}
-            <div className="text-[10.5px] sm:text-xs text-slate-600 mt-0.5 leading-tight min-h-[18px] sm:min-h-[20px] line-clamp-2">
+            {/* Inspirado en el perfume original (tamaño dinámico adaptable para que quepa dentro de la tarjeta) */}
+            <div className="mt-0.5 min-h-[26px] sm:min-h-[28px] flex items-center">
               {isEssence ? (
-                <span className="truncate block" title={`Inspirado en ${getOriginalPerfumeName(product)}`}>
+                <p 
+                  className={`${inspiredSizeClass} text-slate-600 leading-tight line-clamp-2 break-words`} 
+                  title={`Inspirado en ${originalPerfumeName}`}
+                >
                   <span className="text-slate-400 font-normal">Inspirado en </span>
                   <span className="font-semibold text-slate-700">
-                    {getOriginalPerfumeName(product)}
+                    {originalPerfumeName}
                   </span>
-                </span>
+                </p>
               ) : isBottle ? (
-                <span className="text-slate-500 font-normal">Frasco de Vidrio • Atomizador de Lujo</span>
+                <span className="text-[10.5px] sm:text-xs text-slate-500 font-normal truncate">Frasco de Vidrio • Atomizador de Lujo</span>
               ) : (
-                <span className="text-slate-500 font-normal">{product.unit || 'Unidad'} • Disponible</span>
+                <span className="text-[10.5px] sm:text-xs text-slate-500 font-normal truncate">{product.unit || 'Unidad'} • Disponible</span>
               )}
             </div>
           </div>
