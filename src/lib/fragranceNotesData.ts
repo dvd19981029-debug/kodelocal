@@ -197,7 +197,8 @@ const NOTE_RULES: Array<{ pattern: RegExp; file: string }> = [
   { pattern: /l[áa]dano/i, file: 'ladano' },
   { pattern: /mirra/i, file: 'mirra' },
   { pattern: /b[áa]lsamo|resina/i, file: 'incienso' },
-  { pattern: /ambroxan|amberwood/i, file: 'ambar' },
+  { pattern: /ambroxan/i, file: 'ambroxan' },
+  { pattern: /amberwood/i, file: 'ambar' },
   { pattern: /iso\s*e\s*super/i, file: 'maderas' },
 
   // Gourmand
@@ -211,6 +212,7 @@ const NOTE_RULES: Array<{ pattern: RegExp; file: string }> = [
   { pattern: /almendra/i, file: 'almendra' },
   { pattern: /avellana|pralin[ée]/i, file: 'avellana' },
   { pattern: /crema\s*batida/i, file: 'crema-batida' },
+  { pattern: /algod[óo]n\s*(de\s*)?az[úu]car/i, file: 'algodon-azucar' },
 
   // Cuero y Tabaco
   { pattern: /cuero/i, file: 'cuero' },
