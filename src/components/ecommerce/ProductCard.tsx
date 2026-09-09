@@ -52,11 +52,6 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
     : [];
   const currentQuantity = matchingCartItems.reduce((acc, it) => acc + it.quantity, 0);
 
-  // Total de unidades de esta esencia en el carrito (entre 1 oz y ½ oz)
-  const totalUnitsInCart = isEssence
-    ? (discreteStock ? discreteStock.used1oz + discreteStock.usedHalfOz : 0)
-    : (cart.find(it => it.product.id === product.id)?.quantity || 0);
-
   const triggerCardPulse = () => {
     setIsCardPulsing(true);
     setTimeout(() => setIsCardPulsing(false), 700);
@@ -191,19 +186,17 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               </div>
             )}
 
-            {/* Indicador en esquina inferior derecha: cuando ya está en carrito */}
-            {totalUnitsInCart > 0 && (
+            {/* Indicador en esquina inferior derecha: cuando la presentación seleccionada está en carrito */}
+            {currentQuantity > 0 && (
               <div className="absolute bottom-2 right-2 z-10 animate-in zoom-in-75 duration-200 pointer-events-none">
                 <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-[8px] sm:text-[9px] font-black py-0.5 px-1.5 rounded-md shadow-md flex items-center gap-1">
                   <Check className="w-2.5 h-2.5 stroke-[3]" />
                   <span>
                     {isEssence
-                      ? (discreteStock?.used1oz && discreteStock?.usedHalfOz)
-                        ? `${discreteStock.used1oz} oz + ${discreteStock.usedHalfOz} (½)`
-                        : discreteStock?.usedHalfOz
-                        ? `${discreteStock.usedHalfOz} ${discreteStock.usedHalfOz === 1 ? '½ onza' : '½ onzas'}`
-                        : `${discreteStock?.used1oz} ${discreteStock?.used1oz === 1 ? 'onza' : 'onzas'}`
-                      : `${totalUnitsInCart}`}
+                      ? selectedPresentation === 'MEDIA_ONZA'
+                        ? `${currentQuantity} ${currentQuantity === 1 ? '½ onza' : '½ onzas'}`
+                        : `${currentQuantity} ${currentQuantity === 1 ? 'onza' : 'onzas'}`
+                      : `${currentQuantity}`}
                   </span>
                 </span>
               </div>
