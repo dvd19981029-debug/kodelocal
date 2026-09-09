@@ -46,6 +46,12 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
   const canAddMore = availableUnits >= 1;
 
+  // Umbral de stock mínimo de alerta definido en la tabla de productos
+  const minStockThreshold = typeof product.minStock === 'number' && product.minStock > 0
+    ? product.minStock
+    : 15;
+  const isBelowMinAlert = availableUnits > 0 && availableUnits <= minStockThreshold;
+
   // Buscar si esta presentación específica ya está en el carrito
   const matchingCartItems = selectedPresentation
     ? cart.filter(item => item.product.id === product.id && item.presentation === selectedPresentation)
@@ -217,14 +223,22 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               <span className="text-base sm:text-xl font-bold text-indigo-700 leading-tight tracking-tight">
                 ${activeOption.price.toFixed(2)}
               </span>
-              <span className="text-[8px] sm:text-[9px] text-slate-400 font-normal tracking-tight">
+              <span className={`text-[8px] sm:text-[9px] tracking-tight ${
+                availableUnits === 0
+                  ? 'text-slate-400 font-normal'
+                  : isBelowMinAlert
+                  ? 'text-amber-700 font-black'
+                  : 'text-emerald-700 font-bold'
+              }`}>
                 {availableUnits === 0
                   ? 'Sin existencias'
-                  : isEssence
-                  ? selectedPresentation === 'MEDIA_ONZA'
-                    ? `Disp: ${availableUnits} ${availableUnits === 1 ? '½ onza' : '½ onzas'}`
-                    : `Disp: ${availableUnits} ${availableUnits === 1 ? 'onza' : 'onzas'}`
-                  : `Disp: ${availableUnits} unid`}
+                  : isBelowMinAlert
+                  ? isEssence
+                    ? selectedPresentation === 'MEDIA_ONZA'
+                      ? availableUnits === 1 ? '¡Solo queda 1 media onza!' : `¡Solo quedan ${availableUnits} medias onzas!`
+                      : availableUnits === 1 ? '¡Solo queda 1 onza!' : `¡Solo quedan ${availableUnits} onzas!`
+                    : availableUnits === 1 ? '¡Solo queda 1 unidad!' : `¡Solo quedan ${availableUnits} unidades!`
+                  : 'Disponible'}
               </span>
             </div>
 

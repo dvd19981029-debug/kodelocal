@@ -124,6 +124,12 @@ export default function ProductDetailPage() {
 
   const canAddMore = availableUnits >= quantity;
 
+  // Umbral de stock mínimo de alerta configurado en el producto
+  const minStockThreshold = typeof product?.minStock === 'number' && product.minStock > 0
+    ? product.minStock
+    : 15;
+  const isBelowMinAlert = availableUnits > 0 && (availableUnits <= minStockThreshold || (availableUnits - quantity) < minStockThreshold);
+
   // Estado de carga elegante mientras se resuelve el producto o catálogo
   if (!product && (isLoading || !productId)) {
     return (
@@ -456,20 +462,27 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Aviso de existencias */}
-            <div className="flex items-center justify-between text-[11px] text-slate-500 px-1 font-medium">
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>En existencia para envío inmediato con <strong>C807</strong></span>
+            <div className="flex items-center justify-between text-[11px] px-1 font-medium">
+              <span className="flex items-center gap-1.5 text-slate-500">
+                <span className={`w-2 h-2 rounded-full ${availableUnits === 0 ? 'bg-slate-400' : isBelowMinAlert ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500 animate-pulse'}`}></span>
+                <span>{availableUnits === 0 ? 'Temporalmente agotado' : 'En existencia para envío inmediato con'} <strong>C807</strong></span>
               </span>
               <span>
-                Existencias:{' '}
-                <strong>
-                  {isEssence
-                    ? selectedPresentation === 'MEDIA_ONZA'
-                      ? `${availableUnits} ${availableUnits === 1 ? 'media onza (½ oz)' : 'medias onzas (½ oz)'}`
-                      : `${availableUnits} ${availableUnits === 1 ? 'onza (1 oz)' : 'onzas (1 oz)'}`
-                    : `${availableUnits} unidades`}
-                </strong>
+                {availableUnits === 0 ? (
+                  <span className="text-slate-400 font-bold">Sin existencias</span>
+                ) : isBelowMinAlert ? (
+                  <strong className="text-amber-700 font-black">
+                    {isEssence
+                      ? selectedPresentation === 'MEDIA_ONZA'
+                        ? availableUnits === 1 ? '¡Solo queda 1 media onza!' : `¡Solo quedan ${availableUnits} medias onzas!`
+                        : availableUnits === 1 ? '¡Solo queda 1 onza!' : `¡Solo quedan ${availableUnits} onzas!`
+                      : availableUnits === 1 ? '¡Solo queda 1 unidad!' : `¡Solo quedan ${availableUnits} unidades!`}
+                  </strong>
+                ) : (
+                  <span>
+                    Estado: <strong className="text-emerald-700 font-bold">Disponible</strong>
+                  </span>
+                )}
               </span>
             </div>
           </div>
