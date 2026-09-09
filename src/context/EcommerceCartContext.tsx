@@ -30,13 +30,13 @@ export function getPresentationsForProduct(product: ProductItem): PresentationOp
       {
         id: 'ONZA_COMPLETA',
         name: '1 Onza',
-        description: 'Esencia pura concentrada (1 oz)',
+        description: 'Bote preparado de 1 oz pura de contratipo',
         price: onzaPrice
       },
       {
         id: 'MEDIA_ONZA',
         name: '½ Onza',
-        description: 'Media onza de esencia pura (0.5 oz)',
+        description: 'Bote preparado de ½ oz pura de contratipo',
         price: mediaOnzaPrice
       }
     ];
@@ -50,6 +50,67 @@ export function getPresentationsForProduct(product: ProductItem): PresentationOp
       price: product.price
     }
   ];
+}
+
+/**
+ * Modelo de inventario para producto no fraccionable:
+ * Aproximadamente el 20% del stock en kilos se envasa en botes de ½ onza,
+ * y el 80% restante en botes de 1 onza completa.
+ * Ninguna esencia se fracciona a granel al momento; se venden en botes ya preparados.
+ */
+export interface EssenceDiscreteStock {
+  total1oz: number;
+  totalHalfOz: number;
+  used1oz: number;
+  usedHalfOz: number;
+  available1oz: number;
+  availableHalfOz: number;
+}
+
+export function getEssenceDiscreteStock(
+  totalStock: number,
+  cart: EcommerceCartItem[],
+  productId: string,
+  excludeItemId?: string
+): EssenceDiscreteStock {
+  const stock = typeof totalStock === 'number' && !isNaN(totalStock) ? Math.max(0, totalStock) : 0;
+  
+  // 80% del stock equivale a botes de 1 oz
+  const total1oz = Math.floor(stock * 0.8);
+  // 20% del stock equivale a botes de ½ oz (cada ½ oz = 0.5 oz, por tanto stock * 0.20 / 0.5 = stock * 0.40 botes)
+  const totalHalfOz = Math.floor(stock * 0.4);
+
+  let used1oz = 0;
+  let usedHalfOz = 0;
+
+  for (const item of cart) {
+    if (excludeItemId && item.id === excludeItemId) continue;
+
+    // Si es un kit de perfume preparado (Kit 100ml)
+    if (item.kitDetails && item.kitDetails.essenceId === productId) {
+      used1oz += item.quantity; // Requiere 1 bote de 1 oz
+      if (item.kitDetails.isPlus) {
+        usedHalfOz += item.quantity; // PLUS requiere 1 bote adicional de ½ oz
+      }
+    }
+    // Si es la esencia directamente
+    else if (item.product.id === productId && !item.kitDetails) {
+      if (item.presentation === 'ONZA_COMPLETA') {
+        used1oz += item.quantity;
+      } else if (item.presentation === 'MEDIA_ONZA') {
+        usedHalfOz += item.quantity;
+      }
+    }
+  }
+
+  return {
+    total1oz,
+    totalHalfOz,
+    used1oz,
+    usedHalfOz,
+    available1oz: Math.max(0, total1oz - used1oz),
+    availableHalfOz: Math.max(0, totalHalfOz - usedHalfOz),
+  };
 }
 
 export interface EcommerceCartItem {
@@ -156,27 +217,26 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     const isEssence = product.category === 'Esencias para Perfume';
 
     setCart(prev => {
-      // 1. Calcular consumo actual de este producto en el carrito excluyendo este item en particular
-      const otherEssenceUsed = prev
-        .filter(item => item.product.id === product.id && item.id !== itemId)
-        .reduce((acc, item) => {
-          if (item.presentation === 'MEDIA_ONZA') return acc + item.quantity * 0.5;
-          if (item.presentation === 'ONZA_COMPLETA') return acc + item.quantity * 1.0;
-          return acc + item.quantity;
-        }, 0);
-
       const existingPerfume = prev.find(item => item.id === itemId);
       const currentQty = existingPerfume ? existingPerfume.quantity : 0;
       const desiredQty = currentQty + quantity;
 
-      // Calcular inventario requerido para la nueva cantidad deseada
-      const requiredOuncesForDesired = isEssence
-        ? (presentation === 'MEDIA_ONZA' ? desiredQty * 0.5 : desiredQty * 1.0)
-        : desiredQty;
-
-      // Si excede el inventario total disponible, bloquear la adición
-      if (otherEssenceUsed + requiredOuncesForDesired > totalStock) {
-        return prev;
+      // Validación de inventario discreto
+      if (isEssence) {
+        const discrete = getEssenceDiscreteStock(totalStock, prev, product.id, itemId);
+        if (presentation === 'ONZA_COMPLETA' && desiredQty > discrete.available1oz) {
+          return prev;
+        }
+        if (presentation === 'MEDIA_ONZA' && desiredQty > discrete.availableHalfOz) {
+          return prev;
+        }
+      } else {
+        const otherUnitsUsed = prev
+          .filter(it => it.product.id === product.id && it.id !== itemId)
+          .reduce((acc, it) => acc + it.quantity, 0);
+        if (otherUnitsUsed + desiredQty > totalStock) {
+          return prev;
+        }
       }
 
       let updatedCart = [...prev];
@@ -263,7 +323,6 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     const itemId = `kit-${essence.id}-${bottle.id}-${hasLabel ? 'label' : 'nolabel'}-${isPlus ? 'plus' : 'std'}`;
 
     const totalEssenceStock = typeof essence.stock === 'number' ? essence.stock : 0;
-    const ozPerKit = isPlus ? 1.5 : 1.0;
 
     const kitProduct: ProductItem = {
       ...essence,
@@ -275,23 +334,16 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     };
 
     setCart(prev => {
-      // Calcular consumo actual de la esencia en el carrito
-      const currentEssenceUsed = prev
-        .filter(item => item.product.id === essence.id || (item.kitDetails && item.kitDetails.essenceId === essence.id))
-        .reduce((acc, item) => {
-          if (item.kitDetails) {
-            return acc + (item.kitDetails.isPlus ? item.quantity * 1.5 : item.quantity * 1.0);
-          }
-          if (item.presentation === 'MEDIA_ONZA') return acc + item.quantity * 0.5;
-          if (item.presentation === 'ONZA_COMPLETA') return acc + item.quantity * 1.0;
-          return acc + item.quantity;
-        }, 0);
-
       const existing = prev.find(item => item.id === itemId);
       const desiredQty = (existing ? existing.quantity : 0) + quantity;
-      const additionalOz = ozPerKit * quantity;
 
-      if (currentEssenceUsed + additionalOz > totalEssenceStock) {
+      // Cada kit requiere 1 bote de 1 oz; y si es PLUS, requiere además 1 bote de ½ oz
+      const discrete = getEssenceDiscreteStock(totalEssenceStock, prev, essence.id, itemId);
+
+      if (desiredQty > discrete.available1oz) {
+        return prev;
+      }
+      if (isPlus && desiredQty > discrete.availableHalfOz) {
         return prev;
       }
 
@@ -359,31 +411,20 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
         const isEssence = prod.category === 'Esencias para Perfume';
 
         if (current.kitDetails) {
-          const ozPerKit = current.kitDetails.isPlus ? 1.5 : 1.0;
-          const otherUsed = prev
-            .filter(item => item.id !== id && (item.product.id === current.kitDetails?.essenceId || item.kitDetails?.essenceId === current.kitDetails?.essenceId))
-            .reduce((acc, item) => {
-              if (item.kitDetails) return acc + (item.kitDetails.isPlus ? item.quantity * 1.5 : item.quantity * 1.0);
-              if (item.presentation === 'MEDIA_ONZA') return acc + item.quantity * 0.5;
-              if (item.presentation === 'ONZA_COMPLETA') return acc + item.quantity * 1.0;
-              return acc + item.quantity;
-            }, 0);
-
-          if (otherUsed + (ozPerKit * quantity) > totalStock) {
-            return prev; // Bloquear aumento más allá del stock
+          const discrete = getEssenceDiscreteStock(totalStock, prev, current.kitDetails.essenceId, id);
+          if (quantity > discrete.available1oz) {
+            return prev;
+          }
+          if (current.kitDetails.isPlus && quantity > discrete.availableHalfOz) {
+            return prev;
           }
         } else if (isEssence) {
-          const otherUsed = prev
-            .filter(item => item.id !== id && item.product.id === prod.id)
-            .reduce((acc, item) => {
-              if (item.presentation === 'MEDIA_ONZA') return acc + item.quantity * 0.5;
-              if (item.presentation === 'ONZA_COMPLETA') return acc + item.quantity * 1.0;
-              return acc + item.quantity;
-            }, 0);
-
-          const desiredOz = current.presentation === 'MEDIA_ONZA' ? quantity * 0.5 : quantity * 1.0;
-          if (otherUsed + desiredOz > totalStock) {
-            return prev; // Bloquear aumento más allá del stock
+          const discrete = getEssenceDiscreteStock(totalStock, prev, prod.id, id);
+          if (current.presentation === 'ONZA_COMPLETA' && quantity > discrete.available1oz) {
+            return prev;
+          }
+          if (current.presentation === 'MEDIA_ONZA' && quantity > discrete.availableHalfOz) {
+            return prev;
           }
         } else {
           if (quantity > totalStock) {

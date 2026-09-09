@@ -54,22 +54,49 @@ export default function BuildYourPerfumeCard({ onOpenBuilder }: BuildYourPerfume
 
       </div>
 
-      {/* Vitrina con frasco de vidrio de 100ml proporcionalmente más alto */}
+      {/* Vitrina dual: Bote Contratipo + Frasco Atomizador 100ml */}
       <div className="relative z-10 shrink-0 flex items-center justify-center">
-        <div className="w-22 h-22 sm:w-26 sm:h-26 md:w-28 md:h-28 rounded-2xl overflow-hidden bg-white border border-amber-300 shadow-inner flex items-center justify-center relative group-hover:scale-105 transition-transform duration-300">
-          <img
-            src="/images/botes/bote_100ml_sauvage_degrade_negro.jpg"
-            alt="Frasco de perfume 100ml"
-            loading="lazy"
-            decoding="async"
-            onError={(e) => {
-              e.currentTarget.src = '/images/botes/bote_100ml_sauvage_degrade_negro.jpg';
-            }}
-            className="w-full h-full object-cover object-center"
-          />
-          <div className="absolute bottom-1.5 bg-slate-950/75 backdrop-blur-xs text-[9px] sm:text-[10px] font-black text-amber-300 px-2 py-0.5 rounded-full border border-amber-400/30">
-            100 ml
+        <div className="relative flex items-center group-hover:scale-105 transition-transform duration-300">
+          
+          {/* 1. Bote Contratipo (Esencia pura concentrada) */}
+          <div className="relative z-10 -mr-2 sm:-mr-3 w-16 h-16 sm:w-20 sm:h-20 md:w-22 md:h-22 rounded-2xl overflow-hidden bg-white border-2 border-amber-300 shadow-md flex items-center justify-center">
+            <img
+              src="/images/esencias/esencia_1.webp"
+              alt="Bote Contratipo Esencia"
+              loading="lazy"
+              decoding="async"
+              onError={(e) => {
+                e.currentTarget.src = '/images/essence_bottle_blank.webp';
+              }}
+              className="w-full h-full object-cover object-center"
+            />
+            <div className="absolute bottom-1 bg-slate-950/80 backdrop-blur-xs text-[7.5px] sm:text-[8.5px] font-black text-amber-300 px-1.5 py-0.5 rounded-full border border-amber-400/40 tracking-tight">
+              Contratipo
+            </div>
           </div>
+
+          {/* Símbolo "+" conector dorado */}
+          <div className="relative z-30 -mx-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] sm:text-xs flex items-center justify-center shadow-md border-2 border-white">
+            +
+          </div>
+
+          {/* 2. Frasco Atomizador de 100ml */}
+          <div className="relative z-20 -ml-2 sm:-ml-3 w-16 h-16 sm:w-20 sm:h-20 md:w-22 md:h-22 rounded-2xl overflow-hidden bg-white border-2 border-amber-300 shadow-md flex items-center justify-center">
+            <img
+              src="/images/botes/bote_100ml_sauvage_degrade_negro.jpg"
+              alt="Frasco de perfume 100ml"
+              loading="lazy"
+              decoding="async"
+              onError={(e) => {
+                e.currentTarget.src = '/images/botes/bote_100ml_sauvage_degrade_negro.jpg';
+              }}
+              className="w-full h-full object-cover object-center"
+            />
+            <div className="absolute bottom-1 bg-slate-950/80 backdrop-blur-xs text-[7.5px] sm:text-[8.5px] font-black text-amber-300 px-1.5 py-0.5 rounded-full border border-amber-400/40 tracking-tight">
+              100 ml
+            </div>
+          </div>
+
         </div>
       </div>
 

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { ShoppingBag, Check, Sparkles, Plus, Minus } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS } from '@/lib/store';
-import { useEcommerceCart, getPresentationsForProduct, ProductPresentation } from '@/context/EcommerceCartContext';
+import { useEcommerceCart, getPresentationsForProduct, ProductPresentation, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getOriginalPerfumeName } from '@/lib/perfumeNames';
 
@@ -29,34 +29,33 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
   const activeOption = presentations.find(p => p.id === selectedPresentation) || presentations[0];
 
-  // Cálculo preciso de inventario y onzas comprometidas en el carrito
+  // Cálculo de inventario discreto 80/20 (80% botes de 1 onza, 20% botes de ½ onza)
+  // No vendemos producto fraccionable; cada unidad es un bote ya preparado
   const isEssence = product.category === 'Esencias para Perfume';
-
-  const cartEssenceUsed = cart
-    .filter(item => item.product.id === product.id)
-    .reduce((acc, item) => {
-      if (item.presentation === 'MEDIA_ONZA') return acc + item.quantity * 0.5;
-      if (item.presentation === 'ONZA_COMPLETA') return acc + item.quantity * 1.0;
-      return acc + item.quantity;
-    }, 0);
-
   const totalStock = typeof product.stock === 'number' ? product.stock : 0;
   const isOutOfStock = totalStock <= 0;
 
-  // Stock restante disponible para este cliente en esta sesión
-  const remainingStock = isEssence
-    ? Math.max(0, totalStock - cartEssenceUsed)
+  const discreteStock = isEssence
+    ? getEssenceDiscreteStock(totalStock, cart, product.id)
+    : null;
+
+  // Unidades/botes disponibles según la presentación actualmente seleccionada
+  const availableUnits = isEssence
+    ? (selectedPresentation === 'MEDIA_ONZA' ? (discreteStock?.availableHalfOz ?? 0) : (discreteStock?.available1oz ?? 0))
     : Math.max(0, totalStock - (cart.find(it => it.product.id === product.id)?.quantity || 0));
 
-  // Consumo de inventario según la presentación elegida
-  const requiredStock = selectedPresentation === 'MEDIA_ONZA' ? 0.5 : 1.0;
-  const canAddMore = selectedPresentation ? remainingStock >= requiredStock : remainingStock >= 0.5;
+  const canAddMore = availableUnits >= 1;
 
   // Buscar si esta presentación específica ya está en el carrito
   const matchingCartItems = selectedPresentation
     ? cart.filter(item => item.product.id === product.id && item.presentation === selectedPresentation)
     : [];
   const currentQuantity = matchingCartItems.reduce((acc, it) => acc + it.quantity, 0);
+
+  // Total de botes de esta esencia en el carrito (incluyendo kits)
+  const totalBotesInCart = isEssence
+    ? (discreteStock ? discreteStock.used1oz + discreteStock.usedHalfOz : 0)
+    : (cart.find(it => it.product.id === product.id)?.quantity || 0);
 
   const triggerCardPulse = () => {
     setIsCardPulsing(true);
@@ -180,11 +179,11 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             )}
 
             {/* Indicador en esquina inferior derecha: cuando ya está en carrito */}
-            {cartEssenceUsed > 0 && (
+            {totalBotesInCart > 0 && (
               <div className="absolute bottom-2 right-2 z-10 animate-in zoom-in-75 duration-200 pointer-events-none">
                 <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-[8px] sm:text-[9px] font-black py-0.5 px-1.5 rounded-md shadow-md flex items-center gap-1">
                   <Check className="w-2.5 h-2.5 stroke-[3]" />
-                  <span>{isEssence ? `${cartEssenceUsed} oz` : `${cartEssenceUsed}`}</span>
+                  <span>{isEssence ? `${totalBotesInCart} ${totalBotesInCart === 1 ? 'bote' : 'botes'}` : `${totalBotesInCart}`}</span>
                 </span>
               </div>
             )}
@@ -205,11 +204,11 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                 ${activeOption.price.toFixed(2)}
               </span>
               <span className="text-[8px] sm:text-[9px] text-slate-400 font-normal tracking-tight">
-                {remainingStock === 0
+                {availableUnits === 0
                   ? 'Sin existencias'
                   : isEssence
-                  ? `Disp: ${remainingStock % 1 === 0 ? remainingStock : remainingStock.toFixed(1)} oz`
-                  : `Disp: ${Math.floor(remainingStock)} unid`}
+                  ? `Disp: ${availableUnits} botes`
+                  : `Disp: ${availableUnits} unid`}
               </span>
             </div>
 
@@ -238,10 +237,10 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                 {presentations.map((opt) => {
                   const isSelected = selectedPresentation === opt.id;
                   
-                  // Verificar si la opción está disponible según stock
-                  const isOptOutOfStock = 
-                    (opt.id === 'ONZA_COMPLETA' && remainingStock < 1.0) ||
-                    (opt.id === 'MEDIA_ONZA' && remainingStock < 0.5);
+                  // Verificar si la opción está disponible según stock discreto
+                  const isOptOutOfStock = isEssence
+                    ? (opt.id === 'ONZA_COMPLETA' ? (discreteStock?.available1oz ?? 0) <= 0 : (discreteStock?.availableHalfOz ?? 0) <= 0)
+                    : availableUnits <= 0;
 
                   return (
                     <button

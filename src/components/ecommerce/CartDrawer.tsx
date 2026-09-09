@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, ArrowLeft, ShieldCheck } from 'lucide-react';
-import { useEcommerceCart } from '@/context/EcommerceCartContext';
+import { useEcommerceCart, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getOriginalPerfumeName } from '@/lib/perfumeNames';
 
@@ -109,20 +109,35 @@ export default function CartDrawer() {
                     <div className="flex items-start gap-3">
                       {/* Miniatura visual de la fragancia / producto */}
                       <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden bg-slate-50 border border-slate-200/70 shrink-0 flex items-center justify-center shadow-2xs">
-                        <img
-                          src={productImage}
-                          alt={displayName}
-                          loading="lazy"
-                          decoding="async"
-                          onError={(e) => {
-                            e.currentTarget.src = '/images/essence_bottle_blank.webp';
-                          }}
-                          className="w-full h-full object-cover object-center"
-                        />
-                        {item.kitDetails && (
-                          <span className="absolute bottom-0 inset-x-0 bg-indigo-950/85 text-[8px] sm:text-[8.5px] font-black text-white text-center py-0.5 tracking-tight">
-                            Kit 100ml
-                          </span>
+                        {item.kitDetails ? (
+                          <div className="relative w-full h-full flex items-center justify-center p-1 bg-gradient-to-br from-amber-50/60 to-purple-50/60">
+                            {/* Bote Contratipo */}
+                            <img
+                              src={productImage}
+                              alt={displayName}
+                              className="absolute left-1 top-1 w-9 h-9 sm:w-10 sm:h-10 rounded-lg object-cover border border-amber-300 z-10 shadow-xs"
+                            />
+                            {/* Frasco Atomizador 100ml */}
+                            <img
+                              src={item.kitDetails.bottleImageUrl || '/images/botes/bote_100ml_sauvage_degrade_negro.jpg'}
+                              alt={item.kitDetails.bottleName}
+                              className="absolute right-1 bottom-1 w-9 h-9 sm:w-10 sm:h-10 rounded-lg object-cover border border-slate-300 z-20 shadow-xs"
+                            />
+                            <span className="absolute bottom-0 inset-x-0 bg-indigo-950/90 text-[7.5px] font-black text-amber-300 text-center py-0.2 tracking-tight z-30">
+                              Kit 100ml
+                            </span>
+                          </div>
+                        ) : (
+                          <img
+                            src={productImage}
+                            alt={displayName}
+                            loading="lazy"
+                            decoding="async"
+                            onError={(e) => {
+                              e.currentTarget.src = '/images/essence_bottle_blank.webp';
+                            }}
+                            className="w-full h-full object-cover object-center"
+                          />
                         )}
                       </div>
 
@@ -203,26 +218,20 @@ export default function CartDrawer() {
                           let canAddMoreInDrawer = true;
 
                           if (item.kitDetails) {
-                            const ozPerKit = item.kitDetails.isPlus ? 1.5 : 1.0;
-                            const otherUsed = cart
-                              .filter(it => it.id !== item.id && (it.product.id === item.kitDetails?.essenceId || it.kitDetails?.essenceId === item.kitDetails?.essenceId))
-                              .reduce((acc, it) => {
-                                if (it.kitDetails) return acc + (it.kitDetails.isPlus ? it.quantity * 1.5 : it.quantity * 1.0);
-                                if (it.presentation === 'MEDIA_ONZA') return acc + it.quantity * 0.5;
-                                if (it.presentation === 'ONZA_COMPLETA') return acc + it.quantity * 1.0;
-                                return acc + it.quantity;
-                              }, 0);
-                            canAddMoreInDrawer = otherUsed + (ozPerKit * (item.quantity + 1)) <= totalStock;
+                            const discrete = getEssenceDiscreteStock(totalStock, cart, item.kitDetails.essenceId, item.id);
+                            const nextQty = item.quantity + 1;
+                            canAddMoreInDrawer = nextQty <= discrete.available1oz;
+                            if (item.kitDetails.isPlus && nextQty > discrete.availableHalfOz) {
+                              canAddMoreInDrawer = false;
+                            }
                           } else if (isEssence) {
-                            const otherUsed = cart
-                              .filter(it => it.id !== item.id && it.product.id === prod.id)
-                              .reduce((acc, it) => {
-                                if (it.presentation === 'MEDIA_ONZA') return acc + it.quantity * 0.5;
-                                if (it.presentation === 'ONZA_COMPLETA') return acc + it.quantity * 1.0;
-                                return acc + it.quantity;
-                              }, 0);
-                            const nextOz = item.presentation === 'MEDIA_ONZA' ? (item.quantity + 1) * 0.5 : (item.quantity + 1) * 1.0;
-                            canAddMoreInDrawer = otherUsed + nextOz <= totalStock;
+                            const discrete = getEssenceDiscreteStock(totalStock, cart, prod.id, item.id);
+                            const nextQty = item.quantity + 1;
+                            if (item.presentation === 'ONZA_COMPLETA') {
+                              canAddMoreInDrawer = nextQty <= discrete.available1oz;
+                            } else if (item.presentation === 'MEDIA_ONZA') {
+                              canAddMoreInDrawer = nextQty <= discrete.availableHalfOz;
+                            }
                           } else {
                             canAddMoreInDrawer = item.quantity + 1 <= totalStock;
                           }

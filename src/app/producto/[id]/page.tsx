@@ -21,7 +21,7 @@ import {
   Clock
 } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS, getStoredProducts, saveStoredProducts } from '@/lib/store';
-import { useEcommerceCart, getPresentationsForProduct, ProductPresentation } from '@/context/EcommerceCartContext';
+import { useEcommerceCart, getPresentationsForProduct, ProductPresentation, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getFragranceProfile } from '@/lib/fragranceProfiles';
 import PerfumeKitBuilderModal from '@/components/ecommerce/PerfumeKitBuilderModal';
@@ -122,23 +122,21 @@ export default function ProductDetailPage() {
       .slice(0, 4);
   }, [products, product, isBottle]);
 
-  // Cálculo de inventario restante
+  // Cálculo de inventario discreto 80/20 (80% botes 1 oz, 20% botes ½ oz)
+  // No vendemos producto fraccionable; son botes cerrados ya preparados
   const totalStock = typeof product?.stock === 'number' ? product.stock : 0;
   const isOutOfStock = totalStock <= 0;
-  const cartUsed = useMemo(() => {
-    if (!product) return 0;
-    return cart
-      .filter(item => item.product.id === product.id)
-      .reduce((acc, item) => {
-        if (item.presentation === 'MEDIA_ONZA') return acc + item.quantity * 0.5;
-        if (item.presentation === 'ONZA_COMPLETA') return acc + item.quantity * 1.0;
-        return acc + item.quantity;
-      }, 0);
-  }, [cart, product]);
 
-  const remainingStock = Math.max(0, totalStock - cartUsed);
-  const requiredStock = selectedPresentation === 'MEDIA_ONZA' ? 0.5 : 1.0;
-  const canAddMore = isEssence ? remainingStock >= (requiredStock * quantity) : remainingStock >= quantity;
+  const discreteStock = useMemo(() => {
+    if (!product || !isEssence) return null;
+    return getEssenceDiscreteStock(totalStock, cart, product.id);
+  }, [product, isEssence, totalStock, cart]);
+
+  const availableUnits = isEssence
+    ? (selectedPresentation === 'MEDIA_ONZA' ? (discreteStock?.availableHalfOz ?? 0) : (discreteStock?.available1oz ?? 0))
+    : Math.max(0, totalStock - (cart.find(it => it.product.id === product?.id)?.quantity || 0));
+
+  const canAddMore = availableUnits >= quantity;
 
   // Estado de carga elegante mientras se resuelve el producto o catálogo
   if (!product && (isLoading || !productId)) {
@@ -375,14 +373,21 @@ export default function ProductDetailPage() {
             <div className={`grid ${presentations.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-2.5`}>
               {presentations.map((pres) => {
                 const isSelected = selectedPresentation === pres.id;
+                const isPresOutOfStock = isEssence
+                  ? (pres.id === 'ONZA_COMPLETA' ? (discreteStock?.available1oz ?? 0) <= 0 : (discreteStock?.availableHalfOz ?? 0) <= 0)
+                  : availableUnits <= 0;
+
                 return (
                   <button
                     key={pres.id}
                     type="button"
                     onClick={() => setSelectedPresentation(pres.id)}
+                    disabled={isPresOutOfStock}
                     className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
                       isSelected
                         ? 'clay-card bg-indigo-50/80 border-indigo-600 ring-2 ring-indigo-400/40 shadow-xs'
+                        : isPresOutOfStock
+                        ? 'bg-slate-100/70 border-slate-200 text-slate-400 opacity-60 cursor-not-allowed'
                         : 'bg-white border-slate-200 hover:bg-slate-50'
                     }`}
                   >
@@ -390,13 +395,17 @@ export default function ProductDetailPage() {
                       <span className="text-xs font-black text-slate-900">
                         {pres.name}
                       </span>
-                      {isSelected && (
+                      {isSelected ? (
                         <span className="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
                           ✓
                         </span>
-                      )}
+                      ) : isPresOutOfStock ? (
+                        <span className="text-[9px] font-bold text-slate-400">
+                          Agotado
+                        </span>
+                      ) : null}
                     </div>
-                    <span className="text-xs font-mono font-black text-indigo-700">
+                    <span className="text-xs font-bold text-indigo-700">
                       ${pres.price.toFixed(2)}
                     </span>
                   </button>
@@ -412,9 +421,30 @@ export default function ProductDetailPage() {
               className="clay-card p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-50/90 via-purple-50/70 to-indigo-50/80 border-2 border-amber-300 ring-2 ring-amber-200/40 cursor-pointer hover:border-amber-400 transition-all flex items-center justify-between gap-3 shadow-2xs group"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-700 flex items-center justify-center shrink-0">
-                  <Wand2 className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                {/* Vitrina dual: Bote Contratipo de este perfume + Frasco 100ml */}
+                <div className="relative flex items-center shrink-0">
+                  {/* Bote Contratipo */}
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-white border border-amber-300 shadow-xs relative z-10">
+                    <img
+                      src={productImage}
+                      alt={displayName}
+                      className="w-full h-full object-cover object-center"
+                    />
+                  </div>
+                  {/* Conector "+" */}
+                  <div className="relative z-20 -mx-1.5 w-4 h-4 rounded-full bg-amber-400 text-slate-950 font-black text-[9px] flex items-center justify-center shadow-xs border border-white">
+                    +
+                  </div>
+                  {/* Frasco de 100ml */}
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-white border border-amber-300 shadow-xs relative z-10">
+                    <img
+                      src="/images/botes/bote_100ml_sauvage_degrade_negro.jpg"
+                      alt="Frasco 100ml"
+                      className="w-full h-full object-cover object-center"
+                    />
+                  </div>
                 </div>
+
                 <div>
                   <div className="flex items-center gap-2">
                     <h4 className="text-xs sm:text-sm font-black text-slate-900">
@@ -497,7 +527,14 @@ export default function ProductDetailPage() {
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span>En existencia para envío inmediato con <strong>C807</strong></span>
               </span>
-              <span>Existencias: <strong>{isEssence ? `${Math.floor(remainingStock)} oz` : `${Math.floor(remainingStock)} unidades`}</strong></span>
+              <span>
+                Existencias:{' '}
+                <strong>
+                  {isEssence
+                    ? `${availableUnits} botes preparados (${selectedPresentation === 'MEDIA_ONZA' ? '½ oz' : '1 oz'})`
+                    : `${availableUnits} unidades`}
+                </strong>
+              </span>
             </div>
           </div>
 
