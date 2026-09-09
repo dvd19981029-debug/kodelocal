@@ -112,8 +112,10 @@ export default function CartDrawer() {
                         <img
                           src={productImage}
                           alt={displayName}
+                          loading="lazy"
+                          decoding="async"
                           onError={(e) => {
-                            e.currentTarget.src = 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=200&q=80';
+                            e.currentTarget.src = '/images/essence_bottle_blank.webp';
                           }}
                           className="w-full h-full object-cover object-center"
                         />

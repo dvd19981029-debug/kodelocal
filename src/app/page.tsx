@@ -384,8 +384,8 @@ export default function EcommerceHomePage() {
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 sm:gap-x-4 md:gap-x-5 gap-y-7 sm:gap-y-9">
             {isSearching ? (
               <>
-                {paginatedProducts.slice(0, 4).map((prod) => (
-                  <ProductCard key={prod.id} product={prod} />
+                {paginatedProducts.slice(0, 4).map((prod, idx) => (
+                  <ProductCard key={prod.id} product={prod} priority={idx < 4} />
                 ))}
                 {currentPage === 1 && (
                   <div className="col-span-full">
@@ -397,8 +397,8 @@ export default function EcommerceHomePage() {
                 ))}
               </>
             ) : (
-              paginatedProducts.map((prod) => (
-                <ProductCard key={prod.id} product={prod} />
+              paginatedProducts.map((prod, idx) => (
+                <ProductCard key={prod.id} product={prod} priority={currentPage === 1 && idx < 4} />
               ))
             )}
           </div>

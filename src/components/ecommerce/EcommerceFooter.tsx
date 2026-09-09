@@ -18,6 +18,8 @@ export default function EcommerceFooter() {
               <img
                 src="/images/logo.png"
                 alt="Aromaniak"
+                loading="lazy"
+                decoding="async"
                 className="h-8 sm:h-9 w-auto object-contain drop-shadow-xs"
               />
             </div>

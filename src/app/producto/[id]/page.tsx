@@ -225,10 +225,13 @@ export default function ProductDetailPage() {
               <img
                 src={productImage}
                 alt={displayName}
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
                 onError={(e) => {
                   e.currentTarget.src = isBottle 
                     ? '/images/botes/bote_100ml_sauvage_degrade_negro.jpg'
-                    : 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=800&q=80';
+                    : '/images/essence_bottle_blank.webp';
                 }}
                 className={`w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105 ${
                   isOutOfStock ? 'grayscale-[25%]' : ''

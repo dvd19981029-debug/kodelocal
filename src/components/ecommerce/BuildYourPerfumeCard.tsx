@@ -60,6 +60,8 @@ export default function BuildYourPerfumeCard({ onOpenBuilder }: BuildYourPerfume
           <img
             src="/images/botes/bote_100ml_sauvage_degrade_negro.jpg"
             alt="Frasco de perfume 100ml"
+            loading="lazy"
+            decoding="async"
             onError={(e) => {
               e.currentTarget.src = '/images/botes/bote_100ml_sauvage_degrade_negro.jpg';
             }}

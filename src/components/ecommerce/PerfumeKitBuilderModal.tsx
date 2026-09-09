@@ -395,6 +395,8 @@ export default function PerfumeKitBuilderModal({
                           <img
                             src={bottle.imageUrl || '/images/botes/bote_100ml_sauvage_degrade_negro.jpg'}
                             alt={bottle.name}
+                            loading="lazy"
+                            decoding="async"
                             onError={(e) => {
                               e.currentTarget.src = '/images/botes/bote_100ml_sauvage_degrade_negro.jpg';
                             }}
@@ -433,6 +435,8 @@ export default function PerfumeKitBuilderModal({
                     <img
                       src={activeBottle.imageUrl || '/images/botes/bote_100ml_sauvage_degrade_negro.jpg'}
                       alt={activeBottle.name}
+                      loading="lazy"
+                      decoding="async"
                       onError={(e) => {
                         e.currentTarget.src = '/images/botes/bote_100ml_sauvage_degrade_negro.jpg';
                       }}

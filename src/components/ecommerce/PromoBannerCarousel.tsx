@@ -23,22 +23,22 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
   const slides: PromoSlide[] = [
     {
       id: 'promo-preparado',
-      imageUrl: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=1200&q=85',
+      imageUrl: '/images/promo/promo_preparado.webp',
       imageAlt: 'Perfume preparado con atomizador',
     },
     {
       id: 'promo-esencias',
-      imageUrl: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=1200&q=85',
+      imageUrl: '/images/promo/promo_esencias.webp',
       imageAlt: 'Esencias puras de contratipos',
     },
     {
       id: 'promo-envios',
-      imageUrl: 'https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=1200&q=85',
+      imageUrl: '/images/promo/promo_envios.webp',
       imageAlt: 'Envíos seguros con C807',
     },
     {
       id: 'promo-envases',
-      imageUrl: 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=1200&q=85',
+      imageUrl: '/images/promo/promo_envases.webp',
       imageAlt: 'Botes y frascos de lujo con atomizador',
     },
   ];

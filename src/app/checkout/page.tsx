@@ -671,8 +671,10 @@ export default function CheckoutPage() {
                       <img
                         src={getProductImage(it.product)}
                         alt={it.product.name}
+                        loading="lazy"
+                        decoding="async"
                         onError={(e) => {
-                          e.currentTarget.src = 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=100&q=80';
+                          e.currentTarget.src = '/images/essence_bottle_blank.webp';
                         }}
                         className="w-full h-full object-cover object-center"
                       />

@@ -11,9 +11,10 @@ import { getOriginalPerfumeName } from '@/lib/perfumeNames';
 interface ProductCardProps {
   product: ProductItem;
   availableBottles?: ProductItem[];
+  priority?: boolean;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, priority = false }: ProductCardProps) {
   const { cart, addToCart, updateQuantity } = useEcommerceCart();
   const presentations = getPresentationsForProduct(product);
   
@@ -151,11 +152,13 @@ export default function ProductCard({ product }: ProductCardProps) {
             <img
               src={productImage}
               alt={displayName}
-              loading="lazy"
+              loading={priority ? 'eager' : 'lazy'}
+              fetchPriority={priority ? 'high' : 'auto'}
+              decoding="async"
               onError={(e) => {
                 e.currentTarget.src = product.category === 'Botes' 
                   ? '/images/botes/bote_100ml_sauvage_degrade_negro.jpg'
-                  : 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80';
+                  : '/images/essence_bottle_blank.webp';
               }}
               className={`w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-108 ${
                 isOutOfStock ? 'grayscale-[35%]' : ''

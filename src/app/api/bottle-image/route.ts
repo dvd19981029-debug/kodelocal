@@ -100,18 +100,32 @@ function generateSvgOverlay(name: string): Buffer {
   return Buffer.from(svgStr);
 }
 
+const imageCache = new Map<string, Buffer>();
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const name = searchParams.get('name') || 'ESENCIA';
+    const name = (searchParams.get('name') || 'ESENCIA').trim();
+
+    if (imageCache.has(name)) {
+      return new Response(imageCache.get(name) as any, {
+        status: 200,
+        headers: {
+          'Content-Type': 'image/webp',
+          'Cache-Control': 'public, max-age=31536000, immutable',
+        },
+      });
+    }
 
     const baseBuffer = getBaseBuffer();
     const svgOverlay = generateSvgOverlay(name);
 
     const compositedBuffer = await sharp(baseBuffer)
       .composite([{ input: svgOverlay, top: 0, left: 0 }])
-      .webp({ quality: 88 })
+      .webp({ quality: 85 })
       .toBuffer();
+
+    imageCache.set(name, compositedBuffer);
 
     return new Response(compositedBuffer as any, {
       status: 200,

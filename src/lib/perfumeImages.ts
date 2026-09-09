@@ -107,10 +107,16 @@ export function getProductImage(product: ProductItem): string {
     return '/images/botes/bote_100ml_sauvage_degrade_negro.jpg';
   }
 
-  // 2. Para todas las esencias de perfume (onzas y medias onzas)
+  // 2. Para todas las esencias de perfume (onzas y medias onzas): usar imagen estática pre-renderizada
   if (!product.category || product.category === 'Esencias para Perfume') {
-    const contratipoName = product.name || 'Esencia Pura';
-    return `/api/bottle-image?name=${encodeURIComponent(contratipoName)}`;
+    const sku = String(product.sku || '').trim();
+    if (sku) {
+      return `/images/esencias/esencia_${sku}.webp`;
+    }
+    if (product.id) {
+      return `/images/esencias/${product.id}.webp`;
+    }
+    return '/images/essence_bottle_blank.webp';
   }
 
   // 3. Si tiene imagen asignada (suministros, empaques, etc.)

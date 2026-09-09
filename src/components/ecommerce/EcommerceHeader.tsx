@@ -84,6 +84,8 @@ export default function EcommerceHeader() {
             <img
               src="/images/logo.png"
               alt="Aromaniak"
+              fetchPriority="high"
+              decoding="async"
               className="h-11 sm:h-14 md:h-16 w-auto object-contain drop-shadow-sm group-hover:scale-105 transition-transform"
             />
           </Link>
