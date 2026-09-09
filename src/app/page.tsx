@@ -14,7 +14,6 @@ import {
   Flame,
   X,
   AlertTriangle,
-  Store,
   CreditCard,
   ShieldAlert,
   Clock,
@@ -578,23 +577,10 @@ export default function EcommerceHomePage() {
             </div>
             <h4 className="font-extrabold text-xs sm:text-sm text-slate-900">Entrega Rápida</h4>
             <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed">
-              Despacho inmediato en días hábiles. Cobertura en los 14 departamentos de <strong className="text-slate-800">24 a 48 horas para todo el país</strong>. No maceramos perfumes.
+              Despacho inmediato en días hábiles. Cobertura en los 14 departamentos de <strong className="text-slate-800">24 a 48 horas para todo el país</strong>.
             </p>
           </div>
 
-        </div>
-
-        {/* Banner Oficial: Aclaración de Maceración de Perfumes */}
-        <div className="clay-card p-4 sm:p-5 bg-gradient-to-r from-purple-50/90 via-indigo-50/80 to-pink-50/80 border border-purple-200/80 flex items-start gap-3.5">
-          <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-            <Store className="w-4 h-4" />
-          </div>
-          <div className="text-xs text-slate-700 leading-relaxed">
-            <strong className="font-black text-slate-900 block mb-0.5">Aclaración Importante de Aromaniak:</strong>
-            <p>
-              <strong>Nosotros no maceramos ningún perfume.</strong> Vendemos la fragancia terminada por onzas y medias onzas (½ oz), y por separado los frascos e insumos. Cada cliente arma y prepara su perfume a su gusto.
-            </p>
-          </div>
         </div>
 
         {/* Banner Oficial de Advertencias de Seguridad Médica y Uso Responsable */}
