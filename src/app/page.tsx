@@ -252,6 +252,7 @@ export default function EcommerceHomePage() {
 
   const renderPagination = (position: 'top' | 'bottom') => {
     if (totalPages <= 1) return null;
+    if (position === 'top' && currentPage === 1) return null;
 
     return (
       <div
