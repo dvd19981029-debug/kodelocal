@@ -184,9 +184,10 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               cartEssenceUsed > 0 ? 'flex-row-reverse' : ''
             }`}>
               <span 
-                className="text-black text-[9px] sm:text-[10px] font-black tracking-tight"
+                className="text-black text-[9px] sm:text-[10px] font-semibold tracking-tight"
                 style={{
-                  textShadow: '-1px -1px 0 #ffffff, 1px -1px 0 #ffffff, -1px 1px 0 #ffffff, 1px 1px 0 #ffffff'
+                  WebkitTextStroke: '1px #ffffff',
+                  paintOrder: 'stroke fill',
                 }}
               >
                 {remainingStock === 0
