@@ -5,54 +5,54 @@
  * SKU -> Nombre del perfume original
  */
 export const ORIGINAL_PERFUME_MAP: Record<string, string> = {
-  '1': 'SAUVAGE',
-  '2': 'BLEU',
-  '3': 'ACQUA DI GIO',
-  '4': 'CLUB DE NUIT INTENSE',
-  '5': 'AVENTUS',
-  '6': 'LA VIE EST BELLE',
-  '7': 'ODYSSEY MANDARIN SKY',
-  '8': 'EROS',
-  '9': "L'EAU D'ISSEY",
-  '10': 'SANTAL 33',
-  '11': 'BORN IN ROMA INTENSE',
-  '12': 'ERBA PURA',
-  '13': 'COCO MADEMOISELLE',
-  '14': 'LIGHT BLUE',
-  '15': 'BOSS BOTTLED',
-  '16': 'INVICTUS',
-  '17': 'Bberry Her',
-  '18': '212 VIP ROSE',
-  '19': 'POLO BLUE',
-  '20': 'ONE MILLION',
-  '21': 'COCO',
-  '22': 'CHANCE',
+  '1': 'Sauvage',
+  '2': 'Bleu',
+  '3': 'Acqua Di Gio',
+  '4': 'Club De Nuit Intense',
+  '5': 'Aventus',
+  '6': 'La Vie Est Belle',
+  '7': 'Odyssey Mandarin Sky',
+  '8': 'Eros',
+  '9': "L'Eau d'Issey",
+  '10': 'Santal 33',
+  '11': 'Born in Roma Intense',
+  '12': 'Erba Pura',
+  '13': 'Coco Mademoiselle',
+  '14': 'Light Blue',
+  '15': 'Boss Bottled',
+  '16': 'Invictus',
+  '17': 'Burberry Her',
+  '18': '212 VIP Rosé',
+  '19': 'Polo Blue',
+  '20': 'One Million',
+  '21': 'Coco',
+  '22': 'Chance',
   '23': '9PM',
-  '24': 'LE MALE',
-  '25': "J'ADORE",
-  '26': 'TOMMY',
+  '24': 'Le Male',
+  '25': "J'adore",
+  '26': 'Tommy',
   '27': 'N° 5',
-  '28': 'BAD BOY',
-  '29': 'BE DELICIOUS',
-  '30': 'LOST CHERRY',
-  '31': 'SCANDAL',
-  '32': 'DONNA',
-  '33': "L'IMMENSITE",
+  '28': 'Bad Boy',
+  '29': 'Be Delicious',
+  '30': 'Lost Cherry',
+  '31': 'Scandal',
+  '32': 'Donna',
+  '33': "L'Immensité",
   '34': '212 VIP',
-  '35': 'SWISS ARMY',
-  '36': 'BLANC L.12.12',
-  '37': 'ACQUA DI GIO',
-  '38': 'POLO BLACK',
-  '39': 'RALPH',
-  '40': 'YARA',
-  '41': 'YARA TOUS',
-  '42': 'FLOWERBOMB',
-  '43': 'BLACK OPIUM',
-  '44': 'HOMME SPORT',
-  '45': 'CK ONE',
-  '46': '360 RED',
-  '47': 'GREEN TEA',
-  '48': 'PRINCESS'
+  '35': 'Swiss Army',
+  '36': 'Blanc L.12.12',
+  '37': 'Acqua Di Gio',
+  '38': 'Polo Black',
+  '39': 'Ralph',
+  '40': 'Yara',
+  '41': 'Yara Tous',
+  '42': 'Flowerbomb',
+  '43': 'Black Opium',
+  '44': 'Homme Sport',
+  '45': 'CK One',
+  '46': '360 Red',
+  '47': 'Green Tea',
+  '48': 'Princess'
 };
 
 const FAMOUS_BRANDS = [
@@ -68,11 +68,29 @@ const FAMOUS_BRANDS = [
 ];
 
 /**
- * Devuelve el nombre del perfume original SIN la marca.
- * Ejemplo:
- *   - "Inspirado en SAUVAGE DIOR" -> "SAUVAGE"
- *   - "Inspirado en BLEU DE CHANEL" -> "BLEU"
- *   - "Inspirado en DOLCE & GABBANA LIGHT BLUE MEN" -> "LIGHT BLUE"
+ * Convierte texto a formato Capitalizado / Title Case para no gritar en mayúsculas
+ */
+function toTitleCase(str: string): string {
+  if (!str) return '';
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map(word => {
+      if (!word) return '';
+      // Excepciones comunes de palabras cortas o acrónimos
+      if (['de', 'di', 'del', 'en', 'la', 'el', 'd\'', 'l\'', 'pour', 'for'].includes(word)) {
+        return word;
+      }
+      if (['ck', 'vip', '9pm', '540', '212', '360', 'n°'].includes(word)) {
+        return word.toUpperCase();
+      }
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+}
+
+/**
+ * Devuelve el nombre del perfume original SIN la marca y en mayúsculas/minúsculas normales.
  */
 export function getOriginalPerfumeName(product: { sku?: string; description?: string; name?: string; brand?: string }): string {
   if (!product) return '';
@@ -118,7 +136,12 @@ export function getOriginalPerfumeName(product: { sku?: string; description?: st
 
   text = text.replace(/\s+/g, ' ').trim();
   if (text.toUpperCase() === 'HER' || text.toUpperCase() === 'BURBERRY HER') {
-    return 'Bberry Her';
+    return 'Burberry Her';
   }
-  return text || product.name || '';
+  const result = text || product.name || '';
+  // Si viene todo en mayúsculas, convertir a Title Case
+  if (result === result.toUpperCase() && result.length > 2) {
+    return toTitleCase(result);
+  }
+  return result;
 }

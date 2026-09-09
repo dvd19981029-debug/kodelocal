@@ -310,8 +310,8 @@ export default function ProductDetailPage() {
           {/* 1. TÍTULO, CONTRATIPO Y VALORACIÓN */}
           <div className="space-y-2">
             
-            {/* Nombre Oficial (Contratipo o Bote) */}
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
+            {/* Nombre Oficial (Contratipo o Bote) - en Bold */}
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight leading-tight">
               {displayName}
             </h1>
 
@@ -319,7 +319,7 @@ export default function ProductDetailPage() {
             {isEssence && (
               <div className="text-xs sm:text-sm text-slate-600 font-medium flex items-center gap-1.5 flex-wrap">
                 <span className="text-slate-400">Inspirado en:</span>
-                <strong className="text-slate-900 font-black">
+                <strong className="text-slate-800 font-semibold">
                   {getOriginalPerfumeName(product)}
                 </strong>
               </div>

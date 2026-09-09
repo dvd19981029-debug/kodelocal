@@ -192,16 +192,16 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
           {/* Detalles del producto (alineados ópticamente con las esquinas redondeadas de la tarjeta superior) */}
           <div className="px-1.5 sm:px-2">
-            {/* Nombre Oficial de la Fragancia (Contratipo) */}
+            {/* Nombre Oficial de la Fragancia (Contratipo) - En Bold y más grande */}
             <Link href={`/producto/${product.id}`} className="block group/title">
-              <h3 className="font-black text-xs sm:text-base text-slate-900 line-clamp-1 leading-snug group-hover/title:text-indigo-600 transition-colors" title={displayName}>
+              <h3 className="font-bold text-[15px] sm:text-lg text-slate-900 line-clamp-1 leading-snug group-hover/title:text-indigo-600 transition-colors" title={displayName}>
                 {displayName}
               </h3>
             </Link>
 
-            {/* Precio Prominente a la par de Disponibilidad sutil y pequeña */}
+            {/* Precio a la par de Disponibilidad sutil y pequeña */}
             <div className="mt-0.5 flex items-baseline gap-1.5 sm:gap-2">
-              <span className="text-lg sm:text-2xl font-black text-indigo-700 leading-tight tracking-tight">
+              <span className="text-base sm:text-xl font-bold text-indigo-700 leading-tight tracking-tight">
                 ${activeOption.price.toFixed(2)}
               </span>
               <span className="text-[8px] sm:text-[9px] text-slate-400 font-normal tracking-tight">
@@ -213,12 +213,12 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               </span>
             </div>
 
-            {/* Inspirado en el perfume original (sin marca) */}
+            {/* Inspirado en el perfume original (sin marca, no mayúsculas) */}
             <div className="text-[10px] sm:text-xs text-slate-600 mt-0.5 leading-tight min-h-[18px] sm:min-h-[20px] line-clamp-2">
               {isEssence ? (
                 <span className="truncate block" title={`Inspirado en ${getOriginalPerfumeName(product)}`}>
                   <span className="text-slate-400 font-normal">Inspirado en </span>
-                  <span className="font-bold text-slate-800">
+                  <span className="font-medium text-slate-600">
                     {getOriginalPerfumeName(product)}
                   </span>
                 </span>
