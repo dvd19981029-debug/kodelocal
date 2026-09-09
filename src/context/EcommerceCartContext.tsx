@@ -438,7 +438,10 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
             return prev;
           }
         } else {
-          if (quantity > totalStock) {
+          const otherUnitsUsed = prev
+            .filter(it => it.product.id === prod.id && it.id !== id)
+            .reduce((acc, it) => acc + it.quantity, 0);
+          if (otherUnitsUsed + quantity > totalStock) {
             return prev; // Bloquear aumento más allá del stock
           }
         }
