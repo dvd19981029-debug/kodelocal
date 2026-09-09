@@ -17,12 +17,15 @@ import {
   CreditCard,
   ShieldAlert,
   Clock,
-  MapPin
+  MapPin,
+  Wand2
 } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS, getStoredProducts, saveStoredProducts } from '@/lib/store';
 import ProductCard from '@/components/ecommerce/ProductCard';
 import PromoBannerCarousel from '@/components/ecommerce/PromoBannerCarousel';
 import ReactiveSearchBar from '@/components/ecommerce/ReactiveSearchBar';
+import BuildYourPerfumeCard from '@/components/ecommerce/BuildYourPerfumeCard';
+import PerfumeKitBuilderModal from '@/components/ecommerce/PerfumeKitBuilderModal';
 import { getOriginalPerfumeName } from '@/lib/perfumeNames';
 
 export default function EcommerceHomePage() {
@@ -32,8 +35,17 @@ export default function EcommerceHomePage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('Esencias para Perfume');
   const [selectedStockFilter, setSelectedStockFilter] = useState<'Todos' | 'Disponibles' | 'Agotados'>('Todos');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isKitModalOpen, setIsKitModalOpen] = useState(false);
   // Columnas dinámicas según el tamaño de pantalla para calcular exactamente 7 filas
   const [columns, setColumns] = useState(2);
+
+  const availableEssences = useMemo(() => {
+    return products.filter((p) => p.category === 'Esencias para Perfume');
+  }, [products]);
+
+  const availableBottles = useMemo(() => {
+    return products.filter((p) => p.category === 'Botes');
+  }, [products]);
 
   useEffect(() => {
     const updateColumns = () => {
@@ -79,8 +91,10 @@ export default function EcommerceHomePage() {
     return products.filter((p) => {
       // Filtro de categoría
       let matchesCategory = true;
-      if (selectedCategory === 'Alcohol y Materiales') {
-        matchesCategory = p.category === 'Insumos y Materia Prima' || p.category === 'Empaque';
+      if (selectedCategory === 'Insumos' || selectedCategory === 'Alcohol y Materiales') {
+        matchesCategory = p.category === 'Insumos y Materia Prima' || p.category === 'Empaque' || p.category === 'Insumos';
+      } else if (selectedCategory === 'Arma tu perfume') {
+        matchesCategory = p.category === 'Botes' || p.category === 'Esencias para Perfume';
       } else if (selectedCategory !== 'Todos') {
         matchesCategory = p.category === selectedCategory;
       }
@@ -337,9 +351,9 @@ export default function EcommerceHomePage() {
       {/* ================= CATÁLOGO DE PRODUCTOS ================= */}
       <section id="catalogo" className="space-y-4 scroll-mt-20">
         
-        {/* Selector de Sección Claymorfista Responsivo y Discreto con Animación de Estiramiento */}
+        {/* Selector de Sección Claymorfista Responsivo con Pestañas: Esencias, Botes, Insumos y Arma tu perfume */}
         <div className="w-full">
-          <div className="clay-tabs-track max-w-xl mx-auto">
+          <div className="clay-tabs-track max-w-2xl mx-auto flex items-stretch gap-1">
             
             {/* Pestaña: Esencias */}
             <button
@@ -348,9 +362,9 @@ export default function EcommerceHomePage() {
                 setSelectedCategory('Esencias para Perfume');
                 setCurrentPage(1);
               }}
-              className={`clay-tab-item py-2 sm:py-2.5 px-3 sm:px-5 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
+              className={`clay-tab-item py-2 sm:py-2.5 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
                 selectedCategory === 'Esencias para Perfume'
-                  ? 'clay-tab-active flex-[1.4] sm:flex-[1.5]'
+                  ? 'clay-tab-active flex-[1.3] sm:flex-[1.4]'
                   : 'clay-tab-inactive flex-1'
               }`}
             >
@@ -365,34 +379,133 @@ export default function EcommerceHomePage() {
                 setSelectedGender('Todos');
                 setCurrentPage(1);
               }}
-              className={`clay-tab-item py-2 sm:py-2.5 px-3 sm:px-5 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
+              className={`clay-tab-item py-2 sm:py-2.5 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
                 selectedCategory === 'Botes'
-                  ? 'clay-tab-active flex-[1.4] sm:flex-[1.5]'
+                  ? 'clay-tab-active flex-[1.1] sm:flex-[1.2]'
                   : 'clay-tab-inactive flex-1'
               }`}
             >
               <span>Botes</span>
             </button>
 
-            {/* Pestaña: Alcohol y Materiales */}
+            {/* Pestaña: Insumos (antes Alcohol y Materiales) */}
             <button
               type="button"
               onClick={() => {
-                setSelectedCategory('Alcohol y Materiales');
+                setSelectedCategory('Insumos');
                 setSelectedGender('Todos');
                 setCurrentPage(1);
               }}
-              className={`clay-tab-item py-2 sm:py-2.5 px-3 sm:px-5 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
-                selectedCategory === 'Alcohol y Materiales'
-                  ? 'clay-tab-active flex-[1.5] sm:flex-[1.6]'
+              className={`clay-tab-item py-2 sm:py-2.5 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
+                selectedCategory === 'Insumos' || selectedCategory === 'Alcohol y Materiales'
+                  ? 'clay-tab-active flex-[1.1] sm:flex-[1.2]'
                   : 'clay-tab-inactive flex-1'
               }`}
             >
-              <span className="truncate">Alcohol y Materiales</span>
+              <span className="truncate">Insumos</span>
+            </button>
+
+            {/* Pestaña: Arma tu perfume */}
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCategory('Arma tu perfume');
+                setSelectedGender('Todos');
+                setCurrentPage(1);
+                setTimeout(() => {
+                  const el = document.getElementById('seccion-arma-tu-perfume');
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 60);
+              }}
+              className={`clay-tab-item py-2 sm:py-2.5 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
+                selectedCategory === 'Arma tu perfume'
+                  ? 'clay-tab-active flex-[1.5] sm:flex-[1.6] !bg-gradient-to-r !from-amber-500 !to-purple-600 !text-white !shadow-[0_4px_16px_rgba(245,158,11,0.35)]'
+                  : 'clay-tab-inactive flex-1 text-amber-700 hover:text-amber-800'
+              }`}
+            >
+              <span className="truncate flex items-center justify-center gap-1">
+                <Wand2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span>Arma tu perfume</span>
+              </span>
             </button>
 
           </div>
         </div>
+
+        {/* ================= SECCIÓN DEDICADA: ARMA TU PROPIO PERFUME ================= */}
+        <section 
+          id="seccion-arma-tu-perfume" 
+          className={`scroll-mt-24 transition-all duration-300 ${
+            selectedCategory === 'Arma tu perfume' 
+              ? 'block space-y-4 pt-1' 
+              : (!searchQuery && selectedCategory === 'Esencias para Perfume') 
+                ? 'block space-y-4' 
+                : 'hidden'
+          }`}
+        >
+          <BuildYourPerfumeCard onOpenBuilder={() => setIsKitModalOpen(true)} />
+
+          {/* Si el usuario seleccionó la pestaña 'Arma tu perfume', desplegamos la guía visual de los 3 pasos */}
+          {selectedCategory === 'Arma tu perfume' && (
+            <div className="clay-card p-4 sm:p-6 bg-gradient-to-r from-amber-50/90 via-purple-50/80 to-indigo-50/90 border border-amber-200/80 space-y-4 rounded-2xl sm:rounded-3xl shadow-xs">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black shadow-xs">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-black text-slate-900">
+                      ¿Cómo funciona Arma tu Perfume?
+                    </h3>
+                    <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
+                      Tu perfume personalizado de 100ml en 3 sencillos pasos:
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsKitModalOpen(true)}
+                  className="clay-btn clay-btn-primary px-4 py-2 text-xs font-black rounded-xl flex items-center gap-1.5 shadow-md active:scale-95 transition-all cursor-pointer"
+                >
+                  <Wand2 className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Configurar mi Perfume Ahora</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                <div className="bg-white/95 p-3.5 rounded-2xl border border-amber-200/70 space-y-1 shadow-2xs">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-amber-100 text-amber-800 text-xs font-black flex items-center justify-center">1</span>
+                    <strong className="text-xs font-extrabold text-slate-900">1 Onza de Esencia Pura</strong>
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-relaxed pl-8">
+                    Elige entre más de 40 contratipos finos de diseñador (o 1.5 oz en versión PLUS por solo $18).
+                  </p>
+                </div>
+
+                <div className="bg-white/95 p-3.5 rounded-2xl border border-purple-200/70 space-y-1 shadow-2xs">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-purple-100 text-purple-800 text-xs font-black flex items-center justify-center">2</span>
+                    <strong className="text-xs font-extrabold text-slate-900">Frasco de 100ml de Lujo</strong>
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-relaxed pl-8">
+                    Selecciona tu diseño favorito con atomizador fino entre nuestro catálogo de frascos de vidrio.
+                  </p>
+                </div>
+
+                <div className="bg-white/95 p-3.5 rounded-2xl border border-emerald-200/70 space-y-1 shadow-2xs">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-black flex items-center justify-center">3</span>
+                    <strong className="text-xs font-extrabold text-slate-900">Alcohol y Fijador Incluido</strong>
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-relaxed pl-8">
+                    Todo listo para tu combinación perfecta. Opción con o sin etiqueta identificadora del contratipo.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
 
         {/* Encabezado informativo del catálogo */}
         <div className="flex items-center justify-between gap-2 px-1 pt-1">
@@ -402,9 +515,11 @@ export default function EcommerceHomePage() {
                 ? (selectedGender === 'Todos' ? 'Esencias de Perfume' : `Esencias • ${selectedGender === 'Caballero' ? 'Hombre' : selectedGender}`) 
                 : selectedCategory === 'Botes' 
                   ? 'Botes y Frascos' 
-                  : selectedCategory === 'Alcohol y Materiales'
-                    ? 'Alcohol, Fijador y Materiales'
-                    : selectedCategory}
+                  : selectedCategory === 'Insumos' || selectedCategory === 'Alcohol y Materiales'
+                    ? 'Insumos y Materiales'
+                    : selectedCategory === 'Arma tu perfume'
+                      ? 'Componentes para tu Perfume'
+                      : selectedCategory}
             </h2>
             <span className="clay-badge text-[10px] sm:text-xs bg-purple-50 text-purple-900 border border-purple-200 px-2.5 py-0.5 rounded-lg font-black">
               {filteredProducts.length} disponibles
@@ -602,6 +717,14 @@ export default function EcommerceHomePage() {
           </ul>
         </div>
       </section>
+
+      {/* ================= MODAL DEL CONFIGURADOR DEL KIT DE PERFUME ($15 / $18 PLUS) ================= */}
+      <PerfumeKitBuilderModal
+        isOpen={isKitModalOpen}
+        onClose={() => setIsKitModalOpen(false)}
+        availableEssences={availableEssences}
+        availableBottles={availableBottles}
+      />
 
     </div>
   );
