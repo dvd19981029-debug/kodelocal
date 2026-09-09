@@ -302,14 +302,25 @@ export default function PerfumeKitBuilderModal({
                       const isChosen = selectedEssence?.id === essence.id;
                       const name = essence.officialName?.trim() || essence.name;
 
+                      // Regla de inventario: protección de stock basada en minStock
+                      const totalStock = typeof essence.stock === 'number' ? essence.stock : 0;
+                      const available1oz = Math.floor(totalStock * 0.8);
+                      const minStockThreshold = typeof essence.minStock === 'number' && essence.minStock > 0
+                        ? essence.minStock
+                        : 15;
+                      const isBelowMinAlert = available1oz > 0 && available1oz <= minStockThreshold;
+                      const isOutOfStock = available1oz <= 0;
+
                       return (
                         <div
                           key={essence.id}
-                          onClick={() => setSelectedEssence(essence)}
-                          className={`p-2.5 rounded-xl cursor-pointer transition-all border select-none flex flex-col justify-between ${
-                            isChosen
-                              ? 'bg-indigo-50/90 border-indigo-600 ring-2 ring-indigo-400/50 shadow-sm scale-[1.01]'
-                              : 'bg-white hover:bg-slate-50 border-slate-200/90 shadow-2xs'
+                          onClick={() => !isOutOfStock && setSelectedEssence(essence)}
+                          className={`p-2 sm:p-2.5 rounded-xl transition-all border select-none flex flex-col justify-between ${
+                            isOutOfStock
+                              ? 'opacity-60 cursor-not-allowed bg-slate-50 border-slate-200'
+                              : isChosen
+                              ? 'bg-indigo-50/90 border-indigo-600 ring-2 ring-indigo-400/50 shadow-sm scale-[1.01] cursor-pointer'
+                              : 'bg-white hover:bg-slate-50 border-slate-200/90 shadow-2xs cursor-pointer'
                           }`}
                         >
                           <div>
@@ -349,8 +360,18 @@ export default function PerfumeKitBuilderModal({
                           </div>
 
                           <div className="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[9px]">
-                            <span className="text-emerald-700 font-bold">
-                              Disp: {Math.floor(essence.stock * 0.8)} onzas (1 oz)
+                            <span className={`tracking-tight ${
+                              isOutOfStock
+                                ? 'text-slate-400 font-normal'
+                                : isBelowMinAlert
+                                ? 'text-amber-700 font-black'
+                                : 'text-emerald-700 font-bold'
+                            }`}>
+                              {isOutOfStock
+                                ? 'Sin existencias'
+                                : isBelowMinAlert
+                                ? available1oz === 1 ? '¡Solo queda 1 onza!' : `¡Solo quedan ${available1oz} onzas!`
+                                : 'Disponible'}
                             </span>
                             {isChosen && (
                               <span className="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-[10px]">
@@ -410,15 +431,23 @@ export default function PerfumeKitBuilderModal({
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
                   {bottlesList.map((bottle) => {
                     const isChosen = activeBottle.id === bottle.id;
+                    const bStock = typeof bottle.stock === 'number' ? bottle.stock : 50;
+                    const bMinStockThreshold = typeof bottle.minStock === 'number' && bottle.minStock > 0
+                      ? bottle.minStock
+                      : 15;
+                    const isBottleBelowMin = bStock > 0 && bStock <= bMinStockThreshold;
+                    const isBottleOutOfStock = bStock <= 0;
 
                     return (
                       <div
                         key={bottle.id}
-                        onClick={() => setSelectedBottle(bottle)}
-                        className={`p-2.5 rounded-2xl cursor-pointer transition-all border select-none relative flex flex-col items-center text-center ${
-                          isChosen
-                            ? 'bg-white border-indigo-600 ring-2 ring-indigo-400/50 shadow-md scale-[1.02]'
-                            : 'bg-white hover:bg-slate-50 border-slate-200/80 shadow-2xs'
+                        onClick={() => !isBottleOutOfStock && setSelectedBottle(bottle)}
+                        className={`p-2.5 rounded-2xl transition-all border select-none relative flex flex-col items-center text-center ${
+                          isBottleOutOfStock
+                            ? 'opacity-60 cursor-not-allowed bg-slate-50 border-slate-200'
+                            : isChosen
+                            ? 'bg-white border-indigo-600 ring-2 ring-indigo-400/50 shadow-md scale-[1.02] cursor-pointer'
+                            : 'bg-white hover:bg-slate-50 border-slate-200/80 shadow-2xs cursor-pointer'
                         }`}
                       >
                         <div className="w-full aspect-square max-h-28 rounded-xl overflow-hidden bg-white mb-2 flex items-center justify-center border border-slate-100">
@@ -442,8 +471,18 @@ export default function PerfumeKitBuilderModal({
                           <span className="text-[9px] font-black text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded">
                             100 ml
                           </span>
-                          <span className="text-[8.5px] font-bold text-emerald-700 bg-emerald-50 px-1 rounded">
-                            {bottle.stock || 50} disp.
+                          <span className={`text-[8.5px] px-1 rounded ${
+                            isBottleOutOfStock
+                              ? 'text-slate-400 font-normal bg-slate-100'
+                              : isBottleBelowMin
+                              ? 'text-amber-800 font-black bg-amber-50 border border-amber-200/80'
+                              : 'text-emerald-700 font-bold bg-emerald-50'
+                          }`}>
+                            {isBottleOutOfStock
+                              ? 'Sin existencias'
+                              : isBottleBelowMin
+                              ? bStock === 1 ? '¡Solo queda 1!' : `¡Solo quedan ${bStock}!`
+                              : 'Disponible'}
                           </span>
                         </div>
 
