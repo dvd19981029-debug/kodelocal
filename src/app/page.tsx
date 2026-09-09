@@ -14,7 +14,7 @@ import {
   Flame,
   X
 } from 'lucide-react';
-import { ProductItem, INITIAL_PRODUCTS, getStoredProducts } from '@/lib/store';
+import { ProductItem, INITIAL_PRODUCTS, getStoredProducts, saveStoredProducts } from '@/lib/store';
 import ProductCard from '@/components/ecommerce/ProductCard';
 import PromoBannerCarousel from '@/components/ecommerce/PromoBannerCarousel';
 import ReactiveSearchBar from '@/components/ecommerce/ReactiveSearchBar';
@@ -23,12 +23,11 @@ import PerfumeKitBuilderModal from '@/components/ecommerce/PerfumeKitBuilderModa
 import { getOriginalPerfumeName } from '@/lib/perfumeNames';
 
 export default function EcommerceHomePage() {
-  const [products, setProducts] = useState<ProductItem[]>(() => INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGender, setSelectedGender] = useState<'Todos' | 'Caballero' | 'Dama' | 'Unisex'>('Todos');
   const [selectedCategory, setSelectedCategory] = useState<string>('Esencias para Perfume');
   const [selectedStockFilter, setSelectedStockFilter] = useState<'Todos' | 'Disponibles' | 'Agotados'>('Todos');
-  const [isLoadingCatalog, setIsLoadingCatalog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isKitModalOpen, setIsKitModalOpen] = useState(false);
   // Columnas dinámicas según el tamaño de pantalla para calcular exactamente 7 filas
@@ -51,28 +50,25 @@ export default function EcommerceHomePage() {
   }, []);
 
   useEffect(() => {
-    // 1. Cargar catálogo desde /api/products con existencias reales de Supabase
+    // Sincronizar con catálogo de Supabase manteniendo coherencia sin parpadeos
+    let isMounted = true;
     const loadCatalog = async () => {
       try {
-        setIsLoadingCatalog(true);
         const res = await fetch('/api/products');
         const data = await res.json();
-        if (data.success && data.products && data.products.length > 0) {
+        if (isMounted && data.success && Array.isArray(data.products) && data.products.length > 0) {
           setProducts(data.products);
-          return;
+          saveStoredProducts(data.products);
         }
       } catch (err) {
-        console.error('Error conectando a /api/products, usando fallback:', err);
-      } finally {
-        setIsLoadingCatalog(false);
+        console.error('Error conectando a /api/products, manteniendo catálogo local:', err);
       }
-
-      // Fallback local
-      const loaded = getStoredProducts();
-      setProducts(loaded && loaded.length > 0 ? loaded : INITIAL_PRODUCTS);
     };
 
     loadCatalog();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Filtrado reactivo de productos
