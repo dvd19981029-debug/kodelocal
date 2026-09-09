@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import Link from 'next/link';
-import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, ArrowLeft, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { useEcommerceCart, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getOriginalPerfumeName } from '@/lib/perfumeNames';
@@ -279,6 +279,19 @@ export default function CartDrawer() {
                   </div>
                 );
               })
+            )}
+
+            {/* Aviso Importante de preparación de esencias con alcohol */}
+            {cart.length > 0 && (
+              <div className="p-3 rounded-2xl bg-amber-50/90 border border-amber-200/90 text-xs text-amber-950 space-y-1 mt-1 shadow-2xs">
+                <div className="flex items-center gap-1.5 font-bold text-amber-900 text-[11px]">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span>Aviso importante: Mezcla con alcohol</span>
+                </div>
+                <p className="text-[10.5px] text-amber-900/90 font-medium leading-relaxed">
+                  Todas las esencias deben de ser mezcladas con alcohol para perfumería antes de cualquier aplicación. El máximo recomendado para 100ml es de una onza y una media onza, más de eso no es recomendado.
+                </p>
+              </div>
             )}
           </div>
 

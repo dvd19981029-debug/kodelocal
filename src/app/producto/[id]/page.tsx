@@ -709,7 +709,7 @@ export default function ProductDetailPage() {
           </div>
           <ul className="space-y-1.5 pl-5 list-disc text-[11px] sm:text-xs text-amber-900/90 font-medium leading-relaxed">
             <li>
-              <strong>No usar directamente sobre la piel:</strong> Las esencias son 100% puras y concentradas. <strong>Tienen que ser mezcladas sí o sí con alcohol especial de perfumería</strong> antes de aplicarse.
+              <strong>No usar directamente sobre la piel:</strong> Las esencias son 100% puras y concentradas. <strong>Tienen que ser mezcladas sí o sí con alcohol especial de perfumería</strong> antes de aplicarse. El máximo recomendado para 100ml es de una onza y una media onza, más de eso no es recomendado.
             </li>
             <li>
               <strong>Bajo ningún motivo deben ser ingeridas, inhaladas directamente o tener contacto con los ojos.</strong> En caso de salpicadura en los ojos, lavar inmediatamente con abundante agua y buscar atención médica.
