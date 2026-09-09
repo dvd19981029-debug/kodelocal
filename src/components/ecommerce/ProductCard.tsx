@@ -199,7 +199,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
           {/* Precio Prominente a la par de Disponibilidad sutil y pequeña */}
           <div className="mt-0.5 flex items-baseline gap-1.5 sm:gap-2">
-            <span className="text-base sm:text-xl font-black text-indigo-700 font-mono leading-tight tracking-tight">
+            <span className="text-lg sm:text-2xl font-black text-indigo-700 font-mono leading-tight tracking-tight">
               ${activeOption.price.toFixed(2)}
             </span>
             <span className="text-[8px] sm:text-[9px] text-slate-400 font-normal font-sans tracking-tight">
