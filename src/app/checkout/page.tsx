@@ -81,6 +81,13 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<SaleRecord | null>(null);
 
+  // Desplazar al inicio cuando se complete el pedido
+  React.useEffect(() => {
+    if (completedOrder && typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [completedOrder]);
+
   // Cálculo del costo de envío: $0 si retira en local; $3.50 SS/La Libertad o $5.00 otros
   const shippingCost = metodoEntrega === 'RETIRO' ? 0 : (departamento === 'San Salvador' || departamento === 'La Libertad' ? 3.50 : 5.00);
   const totalConEnvio = Number((subtotal + (cart.length > 0 ? shippingCost : 0)).toFixed(2));
@@ -236,211 +243,94 @@ export default function CheckoutPage() {
       `📦 *Orden:* #${completedOrder.orderNumber}\n` +
       `👤 *Cliente:* ${completedOrder.cliente.nombre}\n` +
       `📱 *Teléfono:* ${completedOrder.cliente.telefono}\n` +
-      `📍 *Modalidad:* ${metodoEntrega === 'RETIRO' ? 'Retiro en Sucursal (San Salvador)' : 'Envío a Domicilio'}\n` +
+      `📍 *Modalidad:* ${metodoEntrega === 'RETIRO' ? 'Retiro en Sucursal' : 'Envío a Domicilio'}\n` +
       `🏠 *Destino:* ${completedOrder.cliente.direccion}\n\n` +
       `🛍️ *Detalle del Pedido:*\n` +
       completedOrder.items.map(it => `• ${it.quantity}x ${it.name} - $${it.total.toFixed(2)}`).join('\n') +
       `\n\n` +
-      `*Subtotal:* $${completedOrder.subtotal.toFixed(2)}\n` +
-      `*Envío:* $${completedOrder.shippingCost?.toFixed(2) || '0.00'}\n` +
       `*Total a Transferir:* $${completedOrder.total.toFixed(2)}\n\n` +
-      `📎 *Adjunto en este mensaje la captura de mi comprobante de transferencia bancaria para su validación y preparación de pedido.* ¡Muchas gracias!`
+      `📎 *Adjunto mi comprobante de transferencia bancaria para validación.* ¡Muchas gracias!`
     );
 
     const whatsappCardMessage = encodeURIComponent(
       `👋 ¡Hola Aromaniak!\n\n` +
-      `Acabo de realizar mi pedido en línea con *Tarjeta*:\n\n` +
+      `Acabo de realizar mi pedido con *Tarjeta*:\n\n` +
       `📦 *Orden:* #${completedOrder.orderNumber}\n` +
       `👤 *Cliente:* ${completedOrder.cliente.nombre}\n` +
       `📱 *Teléfono:* ${completedOrder.cliente.telefono}\n` +
-      `📍 *Modalidad:* ${metodoEntrega === 'RETIRO' ? 'Retiro en Sucursal (San Salvador)' : 'Envío a Domicilio'}\n` +
+      `📍 *Modalidad:* ${metodoEntrega === 'RETIRO' ? 'Retiro en Sucursal' : 'Envío a Domicilio'}\n` +
       `🏠 *Destino:* ${completedOrder.cliente.direccion}\n\n` +
       `🛍️ *Productos:*\n` +
       completedOrder.items.map(it => `• ${it.quantity}x ${it.name} - $${it.total.toFixed(2)}`).join('\n') +
-      `\n\n*Total Pagado:* $${completedOrder.total.toFixed(2)}\n\n` +
-      `Quedo atento a la confirmación de entrega. ¡Muchas gracias!`
+      `\n\n*Total:* $${completedOrder.total.toFixed(2)}\n\n` +
+      `¡Quedo atento a la entrega!`
     );
 
     return (
-      <div className="max-w-2xl mx-auto py-8 sm:py-12 px-4 animate-in fade-in zoom-in-95 duration-300">
-        <div className="clay-card p-6 sm:p-10 text-center space-y-6 bg-white/95 shadow-[inset_2px_2px_6px_rgba(255,255,255,0.95),inset_-2px_-2px_6px_rgba(99,102,241,0.08),4px_10px_28px_rgba(0,0,0,0.08)]">
+      <div className="max-w-4xl mx-auto py-6 sm:py-8 px-4 space-y-5 animate-in fade-in duration-300">
+        
+        {/* Barra superior a la altura normal del inicio de página */}
+        <div className="flex items-center justify-between">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Volver a la tienda</span>
+          </Link>
+          <span className="clay-badge text-xs font-mono font-black text-indigo-700 bg-white">
+            Orden #{completedOrder.orderNumber}
+          </span>
+        </div>
+
+        {/* Encabezado y Acción Principal */}
+        <div className="clay-card p-6 sm:p-8 text-center space-y-4 bg-white/95">
           
-          <div className="flex justify-center mb-1">
-            <Link href="/" className="inline-flex items-center justify-center cursor-pointer group">
-              <img
-                src="/images/logo.png"
-                alt="Aromaniak"
-                className="h-9 w-auto object-contain drop-shadow-xs group-hover:opacity-90 transition-opacity"
-              />
-            </Link>
+          <div className="flex justify-center">
+            <span className={`clay-badge text-xs font-extrabold px-3.5 py-1.5 rounded-full ${
+              isTransfer 
+                ? 'text-amber-800 bg-amber-100/90' 
+                : 'text-emerald-800 bg-emerald-100/90'
+            }`}>
+              {isTransfer ? (
+                <>
+                  <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+                  <span>Pedido Pendiente de Verificación</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Pedido Confirmado</span>
+                </>
+              )}
+            </span>
           </div>
 
-          {isTransfer ? (
-            <div className="w-16 h-16 rounded-3xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto shadow-[inset_2px_2px_4px_rgba(255,255,255,0.9),inset_-2px_-2px_4px_rgba(245,158,11,0.25),0_4px_12px_rgba(245,158,11,0.2)]">
-              <Clock className="w-9 h-9 animate-pulse" />
-            </div>
-          ) : (
-            <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto shadow-[inset_2px_2px_4px_rgba(255,255,255,0.9),inset_-2px_-2px_4px_rgba(16,185,129,0.25),0_4px_12px_rgba(16,185,129,0.2)]">
-              <CheckCircle2 className="w-9 h-9" />
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <span className={`clay-badge text-xs font-mono font-black px-3.5 py-1 rounded-lg ${
-              isTransfer 
-                ? 'text-amber-800 bg-amber-100/90 border border-amber-200' 
-                : 'text-emerald-800 bg-emerald-100/90 border border-emerald-200'
-            }`}>
-              {isTransfer ? 'Pedido Pendiente de Verificación' : 'Pedido Confirmado'} • #{completedOrder.orderNumber}
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
-              {isTransfer ? '¡Pedido Pendiente!' : '¡Pedido Recibido con Éxito!'}
+          <div className="space-y-1">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+              {isTransfer ? '¡Pedido Registrado!' : '¡Pedido Recibido con Éxito!'}
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto font-medium leading-relaxed">
               {isTransfer ? (
                 <>
-                  Gracias por tu compra, <strong>{completedOrder.cliente.nombre}</strong>. Su pedido será procesado una vez se haya verificado su transferencia bancaria a cualquiera de las siguientes cuentas oficiales:
+                  Transfiere <strong className="text-indigo-700 font-black">${completedOrder.total.toFixed(2)}</strong> y envía tu comprobante por WhatsApp para preparar y despachar tu orden.
                 </>
               ) : (
                 <>
-                  Gracias por tu compra, <strong>{completedOrder.cliente.nombre}</strong>. Tu pedido ya ingresó a nuestra <strong>Bodega</strong> para ser preparado y despachado.
+                  Gracias por tu compra, <strong>{completedOrder.cliente.nombre}</strong>. Tu comanda ya está en preparación.
                 </>
               )}
             </p>
           </div>
 
-          {/* Cuentas bancarias oficiales si es transferencia */}
-          {isTransfer && (
-            <div className="space-y-3 text-left">
-              <div className="clay-card p-4 sm:p-5 bg-gradient-to-br from-indigo-50/70 via-purple-50/50 to-white space-y-3.5 border border-indigo-100/80 shadow-[inset_2px_2px_4px_rgba(255,255,255,0.9),inset_-2px_-2px_4px_rgba(99,102,241,0.08)]">
-                <div className="flex items-center justify-between border-b border-indigo-100/80 pb-2">
-                  <div className="flex items-center gap-2">
-                    <Building className="w-4 h-4 text-indigo-700" />
-                    <span className="font-extrabold text-xs text-indigo-950">Cuentas Bancarias Oficiales</span>
-                  </div>
-                  <span className="text-[10.5px] font-bold text-slate-500">Titular: Aromaniak El Salvador</span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                  {/* Banco Agrícola */}
-                  <div className="p-3 rounded-xl bg-white/90 border border-indigo-100/70 flex flex-col justify-between shadow-xs">
-                    <div>
-                      <span className="text-[10px] font-black uppercase text-indigo-700 tracking-wider">Banco Agrícola</span>
-                      <p className="text-[11px] text-slate-500 font-medium">Cuenta de Ahorros</p>
-                      <p className="font-mono font-bold text-slate-800 text-xs mt-1 select-all">300-478921-0</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyAccount('300-478921-0', 'agricola')}
-                      className="mt-2 text-[10.5px] font-bold py-1 px-2 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 flex items-center justify-center gap-1 active:scale-95 transition-all"
-                    >
-                      {copiedBank === 'agricola' ? (
-                        <>
-                          <Check className="w-3 h-3 text-emerald-600" />
-                          <span className="text-emerald-700">¡Copiado!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3 h-3" />
-                          <span>Copiar cuenta</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  {/* BAC Credomatic */}
-                  <div className="p-3 rounded-xl bg-white/90 border border-indigo-100/70 flex flex-col justify-between shadow-xs">
-                    <div>
-                      <span className="text-[10px] font-black uppercase text-rose-600 tracking-wider">BAC Credomatic</span>
-                      <p className="text-[11px] text-slate-500 font-medium">Cuenta de Ahorros</p>
-                      <p className="font-mono font-bold text-slate-800 text-xs mt-1 select-all">201-839210</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyAccount('201-839210', 'bac')}
-                      className="mt-2 text-[10.5px] font-bold py-1 px-2 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 flex items-center justify-center gap-1 active:scale-95 transition-all"
-                    >
-                      {copiedBank === 'bac' ? (
-                        <>
-                          <Check className="w-3 h-3 text-emerald-600" />
-                          <span className="text-emerald-700">¡Copiado!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3 h-3" />
-                          <span>Copiar cuenta</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Banco Cuscatlán */}
-                  <div className="p-3 rounded-xl bg-white/90 border border-indigo-100/70 flex flex-col justify-between shadow-xs">
-                    <div>
-                      <span className="text-[10px] font-black uppercase text-amber-700 tracking-wider">Banco Cuscatlán</span>
-                      <p className="text-[11px] text-slate-500 font-medium">Cuenta Corriente</p>
-                      <p className="font-mono font-bold text-slate-800 text-xs mt-1 select-all">024-109283-7</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyAccount('024-109283-7', 'cuscatlan')}
-                      className="mt-2 text-[10.5px] font-bold py-1 px-2 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 flex items-center justify-center gap-1 active:scale-95 transition-all"
-                    >
-                      {copiedBank === 'cuscatlan' ? (
-                        <>
-                          <Check className="w-3 h-3 text-emerald-600" />
-                          <span className="text-emerald-700">¡Copiado!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3 h-3" />
-                          <span>Copiar cuenta</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Tarjeta de instrucciones claymórfica para WhatsApp */}
-              <div className="p-4 rounded-2xl bg-amber-50/90 border border-amber-200/90 text-xs text-amber-950 space-y-1.5 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.9),inset_-1px_-1px_2px_rgba(245,158,11,0.15)]">
-                <div className="flex items-center gap-2 font-black text-amber-900 text-[12px]">
-                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-                  <span>Instrucciones para validar tu pedido</span>
-                </div>
-                <p className="text-[11.5px] text-amber-950/90 font-medium leading-relaxed">
-                  Por favor envía la captura de tu <strong>comprobante de transferencia</strong> y tu número de orden (<strong>#{completedOrder.orderNumber}</strong>) a nuestro WhatsApp <strong>7833-9470</strong>. Una vez se verifique la transferencia su pedido estará listo y en camino.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Resumen del pedido */}
-          <div className="clay-card p-4 text-left space-y-2.5 text-xs bg-slate-50/80 shadow-[inset_1px_1px_3px_rgba(255,255,255,0.9),inset_-1px_-1px_3px_rgba(0,0,0,0.04)]">
-            <div className="flex justify-between font-bold text-slate-700 border-b border-slate-200/70 pb-2">
-              <span>Modalidad y destino:</span>
-              <span className="text-slate-900 text-right max-w-xs truncate">{completedOrder.cliente.direccion}</span>
-            </div>
-            <div className="flex justify-between font-bold text-slate-700 border-b border-slate-200/70 pb-2">
-              <span>Forma de pago:</span>
-              <span className="text-slate-900 font-extrabold">
-                {isTransfer ? 'Transferencia Bancaria' : 'Tarjeta de Crédito / Débito'}
-              </span>
-            </div>
-            <div className="flex justify-between font-extrabold text-sm text-slate-900 pt-1">
-              <span>Total a transferir / pagar:</span>
-              <span className="text-indigo-700 font-mono text-base font-black">${completedOrder.total.toFixed(2)}</span>
-            </div>
-          </div>
-
-          {/* Botones de acción */}
-          <div className="space-y-3 pt-2">
+          {/* BOTÓN DE WHATSAPP ARRIBA - CENTRADO Y CON ESTILO CLAYMORFISTA */}
+          <div className="pt-2 pb-1 flex flex-col items-center justify-center gap-2">
             {isTransfer ? (
               <a
                 href={`https://wa.me/50378339470?text=${whatsappTransferMessage}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="clay-btn bg-emerald-600 hover:bg-emerald-700 text-white w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2.5 !shadow-[inset_2px_2px_4px_rgba(255,255,255,0.4),inset_-2px_-2px_4px_rgba(0,0,0,0.2),3px_5px_15px_rgba(16,185,129,0.45)] active:scale-[0.98] transition-all cursor-pointer"
+                className="clay-btn clay-btn-success px-7 py-3 rounded-2xl font-black text-xs sm:text-sm active:scale-95 transition-all flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg cursor-pointer"
               >
                 <Send className="w-4 h-4" />
                 <span>ENVIAR COMPROBANTE POR WHATSAPP</span>
@@ -450,23 +340,155 @@ export default function CheckoutPage() {
                 href={`https://wa.me/50378339470?text=${whatsappCardMessage}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="clay-btn bg-emerald-600 hover:bg-emerald-700 text-white w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 !shadow-[inset_2px_2px_4px_rgba(255,255,255,0.4),inset_-2px_-2px_4px_rgba(0,0,0,0.2),3px_5px_15px_rgba(16,185,129,0.4)] active:scale-[0.98] transition-all cursor-pointer"
+                className="clay-btn clay-btn-success px-7 py-3 rounded-2xl font-black text-xs sm:text-sm active:scale-95 transition-all flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg cursor-pointer"
               >
                 <Send className="w-4 h-4" />
                 <span>Notificar por WhatsApp (7833-9470)</span>
               </a>
             )}
+            <p className="text-[11px] text-slate-500 font-medium">
+              WhatsApp oficial de validación: <strong className="text-slate-700 font-bold">7833-9470</strong>
+            </p>
+          </div>
 
-            <Link
-              href="/"
-              className="clay-btn clay-btn-light w-full py-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Volver a la Tienda</span>
-            </Link>
+          {/* Cuentas Bancarias Disponibles si es transferencia */}
+          {isTransfer && (
+            <div className="pt-3 border-t border-slate-100 text-left space-y-2.5">
+              <div className="flex items-center justify-between px-0.5">
+                <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                  <Building className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Cuentas para Transferir</span>
+                </span>
+                <span className="text-[10.5px] font-bold text-slate-500">
+                  Titular: <strong className="text-slate-800">Aromaniak El Salvador</strong>
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                {/* Banco Agrícola */}
+                <div className="p-3 rounded-2xl bg-slate-50/80 border border-slate-200/70 flex flex-col justify-between gap-2 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.9),inset_-1px_-1px_2px_rgba(0,0,0,0.03)]">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase text-indigo-700">Banco Agrícola</span>
+                      <span className="text-[9px] font-bold text-slate-400 bg-white px-1.5 py-0.5 rounded">Ahorro</span>
+                    </div>
+                    <p className="font-mono font-black text-slate-900 text-xs mt-1 select-all">
+                      300-478921-0
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleCopyAccount('300-478921-0', 'agricola')}
+                    className="clay-btn clay-btn-light w-full py-1 text-[11px] font-bold rounded-xl active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    {copiedBank === 'agricola' ? (
+                      <>
+                        <Check className="w-3 h-3 text-emerald-600" />
+                        <span className="text-emerald-700">¡Copiado!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3 text-slate-400" />
+                        <span>Copiar cuenta</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* BAC Credomatic */}
+                <div className="p-3 rounded-2xl bg-slate-50/80 border border-slate-200/70 flex flex-col justify-between gap-2 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.9),inset_-1px_-1px_2px_rgba(0,0,0,0.03)]">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase text-rose-600">BAC Credomatic</span>
+                      <span className="text-[9px] font-bold text-slate-400 bg-white px-1.5 py-0.5 rounded">Ahorro</span>
+                    </div>
+                    <p className="font-mono font-black text-slate-900 text-xs mt-1 select-all">
+                      201-839210
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleCopyAccount('201-839210', 'bac')}
+                    className="clay-btn clay-btn-light w-full py-1 text-[11px] font-bold rounded-xl active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    {copiedBank === 'bac' ? (
+                      <>
+                        <Check className="w-3 h-3 text-emerald-600" />
+                        <span className="text-emerald-700">¡Copiado!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3 text-slate-400" />
+                        <span>Copiar cuenta</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Banco Cuscatlán */}
+                <div className="p-3 rounded-2xl bg-slate-50/80 border border-slate-200/70 flex flex-col justify-between gap-2 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.9),inset_-1px_-1px_2px_rgba(0,0,0,0.03)]">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase text-amber-700">Banco Cuscatlán</span>
+                      <span className="text-[9px] font-bold text-slate-400 bg-white px-1.5 py-0.5 rounded">Corriente</span>
+                    </div>
+                    <p className="font-mono font-black text-slate-900 text-xs mt-1 select-all">
+                      024-109283-7
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleCopyAccount('024-109283-7', 'cuscatlan')}
+                    className="clay-btn clay-btn-light w-full py-1 text-[11px] font-bold rounded-xl active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    {copiedBank === 'cuscatlan' ? (
+                      <>
+                        <Check className="w-3 h-3 text-emerald-600" />
+                        <span className="text-emerald-700">¡Copiado!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3 text-slate-400" />
+                        <span>Copiar cuenta</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Resumen Compacto */}
+          <div className="pt-3 border-t border-slate-100 text-xs space-y-1.5 text-left">
+            <div className="flex justify-between text-slate-600">
+              <span>Entrega:</span>
+              <span className="font-bold text-slate-900 truncate max-w-xs">{completedOrder.cliente.direccion}</span>
+            </div>
+            <div className="flex justify-between text-slate-600">
+              <span>Forma de pago:</span>
+              <span className="font-bold text-slate-900">
+                {isTransfer ? 'Transferencia Bancaria' : 'Tarjeta de Crédito / Débito'}
+              </span>
+            </div>
+            <div className="flex justify-between text-slate-900 font-extrabold pt-1 border-t border-slate-100">
+              <span>Total:</span>
+              <span className="text-indigo-700 font-mono font-black text-sm">${completedOrder.total.toFixed(2)}</span>
+            </div>
           </div>
 
         </div>
+
+        {/* Botón inferior Volver a la Tienda */}
+        <div className="text-center pt-1">
+          <Link
+            href="/"
+            className="clay-btn clay-btn-light px-5 py-2 text-xs font-bold rounded-xl active:scale-95 transition-all inline-flex items-center gap-2 cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Volver a la Tienda</span>
+          </Link>
+        </div>
+
       </div>
     );
   }
