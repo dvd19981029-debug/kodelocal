@@ -17,7 +17,9 @@ import {
   AlertCircle,
   Store,
   AlertTriangle,
-  Droplets
+  Droplets,
+  ShieldCheck,
+  Lock
 } from 'lucide-react';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
@@ -345,51 +347,101 @@ export default function CheckoutPage() {
 
       {/* Banner de Estado de Autenticación / Google Login */}
       {isLoggedIn && customer ? (
-        <div className="clay-card p-4 bg-emerald-50/80 border border-emerald-200/80 flex items-center justify-between gap-3 shadow-2xs">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
-              ✓
+        <div className="clay-card p-4 sm:p-5 bg-emerald-50/80 border border-emerald-200/80 shadow-2xs space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                ✓
+              </div>
+              <div>
+                <p className="text-xs font-black text-slate-800">
+                  Sesión iniciada como <span className="text-emerald-700">{customer.name}</span> ({customer.email})
+                </p>
+                <p className="text-[11px] text-emerald-700 font-medium">
+                  Tus datos de entrega guardados han sido autocompletados automáticamente.
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs font-black text-slate-800">
-                Sesión iniciada como <span className="text-emerald-700">{customer.name}</span> ({customer.email})
-              </p>
-              <p className="text-[11px] text-emerald-700 font-medium">
-                Tus datos de entrega guardados han sido autocompletados automáticamente.
-              </p>
+            <span className="clay-badge bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2.5 py-1 rounded-lg shrink-0 hidden sm:inline">
+              {customer.authProvider === 'google' ? 'Conectado con Google' : 'Cliente Registrado'}
+            </span>
+          </div>
+
+          {/* Símbolos de Visa, Mastercard y Pago Seguro */}
+          <div className="pt-2.5 border-t border-emerald-200/60 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-1.5 text-emerald-900 font-bold text-[11px]">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Pago 100% Seguro y Encriptado (SSL)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10.5px] font-semibold text-slate-500">Tarjetas aceptadas:</span>
+              <div className="h-6 px-2 bg-white rounded-md border border-slate-200/80 flex items-center justify-center shadow-2xs" title="Visa">
+                <svg className="h-3.5 w-auto" viewBox="0 0 48 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M19.468 1.058L12.753 15.01H8.35L5.092 3.824C4.894 3.064 4.717 2.784 4.12 2.455C3.161 1.935 1.547 1.455 0.17 1.156L0.27 0.706H7.135C8.015 0.706 8.794 1.286 8.983 2.296L10.672 11.264L14.888 0.706H19.468V1.058ZM36.59 10.364C36.608 6.425 31.109 6.205 31.144 4.435C31.162 3.895 31.684 3.326 32.834 3.175C33.404 3.106 34.981 3.045 36.635 3.805L37.311 0.696C36.388 0.355 35.203 0.036 33.722 0.036C29.624 0.036 26.745 2.205 26.727 5.305C26.692 7.604 28.775 8.894 30.347 9.664C31.963 10.454 32.507 10.965 32.498 11.664C32.481 12.734 31.214 13.204 30.046 13.224C27.947 13.254 26.727 12.674 25.753 12.214L25.048 15.484C26.057 15.944 27.877 16.334 29.747 16.354C34.099 16.354 36.572 14.204 36.59 10.364ZM47.603 15.01H51.451L48.077 0.706H44.717C43.957 0.706 43.327 1.146 43.057 1.786L36.791 15.01H40.978L41.811 12.71H46.918L47.603 15.01ZM42.977 9.535L45.109 3.734L46.338 9.535H42.977ZM25.789 0.706L22.464 15.01H18.528L21.853 0.706H25.789Z" fill="#1434CB"/>
+                </svg>
+              </div>
+              <div className="h-6 px-2 bg-white rounded-md border border-slate-200/80 flex items-center justify-center shadow-2xs" title="Mastercard">
+                <svg className="h-4 w-auto" viewBox="0 0 36 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="11" cy="11" r="10" fill="#EB001B"/>
+                  <circle cx="25" cy="11" r="10" fill="#F79E1B"/>
+                  <path d="M18 4.2A9.95 9.95 0 0 0 14.4 11c0 2.76 1.12 5.26 2.93 7.07A9.95 9.95 0 0 0 21.6 11c0-2.76-1.12-5.26-2.93-7.07C18.45 4.02 18.23 4.1 18 4.2Z" fill="#FF5F00"/>
+                </svg>
+              </div>
             </div>
           </div>
-          <span className="clay-badge bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2.5 py-1 rounded-lg shrink-0 hidden sm:inline">
-            {customer.authProvider === 'google' ? 'Conectado con Google' : 'Cliente Registrado'}
-          </span>
         </div>
       ) : (
-        <div className="clay-card p-4 bg-gradient-to-r from-indigo-50/90 via-purple-50/90 to-pink-50/70 border border-indigo-100/80 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-white text-slate-700 flex items-center justify-center shadow-xs border border-slate-100 shrink-0">
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-              </svg>
+        <div className="clay-card p-4 sm:p-5 bg-gradient-to-r from-indigo-50/90 via-purple-50/90 to-pink-50/70 border border-indigo-100/80 shadow-2xs space-y-3.5">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-white text-slate-700 flex items-center justify-center shadow-xs border border-slate-100 shrink-0">
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+              </div>
+              <div>
+                <p className="text-xs font-black text-slate-900">
+                  ¿Quieres comprar en 1 clic sin llenar formularios?
+                </p>
+                <p className="text-[11px] text-slate-500 font-medium">
+                  Inicia sesión con Google o crea tu cuenta para guardar tus direcciones.
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs font-black text-slate-900">
-                ¿Quieres comprar en 1 clic sin llenar formularios?
-              </p>
-              <p className="text-[11px] text-slate-500 font-medium">
-                Inicia sesión con Google o crea tu cuenta para guardar tus direcciones.
-              </p>
+            <button
+              type="button"
+              onClick={() => openAuthModal('login')}
+              className="clay-btn clay-btn-primary px-4 py-2 text-xs font-black rounded-xl whitespace-nowrap active:scale-95 transition-transform cursor-pointer"
+            >
+              Continuar con Google / Correo
+            </button>
+          </div>
+
+          {/* Símbolos de Visa, Mastercard y Pago Seguro */}
+          <div className="pt-2.5 border-t border-indigo-100/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-1.5 text-indigo-950 font-bold text-[11px]">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Pago 100% Seguro y Encriptado (SSL)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10.5px] font-semibold text-slate-500">Tarjetas aceptadas:</span>
+              <div className="h-6 px-2 bg-white rounded-md border border-slate-200/80 flex items-center justify-center shadow-2xs" title="Visa">
+                <svg className="h-3.5 w-auto" viewBox="0 0 48 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M19.468 1.058L12.753 15.01H8.35L5.092 3.824C4.894 3.064 4.717 2.784 4.12 2.455C3.161 1.935 1.547 1.455 0.17 1.156L0.27 0.706H7.135C8.015 0.706 8.794 1.286 8.983 2.296L10.672 11.264L14.888 0.706H19.468V1.058ZM36.59 10.364C36.608 6.425 31.109 6.205 31.144 4.435C31.162 3.895 31.684 3.326 32.834 3.175C33.404 3.106 34.981 3.045 36.635 3.805L37.311 0.696C36.388 0.355 35.203 0.036 33.722 0.036C29.624 0.036 26.745 2.205 26.727 5.305C26.692 7.604 28.775 8.894 30.347 9.664C31.963 10.454 32.507 10.965 32.498 11.664C32.481 12.734 31.214 13.204 30.046 13.224C27.947 13.254 26.727 12.674 25.753 12.214L25.048 15.484C26.057 15.944 27.877 16.334 29.747 16.354C34.099 16.354 36.572 14.204 36.59 10.364ZM47.603 15.01H51.451L48.077 0.706H44.717C43.957 0.706 43.327 1.146 43.057 1.786L36.791 15.01H40.978L41.811 12.71H46.918L47.603 15.01ZM42.977 9.535L45.109 3.734L46.338 9.535H42.977ZM25.789 0.706L22.464 15.01H18.528L21.853 0.706H25.789Z" fill="#1434CB"/>
+                </svg>
+              </div>
+              <div className="h-6 px-2 bg-white rounded-md border border-slate-200/80 flex items-center justify-center shadow-2xs" title="Mastercard">
+                <svg className="h-4 w-auto" viewBox="0 0 36 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="11" cy="11" r="10" fill="#EB001B"/>
+                  <circle cx="25" cy="11" r="10" fill="#F79E1B"/>
+                  <path d="M18 4.2A9.95 9.95 0 0 0 14.4 11c0 2.76 1.12 5.26 2.93 7.07A9.95 9.95 0 0 0 21.6 11c0-2.76-1.12-5.26-2.93-7.07C18.45 4.02 18.23 4.1 18 4.2Z" fill="#FF5F00"/>
+                </svg>
+              </div>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => openAuthModal('login')}
-            className="clay-btn clay-btn-primary px-4 py-2 text-xs font-black rounded-xl whitespace-nowrap active:scale-95 transition-transform cursor-pointer"
-          >
-            Continuar con Google / Correo
-          </button>
         </div>
       )}
 
