@@ -432,64 +432,106 @@ export default function CheckoutPage() {
                 </span>
               </div>
 
-              {/* Selector de Método de Entrega */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-                <label className={`clay-card p-3 flex flex-col justify-between gap-2 cursor-pointer transition-all ${
-                  metodoEntrega === 'ENVIO' ? 'border-2 border-indigo-500 bg-indigo-50/60 shadow-xs' : 'hover:bg-slate-50'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Truck className="w-4 h-4 text-indigo-600" />
-                      <span className="font-black text-slate-800">Envío a Domicilio</span>
+              {/* Selector de Método de Entrega Claymórfico */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                {/* Botón Envío a Domicilio */}
+                <button
+                  type="button"
+                  onClick={() => setMetodoEntrega('ENVIO')}
+                  className={`relative p-3.5 sm:p-4 rounded-2xl text-left flex flex-col justify-between gap-2.5 cursor-pointer select-none transition-all duration-300 ease-out active:scale-[0.97] ${
+                    metodoEntrega === 'ENVIO'
+                      ? 'bg-gradient-to-br from-indigo-50/90 via-white to-purple-50/70 border-2 border-indigo-500 shadow-[5px_7px_18px_rgba(99,102,241,0.25),-4px_-4px_12px_rgba(255,255,255,0.95),inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),inset_-2px_-2px_5px_rgba(99,102,241,0.15)] scale-[1.01]'
+                      : 'bg-slate-50/90 border border-white/80 shadow-[4px_6px_14px_rgba(164,177,198,0.25),-4px_-4px_10px_rgba(255,255,255,0.95),inset_1px_1px_2px_rgba(255,255,255,0.9)] hover:bg-white hover:border-slate-200/80 hover:shadow-[6px_8px_18px_rgba(164,177,198,0.32),-5px_-5px_12px_rgba(255,255,255,1)] hover:-translate-y-0.5'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                        metodoEntrega === 'ENVIO'
+                          ? 'bg-indigo-600 text-white shadow-[2px_3px_8px_rgba(99,102,241,0.45),inset_1px_1px_2px_rgba(255,255,255,0.4)] scale-110'
+                          : 'bg-white text-indigo-600 shadow-[2px_3px_6px_rgba(164,177,198,0.3),inset_1px_1px_2px_rgba(255,255,255,0.9)]'
+                      }`}>
+                        <Truck className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="font-black text-slate-900 text-xs block">Envío a Domicilio</span>
+                        <span className="text-[10px] font-bold text-indigo-600">Cobertura Nacional C807</span>
+                      </div>
                     </div>
-                    <input
-                      type="radio"
-                      name="metodoEntrega"
-                      checked={metodoEntrega === 'ENVIO'}
-                      onChange={() => setMetodoEntrega('ENVIO')}
-                      className="text-indigo-600"
-                    />
-                  </div>
-                  <p className="text-[11px] text-slate-500 font-medium">
-                    Entregamos a <strong className="text-indigo-900 font-bold">absolutamente todas partes de El Salvador</strong> (C807).
-                  </p>
-                </label>
 
-                <label className={`clay-card p-3 flex flex-col justify-between gap-2 cursor-pointer transition-all ${
-                  metodoEntrega === 'RETIRO' ? 'border-2 border-indigo-500 bg-indigo-50/60 shadow-xs' : 'hover:bg-slate-50'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Store className="w-4 h-4 text-emerald-600" />
-                      <span className="font-black text-slate-800">Retiro en Sucursal</span>
+                    {/* Indicador de Selección Claymórfico */}
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300 ${
+                      metodoEntrega === 'ENVIO'
+                        ? 'bg-indigo-600 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.5),inset_-1px_-1px_2px_rgba(0,0,0,0.2)]'
+                        : 'border-2 border-slate-300 bg-white shadow-inner'
+                    }`}>
+                      {metodoEntrega === 'ENVIO' && (
+                        <div className="w-2 h-2 rounded-full bg-white animate-in zoom-in-50 duration-200" />
+                      )}
                     </div>
-                    <input
-                      type="radio"
-                      name="metodoEntrega"
-                      checked={metodoEntrega === 'RETIRO'}
-                      onChange={() => setMetodoEntrega('RETIRO')}
-                      className="text-indigo-600"
-                    />
                   </div>
-                  <p className="text-[11px] text-slate-500 font-medium">
-                    Pasa a retirar gratis en nuestro local en San Salvador.
+                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                    Entregamos en <strong className="text-slate-800 font-bold">absolutamente todas partes de El Salvador</strong> (C807).
                   </p>
-                </label>
+                </button>
+
+                {/* Botón Retiro en Sucursal */}
+                <button
+                  type="button"
+                  onClick={() => setMetodoEntrega('RETIRO')}
+                  className={`relative p-3.5 sm:p-4 rounded-2xl text-left flex flex-col justify-between gap-2.5 cursor-pointer select-none transition-all duration-300 ease-out active:scale-[0.97] ${
+                    metodoEntrega === 'RETIRO'
+                      ? 'bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/70 border-2 border-emerald-500 shadow-[5px_7px_18px_rgba(16,185,129,0.25),-4px_-4px_12px_rgba(255,255,255,0.95),inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),inset_-2px_-2px_5px_rgba(16,185,129,0.15)] scale-[1.01]'
+                      : 'bg-slate-50/90 border border-white/80 shadow-[4px_6px_14px_rgba(164,177,198,0.25),-4px_-4px_10px_rgba(255,255,255,0.95),inset_1px_1px_2px_rgba(255,255,255,0.9)] hover:bg-white hover:border-slate-200/80 hover:shadow-[6px_8px_18px_rgba(164,177,198,0.32),-5px_-5px_12px_rgba(255,255,255,1)] hover:-translate-y-0.5'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                        metodoEntrega === 'RETIRO'
+                          ? 'bg-emerald-600 text-white shadow-[2px_3px_8px_rgba(16,185,129,0.45),inset_1px_1px_2px_rgba(255,255,255,0.4)] scale-110'
+                          : 'bg-white text-emerald-600 shadow-[2px_3px_6px_rgba(164,177,198,0.3),inset_1px_1px_2px_rgba(255,255,255,0.9)]'
+                      }`}>
+                        <Store className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="font-black text-slate-900 text-xs block">Retiro en Sucursal</span>
+                        <span className="text-[10px] font-bold text-emerald-600">Local San Salvador • ¡Gratis!</span>
+                      </div>
+                    </div>
+
+                    {/* Indicador de Selección Claymórfico */}
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300 ${
+                      metodoEntrega === 'RETIRO'
+                        ? 'bg-emerald-600 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.5),inset_-1px_-1px_2px_rgba(0,0,0,0.2)]'
+                        : 'border-2 border-slate-300 bg-white shadow-inner'
+                    }`}>
+                      {metodoEntrega === 'RETIRO' && (
+                        <div className="w-2 h-2 rounded-full bg-white animate-in zoom-in-50 duration-200" />
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                    Pasa a retirar gratis en nuestro local en <strong className="text-slate-800 font-bold">San Salvador</strong>.
+                  </p>
+                </button>
               </div>
 
-              {/* Cuadro de Tiempos de Envío y Despacho */}
-              <div className="p-3 rounded-2xl bg-indigo-50/70 border border-indigo-100 text-xs text-indigo-950 space-y-1.5 leading-relaxed">
-                <div className="flex items-center gap-1.5 font-black text-[11.5px] text-indigo-900">
-                  <Truck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                  <span>Tiempos de Despacho y Entrega a Domicilio</span>
+              {/* Cuadro de Tiempos de Envío y Despacho (únicamente si seleccionó Envío a Domicilio) */}
+              {metodoEntrega === 'ENVIO' && (
+                <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-100 text-xs text-indigo-950 space-y-1.5 leading-relaxed animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="flex items-center gap-1.5 font-black text-[11.5px] text-indigo-900">
+                    <Truck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                    <span>Tiempos de Despacho y Entrega a Domicilio</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600">
+                    • Envíos y cobertura de <strong>24 a 48 horas para todo el país</strong> (los 14 departamentos con C807, normalmente en <strong>24 horas</strong>). Los pedidos realizados en horario laboral se despachan de inmediato.
+                  </p>
+                  <p className="text-[11px] text-slate-600">
+                    • <strong>Domingos no laborables</strong> (paquetera y tienda): pedidos enviados el sábado llegan a partir del lunes; pedidos realizados en domingo se despachan el lunes y llegan a partir del martes.
+                  </p>
                 </div>
-                <p className="text-[11px] text-slate-600">
-                  • Envíos y cobertura de <strong>24 a 48 horas para todo el país</strong> (los 14 departamentos con C807, normalmente en <strong>24 horas</strong>). Los pedidos realizados en horario laboral se despachan de inmediato.
-                </p>
-                <p className="text-[11px] text-slate-600">
-                  • <strong>Domingos no laborables</strong> (paquetera y tienda): pedidos enviados el sábado llegan a partir del lunes; pedidos realizados en domingo se despachan el lunes y llegan a partir del martes.
-                </p>
-              </div>
+              )}
 
               {/* Formulario de contacto y destino */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
