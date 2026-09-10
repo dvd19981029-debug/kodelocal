@@ -174,34 +174,124 @@ export async function POST(request: Request) {
     }
 
     const newOrder = await prisma.$transaction(async (tx) => {
-      // 1. Validar que no se venda más de lo que hay en inventario
+      // 1. Validar existencias y verificar precios legítimos directamente en la base de datos
+      const verifiedItems: {
+        productId: string;
+        productName: string;
+        presentation: string;
+        unitPrice: number;
+        quantity: number;
+        total: number;
+      }[] = [];
+
+      let verifiedSubtotal = 0;
+
       for (const it of (items || [])) {
-        if (!it.productId || it.productId.startsWith('kit-')) continue;
+        const qty = Math.max(1, parseInt(it.quantity || 1, 10));
+        const presentationStr = String(it.presentation || it.presentationName || '1 Onza').trim();
+        const presLower = presentationStr.toLowerCase();
+
+        // Si es un kit preparado de "Arma tu perfume"
+        if (it.productId && it.productId.startsWith('kit-')) {
+          const isPlus = presLower.includes('plus') || presLower.includes('1.5');
+          const kitUnitPrice = isPlus ? 18.00 : 15.00;
+          const lineTotal = Number((kitUnitPrice * qty).toFixed(2));
+          verifiedSubtotal += lineTotal;
+
+          const parts = it.productId.split('-');
+          const essenceId = parts[1];
+
+          let targetProductId = '';
+          if (essenceId) {
+            const essenceProd = await tx.product.findUnique({
+              where: { id: essenceId },
+            });
+            if (essenceProd) {
+              targetProductId = essenceProd.id;
+              const stockNeeded = isPlus ? Math.ceil(qty * 1.5) : qty;
+              await tx.product.update({
+                where: { id: essenceProd.id },
+                data: {
+                  stock: Math.max(0, essenceProd.stock - stockNeeded),
+                },
+              });
+            }
+          }
+
+          if (!targetProductId) {
+            const fallbackProd = await tx.product.findFirst();
+            if (fallbackProd) targetProductId = fallbackProd.id;
+          }
+
+          if (targetProductId) {
+            verifiedItems.push({
+              productId: targetProductId,
+              productName: it.productName || it.name || (isPlus ? 'Perfume Preparado PLUS (100ml)' : 'Perfume Preparado (100ml)'),
+              presentation: presentationStr,
+              unitPrice: kitUnitPrice,
+              quantity: qty,
+              total: lineTotal,
+            });
+          }
+          continue;
+        }
+
+        if (!it.productId) continue;
 
         const prod = await tx.product.findUnique({
           where: { id: it.productId },
+          include: { category: true },
         });
 
-        if (prod) {
-          const qtyRequested = Number(it.quantity || 1);
-          const pres = (it.presentation || '').toLowerCase();
-          const stockToDeduct = pres.includes('media') ? Math.ceil(qtyRequested * 0.5) : qtyRequested;
-
-          if (prod.stock < stockToDeduct) {
-            throw new Error(`Inventario insuficiente para ${prod.officialName || prod.name}. Disponibles: ${prod.stock}`);
-          }
-
-          // Descontar inventario en la base de datos
-          await tx.product.update({
-            where: { id: it.productId },
-            data: {
-              stock: Math.max(0, prod.stock - stockToDeduct),
-            },
-          });
+        if (!prod) {
+          throw new Error(`El producto solicitado ya no se encuentra disponible.`);
         }
+
+        // Determinar precio unitario legítimo según categoría y presentación
+        let legitimateUnitPrice = Number(prod.price || 0);
+        const catName = prod.category?.name || '';
+        if (catName === 'Esencias para Perfume' || !catName) {
+          if (presLower.includes('media') || presLower.includes('½') || presLower.includes('half')) {
+            legitimateUnitPrice = Number((legitimateUnitPrice / 2).toFixed(2));
+          }
+        }
+
+        const lineTotal = Number((legitimateUnitPrice * qty).toFixed(2));
+        verifiedSubtotal += lineTotal;
+
+        // Descontar existencias en la base de datos
+        const stockToDeduct = (presLower.includes('media') || presLower.includes('½')) ? Math.ceil(qty * 0.5) : qty;
+        if (prod.stock < stockToDeduct) {
+          throw new Error(`Inventario insuficiente para ${prod.officialName || prod.name}. Disponibles: ${prod.stock}`);
+        }
+
+        await tx.product.update({
+          where: { id: it.productId },
+          data: {
+            stock: Math.max(0, prod.stock - stockToDeduct),
+          },
+        });
+
+        verifiedItems.push({
+          productId: prod.id,
+          productName: prod.officialName?.trim() || prod.name,
+          presentation: presentationStr,
+          unitPrice: legitimateUnitPrice,
+          quantity: qty,
+          total: lineTotal,
+        });
       }
 
-      // 2. Crear la orden de ecommerce
+      verifiedSubtotal = Number(verifiedSubtotal.toFixed(2));
+
+      // Determinar costo de envío legítimo en el servidor
+      const isRetiro = (deliveryReference && deliveryReference.includes('Retiro')) ||
+                       (shippingAddress && shippingAddress.includes('Retiro')) ||
+                       (notes && notes.includes('Retiro'));
+      const verifiedShippingCost = isRetiro ? 0.00 : 3.50;
+      const verifiedTotal = Number((verifiedSubtotal + verifiedShippingCost).toFixed(2));
+
+      // 2. Crear la orden oficial de ecommerce con los precios y totales verificados
       return await tx.ecommerceOrder.create({
         data: {
           orderNumber: orderNumber || `WEB-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -213,21 +303,21 @@ export async function POST(request: Request) {
           municipality: municipality || 'San Salvador',
           shippingAddress: shippingAddress || '',
           deliveryReference: deliveryReference || null,
-          subtotal: Number(subtotal || 0),
-          shippingCost: Number(shippingCost || 3.50),
-          total: Number(total || 0),
+          subtotal: verifiedSubtotal,
+          shippingCost: verifiedShippingCost,
+          total: verifiedTotal,
           paymentMethod: paymentMethod || 'CASH',
           paymentStatus: 'PENDING',
           orderStatus: 'NUEVO',
           notes: notes || null,
           items: {
-            create: (items || []).map((it: any) => ({
-              productId: it.productId && !it.productId.startsWith('kit-') ? it.productId : null,
-              productName: it.productName || it.name || 'Perfume',
-              presentation: it.presentation || it.presentationName || '1 Onza',
-              unitPrice: Number(it.unitPrice || it.price || 0),
-              quantity: Number(it.quantity || 1),
-              total: Number(it.total || 0),
+            create: verifiedItems.map((it) => ({
+              productId: it.productId,
+              productName: it.productName,
+              presentation: it.presentation,
+              unitPrice: it.unitPrice,
+              quantity: it.quantity,
+              total: it.total,
             })),
           },
         },

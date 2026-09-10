@@ -122,7 +122,7 @@ export default function EcommerceHomePage() {
     let isMounted = true;
     const loadCatalog = async () => {
       try {
-        const res = await fetch('/api/products');
+        const res = await fetch('/api/products', { cache: 'no-store' });
         const data = await res.json();
         if (isMounted && data.success && Array.isArray(data.products) && data.products.length > 0) {
           setProducts(data.products);

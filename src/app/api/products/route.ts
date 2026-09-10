@@ -4,6 +4,12 @@ import { INITIAL_PRODUCTS } from '@/lib/store';
 
 export const dynamic = 'force-dynamic';
 
+const NO_CACHE_HEADERS = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+  'Pragma': 'no-cache',
+  'Expires': '0',
+};
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -36,7 +42,7 @@ export async function GET(request: Request) {
           inStock: INITIAL_PRODUCTS.filter(p => p.stock > 0).length,
           outOfStock: INITIAL_PRODUCTS.filter(p => p.stock <= 0).length,
         }
-      });
+      }, { headers: NO_CACHE_HEADERS });
     }
 
     const formatted = dbProducts.map((p) => ({
@@ -76,7 +82,7 @@ export async function GET(request: Request) {
         inStock,
         outOfStock,
       }
-    });
+    }, { headers: NO_CACHE_HEADERS });
   } catch (error: any) {
     console.error('Error fetching products from DB:', error);
     // Fallback seguro en caso de error de conexión transitoria
@@ -89,7 +95,7 @@ export async function GET(request: Request) {
         inStock: INITIAL_PRODUCTS.filter(p => p.stock > 0).length,
         outOfStock: INITIAL_PRODUCTS.filter(p => p.stock <= 0).length,
       }
-    });
+    }, { headers: NO_CACHE_HEADERS });
   }
 }
 

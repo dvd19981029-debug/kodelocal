@@ -137,14 +137,6 @@ export default function CheckoutPage() {
         }))
       };
 
-      // 1. Guardar en localStorage para disponibilidad inmediata en el POS y Bodega
-      try {
-        const existingSales: SaleRecord[] = JSON.parse(localStorage.getItem('kodelocal_sales') || '[]');
-        localStorage.setItem('kodelocal_sales', JSON.stringify([newOrder, ...existingSales]));
-        window.dispatchEvent(new Event('storage'));
-      } catch (err) {
-        console.error('Error guardando comanda en storage:', err);
-      }
 
       // 2. Intentar registrar cliente en la lista
       try {

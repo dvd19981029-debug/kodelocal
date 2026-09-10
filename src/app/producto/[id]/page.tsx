@@ -47,7 +47,7 @@ export default function ProductDetailPage() {
     let isMounted = true;
     const loadCatalog = async () => {
       try {
-        const res = await fetch('/api/products');
+        const res = await fetch('/api/products', { cache: 'no-store' });
         const data = await res.json();
         if (isMounted && data.success && Array.isArray(data.products) && data.products.length > 0) {
           setProducts(data.products);
@@ -68,15 +68,28 @@ export default function ProductDetailPage() {
     };
   }, []);
 
-  // 2. Encontrar producto por ID o por SKU (búsqueda inmediata en catálogo local y estado)
+  // 2. Encontrar producto por ID, SKU o Barcode (búsqueda robusta en catálogo)
   const product = useMemo(() => {
     if (!productId) return null;
-    const decoded = decodeURIComponent(productId).toLowerCase().trim();
-    return (
-      products.find(p => p.id.toLowerCase() === decoded || String(p.sku || '').toLowerCase() === decoded) ||
-      INITIAL_PRODUCTS.find(p => p.id.toLowerCase() === decoded || String(p.sku || '').toLowerCase() === decoded) ||
-      null
-    );
+    const raw = String(productId).trim();
+    const decoded = decodeURIComponent(raw).toLowerCase().trim();
+    const cleanDecoded = decoded.replace(/^prod-/, '').replace(/^esencia-/, '');
+
+    const matchProduct = (p: ProductItem) => {
+      const pId = p.id.toLowerCase().trim();
+      const pSku = String(p.sku || '').toLowerCase().trim();
+      const pBarcode = String(p.barcode || '').toLowerCase().trim();
+      const pCleanId = pId.replace(/^prod-/, '').replace(/^esencia-/, '');
+
+      return (
+        pId === decoded ||
+        pSku === decoded ||
+        pBarcode === decoded ||
+        (cleanDecoded !== '' && (pCleanId === cleanDecoded || pSku === cleanDecoded))
+      );
+    };
+
+    return products.find(matchProduct) || INITIAL_PRODUCTS.find(matchProduct) || null;
   }, [products, productId]);
 
   const isEssence = product?.category === 'Esencias para Perfume';
