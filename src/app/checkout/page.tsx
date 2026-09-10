@@ -19,7 +19,10 @@ import {
   AlertTriangle,
   Droplets,
   ShieldCheck,
-  Lock
+  Lock,
+  Copy,
+  Check,
+  Clock
 } from 'lucide-react';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
@@ -45,6 +48,14 @@ export default function CheckoutPage() {
   const [municipio, setMunicipio] = useState('San Salvador');
   const [direccion, setDireccion] = useState(customer?.address || '');
   const [referencia, setReferencia] = useState('');
+
+  // Estado para copiar cuenta bancaria
+  const [copiedBank, setCopiedBank] = useState<string | null>(null);
+  const handleCopyAccount = (text: string, bankKey: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedBank(bankKey);
+    setTimeout(() => setCopiedBank(null), 2500);
+  };
 
   // Actualizar si el cliente inicia sesión mientras está en la página
   React.useEffect(() => {
@@ -215,26 +226,44 @@ export default function CheckoutPage() {
     }
   };
 
-  // Pantalla de Pedido Confirmado con Éxito
+  // Pantalla de Pedido Confirmado / Pendiente de Transferencia
   if (completedOrder) {
-    const whatsappMessage = encodeURIComponent(
-      `👋 ¡Hola Aromaniak SV!\n\nAcabo de realizar mi pedido en línea:\n*Orden: #${completedOrder.orderNumber}*\n\n` +
-      `*Cliente:* ${completedOrder.cliente.nombre}\n` +
-      `*Teléfono:* ${completedOrder.cliente.telefono}\n` +
-      `*Modalidad:* ${metodoEntrega === 'RETIRO' ? 'Retiro en Sucursal (San Salvador)' : 'Envío a Domicilio'}\n` +
-      `*Destino:* ${completedOrder.cliente.direccion}\n\n` +
-      `*Productos:*\n` +
+    const isTransfer = completedOrder.paymentMethod === 'TRANSFER';
+
+    const whatsappTransferMessage = encodeURIComponent(
+      `👋 ¡Hola Aromaniak!\n\n` +
+      `Acabo de realizar mi pedido en línea y pagaré por *Transferencia Bancaria*:\n\n` +
+      `📦 *Orden:* #${completedOrder.orderNumber}\n` +
+      `👤 *Cliente:* ${completedOrder.cliente.nombre}\n` +
+      `📱 *Teléfono:* ${completedOrder.cliente.telefono}\n` +
+      `📍 *Modalidad:* ${metodoEntrega === 'RETIRO' ? 'Retiro en Sucursal (San Salvador)' : 'Envío a Domicilio'}\n` +
+      `🏠 *Destino:* ${completedOrder.cliente.direccion}\n\n` +
+      `🛍️ *Detalle del Pedido:*\n` +
       completedOrder.items.map(it => `• ${it.quantity}x ${it.name} - $${it.total.toFixed(2)}`).join('\n') +
-      `\n\n*Subtotal:* $${completedOrder.subtotal.toFixed(2)}\n` +
-      `*Envío:* $${completedOrder.shippingCost?.toFixed(2)}\n` +
-      `*Total a Pagar:* $${completedOrder.total.toFixed(2)}\n` +
-      `*Método de Pago:* ${completedOrder.paymentMethod === 'CARD' ? 'Tarjeta de Crédito / Débito' : 'Transferencia Bancaria'}\n\n` +
-      `Quedo atento a la confirmación de la entrega. ¡Muchas gracias!`
+      `\n\n` +
+      `*Subtotal:* $${completedOrder.subtotal.toFixed(2)}\n` +
+      `*Envío:* $${completedOrder.shippingCost?.toFixed(2) || '0.00'}\n` +
+      `*Total a Transferir:* $${completedOrder.total.toFixed(2)}\n\n` +
+      `📎 *Adjunto en este mensaje la captura de mi comprobante de transferencia bancaria para su validación y preparación de pedido.* ¡Muchas gracias!`
+    );
+
+    const whatsappCardMessage = encodeURIComponent(
+      `👋 ¡Hola Aromaniak!\n\n` +
+      `Acabo de realizar mi pedido en línea con *Tarjeta*:\n\n` +
+      `📦 *Orden:* #${completedOrder.orderNumber}\n` +
+      `👤 *Cliente:* ${completedOrder.cliente.nombre}\n` +
+      `📱 *Teléfono:* ${completedOrder.cliente.telefono}\n` +
+      `📍 *Modalidad:* ${metodoEntrega === 'RETIRO' ? 'Retiro en Sucursal (San Salvador)' : 'Envío a Domicilio'}\n` +
+      `🏠 *Destino:* ${completedOrder.cliente.direccion}\n\n` +
+      `🛍️ *Productos:*\n` +
+      completedOrder.items.map(it => `• ${it.quantity}x ${it.name} - $${it.total.toFixed(2)}`).join('\n') +
+      `\n\n*Total Pagado:* $${completedOrder.total.toFixed(2)}\n\n` +
+      `Quedo atento a la confirmación de entrega. ¡Muchas gracias!`
     );
 
     return (
-      <div className="max-w-2xl mx-auto py-8 sm:py-12 px-4">
-        <div className="clay-card p-6 sm:p-10 text-center space-y-6 bg-white/90">
+      <div className="max-w-2xl mx-auto py-8 sm:py-12 px-4 animate-in fade-in zoom-in-95 duration-300">
+        <div className="clay-card p-6 sm:p-10 text-center space-y-6 bg-white/95 shadow-[inset_2px_2px_6px_rgba(255,255,255,0.95),inset_-2px_-2px_6px_rgba(99,102,241,0.08),4px_10px_28px_rgba(0,0,0,0.08)]">
           
           <div className="flex justify-center mb-1">
             <Link href="/" className="inline-flex items-center justify-center cursor-pointer group">
@@ -246,55 +275,191 @@ export default function CheckoutPage() {
             </Link>
           </div>
 
-          <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
-            <CheckCircle2 className="w-10 h-10" />
-          </div>
+          {isTransfer ? (
+            <div className="w-16 h-16 rounded-3xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto shadow-[inset_2px_2px_4px_rgba(255,255,255,0.9),inset_-2px_-2px_4px_rgba(245,158,11,0.25),0_4px_12px_rgba(245,158,11,0.2)]">
+              <Clock className="w-9 h-9 animate-pulse" />
+            </div>
+          ) : (
+            <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto shadow-[inset_2px_2px_4px_rgba(255,255,255,0.9),inset_-2px_-2px_4px_rgba(16,185,129,0.25),0_4px_12px_rgba(16,185,129,0.2)]">
+              <CheckCircle2 className="w-9 h-9" />
+            </div>
+          )}
 
           <div className="space-y-2">
-            <span className="clay-badge text-xs font-mono font-black text-indigo-700 bg-indigo-50 px-3 py-1 rounded-lg">
-              Comanda #{completedOrder.orderNumber}
+            <span className={`clay-badge text-xs font-mono font-black px-3.5 py-1 rounded-lg ${
+              isTransfer 
+                ? 'text-amber-800 bg-amber-100/90 border border-amber-200' 
+                : 'text-emerald-800 bg-emerald-100/90 border border-emerald-200'
+            }`}>
+              {isTransfer ? 'Pedido Pendiente de Verificación' : 'Pedido Confirmado'} • #{completedOrder.orderNumber}
             </span>
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
-              ¡Pedido Recibido con Éxito!
+              {isTransfer ? '¡Pedido Pendiente!' : '¡Pedido Recibido con Éxito!'}
             </h2>
-            <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto font-medium">
-              Gracias por tu compra, <strong>{completedOrder.cliente.nombre}</strong>. Tu pedido ya ingresó a nuestra <strong>Bodega</strong> para ser preparado y empaquetado.
+            <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto font-medium leading-relaxed">
+              {isTransfer ? (
+                <>
+                  Gracias por tu compra, <strong>{completedOrder.cliente.nombre}</strong>. Su pedido será procesado una vez se haya verificado su transferencia bancaria a cualquiera de las siguientes cuentas oficiales:
+                </>
+              ) : (
+                <>
+                  Gracias por tu compra, <strong>{completedOrder.cliente.nombre}</strong>. Tu pedido ya ingresó a nuestra <strong>Bodega</strong> para ser preparado y despachado.
+                </>
+              )}
             </p>
           </div>
 
-          {/* Resumen del pedido */}
-          <div className="clay-card p-4 text-left space-y-2.5 text-xs bg-slate-50/70">
-            <div className="flex justify-between font-bold text-slate-700 border-b border-slate-200/70 pb-2">
-              <span>Entrega en:</span>
-              <span className="text-slate-900 text-right max-w-xs">{completedOrder.cliente.direccion}</span>
+          {/* Cuentas bancarias oficiales si es transferencia */}
+          {isTransfer && (
+            <div className="space-y-3 text-left">
+              <div className="clay-card p-4 sm:p-5 bg-gradient-to-br from-indigo-50/70 via-purple-50/50 to-white space-y-3.5 border border-indigo-100/80 shadow-[inset_2px_2px_4px_rgba(255,255,255,0.9),inset_-2px_-2px_4px_rgba(99,102,241,0.08)]">
+                <div className="flex items-center justify-between border-b border-indigo-100/80 pb-2">
+                  <div className="flex items-center gap-2">
+                    <Building className="w-4 h-4 text-indigo-700" />
+                    <span className="font-extrabold text-xs text-indigo-950">Cuentas Bancarias Oficiales</span>
+                  </div>
+                  <span className="text-[10.5px] font-bold text-slate-500">Titular: Aromaniak El Salvador</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {/* Banco Agrícola */}
+                  <div className="p-3 rounded-xl bg-white/90 border border-indigo-100/70 flex flex-col justify-between shadow-xs">
+                    <div>
+                      <span className="text-[10px] font-black uppercase text-indigo-700 tracking-wider">Banco Agrícola</span>
+                      <p className="text-[11px] text-slate-500 font-medium">Cuenta de Ahorros</p>
+                      <p className="font-mono font-bold text-slate-800 text-xs mt-1 select-all">300-478921-0</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyAccount('300-478921-0', 'agricola')}
+                      className="mt-2 text-[10.5px] font-bold py-1 px-2 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 flex items-center justify-center gap-1 active:scale-95 transition-all"
+                    >
+                      {copiedBank === 'agricola' ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-600" />
+                          <span className="text-emerald-700">¡Copiado!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          <span>Copiar cuenta</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* BAC Credomatic */}
+                  <div className="p-3 rounded-xl bg-white/90 border border-indigo-100/70 flex flex-col justify-between shadow-xs">
+                    <div>
+                      <span className="text-[10px] font-black uppercase text-rose-600 tracking-wider">BAC Credomatic</span>
+                      <p className="text-[11px] text-slate-500 font-medium">Cuenta de Ahorros</p>
+                      <p className="font-mono font-bold text-slate-800 text-xs mt-1 select-all">201-839210</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyAccount('201-839210', 'bac')}
+                      className="mt-2 text-[10.5px] font-bold py-1 px-2 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 flex items-center justify-center gap-1 active:scale-95 transition-all"
+                    >
+                      {copiedBank === 'bac' ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-600" />
+                          <span className="text-emerald-700">¡Copiado!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          <span>Copiar cuenta</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Banco Cuscatlán */}
+                  <div className="p-3 rounded-xl bg-white/90 border border-indigo-100/70 flex flex-col justify-between shadow-xs">
+                    <div>
+                      <span className="text-[10px] font-black uppercase text-amber-700 tracking-wider">Banco Cuscatlán</span>
+                      <p className="text-[11px] text-slate-500 font-medium">Cuenta Corriente</p>
+                      <p className="font-mono font-bold text-slate-800 text-xs mt-1 select-all">024-109283-7</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyAccount('024-109283-7', 'cuscatlan')}
+                      className="mt-2 text-[10.5px] font-bold py-1 px-2 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 flex items-center justify-center gap-1 active:scale-95 transition-all"
+                    >
+                      {copiedBank === 'cuscatlan' ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-600" />
+                          <span className="text-emerald-700">¡Copiado!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          <span>Copiar cuenta</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tarjeta de instrucciones claymórfica para WhatsApp */}
+              <div className="p-4 rounded-2xl bg-amber-50/90 border border-amber-200/90 text-xs text-amber-950 space-y-1.5 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.9),inset_-1px_-1px_2px_rgba(245,158,11,0.15)]">
+                <div className="flex items-center gap-2 font-black text-amber-900 text-[12px]">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>Instrucciones para validar tu pedido</span>
+                </div>
+                <p className="text-[11.5px] text-amber-950/90 font-medium leading-relaxed">
+                  Por favor envía la captura de tu <strong>comprobante de transferencia</strong> y tu número de orden (<strong>#{completedOrder.orderNumber}</strong>) a nuestro WhatsApp <strong>7833-9470</strong>. Una vez se verifique la transferencia su pedido estará listo y en camino.
+                </p>
+              </div>
             </div>
-            <div className="flex justify-between font-bold text-slate-700">
+          )}
+
+          {/* Resumen del pedido */}
+          <div className="clay-card p-4 text-left space-y-2.5 text-xs bg-slate-50/80 shadow-[inset_1px_1px_3px_rgba(255,255,255,0.9),inset_-1px_-1px_3px_rgba(0,0,0,0.04)]">
+            <div className="flex justify-between font-bold text-slate-700 border-b border-slate-200/70 pb-2">
+              <span>Modalidad y destino:</span>
+              <span className="text-slate-900 text-right max-w-xs truncate">{completedOrder.cliente.direccion}</span>
+            </div>
+            <div className="flex justify-between font-bold text-slate-700 border-b border-slate-200/70 pb-2">
               <span>Forma de pago:</span>
-              <span className="text-slate-900">
-                {completedOrder.paymentMethod === 'TRANSFER' ? 'Transferencia bancaria' : 'Chivo Wallet / Bitcoin'}
+              <span className="text-slate-900 font-extrabold">
+                {isTransfer ? 'Transferencia Bancaria' : 'Tarjeta de Crédito / Débito'}
               </span>
             </div>
-            <div className="flex justify-between font-extrabold text-sm text-slate-900 pt-2 border-t border-slate-200/70">
-              <span>Total a pagar:</span>
-              <span className="text-indigo-700 font-mono text-base">${completedOrder.total.toFixed(2)}</span>
+            <div className="flex justify-between font-extrabold text-sm text-slate-900 pt-1">
+              <span>Total a transferir / pagar:</span>
+              <span className="text-indigo-700 font-mono text-base font-black">${completedOrder.total.toFixed(2)}</span>
             </div>
           </div>
 
-          {/* Botón para abrir WhatsApp con la orden lista */}
+          {/* Botones de acción */}
           <div className="space-y-3 pt-2">
-            <a
-              href={`https://wa.me/50370000000?text=${whatsappMessage}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="clay-btn bg-emerald-600 hover:bg-emerald-700 text-white w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 !shadow-[3px_5px_15px_rgba(16,185,129,0.4)] transition-all"
-            >
-              <Send className="w-4 h-4" />
-              <span>Enviar Confirmación por WhatsApp</span>
-            </a>
+            {isTransfer ? (
+              <a
+                href={`https://wa.me/50378339470?text=${whatsappTransferMessage}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="clay-btn bg-emerald-600 hover:bg-emerald-700 text-white w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2.5 !shadow-[inset_2px_2px_4px_rgba(255,255,255,0.4),inset_-2px_-2px_4px_rgba(0,0,0,0.2),3px_5px_15px_rgba(16,185,129,0.45)] active:scale-[0.98] transition-all cursor-pointer"
+              >
+                <Send className="w-4 h-4" />
+                <span>ENVIAR COMPROBANTE POR WHATSAPP</span>
+              </a>
+            ) : (
+              <a
+                href={`https://wa.me/50378339470?text=${whatsappCardMessage}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="clay-btn bg-emerald-600 hover:bg-emerald-700 text-white w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 !shadow-[inset_2px_2px_4px_rgba(255,255,255,0.4),inset_-2px_-2px_4px_rgba(0,0,0,0.2),3px_5px_15px_rgba(16,185,129,0.4)] active:scale-[0.98] transition-all cursor-pointer"
+              >
+                <Send className="w-4 h-4" />
+                <span>Notificar por WhatsApp (7833-9470)</span>
+              </a>
+            )}
 
             <Link
               href="/"
-              className="clay-btn clay-btn-light w-full py-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-2"
+              className="clay-btn clay-btn-light w-full py-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Volver a la Tienda</span>
@@ -519,16 +684,11 @@ export default function CheckoutPage() {
 
               {/* Cuadro de Tiempos de Envío y Despacho (únicamente si seleccionó Envío a Domicilio) */}
               {metodoEntrega === 'ENVIO' && (
-                <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-100 text-xs text-indigo-950 space-y-1.5 leading-relaxed animate-in fade-in slide-in-from-top-2 duration-300">
-                  <div className="flex items-center gap-1.5 font-black text-[11.5px] text-indigo-900">
-                    <Truck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                    <span>Tiempos de Despacho y Entrega a Domicilio</span>
-                  </div>
-                  <p className="text-[11px] text-slate-600">
-                    • Envíos y cobertura de <strong>24 a 48 horas para todo el país</strong> (los 14 departamentos con C807, normalmente en <strong>24 horas</strong>). Los pedidos realizados en horario laboral se despachan de inmediato.
-                  </p>
-                  <p className="text-[11px] text-slate-600">
-                    • <strong>Domingos no laborables</strong> (paquetera y tienda): pedidos enviados el sábado llegan a partir del lunes; pedidos realizados en domingo se despachan el lunes y llegan a partir del martes.
+                <div className="py-2.5 px-3.5 rounded-xl bg-indigo-50/70 border border-indigo-100/80 text-xs text-slate-700 flex items-center gap-2.5 animate-in fade-in slide-in-from-top-2 duration-300 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.9),inset_-1px_-1px_2px_rgba(99,102,241,0.06)]">
+                  <Truck className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <p className="text-[11.5px] text-slate-600 leading-snug">
+                    <strong className="text-slate-900 font-bold">Entrega de 24 a 48 horas</strong> a todo el país (C807).
+                    <span className="text-slate-500 text-[11px] ml-1">Despachos de lunes a sábado (domingos no laborables).</span>
                   </p>
                 </div>
               )}
@@ -673,48 +833,88 @@ export default function CheckoutPage() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-                <label className={`clay-card p-3.5 flex flex-col justify-between gap-2 cursor-pointer transition-all ${
-                  metodoPago === 'CARD' ? 'border-2 border-indigo-500 bg-indigo-50/60 shadow-xs' : 'hover:bg-slate-50'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="w-4 h-4 text-indigo-600" />
-                      <span className="font-black text-slate-800">Tarjeta de Crédito / Débito</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                {/* Botón Tarjeta */}
+                <button
+                  type="button"
+                  onClick={() => setMetodoPago('CARD')}
+                  className={`relative p-3.5 sm:p-4 rounded-2xl text-left flex flex-col justify-between gap-2.5 cursor-pointer select-none transition-all duration-300 ease-out active:scale-[0.97] ${
+                    metodoPago === 'CARD'
+                      ? 'bg-gradient-to-br from-indigo-50/90 via-white to-purple-50/70 border-2 border-indigo-500 shadow-[5px_7px_18px_rgba(99,102,241,0.25),-4px_-4px_12px_rgba(255,255,255,0.95),inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),inset_-2px_-2px_5px_rgba(99,102,241,0.15)] scale-[1.01]'
+                      : 'bg-slate-50/90 border border-white/80 shadow-[4px_6px_14px_rgba(164,177,198,0.25),-4px_-4px_10px_rgba(255,255,255,0.95),inset_1px_1px_2px_rgba(255,255,255,0.9)] hover:bg-white hover:border-slate-200/80 hover:shadow-[6px_8px_18px_rgba(164,177,198,0.32),-5px_-5px_12px_rgba(255,255,255,1)] hover:-translate-y-0.5'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                        metodoPago === 'CARD'
+                          ? 'bg-indigo-600 text-white shadow-[2px_3px_8px_rgba(99,102,241,0.45),inset_1px_1px_2px_rgba(255,255,255,0.4)] scale-110'
+                          : 'bg-white text-indigo-600 shadow-[2px_3px_6px_rgba(164,177,198,0.3),inset_1px_1px_2px_rgba(255,255,255,0.9)]'
+                      }`}>
+                        <CreditCard className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="font-black text-slate-900 text-xs block">Tarjeta Crédito / Débito</span>
+                        <span className="text-[10px] font-bold text-indigo-600">Visa / Mastercard</span>
+                      </div>
                     </div>
-                    <input
-                      type="radio"
-                      name="metodoPago"
-                      checked={metodoPago === 'CARD'}
-                      onChange={() => setMetodoPago('CARD')}
-                      className="text-indigo-600"
-                    />
-                  </div>
-                  <p className="text-[10.5px] text-slate-500 font-medium">
-                    Visa o Mastercard. Procesamiento 100% seguro y cifrado.
-                  </p>
-                </label>
 
-                <label className={`clay-card p-3.5 flex flex-col justify-between gap-2 cursor-pointer transition-all ${
-                  metodoPago === 'TRANSFER' ? 'border-2 border-indigo-500 bg-indigo-50/60 shadow-xs' : 'hover:bg-slate-50'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Building className="w-4 h-4 text-indigo-600" />
-                      <span className="font-black text-slate-800">Transferencia Bancaria</span>
+                    {/* Indicador de Selección Claymórfico */}
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300 ${
+                      metodoPago === 'CARD'
+                        ? 'bg-indigo-600 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.5),inset_-1px_-1px_2px_rgba(0,0,0,0.2)]'
+                        : 'border-2 border-slate-300 bg-white shadow-inner'
+                    }`}>
+                      {metodoPago === 'CARD' && (
+                        <div className="w-2 h-2 rounded-full bg-white animate-in zoom-in-50 duration-200" />
+                      )}
                     </div>
-                    <input
-                      type="radio"
-                      name="metodoPago"
-                      checked={metodoPago === 'TRANSFER'}
-                      onChange={() => setMetodoPago('TRANSFER')}
-                      className="text-indigo-600"
-                    />
                   </div>
-                  <p className="text-[10.5px] text-slate-500 font-medium">
-                    Banco Agrícola, BAC Credomatic o Banco Cuscatlán.
+                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                    Procesamiento <strong className="text-slate-800 font-bold">100% seguro y cifrado</strong> con tu tarjeta.
                   </p>
-                </label>
+                </button>
+
+                {/* Botón Transferencia Bancaria */}
+                <button
+                  type="button"
+                  onClick={() => setMetodoPago('TRANSFER')}
+                  className={`relative p-3.5 sm:p-4 rounded-2xl text-left flex flex-col justify-between gap-2.5 cursor-pointer select-none transition-all duration-300 ease-out active:scale-[0.97] ${
+                    metodoPago === 'TRANSFER'
+                      ? 'bg-gradient-to-br from-indigo-50/90 via-white to-purple-50/70 border-2 border-indigo-500 shadow-[5px_7px_18px_rgba(99,102,241,0.25),-4px_-4px_12px_rgba(255,255,255,0.95),inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),inset_-2px_-2px_5px_rgba(99,102,241,0.15)] scale-[1.01]'
+                      : 'bg-slate-50/90 border border-white/80 shadow-[4px_6px_14px_rgba(164,177,198,0.25),-4px_-4px_10px_rgba(255,255,255,0.95),inset_1px_1px_2px_rgba(255,255,255,0.9)] hover:bg-white hover:border-slate-200/80 hover:shadow-[6px_8px_18px_rgba(164,177,198,0.32),-5px_-5px_12px_rgba(255,255,255,1)] hover:-translate-y-0.5'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                        metodoPago === 'TRANSFER'
+                          ? 'bg-indigo-600 text-white shadow-[2px_3px_8px_rgba(99,102,241,0.45),inset_1px_1px_2px_rgba(255,255,255,0.4)] scale-110'
+                          : 'bg-white text-indigo-600 shadow-[2px_3px_6px_rgba(164,177,198,0.3),inset_1px_1px_2px_rgba(255,255,255,0.9)]'
+                      }`}>
+                        <Building className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="font-black text-slate-900 text-xs block">Transferencia Bancaria</span>
+                        <span className="text-[10px] font-bold text-indigo-600">Agrícola, BAC o Cuscatlán</span>
+                      </div>
+                    </div>
+
+                    {/* Indicador de Selección Claymórfico */}
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300 ${
+                      metodoPago === 'TRANSFER'
+                        ? 'bg-indigo-600 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.5),inset_-1px_-1px_2px_rgba(0,0,0,0.2)]'
+                        : 'border-2 border-slate-300 bg-white shadow-inner'
+                    }`}>
+                      {metodoPago === 'TRANSFER' && (
+                        <div className="w-2 h-2 rounded-full bg-white animate-in zoom-in-50 duration-200" />
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                    Envía tu comprobante por <strong className="text-slate-800 font-bold">WhatsApp al 7833-9470</strong> para procesar.
+                  </p>
+                </button>
               </div>
 
               <p className="text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
@@ -812,34 +1012,6 @@ export default function CheckoutPage() {
                   </div>
                 </div>
               )}
-            </div>
-
-            {/* Aviso de Maceración y Advertencias de Salud en Checkout */}
-            <div className="space-y-3">
-              <div className="p-3.5 rounded-2xl bg-indigo-50/80 border border-indigo-100 flex items-start gap-2.5 text-xs text-slate-700">
-                <Droplets className="w-4 h-4 text-indigo-700 shrink-0 mt-0.5" />
-                <p>
-                  <strong>Aviso: Nosotros no maceramos ningún perfume.</strong> Nuestras esencias se entregan 100% puras listas para ser combinadas con alcohol especial de perfumería.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-amber-50/90 border border-amber-200 text-xs text-amber-950 space-y-2">
-                <div className="flex items-center gap-2 font-black text-amber-900">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                  <span>Aviso Importante de Seguridad y Uso Responsable</span>
-                </div>
-                <ul className="space-y-1 pl-4 list-disc text-[11px] text-amber-900/90 font-medium leading-relaxed">
-                  <li>
-                    <strong>No usar directamente sobre la piel:</strong> Las esencias puras tienen que ser mezcladas sí o sí con alcohol especial de perfumería antes de cualquier aplicación. El máximo recomendado para 100ml es de una onza y una media onza, más de eso no es recomendado.
-                  </li>
-                  <li>
-                    <strong>Bajo ningún motivo deben ser ingeridas, inhaladas directamente o tener contacto con los ojos.</strong>
-                  </li>
-                  <li>
-                    <strong>Uso restringido ante alergias:</strong> No deben ser usadas por personas con antecedentes o experiencias previas de alergia a los perfumes, fragancias, alcohol o sus componentes.
-                  </li>
-                </ul>
-              </div>
             </div>
 
           </div>
@@ -963,6 +1135,34 @@ export default function CheckoutPage() {
                   </>
                 )}
               </button>
+            </div>
+
+            {/* Aviso de Maceración y Advertencias de Salud en Checkout (debajo del resumen de pedido) */}
+            <div className="space-y-3">
+              <div className="p-3.5 rounded-2xl bg-indigo-50/80 border border-indigo-100 flex items-start gap-2.5 text-xs text-slate-700 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.9),inset_-1px_-1px_2px_rgba(99,102,241,0.06)]">
+                <Droplets className="w-4 h-4 text-indigo-700 shrink-0 mt-0.5" />
+                <p>
+                  <strong>Aviso: Nosotros no maceramos ningún perfume.</strong> Nuestras esencias se entregan 100% puras listas para ser combinadas con alcohol especial de perfumería.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-amber-50/90 border border-amber-200 text-xs text-amber-950 space-y-2 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.9),inset_-1px_-1px_2px_rgba(245,158,11,0.12)]">
+                <div className="flex items-center gap-2 font-black text-amber-900">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>Aviso Importante de Seguridad y Uso Responsable</span>
+                </div>
+                <ul className="space-y-1 pl-4 list-disc text-[11px] text-amber-900/90 font-medium leading-relaxed">
+                  <li>
+                    <strong>No usar directamente sobre la piel:</strong> Las esencias puras tienen que ser mezcladas sí o sí con alcohol especial de perfumería antes de cualquier aplicación. El máximo recomendado para 100ml es de una onza y una media onza, más de eso no es recomendado.
+                  </li>
+                  <li>
+                    <strong>Bajo ningún motivo deben ser ingeridas, inhaladas directamente o tener contacto con los ojos.</strong>
+                  </li>
+                  <li>
+                    <strong>Uso restringido ante alergias:</strong> No deben ser usadas por personas con antecedentes o experiencias previas de alergia a los perfumes, fragancias, alcohol o sus componentes.
+                  </li>
+                </ul>
+              </div>
             </div>
 
           </div>
