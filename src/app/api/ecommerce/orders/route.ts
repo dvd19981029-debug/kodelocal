@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getWompiTransaction } from '@/lib/wompi';
 
 export const dynamic = 'force-dynamic';
 
@@ -105,6 +106,57 @@ export async function PATCH(request: Request) {
 
     if (!order) {
       return NextResponse.json({ success: false, error: 'Pedido no encontrado' }, { status: 404 });
+    }
+
+    // SEC-01: Protección contra marcado arbitrario de pedidos como COMPLETED
+    if (paymentStatus === 'COMPLETED') {
+      if (order.paymentStatus === 'COMPLETED') {
+        return NextResponse.json({ success: true, order });
+      }
+
+      // Exigir ID de transacción y verificarla directamente con la API oficial de Wompi
+      const txId = body.transactionId || body.idTransaccion;
+      if (!txId) {
+        return NextResponse.json(
+          { success: false, error: 'No autorizado: se requiere comprobante/ID de transacción bancaria verificado.' },
+          { status: 403 }
+        );
+      }
+
+      try {
+        const txData = await getWompiTransaction(String(txId));
+        const isApproved = txData.esAprobada === true || txData.resultadoTransaccion === 'ExitosaAprobada';
+        const numMatches = !txData.identificadorEnlaceComercio || txData.identificadorEnlaceComercio === order.orderNumber;
+
+        if (!isApproved || !numMatches) {
+          return NextResponse.json(
+            { success: false, error: 'Transacción denegada o no corresponde a esta orden.' },
+            { status: 403 }
+          );
+        }
+      } catch (err: any) {
+        console.error('Error validando transacción bancaria en Wompi:', err);
+        return NextResponse.json(
+          { success: false, error: 'Error verificando la autenticidad del pago con la pasarela bancaria.' },
+          { status: 502 }
+        );
+      }
+    }
+
+    // SEC-01: Prohibir cancelaciones ilegítimas de órdenes pagadas o despachadas
+    if (orderStatus === 'CANCELADO' || paymentStatus === 'CANCELLED' || paymentStatus === 'REJECTED') {
+      if (order.paymentStatus === 'COMPLETED') {
+        return NextResponse.json(
+          { success: false, error: 'No se puede cancelar una orden con pago ya procesado y completado.' },
+          { status: 400 }
+        );
+      }
+      if (order.orderStatus === 'EN_RUTA' || order.orderStatus === 'ENTREGADO') {
+        return NextResponse.json(
+          { success: false, error: 'No se puede cancelar una orden en tránsito o entregada.' },
+          { status: 400 }
+        );
+      }
     }
 
     // Si se cancela o rechaza el pedido y no estaba cancelado previamente (o se fuerza restock), restaurar existencias
