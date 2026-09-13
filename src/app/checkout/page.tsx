@@ -273,10 +273,10 @@ export default function CheckoutPage() {
           throw new Error(wompiData.error || 'No se pudo generar la pasarela segura de Wompi');
         }
 
-        // Redireccionar al usuario a la pantalla oficial de pago de Wompi / Banco Agrícola
-        // Limpiamos el carrito justo al navegar para evitar el flash de pantalla vacía
-        clearCart();
-        window.location.replace(wompiData.urlEnlace);
+        // Redireccionar al usuario a la pasarela segura oficial de Wompi / Banco Agrícola
+        // NO limpiamos el carrito aquí para que la pantalla del checkout nunca parpadee en 'carrito vacío'
+        // El carrito se limpia automáticamente en la pantalla de resultado /confirmación de pago
+        window.location.href = wompiData.urlEnlace;
         return;
       }
 

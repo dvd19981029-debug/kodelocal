@@ -15,10 +15,12 @@ import {
   ExternalLink 
 } from 'lucide-react';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
+import { useEcommerceCart } from '@/context/EcommerceCartContext';
 
 function CheckoutResultadoContent() {
   const searchParams = useSearchParams();
   const { openDrawer } = useCustomerAuth();
+  const { clearCart } = useEcommerceCart();
 
   const idTransaccion = searchParams.get('idTransaccion');
   const monto = searchParams.get('monto');
@@ -30,18 +32,21 @@ function CheckoutResultadoContent() {
   // Si no viene 'esAprobada', la presencia de 'idTransaccion' y 'monto' con hash indica transacción procesada
   const isApproved = esAprobada === 'True' || (!esAprobada && Boolean(idTransaccion));
 
-  // Confirmar pago en la base de datos inmediatamente al volver de Wompi
+  // Confirmar pago en la base de datos inmediatamente al volver de Wompi y vaciar carrito
   useEffect(() => {
-    if (isApproved && identificador) {
-      fetch('/api/ecommerce/orders', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderNumber: identificador,
-          paymentStatus: 'COMPLETED',
-          notes: `[Pago Aprobado Wompi Tx: ${idTransaccion || 'N/A'}]`,
-        }),
-      }).catch((err) => console.error('Error actualizando estado de pago:', err));
+    if (isApproved) {
+      clearCart();
+      if (identificador) {
+        fetch('/api/ecommerce/orders', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderNumber: identificador,
+            paymentStatus: 'COMPLETED',
+            notes: `[Pago Aprobado Wompi Tx: ${idTransaccion || 'N/A'}]`,
+          }),
+        }).catch((err) => console.error('Error actualizando estado de pago:', err));
+      }
     }
   }, [isApproved, identificador, idTransaccion]);
 
