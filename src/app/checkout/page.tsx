@@ -57,6 +57,12 @@ export default function CheckoutPage() {
     setTimeout(() => setCopiedBank(null), 2500);
   };
 
+  // Tipo de comprobante
+  const [tipoComprobante, setTipoComprobante] = useState<'TICKET' | '01' | '03'>(customer?.nrc ? '03' : '01');
+  const [numDoc, setNumDoc] = useState(customer?.documentNum || '');
+  const [nrc, setNrc] = useState(customer?.nrc || '');
+  const [giro, setGiro] = useState(customer?.activityDesc || '');
+
   // Actualizar si el cliente inicia sesión o tiene datos guardados en su perfil
   React.useEffect(() => {
     if (customer) {
@@ -73,16 +79,10 @@ export default function CheckoutPage() {
       }
       if (customer.activityDesc) setGiro(customer.activityDesc);
     }
-  }, [customer]);
+  }, [customer?.id, customer?.documentNum, customer?.nrc, customer?.address, customer?.phone, customer?.name]);
 
   // Método de pago: Tarjeta de Crédito/Débito o Transferencia Bancaria
   const [metodoPago, setMetodoPago] = useState<'CARD' | 'TRANSFER'>('CARD');
-
-  // Tipo de comprobante
-  const [tipoComprobante, setTipoComprobante] = useState<'TICKET' | '01' | '03'>('01');
-  const [numDoc, setNumDoc] = useState('');
-  const [nrc, setNrc] = useState('');
-  const [giro, setGiro] = useState('');
 
   // Estados de proceso
   const [isSubmitting, setIsSubmitting] = useState(false);

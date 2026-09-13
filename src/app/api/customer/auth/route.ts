@@ -69,9 +69,14 @@ export async function POST(request: Request) {
           name: customer.name,
           email: customer.email,
           phone: customer.phone || '',
+          documentType: customer.documentType || 'DUI',
+          documentNum: customer.documentNum || '',
           department: customer.department || 'San Salvador',
           municipality: customer.municipality || 'San Salvador Centro',
           address: customer.address || '',
+          nrc: customer.nrc || '',
+          businessName: customer.businessName || '',
+          activityDesc: customer.activityDesc || '',
           avatarUrl: customer.avatarUrl || '',
           authProvider: 'google',
         },
@@ -127,9 +132,14 @@ export async function POST(request: Request) {
           name: customer.name,
           email: customer.email,
           phone: customer.phone || '',
+          documentType: customer.documentType || 'DUI',
+          documentNum: customer.documentNum || '',
           department: customer.department || 'San Salvador',
           municipality: customer.municipality || 'San Salvador',
           address: customer.address || '',
+          nrc: customer.nrc || '',
+          businessName: customer.businessName || '',
+          activityDesc: customer.activityDesc || '',
           avatarUrl: customer.avatarUrl,
           authProvider: 'credentials',
         },
@@ -142,19 +152,20 @@ export async function POST(request: Request) {
 
       if (!email || !password) {
         return NextResponse.json(
-          { success: false, error: 'Ingresa tu correo y contraseña' },
+          { success: false, error: 'Correo y contraseña requeridos' },
           { status: 400 }
         );
       }
 
       const normalizedEmail = email.toLowerCase().trim();
+
       const customer = await prisma.customer.findUnique({
         where: { email: normalizedEmail },
       });
 
       if (!customer) {
         return NextResponse.json(
-          { success: false, error: 'No encontramos ninguna cuenta con este correo electrónico.' },
+          { success: false, error: 'No existe una cuenta registrada con este correo' },
           { status: 404 }
         );
       }
@@ -184,9 +195,14 @@ export async function POST(request: Request) {
           name: customer.name,
           email: customer.email,
           phone: customer.phone || '',
+          documentType: customer.documentType || 'DUI',
+          documentNum: customer.documentNum || '',
           department: customer.department || 'San Salvador',
           municipality: customer.municipality || 'San Salvador',
           address: customer.address || '',
+          nrc: customer.nrc || '',
+          businessName: customer.businessName || '',
+          activityDesc: customer.activityDesc || '',
           avatarUrl: customer.avatarUrl || '',
           authProvider: 'credentials',
         },
