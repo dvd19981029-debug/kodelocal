@@ -1,6 +1,17 @@
 import crypto from 'crypto';
 
-const AUTH_SECRET = process.env.AUTH_SECRET || process.env.WOMPI_API_SECRET || 'aromaniak_auth_token_secret_2026';
+function getAuthSecret(): string {
+  const secret = process.env.AUTH_SECRET || process.env.WOMPI_API_SECRET;
+  if (!secret) {
+    if (typeof console !== 'undefined') {
+      console.warn('[AVISO DE SEGURIDAD] Defina AUTH_SECRET o WOMPI_API_SECRET en Vercel. Utilizando secreto de contingencia.');
+    }
+    return 'aromaniak_auth_token_secret_prod_fallback_2026';
+  }
+  return secret;
+}
+
+const AUTH_SECRET = getAuthSecret();
 
 export interface CustomerTokenPayload {
   customerId: string;
