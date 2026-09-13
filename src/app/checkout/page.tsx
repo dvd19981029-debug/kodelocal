@@ -57,14 +57,21 @@ export default function CheckoutPage() {
     setTimeout(() => setCopiedBank(null), 2500);
   };
 
-  // Actualizar si el cliente inicia sesión mientras está en la página
+  // Actualizar si el cliente inicia sesión o tiene datos guardados en su perfil
   React.useEffect(() => {
     if (customer) {
-      if (!nombre && customer.name) setNombre(customer.name);
-      if (!email && customer.email) setEmail(customer.email);
-      if (!telefono && customer.phone) setTelefono(customer.phone);
+      if (customer.name) setNombre(customer.name);
+      if (customer.email) setEmail(customer.email);
+      if (customer.phone) setTelefono(customer.phone);
       if (customer.department) setDepartamento(customer.department);
-      if (!direccion && customer.address) setDireccion(customer.address);
+      if (customer.municipality) setMunicipio(customer.municipality);
+      if (customer.address) setDireccion(customer.address);
+      if (customer.documentNum) setNumDoc(customer.documentNum);
+      if (customer.nrc) {
+        setNrc(customer.nrc);
+        setTipoComprobante('03'); // Si tiene NRC, preseleccionar Crédito Fiscal
+      }
+      if (customer.activityDesc) setGiro(customer.activityDesc);
     }
   }, [customer]);
 
