@@ -30,7 +30,13 @@ import { useEcommerceCart } from '@/context/EcommerceCartContext';
 
 export default function EcommerceHomePage() {
   const { setIsArmaTuPerfumeActive } = useEcommerceCart();
-  const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
+  const [products, setProducts] = useState<ProductItem[]>(INITIAL_PRODUCTS);
+
+  // Sincronizar con localStorage en el cliente después de montar para evitar desajustes de hidratación SSR
+  useEffect(() => {
+    setProducts(getStoredProducts());
+  }, []);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGender, setSelectedGender] = useState<'Todos' | 'Caballero' | 'Dama' | 'Unisex'>('Todos');
   const [selectedCategory, setSelectedCategory] = useState<string>('Esencias para Perfume');
