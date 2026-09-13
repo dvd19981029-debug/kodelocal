@@ -86,7 +86,7 @@ export async function createWompiPaymentLink(params: CreatePaymentLinkParams): P
     formaPago: {
       permitirTarjetaCreditoDebido: true,
       permitirPagoConPuntoAgricola: true,
-      permitirPagoEnCuotasAgricola: true,
+      permitirPagoEnCuotasAgricola: false,
       permitirPagoEnBitcoin: false,
       permitePagoQuickPay: true,
     },
@@ -110,7 +110,12 @@ export async function createWompiPaymentLink(params: CreatePaymentLinkParams): P
     payload.configuracion.urlWebhook = params.webhookUrl;
   }
   if (params.customerPhone) {
-    payload.configuracion.telefonosNotificacion = params.customerPhone;
+    // Wompi exige que los teléfonos de notificación sean salvadoreños de 8 dígitos sin guiones ni prefijo +503
+    const cleanPhone = params.customerPhone.replace(/\D/g, '');
+    const svPhone = cleanPhone.startsWith('503') && cleanPhone.length === 11 ? cleanPhone.slice(3) : cleanPhone;
+    if (svPhone.length === 8) {
+      payload.configuracion.telefonosNotificacion = svPhone;
+    }
   }
 
   const res = await fetch(`${WOMPI_API_URL}/EnlacePago`, {

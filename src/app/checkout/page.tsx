@@ -100,6 +100,14 @@ export default function CheckoutPage() {
       return;
     }
 
+    // Validación de teléfono de El Salvador (8 dígitos)
+    const rawPhoneDigits = telefono.replace(/\D/g, '');
+    const cleanPhoneDigits = rawPhoneDigits.startsWith('503') && rawPhoneDigits.length === 11 ? rawPhoneDigits.slice(3) : rawPhoneDigits;
+    if (cleanPhoneDigits.length !== 8) {
+      alert('Por favor ingresa un número de teléfono válido de El Salvador de 8 dígitos (ej. 7000-0000).');
+      return;
+    }
+
     if (metodoEntrega === 'ENVIO' && !direccion.trim()) {
       alert('Por favor completa tu Dirección exacta de entrega.');
       return;
