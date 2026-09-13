@@ -264,7 +264,14 @@ export default function PosPage() {
       .then(res => res.json())
       .then(data => {
         if (data.success && Array.isArray(data.orders)) {
-          const webSales: SaleRecord[] = data.orders.map((o: any) => ({
+          // Solo cargar en la cola pedidos con pago confirmado (autorización de Wompi) o transferencias válidas
+          const validOrders = data.orders.filter((o: any) => {
+            if (o.orderStatus === 'CANCELADO') return false;
+            if (o.paymentMethod === 'CARD' && o.paymentStatus !== 'COMPLETED') return false;
+            return true;
+          });
+
+          const webSales: SaleRecord[] = validOrders.map((o: any) => ({
             id: o.id,
             saleNumber: o.orderNumber,
             orderNumber: o.orderNumber,
