@@ -30,6 +30,21 @@ function CheckoutResultadoContent() {
   // Si no viene 'esAprobada', la presencia de 'idTransaccion' y 'monto' con hash indica transacción procesada
   const isApproved = esAprobada === 'True' || (!esAprobada && Boolean(idTransaccion));
 
+  // Confirmar pago en la base de datos inmediatamente al volver de Wompi
+  useEffect(() => {
+    if (isApproved && identificador) {
+      fetch('/api/ecommerce/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderNumber: identificador,
+          paymentStatus: 'COMPLETED',
+          notes: `[Pago Aprobado Wompi Tx: ${idTransaccion || 'N/A'}]`,
+        }),
+      }).catch((err) => console.error('Error actualizando estado de pago:', err));
+    }
+  }, [isApproved, identificador, idTransaccion]);
+
   return (
     <div className="min-h-[70vh] flex items-center justify-center py-10 px-4">
       <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200/80 shadow-xl p-6 sm:p-8 text-center space-y-6 animate-in zoom-in-95 duration-300">

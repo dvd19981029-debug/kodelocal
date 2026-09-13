@@ -18,7 +18,8 @@ import {
   Clock,
   Truck,
   Sparkles,
-  ShoppingBag
+  ShoppingBag,
+  CreditCard
 } from 'lucide-react';
 import { useCustomerAuth, CustomerUser } from '@/context/CustomerAuthContext';
 import { DEPARTAMENTOS_CATALOG, MUNICIPIOS_CATALOG } from '@/lib/svTerritory';
@@ -169,18 +170,44 @@ export default function CustomerDrawer() {
     switch (status?.toUpperCase()) {
       case 'DELIVERED':
       case 'COMPLETED':
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200"><CheckCircle2 className="w-3 h-3" /> Entregado</span>;
+        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200"><CheckCircle2 className="w-3 h-3" /> Entregado</span>;
       case 'SHIPPED':
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-200"><Truck className="w-3 h-3" /> En camino</span>;
+        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200"><Truck className="w-3 h-3" /> En camino</span>;
       case 'PREPARING':
       case 'PROCESSING':
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 border border-blue-200"><Clock className="w-3 h-3" /> En preparación</span>;
+        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200"><Clock className="w-3 h-3" /> En preparación</span>;
       case 'CANCELLED':
       case 'CANCELADO':
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-200"><AlertCircle className="w-3 h-3" /> Cancelado</span>;
+        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200"><AlertCircle className="w-3 h-3" /> Cancelado</span>;
       default:
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200"><Clock className="w-3 h-3" /> Pendiente</span>;
+        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200"><Clock className="w-3 h-3" /> En espera</span>;
     }
+  };
+
+  const getPaymentBadge = (payStatus: string, payMethod: string) => {
+    const isWompi = payMethod === 'CARD';
+    if (payStatus === 'COMPLETED') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-300">
+          <CreditCard className="w-2.5 h-2.5 text-emerald-600" />
+          {isWompi ? 'Pagado (Wompi)' : 'Pagado'}
+        </span>
+      );
+    }
+    if (payStatus === 'REJECTED') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-300">
+          <AlertCircle className="w-2.5 h-2.5 text-rose-600" />
+          Pago Denegado
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-50 text-amber-700 border border-amber-300">
+        <Clock className="w-2.5 h-2.5 text-amber-600" />
+        {isWompi ? 'Pendiente Wompi' : 'Pendiente Transferencia'}
+      </span>
+    );
   };
 
   return (
@@ -325,7 +352,10 @@ export default function CustomerDrawer() {
                             </span>
                             <p className="text-[10px] text-slate-400 font-medium">{orderDate}</p>
                           </div>
-                          <div>{getStatusBadge(order.orderStatus)}</div>
+                          <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                            {getPaymentBadge(order.paymentStatus, order.paymentMethod)}
+                            {getStatusBadge(order.orderStatus)}
+                          </div>
                         </div>
 
                         {/* Artículos del pedido */}

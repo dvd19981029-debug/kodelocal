@@ -75,19 +75,33 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
-    const { orderId, orderStatus, paymentStatus, courierName, trackingNumber } = body;
+    const { orderId, orderNumber, orderStatus, paymentStatus, courierName, trackingNumber, notes } = body;
 
-    if (!orderId) {
-      return NextResponse.json({ success: false, error: 'orderId es requerido' }, { status: 400 });
+    if (!orderId && !orderNumber) {
+      return NextResponse.json({ success: false, error: 'orderId o orderNumber es requerido' }, { status: 400 });
+    }
+
+    const order = await prisma.ecommerceOrder.findFirst({
+      where: {
+        OR: [
+          ...(orderId ? [{ id: orderId }] : []),
+          ...(orderNumber ? [{ orderNumber }] : []),
+        ],
+      },
+    });
+
+    if (!order) {
+      return NextResponse.json({ success: false, error: 'Pedido no encontrado' }, { status: 404 });
     }
 
     const updated = await prisma.ecommerceOrder.update({
-      where: { id: orderId },
+      where: { id: order.id },
       data: {
         ...(orderStatus ? { orderStatus } : {}),
         ...(paymentStatus ? { paymentStatus } : {}),
         ...(courierName ? { courierName } : {}),
         ...(trackingNumber ? { trackingNumber } : {}),
+        ...(notes ? { notes: [order.notes, notes].filter(Boolean).join(' ') } : {}),
       },
       include: { items: true, customer: true },
     });
