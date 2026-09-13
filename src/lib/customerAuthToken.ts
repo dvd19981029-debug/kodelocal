@@ -1,6 +1,17 @@
 import crypto from 'crypto';
 
-const AUTH_SECRET = process.env.AUTH_SECRET || process.env.WOMPI_API_SECRET || 'aromaniak_auth_token_secret_2026';
+function getAuthSecret(): string {
+  const secret = process.env.AUTH_SECRET || process.env.WOMPI_API_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Configuración de seguridad crítica ausente: Defina AUTH_SECRET o WOMPI_API_SECRET en las variables de entorno.');
+    }
+    return 'aromaniak_auth_token_secret_dev_fallback_2026';
+  }
+  return secret;
+}
+
+const AUTH_SECRET = getAuthSecret();
 
 export interface CustomerTokenPayload {
   customerId: string;

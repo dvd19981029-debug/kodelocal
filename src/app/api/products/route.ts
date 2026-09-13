@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { INITIAL_PRODUCTS } from '@/lib/store';
+import { verifyStaffInternalToken } from '@/lib/customerAuthToken';
 
 export const dynamic = 'force-dynamic';
 
@@ -101,6 +102,19 @@ export async function GET(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
+    // SEC-01: Exigir autenticación de personal/staff para modificar productos
+    const authHeader = request.headers.get('authorization') || '';
+    const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : null;
+    const staffHeaderToken = request.headers.get('x-staff-token');
+
+    const isStaff = verifyStaffInternalToken(staffHeaderToken) || verifyStaffInternalToken(bearerToken);
+    if (!isStaff) {
+      return NextResponse.json(
+        { success: false, error: 'Acceso no autorizado. Se requiere autenticación de personal administrativo para modificar productos.' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { id, stock, isAvailableOnline, price, puesto, officialName, imageUrl } = body;
 
