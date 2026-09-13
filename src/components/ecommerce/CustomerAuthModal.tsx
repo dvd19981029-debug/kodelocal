@@ -44,22 +44,12 @@ export default function CustomerAuthModal() {
 
   if (!isAuthModalOpen) return null;
 
-  const handleGoogleAuth = async () => {
+  const handleGoogleAuth = () => {
     setIsLoading(true);
     setErrorMessage('');
-    try {
-      const res = await loginWithGoogle();
-      if (!res.success) {
-        setErrorMessage(res.error || 'No se pudo conectar con Google');
-        setIsLoading(false);
-      } else {
-        // Fallback de seguridad si el navegador no descarga la página de inmediato
-        setTimeout(() => setIsLoading(false), 5000);
-      }
-    } catch (e: any) {
-      setErrorMessage(e.message || 'Error al conectar con Google');
-      setIsLoading(false);
-    }
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://aromaniaksv.com';
+    const authUrl = `https://dogavyiyrqktygdgikqi.supabase.co/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(origin)}`;
+    window.location.href = authUrl;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

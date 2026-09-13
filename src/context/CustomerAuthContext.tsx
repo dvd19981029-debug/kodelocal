@@ -113,33 +113,43 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
       setIsLoading(false);
     }
 
+    const syncGoogleUser = async (u: any) => {
+      const googleName = u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0] || 'Cliente';
+      const googleAvatar = u.user_metadata?.avatar_url || u.user_metadata?.picture || '';
+
+      try {
+        const res = await fetch('/api/customer/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'google',
+            name: googleName,
+            email: u.email,
+            avatarUrl: googleAvatar,
+            googleId: u.id,
+          }),
+        });
+        const data = await res.json();
+        if (data.success && data.customer) {
+          saveCustomerSession(data.customer);
+          closeAuthModal();
+        }
+      } catch (err) {
+        console.error('Error sincronizando usuario de Google con BD:', err);
+      }
+    };
+
     // 2. Escuchar cambios de autenticación de Supabase (OAuth con Google)
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        const u = session.user;
-        const googleName = u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0] || 'Cliente';
-        const googleAvatar = u.user_metadata?.avatar_url || u.user_metadata?.picture || '';
+        syncGoogleUser(session.user);
+      }
+    });
 
-        try {
-          const res = await fetch('/api/customer/auth', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'google',
-              name: googleName,
-              email: u.email,
-              avatarUrl: googleAvatar,
-              googleId: u.id,
-            }),
-          });
-          const data = await res.json();
-          if (data.success && data.customer) {
-            saveCustomerSession(data.customer);
-            closeAuthModal();
-          }
-        } catch (err) {
-          console.error('Error sincronizando usuario de Google con BD:', err);
-        }
+    // 3. Revisar si ya hay una sesión activa de Supabase en el navegador
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        syncGoogleUser(session.user);
       }
     });
 
@@ -157,22 +167,13 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     setIsAuthModalOpen(false);
   };
 
-  // 1. Iniciar Sesión / Registro con Google (Real OAuth)
+  // 1. Iniciar Sesión / Registro con Google (Direct Authorize URL)
   const loginWithGoogle = async () => {
     try {
-      const redirectUrl = typeof window !== 'undefined' ? window.location.origin : undefined;
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-        },
-      });
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-      if (data?.url) {
-        window.location.href = data.url;
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://aromaniaksv.com';
+      const authUrl = `https://dogavyiyrqktygdgikqi.supabase.co/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(origin)}`;
+      if (typeof window !== 'undefined') {
+        window.location.href = authUrl;
       }
       return { success: true };
     } catch (err: any) {
