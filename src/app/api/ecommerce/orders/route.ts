@@ -340,6 +340,9 @@ export async function POST(request: Request) {
           customer: true,
         },
       });
+    }, {
+      maxWait: 10000, // Tiempo máximo para obtener conexión del pool (10s)
+      timeout: 20000, // Tiempo máximo de ejecución para carritos con múltiples productos (20s)
     });
 
     return NextResponse.json({ success: true, order: newOrder });
