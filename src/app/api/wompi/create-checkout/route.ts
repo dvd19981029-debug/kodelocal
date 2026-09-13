@@ -1,11 +1,31 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createWompiPaymentLink } from '@/lib/wompi';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
+    // Rate Limiting para generación de pasarela Wompi (SEC-05)
+    const rl = checkRateLimit(request, {
+      keyPrefix: 'wompi_checkout',
+      maxRequests: 10,
+      windowMs: 60 * 1000,
+    });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Has realizado demasiadas solicitudes de pago en poco tiempo. Por favor espera ${rl.resetSeconds} segundos.`,
+        },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(rl.resetSeconds) },
+        }
+      );
+    }
+
     const body = await request.json();
     const { orderId, orderNumber, amount, customerEmail, customerName, customerPhone } = body;
 

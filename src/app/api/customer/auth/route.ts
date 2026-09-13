@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
 import { createCustomerToken, verifyCustomerToken } from '@/lib/customerAuthToken';
+import { checkRateLimit } from '@/lib/rateLimit';
+import { sanitizeText, sanitizeEmail, sanitizePhone, sanitizeDocument } from '@/lib/sanitize';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +16,27 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { action } = body;
+
+    // ================= RATE LIMITING (SEC-05) =================
+    if (action === 'login' || action === 'register' || action === 'google') {
+      const rl = checkRateLimit(request, {
+        keyPrefix: 'customer_auth',
+        maxRequests: 10,
+        windowMs: 60 * 1000,
+      });
+      if (!rl.allowed) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Demasiados intentos. Por favor espera ${rl.resetSeconds} segundos antes de reintentar.`,
+          },
+          {
+            status: 429,
+            headers: { 'Retry-After': String(rl.resetSeconds) },
+          }
+        );
+      }
+    }
 
     // ================= 1. REGISTRO / LOGIN CON GOOGLE =================
     if (action === 'google') {
@@ -99,11 +122,24 @@ export async function POST(request: Request) {
         );
       }
 
-      const normalizedEmail = email.toLowerCase().trim();
+      const cleanEmail = sanitizeEmail(email);
+      if (!cleanEmail) {
+        return NextResponse.json(
+          { success: false, error: 'Formato de correo electrónico no válido' },
+          { status: 400 }
+        );
+      }
+      const cleanName = sanitizeText(name, 100);
+      if (!cleanName) {
+        return NextResponse.json(
+          { success: false, error: 'Nombre es requerido' },
+          { status: 400 }
+        );
+      }
 
       // Verificar si ya existe
       const existing = await prisma.customer.findUnique({
-        where: { email: normalizedEmail },
+        where: { email: cleanEmail },
       });
 
       if (existing) {
@@ -114,18 +150,18 @@ export async function POST(request: Request) {
       }
 
       const passwordHash = hashPassword(password);
-      const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`;
+      const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanName)}`;
 
       const customer = await prisma.customer.create({
         data: {
-          name: name.trim(),
-          email: normalizedEmail,
+          name: cleanName,
+          email: cleanEmail,
           passwordHash,
           avatarUrl,
-          phone: phone?.trim() || '',
-          department: department?.trim() || 'San Salvador',
-          municipality: municipality?.trim() || 'San Salvador Centro',
-          address: address?.trim() || '',
+          phone: sanitizePhone(phone) || '',
+          department: sanitizeText(department, 50) || 'San Salvador',
+          municipality: sanitizeText(municipality, 60) || 'San Salvador Centro',
+          address: sanitizeText(address, 255) || '',
           documentType: 'DUI',
         },
       });
@@ -260,16 +296,16 @@ export async function POST(request: Request) {
       const updated = await prisma.customer.update({
         where: { id: customerId },
         data: {
-          ...(name ? { name: name.trim() } : {}),
-          ...(phone !== undefined ? { phone: phone.trim() } : {}),
-          ...(documentType !== undefined ? { documentType } : {}),
-          ...(documentNum !== undefined ? { documentNum: documentNum.trim() } : {}),
-          ...(department !== undefined ? { department } : {}),
-          ...(municipality !== undefined ? { municipality } : {}),
-          ...(address !== undefined ? { address: address.trim() } : {}),
-          ...(nrc !== undefined ? { nrc: nrc.trim() } : {}),
-          ...(businessName !== undefined ? { businessName: businessName.trim() } : {}),
-          ...(activityDesc !== undefined ? { activityDesc: activityDesc.trim() } : {}),
+          ...(name !== undefined ? { name: sanitizeText(name, 100) } : {}),
+          ...(phone !== undefined ? { phone: sanitizePhone(phone) || '' } : {}),
+          ...(documentType !== undefined ? { documentType: sanitizeText(documentType, 20) } : {}),
+          ...(documentNum !== undefined ? { documentNum: sanitizeDocument(documentNum, 30) || '' } : {}),
+          ...(department !== undefined ? { department: sanitizeText(department, 50) } : {}),
+          ...(municipality !== undefined ? { municipality: sanitizeText(municipality, 60) } : {}),
+          ...(address !== undefined ? { address: sanitizeText(address, 255) } : {}),
+          ...(nrc !== undefined ? { nrc: sanitizeDocument(nrc, 30) || '' } : {}),
+          ...(businessName !== undefined ? { businessName: sanitizeText(businessName, 120) } : {}),
+          ...(activityDesc !== undefined ? { activityDesc: sanitizeText(activityDesc, 200) } : {}),
         },
       });
 
