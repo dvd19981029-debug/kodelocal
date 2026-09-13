@@ -608,16 +608,35 @@ export default function CustomerDrawer() {
                   )}
                 </div>
 
-                {/* Botón Guardar Cambios */}
+                {/* Mensaje de Error */}
+                {saveError && (
+                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                    <span>{saveError}</span>
+                  </div>
+                )}
+
+                {/* Botón Guardar Cambios con Feedback Visual Inmediato */}
                 <button
                   type="submit"
-                  disabled={isSaving}
-                  className="w-full py-3 px-4 rounded-xl bg-[#52b747] hover:bg-[#46a13d] text-white font-extrabold text-xs shadow-md shadow-emerald-200 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 disabled:opacity-50"
+                  disabled={isSaving || saveSuccess}
+                  className={`w-full py-3.5 px-4 rounded-xl font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 ${
+                    saveSuccess
+                      ? 'bg-emerald-600 text-white shadow-emerald-200 ring-2 ring-emerald-400/50'
+                      : isSaving
+                      ? 'bg-slate-400 text-white cursor-not-allowed opacity-80'
+                      : 'bg-[#52b747] hover:bg-[#46a13d] text-white shadow-emerald-200 hover:shadow-lg'
+                  }`}
                 >
                   {isSaving ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Guardando cambios...</span>
+                      <span>Guardando cambios en tu perfil...</span>
+                    </>
+                  ) : saveSuccess ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 text-white animate-bounce" />
+                      <span className="tracking-wide">¡Información Guardada con Éxito! ✓</span>
                     </>
                   ) : (
                     <>
