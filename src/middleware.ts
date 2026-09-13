@@ -66,6 +66,17 @@ export function middleware(request: NextRequest) {
     );
   }
 
+  // 4. En el dominio de clientes (aromaniaksv.com), bloquear modificaciones de catálogo (PATCH/POST/DELETE)
+  if (isCustomerDomain && pathname.startsWith('/api/products') && request.method !== 'GET') {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Acceso denegado: Modificación de productos reservada para el entorno operativo pos.aromaniaksv.com',
+      },
+      { status: 403 }
+    );
+  }
+
   return NextResponse.next();
 }
 
