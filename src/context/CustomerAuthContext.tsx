@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 
 export interface CustomerUser {
   id: string;
@@ -32,7 +33,7 @@ interface CustomerAuthContextType {
   authModalTab: 'login' | 'register';
   openAuthModal: (tab?: 'login' | 'register') => void;
   closeAuthModal: () => void;
-  loginWithGoogle: (customData?: Partial<CustomerUser>) => Promise<{ success: boolean; error?: string }>;
+  loginWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   loginWithCredentials: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   registerCustomer: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
@@ -46,8 +47,17 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalTab, setAuthModalTab] = useState<'login' | 'register'>('login');
 
+  const saveCustomerSession = (user: CustomerUser | null) => {
+    setCustomer(user);
+    if (user) {
+      localStorage.setItem('aromaniak_customer_session', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('aromaniak_customer_session');
+    }
+  };
+
   useEffect(() => {
-    // Restaurar sesión de cliente desde localStorage
+    // 1. Restaurar sesión de cliente desde localStorage
     try {
       const saved = localStorage.getItem('aromaniak_customer_session');
       if (saved) {
@@ -58,16 +68,40 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     } finally {
       setIsLoading(false);
     }
-  }, []);
 
-  const saveCustomerSession = (user: CustomerUser | null) => {
-    setCustomer(user);
-    if (user) {
-      localStorage.setItem('aromaniak_customer_session', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('aromaniak_customer_session');
-    }
-  };
+    // 2. Escuchar cambios de autenticación de Supabase (OAuth con Google)
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const u = session.user;
+        const googleName = u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0] || 'Cliente';
+        const googleAvatar = u.user_metadata?.avatar_url || u.user_metadata?.picture || '';
+
+        try {
+          const res = await fetch('/api/customer/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'google',
+              name: googleName,
+              email: u.email,
+              avatarUrl: googleAvatar,
+              googleId: u.id,
+            }),
+          });
+          const data = await res.json();
+          if (data.success && data.customer) {
+            saveCustomerSession(data.customer);
+          }
+        } catch (err) {
+          console.error('Error sincronizando usuario de Google con BD:', err);
+        }
+      }
+    });
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
+  }, []);
 
   const openAuthModal = (tab: 'login' | 'register' = 'login') => {
     setAuthModalTab(tab);
@@ -78,31 +112,20 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     setIsAuthModalOpen(false);
   };
 
-  // 1. Iniciar Sesión / Registro con Google
-  const loginWithGoogle = async (customData?: Partial<CustomerUser>) => {
+  // 1. Iniciar Sesión / Registro con Google (Real OAuth)
+  const loginWithGoogle = async () => {
     try {
-      // Si se proveen datos o se usa flujo de Google
-      const payload = {
-        action: 'google',
-        name: customData?.name || 'Usuario Google',
-        email: customData?.email || `google.user.${Date.now()}@gmail.com`,
-        avatarUrl: customData?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80',
-        googleId: customData?.id || `g_${Date.now()}`,
-      };
-
-      const res = await fetch('/api/customer/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+      const redirectUrl = typeof window !== 'undefined' ? window.location.origin : undefined;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+        },
       });
 
-      const data = await res.json();
-      if (!data.success) {
-        return { success: false, error: data.error || 'Error al autenticar con Google' };
+      if (error) {
+        return { success: false, error: error.message };
       }
-
-      saveCustomerSession(data.customer);
-      closeAuthModal();
       return { success: true };
     } catch (err: any) {
       return { success: false, error: err.message || 'Error de conexión con Google' };
@@ -161,7 +184,12 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
   };
 
   // 4. Cerrar Sesión
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.error('Error cerrando sesión en Supabase:', e);
+    }
     saveCustomerSession(null);
   };
 

@@ -39,24 +39,14 @@ export default function CustomerAuthModal() {
     setIsLoading(true);
     setErrorMessage('');
     try {
-      const simulatedGoogleEmail = email.trim() || `cliente.${Math.floor(100 + Math.random() * 900)}@gmail.com`;
-      const simulatedName = name.trim() || 'Cliente Aromaniak';
-      
-      const res = await loginWithGoogle({
-        email: simulatedGoogleEmail,
-        name: simulatedName,
-        avatarUrl: `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(simulatedName)}`,
-      });
-
+      const res = await loginWithGoogle();
       if (!res.success) {
         setErrorMessage(res.error || 'No se pudo conectar con Google');
-      } else {
-        setSuccessMessage('¡Bienvenido! Sesión iniciada con Google');
-        setTimeout(() => closeAuthModal(), 700);
+        setIsLoading(false);
       }
+      // If success, the browser will be redirected to Google OAuth
     } catch (e: any) {
       setErrorMessage(e.message || 'Error al conectar con Google');
-    } finally {
       setIsLoading(false);
     }
   };
