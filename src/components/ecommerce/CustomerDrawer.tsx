@@ -125,6 +125,12 @@ export default function CustomerDrawer() {
 
   if (!isDrawerOpen || !customer) return null;
 
+  // Para el cliente, mostrar únicamente compras confirmadas o pedidos reales.
+  // Excluir intentos de pago con tarjeta abandonados o nunca pagados para no saturar su historial.
+  const visibleOrders = orders.filter(
+    (order) => !(order.paymentMethod === 'CARD' && (order.paymentStatus === 'PENDING' || order.paymentStatus === 'CANCELLED'))
+  );
+
   // Filter available municipalities by selected department
   const selectedDeptObj = DEPARTAMENTOS_CATALOG.find(
     (d) => d.nombre.toLowerCase() === department.toLowerCase()
@@ -166,7 +172,10 @@ export default function CustomerDrawer() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, payStatus?: string) => {
+    if (payStatus === 'REJECTED' || status?.toUpperCase() === 'CANCELLED' || status?.toUpperCase() === 'CANCELADO') {
+      return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200"><AlertCircle className="w-3 h-3" /> Cancelado</span>;
+    }
     switch (status?.toUpperCase()) {
       case 'DELIVERED':
       case 'COMPLETED':
@@ -176,9 +185,6 @@ export default function CustomerDrawer() {
       case 'PREPARING':
       case 'PROCESSING':
         return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200"><Clock className="w-3 h-3" /> En preparación</span>;
-      case 'CANCELLED':
-      case 'CANCELADO':
-        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200"><AlertCircle className="w-3 h-3" /> Cancelado</span>;
       default:
         return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200"><Clock className="w-3 h-3" /> En espera</span>;
     }
@@ -198,7 +204,7 @@ export default function CustomerDrawer() {
       return (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-300">
           <AlertCircle className="w-2.5 h-2.5 text-rose-600" />
-          Pago Denegado
+          No Pagado
         </span>
       );
     }
@@ -313,7 +319,7 @@ export default function CustomerDrawer() {
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     <span>{ordersError}</span>
                   </div>
-                ) : orders.length === 0 ? (
+                ) : visibleOrders.length === 0 ? (
                   <div className="py-16 px-4 text-center flex flex-col items-center justify-center bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
                     <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3">
                       <ShoppingBag className="w-7 h-7" />
@@ -330,7 +336,7 @@ export default function CustomerDrawer() {
                     </button>
                   </div>
                 ) : (
-                  orders.map((order) => {
+                  visibleOrders.map((order) => {
                     const orderDate = new Date(order.createdAt).toLocaleDateString('es-SV', {
                       day: 'numeric',
                       month: 'short',
@@ -354,7 +360,7 @@ export default function CustomerDrawer() {
                           </div>
                           <div className="flex items-center gap-1.5 flex-wrap justify-end">
                             {getPaymentBadge(order.paymentStatus, order.paymentMethod)}
-                            {getStatusBadge(order.orderStatus)}
+                            {getStatusBadge(order.orderStatus, order.paymentStatus)}
                           </div>
                         </div>
 

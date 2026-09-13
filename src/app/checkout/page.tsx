@@ -87,6 +87,37 @@ export default function CheckoutPage() {
   // Estados de proceso
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<SaleRecord | null>(null);
+  const [wompiCancelledNotice, setWompiCancelledNotice] = useState<string | null>(null);
+
+  // Detectar si el usuario regresó de la pasarela de Wompi sin completar el pago
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const isCancelled = params.get('wompi_cancelled') === 'true';
+    const num = params.get('orderNumber');
+    const orderId = params.get('orderId');
+
+    if (isCancelled && (orderId || num)) {
+      // Cancelar la orden en la base de datos y restaurar inventario
+      fetch('/api/ecommerce/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: orderId || undefined,
+          orderNumber: num || undefined,
+          orderStatus: 'CANCELADO',
+          paymentStatus: 'CANCELLED',
+          notes: '[Pago no completado: Usuario regresó de la pasarela de Wompi]',
+          restock: true,
+        }),
+      }).catch((err) => console.error('Error cancelando orden abandonada:', err));
+
+      setWompiCancelledNotice(num ? `Pedido #${num}` : 'Tu intento de pago');
+
+      // Limpiar los parámetros de la URL sin recargar
+      window.history.replaceState({}, '', '/checkout');
+    }
+  }, []);
 
   // Desplazar al inicio cuando se complete el pedido
   React.useEffect(() => {
@@ -263,7 +294,8 @@ export default function CheckoutPage() {
                 body: JSON.stringify({
                   orderId: orderData.order.id,
                   orderStatus: 'CANCELADO',
-                  paymentStatus: 'REJECTED',
+                  paymentStatus: 'CANCELLED',
+                  restock: true,
                 }),
               });
             } catch (cleanupErr) {
@@ -589,6 +621,33 @@ export default function CheckoutPage() {
           Paso 2 de 2 • Pago Seguro
         </span>
       </div>
+
+      {/* Banner informativo si el usuario regresó de Wompi sin pagar */}
+      {wompiCancelledNotice && (
+        <div className="clay-card p-3.5 sm:p-4 bg-amber-50/95 border border-amber-200 shadow-xs rounded-2xl flex items-start justify-between gap-3 animate-in fade-in">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
+              <AlertCircle className="w-4 h-4 text-amber-600" />
+            </div>
+            <div className="space-y-1 text-xs">
+              <h4 className="font-black text-amber-900">
+                Pago no completado en Wompi
+              </h4>
+              <p className="text-amber-800 leading-relaxed text-[11px]">
+                Has regresado de la pasarela bancaria. No se realizó ningún cargo a tu tarjeta y la orden tentativa anterior ({wompiCancelledNotice}) no fue procesada. Tus productos siguen intactos en tu carrito para que puedas completar tu compra cuando gustes.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setWompiCancelledNotice(null)}
+            className="text-amber-500 hover:text-amber-800 p-1 rounded-lg text-xs font-bold cursor-pointer transition-colors shrink-0"
+            title="Cerrar aviso"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Banner de Estado de Autenticación / Google Login (delgado y compacto) */}
       {isLoggedIn && customer ? (

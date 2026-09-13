@@ -48,7 +48,7 @@ export async function POST(request: Request) {
       customerEmail: customerEmail || order.customerEmail || undefined,
       customerPhone: customerPhone || order.customerPhone || undefined,
       redirectUrl: `${baseUrl}/checkout/resultado`,
-      returnUrl: `${baseUrl}/checkout`,
+      returnUrl: `${baseUrl}/checkout?wompi_cancelled=true&orderNumber=${num}&orderId=${order.id}`,
       webhookUrl: `${baseUrl}/api/wompi/webhook`,
     });
 

@@ -8,10 +8,22 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const customerId = searchParams.get('customerId');
     const status = searchParams.get('status');
+    const includeIncomplete = searchParams.get('includeIncomplete') === 'true';
 
     const orders = await prisma.ecommerceOrder.findMany({
       where: {
-        ...(customerId ? { customerId } : {}),
+        ...(customerId ? {
+          customerId,
+          // Para el cliente, excluir intentos de pago con tarjeta abandonados o nunca pagados
+          ...(!includeIncomplete ? {
+            NOT: {
+              AND: [
+                { paymentMethod: 'CARD' },
+                { OR: [{ paymentStatus: 'PENDING' }, { paymentStatus: 'CANCELLED' }] },
+              ],
+            },
+          } : {}),
+        } : {}),
         ...(status ? { orderStatus: status as any } : {}),
       },
       include: {
@@ -75,7 +87,7 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
-    const { orderId, orderNumber, orderStatus, paymentStatus, courierName, trackingNumber, notes } = body;
+    const { orderId, orderNumber, orderStatus, paymentStatus, courierName, trackingNumber, notes, restock } = body;
 
     if (!orderId && !orderNumber) {
       return NextResponse.json({ success: false, error: 'orderId o orderNumber es requerido' }, { status: 400 });
@@ -88,17 +100,42 @@ export async function PATCH(request: Request) {
           ...(orderNumber ? [{ orderNumber }] : []),
         ],
       },
+      include: { items: true },
     });
 
     if (!order) {
       return NextResponse.json({ success: false, error: 'Pedido no encontrado' }, { status: 404 });
     }
 
+    // Si se cancela o rechaza el pedido y no estaba cancelado previamente (o se fuerza restock), restaurar existencias
+    const isCancelling = (orderStatus === 'CANCELADO' || paymentStatus === 'CANCELLED' || paymentStatus === 'REJECTED' || restock === true) && order.orderStatus !== 'CANCELADO';
+    if (isCancelling && order.items && order.items.length > 0) {
+      for (const it of order.items) {
+        if (it.productId) {
+          const qty = Math.max(1, it.quantity || 1);
+          const presLower = String(it.presentation || '').toLowerCase();
+          const stockToRestore = (presLower.includes('media') || presLower.includes('½')) ? Math.ceil(qty * 0.5) : qty;
+          try {
+            await prisma.product.update({
+              where: { id: it.productId },
+              data: {
+                stock: { increment: stockToRestore },
+              },
+            });
+          } catch (stockErr) {
+            console.warn(`No se pudo restaurar inventario para producto ${it.productId}:`, stockErr);
+          }
+        }
+      }
+    }
+
+    const safePaymentStatus = paymentStatus === 'REJECTED' ? 'CANCELLED' : paymentStatus;
+
     const updated = await prisma.ecommerceOrder.update({
       where: { id: order.id },
       data: {
         ...(orderStatus ? { orderStatus } : {}),
-        ...(paymentStatus ? { paymentStatus } : {}),
+        ...(safePaymentStatus ? { paymentStatus: safePaymentStatus } : {}),
         ...(courierName ? { courierName } : {}),
         ...(trackingNumber ? { trackingNumber } : {}),
         ...(notes ? { notes: [order.notes, notes].filter(Boolean).join(' ') } : {}),
