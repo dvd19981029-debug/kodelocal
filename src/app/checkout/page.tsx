@@ -222,7 +222,33 @@ export default function CheckoutPage() {
         throw new Error(orderData.error || 'No fue posible confirmar el pedido');
       }
 
-      // Limpiar carrito del cliente
+      // Si el cliente paga con Tarjeta, generamos el enlace bancario de Wompi y lo redireccionamos
+      if (metodoPago === 'CARD') {
+        const wompiRes = await fetch('/api/wompi/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId: orderData.order?.id,
+            orderNumber: orderNumber,
+            amount: totalConEnvio,
+            customerEmail: email || customer?.email,
+            customerName: nombre,
+            customerPhone: telefono,
+          }),
+        });
+
+        const wompiData = await wompiRes.json();
+        if (!wompiRes.ok || !wompiData.success || !wompiData.urlEnlace) {
+          throw new Error(wompiData.error || 'No se pudo generar la pasarela segura de Wompi');
+        }
+
+        clearCart();
+        // Redireccionar al usuario a la pantalla oficial de pago de Wompi / Banco Agrícola
+        window.location.href = wompiData.urlEnlace;
+        return;
+      }
+
+      // Limpiar carrito del cliente para pedidos por transferencia
       clearCart();
       setCompletedOrder(newOrder);
     } catch (error: any) {
@@ -876,8 +902,8 @@ export default function CheckoutPage() {
                         <CreditCard className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="font-black text-slate-900 text-xs block">Tarjeta Crédito / Débito</span>
-                        <span className="text-[10px] font-bold text-indigo-600">Visa / Mastercard</span>
+                        <span className="font-black text-slate-900 text-xs block">Tarjeta Crédito / Débito (Wompi)</span>
+                        <span className="text-[10px] font-bold text-indigo-600">Visa, Mastercard, Puntos y Cuotas</span>
                       </div>
                     </div>
 
@@ -893,7 +919,7 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                   <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                    Procesamiento <strong className="text-slate-800 font-bold">100% seguro y cifrado</strong> con tu tarjeta.
+                    Pasarela segura de <strong className="text-slate-800 font-bold">Wompi / Banco Agrícola</strong> con protección 3D Secure.
                   </p>
                 </button>
 
@@ -1149,10 +1175,14 @@ export default function CheckoutPage() {
                 className="clay-btn clay-btn-primary w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 !shadow-[3px_5px_15px_rgba(99,102,241,0.4)] disabled:opacity-50 transition-all active:scale-95"
               >
                 {isSubmitting ? (
-                  <span>Procesando comanda...</span>
+                  <span>{metodoPago === 'CARD' ? 'Conectando con Wompi...' : 'Procesando comanda...'}</span>
                 ) : (
                   <>
-                    <span>Confirmar Pedido (${totalConEnvio.toFixed(2)})</span>
+                    <span>
+                      {metodoPago === 'CARD' 
+                        ? `Pagar con Tarjeta ($${totalConEnvio.toFixed(2)})` 
+                        : `Confirmar Pedido ($${totalConEnvio.toFixed(2)})`}
+                    </span>
                     <CheckCircle2 className="w-4 h-4" />
                   </>
                 )}
