@@ -21,8 +21,8 @@ import {
   ShieldCheck,
   Lock,
   Copy,
-  Check,
-  Clock
+  Clock,
+  Loader2
 } from 'lucide-react';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
@@ -1266,7 +1266,10 @@ export default function CheckoutPage() {
                 className="clay-btn clay-btn-primary w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 !shadow-[3px_5px_15px_rgba(99,102,241,0.4)] disabled:opacity-50 transition-all active:scale-95"
               >
                 {isSubmitting ? (
-                  <span>{metodoPago === 'CARD' ? 'Conectando con Wompi...' : 'Procesando comanda...'}</span>
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    <span>{metodoPago === 'CARD' ? 'Conectando con pasarela segura Wompi...' : 'Procesando comanda...'}</span>
+                  </span>
                 ) : (
                   <>
                     <span>
