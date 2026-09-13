@@ -616,7 +616,7 @@ export default function CustomerDrawer() {
                   </div>
                 )}
 
-                {/* Botón Guardar Cambios con Feedback Visual Inmediato */}
+                {/* Botón Guardar Cambios con Feedback Visual Inmediato y Color de Marca Aromaniak */}
                 <button
                   type="submit"
                   disabled={isSaving || saveSuccess}
@@ -625,7 +625,7 @@ export default function CustomerDrawer() {
                       ? 'bg-emerald-600 text-white shadow-emerald-200 ring-2 ring-emerald-400/50'
                       : isSaving
                       ? 'bg-slate-400 text-white cursor-not-allowed opacity-80'
-                      : 'bg-[#52b747] hover:bg-[#46a13d] text-white shadow-emerald-200 hover:shadow-lg'
+                      : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200 hover:shadow-lg'
                   }`}
                 >
                   {isSaving ? (
