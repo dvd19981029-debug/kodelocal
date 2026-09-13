@@ -266,9 +266,10 @@ export default function CheckoutPage() {
           throw new Error(wompiData.error || 'No se pudo generar la pasarela segura de Wompi');
         }
 
-        clearCart();
         // Redireccionar al usuario a la pantalla oficial de pago de Wompi / Banco Agrícola
-        window.location.href = wompiData.urlEnlace;
+        // Limpiamos el carrito justo al navegar para evitar el flash de pantalla vacía
+        clearCart();
+        window.location.replace(wompiData.urlEnlace);
         return;
       }
 
@@ -543,8 +544,8 @@ export default function CheckoutPage() {
     );
   }
 
-  // Si el carrito está vacío
-  if (cart.length === 0) {
+  // Si el carrito está vacío y no se está procesando una redirección a Wompi
+  if (cart.length === 0 && !isSubmitting) {
     return (
       <div className="max-w-md mx-auto py-16 px-4 text-center space-y-4">
         <div className="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-400 flex items-center justify-center mx-auto shadow-inner">
