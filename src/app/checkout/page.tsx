@@ -247,6 +247,22 @@ export default function CheckoutPage() {
 
         const wompiData = await wompiRes.json();
         if (!wompiRes.ok || !wompiData.success || !wompiData.urlEnlace) {
+          // Si falló la creación del enlace de Wompi, marcamos o cancelamos el pedido huérfano
+          if (orderData.order?.id) {
+            try {
+              await fetch('/api/ecommerce/orders', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  orderId: orderData.order.id,
+                  orderStatus: 'CANCELADO',
+                  paymentStatus: 'REJECTED',
+                }),
+              });
+            } catch (cleanupErr) {
+              console.error('Error limpiando pedido fallido:', cleanupErr);
+            }
+          }
           throw new Error(wompiData.error || 'No se pudo generar la pasarela segura de Wompi');
         }
 
