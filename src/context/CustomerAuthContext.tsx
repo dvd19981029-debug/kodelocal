@@ -135,6 +135,7 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
           const data = await res.json();
           if (data.success && data.customer) {
             saveCustomerSession(data.customer);
+            closeAuthModal();
           }
         } catch (err) {
           console.error('Error sincronizando usuario de Google con BD:', err);
@@ -160,7 +161,7 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
   const loginWithGoogle = async () => {
     try {
       const redirectUrl = typeof window !== 'undefined' ? window.location.origin : undefined;
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
@@ -169,6 +170,9 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
 
       if (error) {
         return { success: false, error: error.message };
+      }
+      if (data?.url) {
+        window.location.href = data.url;
       }
       return { success: true };
     } catch (err: any) {

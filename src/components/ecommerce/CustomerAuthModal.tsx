@@ -19,13 +19,22 @@ export default function CustomerAuthModal() {
     openAuthModal,
     loginWithGoogle,
     loginWithCredentials,
-    registerCustomer
+    registerCustomer,
+    isLoggedIn
   } = useCustomerAuth();
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Cerrar modal automáticamente si el usuario ya inició sesión
+  React.useEffect(() => {
+    if (isLoggedIn && isAuthModalOpen) {
+      closeAuthModal();
+      setIsLoading(false);
+    }
+  }, [isLoggedIn, isAuthModalOpen, closeAuthModal]);
 
   // Form states
   const [email, setEmail] = useState('');
@@ -43,8 +52,10 @@ export default function CustomerAuthModal() {
       if (!res.success) {
         setErrorMessage(res.error || 'No se pudo conectar con Google');
         setIsLoading(false);
+      } else {
+        // Fallback de seguridad si el navegador no descarga la página de inmediato
+        setTimeout(() => setIsLoading(false), 5000);
       }
-      // If success, the browser will be redirected to Google OAuth
     } catch (e: any) {
       setErrorMessage(e.message || 'Error al conectar con Google');
       setIsLoading(false);
