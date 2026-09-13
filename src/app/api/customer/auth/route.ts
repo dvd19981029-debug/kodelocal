@@ -193,6 +193,66 @@ export async function POST(request: Request) {
       });
     }
 
+    // ================= 4. ACTUALIZAR PERFIL / FACTURACIÓN =================
+    if (action === 'update_profile') {
+      const { 
+        customerId, 
+        name, 
+        phone, 
+        documentType, 
+        documentNum, 
+        department, 
+        municipality, 
+        address,
+        nrc,
+        businessName,
+        activityDesc 
+      } = body;
+
+      if (!customerId) {
+        return NextResponse.json(
+          { success: false, error: 'ID de cliente requerido' },
+          { status: 400 }
+        );
+      }
+
+      const updated = await prisma.customer.update({
+        where: { id: customerId },
+        data: {
+          ...(name ? { name: name.trim() } : {}),
+          ...(phone !== undefined ? { phone: phone.trim() } : {}),
+          ...(documentType !== undefined ? { documentType } : {}),
+          ...(documentNum !== undefined ? { documentNum: documentNum.trim() } : {}),
+          ...(department !== undefined ? { department } : {}),
+          ...(municipality !== undefined ? { municipality } : {}),
+          ...(address !== undefined ? { address: address.trim() } : {}),
+          ...(nrc !== undefined ? { nrc: nrc.trim() } : {}),
+          ...(businessName !== undefined ? { businessName: businessName.trim() } : {}),
+          ...(activityDesc !== undefined ? { activityDesc: activityDesc.trim() } : {}),
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        customer: {
+          id: updated.id,
+          name: updated.name,
+          email: updated.email || '',
+          phone: updated.phone || '',
+          documentType: updated.documentType || 'DUI',
+          documentNum: updated.documentNum || '',
+          department: updated.department || 'San Salvador',
+          municipality: updated.municipality || 'San Salvador Centro',
+          address: updated.address || '',
+          nrc: updated.nrc || '',
+          businessName: updated.businessName || '',
+          activityDesc: updated.activityDesc || '',
+          avatarUrl: updated.avatarUrl || '',
+          authProvider: updated.googleId ? 'google' : 'credentials',
+        },
+      });
+    }
+
     return NextResponse.json({ success: false, error: 'Acción no válida' }, { status: 400 });
   } catch (error: any) {
     console.error('Customer Auth Error:', error);

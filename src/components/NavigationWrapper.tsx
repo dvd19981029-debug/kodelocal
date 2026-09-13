@@ -7,6 +7,7 @@ import EcommerceHeader from '@/components/ecommerce/EcommerceHeader';
 import PromoTickerBar from '@/components/ecommerce/PromoTickerBar';
 import EcommerceFooter from '@/components/ecommerce/EcommerceFooter';
 import CartDrawer from '@/components/ecommerce/CartDrawer';
+import CustomerDrawer from '@/components/ecommerce/CustomerDrawer';
 import CustomerAuthModal from '@/components/ecommerce/CustomerAuthModal';
 import { EcommerceCartProvider } from '@/context/EcommerceCartContext';
 import { CustomerAuthProvider } from '@/context/CustomerAuthContext';
@@ -29,6 +30,7 @@ export default function NavigationWrapper({ children }: { children: React.ReactN
     <CustomerAuthProvider>
       <EcommerceCartProvider>
         <CartDrawer />
+        <CustomerDrawer />
         <CustomerAuthModal />
 
       {isLoginPage ? (

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ShoppingBag, User, LogOut, ChevronDown } from 'lucide-react';
+import { ShoppingBag, User, ChevronDown } from 'lucide-react';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { useScrolled } from '@/hooks/useScrolled';
@@ -11,8 +11,7 @@ import { useScrolled } from '@/hooks/useScrolled';
 export default function EcommerceHeader() {
   const pathname = usePathname();
   const { totalItems, subtotal, setIsCartOpen, isCartPulsing } = useEcommerceCart();
-  const { customer, isLoggedIn, openAuthModal, logout } = useCustomerAuth();
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const { customer, isLoggedIn, openAuthModal, openDrawer } = useCustomerAuth();
   const isScrolled = useScrolled(75);
 
   const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -32,51 +31,27 @@ export default function EcommerceHeader() {
         {/* ================= LADO IZQUIERDO: Botón de Usuario / Mi Cuenta ================= */}
         <div className="flex items-center justify-start gap-2">
           {isLoggedIn && customer ? (
-            <div className="relative">
-              <button
-                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center gap-1.5 sm:gap-2 py-1 px-2 sm:px-2.5 rounded-xl bg-white/95 hover:bg-white border border-slate-200/80 shadow-2xs transition-all text-left cursor-pointer active:scale-95"
-              >
-                {customer.avatarUrl ? (
-                  <img
-                    src={customer.avatarUrl}
-                    alt={customer.name}
-                    className="w-6 h-6 rounded-full object-cover border border-indigo-200"
-                  />
-                ) : (
-                  <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px] font-black">
-                    {customer.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <span className="text-[11px] font-black text-slate-800 hidden sm:inline truncate max-w-[80px]">
-                  {customer.name.split(' ')[0]}
-                </span>
-                <ChevronDown className="w-3 h-3 text-slate-400" />
-              </button>
-
-              {/* Menú Desplegable */}
-              {isUserMenuOpen && (
-                <div className="absolute left-0 mt-2 w-56 rounded-2xl bg-white shadow-xl border border-slate-100 p-2 z-50 animate-in fade-in zoom-in-95">
-                  <div className="px-3 py-2 border-b border-slate-100">
-                    <p className="text-xs font-black text-slate-900 truncate">{customer.name}</p>
-                    <p className="text-[10px] text-slate-400 font-medium truncate">{customer.email}</p>
-                    {customer.department && (
-                      <p className="text-[10px] text-indigo-600 font-bold mt-0.5">📍 {customer.department}</p>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => {
-                      setIsUserMenuOpen(false);
-                      logout();
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 mt-1 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                    <span>Cerrar Sesión</span>
-                  </button>
+            <button
+              onClick={() => openDrawer('orders')}
+              className="flex items-center gap-1.5 sm:gap-2 py-1 px-2 sm:px-2.5 rounded-xl bg-white/95 hover:bg-white hover:border-indigo-300 border border-slate-200/80 shadow-2xs transition-all text-left cursor-pointer active:scale-95 group"
+              title="Ver mi perfil y pedidos"
+            >
+              {customer.avatarUrl ? (
+                <img
+                  src={customer.avatarUrl}
+                  alt={customer.name}
+                  className="w-6 h-6 rounded-full object-cover border border-indigo-200"
+                />
+              ) : (
+                <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px] font-black">
+                  {customer.name.charAt(0).toUpperCase()}
                 </div>
               )}
-            </div>
+              <span className="text-[11px] font-black text-slate-800 hidden sm:inline truncate max-w-[90px]">
+                {customer.name.split(' ')[0]}
+              </span>
+              <ChevronDown className="w-3 h-3 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+            </button>
           ) : (
             <button
               onClick={() => openAuthModal('login')}

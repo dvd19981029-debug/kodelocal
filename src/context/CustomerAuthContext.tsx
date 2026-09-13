@@ -8,9 +8,14 @@ export interface CustomerUser {
   name: string;
   email: string;
   phone?: string;
+  documentType?: string;
+  documentNum?: string;
   department?: string;
   municipality?: string;
   address?: string;
+  nrc?: string;
+  businessName?: string;
+  activityDesc?: string;
   avatarUrl?: string;
   authProvider?: 'google' | 'credentials';
 }
@@ -33,6 +38,12 @@ interface CustomerAuthContextType {
   authModalTab: 'login' | 'register';
   openAuthModal: (tab?: 'login' | 'register') => void;
   closeAuthModal: () => void;
+  isDrawerOpen: boolean;
+  drawerTab: 'orders' | 'profile';
+  openDrawer: (tab?: 'orders' | 'profile') => void;
+  closeDrawer: () => void;
+  setDrawerTab: (tab: 'orders' | 'profile') => void;
+  updateCustomerProfile: (data: Partial<CustomerUser>) => Promise<{ success: boolean; error?: string }>;
   loginWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   loginWithCredentials: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   registerCustomer: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
@@ -46,6 +57,17 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalTab, setAuthModalTab] = useState<'login' | 'register'>('login');
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [drawerTab, setDrawerTab] = useState<'orders' | 'profile'>('orders');
+
+  const openDrawer = (tab: 'orders' | 'profile' = 'orders') => {
+    setDrawerTab(tab);
+    setIsDrawerOpen(true);
+  };
+
+  const closeDrawer = () => {
+    setIsDrawerOpen(false);
+  };
 
   const saveCustomerSession = (user: CustomerUser | null) => {
     setCustomer(user);
@@ -183,7 +205,34 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     }
   };
 
-  // 4. Cerrar Sesión
+  // 4. Actualizar Perfil / Datos de Facturación
+  const updateCustomerProfile = async (data: Partial<CustomerUser>) => {
+    if (!customer?.id) return { success: false, error: 'No hay sesión activa' };
+
+    try {
+      const res = await fetch('/api/customer/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_profile',
+          customerId: customer.id,
+          ...data,
+        }),
+      });
+
+      const resData = await res.json();
+      if (!resData.success) {
+        return { success: false, error: resData.error || 'Error al actualizar perfil' };
+      }
+
+      saveCustomerSession(resData.customer);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Error de conexión' };
+    }
+  };
+
+  // 5. Cerrar Sesión
   const logout = async () => {
     try {
       await supabase.auth.signOut();
@@ -191,6 +240,7 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
       console.error('Error cerrando sesión en Supabase:', e);
     }
     saveCustomerSession(null);
+    closeDrawer();
   };
 
   return (
@@ -203,6 +253,12 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
         authModalTab,
         openAuthModal,
         closeAuthModal,
+        isDrawerOpen,
+        drawerTab,
+        openDrawer,
+        closeDrawer,
+        setDrawerTab,
+        updateCustomerProfile,
         loginWithGoogle,
         loginWithCredentials,
         registerCustomer,
