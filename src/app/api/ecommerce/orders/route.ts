@@ -1,20 +1,49 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getWompiTransaction } from '@/lib/wompi';
+import { verifyCustomerToken, verifyStaffInternalToken } from '@/lib/customerAuthToken';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const customerId = searchParams.get('customerId');
+    const queryCustomerId = searchParams.get('customerId');
     const status = searchParams.get('status');
     const includeIncomplete = searchParams.get('includeIncomplete') === 'true';
 
+    // 1. Verificar autenticación: Staff vs Cliente
+    const authHeader = request.headers.get('authorization') || '';
+    const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : null;
+    const staffHeaderToken = request.headers.get('x-staff-token');
+
+    const isStaff = verifyStaffInternalToken(staffHeaderToken) || verifyStaffInternalToken(bearerToken);
+    const customerPayload = verifyCustomerToken(bearerToken);
+
+    if (!isStaff && !customerPayload) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Acceso no autorizado. Se requiere autenticación de cliente o personal para consultar pedidos.',
+        },
+        { status: 401 }
+      );
+    }
+
+    // 2. Determinar el customerId efectivo
+    // Si es un cliente autenticado, FORZAR su propio customerId (inmune a BOLA / IDOR / spoofing)
+    // Si es staff operativo, puede consultar pedidos globales o filtrar por un customerId específico
+    let targetCustomerId: string | undefined = undefined;
+    if (customerPayload) {
+      targetCustomerId = customerPayload.customerId;
+    } else if (isStaff && queryCustomerId) {
+      targetCustomerId = queryCustomerId;
+    }
+
     const orders = await prisma.ecommerceOrder.findMany({
       where: {
-        ...(customerId ? {
-          customerId,
+        ...(targetCustomerId ? {
+          customerId: targetCustomerId,
           // Para el cliente, excluir intentos de pago con tarjeta abandonados o nunca pagados
           ...(!includeIncomplete ? {
             NOT: {

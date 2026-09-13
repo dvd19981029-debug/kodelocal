@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
+import { createCustomerToken, verifyCustomerToken } from '@/lib/customerAuthToken';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,8 +63,11 @@ export async function POST(request: Request) {
         });
       }
 
+      const sessionToken = createCustomerToken(customer.id, customer.email || '');
+
       return NextResponse.json({
         success: true,
+        sessionToken,
         customer: {
           id: customer.id,
           name: customer.name,
@@ -79,6 +83,7 @@ export async function POST(request: Request) {
           activityDesc: customer.activityDesc || '',
           avatarUrl: customer.avatarUrl || '',
           authProvider: 'google',
+          sessionToken,
         },
       });
     }
@@ -125,8 +130,11 @@ export async function POST(request: Request) {
         },
       });
 
+      const sessionToken = createCustomerToken(customer.id, customer.email || '');
+
       return NextResponse.json({
         success: true,
+        sessionToken,
         customer: {
           id: customer.id,
           name: customer.name,
@@ -142,6 +150,7 @@ export async function POST(request: Request) {
           activityDesc: customer.activityDesc || '',
           avatarUrl: customer.avatarUrl,
           authProvider: 'credentials',
+          sessionToken,
         },
       });
     }
@@ -188,8 +197,11 @@ export async function POST(request: Request) {
         );
       }
 
+      const sessionToken = createCustomerToken(customer.id, customer.email || '');
+
       return NextResponse.json({
         success: true,
+        sessionToken,
         customer: {
           id: customer.id,
           name: customer.name,
@@ -205,6 +217,7 @@ export async function POST(request: Request) {
           activityDesc: customer.activityDesc || '',
           avatarUrl: customer.avatarUrl || '',
           authProvider: 'credentials',
+          sessionToken,
         },
       });
     }
@@ -232,6 +245,18 @@ export async function POST(request: Request) {
         );
       }
 
+      // Proteger contra IDOR: validar que quien edita sea el titular del token
+      const authHeader = request.headers.get('authorization');
+      const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : (body.sessionToken || null);
+      const verified = verifyCustomerToken(token);
+
+      if (!verified || verified.customerId !== customerId) {
+        return NextResponse.json(
+          { success: false, error: 'No autorizado: se requiere sesión activa del titular de la cuenta.' },
+          { status: 403 }
+        );
+      }
+
       const updated = await prisma.customer.update({
         where: { id: customerId },
         data: {
@@ -248,8 +273,11 @@ export async function POST(request: Request) {
         },
       });
 
+      const sessionToken = createCustomerToken(updated.id, updated.email || '');
+
       return NextResponse.json({
         success: true,
+        sessionToken,
         customer: {
           id: updated.id,
           name: updated.name,
@@ -265,8 +293,28 @@ export async function POST(request: Request) {
           activityDesc: updated.activityDesc || '',
           avatarUrl: updated.avatarUrl || '',
           authProvider: updated.googleId ? 'google' : 'credentials',
+          sessionToken,
         },
       });
+    }
+
+    // ================= 5. REFRESCAR / OBTENER TOKEN DE SESIÓN =================
+    if (action === 'get_token') {
+      const { customerId, email } = body;
+      if (!customerId || !email) {
+        return NextResponse.json({ success: false, error: 'Datos insuficientes' }, { status: 400 });
+      }
+
+      const existing = await prisma.customer.findFirst({
+        where: { id: customerId, email: email.toLowerCase().trim() },
+      });
+
+      if (!existing) {
+        return NextResponse.json({ success: false, error: 'Cliente no encontrado' }, { status: 404 });
+      }
+
+      const sessionToken = createCustomerToken(existing.id, existing.email || '');
+      return NextResponse.json({ success: true, sessionToken });
     }
 
     return NextResponse.json({ success: false, error: 'Acción no válida' }, { status: 400 });

@@ -11,6 +11,16 @@ const OPERATIONAL_ROUTES = [
   '/login'
 ];
 
+const OPERATIONAL_API_ROUTES = [
+  '/api/shifts',
+  '/api/purchases',
+  '/api/suppliers',
+  '/api/dte',
+  '/api/sales',
+  '/api/customers',
+  '/api/staff',
+];
+
 export function middleware(request: NextRequest) {
   const host = request.headers.get('host') || '';
   const { pathname } = request.nextUrl;
@@ -22,22 +32,38 @@ export function middleware(request: NextRequest) {
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
 
+  const isOperationalApi = OPERATIONAL_API_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+
   // 1. En el subdominio de empleados (pos.aromaniaksv.com)
   if (isPosSubdomain) {
     // Si entran a la raíz de pos.aromaniaksv.com, abrir directo el POS
     if (pathname === '/') {
       return NextResponse.redirect(new URL('/pos', request.url));
     }
-    // Si intentan entrar a rutas de tienda (ej: /checkout) en el subdominio pos, mandar a la tienda oficial
-    if (!isOperational) {
+    // Si intentan entrar a páginas de tienda (ej: /checkout) en el subdominio pos, mandar a la tienda oficial
+    // (no redirigir llamadas /api)
+    if (!isOperational && !pathname.startsWith('/api')) {
       return NextResponse.redirect(new URL(`https://aromaniaksv.com${pathname}`, request.url));
     }
   }
 
-  // 2. En el dominio de clientes (aromaniaksv.com), bloquear todo acceso a rutas de empleados
-  // Redirige al subdominio operativo pos.aromaniaksv.com para aislar completamente el dominio de clientes
+  // 2. En el dominio de clientes (aromaniaksv.com), bloquear páginas operativas
+  // Redirige al subdominio operativo pos.aromaniaksv.com
   if (isCustomerDomain && isOperational) {
     return NextResponse.redirect(new URL(`https://pos.aromaniaksv.com${pathname}`, request.url));
+  }
+
+  // 3. En el dominio de clientes (aromaniaksv.com), bloquear APIs operacionales/administrativas
+  if (isCustomerDomain && isOperationalApi) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Acceso denegado: API reservada exclusivamente para el entorno operativo pos.aromaniaksv.com',
+      },
+      { status: 403 }
+    );
   }
 
   return NextResponse.next();
@@ -47,11 +73,10 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for:
-     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };

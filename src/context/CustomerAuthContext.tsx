@@ -18,6 +18,7 @@ export interface CustomerUser {
   activityDesc?: string;
   avatarUrl?: string;
   authProvider?: 'google' | 'credentials';
+  sessionToken?: string;
 }
 
 export interface RegisterData {
@@ -83,7 +84,28 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     try {
       const saved = localStorage.getItem('aromaniak_customer_session');
       if (saved) {
-        setCustomer(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        setCustomer(parsed);
+
+        // Si la sesión guardada no tiene token firmado, refrescarlo silenciosamente
+        if (parsed.id && parsed.email && !parsed.sessionToken) {
+          fetch('/api/customer/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'get_token',
+              customerId: parsed.id,
+              email: parsed.email,
+            }),
+          })
+            .then((r) => r.json())
+            .then((d) => {
+              if (d.success && d.sessionToken) {
+                saveCustomerSession({ ...parsed, sessionToken: d.sessionToken });
+              }
+            })
+            .catch((e) => console.error('Error refrescando token de sesión:', e));
+        }
       }
     } catch (e) {
       console.error('Error restaurando sesión de cliente:', e);
@@ -212,10 +234,14 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     try {
       const res = await fetch('/api/customer/auth', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(customer.sessionToken ? { 'Authorization': `Bearer ${customer.sessionToken}` } : {})
+        },
         body: JSON.stringify({
           action: 'update_profile',
           customerId: customer.id,
+          sessionToken: customer.sessionToken,
           ...data,
         }),
       });

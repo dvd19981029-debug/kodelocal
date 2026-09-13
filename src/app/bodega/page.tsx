@@ -41,7 +41,7 @@ import {
   saveStoredPurchases, 
   applyBodegaReceptionToProducts 
 } from '@/lib/purchases';
-import { getActiveUser, UserAccount } from '@/lib/auth';
+import { getActiveUser, UserAccount, getStaffToken } from '@/lib/auth';
 
 type BodegaTab = 'por_preparar' | 'listos' | 'entregados' | 'inventario' | 'ingreso_compras';
 
@@ -145,8 +145,13 @@ export default function BodegaPage() {
       .catch(err => console.error('Error sincronizando compras con Supabase en Bodega:', err));
 
     // Cargar pedidos de la tienda online (Ecommerce) desde Supabase
-    const fetchEcommerceOrders = () => {
-      fetch('/api/ecommerce/orders')
+    const fetchEcommerceOrders = async () => {
+      const staffToken = await getStaffToken();
+      fetch('/api/ecommerce/orders', {
+        headers: {
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+      })
         .then(res => res.json())
         .then(data => {
           if (data.success && Array.isArray(data.orders)) {
@@ -220,11 +225,15 @@ export default function BodegaPage() {
   };
 
   // Marcar pedido como listo para ventanilla
-  const handleMarkAsReady = (orderId: string) => {
+  const handleMarkAsReady = async (orderId: string) => {
     // Si es pedido web, actualizar en Supabase
+    const staffToken = await getStaffToken();
     fetch('/api/ecommerce/orders', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+      },
       body: JSON.stringify({ orderId, orderStatus: 'EN_RUTA' })
     }).catch(() => {});
 
@@ -243,12 +252,16 @@ export default function BodegaPage() {
   };
 
   // Marcar pedido como entregado
-  const handleMarkAsCompleted = (orderId: string) => {
+  const handleMarkAsCompleted = async (orderId: string) => {
     // Si es pedido web, actualizar en Supabase
+    const staffToken = await getStaffToken();
     fetch('/api/ecommerce/orders', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderId, orderStatus: 'ENTREGADO', paymentStatus: 'COMPLETED' })
+      headers: {
+        'Content-Type': 'application/json',
+        ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+      },
+      body: JSON.stringify({ orderId, orderStatus: 'ENTREGADO' })
     }).catch(() => {});
 
     setSales(prev => {
