@@ -1,19 +1,51 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getWompiTransaction } from '@/lib/wompi';
+import { verifyCustomerToken, verifyStaffInternalToken } from '@/lib/customerAuthToken';
+import { checkRateLimit } from '@/lib/rateLimit';
+import { sanitizeText, sanitizeEmail, sanitizePhone, sanitizeDocument } from '@/lib/sanitize';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const customerId = searchParams.get('customerId');
+    const queryCustomerId = searchParams.get('customerId');
     const status = searchParams.get('status');
     const includeIncomplete = searchParams.get('includeIncomplete') === 'true';
 
+    // 1. Verificar autenticación: Staff vs Cliente
+    const authHeader = request.headers.get('authorization') || '';
+    const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : null;
+    const staffHeaderToken = request.headers.get('x-staff-token');
+
+    const isStaff = verifyStaffInternalToken(staffHeaderToken) || verifyStaffInternalToken(bearerToken);
+    const customerPayload = verifyCustomerToken(bearerToken);
+
+    if (!isStaff && !customerPayload) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Acceso no autorizado. Se requiere autenticación de cliente o personal para consultar pedidos.',
+        },
+        { status: 401 }
+      );
+    }
+
+    // 2. Determinar el customerId efectivo
+    // Si es un cliente autenticado, FORZAR su propio customerId (inmune a BOLA / IDOR / spoofing)
+    // Si es staff operativo, puede consultar pedidos globales o filtrar por un customerId específico
+    let targetCustomerId: string | undefined = undefined;
+    if (customerPayload) {
+      targetCustomerId = customerPayload.customerId;
+    } else if (isStaff && queryCustomerId) {
+      targetCustomerId = queryCustomerId;
+    }
+
     const orders = await prisma.ecommerceOrder.findMany({
       where: {
-        ...(customerId ? {
-          customerId,
+        ...(targetCustomerId ? {
+          customerId: targetCustomerId,
           // Para el cliente, excluir intentos de pago con tarjeta abandonados o nunca pagados
           ...(!includeIncomplete ? {
             NOT: {
@@ -107,6 +139,57 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: false, error: 'Pedido no encontrado' }, { status: 404 });
     }
 
+    // SEC-01: Protección contra marcado arbitrario de pedidos como COMPLETED
+    if (paymentStatus === 'COMPLETED') {
+      if (order.paymentStatus === 'COMPLETED') {
+        return NextResponse.json({ success: true, order });
+      }
+
+      // Exigir ID de transacción y verificarla directamente con la API oficial de Wompi
+      const txId = body.transactionId || body.idTransaccion;
+      if (!txId) {
+        return NextResponse.json(
+          { success: false, error: 'No autorizado: se requiere comprobante/ID de transacción bancaria verificado.' },
+          { status: 403 }
+        );
+      }
+
+      try {
+        const txData = await getWompiTransaction(String(txId));
+        const isApproved = txData.esAprobada === true || txData.resultadoTransaccion === 'ExitosaAprobada';
+        const numMatches = !txData.identificadorEnlaceComercio || txData.identificadorEnlaceComercio === order.orderNumber;
+
+        if (!isApproved || !numMatches) {
+          return NextResponse.json(
+            { success: false, error: 'Transacción denegada o no corresponde a esta orden.' },
+            { status: 403 }
+          );
+        }
+      } catch (err: any) {
+        console.error('Error validando transacción bancaria en Wompi:', err);
+        return NextResponse.json(
+          { success: false, error: 'Error verificando la autenticidad del pago con la pasarela bancaria.' },
+          { status: 502 }
+        );
+      }
+    }
+
+    // SEC-01: Prohibir cancelaciones ilegítimas de órdenes pagadas o despachadas
+    if (orderStatus === 'CANCELADO' || paymentStatus === 'CANCELLED' || paymentStatus === 'REJECTED') {
+      if (order.paymentStatus === 'COMPLETED') {
+        return NextResponse.json(
+          { success: false, error: 'No se puede cancelar una orden con pago ya procesado y completado.' },
+          { status: 400 }
+        );
+      }
+      if (order.orderStatus === 'EN_RUTA' || order.orderStatus === 'ENTREGADO') {
+        return NextResponse.json(
+          { success: false, error: 'No se puede cancelar una orden en tránsito o entregada.' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Si se cancela o rechaza el pedido y no estaba cancelado previamente (o se fuerza restock), restaurar existencias
     const isCancelling = (orderStatus === 'CANCELADO' || paymentStatus === 'CANCELLED' || paymentStatus === 'REJECTED' || restock === true) && order.orderStatus !== 'CANCELADO';
     if (isCancelling && order.items && order.items.length > 0) {
@@ -151,6 +234,25 @@ export async function PATCH(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    // 0. Rate Limiting para creación de pedidos (SEC-05)
+    const rl = checkRateLimit(request, {
+      keyPrefix: 'ecommerce_orders_create',
+      maxRequests: 10,
+      windowMs: 5 * 60 * 1000,
+    });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Has alcanzado el límite de creación de pedidos. Por favor espera ${rl.resetSeconds} segundos antes de intentar nuevamente.`,
+        },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(rl.resetSeconds) },
+        }
+      );
+    }
+
     const body = await request.json();
     const {
       orderNumber,
@@ -174,15 +276,28 @@ export async function POST(request: Request) {
       tipoComprobante,
     } = body;
 
+    // Sanitización estricta de entradas (SEC-07)
+    const cleanCustomerName = sanitizeText(customerName, 100) || 'Cliente Online';
+    const cleanCustomerEmail = sanitizeEmail(customerEmail);
+    const cleanCustomerPhone = sanitizePhone(customerPhone) || '';
+    const cleanDepartment = sanitizeText(department, 50) || 'San Salvador';
+    const cleanMunicipality = sanitizeText(municipality, 60) || 'San Salvador Centro';
+    const cleanShippingAddress = sanitizeText(shippingAddress, 255);
+    const cleanDeliveryReference = sanitizeText(deliveryReference, 255) || null;
+    const cleanNotes = sanitizeText(notes, 500) || null;
+    const cleanNumDoc = sanitizeDocument(numDoc, 30) || '00000000-0';
+    const cleanNrc = sanitizeDocument(nrc, 30) || null;
+    const cleanGiro = sanitizeText(giro, 200) || null;
+    const cleanTipoComprobante = sanitizeText(tipoComprobante, 10) || '01';
+
     let resolvedCustomerId = customerId;
-    if (!resolvedCustomerId && (customerEmail || customerPhone || customerName)) {
+    if (!resolvedCustomerId && (cleanCustomerEmail || cleanCustomerPhone || cleanCustomerName)) {
       try {
-        const normalizedEmail = customerEmail?.trim()?.toLowerCase();
         let cust = await prisma.customer.findFirst({
           where: {
             OR: [
-              ...(normalizedEmail ? [{ email: normalizedEmail }] : []),
-              ...(customerPhone ? [{ phone: customerPhone.trim() }] : []),
+              ...(cleanCustomerEmail ? [{ email: cleanCustomerEmail }] : []),
+              ...(cleanCustomerPhone ? [{ phone: cleanCustomerPhone }] : []),
             ],
           },
         });
@@ -191,30 +306,30 @@ export async function POST(request: Request) {
           cust = await prisma.customer.update({
             where: { id: cust.id },
             data: {
-              ...(numDoc ? { documentNum: numDoc } : {}),
-              ...(nrc ? { nrc } : {}),
-              ...(giro ? { activityDesc: giro } : {}),
-              ...(tipoComprobante ? { preferredDoc: tipoComprobante } : {}),
-              ...(shippingAddress && !cust.address ? { address: shippingAddress } : {}),
-              ...(department && !cust.department ? { department } : {}),
-              ...(municipality && !cust.municipality ? { municipality } : {}),
+              ...(cleanNumDoc ? { documentNum: cleanNumDoc } : {}),
+              ...(cleanNrc ? { nrc: cleanNrc } : {}),
+              ...(cleanGiro ? { activityDesc: cleanGiro } : {}),
+              ...(cleanTipoComprobante ? { preferredDoc: cleanTipoComprobante } : {}),
+              ...(cleanShippingAddress && !cust.address ? { address: cleanShippingAddress } : {}),
+              ...(cleanDepartment && !cust.department ? { department: cleanDepartment } : {}),
+              ...(cleanMunicipality && !cust.municipality ? { municipality: cleanMunicipality } : {}),
             },
           });
           resolvedCustomerId = cust.id;
         } else {
           cust = await prisma.customer.create({
             data: {
-              name: customerName || 'Cliente Online',
-              email: normalizedEmail || null,
-              phone: customerPhone?.trim() || null,
-              documentType: tipoComprobante === '03' ? 'NIT' : 'DUI',
-              documentNum: numDoc?.trim() || '00000000-0',
-              nrc: nrc?.trim() || null,
-              activityDesc: giro?.trim() || null,
-              preferredDoc: tipoComprobante || '01',
-              department: department || 'San Salvador',
-              municipality: municipality || 'San Salvador',
-              address: shippingAddress || null,
+              name: cleanCustomerName,
+              email: cleanCustomerEmail || null,
+              phone: cleanCustomerPhone || null,
+              documentType: cleanTipoComprobante === '03' ? 'NIT' : 'DUI',
+              documentNum: cleanNumDoc,
+              nrc: cleanNrc,
+              activityDesc: cleanGiro,
+              preferredDoc: cleanTipoComprobante,
+              department: cleanDepartment,
+              municipality: cleanMunicipality,
+              address: cleanShippingAddress || null,
             },
           });
           resolvedCustomerId = cust.id;
@@ -336,9 +451,9 @@ export async function POST(request: Request) {
       verifiedSubtotal = Number(verifiedSubtotal.toFixed(2));
 
       // Determinar costo de envío legítimo en el servidor
-      const isRetiro = (deliveryReference && deliveryReference.includes('Retiro')) ||
-                       (shippingAddress && shippingAddress.includes('Retiro')) ||
-                       (notes && notes.includes('Retiro'));
+      const isRetiro = (cleanDeliveryReference && cleanDeliveryReference.includes('Retiro')) ||
+                       (cleanShippingAddress && cleanShippingAddress.includes('Retiro')) ||
+                       (cleanNotes && cleanNotes.includes('Retiro'));
       const verifiedShippingCost = isRetiro ? 0.00 : 3.50;
       const verifiedTotal = Number((verifiedSubtotal + verifiedShippingCost).toFixed(2));
 
@@ -347,20 +462,20 @@ export async function POST(request: Request) {
         data: {
           orderNumber: orderNumber || `WEB-${Math.floor(1000 + Math.random() * 9000)}`,
           customerId: resolvedCustomerId || null,
-          customerName: customerName || 'Cliente Online',
-          customerEmail: customerEmail || null,
-          customerPhone: customerPhone || '',
-          department: department || 'San Salvador',
-          municipality: municipality || 'San Salvador',
-          shippingAddress: shippingAddress || '',
-          deliveryReference: deliveryReference || null,
+          customerName: cleanCustomerName,
+          customerEmail: cleanCustomerEmail || null,
+          customerPhone: cleanCustomerPhone,
+          department: cleanDepartment,
+          municipality: cleanMunicipality,
+          shippingAddress: cleanShippingAddress,
+          deliveryReference: cleanDeliveryReference,
           subtotal: verifiedSubtotal,
           shippingCost: verifiedShippingCost,
           total: verifiedTotal,
           paymentMethod: paymentMethod || 'CASH',
           paymentStatus: 'PENDING',
           orderStatus: 'NUEVO',
-          notes: notes || null,
+          notes: cleanNotes,
           items: {
             create: verifiedItems.map((it) => ({
               productId: it.productId,

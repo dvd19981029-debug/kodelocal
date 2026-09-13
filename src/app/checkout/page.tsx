@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   Lock,
   Copy,
+  Check,
   Clock,
   Loader2
 } from 'lucide-react';

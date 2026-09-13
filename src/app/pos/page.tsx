@@ -65,6 +65,7 @@ import {
   DEPARTAMENTOS_CATALOG, 
   getMunicipiosByDepartamento 
 } from '@/lib/svTerritory';
+import { getStaffToken } from '@/lib/auth';
 
 export default function PosPage() {
   const router = useRouter();
@@ -260,9 +261,14 @@ export default function PosPage() {
       })
       .catch(err => console.error('Error sincronizando productos con Supabase:', err));
 
-    fetch('/api/ecommerce/orders')
-      .then(res => res.json())
-      .then(data => {
+    getStaffToken().then(staffToken => {
+      fetch('/api/ecommerce/orders', {
+        headers: {
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+      })
+        .then(res => res.json())
+        .then(data => {
         if (data.success && Array.isArray(data.orders)) {
           // Solo cargar en la cola pedidos con pago confirmado (autorización de Wompi) o transferencias válidas
           const validOrders = data.orders.filter((o: any) => {
@@ -320,6 +326,7 @@ export default function PosPage() {
         }
       })
       .catch(err => console.error('Error sincronizando pedidos ecommerce en POS:', err));
+    });
   }, []);
 
   // Filtrado de productos

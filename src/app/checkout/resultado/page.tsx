@@ -43,6 +43,7 @@ function CheckoutResultadoContent() {
           body: JSON.stringify({
             orderNumber: identificador,
             paymentStatus: 'COMPLETED',
+            transactionId: idTransaccion,
             notes: `[Pago Aprobado Wompi Tx: ${idTransaccion || 'N/A'}]`,
           }),
         }).catch((err) => console.error('Error actualizando estado de pago:', err));

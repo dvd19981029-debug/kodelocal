@@ -100,7 +100,11 @@ export default function CustomerDrawer() {
     setIsLoadingOrders(true);
     setOrdersError('');
 
-    fetch(`/api/ecommerce/orders?customerId=${customer.id}`)
+    fetch(`/api/ecommerce/orders?customerId=${customer.id}`, {
+      headers: {
+        ...(customer.sessionToken ? { 'Authorization': `Bearer ${customer.sessionToken}` } : {}),
+      },
+    })
       .then(async (res) => {
         const data = await res.json();
         if (isMounted) {

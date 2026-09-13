@@ -7,16 +7,24 @@ interface WompiTokenCache {
 
 let tokenCache: WompiTokenCache | null = null;
 
-const WOMPI_APP_ID = process.env.WOMPI_APP_ID || '27997c46-d68e-4a5f-8725-a930fb1e5aa0';
-const WOMPI_API_SECRET = process.env.WOMPI_API_SECRET || '5376bdd2-4d1a-4146-983c-7b4012728a55';
+const WOMPI_APP_ID = process.env.WOMPI_APP_ID;
+const WOMPI_API_SECRET = process.env.WOMPI_API_SECRET;
 const WOMPI_AUTH_URL = process.env.WOMPI_AUTH_URL || 'https://id.wompi.sv';
 const WOMPI_API_URL = process.env.WOMPI_API_URL || 'https://api.wompi.sv';
+
+function ensureWompiConfig(): { appId: string; apiSecret: string } {
+  if (!WOMPI_APP_ID || !WOMPI_API_SECRET) {
+    throw new Error('Configuración de Wompi incompleta: defina WOMPI_APP_ID y WOMPI_API_SECRET en las variables de entorno (.env).');
+  }
+  return { appId: WOMPI_APP_ID, apiSecret: WOMPI_API_SECRET };
+}
 
 /**
  * Obtiene el token de autenticación OAuth 2.0 de Wompi El Salvador.
  * El token se almacena en memoria y se reutiliza hasta que esté próximo a expirar (8 horas de vigencia).
  */
 export async function getWompiToken(): Promise<string> {
+  const { appId, apiSecret } = ensureWompiConfig();
   const now = Date.now();
 
   // Si tenemos token válido en caché con más de 2 minutos de margen, lo reutilizamos
@@ -26,8 +34,8 @@ export async function getWompiToken(): Promise<string> {
 
   const params = new URLSearchParams();
   params.append('grant_type', 'client_credentials');
-  params.append('client_id', WOMPI_APP_ID);
-  params.append('client_secret', WOMPI_API_SECRET);
+  params.append('client_id', appId);
+  params.append('client_secret', apiSecret);
   params.append('audience', 'wompi_api');
 
   const res = await fetch(`${WOMPI_AUTH_URL}/connect/token`, {
@@ -142,9 +150,10 @@ export async function createWompiPaymentLink(params: CreatePaymentLinkParams): P
  */
 export function validateWompiWebhook(rawBody: string, receivedHash?: string | null): boolean {
   if (!receivedHash) return false;
+  const { apiSecret } = ensureWompiConfig();
 
   try {
-    const hmac = crypto.createHmac('sha256', WOMPI_API_SECRET);
+    const hmac = crypto.createHmac('sha256', apiSecret);
     hmac.update(rawBody, 'utf8');
     const calculatedHash = hmac.digest('hex');
 

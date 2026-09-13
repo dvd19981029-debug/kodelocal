@@ -9,13 +9,16 @@ export async function POST(request: Request) {
     const rawBody = await request.text();
     const hashHeader = request.headers.get('wompi_hash');
 
-    // Validar autenticidad de la notificación si viene el hash
-    if (hashHeader) {
-      const isValid = validateWompiWebhook(rawBody, hashHeader);
-      if (!isValid) {
-        console.warn('⚠️ Webhook de Wompi descartado por firma inválida');
-        return NextResponse.json({ success: false, error: 'Firma inválida' }, { status: 401 });
-      }
+    // SEC-03: Validar autenticidad de la notificación OBLIGATORIAMENTE con el header wompi_hash
+    if (!hashHeader) {
+      console.warn('⚠️ Webhook de Wompi descartado: encabezado wompi_hash ausente');
+      return NextResponse.json({ success: false, error: 'Firma requerida' }, { status: 401 });
+    }
+
+    const isValid = validateWompiWebhook(rawBody, hashHeader);
+    if (!isValid) {
+      console.warn('⚠️ Webhook de Wompi descartado por firma inválida');
+      return NextResponse.json({ success: false, error: 'Firma inválida' }, { status: 401 });
     }
 
     const payload = JSON.parse(rawBody);
@@ -40,6 +43,13 @@ export async function POST(request: Request) {
       });
 
       if (order) {
+        // SEC-08: Control de idempotencia ante reintentos de red de Wompi
+        const alreadyHasTx = IdTransaccion && order.notes?.includes(String(IdTransaccion));
+        if (order.paymentStatus === 'COMPLETED' || alreadyHasTx) {
+          console.log(`ℹ️ Webhook Wompi: Orden ${orderNumber} ya fue procesada anteriormente. Respuesta idempotente.`);
+          return NextResponse.json({ success: true, message: 'Transacción ya procesada' });
+        }
+
         // Actualizar pedido a PAGADO
         await prisma.ecommerceOrder.update({
           where: { id: order.id },
