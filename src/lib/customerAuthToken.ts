@@ -1,6 +1,15 @@
 import crypto from 'crypto';
 
-const AUTH_SECRET = process.env.AUTH_SECRET || process.env.WOMPI_API_SECRET || 'aromaniak_auth_token_secret_2026';
+function ensureAuthSecret(): string {
+  const secret = process.env.AUTH_SECRET || process.env.WOMPI_API_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Configuración de seguridad crítica ausente: Defina AUTH_SECRET o WOMPI_API_SECRET en las variables de entorno de producción.');
+    }
+    return 'aromaniak_auth_token_secret_dev_2026';
+  }
+  return secret;
+}
 
 export interface CustomerTokenPayload {
   customerId: string;
@@ -13,6 +22,7 @@ export interface CustomerTokenPayload {
  * Vigencia: 30 días.
  */
 export function createCustomerToken(customerId: string, email: string): string {
+  const secret = ensureAuthSecret();
   const payload: CustomerTokenPayload = {
     customerId,
     email: email.toLowerCase().trim(),
@@ -21,7 +31,7 @@ export function createCustomerToken(customerId: string, email: string): string {
 
   const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
   const signature = crypto
-    .createHmac('sha256', AUTH_SECRET)
+    .createHmac('sha256', secret)
     .update(payloadB64)
     .digest('base64url');
 
@@ -41,8 +51,9 @@ export function verifyCustomerToken(token?: string | null): CustomerTokenPayload
   const [payloadB64, receivedSig] = parts;
 
   try {
+    const secret = ensureAuthSecret();
     const expectedSig = crypto
-      .createHmac('sha256', AUTH_SECRET)
+      .createHmac('sha256', secret)
       .update(payloadB64)
       .digest('base64url');
 
@@ -69,6 +80,7 @@ export function verifyCustomerToken(token?: string | null): CustomerTokenPayload
  * Firma interna para peticiones de Bodega y POS desde el servidor u operaciones internas.
  */
 export function createStaffInternalToken(role: string = 'STAFF'): string {
+  const secret = ensureAuthSecret();
   const payload = {
     role,
     scope: 'internal_operations',
@@ -77,7 +89,7 @@ export function createStaffInternalToken(role: string = 'STAFF'): string {
 
   const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
   const signature = crypto
-    .createHmac('sha256', AUTH_SECRET)
+    .createHmac('sha256', secret)
     .update(payloadB64)
     .digest('base64url');
 
@@ -93,8 +105,9 @@ export function verifyStaffInternalToken(token?: string | null): boolean {
   const [payloadB64, receivedSig] = parts;
 
   try {
+    const secret = ensureAuthSecret();
     const expectedSig = crypto
-      .createHmac('sha256', AUTH_SECRET)
+      .createHmac('sha256', secret)
       .update(payloadB64)
       .digest('base64url');
 
