@@ -273,6 +273,36 @@ export async function PATCH(request: Request) {
       include: { items: true, customer: true },
     });
 
+    // Enviar confirmación por correo si el pago se completó exitosamente (ej. retorno de Wompi)
+    if (safePaymentStatus === 'COMPLETED' && order.paymentStatus !== 'COMPLETED' && updated.customerEmail) {
+      try {
+        await sendOrderConfirmationEmail({
+          orderNumber: updated.orderNumber,
+          customerName: updated.customerName,
+          customerEmail: updated.customerEmail,
+          customerPhone: updated.customerPhone,
+          department: updated.department,
+          municipality: updated.municipality,
+          shippingAddress: updated.shippingAddress,
+          deliveryReference: updated.deliveryReference,
+          subtotal: Number(updated.subtotal || 0),
+          shippingCost: Number(updated.shippingCost || 0),
+          total: Number(updated.total || 0),
+          paymentMethod: updated.paymentMethod,
+          paymentStatus: updated.paymentStatus,
+          items: (updated.items || []).map((it) => ({
+            productName: it.productName,
+            presentation: it.presentation,
+            quantity: it.quantity,
+            unitPrice: Number(it.unitPrice || 0),
+            total: Number(it.total || 0),
+          })),
+        });
+      } catch (err) {
+        console.error('Error enviando correo de confirmación de pedido (PATCH):', err);
+      }
+    }
+
     return NextResponse.json({ success: true, order: updated });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -574,30 +604,34 @@ export async function POST(request: Request) {
       timeout: 20000, // Tiempo máximo de ejecución para carritos con múltiples productos (20s)
     });
 
-    // Enviar confirmación por correo de forma asíncrona (Google Apps Script)
+    // Enviar confirmación por correo (Google Apps Script)
     if (newOrder.customerEmail && (newOrder.paymentMethod === 'CASH' || newOrder.paymentMethod === 'TRANSFER')) {
-      sendOrderConfirmationEmail({
-        orderNumber: newOrder.orderNumber,
-        customerName: newOrder.customerName,
-        customerEmail: newOrder.customerEmail,
-        customerPhone: newOrder.customerPhone,
-        department: newOrder.department,
-        municipality: newOrder.municipality,
-        shippingAddress: newOrder.shippingAddress,
-        deliveryReference: newOrder.deliveryReference,
-        subtotal: Number(newOrder.subtotal || 0),
-        shippingCost: Number(newOrder.shippingCost || 0),
-        total: Number(newOrder.total || 0),
-        paymentMethod: newOrder.paymentMethod,
-        paymentStatus: newOrder.paymentStatus,
-        items: (newOrder.items || []).map((it) => ({
-          productName: it.productName,
-          presentation: it.presentation,
-          quantity: it.quantity,
-          unitPrice: Number(it.unitPrice || 0),
-          total: Number(it.total || 0),
-        })),
-      }).catch((err) => console.error('Error enviando correo de confirmación de pedido:', err));
+      try {
+        await sendOrderConfirmationEmail({
+          orderNumber: newOrder.orderNumber,
+          customerName: newOrder.customerName,
+          customerEmail: newOrder.customerEmail,
+          customerPhone: newOrder.customerPhone,
+          department: newOrder.department,
+          municipality: newOrder.municipality,
+          shippingAddress: newOrder.shippingAddress,
+          deliveryReference: newOrder.deliveryReference,
+          subtotal: Number(newOrder.subtotal || 0),
+          shippingCost: Number(newOrder.shippingCost || 0),
+          total: Number(newOrder.total || 0),
+          paymentMethod: newOrder.paymentMethod,
+          paymentStatus: newOrder.paymentStatus,
+          items: (newOrder.items || []).map((it) => ({
+            productName: it.productName,
+            presentation: it.presentation,
+            quantity: it.quantity,
+            unitPrice: Number(it.unitPrice || 0),
+            total: Number(it.total || 0),
+          })),
+        });
+      } catch (err) {
+        console.error('Error enviando correo de confirmación de pedido (POST):', err);
+      }
     }
 
     return NextResponse.json({ success: true, order: newOrder });

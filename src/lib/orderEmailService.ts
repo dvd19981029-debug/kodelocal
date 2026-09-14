@@ -26,7 +26,9 @@ export interface OrderEmailData {
  * Se ejecuta en segundo plano sin interrumpir ni demorar la respuesta de compra del cliente.
  */
 export async function sendOrderConfirmationEmail(orderData: OrderEmailData): Promise<boolean> {
-  const scriptUrl = process.env.GOOGLE_APPS_SCRIPT_ORDER_EMAIL_URL;
+  const scriptUrl =
+    process.env.GOOGLE_APPS_SCRIPT_ORDER_EMAIL_URL ||
+    'https://script.google.com/macros/s/AKfycbwQJaDwGl_QLRB5lkLVFa3nXEOVAwUZypf7b36Ki_NKHEWMsL9Cb0KNly3gB6x_o3qH/exec';
 
   if (!scriptUrl) {
     console.log('ℹ️ GOOGLE_APPS_SCRIPT_ORDER_EMAIL_URL no está configurada en las variables de entorno. Omitiendo envío de correo.');
