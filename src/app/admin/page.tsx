@@ -472,7 +472,7 @@ export default function AdminPage() {
     // Sincronizar en vivo con la base de datos de Supabase
     try {
       const staffToken = await getStaffToken();
-      await fetch('/api/products', {
+      const res = await fetch('/api/products', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -480,6 +480,8 @@ export default function AdminPage() {
         },
         body: JSON.stringify({
           id: prodToSave.id,
+          sku: prodToSave.sku,
+          brand: prodToSave.brand,
           name: prodToSave.name,
           officialName: prodToSave.officialName,
           price: Number(prodToSave.price),
@@ -492,6 +494,13 @@ export default function AdminPage() {
           isAvailableOnline: prodToSave.isAvailableOnline,
         }),
       });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.product) {
+          setProducts(prev => prev.map(p => (p.id === prodToSave.id || (p.sku && p.sku === data.product.sku)) ? { ...p, ...data.product } : p));
+        }
+      }
     } catch (err) {
       console.error('Error sincronizando producto con Supabase:', err);
     }

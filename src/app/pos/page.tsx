@@ -360,6 +360,7 @@ export default function PosPage() {
         !q ||
         product.sku.toLowerCase() === q ||
         product.name.toLowerCase().includes(q) ||
+        (product.officialName && product.officialName.toLowerCase().includes(q)) ||
         (product.brand && product.brand.toLowerCase().includes(q)) ||
         (product.puesto && product.puesto.toLowerCase().includes(q)) ||
         product.barcode.includes(q);
@@ -396,9 +397,12 @@ export default function PosPage() {
   const formatCartItem = (i: CartItem) => {
     const isHalfOz = i.presentation === 'MEDIA_ONZA';
     const unitPrice = getItemUnitPrice(i);
+    const displayName = i.product.officialName && i.product.officialName !== i.product.name
+      ? `${i.product.officialName} (${i.product.name})`
+      : i.product.name;
     return {
       productId: i.product.id,
-      name: isHalfOz ? `${i.product.name} (½ Oz)` : i.product.name,
+      name: isHalfOz ? `${displayName} (½ Oz)` : displayName,
       quantity: i.quantity,
       price: unitPrice,
       total: Number((i.quantity * unitPrice).toFixed(2)),
@@ -1655,9 +1659,20 @@ export default function PosPage() {
                           </span>
                         )}
 
-                        <h3 className="font-bold text-[11.5px] text-slate-800 line-clamp-2 leading-snug min-h-[28px] mt-0.5">
-                          {product.name}
-                        </h3>
+                        {product.officialName ? (
+                          <div className="min-h-[30px] mt-0.5">
+                            <h3 className="font-black text-[12px] text-slate-900 line-clamp-1 leading-snug">
+                              {product.officialName}
+                            </h3>
+                            <span className="text-[10px] text-slate-500 font-medium block truncate">
+                              Inspirado en {product.name}
+                            </span>
+                          </div>
+                        ) : (
+                          <h3 className="font-bold text-[11.5px] text-slate-800 line-clamp-2 leading-snug min-h-[28px] mt-0.5">
+                            {product.name}
+                          </h3>
+                        )}
                       </div>
 
                       <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-100 gap-1">
@@ -1992,9 +2007,14 @@ export default function PosPage() {
                                   #{item.product.sku}
                                 </span>
                                 <h4 className="font-bold text-[11px] text-slate-800 truncate leading-tight">
-                                  {item.product.name}
+                                  {item.product.officialName || item.product.name}
                                 </h4>
                               </div>
+                              {item.product.officialName && item.product.officialName !== item.product.name && (
+                                <p className="text-[9.5px] text-slate-400 truncate">
+                                  Inspirado en {item.product.name}
+                                </p>
+                              )}
                               <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-500">
                                 <span className="font-medium text-slate-700">
                                   ${unitPrice.toFixed(2)}/{itemPres === 'MEDIA_ONZA' ? '½ Oz' : item.product.unit}

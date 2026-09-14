@@ -146,14 +146,36 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: true, count: result.count });
     }
 
-    const { id, stock, isAvailableOnline, price, cost, priceHalfOunce, finishedPerfumePrice, puesto, officialName, imageUrl, name } = body;
+    const { id, sku, stock, isAvailableOnline, price, cost, priceHalfOunce, finishedPerfumePrice, puesto, officialName, imageUrl, name, brand, description } = body;
 
-    if (!id) {
-      return NextResponse.json({ success: false, error: 'Product ID required' }, { status: 400 });
+    if (!id && !sku) {
+      return NextResponse.json({ success: false, error: 'Product ID or SKU required' }, { status: 400 });
+    }
+
+    let existing = null;
+    if (id) {
+      existing = await prisma.product.findUnique({ where: { id } });
+    }
+    if (!existing && sku) {
+      existing = await prisma.product.findUnique({ where: { sku: String(sku).trim() } });
+    }
+    if (!existing && id) {
+      existing = await prisma.product.findFirst({
+        where: {
+          OR: [
+            { sku: String(id).trim() },
+            { barcode: String(id).trim() },
+          ],
+        },
+      });
+    }
+
+    if (!existing) {
+      return NextResponse.json({ success: false, error: 'Producto no encontrado en la base de datos' }, { status: 404 });
     }
 
     const updated = await prisma.product.update({
-      where: { id },
+      where: { id: existing.id },
       data: {
         ...(typeof stock === 'number' ? { stock } : {}),
         ...(typeof isAvailableOnline === 'boolean' ? { isAvailableOnline } : {}),
@@ -165,10 +187,37 @@ export async function PATCH(request: Request) {
         ...(typeof officialName === 'string' ? { officialName } : {}),
         ...(typeof imageUrl === 'string' ? { imageUrl } : {}),
         ...(typeof name === 'string' ? { name } : {}),
+        ...(typeof brand === 'string' ? { brand } : {}),
+        ...(typeof description === 'string' ? { description } : {}),
+      },
+      include: {
+        category: true,
       },
     });
 
-    return NextResponse.json({ success: true, product: updated });
+    const formattedUpdated = {
+      id: updated.id,
+      sku: updated.sku || '',
+      barcode: updated.barcode || '',
+      name: updated.name,
+      officialName: updated.officialName || '',
+      brand: updated.brand || '',
+      gender: updated.gender || 'Unisex',
+      category: updated.category?.name || 'Esencias para Perfume',
+      unit: updated.unit || 'Onza',
+      price: Number(updated.price),
+      priceHalfOunce: updated.priceHalfOunce != null ? Number(updated.priceHalfOunce) : undefined,
+      finishedPerfumePrice: updated.finishedPerfumePrice != null ? Number(updated.finishedPerfumePrice) : undefined,
+      cost: Number(updated.cost || 0),
+      stock: updated.stock,
+      minStock: updated.minStock,
+      imageUrl: updated.imageUrl || '',
+      description: updated.description || '',
+      isAvailableOnline: updated.isAvailableOnline,
+      puesto: updated.puesto || '',
+    };
+
+    return NextResponse.json({ success: true, product: formattedUpdated });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

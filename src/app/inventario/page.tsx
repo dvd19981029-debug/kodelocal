@@ -129,7 +129,7 @@ export default function InventarioPage() {
     // Sincronizar con Supabase
     try {
       const staffToken = await getStaffToken();
-      await fetch('/api/products', {
+      const res = await fetch('/api/products', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -137,6 +137,8 @@ export default function InventarioPage() {
         },
         body: JSON.stringify({
           id: targetId,
+          sku: payload.sku,
+          brand: payload.brand,
           name: payload.name,
           officialName: payload.officialName,
           price: payload.price,
@@ -148,6 +150,13 @@ export default function InventarioPage() {
           isAvailableOnline: payload.isAvailableOnline,
         }),
       });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.product) {
+          setProducts(prev => prev.map(p => (p.id === targetId || (p.sku && p.sku === data.product.sku)) ? { ...p, ...data.product } : p));
+        }
+      }
     } catch (err) {
       console.error('Error sincronizando con Supabase:', err);
     }

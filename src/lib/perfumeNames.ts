@@ -92,17 +92,31 @@ function toTitleCase(str: string): string {
 /**
  * Devuelve el nombre del perfume original SIN la marca y en mayúsculas/minúsculas normales.
  */
-export function getOriginalPerfumeName(product: { sku?: string; description?: string; name?: string; brand?: string }): string {
+export function getOriginalPerfumeName(product: { sku?: string; description?: string; name?: string; brand?: string; officialName?: string }): string {
   if (!product) return '';
 
-  // 1. Mapeo directo por SKU si existe
+  // 1. Si product.name tiene valor y es diferente a officialName, ese es el nombre de inspiración dinámico de la BD
+  if (product.name && product.name.trim()) {
+    const cleanName = product.name.trim();
+    const offName = (product.officialName || '').trim();
+    if (offName && cleanName.toLowerCase() !== offName.toLowerCase()) {
+      return cleanName;
+    }
+  }
+
+  // 2. Mapeo directo por SKU si existe
   const sku = String(product.sku || '').trim();
   if (sku && ORIGINAL_PERFUME_MAP[sku]) {
     return ORIGINAL_PERFUME_MAP[sku];
   }
 
-  // 2. Extracción dinámica limpiando "Inspirado en", marcas y sufijos de laboratorio
-  let text = (product.description || product.name || '').trim();
+  // 3. Si product.name está definido (incluso si no hay officialName), usar product.name
+  if (product.name && product.name.trim()) {
+    return product.name.trim();
+  }
+
+  // 4. Extracción dinámica limpiando "Inspirado en", marcas y sufijos de laboratorio
+  let text = (product.description || '').trim();
   text = text.replace(/^Inspirado en\s+/i, '').replace(/&amp;/g, '&').trim();
 
   // Remover sufijos de laboratorio
