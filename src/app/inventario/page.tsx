@@ -60,7 +60,6 @@ export default function InventarioPage() {
 
   useEffect(() => {
     localStorage.setItem('kodelocal_products', JSON.stringify(products));
-    window.dispatchEvent(new Event('kodelocal_products_updated'));
   }, [products]);
 
   // Categorías
@@ -89,6 +88,8 @@ export default function InventarioPage() {
   const lowStockCount = useMemo(() => products.filter(p => p.stock <= p.minStock).length, [products]);
   const ecommerceCount = useMemo(() => products.filter(p => p.isAvailableOnline).length, [products]);
 
+  const [isSaving, setIsSaving] = useState(false);
+
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.price) {
@@ -96,6 +97,7 @@ export default function InventarioPage() {
       return;
     }
 
+    setIsSaving(true);
     const targetId = editingProduct ? editingProduct.id : `prod-${Date.now()}`;
     const payload = {
       id: targetId,
@@ -169,6 +171,8 @@ export default function InventarioPage() {
     } catch (err) {
       console.error('Error sincronizando con Supabase:', err);
       alert('Error de conexión al sincronizar con la base de datos.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -477,7 +481,7 @@ export default function InventarioPage() {
               Configura los detalles del producto para caja física y e-commerce.
             </p>
 
-            <form onSubmit={handleSaveProduct} className="space-y-4">
+            <form onSubmit={handleSaveProduct} noValidate className="space-y-4">
               {/* Imagen y Vista Previa */}
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
                 <div className="sm:col-span-3 flex flex-col items-center">
@@ -495,13 +499,13 @@ export default function InventarioPage() {
                     URL de Imagen del Producto
                   </label>
                   <input
-                    type="url"
+                    type="text"
                     value={formData.imageUrl || ''}
                     onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                    placeholder="https://images.unsplash.com/... o enlace de foto"
+                    placeholder="/images/esencias/... o https://..."
                     className="clay-input w-full text-xs"
                   />
-                  <span className="text-[10px] text-slate-400 mt-1 block">Foto oficial del frasco de perfume</span>
+                  <span className="text-[10px] text-slate-400 mt-1 block">Foto oficial del frasco o ruta local (/images/...)</span>
                 </div>
               </div>
 
@@ -645,9 +649,17 @@ export default function InventarioPage() {
                 </button>
                 <button
                   type="submit"
-                  className="clay-btn clay-btn-primary flex-1 py-2.5 text-xs"
+                  disabled={isSaving}
+                  className="clay-btn clay-btn-primary flex-1 py-2.5 text-xs disabled:opacity-60 flex items-center justify-center gap-2"
                 >
-                  Guardar Producto
+                  {isSaving ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Guardando...</span>
+                    </>
+                  ) : (
+                    <span>Guardar Producto</span>
+                  )}
                 </button>
               </div>
             </form>

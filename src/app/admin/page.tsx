@@ -182,7 +182,6 @@ export default function AdminPage() {
 
   useEffect(() => {
     localStorage.setItem('kodelocal_products', JSON.stringify(products));
-    window.dispatchEvent(new Event('kodelocal_products_updated'));
   }, [products]);
 
   useEffect(() => {
@@ -2257,7 +2256,7 @@ export default function AdminPage() {
               Modifica precios de venta, costo de compra o nivel de existencias en tiempo real.
             </p>
 
-            <form onSubmit={handleSaveProduct} className="space-y-4">
+            <form onSubmit={handleSaveProduct} noValidate className="space-y-4">
               {/* Imagen y Vista Previa */}
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
                 <div className="sm:col-span-3 flex flex-col items-center">
@@ -2275,13 +2274,13 @@ export default function AdminPage() {
                     URL de Imagen del Producto
                   </label>
                   <input
-                    type="url"
+                    type="text"
                     value={editingProduct.imageUrl || ''}
                     onChange={(e) => setEditingProduct({ ...editingProduct, imageUrl: e.target.value })}
-                    placeholder="https://images.unsplash.com/... o enlace de foto"
+                    placeholder="/images/esencias/... o https://..."
                     className="clay-input w-full text-xs"
                   />
-                  <span className="text-[10px] text-slate-400 mt-1 block">Foto oficial del frasco de perfume</span>
+                  <span className="text-[10px] text-slate-400 mt-1 block">Foto oficial del frasco o ruta local (/images/...)</span>
                 </div>
               </div>
 
