@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface PromoSlide {
   id: string;
@@ -151,16 +152,16 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
 
   return (
     <div 
-      className="clay-card relative w-full overflow-hidden p-0 border border-white/90 select-none group bg-slate-900 shadow-lg rounded-3xl"
+      className="clay-card relative w-full overflow-hidden p-0 border border-white/90 select-none group bg-slate-100 shadow-md sm:shadow-lg rounded-2xl sm:rounded-3xl"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       style={{
-        aspectRatio: '16 / 7',
-        minHeight: '160px',
-        maxHeight: '260px'
+        aspectRatio: '1024 / 448',
+        width: '100%',
+        maxHeight: '420px'
       }}
     >
       {/* Carril deslizante horizontal infinito: siempre avanza hacia adelante de manera continua */}
@@ -184,12 +185,12 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
                 }
                 handleSlideClick(slide.action);
               }}
-              className="min-w-full w-full h-full shrink-0 relative cursor-pointer overflow-hidden"
+              className="min-w-full w-full h-full shrink-0 relative cursor-pointer overflow-hidden bg-slate-50"
             >
               <img
                 src={slide.imageUrl}
                 alt={slide.imageAlt}
-                className="w-full h-full object-cover object-center transform group-hover:scale-[1.015] transition-transform duration-700"
+                className="w-full h-full object-contain sm:object-cover object-center transform group-hover:scale-[1.012] transition-transform duration-700"
                 loading="eager"
               />
             </div>
@@ -197,8 +198,33 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
         })}
       </div>
 
+      {/* Flechas de Navegación Lateral en Computadora */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          handlePrev();
+        }}
+        className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-slate-700 hover:text-purple-700 shadow-md backdrop-blur-md items-center justify-center border border-white/90 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+        aria-label="Banner anterior"
+      >
+        <ChevronLeft className="w-5 h-5 -ml-0.5" />
+      </button>
+
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleNext();
+        }}
+        className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-slate-700 hover:text-purple-700 shadow-md backdrop-blur-md items-center justify-center border border-white/90 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+        aria-label="Siguiente banner"
+      >
+        <ChevronRight className="w-5 h-5 -mr-0.5" />
+      </button>
+
       {/* Indicadores inferiores estilo Frosted Glass blanco con tonos púrpura de la marca */}
-      <div className="absolute bottom-1.5 sm:bottom-2 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-white/75 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/90 shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
+      <div className="absolute bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 sm:gap-2 bg-white/85 backdrop-blur-md px-3 py-1 sm:py-1.5 rounded-full border border-white/90 shadow-[0_2px_10px_rgba(0,0,0,0.14)]">
         {slides.map((_, idx) => (
           <button
             key={idx}
@@ -209,8 +235,8 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
             }}
             className={`transition-all duration-300 rounded-full cursor-pointer p-0 border-0 block ${
               idx === activeDotIndex
-                ? 'w-4 h-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 shadow-xs'
-                : 'w-1.5 h-1.5 bg-slate-300/80 hover:bg-purple-300'
+                ? 'w-4 sm:w-6 h-1.5 sm:h-2 bg-gradient-to-r from-purple-600 to-indigo-600 shadow-xs'
+                : 'w-1.5 sm:w-2 h-1.5 sm:h-2 bg-slate-300/90 hover:bg-purple-300'
             }`}
             aria-label={`Ir a diapositiva ${idx + 1}`}
           />
