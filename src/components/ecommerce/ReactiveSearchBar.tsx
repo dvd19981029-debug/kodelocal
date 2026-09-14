@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, X, ShoppingBag } from 'lucide-react';
 import { useScrolled } from '@/hooks/useScrolled';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
@@ -38,6 +38,40 @@ export default function ReactiveSearchBar({
   const { totalItems, subtotal, setIsCartOpen, isCartPulsing } = useEcommerceCart();
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Detección de dirección de scroll: ocultar barra de búsqueda hacia arriba al hacer scroll down (arrastrar hacia arriba),
+  // y reaparecer al hacer scroll up (arrastrar hacia abajo)
+  const [isSearchBarVisible, setIsSearchBarVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScrollDirection = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Siempre visible cerca de la parte superior de la página
+      if (currentScrollY <= 90) {
+        setIsSearchBarVisible(true);
+        lastScrollY.current = currentScrollY;
+        return;
+      }
+
+      // Umbral mínimo de scroll para evitar cambios accidentales
+      const diff = currentScrollY - lastScrollY.current;
+      if (Math.abs(diff) > 8) {
+        if (diff > 0) {
+          // Usuario hace scroll hacia abajo (arrastra hacia arriba): esconder barra de búsqueda
+          setIsSearchBarVisible(false);
+        } else {
+          // Usuario hace scroll hacia arriba (arrastra hacia abajo): mostrar barra de búsqueda
+          setIsSearchBarVisible(true);
+        }
+        lastScrollY.current = currentScrollY;
+      }
+    };
+
+    window.addEventListener('scroll', handleScrollDirection, { passive: true });
+    return () => window.removeEventListener('scroll', handleScrollDirection);
+  }, []);
+
   const handleSelectFilter = (type: 'all' | 'stock' | 'cat' | 'gender', value?: string) => {
     setCurrentPage(1);
 
@@ -72,64 +106,72 @@ export default function ReactiveSearchBar({
 
   return (
     <>
-      {/* ================= BARRA DE BÚSQUEDA STICKY CON ANIMACIÓN BUBBLY ================= */}
+      {/* ================= BARRA DE BÚSQUEDA STICKY CON ANIMACIÓN HACIA ARRIBA ================= */}
       <div
-        className="sticky top-2 sm:top-2.5 z-40 w-full pointer-events-none transition-all duration-400"
+        className="sticky top-2 sm:top-2.5 z-40 w-full pointer-events-none"
       >
         <div className="w-full px-1 sm:px-2">
-          {/* Fila Bubbly: Cápsula de Búsqueda + Botón del Carrito Idéntico al Original */}
+          {/* Fila: Cápsula de Búsqueda (animada hacia arriba) + Botón del Carrito (permanece visible) */}
           <div className="flex items-center w-full gap-2">
             
-            {/* Cápsula de Búsqueda Flotante (se adapta suavemente por la derecha con rebote) */}
+            {/* Cápsula de Búsqueda: Se desliza hacia arriba y se desvanece al arrastrar hacia arriba */}
             <div
-              className={`flex-1 min-w-0 pointer-events-auto h-11 sm:h-12 clay-card bg-[#f8fafc]/95 backdrop-blur-md rounded-2xl px-3 flex items-center gap-2.5 transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
-                isScrolled
-                  ? 'border-[3px] border-slate-800/60 shadow-[0_4px_16px_rgba(0,0,0,0.06)]'
-                  : 'border border-white/90 shadow-sm'
+              className={`flex-1 min-w-0 transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] transform ${
+                isSearchBarVisible
+                  ? 'translate-y-0 opacity-100 scale-100 pointer-events-auto'
+                  : '-translate-y-14 opacity-0 scale-95 pointer-events-none'
               }`}
             >
-              {/* Ícono de Búsqueda Permanente */}
-              <div className="flex items-center justify-center shrink-0 text-slate-400">
-                <Search className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
-              </div>
+              <div
+                className={`h-11 sm:h-12 clay-card bg-[#f8fafc]/95 backdrop-blur-md rounded-2xl px-3 flex items-center gap-2.5 transition-all duration-300 ${
+                  isScrolled
+                    ? 'border-[3px] border-slate-800/60 shadow-[0_4px_16px_rgba(0,0,0,0.06)]'
+                    : 'border border-white/90 shadow-sm'
+                }`}
+              >
+                {/* Ícono de Búsqueda Permanente */}
+                <div className="flex items-center justify-center shrink-0 text-slate-400">
+                  <Search className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
+                </div>
 
-              {/* Input de Búsqueda y Botón Limpiar */}
-              <div className="flex items-center flex-1 min-w-0">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  placeholder="Buscar perfume: Nombre del perfume..."
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="w-full py-1 text-xs sm:text-sm font-bold text-slate-800 placeholder-slate-400 bg-transparent outline-none truncate"
-                />
-
-                {/* Botón para Limpiar Búsqueda */}
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSearchQuery('');
+                {/* Input de Búsqueda y Botón Limpiar */}
+                <div className="flex items-center flex-1 min-w-0">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    placeholder="Buscar perfume: Nombre del perfume..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
                       setCurrentPage(1);
-                      inputRef.current?.focus();
                     }}
-                    className="p-1 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer shrink-0 transition-colors"
-                    title="Limpiar búsqueda"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
+                    className="w-full py-1 text-xs sm:text-sm font-bold text-slate-800 placeholder-slate-400 bg-transparent outline-none truncate"
+                  />
+
+                  {/* Botón para Limpiar Búsqueda */}
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSearchQuery('');
+                        setCurrentPage(1);
+                        inputRef.current?.focus();
+                      }}
+                      className="p-1 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer shrink-0 transition-colors"
+                      title="Limpiar búsqueda"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Botón del Carrito: Sin sombras cuando flota junto a la barra de búsqueda */}
+            {/* Botón del Carrito Flotante: Visible permanentemente cuando se hace scroll o cuando la barra se oculta */}
             <div
               className={`transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] shrink-0 flex items-center ${
-                isScrolled
+                isScrolled || !isSearchBarVisible
                   ? 'w-auto opacity-100 scale-100 translate-x-0 pointer-events-auto overflow-visible'
                   : 'w-0 opacity-0 scale-75 translate-x-4 pointer-events-none overflow-hidden'
               }`}
