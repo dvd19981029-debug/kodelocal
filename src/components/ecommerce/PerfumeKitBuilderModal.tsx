@@ -36,7 +36,7 @@ export default function PerfumeKitBuilderModal({
   inline = false,
   initialEssenceId,
 }: PerfumeKitBuilderModalProps) {
-  const { addKitToCart, cart } = useEcommerceCart();
+  const { addKitToCart, cart, kitConfig } = useEcommerceCart();
 
   // Wizard de 3 pasos claros (1: Esencia, 2: Frasco 100ml, 3: Personalizar)
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
@@ -139,8 +139,9 @@ export default function PerfumeKitBuilderModal({
 
   const basePrice = selectedEssence?.finishedPerfumePrice != null 
     ? Number(selectedEssence.finishedPerfumePrice) 
-    : 15.00;
-  const plusCost = (isPlus && hasHalfOzAvailable) ? 3.00 : 0.00;
+    : (kitConfig?.basePrice ?? 15.00);
+  const extraShotPrice = kitConfig?.extraShotPrice ?? 3.00;
+  const plusCost = (isPlus && hasHalfOzAvailable) ? extraShotPrice : 0.00;
   const totalPrice = basePrice + plusCost;
 
   const handleConfirmKit = () => {
@@ -651,7 +652,7 @@ export default function PerfumeKitBuilderModal({
                       Versión PLUS (+½ Onza extra de esencia pura)
                     </span>
                     <span className="bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-2xs">
-                      +$3.00
+                      +${extraShotPrice.toFixed(2)}
                     </span>
                     {!hasHalfOzAvailable && (
                       <span className="bg-rose-50 text-rose-700 border border-rose-200 text-[9.5px] font-bold px-2 py-0.5 rounded-full">

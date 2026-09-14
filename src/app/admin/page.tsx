@@ -34,7 +34,8 @@ import {
   Check,
   ShoppingCart,
   History,
-  RotateCcw
+  RotateCcw,
+  Sparkles
 } from 'lucide-react';
 import { 
   getStoredUsers, 
@@ -111,11 +112,17 @@ export default function AdminPage() {
   // Estado Usuario
   const [editingUser, setEditingUser] = useState<UserAccount | null>(null);
 
-  // Precios Masivos
+  // Precios Masivos de Esencias
   const [bulkPrice, setBulkPrice] = useState('3.25');
   const [bulkPriceHalf, setBulkPriceHalf] = useState('1.65');
-  const [bulkPriceFinished, setBulkPriceFinished] = useState('15.00');
   const [bulkCost, setBulkCost] = useState('1.95');
+
+  // Configuración de Perfume Terminado (Arma tu propio perfume 100ml)
+  // Solo se configuran 2 valores: Valor Base del Perfume y Valor del Extra Shot
+  const [kitBasePrice, setKitBasePrice] = useState('15.00');
+  const [kitExtraShotPrice, setKitExtraShotPrice] = useState('3.00');
+  const [isKitModalOpen, setIsKitModalOpen] = useState(false);
+  const [isSavingKit, setIsSavingKit] = useState(false);
 
   // Precios actuales de referencia para esencias
   const sampleEssence = useMemo(() => {
@@ -126,7 +133,6 @@ export default function AdminPage() {
   const activeEssenceHalfPrice = sampleEssence?.priceHalfOunce != null 
     ? Number(sampleEssence.priceHalfOunce) 
     : Number((activeEssencePrice / 2).toFixed(2));
-  const activeEssenceFinished = sampleEssence?.finishedPerfumePrice ?? 15.00;
   const activeEssenceCost = sampleEssence?.cost ?? 1.95;
 
   useEffect(() => {
@@ -137,12 +143,26 @@ export default function AdminPage() {
       } else if (sampleEssence.price) {
         setBulkPriceHalf((sampleEssence.price / 2).toFixed(2));
       }
-      if (sampleEssence.finishedPerfumePrice != null) {
-        setBulkPriceFinished(sampleEssence.finishedPerfumePrice.toString());
-      }
       if (sampleEssence.cost) setBulkCost(sampleEssence.cost.toString());
     }
   }, [sampleEssence]);
+
+  // Cargar configuración de Perfume Terminado desde /api/kit-config
+  useEffect(() => {
+    fetch('/api/kit-config')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          if (typeof data.basePrice === 'number') {
+            setKitBasePrice(data.basePrice.toFixed(2));
+          }
+          if (typeof data.extraShotPrice === 'number') {
+            setKitExtraShotPrice(data.extraShotPrice.toFixed(2));
+          }
+        }
+      })
+      .catch(err => console.error('Error cargando kit-config en admin:', err));
+  }, []);
 
   // Reporte Filtro Período
   const [periodFilter, setPeriodFilter] = useState<'HOY' | 'MES' | 'ANIO'>('HOY');
@@ -292,11 +312,56 @@ export default function AdminPage() {
     setEditingUser({ ...editingUser, pin: randomPin });
   };
 
+  const handleSaveKitConfig = async (baseP?: number, extraP?: number) => {
+    const numBase = baseP ?? parseFloat(kitBasePrice);
+    const numExtra = extraP ?? parseFloat(kitExtraShotPrice);
+    if (isNaN(numBase) || isNaN(numExtra) || numBase <= 0 || numExtra < 0) return false;
+
+    setIsSavingKit(true);
+    try {
+      const staffToken = await getStaffToken();
+      const res = await fetch('/api/kit-config', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({
+          basePrice: numBase,
+          extraShotPrice: numExtra,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setKitBasePrice(numBase.toFixed(2));
+        setKitExtraShotPrice(numExtra.toFixed(2));
+        localStorage.setItem('kodelocal_kit_config', JSON.stringify({
+          basePrice: numBase,
+          extraShotPrice: numExtra,
+        }));
+        window.dispatchEvent(new CustomEvent('kodelocal_kit_config_updated'));
+        setProducts(prev => prev.map(p => {
+          if (p.category === 'Esencias para Perfume' || !p.category) {
+            return { ...p, finishedPerfumePrice: numBase };
+          }
+          return p;
+        }));
+        setIsSavingKit(false);
+        return true;
+      }
+    } catch (err) {
+      console.error('Error guardando configuración de perfume terminado:', err);
+    }
+    setIsSavingKit(false);
+    return false;
+  };
+
   const handleApplyBulkPrices = async (e: React.FormEvent) => {
     e.preventDefault();
     const np = parseFloat(bulkPrice);
     const npHalf = parseFloat(bulkPriceHalf);
-    const npFinished = parseFloat(bulkPriceFinished);
+    const npFinished = parseFloat(kitBasePrice);
+    const npExtra = parseFloat(kitExtraShotPrice);
     const nc = parseFloat(bulkCost);
     if (isNaN(np) || isNaN(nc)) return;
 
@@ -317,6 +382,7 @@ export default function AdminPage() {
 
     try {
       const staffToken = await getStaffToken();
+      // 1. Guardar precios de esencias en Supabase
       const res = await fetch('/api/products', {
         method: 'PATCH',
         headers: {
@@ -332,15 +398,19 @@ export default function AdminPage() {
           finishedPerfumePrice: !isNaN(npFinished) ? npFinished : 15.00,
         }),
       });
+
+      // 2. Guardar configuración global de kit de perfume terminado y extra shot
+      await handleSaveKitConfig(npFinished, npExtra);
+
       const data = await res.json();
       if (data.success) {
-        alert(`¡Precios actualizados en la base de datos y tienda online para las ${totalEsencias} esencias!`);
+        alert(`¡Precios de esencias y perfume terminado actualizados en la base de datos y tienda online!`);
         return;
       }
     } catch (err) {
       console.error('Error sincronizando precios masivos con Supabase:', err);
     }
-    alert(`¡Precios actualizados para las ${totalEsencias} esencias!`);
+    alert(`¡Precios actualizados para las ${totalEsencias} esencias y perfume terminado!`);
   };
 
   const handleAddCategory = (e: React.FormEvent) => {
@@ -922,6 +992,67 @@ export default function AdminPage() {
               </div>
             </div>
 
+            {/* Tarjeta de Configuración: Perfume Terminado (Arma tu propio perfume 100ml) */}
+            <div className="clay-card p-4 sm:p-5 bg-gradient-to-r from-indigo-50/80 via-purple-50/40 to-white border border-indigo-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm font-black text-slate-900">
+                      Arma tu Propio Perfume (Perfume Terminado 100ml)
+                    </h3>
+                    <span className="clay-badge bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-0.5">
+                      Ecommerce & Tienda
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Configuración única de los 2 valores para la preparación de fragancia terminada de 100ml.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+                <div className="flex items-center gap-3 bg-white/90 backdrop-blur-xs px-3.5 py-2 rounded-xl border border-indigo-100/80 shadow-2xs">
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">
+                      Perfume Total (100ml)
+                    </span>
+                    <span className="text-sm font-black text-indigo-700 font-mono">
+                      ${parseFloat(kitBasePrice || '15').toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="h-6 w-px bg-slate-200" />
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wider text-amber-600 font-bold block">
+                      Extra Shot (+½ Oz)
+                    </span>
+                    <span className="text-sm font-black text-amber-600 font-mono">
+                      +${parseFloat(kitExtraShotPrice || '3').toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="h-6 w-px bg-slate-200" />
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wider text-emerald-600 font-bold block">
+                      Total PLUS (1.5 Oz)
+                    </span>
+                    <span className="text-sm font-black text-emerald-700 font-mono">
+                      ${(parseFloat(kitBasePrice || '15') + parseFloat(kitExtraShotPrice || '3')).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setIsKitModalOpen(true)}
+                  className="clay-btn clay-btn-primary px-3.5 py-2 text-xs flex items-center gap-1.5 shrink-0 shadow-sm"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>Configurar Perfume Terminado</span>
+                </button>
+              </div>
+            </div>
+
             {/* Barra de Filtros */}
             <div className="clay-card p-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
               <div className="relative flex-1 w-full">
@@ -965,10 +1096,6 @@ export default function AdminPage() {
                         <span>Precio ½ Oz ($)</span>
                         <span className="text-[9px] lowercase text-purple-600 font-extrabold block">(tienda online)</span>
                       </th>
-                      <th className="py-3 px-3">
-                        <span>Perfume Terminado ($)</span>
-                        <span className="text-[9px] lowercase text-indigo-600 font-extrabold block">(arma tu perfume)</span>
-                      </th>
                       <th className="py-3 px-3">Margen Neto</th>
                       <th className="py-3 px-3">Stock</th>
                       <th className="py-3 px-3 text-right">Acción</th>
@@ -979,7 +1106,6 @@ export default function AdminPage() {
                       const margen = p.price - p.cost;
                       const isEssence = p.category === 'Esencias para Perfume' || !p.category;
                       const halfPriceVal = p.priceHalfOunce != null ? p.priceHalfOunce : Number((p.price / 2).toFixed(2));
-                      const finishedPriceVal = p.finishedPerfumePrice != null ? p.finishedPerfumePrice : 15.00;
 
                       return (
                         <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
@@ -1052,17 +1178,6 @@ export default function AdminPage() {
                             {isEssence ? (
                               <div className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 font-black px-2 py-0.5 rounded-md border border-purple-200/80 text-xs shadow-2xs">
                                 ${halfPriceVal.toFixed(2)}
-                              </div>
-                            ) : (
-                              <span className="text-slate-300 font-mono text-xs">-</span>
-                            )}
-                          </td>
-
-                          {/* Perfume Terminado 100ml */}
-                          <td className="py-2.5 px-3 font-mono">
-                            {isEssence ? (
-                              <div className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 font-black px-2 py-0.5 rounded-md border border-indigo-200/80 text-xs shadow-2xs">
-                                ${finishedPriceVal.toFixed(2)}
                               </div>
                             ) : (
                               <span className="text-slate-300 font-mono text-xs">-</span>
@@ -1845,79 +1960,131 @@ export default function AdminPage() {
             </p>
 
             <form onSubmit={handleApplyBulkPrices} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">Precio 1 Oz ($ / Oz)</label>
-                  <div className="clay-input flex items-center gap-1.5 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20">
-                    <span className="font-black text-slate-400 select-none text-base">$</span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      required
-                      value={bulkPrice}
-                      onChange={(e) => setBulkPrice(e.target.value)}
-                      className="bg-transparent border-none outline-none w-full text-base font-black text-slate-800 p-0"
-                    />
-                  </div>
-                  <span className="text-[10px] text-slate-400 mt-0.5 block">Precio onza completa</span>
+              {/* SECCIÓN 1: ESENCIAS PURAS */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5">
+                <div className="flex items-center gap-1.5 border-b border-slate-200/80 pb-2">
+                  <Droplets className="w-4 h-4 text-indigo-600" />
+                  <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                    1. Precios de Esencias Puras
+                  </h4>
                 </div>
 
-                <div>
-                  <label className="text-xs font-bold text-purple-700 block mb-1">
-                    Precio ½ Oz ($) <span className="text-[10px] font-black text-purple-600 bg-purple-50 px-1 rounded">Ecommerce</span>
-                  </label>
-                  <div className="clay-input flex items-center gap-1.5 focus-within:border-purple-400 focus-within:ring-2 focus-within:ring-purple-500/20">
-                    <span className="font-black text-purple-400 select-none text-base">$</span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      required
-                      value={bulkPriceHalf}
-                      onChange={(e) => setBulkPriceHalf(e.target.value)}
-                      className="bg-transparent border-none outline-none w-full text-base font-black text-purple-700 p-0"
-                    />
+                <div className="grid grid-cols-3 gap-2.5">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">Precio 1 Oz ($)</label>
+                    <div className="clay-input flex items-center gap-1 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20 px-2 py-1.5">
+                      <span className="font-black text-slate-400 select-none text-sm">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        required
+                        value={bulkPrice}
+                        onChange={(e) => setBulkPrice(e.target.value)}
+                        className="bg-transparent border-none outline-none w-full text-sm font-black text-slate-800 p-0"
+                      />
+                    </div>
+                    <span className="text-[9.5px] text-slate-400 mt-0.5 block">1 Onza</span>
                   </div>
-                  <span className="text-[10px] text-purple-600 mt-0.5 block font-bold">Mostrado en tienda online</span>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-purple-700 block mb-1">Precio ½ Oz ($)</label>
+                    <div className="clay-input flex items-center gap-1 focus-within:border-purple-400 focus-within:ring-2 focus-within:ring-purple-500/20 px-2 py-1.5">
+                      <span className="font-black text-purple-400 select-none text-sm">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        required
+                        value={bulkPriceHalf}
+                        onChange={(e) => setBulkPriceHalf(e.target.value)}
+                        className="bg-transparent border-none outline-none w-full text-sm font-black text-purple-700 p-0"
+                      />
+                    </div>
+                    <span className="text-[9.5px] text-purple-600 mt-0.5 block font-bold">Ecommerce</span>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">Costo Compra ($)</label>
+                    <div className="clay-input flex items-center gap-1 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-500/20 px-2 py-1.5">
+                      <span className="font-black text-slate-400 select-none text-sm">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        required
+                        value={bulkCost}
+                        onChange={(e) => setBulkCost(e.target.value)}
+                        className="bg-transparent border-none outline-none w-full text-sm font-black text-slate-700 p-0"
+                      />
+                    </div>
+                    <span className="text-[9.5px] text-slate-400 mt-0.5 block">Costo / Oz</span>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="text-xs font-bold text-indigo-700 block mb-1">
-                    Perfume Terminado ($) <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-1 rounded">100ml</span>
-                  </label>
-                  <div className="clay-input flex items-center gap-1.5 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20">
-                    <span className="font-black text-indigo-400 select-none text-base">$</span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      required
-                      value={bulkPriceFinished}
-                      onChange={(e) => setBulkPriceFinished(e.target.value)}
-                      className="bg-transparent border-none outline-none w-full text-base font-black text-indigo-700 p-0"
-                    />
-                  </div>
-                  <span className="text-[10px] text-indigo-600 mt-0.5 block font-bold">En Arma tu propio perfume</span>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">Costo Compra ($ / Oz)</label>
-                  <div className="clay-input flex items-center gap-1.5 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-500/20">
-                    <span className="font-black text-slate-400 select-none text-base">$</span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      required
-                      value={bulkCost}
-                      onChange={(e) => setBulkCost(e.target.value)}
-                      className="bg-transparent border-none outline-none w-full text-base font-black text-slate-700 p-0"
-                    />
-                  </div>
-                  <span className="text-[10px] text-slate-400 mt-0.5 block">Costo adquisición</span>
+                <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 space-y-0.5 font-medium">
+                  <p><strong>Margen por onza:</strong> ${(parseFloat(bulkPrice || '0') - parseFloat(bulkCost || '0')).toFixed(2)}</p>
+                  <p><strong>Margen porcentual:</strong> {parseFloat(bulkPrice || '0') > 0 ? (((parseFloat(bulkPrice || '0') - parseFloat(bulkCost || '0')) / parseFloat(bulkPrice || '0')) * 100).toFixed(1) : 0}%</p>
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 space-y-1 font-medium">
-                <p><strong>Margen por onza:</strong> ${(parseFloat(bulkPrice) - parseFloat(bulkCost)).toFixed(2)}</p>
-                <p><strong>Margen porcentual:</strong> {(((parseFloat(bulkPrice) - parseFloat(bulkCost)) / parseFloat(bulkPrice)) * 100).toFixed(1)}%</p>
+              {/* SECCIÓN 2: PERFUME TERMINADO (SOLO 2 VALORES) */}
+              <div className="p-3.5 rounded-2xl bg-indigo-50/50 border border-indigo-200/80 space-y-3">
+                <div className="flex items-center justify-between border-b border-indigo-200/60 pb-2">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-indigo-600" />
+                    <h4 className="text-xs font-black text-indigo-900 uppercase tracking-wider">
+                      2. Perfume Terminado (100ml)
+                    </h4>
+                  </div>
+                  <span className="clay-badge bg-indigo-100 text-indigo-800 text-[10px] font-black px-2 py-0.5">
+                    Arma tu perfume
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-indigo-950 block mb-1">
+                      Valor del Perfume Total (Base 100ml)
+                    </label>
+                    <div className="clay-input flex items-center gap-1.5 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20">
+                      <span className="font-black text-indigo-400 select-none text-base">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        required
+                        value={kitBasePrice}
+                        onChange={(e) => setKitBasePrice(e.target.value)}
+                        className="bg-transparent border-none outline-none w-full text-base font-black text-indigo-700 p-0"
+                      />
+                    </div>
+                    <span className="text-[10px] text-indigo-600 mt-0.5 block font-medium">100ml con 1 Oz</span>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-amber-950 block mb-1">
+                      Valor de Agregar Extra Shot (+½ Oz)
+                    </label>
+                    <div className="clay-input flex items-center gap-1.5 focus-within:border-amber-400 focus-within:ring-2 focus-within:ring-amber-500/20">
+                      <span className="font-black text-amber-500 select-none text-base">+$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        required
+                        value={kitExtraShotPrice}
+                        onChange={(e) => setKitExtraShotPrice(e.target.value)}
+                        className="bg-transparent border-none outline-none w-full text-base font-black text-amber-700 p-0"
+                      />
+                    </div>
+                    <span className="text-[10px] text-amber-700 mt-0.5 block font-medium">Versión PLUS (+½ Oz)</span>
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-white border border-indigo-100 text-xs flex items-center justify-between font-bold">
+                  <span className="text-slate-600">Total Versión PLUS (1.5 Oz):</span>
+                  <span className="text-indigo-700 text-sm font-black font-mono">
+                    ${(parseFloat(kitBasePrice || '0') + parseFloat(kitExtraShotPrice || '0')).toFixed(2)}
+                  </span>
+                </div>
               </div>
 
               <div className="flex gap-3 pt-2">
@@ -1930,9 +2097,117 @@ export default function AdminPage() {
                 </button>
                 <button
                   type="submit"
-                  className="clay-btn clay-btn-primary flex-1 py-2.5 text-xs"
+                  className="clay-btn clay-btn-primary flex-1 py-2.5 text-xs font-bold"
                 >
-                  Actualizar Todas
+                  Actualizar Precios
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: CONFIGURACIÓN PERFUME TERMINADO ================= */}
+      {isKitModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in">
+          <div className="clay-card w-full max-w-md p-6 relative animate-in zoom-in-95">
+            <button
+              onClick={() => setIsKitModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <h3 className="text-xl font-black text-slate-800">
+                Arma tu Propio Perfume
+              </h3>
+            </div>
+            <p className="text-xs text-slate-500 mb-4">
+              Configura los únicos 2 valores para la preparación de perfume terminado de 100ml.
+            </p>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const ok = await handleSaveKitConfig();
+                if (ok) {
+                  setIsKitModalOpen(false);
+                  alert('¡Configuración de perfume terminado guardada exitosamente!');
+                } else {
+                  alert('Error al guardar la configuración.');
+                }
+              }}
+              className="space-y-4"
+            >
+              <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-200/80 space-y-3.5">
+                <div>
+                  <label className="text-xs font-black text-indigo-950 block mb-1">
+                    Valor del Perfume Total (Base 100ml)
+                  </label>
+                  <div className="clay-input flex items-center gap-2 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20">
+                    <span className="font-black text-indigo-400 select-none text-base">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      required
+                      value={kitBasePrice}
+                      onChange={(e) => setKitBasePrice(e.target.value)}
+                      className="bg-transparent border-none outline-none w-full text-base font-black text-indigo-700 p-0"
+                    />
+                  </div>
+                  <span className="text-[10px] text-indigo-600 mt-0.5 block font-medium">
+                    Precio del frasco de 100ml con 1 Oz de esencia pura
+                  </span>
+                </div>
+
+                <div>
+                  <label className="text-xs font-black text-amber-950 block mb-1">
+                    Valor de Agregar Extra Shot (+½ Oz extra)
+                  </label>
+                  <div className="clay-input flex items-center gap-2 focus-within:border-amber-400 focus-within:ring-2 focus-within:ring-amber-500/20">
+                    <span className="font-black text-amber-500 select-none text-base">+$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      required
+                      value={kitExtraShotPrice}
+                      onChange={(e) => setKitExtraShotPrice(e.target.value)}
+                      className="bg-transparent border-none outline-none w-full text-base font-black text-amber-700 p-0"
+                    />
+                  </div>
+                  <span className="text-[10px] text-amber-700 mt-0.5 block font-medium">
+                    Suplemento cobrado al cliente por aumentar la concentración a versión PLUS
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-white border border-indigo-100 flex items-center justify-between text-xs font-bold">
+                  <span className="text-slate-600">Total Versión PLUS (1.5 Oz):</span>
+                  <span className="text-indigo-700 text-base font-black font-mono">
+                    ${(parseFloat(kitBasePrice || '0') + parseFloat(kitExtraShotPrice || '0')).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsKitModalOpen(false)}
+                  className="clay-btn clay-btn-light flex-1 py-2.5 text-xs"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingKit}
+                  className="clay-btn clay-btn-primary flex-1 py-2.5 text-xs font-bold"
+                >
+                  {isSavingKit ? 'Guardando...' : 'Guardar Precios'}
                 </button>
               </div>
             </form>
@@ -2136,25 +2411,6 @@ export default function AdminPage() {
                       />
                     </div>
                     <span className="text-[10px] text-purple-600 mt-1 block font-bold">Precio mostrado por defecto en tienda online</span>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-indigo-700 block mb-1">
-                      Perfume Terminado ($) <span className="text-[10px] font-black text-indigo-600 bg-indigo-100 px-1.5 py-0.5 rounded">100ml</span>
-                    </label>
-                    <div className="clay-input flex items-center gap-2 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20">
-                      <span className="font-bold text-indigo-400 select-none text-base">$</span>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={editingProduct.finishedPerfumePrice != null ? editingProduct.finishedPerfumePrice : 15.00}
-                        onChange={(e) => setEditingProduct({ ...editingProduct, finishedPerfumePrice: parseFloat(e.target.value) || 0 })}
-                        placeholder="15.00"
-                        className="bg-transparent border-none outline-none w-full text-base font-black text-indigo-700 p-0"
-                      />
-                    </div>
-                    <span className="text-[10px] text-indigo-600 mt-1 block font-bold">Precio en "Arma tu propio perfume"</span>
                   </div>
 
                   <div>

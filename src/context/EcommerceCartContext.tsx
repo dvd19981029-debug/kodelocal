@@ -170,7 +170,19 @@ interface EcommerceCartContextType {
   subtotal: number;
   isArmaTuPerfumeActive: boolean;
   setIsArmaTuPerfumeActive: (active: boolean) => void;
+  kitConfig: KitConfig;
+  refreshKitConfig: () => Promise<void>;
 }
+
+export interface KitConfig {
+  basePrice: number;
+  extraShotPrice: number;
+}
+
+const DEFAULT_KIT_CONFIG: KitConfig = {
+  basePrice: 15.00,
+  extraShotPrice: 3.00,
+};
 
 const EcommerceCartContext = createContext<EcommerceCartContextType | undefined>(undefined);
 
@@ -180,6 +192,39 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
   const [isCartPulsing, setIsCartPulsing] = useState(false);
   const [isArmaTuPerfumeActive, setIsArmaTuPerfumeActive] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [kitConfig, setKitConfig] = useState<KitConfig>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('kodelocal_kit_config');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (typeof parsed.basePrice === 'number' && typeof parsed.extraShotPrice === 'number') {
+            return parsed;
+          }
+        }
+      } catch (_) {}
+    }
+    return DEFAULT_KIT_CONFIG;
+  });
+
+  const refreshKitConfig = async () => {
+    try {
+      const res = await fetch('/api/kit-config');
+      const data = await res.json();
+      if (data.success && typeof data.basePrice === 'number' && typeof data.extraShotPrice === 'number') {
+        const newCfg: KitConfig = {
+          basePrice: Number(data.basePrice),
+          extraShotPrice: Number(data.extraShotPrice),
+        };
+        setKitConfig(newCfg);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('kodelocal_kit_config', JSON.stringify(newCfg));
+        }
+      }
+    } catch (e) {
+      console.error('Error cargando kit-config:', e);
+    }
+  };
 
   const triggerCartPulse = () => {
     setIsCartPulsing(true);
@@ -190,6 +235,13 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
 
   useEffect(() => {
     setIsMounted(true);
+    refreshKitConfig();
+
+    const handleUpdate = () => {
+      refreshKitConfig();
+    };
+    window.addEventListener('kodelocal_kit_config_updated', handleUpdate);
+
     try {
       const saved = localStorage.getItem('aromaniak_online_cart');
       if (saved) {
@@ -198,6 +250,10 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     } catch (e) {
       console.error('Error cargando carrito online:', e);
     }
+
+    return () => {
+      window.removeEventListener('kodelocal_kit_config_updated', handleUpdate);
+    };
   }, []);
 
   useEffect(() => {
@@ -322,8 +378,10 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     isPlus: boolean;
     quantity?: number;
   }) => {
-    // Precio fijo $15.00 base, o $18.00 si seleccionó versión PLUS (+½ oz extra)
-    const unitPrice = isPlus ? 18.00 : 15.00;
+    // Precio dinámico: base + extra shot si seleccionó PLUS
+    const baseKitPrice = essence.finishedPerfumePrice != null ? Number(essence.finishedPerfumePrice) : kitConfig.basePrice;
+    const extraShotPrice = kitConfig.extraShotPrice;
+    const unitPrice = isPlus ? Number((baseKitPrice + extraShotPrice).toFixed(2)) : baseKitPrice;
     const presentation: ProductPresentation = isPlus ? 'KIT_PREPARADO_PLUS' : 'KIT_PREPARADO';
     const presentationName = isPlus ? 'Arma tu propio perfume PLUS (1.5 oz)' : 'Arma tu propio perfume (1 oz)';
     const itemId = `kit-${essence.id}-${bottle.id}-${hasLabel ? 'label' : 'nolabel'}-${isPlus ? 'plus' : 'std'}`;
@@ -485,7 +543,9 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
       totalItems,
       subtotal,
       isArmaTuPerfumeActive,
-      setIsArmaTuPerfumeActive
+      setIsArmaTuPerfumeActive,
+      kitConfig,
+      refreshKitConfig
     }}>
       {children}
     </EcommerceCartContext.Provider>

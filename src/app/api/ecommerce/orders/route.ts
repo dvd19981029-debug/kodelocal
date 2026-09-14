@@ -398,6 +398,31 @@ export async function POST(request: Request) {
 
       let verifiedSubtotal = 0;
 
+      // Obtener configuración global de kit de perfume (base y extra shot)
+      let dynamicKitBasePrice = 15.00;
+      let dynamicExtraShotPrice = 3.00;
+      try {
+        const catConfig = await tx.category.findFirst({
+          where: {
+            OR: [
+              { name: 'Esencias para Perfume' },
+              { slug: 'esencias-para-perfume' },
+            ],
+          },
+        });
+        if (catConfig?.description) {
+          try {
+            const parsed = JSON.parse(catConfig.description);
+            if (typeof parsed.basePrice === 'number' && !isNaN(parsed.basePrice) && parsed.basePrice > 0) {
+              dynamicKitBasePrice = parsed.basePrice;
+            }
+            if (typeof parsed.extraShotPrice === 'number' && !isNaN(parsed.extraShotPrice) && parsed.extraShotPrice >= 0) {
+              dynamicExtraShotPrice = parsed.extraShotPrice;
+            }
+          } catch (_) {}
+        }
+      } catch (_) {}
+
       for (const it of (items || [])) {
         const qty = Math.max(1, parseInt(it.quantity || 1, 10));
         const presentationStr = String(it.presentation || it.presentationName || '1 Onza').trim();
@@ -410,7 +435,7 @@ export async function POST(request: Request) {
           const essenceId = parts[1];
 
           let targetProductId = '';
-          let baseKitPrice = 15.00;
+          let baseKitPrice = dynamicKitBasePrice;
 
           if (essenceId) {
             const essenceProd = await tx.product.findUnique({
@@ -431,7 +456,7 @@ export async function POST(request: Request) {
             }
           }
 
-          const kitUnitPrice = isPlus ? Number((baseKitPrice + 3.00).toFixed(2)) : baseKitPrice;
+          const kitUnitPrice = isPlus ? Number((baseKitPrice + dynamicExtraShotPrice).toFixed(2)) : baseKitPrice;
           const lineTotal = Number((kitUnitPrice * qty).toFixed(2));
           verifiedSubtotal += lineTotal;
 
