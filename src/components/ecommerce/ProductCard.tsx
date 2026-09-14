@@ -18,9 +18,9 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   const { cart, addToCart, updateQuantity } = useEcommerceCart();
   const presentations = getPresentationsForProduct(product);
   
-  // Presentación por defecto: 'MEDIA_ONZA' con el precio de media onza mostrado en el ecommerce
+  // Presentación por defecto: 'ONZA_COMPLETA' (1 Onza seleccionada primero)
   const defaultPres = product.category === 'Esencias para Perfume' 
-    ? 'MEDIA_ONZA'
+    ? 'ONZA_COMPLETA'
     : 'UNIDAD';
 
   const [selectedPresentation, setSelectedPresentation] = useState<ProductPresentation>(defaultPres);
