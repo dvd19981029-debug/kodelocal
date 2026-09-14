@@ -4,6 +4,7 @@ import { getWompiTransaction } from '@/lib/wompi';
 import { verifyCustomerToken, verifyStaffInternalToken } from '@/lib/customerAuthToken';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { sanitizeText, sanitizeEmail, sanitizePhone, sanitizeDocument } from '@/lib/sanitize';
+import { sendOrderConfirmationEmail } from '@/lib/orderEmailService';
 
 export const dynamic = 'force-dynamic';
 
@@ -572,6 +573,32 @@ export async function POST(request: Request) {
       maxWait: 10000, // Tiempo máximo para obtener conexión del pool (10s)
       timeout: 20000, // Tiempo máximo de ejecución para carritos con múltiples productos (20s)
     });
+
+    // Enviar confirmación por correo de forma asíncrona (Google Apps Script)
+    if (newOrder.customerEmail && (newOrder.paymentMethod === 'CASH' || newOrder.paymentMethod === 'TRANSFER')) {
+      sendOrderConfirmationEmail({
+        orderNumber: newOrder.orderNumber,
+        customerName: newOrder.customerName,
+        customerEmail: newOrder.customerEmail,
+        customerPhone: newOrder.customerPhone,
+        department: newOrder.department,
+        municipality: newOrder.municipality,
+        shippingAddress: newOrder.shippingAddress,
+        deliveryReference: newOrder.deliveryReference,
+        subtotal: Number(newOrder.subtotal || 0),
+        shippingCost: Number(newOrder.shippingCost || 0),
+        total: Number(newOrder.total || 0),
+        paymentMethod: newOrder.paymentMethod,
+        paymentStatus: newOrder.paymentStatus,
+        items: (newOrder.items || []).map((it) => ({
+          productName: it.productName,
+          presentation: it.presentation,
+          quantity: it.quantity,
+          unitPrice: Number(it.unitPrice || 0),
+          total: Number(it.total || 0),
+        })),
+      }).catch((err) => console.error('Error enviando correo de confirmación de pedido:', err));
+    }
 
     return NextResponse.json({ success: true, order: newOrder });
   } catch (error: any) {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { validateWompiWebhook } from '@/lib/wompi';
+import { sendOrderConfirmationEmail } from '@/lib/orderEmailService';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,7 +71,7 @@ export async function POST(request: Request) {
         }
 
         // Actualizar pedido a PAGADO
-        await prisma.ecommerceOrder.update({
+        const paidOrder = await prisma.ecommerceOrder.update({
           where: { id: order.id },
           data: {
             paymentStatus: 'COMPLETED',
@@ -79,7 +80,36 @@ export async function POST(request: Request) {
               `[Pago Aprobado Wompi Tx: ${IdTransaccion || 'N/A'} - Cod: ${CodigoAutorizacion || 'N/A'}]`,
             ].filter(Boolean).join(' '),
           },
+          include: {
+            items: true,
+          },
         });
+
+        // Enviar correo de confirmación de pago
+        if (paidOrder.customerEmail) {
+          sendOrderConfirmationEmail({
+            orderNumber: paidOrder.orderNumber,
+            customerName: paidOrder.customerName,
+            customerEmail: paidOrder.customerEmail,
+            customerPhone: paidOrder.customerPhone,
+            department: paidOrder.department,
+            municipality: paidOrder.municipality,
+            shippingAddress: paidOrder.shippingAddress,
+            deliveryReference: paidOrder.deliveryReference,
+            subtotal: Number(paidOrder.subtotal || 0),
+            shippingCost: Number(paidOrder.shippingCost || 0),
+            total: Number(paidOrder.total || 0),
+            paymentMethod: 'CARD',
+            paymentStatus: 'COMPLETED',
+            items: (paidOrder.items || []).map((it) => ({
+              productName: it.productName,
+              presentation: it.presentation,
+              quantity: it.quantity,
+              unitPrice: Number(it.unitPrice || 0),
+              total: Number(it.total || 0),
+            })),
+          }).catch((err) => console.error('Error enviando correo Wompi:', err));
+        }
       }
     }
 
