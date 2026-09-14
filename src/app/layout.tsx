@@ -27,6 +27,9 @@ export const metadata: Metadata = {
     icon: "/images/logo.png",
     apple: "/images/logo.png",
   },
+  verification: {
+    google: "NFHSyGtVLfg0Q_J3TbvRmNP4-S9l1zO00afYvcieTPw",
+  },
 };
 
 export default function RootLayout({
@@ -36,6 +39,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`h-full touch-manipulation ${quicksand.variable}`}>
+      <head>
+        <meta name="google-site-verification" content="NFHSyGtVLfg0Q_J3TbvRmNP4-S9l1zO00afYvcieTPw" />
+      </head>
       <body className={`${quicksand.className} min-h-full flex flex-col bg-[#f1f4f9] text-slate-800 antialiased touch-manipulation font-sans`}>
         <StorageInitializer />
         <NavigationWrapper>
