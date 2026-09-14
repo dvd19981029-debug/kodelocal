@@ -151,52 +151,52 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
   const activeDotIndex = (currentIndex - 1 + slides.length) % slides.length;
 
   return (
-    <div 
-      className="clay-card relative w-full overflow-hidden p-0 border border-white/90 select-none group bg-slate-100 shadow-md sm:shadow-lg rounded-2xl sm:rounded-3xl"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      style={{
-        aspectRatio: '1024 / 448',
-        width: '100%',
-        maxHeight: '420px'
-      }}
-    >
-      {/* Carril deslizante horizontal infinito: siempre avanza hacia adelante de manera continua */}
+    <div className="w-full flex justify-center">
       <div 
-        className="flex w-full h-full will-change-transform"
-        onTransitionEnd={handleTransitionEnd}
-        style={{ 
-          transform: `translateX(-${currentIndex * 100}%)`,
-          transition: isTransitionEnabled 
-            ? 'transform 700ms cubic-bezier(0.25, 1, 0.5, 1)' 
-            : 'none'
+        className="clay-card relative w-full max-w-4xl overflow-hidden p-0 border border-white/90 select-none group bg-slate-900 shadow-md sm:shadow-xl rounded-2xl sm:rounded-3xl"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          aspectRatio: '1024 / 448',
+          width: '100%',
         }}
       >
-        {extendedSlides.map((slide, index) => {
-          return (
-            <div
-              key={`${slide.id}-${index}`}
-              onClick={() => {
-                if (touchStartX.current !== null && touchEndX.current !== null && Math.abs(touchStartX.current - touchEndX.current) > 15) {
-                  return;
-                }
-                handleSlideClick(slide.action);
-              }}
-              className="min-w-full w-full h-full shrink-0 relative cursor-pointer overflow-hidden bg-slate-50"
-            >
-              <img
-                src={slide.imageUrl}
-                alt={slide.imageAlt}
-                className="w-full h-full object-contain sm:object-cover object-center transform group-hover:scale-[1.012] transition-transform duration-700"
-                loading="eager"
-              />
-            </div>
-          );
-        })}
-      </div>
+        {/* Carril deslizante horizontal infinito: siempre avanza hacia adelante de manera continua */}
+        <div 
+          className="flex w-full h-full will-change-transform"
+          onTransitionEnd={handleTransitionEnd}
+          style={{ 
+            transform: `translateX(-${currentIndex * 100}%)`,
+            transition: isTransitionEnabled 
+              ? 'transform 700ms cubic-bezier(0.25, 1, 0.5, 1)' 
+              : 'none'
+          }}
+        >
+          {extendedSlides.map((slide, index) => {
+            return (
+              <div
+                key={`${slide.id}-${index}`}
+                onClick={() => {
+                  if (touchStartX.current !== null && touchEndX.current !== null && Math.abs(touchStartX.current - touchEndX.current) > 15) {
+                    return;
+                  }
+                  handleSlideClick(slide.action);
+                }}
+                className="min-w-full w-full h-full shrink-0 relative cursor-pointer overflow-hidden flex items-center justify-center bg-slate-900"
+              >
+                <img
+                  src={slide.imageUrl}
+                  alt={slide.imageAlt}
+                  className="w-full h-full object-fill transform group-hover:scale-[1.01] transition-transform duration-700"
+                  loading="eager"
+                />
+              </div>
+            );
+          })}
+        </div>
 
       {/* Flechas de Navegación Lateral en Computadora */}
       <button
@@ -243,5 +243,6 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
         ))}
       </div>
     </div>
+  </div>
   );
 }
