@@ -154,11 +154,21 @@ export default function InventarioPage() {
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.product) {
-          setProducts(prev => prev.map(p => (p.id === targetId || (p.sku && p.sku === data.product.sku)) ? { ...p, ...data.product } : p));
+          setProducts(prev => {
+            const updated = prev.map(p => (p.id === targetId || (p.sku && p.sku === data.product.sku)) ? { ...p, ...data.product } : p);
+            localStorage.setItem('kodelocal_products', JSON.stringify(updated));
+            window.dispatchEvent(new Event('kodelocal_products_updated'));
+            return updated;
+          });
         }
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        console.error('Error al guardar producto:', errData);
+        alert(`Aviso: No se pudo sincronizar en el servidor: ${errData.error || 'Error desconocido'}`);
       }
     } catch (err) {
       console.error('Error sincronizando con Supabase:', err);
+      alert('Error de conexión al sincronizar con la base de datos.');
     }
   };
 

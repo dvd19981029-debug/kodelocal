@@ -193,6 +193,11 @@ export default function PosPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [completedSale, setCompletedSale] = useState<SaleRecord | null>(null);
 
+  // Edición rápida de producto desde POS
+  const [isEditingProductOpen, setIsEditingProductOpen] = useState(false);
+  const [editingProductInPos, setEditingProductInPos] = useState<ProductItem | null>(null);
+  const [isSavingProductInPos, setIsSavingProductInPos] = useState(false);
+
   // Guardar productos en localStorage
   useEffect(() => {
     localStorage.setItem('kodelocal_products', JSON.stringify(products));
@@ -648,6 +653,90 @@ export default function PosPage() {
 
   const clearCart = () => {
     setCart([]);
+  };
+
+  const handleOpenEditProduct = (e: React.MouseEvent, product: ProductItem) => {
+    e.stopPropagation();
+    setEditingProductInPos({ ...product });
+    setIsEditingProductOpen(true);
+  };
+
+  const handleSaveProductFromPos = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProductInPos || !editingProductInPos.name.trim()) {
+      alert('El nombre o inspiración es requerido.');
+      return;
+    }
+
+    setIsSavingProductInPos(true);
+    const prodToSave = { ...editingProductInPos };
+
+    // 1. Actualización optimista inmediata en estado local
+    setProducts(prev => {
+      const updated = prev.map(p => (p.id === prodToSave.id || (p.sku && p.sku === prodToSave.sku)) ? { ...p, ...prodToSave } : p);
+      localStorage.setItem('kodelocal_products', JSON.stringify(updated));
+      window.dispatchEvent(new Event('kodelocal_products_updated'));
+      return updated;
+    });
+
+    // También actualizar en carrito si el producto estaba agregado
+    setCart(prev => prev.map(it => {
+      if (it.product.id === prodToSave.id || (it.product.sku && it.product.sku === prodToSave.sku)) {
+        return { ...it, product: { ...it.product, ...prodToSave } };
+      }
+      return it;
+    }));
+
+    setIsEditingProductOpen(false);
+
+    // 2. Persistir en la base de datos de Supabase
+    try {
+      const staffToken = await getStaffToken();
+      const res = await fetch('/api/products', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({
+          id: prodToSave.id,
+          sku: prodToSave.sku,
+          brand: prodToSave.brand,
+          name: prodToSave.name,
+          officialName: prodToSave.officialName,
+          price: Number(prodToSave.price),
+          priceHalfOunce: prodToSave.priceHalfOunce != null ? Number(prodToSave.priceHalfOunce) : undefined,
+          finishedPerfumePrice: prodToSave.finishedPerfumePrice != null ? Number(prodToSave.finishedPerfumePrice) : undefined,
+          cost: Number(prodToSave.cost || 0),
+          stock: Number(prodToSave.stock || 0),
+          puesto: prodToSave.puesto || '',
+          imageUrl: prodToSave.imageUrl || '',
+          isAvailableOnline: prodToSave.isAvailableOnline,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.product) {
+          setProducts(prev => {
+            const updated = prev.map(p => (p.id === prodToSave.id || (p.sku && p.sku === data.product.sku)) ? { ...p, ...data.product } : p);
+            localStorage.setItem('kodelocal_products', JSON.stringify(updated));
+            window.dispatchEvent(new Event('kodelocal_products_updated'));
+            return updated;
+          });
+        }
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        console.error('Error al guardar producto desde POS:', errData);
+        alert(`Aviso: No se pudo guardar en el servidor: ${errData.error || 'Error de permisos'}`);
+      }
+    } catch (err) {
+      console.error('Error de conexión al guardar producto desde POS:', err);
+      alert('Error de conexión al sincronizar con la base de datos.');
+    } finally {
+      setIsSavingProductInPos(false);
+      setEditingProductInPos(null);
+    }
   };
 
   const handleBarcodeSubmit = (e: React.FormEvent) => {
@@ -1634,23 +1723,36 @@ export default function PosPage() {
                     >
                       <div>
                         <div className="flex items-center justify-between gap-1 mb-1">
-                          <span className="clay-badge text-[9px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-100/80 px-1.5 py-0.5 rounded-md">
-                            #{product.sku}
-                          </span>
-                          {product.puesto && (
-                            <span className="clay-badge text-[8.5px] font-mono font-bold bg-amber-100 text-amber-900 px-1 py-0.5 border border-amber-200" title={`Puesto: ${product.puesto}`}>
-                              📍{product.puesto}
+                          <div className="flex items-center gap-1">
+                            <span className="clay-badge text-[9px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-100/80 px-1.5 py-0.5 rounded-md">
+                              #{product.sku}
                             </span>
-                          )}
-                          <span className={`clay-badge text-[9px] font-bold py-0.5 px-1.5 rounded-md ${
-                            isOutOfStock 
-                              ? 'bg-rose-50 text-rose-700 border border-rose-200' 
-                              : isLowStock 
-                              ? 'bg-amber-50 text-amber-800 border border-amber-200' 
-                              : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                          }`}>
-                            {isOutOfStock ? 'Agotado' : `${availableRemaining} ${product.unit === 'Onza' ? 'Oz' : 'Un.'}`}
-                          </span>
+                            {product.puesto && (
+                              <span className="clay-badge text-[8.5px] font-mono font-bold bg-amber-100 text-amber-900 px-1 py-0.5 border border-amber-200" title={`Puesto: ${product.puesto}`}>
+                                📍{product.puesto}
+                              </span>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center gap-1">
+                            <span className={`clay-badge text-[9px] font-bold py-0.5 px-1.5 rounded-md ${
+                              isOutOfStock 
+                                ? 'bg-rose-50 text-rose-700 border border-rose-200' 
+                                : isLowStock 
+                                ? 'bg-amber-50 text-amber-800 border border-amber-200' 
+                                : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                            }`}>
+                              {isOutOfStock ? 'Agotado' : `${availableRemaining} ${product.unit === 'Onza' ? 'Oz' : 'Un.'}`}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => handleOpenEditProduct(e, product)}
+                              className="w-5 h-5 rounded-md bg-slate-100 hover:bg-indigo-100 text-slate-500 hover:text-indigo-600 flex items-center justify-center transition-colors shadow-2xs"
+                              title="Editar nombre, inspiración y precios del producto"
+                            >
+                              <Edit3 className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
                         </div>
 
                         {product.brand && (
@@ -4379,6 +4481,193 @@ export default function PosPage() {
         onClose={() => setIsQuoteModalOpen(false)}
         sale={activeQuoteSale}
       />
+
+      {/* ========================================================================= */}
+      {/* MODAL 6: EDICIÓN RÁPIDA DE PRODUCTO DIRECTAMENTE DESDE POS                */}
+      {/* ========================================================================= */}
+      {isEditingProductOpen && editingProductInPos && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="clay-card w-full max-w-lg p-5 max-h-[90vh] overflow-y-auto relative animate-in zoom-in-95 duration-200 shadow-2xl">
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditingProductOpen(false);
+                setEditingProductInPos(null);
+              }}
+              className="absolute top-4 right-4 p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+                <Edit3 className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-900">Editar Producto / Fragancia</h3>
+                <p className="text-[11px] text-slate-500">
+                  Actualiza el nombre comercial, inspiración y precios sincronizados con Supabase y E-commerce.
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaveProductFromPos} className="space-y-3.5 mt-4">
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Nombre Oficial de la Fragancia
+                  </label>
+                  <input
+                    type="text"
+                    value={editingProductInPos.officialName || ''}
+                    onChange={(e) => setEditingProductInPos({ ...editingProductInPos, officialName: e.target.value })}
+                    placeholder="Ej. Hombre Salvaje / Euro Girl"
+                    className="clay-input w-full text-xs font-black text-indigo-950 bg-indigo-50/40"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">Nombre comercial de tu marca o tienda</span>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Inspirado en (Contratipo) <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingProductInPos.name || ''}
+                    onChange={(e) => setEditingProductInPos({ ...editingProductInPos, name: e.target.value })}
+                    placeholder="Ej. Sauvage / Donna"
+                    className="clay-input w-full text-xs font-bold"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">Nombre de la esencia o fragancia de inspiración</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Marca / Diseñador</label>
+                    <input
+                      type="text"
+                      value={editingProductInPos.brand || ''}
+                      onChange={(e) => setEditingProductInPos({ ...editingProductInPos, brand: e.target.value })}
+                      placeholder="Ej. Dior / Valentino"
+                      className="clay-input w-full text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Puesto / Estante</label>
+                    <input
+                      type="text"
+                      value={editingProductInPos.puesto || ''}
+                      onChange={(e) => setEditingProductInPos({ ...editingProductInPos, puesto: e.target.value })}
+                      placeholder="Ej. A1, B2"
+                      className="clay-input w-full text-xs font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-100">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Precio 1 Oz ($)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      value={editingProductInPos.price}
+                      onChange={(e) => {
+                        const newPrice = parseFloat(e.target.value) || 0;
+                        setEditingProductInPos({
+                          ...editingProductInPos,
+                          price: newPrice,
+                          priceHalfOunce: Number((newPrice / 2).toFixed(2))
+                        });
+                      }}
+                      className="clay-input w-full text-xs font-bold font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Precio ½ Oz ($)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProductInPos.priceHalfOunce != null ? editingProductInPos.priceHalfOunce : ''}
+                      onChange={(e) => setEditingProductInPos({ ...editingProductInPos, priceHalfOunce: parseFloat(e.target.value) || 0 })}
+                      className="clay-input w-full text-xs font-bold font-mono text-violet-700"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Stock Disponible</label>
+                    <input
+                      type="number"
+                      value={editingProductInPos.stock}
+                      onChange={(e) => setEditingProductInPos({ ...editingProductInPos, stock: parseInt(e.target.value) || 0 })}
+                      className="clay-input w-full text-xs font-bold font-mono text-emerald-700"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-1 border-t border-slate-100">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Costo Unitario ($)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProductInPos.cost || 0}
+                      onChange={(e) => setEditingProductInPos({ ...editingProductInPos, cost: parseFloat(e.target.value) || 0 })}
+                      className="clay-input w-full text-xs font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Perfume 100ml ($)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProductInPos.finishedPerfumePrice || 15}
+                      onChange={(e) => setEditingProductInPos({ ...editingProductInPos, finishedPerfumePrice: parseFloat(e.target.value) || 0 })}
+                      className="clay-input w-full text-xs font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={editingProductInPos.isAvailableOnline}
+                      onChange={(e) => setEditingProductInPos({ ...editingProductInPos, isAvailableOnline: e.target.checked })}
+                      className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                    />
+                    <span className="text-xs font-bold text-slate-700">Disponible en Tienda Online (E-commerce)</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditingProductOpen(false);
+                    setEditingProductInPos(null);
+                  }}
+                  className="clay-btn clay-btn-light flex-1 py-2 text-xs font-bold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingProductInPos}
+                  className="clay-btn clay-btn-primary flex-1 py-2 text-xs font-bold flex items-center justify-center gap-1.5"
+                >
+                  {isSavingProductInPos ? 'Guardando...' : 'Guardar y Sincronizar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* ========================================================================= */}
       {/* TICKET TÉRMICO 80MM FORMATEADO PARA IMPRESIÓN (WINDOW.PRINT)              */}
