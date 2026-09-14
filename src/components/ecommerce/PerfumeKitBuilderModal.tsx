@@ -172,15 +172,15 @@ export default function PerfumeKitBuilderModal({
     <div 
       className={`clay-card w-full ${
         inline 
-          ? 'max-w-5xl mx-auto rounded-3xl shadow-xl border-2 border-amber-300/80 my-2' 
+          ? 'max-w-5xl mx-auto rounded-3xl shadow-xl border border-white/90 my-2' 
           : 'max-w-4xl max-h-[94vh] rounded-2xl sm:rounded-3xl shadow-2xl border border-white/90 overscroll-contain'
       } bg-white relative flex flex-col overflow-hidden`}
       onClick={(e) => e.stopPropagation()}
     >
-      {/* ================= CABECERA COMPACTA ================= */}
-      <div className="px-4 sm:px-6 py-2.5 sm:py-3 border-b border-slate-100 bg-gradient-to-r from-amber-50/80 via-purple-50/70 to-indigo-50/80 flex items-center justify-between relative shrink-0">
+      {/* ================= CABECERA COMPACTA CLAYMÓRFICA ================= */}
+      <div className="px-4 sm:px-6 py-3 border-b border-purple-100/80 bg-gradient-to-r from-purple-50/90 via-indigo-50/70 to-slate-50/80 flex items-center justify-between relative shrink-0">
         <div className="flex items-center gap-2.5 sm:gap-3">
-          <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black shadow-xs shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center font-black shadow-[2px_4px_10px_rgba(124,58,237,0.3)] shrink-0">
             <Sparkles className="w-4 h-4" />
           </div>
           <div>
@@ -191,7 +191,7 @@ export default function PerfumeKitBuilderModal({
               1 oz pura de tu contratipo favorito, frasco de 100ml y alcohol con fijador
             </p>
           </div>
-          <span className="bg-emerald-50 text-emerald-800 border border-emerald-300/80 text-[11px] sm:text-xs font-black px-2.5 py-0.5 rounded-full shadow-2xs shrink-0 ml-1">
+          <span className="bg-purple-100/80 text-purple-900 border border-purple-200/90 text-[11px] sm:text-xs font-black px-2.5 py-0.5 rounded-full shadow-2xs shrink-0 ml-1">
             ${totalPrice.toFixed(2)}
           </span>
         </div>
@@ -212,27 +212,28 @@ export default function PerfumeKitBuilderModal({
         )}
       </div>
 
-        {/* ================= STEPPER DE PROGRESO COMPACTO ================= */}
-        <div className="grid grid-cols-3 border-b border-slate-100 bg-slate-50/90 text-center select-none text-[11px] sm:text-xs font-extrabold shrink-0">
+      {/* ================= STEPPER DE PROGRESO CLAYMÓRFICO ================= */}
+      <div className="px-3 sm:px-6 py-2 border-b border-slate-100 bg-[#f8fafc]">
+        <div className="clay-tabs-track flex items-stretch gap-1 max-w-xl mx-auto">
           <button
             type="button"
             onClick={() => setCurrentStep(1)}
-            className={`py-2 px-2 transition-all flex items-center justify-center gap-1.5 border-b-2 cursor-pointer ${
+            className={`clay-tab-item py-1.5 sm:py-2 px-2 sm:px-3 text-[11px] sm:text-xs font-extrabold flex-1 transition-all cursor-pointer gap-1.5 ${
               currentStep === 1
-                ? 'border-indigo-600 text-indigo-700 bg-white font-black'
+                ? 'clay-tab-active'
                 : selectedEssence
-                ? 'border-emerald-500 text-emerald-700 bg-emerald-50/40'
-                : 'border-transparent text-slate-400'
+                ? 'text-purple-700 bg-purple-50/70 hover:bg-purple-50'
+                : 'clay-tab-inactive'
             }`}
           >
-            <span className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[10px] ${
+            <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black ${
               currentStep === 1
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-white text-purple-700'
                 : selectedEssence
-                ? 'bg-emerald-600 text-white'
+                ? 'bg-purple-600 text-white'
                 : 'bg-slate-200 text-slate-600'
             }`}>
-              {selectedEssence ? '✓' : '1'}
+              {selectedEssence && currentStep !== 1 ? '✓' : '1'}
             </span>
             <span className="truncate">1. Esencia</span>
           </button>
@@ -241,37 +242,39 @@ export default function PerfumeKitBuilderModal({
             type="button"
             onClick={() => selectedEssence && setCurrentStep(2)}
             disabled={!selectedEssence}
-            className={`py-2 px-2 transition-all flex items-center justify-center gap-1.5 border-b-2 ${
+            className={`clay-tab-item py-1.5 sm:py-2 px-2 sm:px-3 text-[11px] sm:text-xs font-extrabold flex-1 transition-all gap-1.5 ${
               currentStep === 2
-                ? 'border-indigo-600 text-indigo-700 bg-white font-black'
-                : activeBottle
-                ? 'border-emerald-500 text-emerald-700 bg-emerald-50/40'
-                : 'border-transparent text-slate-400 opacity-60 cursor-not-allowed'
+                ? 'clay-tab-active'
+                : activeBottle && selectedEssence
+                ? 'text-purple-700 bg-purple-50/70 hover:bg-purple-50 cursor-pointer'
+                : 'clay-tab-inactive opacity-60 cursor-not-allowed'
             }`}
           >
-            <span className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[10px] ${
+            <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black ${
               currentStep === 2
-                ? 'bg-indigo-600 text-white'
-                : 'bg-emerald-600 text-white'
+                ? 'bg-white text-purple-700'
+                : activeBottle && selectedEssence
+                ? 'bg-purple-600 text-white'
+                : 'bg-slate-200 text-slate-600'
             }`}>
-              2
+              {activeBottle && selectedEssence && currentStep > 2 ? '✓' : '2'}
             </span>
-            <span className="truncate">2. Frasco 100ml</span>
+            <span className="truncate">2. Frasco</span>
           </button>
 
           <button
             type="button"
             onClick={() => selectedEssence && activeBottle && setCurrentStep(3)}
             disabled={!selectedEssence || !activeBottle}
-            className={`py-2 px-2 transition-all flex items-center justify-center gap-1.5 border-b-2 ${
+            className={`clay-tab-item py-1.5 sm:py-2 px-2 sm:px-3 text-[11px] sm:text-xs font-extrabold flex-1 transition-all gap-1.5 ${
               currentStep === 3
-                ? 'border-indigo-600 text-indigo-700 bg-white font-black'
-                : 'border-transparent text-slate-400 opacity-60 cursor-not-allowed'
+                ? 'clay-tab-active'
+                : 'clay-tab-inactive opacity-60 cursor-not-allowed'
             }`}
           >
-            <span className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[10px] ${
+            <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black ${
               currentStep === 3
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-white text-purple-700'
                 : 'bg-slate-200 text-slate-600'
             }`}>
               3
@@ -279,6 +282,7 @@ export default function PerfumeKitBuilderModal({
             <span className="truncate">3. Personalizar</span>
           </button>
         </div>
+      </div>
 
         {/* ================= CUERPO CENTRAL DEL WIZARD (ESPACIO OPTIMIZADO) ================= */}
         <div className="flex-1 overflow-y-auto p-3 sm:p-5">
@@ -296,12 +300,12 @@ export default function PerfumeKitBuilderModal({
                     placeholder="Buscar fragancia: Nombre del perfume..."
                     value={essenceSearch}
                     onChange={(e) => setEssenceSearch(e.target.value)}
-                    className="w-full pl-9 pr-8 py-2 text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all shadow-2xs"
+                    className="clay-input w-full pl-9 pr-8 py-2 text-xs font-bold text-slate-800 placeholder-slate-400 bg-white"
                   />
                   {essenceSearch && (
                     <button
                       onClick={() => setEssenceSearch('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -314,10 +318,10 @@ export default function PerfumeKitBuilderModal({
                       key={gender}
                       type="button"
                       onClick={() => setEssenceGenderFilter(gender)}
-                      className={`px-2.5 py-1.5 rounded-xl text-[10.5px] font-black transition-all cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-xl text-[10.5px] font-black transition-all cursor-pointer ${
                         essenceGenderFilter === gender
-                          ? 'bg-indigo-600 text-white shadow-xs'
-                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                          ? 'clay-btn-primary shadow-xs'
+                          : 'clay-btn-light text-slate-600'
                       }`}
                     >
                       {gender === 'Caballero' ? 'Hombre' : gender}
@@ -327,13 +331,13 @@ export default function PerfumeKitBuilderModal({
               </div>
 
               {/* Área Deslizante Optimizada de Selección de Esencias */}
-              <div className={`flex-1 ${inline ? 'min-h-[170px] max-h-[250px] sm:max-h-[275px]' : 'min-h-[170px] max-h-[35vh]'} overflow-y-auto pr-1 p-1 bg-slate-50/50 rounded-2xl border border-slate-200/80`}>
+              <div className={`flex-1 ${inline ? 'min-h-[190px] max-h-[290px] sm:max-h-[320px]' : 'min-h-[190px] max-h-[40vh]'} overflow-y-auto pr-1 p-2 bg-[#f1f4f9]/60 rounded-2xl border border-slate-200/80`}>
                 {filteredEssences.length === 0 ? (
                   <div className="h-full flex items-center justify-center py-12 text-center text-xs text-slate-400 font-medium">
                     No se encontraron esencias disponibles con ese criterio.
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-2.5">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
                     {filteredEssences.map((essence) => {
                       const isChosen = selectedEssence?.id === essence.id;
                       const name = essence.officialName?.trim() || essence.name;
@@ -352,18 +356,18 @@ export default function PerfumeKitBuilderModal({
                         <div
                           key={essence.id}
                           onClick={() => !isOutOfStock && setSelectedEssence(essence)}
-                          className={`p-2 sm:p-2.5 rounded-xl transition-all border select-none flex flex-col justify-between ${
+                          className={`p-2.5 rounded-2xl transition-all border select-none flex flex-col justify-between relative group ${
                             isOutOfStock
-                              ? 'opacity-60 cursor-not-allowed bg-slate-50 border-slate-200'
+                              ? 'opacity-55 cursor-not-allowed bg-slate-100 border-slate-200'
                               : isChosen
-                              ? 'bg-indigo-50/90 border-indigo-600 ring-2 ring-indigo-400/50 shadow-sm scale-[1.01] cursor-pointer'
-                              : 'bg-white hover:bg-slate-50 border-slate-200/90 shadow-2xs cursor-pointer'
+                              ? 'clay-card bg-purple-50/80 border-purple-500 ring-2 ring-purple-400/50 shadow-md scale-[1.02] cursor-pointer'
+                              : 'clay-card bg-white hover:bg-slate-50 border-white/90 hover:scale-[1.01] cursor-pointer'
                           }`}
                         >
                           <div>
-                            <div className="flex items-start gap-2 mb-1">
-                              {/* Miniatura de la esencia */}
-                              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg overflow-hidden bg-slate-50 border border-slate-200/80 shrink-0 flex items-center justify-center">
+                            <div className="flex items-start gap-2.5 mb-1.5">
+                              {/* Miniatura destacada de la esencia con estilo clay */}
+                              <div className="w-12 h-12 sm:w-13 sm:h-13 rounded-xl overflow-hidden bg-white border border-slate-200/90 shadow-2xs shrink-0 flex items-center justify-center p-0.5">
                                 <img
                                   src={getProductImage(essence)}
                                   alt={name}
@@ -372,31 +376,31 @@ export default function PerfumeKitBuilderModal({
                                   onError={(e) => {
                                     e.currentTarget.src = '/images/essence_bottle_blank.webp';
                                   }}
-                                  className="w-full h-full object-cover object-center"
+                                  className="w-full h-full object-cover object-center rounded-lg"
                                 />
                               </div>
                               <div className="min-w-0 flex-1">
-                                <div className="flex items-center justify-between text-[8px] text-slate-400 font-bold mb-0.5">
+                                <div className="flex items-center justify-between text-[8.5px] text-slate-400 font-bold mb-0.5">
                                   {essence.gender && (
-                                    <span className="uppercase text-slate-600 font-black">
-                                      {essence.gender.slice(0, 3)}
+                                    <span className="uppercase text-purple-700 bg-purple-100/70 px-1 py-0.2 rounded font-black text-[8px]">
+                                      {essence.gender === 'Caballero' ? 'Hombre' : essence.gender}
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-[11px] font-black text-slate-900 leading-snug line-clamp-2">
+                                <p className="text-xs font-black text-slate-900 leading-snug line-clamp-2">
                                   {name}
                                 </p>
                               </div>
                             </div>
-                            <p className="text-[9px] text-slate-500 font-medium truncate mt-0.5" title={`Inspirado en ${getInspiracionPerfumeName(essence)}`}>
+                            <p className="text-[9.5px] text-slate-500 font-medium truncate mt-1 bg-slate-50 px-1.5 py-0.5 rounded-md border border-slate-100" title={`Inspirado en ${getInspiracionPerfumeName(essence)}`}>
                               <span className="text-slate-400">Inspirado en: </span>
-                              <strong className="text-slate-800 font-semibold">
+                              <strong className="text-purple-900 font-bold">
                                 {getInspiracionPerfumeName(essence)}
                               </strong>
                             </p>
                           </div>
 
-                          <div className="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[9px]">
+                          <div className="mt-2.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[9.5px]">
                             <span className={`tracking-tight ${
                               isOutOfStock
                                 ? 'text-slate-400 font-normal'
@@ -407,11 +411,11 @@ export default function PerfumeKitBuilderModal({
                               {isOutOfStock
                                 ? 'Sin existencias'
                                 : isBelowMinAlert
-                                ? available1oz === 1 ? '¡Solo queda 1 onza!' : `¡Solo quedan ${available1oz} onzas!`
+                                ? available1oz === 1 ? '¡Solo 1 onza!' : `¡Solo ${available1oz} oz!`
                                 : 'Disponible'}
                             </span>
                             {isChosen && (
-                              <span className="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-[10px]">
+                              <span className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center font-bold text-[10px] shadow-xs">
                                 ✓
                               </span>
                             )}
@@ -423,17 +427,23 @@ export default function PerfumeKitBuilderModal({
                 )}
               </div>
 
-              {/* Indicador de esencia seleccionada */}
+              {/* Indicador de esencia seleccionada con diseño Clay */}
               {selectedEssence && (
-                <div className="p-2.5 sm:p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 flex items-center justify-between shrink-0">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Droplets className="w-4 h-4 text-emerald-600 shrink-0" />
+                <div className="p-3 rounded-2xl clay-card bg-purple-50/70 border border-purple-200/80 text-purple-950 flex items-center justify-between shrink-0 shadow-xs">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-purple-200 shadow-2xs shrink-0 flex items-center justify-center p-0.5">
+                      <img
+                        src={getProductImage(selectedEssence)}
+                        alt={selectedEssence.officialName || selectedEssence.name}
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                    </div>
                     <div className="min-w-0">
-                      <span className="text-[9px] text-emerald-700 font-bold uppercase tracking-wider block">Esencia elegida:</span>
-                      <strong className="text-xs sm:text-sm font-black text-emerald-900 truncate block">
+                      <span className="text-[9px] text-purple-700 font-bold uppercase tracking-wider block">Esencia elegida:</span>
+                      <strong className="text-xs sm:text-sm font-black text-purple-950 truncate block">
                         {selectedEssence.officialName || selectedEssence.name}
                       </strong>
-                      <span className="text-[10px] text-emerald-800 font-medium truncate block">
+                      <span className="text-[10px] text-purple-800 font-medium truncate block">
                         Inspirado en: {getInspiracionPerfumeName(selectedEssence)}
                       </span>
                     </div>
@@ -441,7 +451,7 @@ export default function PerfumeKitBuilderModal({
                   <button
                     type="button"
                     onClick={() => setCurrentStep(2)}
-                    className="clay-btn clay-btn-primary px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1 cursor-pointer shrink-0"
+                    className="clay-btn clay-btn-primary px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 cursor-pointer shrink-0"
                   >
                     <span>Continuar</span>
                     <ChevronRight className="w-3.5 h-3.5" />
@@ -456,15 +466,15 @@ export default function PerfumeKitBuilderModal({
             <div className="space-y-3 animate-in fade-in duration-200 h-full flex flex-col">
               <div className="flex items-center justify-between shrink-0">
                 <h3 className="text-xs sm:text-sm font-black text-slate-800">
-                  Elige tu modelo favorito (Todos de 100ml con cierre de rosca, fácil de cerrar sin máquina selladora):
+                  Elige tu modelo favorito (Todos de 100ml con cierre de rosca):
                 </h3>
-                <span className="text-[11px] font-black text-indigo-600">
+                <span className="text-[11px] font-black text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200/80">
                   {bottlesList.length} modelos
                 </span>
               </div>
 
-              {/* Área Deslizante Optimizada de Frascos */}
-              <div className={`flex-1 ${inline ? 'min-h-[170px] max-h-[250px] sm:max-h-[275px]' : 'min-h-[170px] max-h-[35vh]'} overflow-y-auto pr-1 p-1`}>
+              {/* Área Deslizante Optimizada de Frascos con Claymorphism */}
+              <div className={`flex-1 ${inline ? 'min-h-[190px] max-h-[290px] sm:max-h-[320px]' : 'min-h-[190px] max-h-[40vh]'} overflow-y-auto pr-1 p-2 bg-[#f1f4f9]/60 rounded-2xl border border-slate-200/80`}>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
                   {bottlesList.map((bottle) => {
                     const isChosen = activeBottle.id === bottle.id;
@@ -479,15 +489,15 @@ export default function PerfumeKitBuilderModal({
                       <div
                         key={bottle.id}
                         onClick={() => !isBottleOutOfStock && setSelectedBottle(bottle)}
-                        className={`p-2.5 rounded-2xl transition-all border select-none relative flex flex-col items-center text-center ${
+                        className={`p-2.5 rounded-2xl transition-all border select-none relative flex flex-col items-center text-center group ${
                           isBottleOutOfStock
-                            ? 'opacity-60 cursor-not-allowed bg-slate-50 border-slate-200'
+                            ? 'opacity-55 cursor-not-allowed bg-slate-100 border-slate-200'
                             : isChosen
-                            ? 'bg-white border-indigo-600 ring-2 ring-indigo-400/50 shadow-md scale-[1.02] cursor-pointer'
-                            : 'bg-white hover:bg-slate-50 border-slate-200/80 shadow-2xs cursor-pointer'
+                            ? 'clay-card bg-purple-50/80 border-purple-500 ring-2 ring-purple-400/50 shadow-md scale-[1.02] cursor-pointer'
+                            : 'clay-card bg-white hover:bg-slate-50 border-white/90 hover:scale-[1.01] cursor-pointer'
                         }`}
                       >
-                        <div className="w-full aspect-square max-h-28 rounded-xl overflow-hidden bg-white mb-2 flex items-center justify-center border border-slate-100">
+                        <div className="w-full aspect-square max-h-28 rounded-xl overflow-hidden bg-white mb-2 flex items-center justify-center border border-slate-100 shadow-2xs">
                           <img
                             src={bottle.imageUrl || '/images/botes/bote_100ml_sauvage_degrade_negro.jpg'}
                             alt={bottle.name}
@@ -500,12 +510,12 @@ export default function PerfumeKitBuilderModal({
                           />
                         </div>
 
-                        <p className="text-[10.5px] font-black text-slate-900 leading-tight line-clamp-2">
+                        <p className="text-xs font-black text-slate-900 leading-tight line-clamp-2">
                           {bottle.name}
                         </p>
 
                         <div className="mt-1.5 flex items-center gap-1 flex-wrap justify-center">
-                          <span className="text-[9px] font-black text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded">
+                          <span className="text-[9px] font-black text-purple-700 bg-purple-100/70 px-1.5 py-0.2 rounded">
                             100 ml
                           </span>
                           <span className={`text-[8.5px] px-1 rounded ${
@@ -518,13 +528,13 @@ export default function PerfumeKitBuilderModal({
                             {isBottleOutOfStock
                               ? 'Sin existencias'
                               : isBottleBelowMin
-                              ? bStock === 1 ? '¡Solo queda 1!' : `¡Solo quedan ${bStock}!`
+                              ? bStock === 1 ? '¡Solo 1!' : `¡Solo ${bStock}!`
                               : 'Disponible'}
                           </span>
                         </div>
 
                         {isChosen && (
-                          <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shadow-xs">
+                          <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shadow-xs">
                             ✓
                           </span>
                         )}
@@ -535,9 +545,9 @@ export default function PerfumeKitBuilderModal({
               </div>
 
               {/* Frasco elegido resumen */}
-              <div className="p-2.5 sm:p-3 rounded-xl bg-indigo-50/90 border border-indigo-200 text-indigo-950 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-8 h-8 rounded-lg overflow-hidden bg-white border border-indigo-200 shrink-0">
+              <div className="p-3 rounded-2xl clay-card bg-purple-50/70 border border-purple-200/80 text-purple-950 flex items-center justify-between shrink-0 shadow-xs">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-purple-200 shadow-2xs shrink-0 p-0.5">
                     <img
                       src={activeBottle.imageUrl || '/images/botes/bote_100ml_sauvage_degrade_negro.jpg'}
                       alt={activeBottle.name}
@@ -546,12 +556,12 @@ export default function PerfumeKitBuilderModal({
                       onError={(e) => {
                         e.currentTarget.src = '/images/botes/bote_100ml_sauvage_degrade_negro.jpg';
                       }}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover rounded-lg"
                     />
                   </div>
                   <div className="min-w-0">
-                    <span className="text-[9px] text-indigo-700 font-bold uppercase tracking-wider block">Frasco seleccionado:</span>
-                    <strong className="text-xs sm:text-sm font-black text-indigo-900 truncate block">
+                    <span className="text-[9px] text-purple-700 font-bold uppercase tracking-wider block">Frasco seleccionado:</span>
+                    <strong className="text-xs sm:text-sm font-black text-purple-950 truncate block">
                       {activeBottle.name} (100 ml)
                     </strong>
                   </div>
@@ -559,7 +569,7 @@ export default function PerfumeKitBuilderModal({
                 <button
                   type="button"
                   onClick={() => setCurrentStep(3)}
-                  className="clay-btn clay-btn-primary px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1 cursor-pointer shrink-0"
+                  className="clay-btn clay-btn-primary px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 cursor-pointer shrink-0"
                 >
                   <span>Continuar</span>
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -574,19 +584,19 @@ export default function PerfumeKitBuilderModal({
               
               {/* 1. Selección de Etiqueta (Sin costo adicional) */}
               <div className="space-y-1.5">
-                <label className="text-xs font-black text-slate-800 flex items-center gap-1">
+                <label className="text-xs font-black text-slate-800 flex items-center gap-1.5">
                   <span>¿Deseas etiqueta con el nombre de tu fragancia?</span>
-                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.2 rounded">Gratis</span>
+                  <span className="text-[10px] text-purple-800 font-black bg-purple-100/70 border border-purple-200 px-2 py-0.2 rounded-full">Gratis</span>
                 </label>
 
                 <div className="grid grid-cols-2 gap-2.5">
                   <button
                     type="button"
                     onClick={() => setHasLabel(true)}
-                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between ${
+                    className={`p-3 sm:p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between ${
                       hasLabel
-                        ? 'bg-indigo-50/90 border-indigo-600 ring-2 ring-indigo-400/40 shadow-xs'
-                        : 'bg-white border-slate-200 hover:bg-slate-50'
+                        ? 'clay-card bg-purple-50/80 border-purple-500 ring-2 ring-purple-400/40 shadow-xs'
+                        : 'clay-card bg-white border-white/90 hover:bg-slate-50'
                     }`}
                   >
                     <div>
@@ -597,16 +607,20 @@ export default function PerfumeKitBuilderModal({
                         Lleva el nombre de tu perfume impreso de forma nítida.
                       </span>
                     </div>
-                    {hasLabel && <Check className="w-4 h-4 text-indigo-600 shrink-0 ml-1" />}
+                    {hasLabel && (
+                      <span className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shadow-xs shrink-0 ml-1">
+                        ✓
+                      </span>
+                    )}
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setHasLabel(false)}
-                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between ${
+                    className={`p-3 sm:p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between ${
                       !hasLabel
-                        ? 'bg-indigo-50/90 border-indigo-600 ring-2 ring-indigo-400/40 shadow-xs'
-                        : 'bg-white border-slate-200 hover:bg-slate-50'
+                        ? 'clay-card bg-purple-50/80 border-purple-500 ring-2 ring-purple-400/40 shadow-xs'
+                        : 'clay-card bg-white border-white/90 hover:bg-slate-50'
                     }`}
                   >
                     <div>
@@ -617,7 +631,11 @@ export default function PerfumeKitBuilderModal({
                         Frasco limpio y liso para acabado minimalista.
                       </span>
                     </div>
-                    {!hasLabel && <Check className="w-4 h-4 text-indigo-600 shrink-0 ml-1" />}
+                    {!hasLabel && (
+                      <span className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shadow-xs shrink-0 ml-1">
+                        ✓
+                      </span>
+                    )}
                   </button>
                 </div>
               </div>
@@ -628,12 +646,12 @@ export default function PerfumeKitBuilderModal({
                   if (!hasHalfOzAvailable) return;
                   setIsPlus(!isPlus);
                 }}
-                className={`p-3.5 sm:p-4 rounded-2xl border-2 transition-all select-none flex items-start gap-3 ${
+                className={`p-3.5 sm:p-4 rounded-2xl transition-all select-none flex items-start gap-3 ${
                   !hasHalfOzAvailable
-                    ? 'bg-slate-50 border-slate-200 opacity-60 cursor-not-allowed'
+                    ? 'bg-slate-100 border border-slate-200 opacity-60 cursor-not-allowed'
                     : isPlus
-                    ? 'bg-gradient-to-r from-amber-50/95 via-purple-50/90 to-indigo-50/90 border-amber-400 shadow-md ring-2 ring-amber-300/60 cursor-pointer'
-                    : 'bg-slate-50/90 border-slate-200 hover:bg-white hover:border-slate-300 cursor-pointer'
+                    ? 'clay-card bg-purple-50/85 border-purple-500 shadow-md ring-2 ring-purple-400/60 cursor-pointer'
+                    : 'clay-card bg-white border-white/90 hover:bg-slate-50 cursor-pointer'
                 }`}
               >
                 <div className="pt-0.5">
@@ -642,7 +660,7 @@ export default function PerfumeKitBuilderModal({
                     checked={isPlus && hasHalfOzAvailable}
                     disabled={!hasHalfOzAvailable}
                     onChange={() => {}}
-                    className="w-5 h-5 rounded-md text-indigo-600 focus:ring-indigo-500 border-slate-300 cursor-pointer disabled:cursor-not-allowed"
+                    className="w-5 h-5 rounded-md text-purple-600 focus:ring-purple-500 border-slate-300 cursor-pointer disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -651,7 +669,7 @@ export default function PerfumeKitBuilderModal({
                     <span className="text-xs sm:text-sm font-black text-slate-900">
                       Versión PLUS (+½ Onza extra de esencia pura)
                     </span>
-                    <span className="bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-2xs">
+                    <span className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-2xs">
                       +${extraShotPrice.toFixed(2)}
                     </span>
                     {!hasHalfOzAvailable && (
@@ -668,20 +686,20 @@ export default function PerfumeKitBuilderModal({
                       </span>
                     ) : (
                       <>
-                        Aumenta la concentración de tu perfume a <strong>1.5 Onzas de esencia pura</strong> (1 onza base + media onza adicional) para mayor intensidad y presencia.
+                        Aumenta la concentración de tu perfume a <strong>1.5 Onzas de esencia pura</strong> (1 onza base + media onza adicional) para mayor fijación y presencia.
                       </>
                     )}
                   </p>
                 </div>
               </div>
 
-              {/* 3. Tarjeta Resumen Final del Perfume */}
-              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-50/90 via-purple-50/80 to-pink-50/80 border border-indigo-100 space-y-2">
-                <span className="text-[10px] font-black uppercase text-indigo-700 tracking-wider block">
+              {/* 3. Tarjeta Resumen Final del Perfume con Estilo Clay */}
+              <div className="p-3.5 rounded-2xl clay-card bg-white/90 border border-purple-100 shadow-sm space-y-2.5">
+                <span className="text-[10.5px] font-black uppercase text-purple-700 tracking-wider block">
                   Resumen de tu preparación:
                 </span>
                 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
                   <div>
                     <span className="text-[10px] text-slate-400 block font-bold">Fragancia:</span>
                     <strong className="text-slate-900 font-black truncate block">
@@ -696,7 +714,7 @@ export default function PerfumeKitBuilderModal({
                   </div>
                   <div>
                     <span className="text-[10px] text-slate-400 block font-bold">Concentración:</span>
-                    <strong className={(isPlus && hasHalfOzAvailable) ? 'text-amber-800 font-black' : 'text-slate-700 font-bold'}>
+                    <strong className={(isPlus && hasHalfOzAvailable) ? 'text-purple-700 font-black' : 'text-slate-700 font-bold'}>
                       {(isPlus && hasHalfOzAvailable) ? '1.5 Onzas (Versión PLUS)' : '1 Onza Estándar'}
                     </strong>
                   </div>
@@ -715,7 +733,7 @@ export default function PerfumeKitBuilderModal({
         </div>
 
         {/* ================= BARRA INFERIOR DE NAVEGACIÓN Y COMPRA ================= */}
-        <div className="p-3 sm:p-4 border-t border-slate-100 bg-slate-50/95 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+        <div className="p-3 sm:p-4 border-t border-purple-100/80 bg-[#f8fafc] flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
           
           {/* Precio total en vivo */}
           <div>
@@ -723,10 +741,10 @@ export default function PerfumeKitBuilderModal({
               Total a pagar:
             </span>
             <div className="flex items-baseline gap-2">
-              <span className="text-xl sm:text-2xl font-black text-slate-900">
+              <span className="text-xl sm:text-2xl font-black text-purple-950">
                 ${totalPrice.toFixed(2)}
               </span>
-              <span className="text-[11px] font-bold text-slate-500">
+              <span className="text-[11px] font-bold text-purple-700">
                 {(isPlus && hasHalfOzAvailable) ? '(Incluye +½ oz PLUS)' : '(1 Onza Estándar)'}
               </span>
             </div>
@@ -738,7 +756,7 @@ export default function PerfumeKitBuilderModal({
               <button
                 type="button"
                 onClick={() => setCurrentStep((prev) => (prev - 1) as 1 | 2)}
-                className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 transition-colors flex items-center gap-1 cursor-pointer"
+                className="clay-btn clay-btn-light px-3.5 py-2 text-xs font-bold"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Atrás</span>
@@ -768,8 +786,8 @@ export default function PerfumeKitBuilderModal({
                   !selectedEssence
                     ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
                     : justAdded
-                    ? 'bg-emerald-600 text-white'
-                    : 'clay-btn bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 !text-white active:scale-95 cursor-pointer shadow-[0_4px_18px_rgba(16,185,129,0.45)] hover:brightness-105'
+                    ? 'clay-btn-success text-white'
+                    : 'clay-btn-primary active:scale-95 cursor-pointer hover:brightness-105'
                 }`}
               >
                 {justAdded ? (
