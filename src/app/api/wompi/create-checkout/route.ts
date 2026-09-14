@@ -58,7 +58,9 @@ export async function POST(request: Request) {
     const baseUrl = `${protocol}://${host}`;
 
     const num = order.orderNumber;
-    const finalAmount = amount ? Number(amount) : Number(order.total);
+    // SEC-CRITICAL: El monto a cobrar SIEMPRE proviene de la base de datos (order.total).
+    // Se ignora cualquier valor de amount enviado por el cliente para prevenir manipulación maliciosa de precios.
+    const finalAmount = Number(order.total);
 
     // Generar enlace seguro en Wompi
     const link = await createWompiPaymentLink({

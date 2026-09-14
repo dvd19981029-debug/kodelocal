@@ -50,6 +50,25 @@ export async function POST(request: Request) {
           return NextResponse.json({ success: true, message: 'Transacción ya procesada' });
         }
 
+        // SEC-FINANCIAL: Validar que el monto cobrado por Wompi coincida con el total de la orden
+        if (Monto !== undefined && Monto !== null) {
+          const paid = Number(Monto);
+          const expected = Number(order.total);
+          if (paid < expected - 0.05) {
+            console.error(`🚨 ALERTA FINANCIERA: Monto recibido en Wompi ($${paid}) es menor al esperado ($${expected}) para orden ${orderNumber}`);
+            await prisma.ecommerceOrder.update({
+              where: { id: order.id },
+              data: {
+                notes: [
+                  order.notes,
+                  `[ALERTA PAGO PARCIAL/DISCREPANCIA: Pagado $${paid} de esperado $${expected} - Tx: ${IdTransaccion}]`,
+                ].filter(Boolean).join(' '),
+              },
+            });
+            return NextResponse.json({ success: false, error: 'Monto insuficiente' }, { status: 400 });
+          }
+        }
+
         // Actualizar pedido a PAGADO
         await prisma.ecommerceOrder.update({
           where: { id: order.id },

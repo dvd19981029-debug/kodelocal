@@ -28,9 +28,9 @@ function CheckoutResultadoContent() {
   const esAprobada = searchParams.get('esAprobada');
   const mensaje = searchParams.get('mensaje');
 
-  // En Wompi 'esAprobada' puede venir como 'True' o no venir si es enlace de pago
-  // Si no viene 'esAprobada', la presencia de 'idTransaccion' y 'monto' con hash indica transacción procesada
-  const isApproved = esAprobada === 'True' || (!esAprobada && Boolean(idTransaccion));
+  // En Wompi 'esAprobada' puede venir como 'True', 'true' o no venir si es enlace de pago
+  const esAprobadaLower = (esAprobada || '').trim().toLowerCase();
+  const isApproved = esAprobadaLower === 'true' || (!esAprobada && Boolean(idTransaccion));
 
   // Confirmar pago en la base de datos inmediatamente al volver de Wompi y vaciar carrito
   useEffect(() => {

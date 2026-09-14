@@ -158,10 +158,20 @@ export async function PATCH(request: Request) {
         const txData = await getWompiTransaction(String(txId));
         const isApproved = txData.esAprobada === true || txData.resultadoTransaccion === 'ExitosaAprobada';
         const numMatches = !txData.identificadorEnlaceComercio || txData.identificadorEnlaceComercio === order.orderNumber;
+        const txMonto = Number(txData.monto ?? txData.Monto ?? 0);
+        const orderTotal = Number(order.total);
 
         if (!isApproved || !numMatches) {
           return NextResponse.json(
             { success: false, error: 'Transacción denegada o no corresponde a esta orden.' },
+            { status: 403 }
+          );
+        }
+
+        // SEC-FINANCIAL: Verificar que el monto pagado en Wompi cubra el total de la orden
+        if (txMonto > 0 && txMonto < orderTotal - 0.05) {
+          return NextResponse.json(
+            { success: false, error: `El monto pagado ($${txMonto}) es menor al total de la orden ($${orderTotal}).` },
             { status: 403 }
           );
         }
@@ -191,7 +201,8 @@ export async function PATCH(request: Request) {
     }
 
     // Si se cancela o rechaza el pedido y no estaba cancelado previamente (o se fuerza restock), restaurar existencias
-    const isCancelling = (orderStatus === 'CANCELADO' || paymentStatus === 'CANCELLED' || paymentStatus === 'REJECTED' || restock === true) && order.orderStatus !== 'CANCELADO';
+    const isAlreadyCancelled = order.orderStatus === 'CANCELADO' || order.paymentStatus === 'CANCELLED';
+    const isCancelling = (orderStatus === 'CANCELADO' || paymentStatus === 'CANCELLED' || paymentStatus === 'REJECTED' || restock === true) && !isAlreadyCancelled;
     if (isCancelling && order.items && order.items.length > 0) {
       for (const it of order.items) {
         if (it.productId) {
@@ -212,12 +223,13 @@ export async function PATCH(request: Request) {
       }
     }
 
-    const safePaymentStatus = paymentStatus === 'REJECTED' ? 'CANCELLED' : paymentStatus;
+    const safePaymentStatus = (paymentStatus === 'REJECTED' || paymentStatus === 'CANCELLED' || isCancelling) ? 'CANCELLED' : paymentStatus;
+    const safeOrderStatus = isCancelling ? 'CANCELADO' : orderStatus;
 
     const updated = await prisma.ecommerceOrder.update({
       where: { id: order.id },
       data: {
-        ...(orderStatus ? { orderStatus } : {}),
+        ...(safeOrderStatus ? { orderStatus: safeOrderStatus } : {}),
         ...(safePaymentStatus ? { paymentStatus: safePaymentStatus } : {}),
         ...(courierName ? { courierName } : {}),
         ...(trackingNumber ? { trackingNumber } : {}),
