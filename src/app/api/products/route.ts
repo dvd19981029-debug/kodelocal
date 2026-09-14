@@ -116,7 +116,33 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json();
-    const { id, stock, isAvailableOnline, price, puesto, officialName, imageUrl } = body;
+
+    // Actualización masiva por categoría (ej. esencias)
+    if (body.bulk === true) {
+      const { category, price, cost } = body;
+      const updateData: any = {};
+      if (typeof price === 'number') updateData.price = price;
+      if (typeof cost === 'number') updateData.cost = cost;
+
+      let whereClause: any = {};
+      if (category) {
+        const cat = await prisma.category.findFirst({ where: { name: category } });
+        if (cat) {
+          whereClause.categoryId = cat.id;
+        } else {
+          whereClause.category = { name: category };
+        }
+      }
+
+      const result = await prisma.product.updateMany({
+        where: whereClause,
+        data: updateData,
+      });
+
+      return NextResponse.json({ success: true, count: result.count });
+    }
+
+    const { id, stock, isAvailableOnline, price, cost, puesto, officialName, imageUrl, name } = body;
 
     if (!id) {
       return NextResponse.json({ success: false, error: 'Product ID required' }, { status: 400 });
@@ -128,9 +154,11 @@ export async function PATCH(request: Request) {
         ...(typeof stock === 'number' ? { stock } : {}),
         ...(typeof isAvailableOnline === 'boolean' ? { isAvailableOnline } : {}),
         ...(typeof price === 'number' ? { price } : {}),
+        ...(typeof cost === 'number' ? { cost } : {}),
         ...(typeof puesto === 'string' ? { puesto } : {}),
         ...(typeof officialName === 'string' ? { officialName } : {}),
         ...(typeof imageUrl === 'string' ? { imageUrl } : {}),
+        ...(typeof name === 'string' ? { name } : {}),
       },
     });
 

@@ -17,6 +17,7 @@ import {
   Barcode
 } from 'lucide-react';
 import { INITIAL_PRODUCTS, ProductItem, getStoredProducts } from '@/lib/store';
+import { getStaffToken } from '@/lib/auth';
 
 export default function InventarioPage() {
   const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
@@ -44,6 +45,18 @@ export default function InventarioPage() {
     imageUrl: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80',
     isAvailableOnline: true
   });
+
+  useEffect(() => {
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.products) && data.products.length > 0) {
+          setProducts(data.products);
+          localStorage.setItem('kodelocal_products', JSON.stringify(data.products));
+        }
+      })
+      .catch(err => console.error('Error sincronizando productos con Supabase:', err));
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('kodelocal_products', JSON.stringify(products));
@@ -75,48 +88,92 @@ export default function InventarioPage() {
   const lowStockCount = useMemo(() => products.filter(p => p.stock <= p.minStock).length, [products]);
   const ecommerceCount = useMemo(() => products.filter(p => p.isAvailableOnline).length, [products]);
 
-  const handleSaveProduct = (e: React.FormEvent) => {
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.price) {
       alert('Por favor ingresa nombre y precio.');
       return;
     }
 
+    const targetId = editingProduct ? editingProduct.id : `prod-${Date.now()}`;
+    const payload = {
+      id: targetId,
+      name: formData.name || 'Nuevo Producto',
+      officialName: formData.officialName || '',
+      sku: formData.sku || (editingProduct ? editingProduct.sku : `SKU-${Math.floor(1000 + Math.random() * 9000)}`),
+      barcode: formData.barcode || (editingProduct ? editingProduct.barcode : `${Math.floor(741000000000 + Math.random() * 99999999)}`),
+      brand: formData.brand || 'Kode',
+      gender: formData.gender || 'Unisex',
+      category: formData.category || 'Esencias para Perfume',
+      unit: formData.unit || 'Onza',
+      price: Number(formData.price),
+      cost: Number(formData.cost || 0),
+      stock: Number(formData.stock || 0),
+      minStock: Number(formData.minStock || 5),
+      imageUrl: formData.imageUrl || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80',
+      isAvailableOnline: Boolean(formData.isAvailableOnline)
+    };
+
     if (editingProduct) {
-      setProducts(prev => prev.map(p => p.id === editingProduct.id ? { ...p, ...formData } as ProductItem : p));
+      setProducts(prev => prev.map(p => p.id === editingProduct.id ? { ...p, ...payload } as ProductItem : p));
     } else {
-      const newProduct: ProductItem = {
-        id: `prod-${Date.now()}`,
-        name: formData.name || 'Nuevo Producto',
-        officialName: formData.officialName || '',
-        sku: formData.sku || `SKU-${Math.floor(1000 + Math.random() * 9000)}`,
-        barcode: formData.barcode || `${Math.floor(741000000000 + Math.random() * 99999999)}`,
-        brand: formData.brand || 'Kode',
-        gender: formData.gender || 'Unisex',
-        category: formData.category || 'Esencias para Perfume',
-        unit: formData.unit || 'Onza',
-        price: Number(formData.price),
-        cost: Number(formData.cost || 0),
-        stock: Number(formData.stock || 0),
-        minStock: Number(formData.minStock || 5),
-        imageUrl: formData.imageUrl || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80',
-        isAvailableOnline: Boolean(formData.isAvailableOnline)
-      };
-      setProducts(prev => [newProduct, ...prev]);
+      setProducts(prev => [payload as ProductItem, ...prev]);
     }
 
     setIsNewProductOpen(false);
     setEditingProduct(null);
+
+    // Sincronizar con Supabase
+    try {
+      const staffToken = await getStaffToken();
+      await fetch('/api/products', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({
+          id: targetId,
+          name: payload.name,
+          officialName: payload.officialName,
+          price: payload.price,
+          cost: payload.cost,
+          stock: payload.stock,
+          imageUrl: payload.imageUrl,
+          isAvailableOnline: payload.isAvailableOnline,
+        }),
+      });
+    } catch (err) {
+      console.error('Error sincronizando con Supabase:', err);
+    }
   };
 
-  const handleAdjustStock = (productId: string, amount: number) => {
+  const handleAdjustStock = async (productId: string, amount: number) => {
+    let nextStockVal = 0;
     setProducts(prev => prev.map(p => {
       if (p.id === productId) {
-        const nextStock = Math.max(0, p.stock + amount);
-        return { ...p, stock: nextStock };
+        nextStockVal = Math.max(0, p.stock + amount);
+        return { ...p, stock: nextStockVal };
       }
       return p;
     }));
+
+    try {
+      const staffToken = await getStaffToken();
+      await fetch('/api/products', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({
+          id: productId,
+          stock: nextStockVal,
+        }),
+      });
+    } catch (err) {
+      console.error('Error sincronizando stock con Supabase:', err);
+    }
   };
 
   const handleDeleteProduct = (productId: string) => {

@@ -43,7 +43,8 @@ import {
   getStoredRoles, 
   saveStoredRoles, 
   CustomRole, 
-  SYSTEM_VIEWS 
+  SYSTEM_VIEWS,
+  getStaffToken 
 } from '@/lib/auth';
 import { INITIAL_PRODUCTS, ProductItem, PERFUME_CATEGORIES, SaleRecord, resetDatabaseToZeroStock, getStoredProducts, DATA_VERSION } from '@/lib/store';
 import ComprasModule from '@/components/admin/ComprasModule';
@@ -261,7 +262,7 @@ export default function AdminPage() {
     setEditingUser({ ...editingUser, pin: randomPin });
   };
 
-  const handleApplyBulkPrices = (e: React.FormEvent) => {
+  const handleApplyBulkPrices = async (e: React.FormEvent) => {
     e.preventDefault();
     const np = parseFloat(bulkPrice);
     const nc = parseFloat(bulkCost);
@@ -275,6 +276,30 @@ export default function AdminPage() {
     }));
 
     setIsBulkPriceModalOpen(false);
+
+    try {
+      const staffToken = await getStaffToken();
+      const res = await fetch('/api/products', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({
+          bulk: true,
+          category: 'Esencias para Perfume',
+          price: np,
+          cost: nc,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(`¡Precios actualizados en la base de datos y tienda online para las ${totalEsencias} esencias!`);
+        return;
+      }
+    } catch (err) {
+      console.error('Error sincronizando precios masivos con Supabase:', err);
+    }
     alert(`¡Precios actualizados para las ${totalEsencias} esencias!`);
   };
 
@@ -314,21 +339,48 @@ export default function AdminPage() {
     setIsEditModalOpen(true);
   };
 
-  const handleSaveProduct = (e: React.FormEvent) => {
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProduct || !editingProduct.name.trim()) return;
 
+    const prodToSave = { ...editingProduct };
+
     setProducts(prev => {
-      const exists = prev.some(p => p.id === editingProduct.id);
+      const exists = prev.some(p => p.id === prodToSave.id);
       if (exists) {
-        return prev.map(p => p.id === editingProduct.id ? editingProduct : p);
+        return prev.map(p => p.id === prodToSave.id ? prodToSave : p);
       } else {
-        return [editingProduct, ...prev];
+        return [prodToSave, ...prev];
       }
     });
 
     setIsEditModalOpen(false);
     setEditingProduct(null);
+
+    // Sincronizar en vivo con la base de datos de Supabase
+    try {
+      const staffToken = await getStaffToken();
+      await fetch('/api/products', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({
+          id: prodToSave.id,
+          name: prodToSave.name,
+          officialName: prodToSave.officialName,
+          price: Number(prodToSave.price),
+          cost: Number(prodToSave.cost || 0),
+          stock: Number(prodToSave.stock || 0),
+          puesto: prodToSave.puesto || '',
+          imageUrl: prodToSave.imageUrl || '',
+          isAvailableOnline: prodToSave.isAvailableOnline,
+        }),
+      });
+    } catch (err) {
+      console.error('Error sincronizando producto con Supabase:', err);
+    }
   };
 
   const handleStartEditRole = (r: CustomRole) => {
