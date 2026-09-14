@@ -60,6 +60,16 @@ export default function PerfumeKitBuilderModal({
       }
     }
   }, [initialEssenceId, availableEssences, cart]);
+
+  // Mantener la sección visible y centrada en pantalla al avanzar de paso
+  useEffect(() => {
+    if (inline) {
+      const el = document.getElementById('seccion-arma-tu-perfume');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  }, [currentStep, inline]);
   
   // Usar los frascos de 100ml reales con fotos en fondo blanco del inventario
   const bottlesList = useMemo(() => {
@@ -630,20 +640,20 @@ export default function PerfumeKitBuilderModal({
 
           {/* -------------------- PASO 3: PERSONALIZACIÓN & VERSIÓN PLUS -------------------- */}
           {currentStep === 3 && (
-            <div className="space-y-3.5 animate-in fade-in duration-200">
+            <div className="space-y-3 animate-in fade-in duration-200 max-w-2xl mx-auto w-full">
               
               {/* 1. Selección de Etiqueta (Sin costo adicional) */}
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <label className="text-xs font-black text-slate-800 flex items-center gap-1.5">
                   <span>¿Deseas etiqueta con el nombre de tu fragancia?</span>
                   <span className="text-[10px] text-purple-800 font-black bg-purple-100/70 border border-purple-200 px-2 py-0.2 rounded-full">Gratis</span>
                 </label>
 
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setHasLabel(true)}
-                    className={`p-3 sm:p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between ${
+                    className={`p-2.5 sm:p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between ${
                       hasLabel
                         ? 'clay-card bg-purple-50/80 border-purple-500 ring-2 ring-purple-400/40 shadow-xs'
                         : 'clay-card bg-white border-white/90 hover:bg-slate-50'
@@ -653,8 +663,8 @@ export default function PerfumeKitBuilderModal({
                       <strong className="block text-xs font-black text-slate-900">
                         Con Etiqueta
                       </strong>
-                      <span className="text-[10px] text-slate-500 font-medium leading-tight">
-                        Lleva el nombre de tu perfume impreso de forma nítida.
+                      <span className="text-[9.5px] sm:text-[10px] text-slate-500 font-medium leading-tight block">
+                        Nombre de tu perfume impreso.
                       </span>
                     </div>
                     {hasLabel && (
@@ -667,7 +677,7 @@ export default function PerfumeKitBuilderModal({
                   <button
                     type="button"
                     onClick={() => setHasLabel(false)}
-                    className={`p-3 sm:p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between ${
+                    className={`p-2.5 sm:p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between ${
                       !hasLabel
                         ? 'clay-card bg-purple-50/80 border-purple-500 ring-2 ring-purple-400/40 shadow-xs'
                         : 'clay-card bg-white border-white/90 hover:bg-slate-50'
@@ -677,8 +687,8 @@ export default function PerfumeKitBuilderModal({
                       <strong className="block text-xs font-black text-slate-900">
                         Sin Etiqueta
                       </strong>
-                      <span className="text-[10px] text-slate-500 font-medium leading-tight">
-                        Frasco limpio y liso para acabado minimalista.
+                      <span className="text-[9.5px] sm:text-[10px] text-slate-500 font-medium leading-tight block">
+                        Frasco liso y minimalista.
                       </span>
                     </div>
                     {!hasLabel && (
@@ -696,7 +706,7 @@ export default function PerfumeKitBuilderModal({
                   if (!hasHalfOzAvailable) return;
                   setIsPlus(!isPlus);
                 }}
-                className={`p-3.5 sm:p-4 rounded-2xl transition-all select-none flex items-start gap-3 ${
+                className={`p-2.5 sm:p-3 rounded-2xl transition-all select-none flex items-start gap-2.5 ${
                   !hasHalfOzAvailable
                     ? 'bg-slate-100 border border-slate-200 opacity-60 cursor-not-allowed'
                     : isPlus
@@ -710,33 +720,33 @@ export default function PerfumeKitBuilderModal({
                     checked={isPlus && hasHalfOzAvailable}
                     disabled={!hasHalfOzAvailable}
                     onChange={() => {}}
-                    className="w-5 h-5 rounded-md text-purple-600 focus:ring-purple-500 border-slate-300 cursor-pointer disabled:cursor-not-allowed"
+                    className="w-4 h-4 sm:w-5 sm:h-5 rounded-md text-purple-600 focus:ring-purple-500 border-slate-300 cursor-pointer disabled:cursor-not-allowed"
                   />
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-xs sm:text-sm font-black text-slate-900">
-                      Versión PLUS (+½ Onza extra de esencia pura)
+                      Versión PLUS (+½ Onza extra de esencia)
                     </span>
-                    <span className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-2xs">
+                    <span className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[9.5px] sm:text-[10px] font-black px-2 py-0.5 rounded-full shadow-2xs">
                       +${extraShotPrice.toFixed(2)}
                     </span>
                     {!hasHalfOzAvailable && (
-                      <span className="bg-rose-50 text-rose-700 border border-rose-200 text-[9.5px] font-bold px-2 py-0.5 rounded-full">
-                        Sin disponibilidad de medias onzas
+                      <span className="bg-rose-50 text-rose-700 border border-rose-200 text-[9px] font-bold px-1.5 py-0.2 rounded-full">
+                        Sin stock ½ oz
                       </span>
                     )}
                   </div>
 
-                  <p className="text-[11px] text-slate-600 font-medium mt-1 leading-relaxed">
+                  <p className="text-[10px] sm:text-[11px] text-slate-600 font-medium mt-0.5 leading-snug">
                     {!hasHalfOzAvailable ? (
                       <span className="text-rose-600 font-bold block">
-                        Opción bloqueada: No hay disponibilidad de medias onzas para convertir este contratipo en versión PLUS.
+                        No hay disponibilidad de medias onzas para versión PLUS.
                       </span>
                     ) : (
                       <>
-                        Aumenta la concentración de tu perfume a <strong>1.5 Onzas de esencia pura</strong> (1 onza base + media onza adicional) para mayor fijación y presencia.
+                        Aumenta a <strong>1.5 Onzas de esencia pura</strong> para mayor fijación y concentración.
                       </>
                     )}
                   </p>
@@ -744,33 +754,33 @@ export default function PerfumeKitBuilderModal({
               </div>
 
               {/* 3. Tarjeta Resumen Final del Perfume con Estilo Clay */}
-              <div className="p-3.5 rounded-2xl clay-card bg-white/90 border border-purple-100 shadow-sm space-y-2.5">
-                <span className="text-[10.5px] font-black uppercase text-purple-700 tracking-wider block">
+              <div className="p-2.5 sm:p-3 rounded-2xl clay-card bg-white/90 border border-purple-100 shadow-xs space-y-1.5">
+                <span className="text-[10px] font-black uppercase text-purple-700 tracking-wider block">
                   Resumen de tu preparación:
                 </span>
                 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                   <div>
-                    <span className="text-[10px] text-slate-400 block font-bold">Fragancia:</span>
-                    <strong className="text-slate-900 font-black truncate block">
+                    <span className="text-[9px] text-slate-400 block font-bold">Fragancia:</span>
+                    <strong className="text-slate-900 font-black truncate block text-[11px] sm:text-xs">
                       {selectedEssence ? (selectedEssence.officialName || selectedEssence.name) : 'No seleccionada'}
                     </strong>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 block font-bold">Frasco:</span>
-                    <strong className="text-slate-900 font-black truncate block">
+                    <span className="text-[9px] text-slate-400 block font-bold">Frasco:</span>
+                    <strong className="text-slate-900 font-black truncate block text-[11px] sm:text-xs">
                       {activeBottle.name} (100 ml)
                     </strong>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 block font-bold">Concentración:</span>
-                    <strong className={(isPlus && hasHalfOzAvailable) ? 'text-purple-700 font-black' : 'text-slate-700 font-bold'}>
-                      {(isPlus && hasHalfOzAvailable) ? '1.5 Onzas (Versión PLUS)' : '1 Onza Estándar'}
+                    <span className="text-[9px] text-slate-400 block font-bold">Concentración:</span>
+                    <strong className={`truncate block text-[11px] sm:text-xs ${(isPlus && hasHalfOzAvailable) ? 'text-purple-700 font-black' : 'text-slate-700 font-bold'}`}>
+                      {(isPlus && hasHalfOzAvailable) ? '1.5 Oz (PLUS)' : '1 Oz Estándar'}
                     </strong>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 block font-bold">Etiqueta:</span>
-                    <strong className="text-slate-700 font-bold">
+                    <span className="text-[9px] text-slate-400 block font-bold">Etiqueta:</span>
+                    <strong className="text-slate-700 font-bold block text-[11px] sm:text-xs">
                       {hasLabel ? 'Con etiqueta' : 'Sin etiqueta'}
                     </strong>
                   </div>
@@ -783,78 +793,84 @@ export default function PerfumeKitBuilderModal({
         </div>
 
         {/* ================= BARRA INFERIOR DE NAVEGACIÓN Y COMPRA ================= */}
-        <div className="p-2.5 sm:p-3.5 border-t border-purple-100/80 bg-[#f8fafc]/95 backdrop-blur-md sticky bottom-0 z-20 flex items-center justify-between gap-2.5 sm:gap-4 shrink-0 shadow-[0_-4px_16px_rgba(0,0,0,0.05)]">
-          
-          {/* Precio total en vivo */}
-          <div className="shrink-0">
-            <span className="text-[9px] uppercase font-black text-slate-400 block tracking-wider leading-none mb-0.5">
-              Total a pagar:
-            </span>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-xl sm:text-2xl font-black text-purple-950 leading-none">
-                ${totalPrice.toFixed(2)}
+        <div className="p-2.5 sm:p-3.5 border-t border-purple-100/80 bg-[#f8fafc]/95 backdrop-blur-md sticky bottom-0 z-20 shrink-0 shadow-[0_-4px_16px_rgba(0,0,0,0.05)]">
+          <div className="flex items-center justify-between gap-2 max-w-3xl mx-auto w-full">
+            
+            {/* Precio total en vivo */}
+            <div className="min-w-0 shrink-0">
+              <span className="text-[9px] uppercase font-black text-slate-400 block tracking-wider leading-none mb-0.5">
+                Total:
               </span>
-              <span className="text-[10.5px] sm:text-[11px] font-bold text-purple-700 hidden xs:inline">
-                {(isPlus && hasHalfOzAvailable) ? '(Incluye +½ oz PLUS)' : '(1 Onza Estándar)'}
-              </span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-lg sm:text-2xl font-black text-purple-950 leading-none">
+                  ${totalPrice.toFixed(2)}
+                </span>
+                <span className="text-[10px] sm:text-[11px] font-bold text-purple-700 hidden md:inline truncate">
+                  {(isPlus && hasHalfOzAvailable) ? '(+½ oz PLUS)' : '(1 Oz)'}
+                </span>
+              </div>
             </div>
+
+            {/* Botones de navegación según el paso */}
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+              {currentStep > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep((prev) => (prev - 1) as 1 | 2)}
+                  className="clay-btn clay-btn-light px-2.5 sm:px-3.5 py-2 text-xs font-bold flex items-center gap-1 cursor-pointer shrink-0"
+                  title="Paso anterior"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span className="hidden xs:inline">Atrás</span>
+                </button>
+              )}
+
+              {currentStep < 3 ? (
+                <button
+                  type="button"
+                  disabled={currentStep === 1 && !selectedEssence}
+                  onClick={() => setCurrentStep((prev) => (prev + 1) as 2 | 3)}
+                  className={`px-3.5 sm:px-6 py-2 sm:py-2.5 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all shadow-md shrink-0 ${
+                    currentStep === 1 && !selectedEssence
+                      ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
+                      : 'clay-btn-primary active:scale-95 cursor-pointer hover:brightness-105'
+                  }`}
+                >
+                  <span>{currentStep === 1 ? 'Continuar a Frasco' : 'Continuar a Personalizar'}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={!selectedEssence || justAdded}
+                  onClick={handleConfirmKit}
+                  className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-all shadow-md min-w-0 ${
+                    !selectedEssence
+                      ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
+                      : justAdded
+                      ? 'clay-btn-success text-white'
+                      : 'clay-btn-primary active:scale-95 cursor-pointer hover:brightness-105'
+                  }`}
+                >
+                  {justAdded ? (
+                    <>
+                      <Check className="w-4 h-4 shrink-0" />
+                      <span className="truncate">¡Agregado!</span>
+                    </>
+                  ) : (
+                    <>
+                      <PackageCheck className="w-4 h-4 shrink-0" />
+                      <span className="truncate">
+                        <span className="sm:hidden">Agregar Perfume</span>
+                        <span className="hidden sm:inline">Agregar Perfume (${totalPrice.toFixed(2)})</span>
+                      </span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+
           </div>
-
-          {/* Botones de navegación según el paso */}
-          <div className="flex items-center gap-2 shrink-0">
-            {currentStep > 1 && (
-              <button
-                type="button"
-                onClick={() => setCurrentStep((prev) => (prev - 1) as 1 | 2)}
-                className="clay-btn clay-btn-light px-3 sm:px-3.5 py-2 text-xs font-bold flex items-center gap-1 cursor-pointer"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Atrás</span>
-              </button>
-            )}
-
-            {currentStep < 3 ? (
-              <button
-                type="button"
-                disabled={currentStep === 1 && !selectedEssence}
-                onClick={() => setCurrentStep((prev) => (prev + 1) as 2 | 3)}
-                className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all shadow-md ${
-                  currentStep === 1 && !selectedEssence
-                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
-                    : 'clay-btn-primary active:scale-95 cursor-pointer hover:brightness-105'
-                }`}
-              >
-                <span>{currentStep === 1 ? 'Continuar a Frasco' : 'Continuar a Personalizar'}</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                disabled={!selectedEssence || justAdded}
-                onClick={handleConfirmKit}
-                className={`px-5 sm:px-7 py-2 sm:py-2.5 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md ${
-                  !selectedEssence
-                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
-                    : justAdded
-                    ? 'clay-btn-success text-white'
-                    : 'clay-btn-primary active:scale-95 cursor-pointer hover:brightness-105'
-                }`}
-              >
-                {justAdded ? (
-                  <>
-                    <Check className="w-4 h-4" />
-                    <span>¡Perfume Agregado!</span>
-                  </>
-                ) : (
-                  <>
-                    <PackageCheck className="w-4 h-4" />
-                    <span>Agregar Perfume (${totalPrice.toFixed(2)})</span>
-                  </>
-                )}
-              </button>
-            )}
-          </div>
-
         </div>
 
       </div>
