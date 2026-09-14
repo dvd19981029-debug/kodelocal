@@ -30,16 +30,16 @@ export function getPresentationsForProduct(product: ProductItem): PresentationOp
       : Number((onzaPrice / 2).toFixed(2));
     return [
       {
-        id: 'MEDIA_ONZA',
-        name: '½ Onza',
-        description: '½ onza de esencia pura concentrada',
-        price: mediaOnzaPrice
-      },
-      {
         id: 'ONZA_COMPLETA',
         name: '1 Onza',
         description: '1 onza de esencia pura concentrada',
         price: onzaPrice
+      },
+      {
+        id: 'MEDIA_ONZA',
+        name: '½ Onza',
+        description: '½ onza de esencia pura concentrada',
+        price: mediaOnzaPrice
       }
     ];
   }
