@@ -10,7 +10,9 @@ export interface ProductItem {
   gender?: string; // Caballero, Dama, Unisex
   category: string;
   unit: string; // Onza, Unidad, Paquete, Galón
-  price: number;
+  price: number; // Precio por Onza (o precio base por unidad)
+  priceHalfOunce?: number; // Precio Media Onza (mostrado en ecommerce)
+  finishedPerfumePrice?: number; // Precio Perfume Terminado 100ml ("Arma tu propio perfume")
   cost: number;
   stock: number;
   minStock: number;

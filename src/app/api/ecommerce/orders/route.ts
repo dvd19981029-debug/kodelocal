@@ -406,20 +406,21 @@ export async function POST(request: Request) {
         // Si es un kit preparado de "Arma tu perfume"
         if (it.productId && it.productId.startsWith('kit-')) {
           const isPlus = presLower.includes('plus') || presLower.includes('1.5');
-          const kitUnitPrice = isPlus ? 18.00 : 15.00;
-          const lineTotal = Number((kitUnitPrice * qty).toFixed(2));
-          verifiedSubtotal += lineTotal;
-
           const parts = it.productId.split('-');
           const essenceId = parts[1];
 
           let targetProductId = '';
+          let baseKitPrice = 15.00;
+
           if (essenceId) {
             const essenceProd = await tx.product.findUnique({
               where: { id: essenceId },
             });
             if (essenceProd) {
               targetProductId = essenceProd.id;
+              if (essenceProd.finishedPerfumePrice != null) {
+                baseKitPrice = Number(essenceProd.finishedPerfumePrice);
+              }
               const stockNeeded = isPlus ? Math.ceil(qty * 1.5) : qty;
               await tx.product.update({
                 where: { id: essenceProd.id },
@@ -429,6 +430,10 @@ export async function POST(request: Request) {
               });
             }
           }
+
+          const kitUnitPrice = isPlus ? Number((baseKitPrice + 3.00).toFixed(2)) : baseKitPrice;
+          const lineTotal = Number((kitUnitPrice * qty).toFixed(2));
+          verifiedSubtotal += lineTotal;
 
           if (!targetProductId) {
             const fallbackProd = await tx.product.findFirst();
@@ -464,7 +469,7 @@ export async function POST(request: Request) {
         const catName = prod.category?.name || '';
         if (catName === 'Esencias para Perfume' || !catName) {
           if (presLower.includes('media') || presLower.includes('½') || presLower.includes('half')) {
-            legitimateUnitPrice = Number((legitimateUnitPrice / 2).toFixed(2));
+            legitimateUnitPrice = prod.priceHalfOunce != null ? Number(prod.priceHalfOunce) : Number((legitimateUnitPrice / 2).toFixed(2));
           }
         }
 

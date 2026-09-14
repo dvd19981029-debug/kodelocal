@@ -57,6 +57,8 @@ export async function GET(request: Request) {
       category: p.category?.name || 'Esencias para Perfume',
       unit: p.unit || 'Onza',
       price: Number(p.price),
+      priceHalfOunce: p.priceHalfOunce != null ? Number(p.priceHalfOunce) : (p.category?.name === 'Esencias para Perfume' || !p.category?.name ? Number((Number(p.price) / 2).toFixed(2)) : undefined),
+      finishedPerfumePrice: p.finishedPerfumePrice != null ? Number(p.finishedPerfumePrice) : (p.category?.name === 'Esencias para Perfume' || !p.category?.name ? 15.00 : undefined),
       cost: Number(p.cost || 0),
       stock: p.stock,
       minStock: p.minStock,
@@ -119,10 +121,12 @@ export async function PATCH(request: Request) {
 
     // Actualización masiva por categoría (ej. esencias)
     if (body.bulk === true) {
-      const { category, price, cost } = body;
+      const { category, price, cost, priceHalfOunce, finishedPerfumePrice } = body;
       const updateData: any = {};
       if (typeof price === 'number') updateData.price = price;
       if (typeof cost === 'number') updateData.cost = cost;
+      if (typeof priceHalfOunce === 'number') updateData.priceHalfOunce = priceHalfOunce;
+      if (typeof finishedPerfumePrice === 'number') updateData.finishedPerfumePrice = finishedPerfumePrice;
 
       let whereClause: any = {};
       if (category) {
@@ -142,7 +146,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: true, count: result.count });
     }
 
-    const { id, stock, isAvailableOnline, price, cost, puesto, officialName, imageUrl, name } = body;
+    const { id, stock, isAvailableOnline, price, cost, priceHalfOunce, finishedPerfumePrice, puesto, officialName, imageUrl, name } = body;
 
     if (!id) {
       return NextResponse.json({ success: false, error: 'Product ID required' }, { status: 400 });
@@ -155,6 +159,8 @@ export async function PATCH(request: Request) {
         ...(typeof isAvailableOnline === 'boolean' ? { isAvailableOnline } : {}),
         ...(typeof price === 'number' ? { price } : {}),
         ...(typeof cost === 'number' ? { cost } : {}),
+        ...(typeof priceHalfOunce === 'number' ? { priceHalfOunce } : {}),
+        ...(typeof finishedPerfumePrice === 'number' ? { finishedPerfumePrice } : {}),
         ...(typeof puesto === 'string' ? { puesto } : {}),
         ...(typeof officialName === 'string' ? { officialName } : {}),
         ...(typeof imageUrl === 'string' ? { imageUrl } : {}),

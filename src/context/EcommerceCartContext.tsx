@@ -25,19 +25,21 @@ export interface PresentationOption {
 export function getPresentationsForProduct(product: ProductItem): PresentationOption[] {
   if (product.category === 'Esencias para Perfume') {
     const onzaPrice = Number((product.price || 3.25).toFixed(2));
-    const mediaOnzaPrice = Number((onzaPrice / 2).toFixed(2));
+    const mediaOnzaPrice = product.priceHalfOunce != null 
+      ? Number(Number(product.priceHalfOunce).toFixed(2)) 
+      : Number((onzaPrice / 2).toFixed(2));
     return [
-      {
-        id: 'ONZA_COMPLETA',
-        name: '1 Onza',
-        description: '1 onza de esencia pura concentrada',
-        price: onzaPrice
-      },
       {
         id: 'MEDIA_ONZA',
         name: '½ Onza',
         description: '½ onza de esencia pura concentrada',
         price: mediaOnzaPrice
+      },
+      {
+        id: 'ONZA_COMPLETA',
+        name: '1 Onza',
+        description: '1 onza de esencia pura concentrada',
+        price: onzaPrice
       }
     ];
   }

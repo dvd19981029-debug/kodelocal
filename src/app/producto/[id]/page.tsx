@@ -36,7 +36,7 @@ export default function ProductDetailPage() {
 
   const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedPresentation, setSelectedPresentation] = useState<ProductPresentation>('ONZA_COMPLETA');
+  const [selectedPresentation, setSelectedPresentation] = useState<ProductPresentation>('MEDIA_ONZA');
   const [quantity, setQuantity] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
 

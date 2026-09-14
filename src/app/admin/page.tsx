@@ -113,6 +113,8 @@ export default function AdminPage() {
 
   // Precios Masivos
   const [bulkPrice, setBulkPrice] = useState('3.25');
+  const [bulkPriceHalf, setBulkPriceHalf] = useState('1.65');
+  const [bulkPriceFinished, setBulkPriceFinished] = useState('15.00');
   const [bulkCost, setBulkCost] = useState('1.95');
 
   // Reporte Filtro Período
@@ -265,12 +267,20 @@ export default function AdminPage() {
   const handleApplyBulkPrices = async (e: React.FormEvent) => {
     e.preventDefault();
     const np = parseFloat(bulkPrice);
+    const npHalf = parseFloat(bulkPriceHalf);
+    const npFinished = parseFloat(bulkPriceFinished);
     const nc = parseFloat(bulkCost);
     if (isNaN(np) || isNaN(nc)) return;
 
     setProducts(prev => prev.map(p => {
       if (p.category === 'Esencias para Perfume') {
-        return { ...p, price: np, cost: nc };
+        return { 
+          ...p, 
+          price: np, 
+          cost: nc,
+          priceHalfOunce: !isNaN(npHalf) ? npHalf : Number((np / 2).toFixed(2)),
+          finishedPerfumePrice: !isNaN(npFinished) ? npFinished : 15.00,
+        };
       }
       return p;
     }));
@@ -290,6 +300,8 @@ export default function AdminPage() {
           category: 'Esencias para Perfume',
           price: np,
           cost: nc,
+          priceHalfOunce: !isNaN(npHalf) ? npHalf : Number((np / 2).toFixed(2)),
+          finishedPerfumePrice: !isNaN(npFinished) ? npFinished : 15.00,
         }),
       });
       const data = await res.json();
@@ -330,6 +342,8 @@ export default function AdminPage() {
       category: 'Esencias para Perfume',
       unit: 'Onza',
       price: 3.25,
+      priceHalfOunce: 1.65,
+      finishedPerfumePrice: 15.00,
       cost: 1.95,
       stock: 20,
       minStock: 5,
@@ -371,6 +385,8 @@ export default function AdminPage() {
           name: prodToSave.name,
           officialName: prodToSave.officialName,
           price: Number(prodToSave.price),
+          priceHalfOunce: prodToSave.priceHalfOunce != null ? Number(prodToSave.priceHalfOunce) : undefined,
+          finishedPerfumePrice: prodToSave.finishedPerfumePrice != null ? Number(prodToSave.finishedPerfumePrice) : undefined,
           cost: Number(prodToSave.cost || 0),
           stock: Number(prodToSave.stock || 0),
           puesto: prodToSave.puesto || '',
@@ -916,7 +932,15 @@ export default function AdminPage() {
                       <th className="py-3 px-3">Inspirado en</th>
                       <th className="py-3 px-3">Categoría</th>
                       <th className="py-3 px-3">Costo ($)</th>
-                      <th className="py-3 px-3">PVP Venta ($)</th>
+                      <th className="py-3 px-3">Precio 1 Oz ($)</th>
+                      <th className="py-3 px-3">
+                        <span>Precio ½ Oz ($)</span>
+                        <span className="text-[9px] lowercase text-purple-600 font-extrabold block">(tienda online)</span>
+                      </th>
+                      <th className="py-3 px-3">
+                        <span>Perfume Terminado ($)</span>
+                        <span className="text-[9px] lowercase text-indigo-600 font-extrabold block">(arma tu perfume)</span>
+                      </th>
                       <th className="py-3 px-3">Margen Neto</th>
                       <th className="py-3 px-3">Stock</th>
                       <th className="py-3 px-3 text-right">Acción</th>
@@ -925,6 +949,10 @@ export default function AdminPage() {
                   <tbody className="divide-y divide-slate-100">
                     {filteredProducts.slice(0, 100).map((p) => {
                       const margen = p.price - p.cost;
+                      const isEssence = p.category === 'Esencias para Perfume' || !p.category;
+                      const halfPriceVal = p.priceHalfOunce != null ? p.priceHalfOunce : Number((p.price / 2).toFixed(2));
+                      const finishedPriceVal = p.finishedPerfumePrice != null ? p.finishedPerfumePrice : 15.00;
+
                       return (
                         <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
                           {/* Columna Imagen */}
@@ -985,9 +1013,34 @@ export default function AdminPage() {
                           <td className="py-2.5 px-3 font-bold text-slate-600 font-mono">
                             ${p.cost.toFixed(2)}
                           </td>
-                          <td className="py-2.5 px-3 font-black text-indigo-600 font-mono text-sm">
+
+                          {/* Precio 1 Onza */}
+                          <td className="py-2.5 px-3 font-black text-slate-900 font-mono text-xs">
                             ${p.price.toFixed(2)}
                           </td>
+
+                          {/* Precio ½ Onza (Ecommerce) */}
+                          <td className="py-2.5 px-3 font-mono">
+                            {isEssence ? (
+                              <div className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 font-black px-2 py-0.5 rounded-md border border-purple-200/80 text-xs shadow-2xs">
+                                ${halfPriceVal.toFixed(2)}
+                              </div>
+                            ) : (
+                              <span className="text-slate-300 font-mono text-xs">-</span>
+                            )}
+                          </td>
+
+                          {/* Perfume Terminado 100ml */}
+                          <td className="py-2.5 px-3 font-mono">
+                            {isEssence ? (
+                              <div className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 font-black px-2 py-0.5 rounded-md border border-indigo-200/80 text-xs shadow-2xs">
+                                ${finishedPriceVal.toFixed(2)}
+                              </div>
+                            ) : (
+                              <span className="text-slate-300 font-mono text-xs">-</span>
+                            )}
+                          </td>
+
                           <td className="py-2.5 px-3 font-bold text-emerald-600 font-mono">
                             +${margen.toFixed(2)} ({((margen/p.price)*100).toFixed(0)}%)
                           </td>
@@ -1766,7 +1819,7 @@ export default function AdminPage() {
             <form onSubmit={handleApplyBulkPrices} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">Precio Venta ($ / Oz)</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Precio 1 Oz ($ / Oz)</label>
                   <div className="clay-input flex items-center gap-1.5 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20">
                     <span className="font-black text-slate-400 select-none text-base">$</span>
                     <input
@@ -1775,13 +1828,51 @@ export default function AdminPage() {
                       required
                       value={bulkPrice}
                       onChange={(e) => setBulkPrice(e.target.value)}
-                      className="bg-transparent border-none outline-none w-full text-lg font-black text-indigo-600 p-0"
+                      className="bg-transparent border-none outline-none w-full text-base font-black text-slate-800 p-0"
                     />
                   </div>
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">Precio onza completa</span>
                 </div>
+
+                <div>
+                  <label className="text-xs font-bold text-purple-700 block mb-1">
+                    Precio ½ Oz ($) <span className="text-[10px] font-black text-purple-600 bg-purple-50 px-1 rounded">Ecommerce</span>
+                  </label>
+                  <div className="clay-input flex items-center gap-1.5 focus-within:border-purple-400 focus-within:ring-2 focus-within:ring-purple-500/20">
+                    <span className="font-black text-purple-400 select-none text-base">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      value={bulkPriceHalf}
+                      onChange={(e) => setBulkPriceHalf(e.target.value)}
+                      className="bg-transparent border-none outline-none w-full text-base font-black text-purple-700 p-0"
+                    />
+                  </div>
+                  <span className="text-[10px] text-purple-600 mt-0.5 block font-bold">Mostrado en tienda online</span>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-indigo-700 block mb-1">
+                    Perfume Terminado ($) <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-1 rounded">100ml</span>
+                  </label>
+                  <div className="clay-input flex items-center gap-1.5 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20">
+                    <span className="font-black text-indigo-400 select-none text-base">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      value={bulkPriceFinished}
+                      onChange={(e) => setBulkPriceFinished(e.target.value)}
+                      className="bg-transparent border-none outline-none w-full text-base font-black text-indigo-700 p-0"
+                    />
+                  </div>
+                  <span className="text-[10px] text-indigo-600 mt-0.5 block font-bold">En Arma tu propio perfume</span>
+                </div>
+
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">Costo Compra ($ / Oz)</label>
-                  <div className="clay-input flex items-center gap-1.5 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20">
+                  <div className="clay-input flex items-center gap-1.5 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-500/20">
                     <span className="font-black text-slate-400 select-none text-base">$</span>
                     <input
                       type="number"
@@ -1789,9 +1880,10 @@ export default function AdminPage() {
                       required
                       value={bulkCost}
                       onChange={(e) => setBulkCost(e.target.value)}
-                      className="bg-transparent border-none outline-none w-full text-lg font-black text-slate-700 p-0"
+                      className="bg-transparent border-none outline-none w-full text-base font-black text-slate-700 p-0"
                     />
                   </div>
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">Costo adquisición</span>
                 </div>
               </div>
 
@@ -1981,7 +2073,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-bold text-slate-700 block mb-1">
-                      Precio de Venta ($ PVP) <span className="text-rose-500">*</span>
+                      Precio 1 Onza ($ PVP) <span className="text-rose-500">*</span>
                     </label>
                     <div className="clay-input flex items-center gap-2 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20">
                       <span className="font-bold text-slate-400 select-none text-base">$</span>
@@ -1993,17 +2085,55 @@ export default function AdminPage() {
                         value={editingProduct.price === 0 ? '' : editingProduct.price}
                         onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) || 0 })}
                         placeholder="0.00"
-                        className="bg-transparent border-none outline-none w-full text-base font-black text-indigo-600 p-0"
+                        className="bg-transparent border-none outline-none w-full text-base font-black text-slate-800 p-0"
                       />
                     </div>
-                    <span className="text-[10px] text-slate-400 mt-1 block">Precio al cliente en el Punto de Venta</span>
+                    <span className="text-[10px] text-slate-400 mt-1 block">Precio por onza completa en mostrador</span>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-purple-700 block mb-1">
+                      Precio ½ Onza ($) <span className="text-[10px] font-black text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded">Ecommerce</span>
+                    </label>
+                    <div className="clay-input flex items-center gap-2 focus-within:border-purple-400 focus-within:ring-2 focus-within:ring-purple-500/20">
+                      <span className="font-bold text-purple-400 select-none text-base">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={editingProduct.priceHalfOunce != null ? editingProduct.priceHalfOunce : (editingProduct.price ? Number((editingProduct.price / 2).toFixed(2)) : '')}
+                        onChange={(e) => setEditingProduct({ ...editingProduct, priceHalfOunce: parseFloat(e.target.value) || 0 })}
+                        placeholder="0.00"
+                        className="bg-transparent border-none outline-none w-full text-base font-black text-purple-700 p-0"
+                      />
+                    </div>
+                    <span className="text-[10px] text-purple-600 mt-1 block font-bold">Precio mostrado por defecto en tienda online</span>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-indigo-700 block mb-1">
+                      Perfume Terminado ($) <span className="text-[10px] font-black text-indigo-600 bg-indigo-100 px-1.5 py-0.5 rounded">100ml</span>
+                    </label>
+                    <div className="clay-input flex items-center gap-2 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20">
+                      <span className="font-bold text-indigo-400 select-none text-base">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={editingProduct.finishedPerfumePrice != null ? editingProduct.finishedPerfumePrice : 15.00}
+                        onChange={(e) => setEditingProduct({ ...editingProduct, finishedPerfumePrice: parseFloat(e.target.value) || 0 })}
+                        placeholder="15.00"
+                        className="bg-transparent border-none outline-none w-full text-base font-black text-indigo-700 p-0"
+                      />
+                    </div>
+                    <span className="text-[10px] text-indigo-600 mt-1 block font-bold">Precio en "Arma tu propio perfume"</span>
                   </div>
 
                   <div>
                     <label className="text-xs font-bold text-slate-700 block mb-1">
                       Costo de Compra ($ Costo) <span className="text-rose-500">*</span>
                     </label>
-                    <div className="clay-input flex items-center gap-2 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20">
+                    <div className="clay-input flex items-center gap-2 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-500/20">
                       <span className="font-bold text-slate-400 select-none text-base">$</span>
                       <input
                         type="number"
@@ -2016,7 +2146,7 @@ export default function AdminPage() {
                         className="bg-transparent border-none outline-none w-full text-base font-black text-slate-700 p-0"
                       />
                     </div>
-                    <span className="text-[10px] text-slate-400 mt-1 block">Costo mayorista (solo Gerencia)</span>
+                    <span className="text-[10px] text-slate-400 mt-1 block">Costo mayorista de adquisición</span>
                   </div>
                 </div>
 

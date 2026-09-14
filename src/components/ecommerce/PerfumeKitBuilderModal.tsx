@@ -137,7 +137,9 @@ export default function PerfumeKitBuilderModal({
     }
   }, [hasHalfOzAvailable, isPlus]);
 
-  const basePrice = 15.00;
+  const basePrice = selectedEssence?.finishedPerfumePrice != null 
+    ? Number(selectedEssence.finishedPerfumePrice) 
+    : 15.00;
   const plusCost = (isPlus && hasHalfOzAvailable) ? 3.00 : 0.00;
   const totalPrice = basePrice + plusCost;
 

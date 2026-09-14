@@ -33,6 +33,8 @@ model Product {
   unit               String?         @default("Onza") // Onza, Unidad, Paquete, Litro
   description        String?
   price              Decimal         @db.Decimal(10, 2) @default(3.25) // Precio venta ($3.25 para esencias)
+  priceHalfOunce     Decimal?        @db.Decimal(10, 2) // Precio venta ½ onza (mostrado en ecommerce)
+  finishedPerfumePrice Decimal?      @db.Decimal(10, 2) // Precio de perfume terminado "Arma tu propio perfume" (ej. $15.00)
   cost               Decimal?        @db.Decimal(10, 2) @default(1.95) // Costo compra ($1.95 para esencias)
   stock              Int             @default(50)
   minStock           Int             @default(10)
