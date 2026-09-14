@@ -87,6 +87,7 @@ export default function CheckoutPage() {
 
   // Estados de proceso
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [wompiCountdown, setWompiCountdown] = useState<number | null>(null);
   const [completedOrder, setCompletedOrder] = useState<SaleRecord | null>(null);
   const [wompiCancelledNotice, setWompiCancelledNotice] = useState<string | null>(null);
 
@@ -158,6 +159,28 @@ export default function CheckoutPage() {
     }
 
     setIsSubmitting(true);
+    let countdownTimer: NodeJS.Timeout | null = null;
+    let countdownFinishedResolve: () => void = () => {};
+    const countdownFinishedPromise = new Promise<void>((res) => {
+      countdownFinishedResolve = res;
+    });
+
+    if (metodoPago === 'CARD') {
+      setWompiCountdown(4);
+      let current = 4;
+      countdownTimer = setInterval(() => {
+        current -= 1;
+        if (current <= 0) {
+          if (countdownTimer) clearInterval(countdownTimer);
+          setWompiCountdown(null);
+          countdownFinishedResolve();
+        } else {
+          setWompiCountdown(current);
+        }
+      }, 1000);
+    } else {
+      countdownFinishedResolve();
+    }
 
     try {
       const orderNumber = `WEB-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -306,9 +329,10 @@ export default function CheckoutPage() {
           throw new Error(wompiData.error || 'No se pudo generar la pasarela segura de Wompi');
         }
 
+        // Esperar a que la cuenta regresiva de 4 segundos termine para dar la experiencia visual solicitada
+        await countdownFinishedPromise;
+
         // Redireccionar al usuario a la pasarela segura oficial de Wompi / Banco Agrícola
-        // NO limpiamos el carrito aquí para que la pantalla del checkout nunca parpadee en 'carrito vacío'
-        // El carrito se limpia automáticamente en la pantalla de resultado /confirmación de pago
         window.location.href = wompiData.urlEnlace;
         return;
       }
@@ -316,11 +340,14 @@ export default function CheckoutPage() {
       // Limpiar carrito del cliente para pedidos por transferencia
       clearCart();
       setCompletedOrder(newOrder);
+      setIsSubmitting(false);
+      setWompiCountdown(null);
     } catch (error: any) {
+      if (countdownTimer) clearInterval(countdownTimer);
+      setWompiCountdown(null);
+      setIsSubmitting(false);
       console.error('Error procesando pedido online:', error);
       alert(error.message || 'Hubo un inconveniente al procesar tu pedido. Por favor verifica las existencias o escríbenos.');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -1269,7 +1296,11 @@ export default function CheckoutPage() {
                 {isSubmitting ? (
                   <span className="flex items-center justify-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin text-white" />
-                    <span>{metodoPago === 'CARD' ? 'Conectando con pasarela segura Wompi...' : 'Procesando comanda...'}</span>
+                    <span>
+                      {metodoPago === 'CARD' 
+                        ? `Dirigiendo a Wompi, por favor espere${wompiCountdown !== null ? ` (${wompiCountdown}s)` : ''}...` 
+                        : 'Procesando comanda...'}
+                    </span>
                   </span>
                 ) : (
                   <>
