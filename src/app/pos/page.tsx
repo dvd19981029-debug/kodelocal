@@ -610,6 +610,18 @@ export default function PosPage() {
       if (!currentItem) return prev;
       const existingTarget = prev.find(it => it.product.id === productId && (it.presentation || 'ONZA_COMPLETA') === newPres);
 
+      // Validar que el cambio de presentación no exceda las existencias
+      const otherOz = prev
+        .filter(it => it.product.id === productId && it !== currentItem && it !== existingTarget)
+        .reduce((sum, it) => sum + (it.presentation === 'MEDIA_ONZA' ? it.quantity * 0.5 : it.quantity), 0);
+      const combinedQty = currentItem.quantity + (existingTarget ? existingTarget.quantity : 0);
+      const neededOz = newPres === 'MEDIA_ONZA' ? combinedQty * 0.5 : combinedQty;
+
+      if (otherOz + neededOz > currentItem.product.stock) {
+        alert(`Stock insuficiente para cambiar a ${newPres === 'MEDIA_ONZA' ? '½ Onza' : '1 Onza'} (${currentItem.product.stock} disponibles).`);
+        return prev;
+      }
+
       if (existingTarget) {
         return prev
           .map(it => {
@@ -1595,11 +1607,12 @@ export default function PosPage() {
               {/* Rejilla de Productos */}
               <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3">
                 {displayedProducts.map((product) => {
-                  const itemInCart = cart.find(i => i.product.id === product.id);
-                  const cartQty = itemInCart ? itemInCart.quantity : 0;
+                  const cartOzForProduct = cart
+                    .filter(i => i.product.id === product.id)
+                    .reduce((sum, i) => sum + (i.presentation === 'MEDIA_ONZA' ? i.quantity * 0.5 : i.quantity), 0);
                   const isOutOfStock = product.stock <= 0;
                   const isLowStock = product.stock > 0 && product.stock <= product.minStock;
-                  const availableRemaining = product.stock - cartQty;
+                  const availableRemaining = Math.max(0, product.stock - cartOzForProduct);
                   const isEssence = product.category === 'Esencias para Perfume' || product.unit === 'Onza';
                   const halfPrice = product.priceHalfOunce != null 
                     ? Number(product.priceHalfOunce) 
