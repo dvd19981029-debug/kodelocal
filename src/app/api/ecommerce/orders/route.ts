@@ -139,6 +139,40 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: false, error: 'Pedido no encontrado' }, { status: 404 });
     }
 
+    // Autenticación de la solicitud: ¿Es personal interno (bodega/admin) o cliente?
+    const authHeader = request.headers.get('authorization') || '';
+    const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : null;
+    const staffHeaderToken = request.headers.get('x-staff-token');
+    const isStaff = verifyStaffInternalToken(staffHeaderToken) || verifyStaffInternalToken(bearerToken);
+    const customerPayload = verifyCustomerToken(bearerToken);
+
+    // SEC-02: Control de autorización de despacho (BOLA / IDOR)
+    // Solo personal autorizado con token de staff puede modificar estado de entrega, despachar o cambiar courier
+    const isUpdatingStaffFields = Boolean(
+      courierName ||
+      trackingNumber ||
+      (orderStatus && ['PROCESANDO', 'LISTO_ENTREGA', 'EN_RUTA', 'ENTREGADO'].includes(orderStatus))
+    );
+    if (isUpdatingStaffFields && !isStaff) {
+      return NextResponse.json(
+        { success: false, error: 'Acceso no autorizado: Se requieren permisos de personal para actualizar el estado logístico de la orden.' },
+        { status: 403 }
+      );
+    }
+
+    // Si se intenta cancelar, validar que sea staff o sea el checkout de tarjeta pendiente del propio usuario
+    const isAttemptingCancellation = orderStatus === 'CANCELADO' || paymentStatus === 'CANCELLED' || paymentStatus === 'REJECTED';
+    if (isAttemptingCancellation && !isStaff) {
+      const isPendingCardAttempt = order.paymentMethod === 'CARD' && order.paymentStatus === 'PENDING';
+      const isOwnerCustomer = customerPayload && order.customerId === customerPayload.customerId;
+      if (!isPendingCardAttempt && !isOwnerCustomer) {
+        return NextResponse.json(
+          { success: false, error: 'No autorizado para cancelar este pedido.' },
+          { status: 403 }
+        );
+      }
+    }
+
     // SEC-01: Protección contra marcado arbitrario de pedidos como COMPLETED
     if (paymentStatus === 'COMPLETED') {
       if (order.paymentStatus === 'COMPLETED') {
