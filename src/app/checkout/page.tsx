@@ -121,6 +121,29 @@ export default function CheckoutPage() {
     }
   }, []);
 
+  // Restablecer el botón si el usuario regresa con el botón de atrás del navegador (bfcache)
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handlePageShow = () => {
+      setIsSubmitting(false);
+      setWompiCountdown(null);
+    };
+
+    const handleFocus = () => {
+      setIsSubmitting(false);
+      setWompiCountdown(null);
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
   // Desplazar al inicio cuando se complete el pedido
   React.useEffect(() => {
     if (completedOrder && typeof window !== 'undefined') {
@@ -334,6 +357,12 @@ export default function CheckoutPage() {
 
         // Redireccionar al usuario a la pasarela segura oficial de Wompi / Banco Agrícola
         window.location.href = wompiData.urlEnlace;
+
+        // Fallback de seguridad: si el usuario regresa con el botón de atrás
+        setTimeout(() => {
+          setIsSubmitting(false);
+          setWompiCountdown(null);
+        }, 2500);
         return;
       }
 
