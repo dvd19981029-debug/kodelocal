@@ -32,9 +32,30 @@ export default function EcommerceHomePage() {
   const { setIsArmaTuPerfumeActive } = useEcommerceCart();
   const [products, setProducts] = useState<ProductItem[]>(INITIAL_PRODUCTS);
 
-  // Sincronizar con localStorage en el cliente después de montar para evitar desajustes de hidratación SSR
+  // Sincronizar con localStorage y con la API remota de Supabase para reflejar cambios en cualquier dispositivo
   useEffect(() => {
     setProducts(getStoredProducts());
+
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.products) && data.products.length > 0) {
+          setProducts(data.products);
+          localStorage.setItem('kodelocal_products', JSON.stringify(data.products));
+        }
+      })
+      .catch(err => console.error('Error sincronizando productos con Supabase en ecommerce:', err));
+
+    const handleProductsUpdate = () => {
+      setProducts(getStoredProducts());
+    };
+
+    window.addEventListener('kodelocal_products_updated', handleProductsUpdate);
+    window.addEventListener('storage', handleProductsUpdate);
+    return () => {
+      window.removeEventListener('kodelocal_products_updated', handleProductsUpdate);
+      window.removeEventListener('storage', handleProductsUpdate);
+    };
   }, []);
 
   const [searchQuery, setSearchQuery] = useState('');
