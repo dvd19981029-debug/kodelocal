@@ -16,7 +16,7 @@ import {
 import { ProductItem } from '@/lib/store';
 import { MOCK_100ML_BOTTLES } from '@/lib/bottles';
 import { useEcommerceCart, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
-import { getOriginalPerfumeName } from '@/lib/perfumeNames';
+import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { getProductImage } from '@/lib/perfumeImages';
 
 interface PerfumeKitBuilderModalProps {
@@ -388,10 +388,10 @@ export default function PerfumeKitBuilderModal({
                                 </p>
                               </div>
                             </div>
-                            <p className="text-[9px] text-slate-500 font-medium truncate mt-0.5" title={`Inspirado en ${getOriginalPerfumeName(essence)}`}>
+                            <p className="text-[9px] text-slate-500 font-medium truncate mt-0.5" title={`Inspirado en ${getInspiracionPerfumeName(essence)}`}>
                               <span className="text-slate-400">Inspirado en: </span>
                               <strong className="text-slate-800 font-semibold">
-                                {getOriginalPerfumeName(essence)}
+                                {getInspiracionPerfumeName(essence)}
                               </strong>
                             </p>
                           </div>
@@ -434,7 +434,7 @@ export default function PerfumeKitBuilderModal({
                         {selectedEssence.officialName || selectedEssence.name}
                       </strong>
                       <span className="text-[10px] text-emerald-800 font-medium truncate block">
-                        Inspirado en: {getOriginalPerfumeName(selectedEssence)}
+                        Inspirado en: {getInspiracionPerfumeName(selectedEssence)}
                       </span>
                     </div>
                   </div>

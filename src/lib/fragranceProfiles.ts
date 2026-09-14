@@ -1,7 +1,7 @@
 // src/lib/fragranceProfiles.ts
 import { ProductItem } from './store';
 import { getAccordColor } from './fragranceNotesData';
-import { getOriginalPerfumeName } from './perfumeNames';
+import { getInspiracionPerfumeName } from './perfumeNames';
 import { CATALOG_PROFILES_48 } from './catalogProfilesData';
 import fragranceDatabaseRaw from './fragranceDatabase.json';
 
@@ -85,7 +85,7 @@ function normalize(str: string): string {
  */
 export function getFragranceProfile(product: ProductItem): FragranceProfile {
   const sku = String(product.sku || (product as any).kodigo || '').trim();
-  const origName = getOriginalPerfumeName(product);
+  const inspiracionName = getInspiracionPerfumeName(product);
   const displayName = product.officialName || product.name;
 
   // 1. Coincidencia prioritaria directa en los 48 perfumes del catálogo de Aromaniak
@@ -95,28 +95,28 @@ export function getFragranceProfile(product: ProductItem): FragranceProfile {
       ...p,
       officialName: displayName,
       brand: product.brand || 'Aromaniak',
-      description: `Perfil olfativo oficial de alta fijación inspirado en ${origName || displayName}. Concentrado de perfumería fina con acordes equilibrados y notas de máxima calidad.`
+      description: `Perfil olfativo oficial de alta fijación inspirado en ${inspiracionName || displayName}. Concentrado de perfumería fina con acordes equilibrados y notas de máxima calidad.`
     };
   }
 
-  // 2. Búsqueda en la base de datos externa de Fragrantica por nombre de perfume original
-  const normOrig = normalize(origName);
+  // 2. Búsqueda en la base de datos externa de Fragrantica por nombre de perfume de inspiración
+  const normInspiracion = normalize(inspiracionName);
   const normName = normalize(displayName);
 
   let entry: FragranceDbEntry | undefined;
-  if (normOrig || normName) {
+  if (normInspiracion || normName) {
     const values = Object.values(fragranceDatabase);
     entry = values.find(p => {
       const dbOfficial = normalize(p.officialName);
       const dbContratipo = normalize(p.contratipo);
-      return (normOrig && (dbOfficial === normOrig || dbContratipo === normOrig)) ||
+      return (normInspiracion && (dbOfficial === normInspiracion || dbContratipo === normInspiracion)) ||
              (normName && (dbOfficial === normName || dbContratipo === normName));
     });
 
-    if (!entry && normOrig) {
+    if (!entry && normInspiracion) {
       entry = values.find(p => {
         const dbOfficial = normalize(p.officialName);
-        return dbOfficial.includes(normOrig) || normOrig.includes(dbOfficial);
+        return dbOfficial.includes(normInspiracion) || normInspiracion.includes(dbOfficial);
       });
     }
   }
@@ -134,7 +134,7 @@ export function getFragranceProfile(product: ProductItem): FragranceProfile {
       season: 'Todo el año / Versátil',
       occasion: 'Uso diario y ocasiones especiales',
       intensity: 'Intensa',
-      description: `Perfil olfativo de alta fijación inspirado en ${origName || displayName}. Formulado con aceites concentrados franceses para brindar una estela duradera.`
+      description: `Perfil olfativo de alta fijación inspirado en ${inspiracionName || displayName}. Formulado con aceites concentrados franceses para brindar una estela duradera.`
     };
   }
 
@@ -170,6 +170,6 @@ export function getFragranceProfile(product: ProductItem): FragranceProfile {
     season: 'Todo el año',
     occasion: 'Uso diario y ocasiones especiales',
     intensity: 'Intensa',
-    description: `Perfil olfativo fino de alta fijación inspirado en ${origName || displayName}.`
+    description: `Perfil olfativo fino de alta fijación inspirado en ${inspiracionName || displayName}.`
   };
 }

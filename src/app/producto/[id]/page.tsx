@@ -26,7 +26,7 @@ import { getProductImage } from '@/lib/perfumeImages';
 import { getFragranceProfile, getFragranceAccordBars } from '@/lib/fragranceProfiles';
 import ProductCard from '@/components/ecommerce/ProductCard';
 import FragranceNotesVisual from '@/components/ecommerce/FragranceNotesVisual';
-import { getOriginalPerfumeName } from '@/lib/perfumeNames';
+import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { getFragranceDescription } from '@/lib/fragranceDescriptions';
 
 export default function ProductDetailPage() {
@@ -368,7 +368,7 @@ export default function ProductDetailPage() {
                 <div className="text-xs sm:text-sm text-slate-600 font-medium flex items-center gap-1.5 flex-wrap pt-0.5">
                   <span className="text-slate-400">Inspirado en:</span>
                   <strong className="text-slate-800 font-bold">
-                    {getOriginalPerfumeName(product)}
+                    {getInspiracionPerfumeName(product)}
                   </strong>
                 </div>
               )}

@@ -1,7 +1,7 @@
 // src/lib/fragranceDescriptions.ts
 import { ProductItem } from './store';
 import { FragranceProfile } from './fragranceProfiles';
-import { getOriginalPerfumeName } from './perfumeNames';
+import { getInspiracionPerfumeName } from './perfumeNames';
 
 /**
  * Descripciones olfativas exclusivas y sensoriales para los 48 perfumes icónicos del catálogo.
@@ -68,7 +68,7 @@ export function getFragranceDescription(product: ProductItem, profile?: Fragranc
     return CATALOG_DESCRIPTIONS_48[sku];
   }
 
-  const origName = getOriginalPerfumeName(product) || product.officialName || product.name;
+  const inspiracionName = getInspiracionPerfumeName(product) || product.officialName || product.name;
 
   // 2. Si existe un perfil con notas olfativas, construir una narrativa profesional y fluida
   if (profile) {
@@ -78,7 +78,7 @@ export function getFragranceDescription(product: ProductItem, profile?: Fragranc
     const base = profile.baseNotes && profile.baseNotes.length > 0 ? profile.baseNotes.slice(0, 3).join(', ') : '';
 
     const parts: string[] = [];
-    parts.push(`Inspirada en ${origName}. Esta fragancia pertenece a la selecta familia olfativa ${family}.`);
+    parts.push(`Inspirada en ${inspiracionName}. Esta fragancia pertenece a la selecta familia olfativa ${family}.`);
 
     if (top && heart && base) {
       parts.push(`Abre con un estallido fresco de ${top.toLowerCase()}, evoluciona hacia un corazón envolvente dominado por ${heart.toLowerCase()}, y reposa sobre una base profunda de ${base.toLowerCase()}.`);
@@ -91,5 +91,5 @@ export function getFragranceDescription(product: ProductItem, profile?: Fragranc
   }
 
   // 3. Fallback personalizado con el nombre de inspiración
-  return `Inspirada en ${origName}. Perfil olfativo de alta perfumería francesa formulado con aceites puros de máxima concentración, garantizando una fijación duradera y una proyección equilibrada.`;
+  return `Inspirada en ${inspiracionName}. Perfil olfativo de alta perfumería francesa formulado con aceites puros de máxima concentración, garantizando una fijación duradera y una proyección equilibrada.`;
 }

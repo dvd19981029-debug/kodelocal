@@ -1,10 +1,10 @@
 // src/lib/perfumeNames.ts
 
 /**
- * Mapeo exacto del nombre del perfume ORIGINAL (sin la marca) para cada esencia del catálogo
- * SKU -> Nombre del perfume original
+ * Mapeo exacto del nombre de INSPIRACIÓN (contratipo) para cada esencia del catálogo
+ * SKU -> Nombre de la fragancia de inspiración
  */
-export const ORIGINAL_PERFUME_MAP: Record<string, string> = {
+export const INSPIRACION_PERFUME_MAP: Record<string, string> = {
   '1': 'Sauvage',
   '2': 'Bleu',
   '3': 'Acqua Di Gio',
@@ -55,6 +55,9 @@ export const ORIGINAL_PERFUME_MAP: Record<string, string> = {
   '48': 'Princess'
 };
 
+// Alias de retrocompatibilidad
+export const ORIGINAL_PERFUME_MAP = INSPIRACION_PERFUME_MAP;
+
 const FAMOUS_BRANDS = [
   'DOLCE & GABBANA', 'DOLCE &amp; GABBANA', 'D&G',
   'JEAN PAUL GAULTIER', 'CAROLINA HERRERA', 'GIORGIO ARMANI',
@@ -90,9 +93,9 @@ function toTitleCase(str: string): string {
 }
 
 /**
- * Devuelve el nombre del perfume original SIN la marca y en mayúsculas/minúsculas normales.
+ * Devuelve el nombre de inspiración (contratipo) SIN la marca y en mayúsculas/minúsculas normales.
  */
-export function getOriginalPerfumeName(product: { sku?: string; description?: string; name?: string; brand?: string; officialName?: string }): string {
+export function getInspiracionPerfumeName(product: { sku?: string; description?: string; name?: string; brand?: string; officialName?: string }): string {
   if (!product) return '';
 
   // 1. Si product.name tiene valor y es diferente a officialName, ese es el nombre de inspiración dinámico de la BD
@@ -106,8 +109,8 @@ export function getOriginalPerfumeName(product: { sku?: string; description?: st
 
   // 2. Mapeo directo por SKU si existe
   const sku = String(product.sku || '').trim();
-  if (sku && ORIGINAL_PERFUME_MAP[sku]) {
-    return ORIGINAL_PERFUME_MAP[sku];
+  if (sku && INSPIRACION_PERFUME_MAP[sku]) {
+    return INSPIRACION_PERFUME_MAP[sku];
   }
 
   // 3. Si product.name está definido (incluso si no hay officialName), usar product.name
@@ -159,3 +162,7 @@ export function getOriginalPerfumeName(product: { sku?: string; description?: st
   }
   return result;
 }
+
+// Alias de retrocompatibilidad
+export const getOriginalPerfumeName = getInspiracionPerfumeName;
+

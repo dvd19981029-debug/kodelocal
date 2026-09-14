@@ -25,7 +25,7 @@ import ProductCard from '@/components/ecommerce/ProductCard';
 import PromoBannerCarousel from '@/components/ecommerce/PromoBannerCarousel';
 import ReactiveSearchBar from '@/components/ecommerce/ReactiveSearchBar';
 import PerfumeKitBuilderModal from '@/components/ecommerce/PerfumeKitBuilderModal';
-import { getOriginalPerfumeName } from '@/lib/perfumeNames';
+import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 
 export default function EcommerceHomePage() {
@@ -180,9 +180,9 @@ export default function EcommerceHomePage() {
       const barcodeStr = String(p.barcode || '');
       const officialStr = (p.officialName || '').toLowerCase();
       const descStr = String(p.description || '').toLowerCase();
-      const origPerfumeStr = getOriginalPerfumeName(p).toLowerCase();
+      const inspiracionPerfumeStr = getInspiracionPerfumeName(p).toLowerCase();
       const normDesc = descStr.replace(/acqua/g, 'aqua');
-      const normOrig = origPerfumeStr.replace(/acqua/g, 'aqua');
+      const normInspiracion = inspiracionPerfumeStr.replace(/acqua/g, 'aqua');
 
       // Normalización inteligente (ej. acqua / aqua)
       const normQ = q.replace(/acqua/g, 'aqua');
@@ -198,8 +198,8 @@ export default function EcommerceHomePage() {
         barcodeStr.includes(q) ||
         descStr.includes(q) ||
         normDesc.includes(normQ) ||
-        origPerfumeStr.includes(q) ||
-        normOrig.includes(normQ);
+        inspiracionPerfumeStr.includes(q) ||
+        normInspiracion.includes(normQ);
 
       return matchesCategory && matchesGender && matchesStock && matchesSearch;
     });

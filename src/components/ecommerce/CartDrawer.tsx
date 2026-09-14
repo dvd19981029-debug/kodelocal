@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, ArrowLeft, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { useEcommerceCart, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
 import { getProductImage } from '@/lib/perfumeImages';
-import { getOriginalPerfumeName } from '@/lib/perfumeNames';
+import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 
 export default function CartDrawer() {
   const { 
@@ -158,9 +158,9 @@ export default function CartDrawer() {
                             <h4 className="font-black text-xs sm:text-sm text-slate-900 leading-snug truncate" title={displayName}>
                               {displayName}
                             </h4>
-                            <p className="text-[10px] text-slate-500 font-medium truncate" title={item.product.category === 'Esencias para Perfume' ? `Inspirado en ${getOriginalPerfumeName(item.product)}` : ''}>
+                            <p className="text-[10px] text-slate-500 font-medium truncate" title={item.product.category === 'Esencias para Perfume' ? `Inspirado en ${getInspiracionPerfumeName(item.product)}` : ''}>
                               {item.product.category === 'Esencias para Perfume' 
-                                ? `Inspirado en ${getOriginalPerfumeName(item.product)}` 
+                                ? `Inspirado en ${getInspiracionPerfumeName(item.product)}` 
                                 : (item.product.unit || 'Unidad')}
                             </p>
                           </div>

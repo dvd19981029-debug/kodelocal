@@ -6,7 +6,7 @@ import { ShoppingBag, Check, Sparkles, Plus, Minus } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS } from '@/lib/store';
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
 import { getProductImage } from '@/lib/perfumeImages';
-import { getOriginalPerfumeName } from '@/lib/perfumeNames';
+import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 
 interface ProductCardProps {
   product: ProductItem;
@@ -129,16 +129,16 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   const displayName = product.officialName?.trim() || product.name;
   const productImage = getProductImage(product);
 
-  // Nombre de inspiración original y cálculo dinámico de escala de texto
-  const originalPerfumeName = getOriginalPerfumeName(product);
-  const originalNameLength = originalPerfumeName.length;
+  // Nombre de inspiración (contratipo) y cálculo dinámico de escala de texto
+  const inspiracionPerfumeName = getInspiracionPerfumeName(product);
+  const inspiracionNameLength = inspiracionPerfumeName.length;
 
   // Si el nombre es largo, reducimos el tamaño progresivamente para que quepa sin salirse de la tarjeta
-  const inspiredSizeClass = originalNameLength > 30
+  const inspiredSizeClass = inspiracionNameLength > 30
     ? 'text-[8px] sm:text-[9px]'
-    : originalNameLength > 22
+    : inspiracionNameLength > 22
     ? 'text-[9px] sm:text-[10px]'
-    : originalNameLength > 16
+    : inspiracionNameLength > 16
     ? 'text-[10px] sm:text-[11px]'
     : 'text-[10.5px] sm:text-xs';
 
@@ -247,11 +247,11 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               {isEssence ? (
                 <p 
                   className={`${inspiredSizeClass} text-slate-600 leading-tight line-clamp-2 break-words`} 
-                  title={`Inspirado en ${originalPerfumeName}`}
+                  title={`Inspirado en ${inspiracionPerfumeName}`}
                 >
                   <span className="text-slate-400 font-normal">Inspirado en </span>
                   <span className="font-semibold text-slate-700">
-                    {originalPerfumeName}
+                    {inspiracionPerfumeName}
                   </span>
                 </p>
               ) : isBottle ? (
