@@ -111,7 +111,8 @@ export async function POST(request: Request) {
             const prod = await tx.product.findUnique({ where: { id: it.productId } });
             if (prod) {
               const prev = prod.stock;
-              const soldQty = Number(it.quantity || 0);
+              const isHalfOz = it.presentation === 'MEDIA_ONZA' || it.unit === '½ Onza' || String(it.name || '').includes('½');
+              const soldQty = isHalfOz ? Math.ceil(Number(it.quantity || 0) * 0.5) : Number(it.quantity || 0);
               const nextStock = Math.max(0, prev - soldQty);
 
               await tx.product.update({

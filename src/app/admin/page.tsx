@@ -117,6 +117,33 @@ export default function AdminPage() {
   const [bulkPriceFinished, setBulkPriceFinished] = useState('15.00');
   const [bulkCost, setBulkCost] = useState('1.95');
 
+  // Precios actuales de referencia para esencias
+  const sampleEssence = useMemo(() => {
+    return products.find(p => p.category === 'Esencias para Perfume');
+  }, [products]);
+
+  const activeEssencePrice = sampleEssence?.price ?? 3.25;
+  const activeEssenceHalfPrice = sampleEssence?.priceHalfOunce != null 
+    ? Number(sampleEssence.priceHalfOunce) 
+    : Number((activeEssencePrice / 2).toFixed(2));
+  const activeEssenceFinished = sampleEssence?.finishedPerfumePrice ?? 15.00;
+  const activeEssenceCost = sampleEssence?.cost ?? 1.95;
+
+  useEffect(() => {
+    if (sampleEssence) {
+      if (sampleEssence.price) setBulkPrice(sampleEssence.price.toString());
+      if (sampleEssence.priceHalfOunce != null) {
+        setBulkPriceHalf(sampleEssence.priceHalfOunce.toString());
+      } else if (sampleEssence.price) {
+        setBulkPriceHalf((sampleEssence.price / 2).toFixed(2));
+      }
+      if (sampleEssence.finishedPerfumePrice != null) {
+        setBulkPriceFinished(sampleEssence.finishedPerfumePrice.toString());
+      }
+      if (sampleEssence.cost) setBulkCost(sampleEssence.cost.toString());
+    }
+  }, [sampleEssence]);
+
   // Reporte Filtro Período
   const [periodFilter, setPeriodFilter] = useState<'HOY' | 'MES' | 'ANIO'>('HOY');
 
@@ -135,6 +162,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     localStorage.setItem('kodelocal_products', JSON.stringify(products));
+    window.dispatchEvent(new Event('kodelocal_products_updated'));
   }, [products]);
 
   useEffect(() => {
@@ -735,7 +763,7 @@ export default function AdminPage() {
                   className="clay-btn clay-btn-light px-3.5 py-2 text-xs flex items-center gap-1.5"
                 >
                   <Sliders className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Ajustar Precios ($3.25)</span>
+                  <span>Ajustar Precios (${activeEssencePrice.toFixed(2)})</span>
                 </button>
                 <button
                   onClick={() => setIsUserModalOpen(true)}
@@ -759,7 +787,7 @@ export default function AdminPage() {
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Margen de Ganancia</p>
                 <h3 className="text-2xl font-black text-emerald-600 mt-1">+{margenPorcentual.toFixed(1)}%</h3>
                 <span className="text-[11px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                  +$1.30 netos por Oz
+                  +${(activeEssencePrice - activeEssenceCost).toFixed(2)} netos por Oz
                 </span>
               </div>
 
@@ -784,7 +812,7 @@ export default function AdminPage() {
                 <div className="flex items-center justify-between">
                   <h3 className="font-extrabold text-sm text-slate-800">Estructura Financiera de Esencias</h3>
                   <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">
-                    641 Contratipos
+                    {totalEsencias} Contratipos
                   </span>
                 </div>
 
@@ -792,7 +820,7 @@ export default function AdminPage() {
                   <div>
                     <div className="flex justify-between text-xs font-bold mb-1">
                       <span className="text-slate-600">Precio Venta al Público (PVP):</span>
-                      <span className="text-indigo-600 font-black text-sm">$3.25 / Oz</span>
+                      <span className="text-indigo-600 font-black text-sm">${activeEssencePrice.toFixed(2)} / Oz</span>
                     </div>
                     <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden">
                       <div className="h-full bg-indigo-600 rounded-full w-full"></div>
@@ -802,20 +830,20 @@ export default function AdminPage() {
                   <div>
                     <div className="flex justify-between text-xs font-bold mb-1">
                       <span className="text-slate-600">Costo de Adquisición / Proveedor:</span>
-                      <span className="text-slate-800 font-black text-sm">$1.95 / Oz (60.0%)</span>
+                      <span className="text-slate-800 font-black text-sm">${activeEssenceCost.toFixed(2)} / Oz ({activeEssencePrice > 0 ? ((activeEssenceCost / activeEssencePrice) * 100).toFixed(1) : 0}%)</span>
                     </div>
                     <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden">
-                      <div className="h-full bg-slate-400 rounded-full w-[60%]"></div>
+                      <div className="h-full bg-slate-400 rounded-full" style={{ width: `${Math.min(100, activeEssencePrice > 0 ? (activeEssenceCost / activeEssencePrice) * 100 : 0)}%` }}></div>
                     </div>
                   </div>
 
                   <div>
                     <div className="flex justify-between text-xs font-bold mb-1">
                       <span className="text-slate-600">Ganancia Bruta Libre:</span>
-                      <span className="text-emerald-600 font-black text-sm">$1.30 / Oz (40.0%)</span>
+                      <span className="text-emerald-600 font-black text-sm">${(activeEssencePrice - activeEssenceCost).toFixed(2)} / Oz ({activeEssencePrice > 0 ? (((activeEssencePrice - activeEssenceCost) / activeEssencePrice) * 100).toFixed(1) : 0}%)</span>
                     </div>
                     <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden">
-                      <div className="h-full bg-emerald-500 rounded-full w-[40%]"></div>
+                      <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(100, activeEssencePrice > 0 ? ((activeEssencePrice - activeEssenceCost) / activeEssencePrice) * 100 : 0)}%` }}></div>
                     </div>
                   </div>
                 </div>
@@ -1288,20 +1316,20 @@ export default function AdminPage() {
               <div className="clay-card p-5">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Inversión en Mercadería</p>
                 <h3 className="text-2xl font-black text-slate-800 mt-1">${valorCostoTotal.toFixed(2)}</h3>
-                <span className="text-[11px] text-slate-400 font-medium">A costo $1.95 por onza</span>
+                <span className="text-[11px] text-slate-400 font-medium">A costo ${activeEssenceCost.toFixed(2)} por onza</span>
               </div>
 
               <div className="clay-card p-5">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Retorno Proyectado</p>
                 <h3 className="text-2xl font-black text-indigo-600 mt-1">${valorVentaTotal.toFixed(2)}</h3>
-                <span className="text-[11px] text-slate-400 font-medium">A venta $3.25 por onza</span>
+                <span className="text-[11px] text-slate-400 font-medium">A venta ${activeEssencePrice.toFixed(2)} por onza</span>
               </div>
 
               <div className="clay-card p-5">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ganancia Neta Proyectada</p>
                 <h3 className="text-2xl font-black text-emerald-600 mt-1">+${gananciaPotencial.toFixed(2)}</h3>
                 <span className="text-[11px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">
-                  40.0% Margen de Ganancia
+                  {activeEssencePrice > 0 ? (((activeEssencePrice - activeEssenceCost) / activeEssencePrice) * 100).toFixed(1) : '0'}% Margen de Ganancia
                 </span>
               </div>
             </div>

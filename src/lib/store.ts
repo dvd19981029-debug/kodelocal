@@ -26,6 +26,7 @@ export interface ProductItem {
 export interface CartItem {
   product: ProductItem;
   quantity: number;
+  presentation?: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD';
 }
 
 export interface SaleRecord {

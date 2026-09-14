@@ -60,6 +60,7 @@ export default function InventarioPage() {
 
   useEffect(() => {
     localStorage.setItem('kodelocal_products', JSON.stringify(products));
+    window.dispatchEvent(new Event('kodelocal_products_updated'));
   }, [products]);
 
   // Categorías

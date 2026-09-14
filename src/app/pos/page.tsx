@@ -261,6 +261,25 @@ export default function PosPage() {
       })
       .catch(err => console.error('Error sincronizando productos con Supabase:', err));
 
+    const handleProductsUpdate = () => {
+      setProducts(getStoredProducts());
+    };
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'kodelocal_products') {
+        setProducts(getStoredProducts());
+      }
+    };
+
+    window.addEventListener('kodelocal_products_updated', handleProductsUpdate);
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('kodelocal_products_updated', handleProductsUpdate);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
+
+  useEffect(() => {
     getStaffToken().then(staffToken => {
       fetch('/api/ecommerce/orders', {
         headers: {
@@ -353,9 +372,45 @@ export default function PosPage() {
     return filteredProducts.slice(0, 60);
   }, [filteredProducts]);
 
+  // Precios dinámicos de esencias en POS
+  const sampleEssence = useMemo(() => {
+    return products.find(p => p.category === 'Esencias para Perfume');
+  }, [products]);
+
+  const activeEssencePrice = sampleEssence?.price ?? 3.25;
+  const activeEssenceHalfPrice = sampleEssence?.priceHalfOunce != null 
+    ? Number(sampleEssence.priceHalfOunce) 
+    : Number((activeEssencePrice / 2).toFixed(2));
+
+  // Helper para obtener el precio unitario del item según su presentación
+  const getItemUnitPrice = (item: CartItem): number => {
+    if (item.presentation === 'MEDIA_ONZA') {
+      return item.product.priceHalfOunce != null 
+        ? Number(item.product.priceHalfOunce) 
+        : Number((item.product.price / 2).toFixed(2));
+    }
+    return item.product.price;
+  };
+
+  // Helper para formatear items de venta/comanda con presentación
+  const formatCartItem = (i: CartItem) => {
+    const isHalfOz = i.presentation === 'MEDIA_ONZA';
+    const unitPrice = getItemUnitPrice(i);
+    return {
+      productId: i.product.id,
+      name: isHalfOz ? `${i.product.name} (½ Oz)` : i.product.name,
+      quantity: i.quantity,
+      price: unitPrice,
+      total: Number((i.quantity * unitPrice).toFixed(2)),
+      unit: isHalfOz ? '½ Onza' : (i.product.unit || 'Unidad'),
+      presentation: i.presentation || 'ONZA_COMPLETA',
+      puesto: i.product.puesto
+    };
+  };
+
   // Totales del carrito
   const cartSubtotal = useMemo(() => {
-    return cart.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
+    return cart.reduce((acc, item) => acc + (getItemUnitPrice(item) * item.quantity), 0);
   }, [cart]);
 
   const totalItemsCount = useMemo(() => {
@@ -463,36 +518,68 @@ export default function PosPage() {
   };
 
   // Manejo del carrito
-  const addToCart = (product: ProductItem) => {
+  const addToCart = (
+    product: ProductItem, 
+    presentation: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD' = 'ONZA_COMPLETA'
+  ) => {
     if (product.stock <= 0) {
       alert('¡Producto sin existencias!');
       return;
     }
     setCart(prev => {
-      const existing = prev.find(item => item.product.id === product.id);
+      const existing = prev.find(item => 
+        item.product.id === product.id && 
+        (item.presentation || 'ONZA_COMPLETA') === presentation
+      );
+      // Calcular onzas consumidas en el carrito para este producto
+      const currentOz = prev
+        .filter(it => it.product.id === product.id)
+        .reduce((sum, it) => sum + (it.presentation === 'MEDIA_ONZA' ? it.quantity * 0.5 : it.quantity), 0);
+      const addOz = presentation === 'MEDIA_ONZA' ? 0.5 : 1;
+
+      if (currentOz + addOz > product.stock) {
+        alert(`Stock máximo alcanzado (${product.stock} disponibles).`);
+        return prev;
+      }
+
       if (existing) {
-        if (existing.quantity >= product.stock) {
-          alert(`Stock máximo alcanzado (${product.stock} disponibles).`);
-          return prev;
-        }
         return prev.map(item =>
-          item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+          (item.product.id === product.id && (item.presentation || 'ONZA_COMPLETA') === presentation)
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
         );
       }
-      return [...prev, { product, quantity: 1 }];
+      return [...prev, { product, quantity: 1, presentation }];
     });
   };
 
-  const updateQuantity = (productId: string, delta: number) => {
+  const updateQuantity = (
+    productId: string, 
+    delta: number, 
+    presentation: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD' = 'ONZA_COMPLETA'
+  ) => {
     setCart(prev => {
+      const targetItem = prev.find(item => 
+        item.product.id === productId && 
+        (item.presentation || 'ONZA_COMPLETA') === presentation
+      );
+      if (!targetItem) return prev;
+
+      if (delta > 0) {
+        const currentOz = prev
+          .filter(it => it.product.id === productId)
+          .reduce((sum, it) => sum + (it.presentation === 'MEDIA_ONZA' ? it.quantity * 0.5 : it.quantity), 0);
+        const addOz = presentation === 'MEDIA_ONZA' ? 0.5 : 1;
+        if (currentOz + addOz > targetItem.product.stock) {
+          alert(`Stock máximo alcanzado (${targetItem.product.stock} disponibles).`);
+          return prev;
+        }
+      }
+
       return prev.map(item => {
-        if (item.product.id === productId) {
+        if (item.product.id === productId && (item.presentation || 'ONZA_COMPLETA') === presentation) {
           const newQty = item.quantity + delta;
           if (newQty <= 0) return null;
-          if (newQty > item.product.stock) {
-            alert(`Stock máximo alcanzado (${item.product.stock} disponibles).`);
-            return item;
-          }
           return { ...item, quantity: newQty };
         }
         return item;
@@ -500,8 +587,47 @@ export default function PosPage() {
     });
   };
 
-  const removeFromCart = (productId: string) => {
-    setCart(prev => prev.filter(item => item.product.id !== productId));
+  const removeFromCart = (
+    productId: string, 
+    presentation?: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD'
+  ) => {
+    setCart(prev => prev.filter(item => {
+      if (presentation) {
+        return !(item.product.id === productId && (item.presentation || 'ONZA_COMPLETA') === presentation);
+      }
+      return item.product.id !== productId;
+    }));
+  };
+
+  const setItemPresentation = (
+    productId: string, 
+    currentPres: 'ONZA_COMPLETA' | 'MEDIA_ONZA', 
+    newPres: 'ONZA_COMPLETA' | 'MEDIA_ONZA'
+  ) => {
+    if (currentPres === newPres) return;
+    setCart(prev => {
+      const currentItem = prev.find(it => it.product.id === productId && (it.presentation || 'ONZA_COMPLETA') === currentPres);
+      if (!currentItem) return prev;
+      const existingTarget = prev.find(it => it.product.id === productId && (it.presentation || 'ONZA_COMPLETA') === newPres);
+
+      if (existingTarget) {
+        return prev
+          .map(it => {
+            if (it === existingTarget) {
+              return { ...it, quantity: it.quantity + currentItem.quantity };
+            }
+            return it;
+          })
+          .filter(it => it !== currentItem);
+      } else {
+        return prev.map(it => {
+          if (it === currentItem) {
+            return { ...it, presentation: newPres };
+          }
+          return it;
+        });
+      }
+    });
   };
 
   const clearCart = () => {
@@ -719,15 +845,7 @@ export default function PosPage() {
       },
       status: 'PREFACTURA',
       vendedor: 'Vendedora Mostrador',
-      items: cart.map(i => ({
-        productId: i.product.id,
-        name: i.product.name,
-        quantity: i.quantity,
-        price: i.product.price,
-        total: i.quantity * i.product.price,
-        unit: i.product.unit,
-        puesto: i.product.puesto
-      }))
+      items: cart.map(formatCartItem)
     };
 
     setActiveQuoteSale(quoteSale);
@@ -765,15 +883,7 @@ export default function PosPage() {
       },
       status: 'PENDING_PREPARATION',
       vendedor: 'Vendedora Mostrador',
-      items: cart.map(i => ({
-        productId: i.product.id,
-        name: i.product.name,
-        quantity: i.quantity,
-        price: i.product.price,
-        total: i.quantity * i.product.price,
-        unit: i.product.unit,
-        puesto: i.product.puesto
-      }))
+      items: cart.map(formatCartItem)
     };
 
     const savedSales = JSON.parse(localStorage.getItem('kodelocal_sales') || '[]');
@@ -830,15 +940,7 @@ export default function PosPage() {
   // Finalizar venta, emitir DTE oficial ante Hacienda y descontar stock
   const handleCompleteSale = async () => {
     const isOrderFromWindow = !!orderToInvoice;
-    const itemsToBill = isOrderFromWindow ? orderToInvoice.items : cart.map(i => ({
-      productId: i.product.id,
-      name: i.product.name,
-      quantity: i.quantity,
-      price: i.product.price,
-      total: i.quantity * i.product.price,
-      unit: i.product.unit,
-      puesto: i.product.puesto
-    }));
+    const itemsToBill = isOrderFromWindow ? orderToInvoice.items : cart.map(formatCartItem);
     const totalToBill = isOrderFromWindow ? orderToInvoice.total : cartSubtotal;
     const subtotalToBill = isOrderFromWindow ? orderToInvoice.subtotal : subtotalNeto;
     const ivaToBill = isOrderFromWindow ? orderToInvoice.ivaTotal : ivaCalculado;
@@ -908,9 +1010,13 @@ export default function PosPage() {
     // Descontar inventario oficial
     setProducts(prev => {
       const updated = prev.map(prod => {
-        const itemInBill = itemsToBill.find(ci => ci.productId === prod.id);
-        if (itemInBill) {
-          return { ...prod, stock: Math.max(0, prod.stock - itemInBill.quantity) };
+        const matchingItems = itemsToBill.filter(ci => ci.productId === prod.id);
+        if (matchingItems.length > 0) {
+          const totalStockDeduct = matchingItems.reduce((sum, ci) => {
+            const isHalf = (ci as any).presentation === 'MEDIA_ONZA' || ci.unit === '½ Onza' || String(ci.name).includes('½');
+            return sum + (isHalf ? Math.ceil(ci.quantity * 0.5) : ci.quantity);
+          }, 0);
+          return { ...prod, stock: Math.max(0, prod.stock - totalStockDeduct) };
         }
         return prod;
       });
@@ -1476,7 +1582,14 @@ export default function PosPage() {
               {/* Conteo de Resultados y Precio Base */}
               <div className="flex items-center justify-between px-1 text-xs text-slate-500">
                 <span>Mostrando <strong>{displayedProducts.length}</strong> de {filteredProducts.length} productos</span>
-                <span className="font-bold text-indigo-600">Precio Esencia: $3.25 / Oz</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+                    Precio Esencia 1 Oz: ${activeEssencePrice.toFixed(2)}
+                  </span>
+                  <span className="font-bold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-md border border-violet-100">
+                    ½ Oz: ${activeEssenceHalfPrice.toFixed(2)}
+                  </span>
+                </div>
               </div>
 
               {/* Rejilla de Productos */}
@@ -1487,11 +1600,15 @@ export default function PosPage() {
                   const isOutOfStock = product.stock <= 0;
                   const isLowStock = product.stock > 0 && product.stock <= product.minStock;
                   const availableRemaining = product.stock - cartQty;
+                  const isEssence = product.category === 'Esencias para Perfume' || product.unit === 'Onza';
+                  const halfPrice = product.priceHalfOunce != null 
+                    ? Number(product.priceHalfOunce) 
+                    : Number((product.price / 2).toFixed(2));
 
                   return (
                     <div 
                       key={product.id}
-                      onClick={() => !isOutOfStock && availableRemaining > 0 && addToCart(product)}
+                      onClick={() => !isOutOfStock && availableRemaining > 0 && addToCart(product, 'ONZA_COMPLETA')}
                       className={`clay-card p-2.5 sm:p-3 flex flex-col justify-between cursor-pointer transition-all hover:scale-[1.015] ${
                         isOutOfStock 
                           ? 'opacity-55 cursor-not-allowed bg-slate-50/70' 
@@ -1530,23 +1647,59 @@ export default function PosPage() {
                         </h3>
                       </div>
 
-                      <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-100">
+                      <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-100 gap-1">
                         <div>
-                          <span className="text-[8.5px] text-slate-400 block font-semibold uppercase tracking-wider">
-                            Por {product.unit === 'Onza' ? 'Oz' : product.unit}
-                          </span>
-                          <span className="text-xs sm:text-[13px] font-black font-mono text-indigo-600">
-                            ${product.price.toFixed(2)}
-                          </span>
+                          {isEssence ? (
+                            <div className="flex flex-col">
+                              <span className="text-[11px] font-black font-mono text-indigo-600">
+                                1 Oz: ${product.price.toFixed(2)}
+                              </span>
+                              <span className="text-[10px] font-bold font-mono text-violet-600">
+                                ½ Oz: ${halfPrice.toFixed(2)}
+                              </span>
+                            </div>
+                          ) : (
+                            <div>
+                              <span className="text-[8.5px] text-slate-400 block font-semibold uppercase tracking-wider">
+                                Por {product.unit}
+                              </span>
+                              <span className="text-xs sm:text-[13px] font-black font-mono text-indigo-600">
+                                ${product.price.toFixed(2)}
+                              </span>
+                            </div>
+                          )}
                         </div>
 
-                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold transition-all ${
-                          isOutOfStock || availableRemaining <= 0
-                            ? 'bg-slate-100 text-slate-400'
-                            : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white shadow-sm'
-                        }`}>
-                          <Plus className="w-3 h-3" />
-                        </div>
+                        {isEssence ? (
+                          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              disabled={isOutOfStock || availableRemaining <= 0}
+                              onClick={() => addToCart(product, 'ONZA_COMPLETA')}
+                              className="px-1.5 py-1 text-[10px] font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white rounded border border-indigo-200 transition-all shadow-2xs disabled:opacity-50"
+                              title="Agregar 1 Onza al pedido"
+                            >
+                              +1 Oz
+                            </button>
+                            <button
+                              type="button"
+                              disabled={isOutOfStock || availableRemaining <= 0}
+                              onClick={() => addToCart(product, 'MEDIA_ONZA')}
+                              className="px-1.5 py-1 text-[10px] font-bold bg-violet-50 text-violet-700 hover:bg-violet-600 hover:text-white rounded border border-violet-200 transition-all shadow-2xs disabled:opacity-50"
+                              title="Agregar ½ Onza al pedido"
+                            >
+                              +½ Oz
+                            </button>
+                          </div>
+                        ) : (
+                          <div className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold transition-all ${
+                            isOutOfStock || availableRemaining <= 0
+                              ? 'bg-slate-100 text-slate-400'
+                              : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white shadow-sm'
+                          }`}>
+                            <Plus className="w-3 h-3" />
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -1806,61 +1959,122 @@ export default function PosPage() {
                       </p>
                     </div>
                   ) : (
-                    cart.map((item) => (
-                      <div 
-                        key={item.product.id}
-                        className="p-1.5 px-2 rounded-xl bg-white/80 border border-slate-200/70 shadow-2xs hover:border-indigo-200 transition-all flex items-center justify-between gap-2"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1">
-                            <span className="text-[9px] font-mono font-bold text-indigo-600 bg-indigo-50 px-1 py-0.2 rounded shrink-0">
-                              #{item.product.sku}
-                            </span>
-                            <h4 className="font-bold text-[11px] text-slate-800 truncate leading-tight">
-                              {item.product.name}
-                            </h4>
+                    cart.map((item) => {
+                      const itemPres = item.presentation || 'ONZA_COMPLETA';
+                      const isEssence = item.product.category === 'Esencias para Perfume' || item.product.unit === 'Onza';
+                      const unitPrice = getItemUnitPrice(item);
+                      const halfPrice = item.product.priceHalfOunce != null 
+                        ? Number(item.product.priceHalfOunce) 
+                        : Number((item.product.price / 2).toFixed(2));
+
+                      return (
+                        <div 
+                          key={`${item.product.id}-${itemPres}`}
+                          className="p-2 rounded-xl bg-white/90 border border-slate-200/80 shadow-2xs hover:border-indigo-200 transition-all flex flex-col gap-1.5"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1">
+                                <span className="text-[9px] font-mono font-bold text-indigo-600 bg-indigo-50 px-1 py-0.2 rounded shrink-0">
+                                  #{item.product.sku}
+                                </span>
+                                <h4 className="font-bold text-[11px] text-slate-800 truncate leading-tight">
+                                  {item.product.name}
+                                </h4>
+                              </div>
+                              <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-500">
+                                <span className="font-medium text-slate-700">
+                                  ${unitPrice.toFixed(2)}/{itemPres === 'MEDIA_ONZA' ? '½ Oz' : item.product.unit}
+                                </span>
+                                {item.product.puesto && (
+                                  <span className="text-[9px] text-amber-700 bg-amber-50 px-1 rounded font-medium truncate">
+                                    📍 {item.product.puesto}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Botón eliminar item */}
+                            <button
+                              type="button"
+                              onClick={() => removeFromCart(item.product.id, itemPres)}
+                              className="text-slate-300 hover:text-rose-500 transition-colors p-0.5"
+                              title="Quitar producto"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
                           </div>
-                          <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-500">
-                            <span className="font-medium">${item.product.price.toFixed(2)}/{item.product.unit}</span>
-                            {item.product.puesto && (
-                              <span className="text-[9px] text-amber-700 bg-amber-50 px-1 rounded font-medium truncate">
-                                📍 {item.product.puesto}
+
+                          {/* Selector de Presentación para Esencias y Controles de Cantidad */}
+                          <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100/80">
+                            {isEssence ? (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => setItemPresentation(item.product.id, itemPres as any, 'ONZA_COMPLETA')}
+                                  className={`px-1.5 py-0.5 text-[9.5px] font-bold rounded transition-all ${
+                                    itemPres === 'ONZA_COMPLETA'
+                                      ? 'bg-indigo-600 text-white shadow-2xs'
+                                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                  }`}
+                                  title={`1 Onza: $${item.product.price.toFixed(2)}`}
+                                >
+                                  1 Oz (${item.product.price.toFixed(2)})
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setItemPresentation(item.product.id, itemPres as any, 'MEDIA_ONZA')}
+                                  className={`px-1.5 py-0.5 text-[9.5px] font-bold rounded transition-all ${
+                                    itemPres === 'MEDIA_ONZA'
+                                      ? 'bg-violet-600 text-white shadow-2xs'
+                                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                  }`}
+                                  title={`½ Onza: $${halfPrice.toFixed(2)}`}
+                                >
+                                  ½ Oz (${halfPrice.toFixed(2)})
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-slate-400 font-medium">
+                                {item.product.unit}
                               </span>
                             )}
+
+                            <div className="flex items-center gap-2">
+                              {/* Controles de cantidad */}
+                              <div className="flex items-center gap-1 bg-slate-50 px-1.5 py-0.5 rounded-lg border border-slate-200/80 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => updateQuantity(item.product.id, -1, itemPres)}
+                                  className="w-4 h-4 rounded bg-white text-slate-600 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center active:scale-90 shadow-2xs"
+                                  title="Reducir cantidad"
+                                >
+                                  <Minus className="w-2.5 h-2.5" />
+                                </button>
+                                <span className="text-[11px] font-black w-4 text-center text-slate-800">
+                                  {item.quantity}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => updateQuantity(item.product.id, 1, itemPres)}
+                                  className="w-4 h-4 rounded bg-white text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-center active:scale-90 shadow-2xs"
+                                  title="Aumentar cantidad"
+                                >
+                                  <Plus className="w-2.5 h-2.5" />
+                                </button>
+                              </div>
+
+                              {/* Subtotal del item */}
+                              <div className="text-right min-w-[48px] shrink-0">
+                                <span className="font-black text-[11.5px] font-mono text-slate-900">
+                                  ${(unitPrice * item.quantity).toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </div>
-
-                        {/* Controles de cantidad */}
-                        <div className="flex items-center gap-1 bg-slate-50 px-1.5 py-0.5 rounded-lg border border-slate-200/80 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => updateQuantity(item.product.id, -1)}
-                            className="w-4 h-4 rounded bg-white text-slate-600 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center active:scale-90 shadow-2xs"
-                            title="Reducir cantidad"
-                          >
-                            <Minus className="w-2.5 h-2.5" />
-                          </button>
-                          <span className="text-[11px] font-black w-4 text-center text-slate-800">
-                            {item.quantity}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => updateQuantity(item.product.id, 1)}
-                            className="w-4 h-4 rounded bg-white text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-center active:scale-90 shadow-2xs"
-                            title="Aumentar cantidad"
-                          >
-                            <Plus className="w-2.5 h-2.5" />
-                          </button>
-                        </div>
-
-                        {/* Subtotal del item */}
-                        <div className="text-right min-w-[46px] shrink-0">
-                          <span className="font-black text-[11px] font-mono text-slate-900">
-                            ${(item.product.price * item.quantity).toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
 
