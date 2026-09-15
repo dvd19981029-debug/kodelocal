@@ -425,24 +425,7 @@ export default function CheckoutPage() {
           throw new Error(wompiData.error || 'No se pudo generar la pasarela segura de Wompi');
         }
 
-        // Cargar en segundo plano la pasarela bancaria en la caché del navegador mientras corre la cuenta regresiva visual falsa
-        try {
-          const parsedUrl = new URL(wompiData.urlEnlace);
-          const preconnect = document.createElement('link');
-          preconnect.rel = 'preconnect';
-          preconnect.href = parsedUrl.origin;
-          document.head.appendChild(preconnect);
 
-          const prefetch = document.createElement('link');
-          prefetch.rel = 'prefetch';
-          prefetch.href = wompiData.urlEnlace;
-          document.head.appendChild(prefetch);
-
-          const prerender = document.createElement('link');
-          prerender.rel = 'prerender';
-          prerender.href = wompiData.urlEnlace;
-          document.head.appendChild(prerender);
-        } catch (_) {}
 
         // Detener el contador visual y mostrar inmediatamente el estado de entrada a Wompi
         if (countdownTimer) clearInterval(countdownTimer);

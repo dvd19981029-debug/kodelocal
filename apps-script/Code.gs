@@ -1,12 +1,28 @@
 /**
- * Google Apps Script - Webhook de Confirmación de Pedidos Aromaniak SV
- * 
- * Distribuidora de esencias y más.
- * Recibe los datos del pedido y envía el correo con diseño claymórfico blanco anti-modo-oscuro.
+ * Función para autorizar los permisos de Gmail por primera vez.
+ * En el editor de Apps Script, selecciona esta función arriba y haz clic en "Ejecutar".
+ * Google te mostrará la ventana para autorizar el envío de correos.
  */
+function autorizarPermisos() {
+  var miCorreo = Session.getActiveUser().getEmail() || "aromaniaksv@gmail.com";
+  MailApp.sendEmail({
+    to: miCorreo,
+    subject: "✅ Webhook Aromaniak Activado",
+    body: "Los permisos de Gmail han sido concedidos correctamente. El webhook ya puede enviar confirmaciones de compra.",
+    name: "Aromaniak - Distribuidora de esencias y más"
+  });
+  Logger.log("Correo de autorización enviado a: " + miCorreo);
+}
 
 function doPost(e) {
   try {
+    if (!e || !e.postData || !e.postData.contents) {
+      return ContentService.createTextOutput(JSON.stringify({ 
+        success: false, 
+        error: "No se recibieron datos en el cuerpo de la petición" 
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     var data = JSON.parse(e.postData.contents);
     
     if (!data.customerEmail) {
