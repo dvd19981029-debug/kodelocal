@@ -26,8 +26,6 @@ import { flushOfflineQueue } from '@/lib/offlineSync';
 export default function VentasPage() {
   const [sales, setSales] = useState<SaleRecord[]>(() => {
     if (typeof window !== 'undefined') {
-      const currentVersion = localStorage.getItem('kodelocal_data_version');
-      if (currentVersion !== '2026_zero_stock_v3') return [];
       const saved = localStorage.getItem('kodelocal_sales');
       if (saved) {
         try { return JSON.parse(saved); } catch (e) {}
@@ -45,6 +43,84 @@ export default function VentasPage() {
   useEffect(() => {
     localStorage.setItem('kodelocal_sales', JSON.stringify(sales));
   }, [sales]);
+
+  // Cargar ventas y DTEs oficiales registrados en la base de datos Supabase
+  useEffect(() => {
+    fetch('/api/sales?limit=150')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.sales)) {
+          const dbSales: SaleRecord[] = data.sales.map((s: any) => ({
+            id: s.id,
+            saleNumber: s.saleNumber,
+            orderNumber: s.saleNumber,
+            createdAt: s.createdAt,
+            invoicedAt: s.createdAt,
+            channel: s.channel || 'POS',
+            total: Number(s.total || 0),
+            subtotal: Number(s.subtotal || 0),
+            ivaTotal: Number(s.ivaTotal || 0),
+            shippingCost: Number(s.shippingCost || 0),
+            paymentMethod: s.paymentMethod || 'CASH',
+            paymentStatus: s.paymentStatus || 'COMPLETED',
+            status: s.orderStatus || 'COMPLETED',
+            tipoComprobante: s.tipoComprobante || '01',
+            cajero: s.cashierName || 'Caja 1',
+            vendedor: s.sellerName || 'Mostrador',
+            cliente: {
+              nombre: s.customer?.name || 'Consumidor Final',
+              numDocumento: s.customer?.documentNum || undefined,
+              nrc: s.customer?.nrc || undefined,
+              correo: s.customer?.email || undefined,
+              telefono: s.customer?.phone || undefined,
+              direccion: s.customer?.address || undefined,
+              actividadEconomica: s.customer?.activityDesc || undefined,
+            },
+            items: (s.items || []).map((it: any) => ({
+              productId: it.productId,
+              name: it.productName,
+              quantity: it.quantity,
+              price: Number(it.unitPrice || 0),
+              total: Number(it.total || 0),
+              unit: it.unit || 'Unidad',
+            })),
+            dteInfo: s.dteDocument ? {
+              codigoGeneracion: s.dteDocument.codigoGeneracion,
+              numeroControl: s.dteDocument.numeroControl,
+              selloRecepcion: s.dteDocument.selloRecepcion,
+              estado: s.dteDocument.estado,
+              simulated: s.dteDocument.estado === 'SIMULADO',
+              mensaje: s.dteDocument.mensajeRespuesta,
+              mhDteUrl: s.dteDocument.mhDteUrl,
+              pdfUrl: `/api/dte/${s.dteDocument.codigoGeneracion}/pdf`,
+              jsonUrl: `/api/dte/${s.dteDocument.codigoGeneracion}/json`,
+              fhProcesamiento: s.dteDocument.fhProcesamiento,
+            } : undefined,
+          }));
+
+          setSales(prev => {
+            const mergedMap = new Map<string, SaleRecord>();
+            dbSales.forEach(s => mergedMap.set(s.saleNumber, s));
+            prev.forEach(p => {
+              if (!mergedMap.has(p.saleNumber)) {
+                mergedMap.set(p.saleNumber, p);
+              } else {
+                const existing = mergedMap.get(p.saleNumber)!;
+                if (!existing.dteInfo && p.dteInfo) {
+                  existing.dteInfo = p.dteInfo;
+                }
+              }
+            });
+            const merged = Array.from(mergedMap.values());
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('kodelocal_sales', JSON.stringify(merged));
+            }
+            return merged;
+          });
+        }
+      })
+      .catch(err => console.error('Error cargando ventas desde DB en /ventas:', err));
+  }, []);
 
   // Escuchar sincronización de ventas desde el motor offline
   useEffect(() => {
@@ -111,21 +187,32 @@ export default function VentasPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tipoDte: sale.tipoComprobante,
-          saleId: sale.saleNumber,
-          cliente: sale.cliente,
+          tipoDte: sale.tipoComprobante === '03' ? '03' : '01',
+          saleId: sale.saleNumber || sale.id,
+          cliente: {
+            nombre: sale.cliente?.nombre || 'Consumidor Final',
+            numDocumento: sale.cliente?.numDocumento,
+            nrc: sale.cliente?.nrc,
+            email: sale.cliente?.correo,
+            giro: sale.cliente?.actividadEconomica,
+            telefono: sale.cliente?.telefono,
+            direccion: sale.cliente?.direccion,
+            departamento: sale.cliente?.departamento || 'San Salvador',
+            municipio: sale.cliente?.municipio || 'San Salvador Centro',
+          },
           items: sale.items.map((it: any) => ({
-            codigo: it.productId,
+            codigo: it.productId || 'GEN-01',
             nombre: it.name,
             cantidad: it.quantity,
             precioUnitario: it.price,
             total: it.total,
             unit: it.unit,
+            tipoItem: it.tipoItem || (it.productId === 'ENVIO-DOM' ? 2 : 1),
           })),
           total: sale.total,
           subtotal: sale.subtotal,
           iva: sale.ivaTotal,
-          metodoPago: sale.paymentMethod,
+          metodoPago: sale.paymentMethod || 'CASH',
         }),
       });
       const data = await res.json();

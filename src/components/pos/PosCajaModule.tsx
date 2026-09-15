@@ -15,6 +15,8 @@ import {
   Eye,
   FileDown,
   Printer,
+  Send,
+  AlertTriangle,
 } from 'lucide-react';
 import { SaleRecord } from '@/lib/store';
 
@@ -35,6 +37,8 @@ export interface PosCajaModuleProps {
   filteredDteSales: SaleRecord[];
   setSelectedSaleDetail: (sale: SaleRecord) => void;
   setCompletedSale: (sale: SaleRecord) => void;
+  handleTransmitDte?: (sale: SaleRecord) => Promise<void>;
+  isTransmittingDteId?: string | null;
 }
 
 export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
@@ -54,6 +58,8 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
   filteredDteSales,
   setSelectedSaleDetail,
   setCompletedSale,
+  handleTransmitDte,
+  isTransmittingDteId,
 }) => {
   return (
     <div className="space-y-6 animate-in fade-in">
@@ -473,10 +479,15 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                           ${sale.total.toFixed(2)}
                         </td>
                         <td className="py-2.5 px-3 text-center">
-                          {sale.dteInfo ? (
+                          {sale.dteInfo?.codigoGeneracion ? (
                             <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
                               <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                               <span>{sale.dteInfo.simulated ? 'Aprobado (Test)' : 'Sello Hacienda'}</span>
+                            </span>
+                          ) : (sale.tipoComprobante === '01' || sale.tipoComprobante === '03') ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded-full">
+                              <AlertTriangle className="w-3 h-3 text-amber-600" />
+                              <span>Pendiente DTE</span>
                             </span>
                           ) : (
                             <span className="text-[10px] text-slate-400 font-medium">Ticket Local</span>
@@ -484,6 +495,29 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                         </td>
                         <td className="py-2.5 px-3 text-center">
                           <div className="flex items-center justify-center gap-1.5">
+                            {/* Botón Emitir DTE si está pendiente de certificar */}
+                            {(sale.tipoComprobante === '01' || sale.tipoComprobante === '03') && !sale.dteInfo?.codigoGeneracion && handleTransmitDte && (
+                              <button
+                                type="button"
+                                disabled={isTransmittingDteId === sale.id || isTransmittingDteId === sale.saleNumber}
+                                onClick={() => handleTransmitDte(sale)}
+                                className="clay-btn px-2.5 py-1 text-[11px] font-black bg-amber-500 hover:bg-amber-600 text-white inline-flex items-center gap-1 shadow-sm disabled:opacity-50"
+                                title="Emitir DTE a Factura Llama y Ministerio de Hacienda"
+                              >
+                                {isTransmittingDteId === sale.id || isTransmittingDteId === sale.saleNumber ? (
+                                  <>
+                                    <span className="w-2.5 h-2.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    <span>Enviando...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Send className="w-3 h-3" />
+                                    <span>Emitir DTE</span>
+                                  </>
+                                )}
+                              </button>
+                            )}
+
                             <button
                               type="button"
                               onClick={() => setSelectedSaleDetail(sale)}

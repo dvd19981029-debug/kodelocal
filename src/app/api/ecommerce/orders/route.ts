@@ -61,6 +61,11 @@ export async function GET(request: Request) {
       },
       include: {
         customer: true,
+        sale: {
+          include: {
+            dteDocument: true,
+          },
+        },
         items: {
           include: {
             product: true,
@@ -94,6 +99,7 @@ export async function GET(request: Request) {
       createdAt: o.createdAt.toISOString(),
       updatedAt: o.updatedAt.toISOString(),
       customer: o.customer,
+      sale: o.sale,
       items: (o.items || []).map((it) => ({
         id: it.id,
         orderId: it.orderId,

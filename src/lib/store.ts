@@ -67,6 +67,7 @@ export interface SaleRecord {
     mhDteUrl?: string;
     pdfUrl?: string;
     jsonUrl?: string;
+    fhProcesamiento?: string;
   };
   status?: 'PREFACTURA' | 'PENDING_PREPARATION' | 'READY_AT_WINDOW' | 'COMPLETED' | 'CANCELLED';
   channel?: 'POS' | 'ONLINE';

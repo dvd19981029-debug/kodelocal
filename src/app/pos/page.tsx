@@ -178,6 +178,7 @@ export default function PosPage() {
   const [clienteDepartamento, setClienteDepartamento] = useState('San Salvador');
   const [clienteMunicipio, setClienteMunicipio] = useState('San Salvador Centro');
   const [clienteDireccion, setClienteDireccion] = useState('');
+  const [isTransmittingDteId, setIsTransmittingDteId] = useState<string | null>(null);
 
   // Buscador interactivo de clientes en Carrito (Combobox)
   const [cartCustomerQuery, setCartCustomerQuery] = useState('');
@@ -331,50 +332,93 @@ export default function PosPage() {
             return true;
           });
 
-          const webSales: SaleRecord[] = validOrders.map((o: any) => ({
-            id: o.id,
-            saleNumber: o.orderNumber,
-            orderNumber: o.orderNumber,
-            createdAt: o.createdAt,
-            channel: 'ONLINE',
-            total: Number(o.total || 0),
-            subtotal: Number(o.subtotal || 0),
-            ivaTotal: 0,
-            shippingCost: Number(o.shippingCost || 0),
-            paymentMethod: o.paymentMethod || 'CARD',
-            paymentStatus: o.paymentStatus || 'COMPLETED',
-            notes: o.notes || undefined,
-            deliveryNotes: o.deliveryReference ? `Entrega: ${o.shippingAddress} (Ref: ${o.deliveryReference})` : `Entrega: ${o.shippingAddress}`,
-            status: o.orderStatus === 'NUEVO' || o.orderStatus === 'EN_PREPARACION'
-              ? 'PENDING_PREPARATION'
-              : o.orderStatus === 'EN_RUTA'
-              ? 'READY_AT_WINDOW'
-              : 'COMPLETED',
-            vendedor: 'Tienda Online (aromaniaksv.com)',
-            tipoComprobante: o.customer?.preferredDoc || (o.customer?.nrc ? '03' : '01'),
-            cliente: {
-              nombre: o.customerName,
-              telefono: o.customerPhone,
-              correo: o.customerEmail || o.customer?.email || undefined,
-              direccion: `${o.shippingAddress}, ${o.municipality}, ${o.department}`,
-              numDocumento: o.customer?.documentNum || undefined,
-              nrc: o.customer?.nrc || undefined,
-              actividadEconomica: o.customer?.activityDesc || undefined,
-            },
-            items: o.items.map((it: any) => ({
-              productId: it.productId,
-              name: `${it.productName} (${it.presentation})`,
-              quantity: it.quantity,
-              price: Number(it.unitPrice || 0),
-              total: Number(it.total || 0),
-              unit: it.presentation,
-              puesto: it.product?.puesto || 'A1',
-            }))
-          }));
+          const webSales: SaleRecord[] = validOrders.map((o: any) => {
+            const noteDocMatch = o.notes?.match(/Doc:\s*(01|03|TICKET)/i);
+            const explicitDoc = noteDocMatch ? (noteDocMatch[1].toUpperCase() as '01' | '03' | 'TICKET') : null;
+            const resolvedDoc: '01' | '03' | 'TICKET' = explicitDoc === '03' || o.customer?.nrc ? '03' : '01';
+
+            const dteDoc = o.sale?.dteDocument;
+            const dteInfo = dteDoc ? {
+              codigoGeneracion: dteDoc.codigoGeneracion,
+              numeroControl: dteDoc.numeroControl,
+              selloRecepcion: dteDoc.selloRecepcion,
+              estado: dteDoc.estado,
+              simulated: dteDoc.estado === 'SIMULADO',
+              mensaje: dteDoc.mensajeRespuesta,
+              mhDteUrl: dteDoc.mhDteUrl,
+              pdfUrl: `/api/dte/${dteDoc.codigoGeneracion}/pdf`,
+              jsonUrl: `/api/dte/${dteDoc.codigoGeneracion}/json`,
+              fhProcesamiento: dteDoc.fhProcesamiento,
+            } : undefined;
+
+            return {
+              id: o.id,
+              saleNumber: o.orderNumber,
+              orderNumber: o.orderNumber,
+              createdAt: o.createdAt,
+              channel: 'ONLINE',
+              total: Number(o.total || 0),
+              subtotal: Number(o.subtotal || 0),
+              ivaTotal: 0,
+              shippingCost: Number(o.shippingCost || 0),
+              paymentMethod: o.paymentMethod || 'CARD',
+              paymentStatus: o.paymentStatus || 'COMPLETED',
+              notes: o.notes || undefined,
+              deliveryNotes: o.deliveryReference ? `Entrega: ${o.shippingAddress} (Ref: ${o.deliveryReference})` : `Entrega: ${o.shippingAddress}`,
+              status: o.orderStatus === 'NUEVO' || o.orderStatus === 'EN_PREPARACION'
+                ? 'PENDING_PREPARATION'
+                : o.orderStatus === 'EN_RUTA'
+                ? 'READY_AT_WINDOW'
+                : 'COMPLETED',
+              vendedor: 'Tienda Online (aromaniaksv.com)',
+              tipoComprobante: resolvedDoc,
+              cliente: {
+                nombre: o.customerName,
+                telefono: o.customerPhone,
+                correo: o.customerEmail || o.customer?.email || undefined,
+                direccion: `${o.shippingAddress}, ${o.municipality}, ${o.department}`,
+                numDocumento: o.customer?.documentNum || undefined,
+                nrc: o.customer?.nrc || undefined,
+                actividadEconomica: o.customer?.activityDesc || undefined,
+                departamento: o.department,
+                municipio: o.municipality,
+              },
+              items: [
+                ...o.items.map((it: any) => ({
+                  productId: it.productId,
+                  name: `${it.productName} (${it.presentation})`,
+                  quantity: it.quantity,
+                  price: Number(it.unitPrice || 0),
+                  total: Number(it.total || 0),
+                  unit: it.presentation,
+                  puesto: it.product?.puesto || 'A1',
+                })),
+                ...(Number(o.shippingCost || 0) > 0 ? [{
+                  productId: 'ENVIO-DOM',
+                  name: 'Servicio de Envío a Domicilio',
+                  quantity: 1,
+                  price: Number(o.shippingCost),
+                  total: Number(o.shippingCost),
+                  unit: 'Servicio',
+                  tipoItem: 2,
+                  puesto: 'LOG'
+                }] : [])
+              ],
+              dteInfo,
+            };
+          });
 
           setSales(prev => {
-            const localNonWeb = prev.filter(s => s.channel !== 'ONLINE' && !webSales.some(w => w.saleNumber === s.saleNumber));
-            const merged = [...webSales, ...localNonWeb];
+            const updatedWebSales = webSales.map(ws => {
+              const prevMatch = prev.find(p => p.saleNumber === ws.saleNumber || p.id === ws.id);
+              if (prevMatch?.dteInfo && !ws.dteInfo) {
+                return { ...ws, dteInfo: prevMatch.dteInfo, status: prevMatch.status || ws.status };
+              }
+              return ws;
+            });
+
+            const localNonWeb = prev.filter(s => s.channel !== 'ONLINE' && !updatedWebSales.some(w => w.saleNumber === s.saleNumber));
+            const merged = [...updatedWebSales, ...localNonWeb];
             if (typeof window !== 'undefined') {
               localStorage.setItem('kodelocal_sales', JSON.stringify(merged));
             }
@@ -384,6 +428,82 @@ export default function PosPage() {
       })
       .catch(err => console.error('Error sincronizando pedidos ecommerce en POS:', err));
     });
+
+    // Cargar historial de ventas y DTEs oficiales registrados en la base de datos Supabase
+    fetch('/api/sales?limit=100')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.sales)) {
+          const dbSales: SaleRecord[] = data.sales.map((s: any) => ({
+            id: s.id,
+            saleNumber: s.saleNumber,
+            orderNumber: s.saleNumber,
+            createdAt: s.createdAt,
+            invoicedAt: s.createdAt,
+            channel: s.channel || 'POS',
+            total: Number(s.total || 0),
+            subtotal: Number(s.subtotal || 0),
+            ivaTotal: Number(s.ivaTotal || 0),
+            shippingCost: Number(s.shippingCost || 0),
+            paymentMethod: s.paymentMethod || 'CASH',
+            paymentStatus: s.paymentStatus || 'COMPLETED',
+            status: s.orderStatus || 'COMPLETED',
+            tipoComprobante: s.tipoComprobante || '01',
+            cajero: s.cashierName || 'Caja 1',
+            vendedor: s.sellerName || 'Mostrador',
+            cliente: {
+              nombre: s.customer?.name || 'Consumidor Final',
+              numDocumento: s.customer?.documentNum || undefined,
+              nrc: s.customer?.nrc || undefined,
+              correo: s.customer?.email || undefined,
+              telefono: s.customer?.phone || undefined,
+              direccion: s.customer?.address || undefined,
+              actividadEconomica: s.customer?.activityDesc || undefined,
+            },
+            items: (s.items || []).map((it: any) => ({
+              productId: it.productId,
+              name: it.productName,
+              quantity: it.quantity,
+              price: Number(it.unitPrice || 0),
+              total: Number(it.total || 0),
+              unit: it.unit || 'Unidad',
+            })),
+            dteInfo: s.dteDocument ? {
+              codigoGeneracion: s.dteDocument.codigoGeneracion,
+              numeroControl: s.dteDocument.numeroControl,
+              selloRecepcion: s.dteDocument.selloRecepcion,
+              estado: s.dteDocument.estado,
+              simulated: s.dteDocument.estado === 'SIMULADO',
+              mensaje: s.dteDocument.mensajeRespuesta,
+              mhDteUrl: s.dteDocument.mhDteUrl,
+              pdfUrl: `/api/dte/${s.dteDocument.codigoGeneracion}/pdf`,
+              jsonUrl: `/api/dte/${s.dteDocument.codigoGeneracion}/json`,
+              fhProcesamiento: s.dteDocument.fhProcesamiento,
+            } : undefined,
+          }));
+
+          setSales(prev => {
+            const mergedMap = new Map<string, SaleRecord>();
+            dbSales.forEach(s => mergedMap.set(s.saleNumber, s));
+            prev.forEach(p => {
+              if (!mergedMap.has(p.saleNumber)) {
+                mergedMap.set(p.saleNumber, p);
+              } else {
+                const existing = mergedMap.get(p.saleNumber)!;
+                if (!existing.dteInfo && p.dteInfo) {
+                  existing.dteInfo = p.dteInfo;
+                }
+              }
+            });
+            const merged = Array.from(mergedMap.values());
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('kodelocal_sales', JSON.stringify(merged));
+            }
+            return merged;
+          });
+        }
+      })
+      .catch(err => console.error('Error cargando ventas desde DB:', err));
   }, []);
 
   // Filtrado de productos
@@ -804,9 +924,7 @@ export default function PosPage() {
       const muniMatch = munis.find(m => m.nombre.toLowerCase() === (found.municipio || '').toLowerCase());
       setClienteMunicipio(muniMatch ? muniMatch.nombre : (munis[0]?.nombre || 'San Salvador Centro'));
       setClienteDireccion(found.direccion || '');
-      if (found.documentoPreferido) {
-        setTipoComprobante(found.documentoPreferido);
-      } else if (found.nrc || found.tipoPersona === 'JURIDICA') {
+      if (found.nrc || found.tipoPersona === 'JURIDICA' || found.documentoPreferido === '03') {
         setTipoComprobante('03');
       } else {
         setTipoComprobante('01');
@@ -1059,13 +1177,20 @@ export default function PosPage() {
     const nrc = order.cliente?.nrc || matchedCust?.nrc || '';
     const email = order.cliente?.correo || matchedCust?.email || '';
     const giro = order.cliente?.actividadEconomica || matchedCust?.actividadEconomica || '';
-    const tipo = order.tipoComprobante || matchedCust?.documentoPreferido || (nrc ? '03' : '01');
+    const direccion = order.cliente?.direccion || matchedCust?.direccion || '';
+    const departamento = order.cliente?.departamento || matchedCust?.departamento || 'San Salvador';
+    const municipio = order.cliente?.municipio || matchedCust?.municipio || 'San Salvador Centro';
+
+    const tipo: '01' | '03' = (order.tipoComprobante === '03' || matchedCust?.documentoPreferido === '03' || nrc) ? '03' : '01';
 
     setClienteNombre(nombre);
     setClienteDoc(doc);
     setClienteNrc(nrc);
     setClienteEmail(email);
     setClienteGiro(giro);
+    setClienteDireccion(direccion);
+    setClienteDepartamento(departamento);
+    setClienteMunicipio(municipio);
     setTipoComprobante(tipo);
     // Sincronizar método de pago de la orden web
     const ordMethod = order.paymentMethod || 'CARD';
@@ -1109,29 +1234,35 @@ export default function PosPage() {
     let dteResponseData = null;
     if (tipoComprobante === '01' || tipoComprobante === '03') {
       try {
+        const saleRefId = isOrderFromWindow
+          ? (orderToInvoice.orderNumber || orderToInvoice.saleNumber || orderToInvoice.id)
+          : `POS-${Date.now()}`;
+
         const res = await fetch('/api/dte', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             tipoDte: tipoComprobante,
-            saleId: isOrderFromWindow ? orderToInvoice.id : `sale-${Date.now()}`,
+            saleId: saleRefId,
             cliente: {
               nombre: clienteNombre,
               numDocumento: clienteDoc,
               nrc: clienteNrc,
               email: clienteEmail,
               giro: clienteGiro,
-              telefono: selectedCustomerObj?.phone,
-              direccion: clienteDireccion || selectedCustomerObj?.direccion,
-              departamento: clienteDepartamento || selectedCustomerObj?.departamento || 'San Salvador',
-              municipio: clienteMunicipio || selectedCustomerObj?.municipio || 'San Salvador Centro',
+              telefono: selectedCustomerObj?.phone || (isOrderFromWindow ? orderToInvoice.cliente?.telefono : undefined),
+              direccion: clienteDireccion || selectedCustomerObj?.direccion || (isOrderFromWindow ? orderToInvoice.cliente?.direccion : undefined),
+              departamento: clienteDepartamento || selectedCustomerObj?.departamento || (isOrderFromWindow ? orderToInvoice.cliente?.departamento : 'San Salvador'),
+              municipio: clienteMunicipio || selectedCustomerObj?.municipio || (isOrderFromWindow ? orderToInvoice.cliente?.municipio : 'San Salvador Centro'),
             },
             items: itemsToBill.map(i => ({
+              codigo: (i as any).productId || 'GEN-01',
               nombre: i.name,
               cantidad: i.quantity,
               precioUnitario: i.price,
               total: i.total,
-              unit: i.unit
+              unit: i.unit,
+              tipoItem: (i as any).tipoItem || ((i as any).productId === 'ENVIO-DOM' ? 2 : 1),
             })),
             total: totalToBill,
             subtotal: subtotalToBill,
@@ -1143,13 +1274,14 @@ export default function PosPage() {
         if (data.dte) {
           dteResponseData = data.dte;
           if (data.dte.estado === 'RECHAZADO') {
-            alert(`Aviso DTE Factura Llama: ${data.dte.mensaje}`);
+            alert(`Aviso DTE Factura Llama: ${data.dte.mensaje || 'Rechazado por Hacienda'}`);
           }
         } else if (!data.success) {
           alert(`Error al emitir DTE: ${data.error || 'No se pudo emitir en Factura Llama'}`);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error al emitir DTE:', err);
+        alert(`Error al conectar con el servicio DTE: ${err?.message || 'Fallo de conexión'}`);
       }
     }
 
@@ -1176,8 +1308,10 @@ export default function PosPage() {
     if (isOrderFromWindow) {
       // Actualizar la orden existente a COMPLETED
       const savedSales: SaleRecord[] = JSON.parse(localStorage.getItem('kodelocal_sales') || '[]');
+      let foundInSaved = false;
       const updatedSales = savedSales.map(s => {
-        if (s.id === orderToInvoice.id) {
+        if (s.id === orderToInvoice.id || (orderToInvoice.saleNumber && s.saleNumber === orderToInvoice.saleNumber)) {
+          foundInSaved = true;
           const updated: SaleRecord = {
             ...s,
             status: 'COMPLETED',
@@ -1193,7 +1327,10 @@ export default function PosPage() {
               numDocumento: clienteDoc || undefined,
               nrc: clienteNrc || undefined,
               correo: clienteEmail || undefined,
-              actividadEconomica: clienteGiro || undefined
+              actividadEconomica: clienteGiro || undefined,
+              direccion: clienteDireccion || s.cliente?.direccion || undefined,
+              departamento: clienteDepartamento || s.cliente?.departamento || undefined,
+              municipio: clienteMunicipio || s.cliente?.municipio || undefined,
             },
             dteInfo: dteResponseData ? {
               codigoGeneracion: dteResponseData.codigoGeneracion,
@@ -1205,6 +1342,7 @@ export default function PosPage() {
               mhDteUrl: dteResponseData.mhDteUrl,
               pdfUrl: dteResponseData.pdfUrl,
               jsonUrl: dteResponseData.jsonUrl,
+              fhProcesamiento: dteResponseData.fhProcesamiento,
             } : undefined
           };
           completedRecord = updated;
@@ -1212,6 +1350,44 @@ export default function PosPage() {
         }
         return s;
       });
+
+      if (!foundInSaved) {
+        const updated: SaleRecord = {
+          ...orderToInvoice,
+          status: 'COMPLETED',
+          invoicedAt: new Date().toISOString(),
+          cajero: 'Caja 1',
+          paymentMethod,
+          cashReceived: parsedCash,
+          cashChange: changeAmount,
+          tipoComprobante,
+          cliente: {
+            ...orderToInvoice.cliente,
+            nombre: clienteNombre,
+            numDocumento: clienteDoc || undefined,
+            nrc: clienteNrc || undefined,
+            correo: clienteEmail || undefined,
+            actividadEconomica: clienteGiro || undefined,
+            direccion: clienteDireccion || orderToInvoice.cliente?.direccion || undefined,
+            departamento: clienteDepartamento || orderToInvoice.cliente?.departamento || undefined,
+            municipio: clienteMunicipio || orderToInvoice.cliente?.municipio || undefined,
+          },
+          dteInfo: dteResponseData ? {
+            codigoGeneracion: dteResponseData.codigoGeneracion,
+            numeroControl: dteResponseData.numeroControl,
+            selloRecepcion: dteResponseData.selloRecepcion,
+            estado: dteResponseData.estado,
+            simulated: dteResponseData.simulated,
+            mensaje: dteResponseData.mensaje,
+            mhDteUrl: dteResponseData.mhDteUrl,
+            pdfUrl: dteResponseData.pdfUrl,
+            jsonUrl: dteResponseData.jsonUrl,
+            fhProcesamiento: dteResponseData.fhProcesamiento,
+          } : undefined
+        };
+        completedRecord = updated;
+        updatedSales.unshift(updated);
+      }
 
       localStorage.setItem('kodelocal_sales', JSON.stringify(updatedSales));
       window.dispatchEvent(new Event('kodelocal_sales_updated'));
@@ -1235,7 +1411,11 @@ export default function PosPage() {
           nombre: clienteNombre,
           numDocumento: clienteDoc,
           nrc: clienteNrc,
-          correo: clienteEmail
+          correo: clienteEmail,
+          actividadEconomica: clienteGiro || undefined,
+          direccion: clienteDireccion || undefined,
+          departamento: clienteDepartamento || undefined,
+          municipio: clienteMunicipio || undefined,
         },
         dteInfo: dteResponseData ? {
           codigoGeneracion: dteResponseData.codigoGeneracion,
@@ -1247,6 +1427,7 @@ export default function PosPage() {
           mhDteUrl: dteResponseData.mhDteUrl,
           pdfUrl: dteResponseData.pdfUrl,
           jsonUrl: dteResponseData.jsonUrl,
+          fhProcesamiento: dteResponseData.fhProcesamiento,
         } : undefined,
         status: 'COMPLETED',
         cajero: 'Caja 1',
@@ -1327,6 +1508,80 @@ export default function PosPage() {
           }).catch(err => console.error('Error actualizando pedido ecommerce a ENTREGADO:', err));
         });
       }
+    }
+  };
+
+  // Transmitir un DTE pendiente desde la tabla de Caja a Factura Llama / MH
+  const handleTransmitDte = async (sale: SaleRecord) => {
+    setIsTransmittingDteId(sale.id || sale.saleNumber);
+    try {
+      const res = await fetch('/api/dte', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tipoDte: sale.tipoComprobante === '03' ? '03' : '01',
+          saleId: sale.saleNumber || sale.id,
+          cliente: {
+            nombre: sale.cliente?.nombre || 'Consumidor Final',
+            numDocumento: sale.cliente?.numDocumento,
+            nrc: sale.cliente?.nrc,
+            email: sale.cliente?.correo,
+            giro: sale.cliente?.actividadEconomica,
+            telefono: sale.cliente?.telefono,
+            direccion: sale.cliente?.direccion,
+            departamento: sale.cliente?.departamento || 'San Salvador',
+            municipio: sale.cliente?.municipio || 'San Salvador Centro',
+          },
+          items: sale.items.map((it: any) => ({
+            codigo: it.productId || 'GEN-01',
+            nombre: it.name,
+            cantidad: it.quantity,
+            precioUnitario: it.price,
+            total: it.total,
+            unit: it.unit,
+            tipoItem: it.tipoItem || (it.productId === 'ENVIO-DOM' ? 2 : 1),
+          })),
+          total: sale.total,
+          subtotal: sale.subtotal,
+          iva: sale.ivaTotal,
+          metodoPago: sale.paymentMethod || 'CASH',
+        }),
+      });
+      const data = await res.json();
+      if (data && data.dte && data.dte.codigoGeneracion) {
+        const newDteInfo = {
+          codigoGeneracion: data.dte.codigoGeneracion,
+          numeroControl: data.dte.numeroControl,
+          selloRecepcion: data.dte.selloRecepcion,
+          estado: data.dte.estado,
+          simulated: data.dte.simulated,
+          mensaje: data.dte.mensaje,
+          mhDteUrl: data.dte.mhDteUrl,
+          pdfUrl: data.dte.pdfUrl,
+          jsonUrl: data.dte.jsonUrl,
+          fhProcesamiento: data.dte.fhProcesamiento,
+        };
+
+        setSales(prev => {
+          const updated = prev.map(s => {
+            if (s.id === sale.id || s.saleNumber === sale.saleNumber) {
+              return { ...s, dteInfo: newDteInfo };
+            }
+            return s;
+          });
+          localStorage.setItem('kodelocal_sales', JSON.stringify(updated));
+          window.dispatchEvent(new Event('kodelocal_sales_updated'));
+          return updated;
+        });
+
+        alert(`✅ DTE emitido exitosamente.\nCódigo: ${data.dte.codigoGeneracion}\nSello: ${data.dte.selloRecepcion || 'Recibido por MH'}`);
+      } else {
+        alert(`No se pudo emitir DTE: ${data?.error || data?.dte?.mensaje || 'Error en Factura Llama / MH'}`);
+      }
+    } catch (err: any) {
+      alert(`Error al transmitir DTE: ${err?.message || 'Fallo de conexión'}`);
+    } finally {
+      setIsTransmittingDteId(null);
     }
   };
 
@@ -2377,6 +2632,8 @@ export default function PosPage() {
             filteredDteSales={filteredDteSales}
             setSelectedSaleDetail={setSelectedSaleDetail}
             setCompletedSale={setCompletedSale}
+            handleTransmitDte={handleTransmitDte}
+            isTransmittingDteId={isTransmittingDteId}
           />
         )}
 
@@ -3169,12 +3426,10 @@ export default function PosPage() {
                   <CheckCircle2 className="w-4 h-4" />
                   <span>
                     {isProcessing 
-                      ? 'Emitiendo DTE...' 
+                      ? 'Emitiendo DTE ante Hacienda...' 
                       : orderToInvoice && orderToInvoice.paymentStatus === 'COMPLETED' && orderToInvoice.paymentMethod !== 'CASH'
-                      ? 'Emitir DTE y Entregar'
-                      : orderToInvoice 
-                      ? 'Cobrar y Emitir DTE' 
-                      : 'Completar Venta'}
+                      ? `Emitir ${tipoComprobante === '03' ? 'Crédito Fiscal (03)' : tipoComprobante === '01' ? 'Factura (01)' : 'Ticket'} y Entregar`
+                      : `Cobrar y Emitir ${tipoComprobante === '03' ? 'Crédito Fiscal (03)' : tipoComprobante === '01' ? 'Factura (01)' : 'Ticket'}`}
                   </span>
                 </button>
               </div>

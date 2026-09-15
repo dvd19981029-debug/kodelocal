@@ -71,7 +71,7 @@ model Customer {
   activityCode String?
   activityDesc String?
   taxCategory  String?   @default("OTRO") // OTRO, MEDIANO, GRANDE
-  preferredDoc String?   @default("TICKET") // 01, 03, TICKET
+  preferredDoc String?   @default("01") // 01, 03, TICKET
   email        String?   @unique
   phone        String?
   address      String?
