@@ -57,7 +57,7 @@ export default function EcommerceFooter() {
             <ul className="space-y-2 text-slate-500 font-medium">
               <li className="flex items-center gap-2">
                 <Truck className="w-4 h-4 text-indigo-500 shrink-0" />
-                <span>Envíos a los 14 departamentos con C807</span>
+                <span>Entregas a domicilio a todo El Salvador o retiro en local</span>
               </li>
               <li className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-indigo-500 shrink-0" />

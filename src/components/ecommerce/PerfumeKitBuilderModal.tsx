@@ -217,7 +217,7 @@ export default function PerfumeKitBuilderModal({
               <span>Arma tu propio perfume</span>
             </h2>
             <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium hidden sm:block">
-              1 oz pura de tu contratipo favorito, frasco de 100ml y alcohol con fijador
+              1 oz pura de tu esencia favorita, frasco de 100ml y alcohol con fijador
             </p>
           </div>
           <span className="bg-purple-100/80 text-purple-900 border border-purple-200/90 text-[11px] sm:text-xs font-black px-2.5 py-0.5 rounded-full shadow-2xs shrink-0 ml-1">

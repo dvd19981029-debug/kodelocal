@@ -87,7 +87,7 @@ export default function CartDrawer() {
                 </div>
                 <h4 className="font-extrabold text-sm text-slate-800">Tu carrito está vacío</h4>
                 <p className="text-xs text-slate-500 max-w-xs leading-relaxed">
-                  Explora nuestro catálogo de contratipos finos y agrega tus fragancias favoritas.
+                  Explora nuestro catálogo de esencias de perfumería fina y agrega tus fragancias favoritas.
                 </p>
                 <button
                   onClick={() => setIsCartOpen(false)}
@@ -335,7 +335,7 @@ export default function CartDrawer() {
 
               <div className="flex items-center justify-center gap-1.5 text-[10px] font-semibold text-slate-400 pt-0.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                <span>Compra segura con envíos C807 en El Salvador</span>
+                <span>Entregas a domicilio a todo El Salvador o retiro en local</span>
               </div>
             </div>
           )}

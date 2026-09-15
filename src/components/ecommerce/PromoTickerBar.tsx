@@ -11,7 +11,7 @@ interface TickerItem {
 
 const TICKER_ITEMS: TickerItem[] = [
   {
-    id: 'c807',
+    id: 'entregas',
     content: (
       <div className="inline-flex items-center gap-2 text-xs font-black text-white shrink-0">
         {/* Mini Camioncito 2D Estilo Claymorphic */}
@@ -32,14 +32,14 @@ const TICKER_ITEMS: TickerItem[] = [
             <circle cx="35" cy="25" r="2" fill="#ede9fe" />
             <rect x="42" y="19" width="3" height="3" rx="1.5" fill="#fde047" />
             <rect x="8" y="10" width="16" height="7" rx="2" fill="#ffffff" />
-            <text x="10" y="15.5" fill="#6d28d9" fontSize="5.5" fontWeight="900" fontFamily="sans-serif">C807</text>
+            <text x="9" y="15.5" fill="#6d28d9" fontSize="5" fontWeight="900" fontFamily="sans-serif">ENVIOS</text>
           </svg>
         </div>
         
         <span className="bg-white text-[#7c3aed] text-[10px] font-black px-2 py-0.5 rounded-full shadow-2xs uppercase tracking-wider">
-          C807
+          Envíos
         </span>
-        <span>Entregas a todo El Salvador con <strong className="text-purple-100 font-black">C807</strong> <span className="text-purple-200 font-semibold">(en serio, a todo el país)</span></span>
+        <span>Entregas a domicilio a <strong className="text-purple-100 font-black">todo El Salvador</strong> o <strong className="text-purple-100 font-black">retiro en local</strong></span>
       </div>
     ),
   },

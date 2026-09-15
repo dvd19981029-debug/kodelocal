@@ -32,7 +32,7 @@ export default function BuildYourPerfumeCard({ onOpenBuilder }: BuildYourPerfume
           </div>
 
           <p className="text-xs sm:text-sm text-slate-600 font-semibold mt-1 leading-snug max-w-md">
-            1 oz pura de tu contratipo favorito, frasco de 100ml a elegir y alcohol con fijador.
+            1 oz pura de tu esencia favorita, frasco de 100ml a elegir y alcohol con fijador.
           </p>
         </div>
 
@@ -54,15 +54,15 @@ export default function BuildYourPerfumeCard({ onOpenBuilder }: BuildYourPerfume
 
       </div>
 
-      {/* Vitrina dual: Bote Contratipo + Frasco Atomizador 100ml */}
+      {/* Vitrina dual: Bote de Esencia + Frasco Atomizador 100ml */}
       <div className="relative z-10 shrink-0 flex items-center justify-center">
         <div className="relative flex items-center group-hover:scale-105 transition-transform duration-300">
           
-          {/* 1. Bote Contratipo (Esencia pura concentrada) */}
+          {/* 1. Bote de Esencia (Esencia pura concentrada) */}
           <div className="relative z-10 -mr-2 sm:-mr-3 w-16 h-16 sm:w-20 sm:h-20 md:w-22 md:h-22 rounded-2xl overflow-hidden bg-white border-2 border-amber-300 shadow-md flex items-center justify-center">
             <img
               src="/images/esencias/esencia_1.webp"
-              alt="Esencia Contratipo"
+              alt="Esencia Pura de Perfume"
               loading="lazy"
               decoding="async"
               onError={(e) => {
@@ -71,7 +71,7 @@ export default function BuildYourPerfumeCard({ onOpenBuilder }: BuildYourPerfume
               className="w-full h-full object-cover object-center"
             />
             <div className="absolute bottom-1 bg-slate-950/80 backdrop-blur-xs text-[7.5px] sm:text-[8.5px] font-black text-amber-300 px-1.5 py-0.5 rounded-full border border-amber-400/40 tracking-tight">
-              Contratipo
+              Esencia
             </div>
           </div>
 
