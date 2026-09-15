@@ -72,8 +72,8 @@ export async function generateMetadata({
 
   if (!product) {
     return {
-      title: 'Esencias de Perfumería Fina & Insumos | Aromaniak SV',
-      description: 'Venta de esencias de perfumería fina, aromas químicos, botes de vidrio y materias primas en El Salvador.',
+      title: 'Distribuidora de Esencias Perfumería Fina | Aromaniak SV',
+      description: 'Distribuidora de esencias de perfumería fina, aromas químicos, botes de vidrio y materias primas en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.',
     };
   }
 
@@ -89,10 +89,10 @@ export async function generateMetadata({
   const title = `${displayName} | Aromaniak SV`;
 
   const description = isBottle
-    ? `${displayName} con atomizador para envasado y perfumería. Envases de vidrio disponibles en El Salvador.`
+    ? `${displayName} con atomizador para envasado y perfumería. Envases de vidrio disponibles en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.`
     : isEssence
-    ? `Esencia concentrada ${displayName} para elaboración de fragancias y perfumería fina. ${notesText}Venta por onza y media onza en El Salvador con envíos a todo el país.`
-    : `${displayName} - Insumos para elaboración de perfumería fina en El Salvador.`;
+    ? `Esencia concentrada ${displayName} para elaboración de fragancias y perfumería fina. ${notesText}Venta por onza y media onza. Entregas a domicilio a todo El Salvador o retiro en local.`
+    : `${displayName} - Insumos para elaboración de perfumería fina en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.`;
 
   const canonical = `https://aromaniaksv.com/producto/${encodeURIComponent(product.id)}`;
   const imageUrl = product.imageUrl
@@ -148,8 +148,8 @@ export default async function ProductLayout({
     '@type': 'Product',
     name: displayName,
     description: isBottle
-      ? `${displayName} con atomizador para elaboración y envasado de perfumes.`
-      : `Esencia concentrada ${displayName} para elaboración de perfumería fina en El Salvador.`,
+      ? `${displayName} con atomizador para elaboración y envasado de perfumes. Entregas a domicilio a todo El Salvador o retiro en local.`
+      : `Esencia concentrada ${displayName} para elaboración de perfumería fina en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.`,
     image: product.imageUrl ? (product.imageUrl.startsWith('http') ? product.imageUrl : `https://aromaniaksv.com${product.imageUrl}`) : 'https://aromaniaksv.com/images/logo.png',
     sku: product.sku || product.id,
     brand: {

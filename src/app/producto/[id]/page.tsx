@@ -560,7 +560,7 @@ export default function ProductDetailPage() {
                   <span>
                     {availableRemaining === 0 
                       ? (cartQuantity > 0 ? 'Has reservado todo el inventario disponible' : 'Temporalmente agotado') 
-                      : <>En existencia para envío inmediato con <strong>C807</strong> a todo El Salvador o retiro en local</>}
+                      : <>En existencia para entregas a domicilio a todo El Salvador o retiro en local</>}
                   </span>
                 </span>
                 <span className="shrink-0 text-right">
@@ -894,13 +894,13 @@ export default function ProductDetailPage() {
                   Envíos a todo El Salvador o Retiro en Local
                 </h4>
                 <p className="text-[11px] text-slate-500 font-medium">
-                  Cobertura de 24 a 48 horas en los 14 departamentos con C807
+                  Entregas a domicilio a todo El Salvador de 24 a 48 horas o retiro en local
                 </p>
               </div>
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed">
-              Envíos y cobertura de <strong className="text-indigo-700">24 a 48 horas para todo el país</strong> (los 14 departamentos con C807, normalmente en 24 horas). También puedes optar por <strong>pasar retirando gratis en nuestro local en San Salvador</strong>.
+              Contamos con <strong className="text-indigo-700">entregas a domicilio a todo El Salvador</strong> (cobertura de 24 a 48 horas hábiles), o puedes optar por <strong>pasar retirando gratis en nuestro local en San Salvador</strong>.
             </p>
 
             <div className="text-[10.5px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-1">
@@ -928,7 +928,7 @@ export default function ProductDetailPage() {
           <div className="text-xs text-slate-700 leading-relaxed">
             <strong className="font-black text-indigo-950 block mb-0.5">Aclaración Importante de Aromaniak:</strong>
             <p>
-              <strong>Nosotros no maceramos ningún perfume.</strong> Nuestras esencias son concentrados puros de contratipos finos listos para que prepares tu fragancia con alcohol especial de perfumería.
+              <strong>Nosotros no maceramos ningún perfume.</strong> Nuestras esencias son concentrados puros de perfumería fina listos para que prepares tu fragancia con alcohol especial de perfumería.
             </p>
           </div>
         </div>

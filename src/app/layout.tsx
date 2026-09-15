@@ -23,11 +23,12 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL("https://aromaniaksv.com"),
   title: {
-    default: "Aromaniak SV | Esencias de Perfumería Fina, Aromas Químicos & Botes de Vidrio en El Salvador",
+    default: "Aromaniak SV | Distribuidora de Esencias Perfumería Fina en El Salvador",
     template: "%s | Aromaniak SV",
   },
-  description: "Proveedor líder en El Salvador de esencias de perfumería fina, aromas químicos, aromas de esencias, botes de vidrio y materias primas para la elaboración de fragancias. Venta por onza y al mayoreo con envíos a todo el país con C807 Express.",
+  description: "Distribuidora de esencias de perfumería fina, aromas químicos, aromas de esencias, botes de vidrio y materias primas en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.",
   keywords: [
+    "distribuidora de esencias perfumeria fina",
     "esencias de perfumeria fina el salvador",
     "venta de esencias el salvador",
     "aromas quimicos el salvador",
@@ -59,22 +60,22 @@ export const metadata: Metadata = {
     type: "website",
     locale: "es_SV",
     url: "https://aromaniaksv.com",
-    siteName: "Aromaniak SV - Esencias & Insumos",
-    title: "Aromaniak SV | Esencias de Perfumería Fina, Aromas Químicos & Insumos en El Salvador",
-    description: "Proveedor en El Salvador de esencias de perfumería fina, aromas químicos, botes de vidrio con atomizador y materias primas para elaboración de fragancias. Venta por onza y mayoreo.",
+    siteName: "Aromaniak SV - Distribuidora de Esencias",
+    title: "Aromaniak SV | Distribuidora de Esencias Perfumería Fina en El Salvador",
+    description: "Distribuidora de esencias de perfumería fina, aromas químicos, botes de vidrio y materias primas en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.",
     images: [
       {
         url: "/images/logo.png",
         width: 800,
         height: 800,
-        alt: "Aromaniak SV - Esencias de Perfumería Fina El Salvador",
+        alt: "Aromaniak SV - Distribuidora de Esencias Perfumería Fina",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Aromaniak SV | Esencias de Perfumería Fina, Aromas Químicos & Insumos en El Salvador",
-    description: "Esencias de perfumería fina, aromas químicos, botes de vidrio y materias primas en El Salvador.",
+    title: "Aromaniak SV | Distribuidora de Esencias Perfumería Fina en El Salvador",
+    description: "Distribuidora de esencias de perfumería fina, aromas químicos, botes de vidrio y materias primas en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.",
     images: ["/images/logo.png"],
   },
   robots: {

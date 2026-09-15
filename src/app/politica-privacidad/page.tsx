@@ -64,8 +64,8 @@ export default function PoliticaPrivacidadPage() {
           </p>
           <ul className="list-disc list-inside text-sm text-slate-600 space-y-1 pl-2 font-medium">
             <li>Autenticar tu identidad de forma segura sin que tengas que recordar una contraseña adicional.</li>
-            <li>Registrar y procesar tus pedidos de perfumes, kits y contratipos.</li>
-            <li>Generar tus comprobantes electrónicos y coordinar el envío de tus productos con nuestra paquetería aliada en El Salvador.</li>
+            <li>Registrar y procesar tus pedidos de esencias, botes de vidrio y materias primas de perfumería fina.</li>
+            <li>Generar tus comprobantes electrónicos y coordinar la entrega a domicilio a todo El Salvador o retiro en local.</li>
             <li>Brindarte soporte y atención al cliente sobre tus compras.</li>
           </ul>
         </section>

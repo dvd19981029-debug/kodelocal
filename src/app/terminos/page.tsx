@@ -40,7 +40,7 @@ export default function TerminosPage() {
             <span>1. Servicio y Productos</span>
           </h2>
           <p className="text-sm text-slate-600 leading-relaxed font-medium">
-            Aromaniak SV ofrece perfumes, contratipos finos de alta concentración, frascos e insumos de perfumería en El Salvador. Los nombres comerciales de fragancias mencionadas en nuestra plataforma se utilizan únicamente como referencia olfativa para orientar al consumidor sobre el estilo o familia de la fragancia.
+            Aromaniak SV es una distribuidora de esencias de perfumería fina, aromas químicos, aromas de esencias, botes de vidrio y materias primas en El Salvador. Ofrecemos entregas a domicilio a todo El Salvador o retiro en local.
           </p>
         </section>
 

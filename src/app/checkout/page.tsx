@@ -816,7 +816,7 @@ export default function CheckoutPage() {
                       </div>
                       <div>
                         <span className="font-black text-slate-900 text-xs block">Envío a Domicilio</span>
-                        <span className="text-[10px] font-bold text-indigo-600">Cobertura Nacional C807</span>
+                        <span className="text-[10px] font-bold text-indigo-600">A los 14 departamentos</span>
                       </div>
                     </div>
 
@@ -832,7 +832,7 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                   <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                    Entregamos en <strong className="text-slate-800 font-bold">absolutamente todas partes de El Salvador</strong> (C807).
+                    Entregamos a domicilio en <strong className="text-slate-800 font-bold">absolutamente todas partes de El Salvador</strong>.
                   </p>
                 </button>
 
@@ -883,7 +883,7 @@ export default function CheckoutPage() {
                 <div className="py-2.5 px-3.5 rounded-xl bg-indigo-50/70 border border-indigo-100/80 text-xs text-slate-700 flex items-center gap-2.5 animate-in fade-in slide-in-from-top-2 duration-300 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.9),inset_-1px_-1px_2px_rgba(99,102,241,0.06)]">
                   <Truck className="w-4 h-4 text-indigo-600 shrink-0" />
                   <p className="text-[11.5px] text-slate-600 leading-snug">
-                    <strong className="text-slate-900 font-bold">Entrega de 24 a 48 horas</strong> a todo el país (C807).
+                    <strong className="text-slate-900 font-bold">Entrega de 24 a 48 horas</strong> a todo El Salvador.
                     <span className="text-slate-500 text-[11px] ml-1">Despachos de lunes a sábado (domingos no laborables).</span>
                   </p>
                 </div>
@@ -1301,7 +1301,7 @@ export default function CheckoutPage() {
                     ) : (
                       <>
                         <Truck className="w-3.5 h-3.5 text-indigo-500" />
-                        <span>Envío nacional C807 ({departamento}):</span>
+                        <span>Envío a domicilio ({departamento}):</span>
                       </>
                     )}
                   </div>
