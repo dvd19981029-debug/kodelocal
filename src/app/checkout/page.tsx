@@ -218,10 +218,6 @@ export default function CheckoutPage() {
 
     setIsSubmitting(true);
     let countdownTimer: NodeJS.Timeout | null = null;
-    let countdownFinishedResolve: () => void = () => {};
-    const countdownFinishedPromise = new Promise<void>((res) => {
-      countdownFinishedResolve = res;
-    });
 
     if (metodoPago === 'CARD') {
       setWompiCountdown(8);
@@ -231,15 +227,10 @@ export default function CheckoutPage() {
         if (current <= 0) {
           if (countdownTimer) clearInterval(countdownTimer);
           setWompiCountdown(0);
-          setTimeout(() => {
-            countdownFinishedResolve();
-          }, 800);
         } else {
           setWompiCountdown(current);
         }
       }, 1000);
-    } else {
-      countdownFinishedResolve();
     }
 
     try {
@@ -453,10 +444,11 @@ export default function CheckoutPage() {
           document.head.appendChild(prerender);
         } catch (_) {}
 
-        // Esperar a que la cuenta regresiva visual termine para dar la experiencia visual solicitada
-        await countdownFinishedPromise;
+        // Detener el contador visual y mostrar inmediatamente el estado de entrada a Wompi
+        if (countdownTimer) clearInterval(countdownTimer);
+        setWompiCountdown(0);
 
-        // Redireccionar al usuario a la pasarela segura oficial de Wompi / Banco Agrícola
+        // Redireccionar al usuario inmediatamente a la pasarela oficial de Wompi / Banco Agrícola sin esperas artificiales
         window.location.href = wompiData.urlEnlace;
 
         // Fallback de seguridad: si el usuario regresa con el botón de atrás
