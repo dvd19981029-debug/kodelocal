@@ -13,6 +13,7 @@ import {
   CreditCard, 
   Banknote, 
   QrCode, 
+  ShieldCheck, 
   Sparkles, 
   AlertCircle,
   X,
@@ -307,10 +308,13 @@ export default function PosPage() {
             orderNumber: o.orderNumber,
             createdAt: o.createdAt,
             channel: 'ONLINE',
-            total: o.total,
-            subtotal: o.subtotal,
+            total: Number(o.total || 0),
+            subtotal: Number(o.subtotal || 0),
             ivaTotal: 0,
-            shippingCost: o.shippingCost,
+            shippingCost: Number(o.shippingCost || 0),
+            paymentMethod: o.paymentMethod || 'CARD',
+            paymentStatus: o.paymentStatus || 'COMPLETED',
+            notes: o.notes || undefined,
             deliveryNotes: o.deliveryReference ? `Entrega: ${o.shippingAddress} (Ref: ${o.deliveryReference})` : `Entrega: ${o.shippingAddress}`,
             status: o.orderStatus === 'NUEVO' || o.orderStatus === 'EN_PREPARACION'
               ? 'PENDING_PREPARATION'
@@ -332,8 +336,8 @@ export default function PosPage() {
               productId: it.productId,
               name: `${it.productName} (${it.presentation})`,
               quantity: it.quantity,
-              price: it.unitPrice,
-              total: it.total,
+              price: Number(it.unitPrice || 0),
+              total: Number(it.total || 0),
               unit: it.presentation,
               puesto: it.product?.puesto || 'A1',
             }))
@@ -1034,17 +1038,25 @@ export default function PosPage() {
     setClienteEmail(email);
     setClienteGiro(giro);
     setTipoComprobante(tipo);
-    if (matchedCust) {
-      setSelectedCustomerId(matchedCust.id);
+    // Sincronizar método de pago de la orden web
+    const ordMethod = order.paymentMethod || 'CARD';
+    setPaymentMethod(ordMethod);
+
+    const isAlreadyPaid = order.paymentStatus === 'COMPLETED' && ordMethod !== 'CASH';
+    if (isAlreadyPaid) {
+      setCashAmount('');
+    } else if (ordMethod === 'CASH') {
+      setCashAmount(order.cashReceived ? String(order.cashReceived) : String(order.total));
+    } else {
+      setCashAmount('');
     }
-    setPaymentMethod('CASH');
-    setCashAmount('');
     setIsCheckoutOpen(true);
   };
 
   // Finalizar venta, emitir DTE oficial ante Hacienda y descontar stock
   const handleCompleteSale = async () => {
     const isOrderFromWindow = !!orderToInvoice;
+    const isOrderAlreadyPaid = isOrderFromWindow && orderToInvoice.paymentStatus === 'COMPLETED' && paymentMethod !== 'CASH';
     const itemsToBill = isOrderFromWindow ? orderToInvoice.items : cart.map(formatCartItem);
     const totalToBill = isOrderFromWindow ? orderToInvoice.total : cartSubtotal;
     const subtotalToBill = isOrderFromWindow ? orderToInvoice.subtotal : subtotalNeto;
@@ -1052,7 +1064,7 @@ export default function PosPage() {
 
     if (itemsToBill.length === 0) return;
 
-    if (paymentMethod === 'CASH') {
+    if (paymentMethod === 'CASH' && !isOrderAlreadyPaid) {
       const parsed = parseFloat(cashAmount);
       if (isNaN(parsed) || parsed < totalToBill) {
         alert('El monto en efectivo ingresado es insuficiente para cubrir el total.');
@@ -1267,6 +1279,24 @@ export default function PosPage() {
           }
         })
         .catch(err => console.error('Error enviando venta a Supabase:', err));
+
+      // Si era una orden web de ventanilla, sincronizar estado ENTREGADO en base de datos
+      if (isOrderFromWindow && orderToInvoice.orderNumber) {
+        getStaffToken().then(staffToken => {
+          fetch('/api/ecommerce/orders', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+            },
+            body: JSON.stringify({
+              orderNumber: orderToInvoice.orderNumber,
+              orderStatus: 'ENTREGADO',
+              notes: `[Entregado y Facturado en Caja ${dteResponseData?.codigoGeneracion ? `- DTE: ${dteResponseData.codigoGeneracion}` : ''}]`,
+            }),
+          }).catch(err => console.error('Error actualizando pedido ecommerce a ENTREGADO:', err));
+        });
+      }
     }
   };
 
@@ -4122,73 +4152,99 @@ export default function PosPage() {
             )}
 
             {/* Método de Pago */}
-            <div className="mb-4">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block mb-1.5">
-                Método de Pago
-              </label>
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  { id: 'CASH', label: 'Efectivo', icon: Banknote },
-                  { id: 'CARD', label: 'Tarjeta', icon: CreditCard },
-                  { id: 'TRANSFER', label: 'Transf.', icon: Building },
-                  { id: 'BITCOIN', label: 'Bitcoin', icon: QrCode },
-                ].map((method) => {
-                  const Icon = method.icon;
-                  return (
-                    <button
-                      key={method.id}
-                      type="button"
-                      onClick={() => setPaymentMethod(method.id as any)}
-                      className={`p-2 rounded-xl text-xs font-bold flex flex-col items-center gap-1 transition-all ${
-                        paymentMethod === method.id ? 'clay-btn-primary' : 'clay-btn-light'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                      <span>{method.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Efectivo recibido */}
-            {paymentMethod === 'CASH' && (
-              <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200 mb-4 space-y-2 shadow-sm">
-                <label className="text-xs font-bold text-amber-950 block">
-                  Efectivo Recibido
-                </label>
-                <div className="flex gap-2">
-                  <div className="flex-1 flex items-center rounded-xl bg-white border border-amber-300 shadow-inner overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition-all">
-                    <span className="px-3.5 py-2.5 bg-amber-100/90 border-r border-amber-200 text-amber-950 font-black text-sm select-none">
-                      $
-                    </span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="0.00"
-                      value={cashAmount}
-                      onChange={(e) => setCashAmount(e.target.value)}
-                      className="w-full px-3 py-2 text-base font-mono font-bold text-slate-900 bg-transparent outline-none placeholder:text-slate-400"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setCashAmount(currentBillingTotal.toFixed(2))}
-                    className="clay-btn clay-btn-light px-3.5 text-xs font-bold whitespace-nowrap text-amber-950 bg-amber-100/70 border border-amber-200 hover:bg-amber-100"
-                  >
-                    Exacto (${currentBillingTotal.toFixed(2)})
-                  </button>
+            {orderToInvoice && orderToInvoice.paymentStatus === 'COMPLETED' && orderToInvoice.paymentMethod !== 'CASH' ? (
+              <div className="mb-4 p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/80 shadow-xs">
+                <div className="flex items-center gap-2 text-emerald-900 font-bold text-xs mb-1.5">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>
+                    PAGO YA PROCESADO EN LÍNEA ({orderToInvoice.paymentMethod === 'CARD' ? 'TARJETA (WOMPI)' : orderToInvoice.paymentMethod === 'TRANSFER' ? 'TRANSFERENCIA' : orderToInvoice.paymentMethod})
+                  </span>
                 </div>
-                {parseFloat(cashAmount) >= currentBillingTotal && (
-                  <div className="flex justify-between items-center text-xs font-bold text-emerald-800 pt-1">
-                    <span>Cambio a devolver:</span>
-                    <span className="font-mono text-base font-black">
-                      ${(parseFloat(cashAmount) - currentBillingTotal).toFixed(2)}
-                    </span>
+                <div className="text-[11px] text-emerald-800 space-y-1">
+                  <p>
+                    Monto Cobrado: <strong className="font-mono text-xs font-black text-emerald-950">${orderToInvoice.total.toFixed(2)} USD</strong> (Transacción Aprobada)
+                  </p>
+                  {orderToInvoice.notes && (
+                    <p className="text-[10px] text-slate-600 font-mono bg-white/80 p-1.5 rounded-lg border border-emerald-100 truncate" title={orderToInvoice.notes}>
+                      {orderToInvoice.notes}
+                    </p>
+                  )}
+                  <p className="text-[10px] text-emerald-700 font-medium">
+                    ✅ Esta orden fue pagada en la tienda online. No requiere cobro en caja; solo emitir el DTE y entregar el paquete al cliente.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="mb-4">
+                  <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block mb-1.5">
+                    Método de Pago
+                  </label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[
+                      { id: 'CASH', label: 'Efectivo', icon: Banknote },
+                      { id: 'CARD', label: 'Tarjeta', icon: CreditCard },
+                      { id: 'TRANSFER', label: 'Transf.', icon: Building },
+                      { id: 'BITCOIN', label: 'Bitcoin', icon: QrCode },
+                    ].map((method) => {
+                      const Icon = method.icon;
+                      return (
+                        <button
+                          key={method.id}
+                          type="button"
+                          onClick={() => setPaymentMethod(method.id as any)}
+                          className={`p-2 rounded-xl text-xs font-bold flex flex-col items-center gap-1 transition-all ${
+                            paymentMethod === method.id ? 'clay-btn-primary' : 'clay-btn-light'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" />
+                          <span>{method.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Efectivo recibido */}
+                {paymentMethod === 'CASH' && (
+                  <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200 mb-4 space-y-2 shadow-sm">
+                    <label className="text-xs font-bold text-amber-950 block">
+                      Efectivo Recibido
+                    </label>
+                    <div className="flex gap-2">
+                      <div className="flex-1 flex items-center rounded-xl bg-white border border-amber-300 shadow-inner overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition-all">
+                        <span className="px-3.5 py-2.5 bg-amber-100/90 border-r border-amber-200 text-amber-950 font-black text-sm select-none">
+                          $
+                        </span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="0.00"
+                          value={cashAmount}
+                          onChange={(e) => setCashAmount(e.target.value)}
+                          className="w-full px-3 py-2 text-base font-mono font-bold text-slate-900 bg-transparent outline-none placeholder:text-slate-400"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setCashAmount(currentBillingTotal.toFixed(2))}
+                        className="clay-btn clay-btn-light px-3.5 text-xs font-bold whitespace-nowrap text-amber-950 bg-amber-100/70 border border-amber-200 hover:bg-amber-100"
+                      >
+                        Exacto (${currentBillingTotal.toFixed(2)})
+                      </button>
+                    </div>
+                    {parseFloat(cashAmount) >= currentBillingTotal && (
+                      <div className="flex justify-between items-center text-xs font-bold text-emerald-800 pt-1">
+                        <span>Cambio a devolver:</span>
+                        <span className="font-mono text-base font-black">
+                          ${(parseFloat(cashAmount) - currentBillingTotal).toFixed(2)}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
+              </>
             )}
 
             {/* Resumen Final y Botón Confirmar */}
@@ -4220,7 +4276,13 @@ export default function PosPage() {
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>
-                    {isProcessing ? 'Emitiendo DTE...' : orderToInvoice ? 'Cobrar y Emitir DTE' : 'Completar Venta'}
+                    {isProcessing 
+                      ? 'Emitiendo DTE...' 
+                      : orderToInvoice && orderToInvoice.paymentStatus === 'COMPLETED' && orderToInvoice.paymentMethod !== 'CASH'
+                      ? 'Emitir DTE y Entregar'
+                      : orderToInvoice 
+                      ? 'Cobrar y Emitir DTE' 
+                      : 'Completar Venta'}
                   </span>
                 </button>
               </div>

@@ -169,10 +169,13 @@ export default function BodegaPage() {
               orderNumber: o.orderNumber,
               createdAt: o.createdAt,
               channel: 'ONLINE',
-              total: o.total,
-              subtotal: o.subtotal,
+              total: Number(o.total || 0),
+              subtotal: Number(o.subtotal || 0),
               ivaTotal: 0,
-              shippingCost: o.shippingCost,
+              shippingCost: Number(o.shippingCost || 0),
+              paymentMethod: o.paymentMethod || 'CARD',
+              paymentStatus: o.paymentStatus || 'COMPLETED',
+              notes: o.notes || undefined,
               deliveryNotes: o.deliveryReference ? `Entrega: ${o.shippingAddress} (Ref: ${o.deliveryReference})` : `Entrega: ${o.shippingAddress}`,
               status: o.orderStatus === 'NUEVO' || o.orderStatus === 'EN_PREPARACION'
                 ? 'PENDING_PREPARATION'
