@@ -454,7 +454,37 @@ export async function POST(request: Request) {
         }
       } catch (_) {}
 
-      for (const it of (items || [])) {
+      // 1. Identificar todos los productos referenciados para consulta en lote (REQ-DB-03)
+      const requestedItems = Array.isArray(items) ? items : [];
+      const productIdsToFetch = new Set<string>();
+
+      for (const it of requestedItems) {
+        if (!it.productId) continue;
+        if (it.productId.startsWith('kit-')) {
+          const parts = it.productId.split('-');
+          const essenceId = parts[1];
+          if (essenceId) productIdsToFetch.add(essenceId);
+        } else {
+          productIdsToFetch.add(it.productId);
+        }
+      }
+
+      // Consulta en lote de todos los productos del carrito en una sola llamada SQL
+      const fetchedProducts = productIdsToFetch.size > 0
+        ? await tx.product.findMany({
+            where: { id: { in: Array.from(productIdsToFetch) } },
+            include: { category: true },
+          })
+        : [];
+      const productMap = new Map(fetchedProducts.map((p) => [p.id, p]));
+
+      // Fallback para kits si fuera necesario
+      let defaultFallbackProdId: string | null = null;
+
+      // Acumulador de deducción de stock por producto (unifica múltiples items que compartan la misma esencia)
+      const stockDeltas = new Map<string, number>();
+
+      for (const it of requestedItems) {
         const qty = Math.max(1, parseInt(it.quantity || 1, 10));
         const presentationStr = String(it.presentation || it.presentationName || '1 Onza').trim();
         const presLower = presentationStr.toLowerCase();
@@ -469,21 +499,14 @@ export async function POST(request: Request) {
           let baseKitPrice = dynamicKitBasePrice;
 
           if (essenceId) {
-            const essenceProd = await tx.product.findUnique({
-              where: { id: essenceId },
-            });
+            const essenceProd = productMap.get(essenceId);
             if (essenceProd) {
               targetProductId = essenceProd.id;
               if (essenceProd.finishedPerfumePrice != null) {
                 baseKitPrice = Number(essenceProd.finishedPerfumePrice);
               }
               const stockNeeded = isPlus ? Math.ceil(qty * 1.5) : qty;
-              await tx.product.update({
-                where: { id: essenceProd.id },
-                data: {
-                  stock: Math.max(0, essenceProd.stock - stockNeeded),
-                },
-              });
+              stockDeltas.set(essenceProd.id, (stockDeltas.get(essenceProd.id) || 0) + stockNeeded);
             }
           }
 
@@ -492,8 +515,11 @@ export async function POST(request: Request) {
           verifiedSubtotal += lineTotal;
 
           if (!targetProductId) {
-            const fallbackProd = await tx.product.findFirst();
-            if (fallbackProd) targetProductId = fallbackProd.id;
+            if (!defaultFallbackProdId) {
+              const fallbackProd = await tx.product.findFirst();
+              if (fallbackProd) defaultFallbackProdId = fallbackProd.id;
+            }
+            if (defaultFallbackProdId) targetProductId = defaultFallbackProdId;
           }
 
           if (targetProductId) {
@@ -511,16 +537,12 @@ export async function POST(request: Request) {
 
         if (!it.productId) continue;
 
-        const prod = await tx.product.findUnique({
-          where: { id: it.productId },
-          include: { category: true },
-        });
-
+        const prod = productMap.get(it.productId);
         if (!prod) {
           throw new Error(`El producto solicitado ya no se encuentra disponible.`);
         }
 
-        // Determinar precio unitario legítimo según categoría y presentación
+        // Determinar precio unitario legítimo según categoría y presentación directamente desde BD
         let legitimateUnitPrice = Number(prod.price || 0);
         const catName = prod.category?.name || '';
         if (catName === 'Esencias para Perfume' || !catName) {
@@ -532,18 +554,9 @@ export async function POST(request: Request) {
         const lineTotal = Number((legitimateUnitPrice * qty).toFixed(2));
         verifiedSubtotal += lineTotal;
 
-        // Descontar existencias en la base de datos
+        // Descontar existencias: acumular en stockDeltas para ejecución atómica
         const stockToDeduct = (presLower.includes('media') || presLower.includes('½')) ? Math.ceil(qty * 0.5) : qty;
-        if (prod.stock < stockToDeduct) {
-          throw new Error(`Inventario insuficiente para ${prod.officialName || prod.name}. Disponibles: ${prod.stock}`);
-        }
-
-        await tx.product.update({
-          where: { id: it.productId },
-          data: {
-            stock: Math.max(0, prod.stock - stockToDeduct),
-          },
-        });
+        stockDeltas.set(prod.id, (stockDeltas.get(prod.id) || 0) + stockToDeduct);
 
         verifiedItems.push({
           productId: prod.id,
@@ -555,6 +568,24 @@ export async function POST(request: Request) {
         });
       }
 
+      // 2. Descuento atómico de existencias en PostgreSQL con control estricto anti-overselling (REQ-DB-02)
+      for (const [prodId, deductQty] of stockDeltas.entries()) {
+        const prod = productMap.get(prodId);
+        const prodName = prod?.officialName?.trim() || prod?.name || 'Producto';
+
+        const updatedRows: Array<{ stock: number }> = await tx.$queryRaw`
+          UPDATE "Product"
+          SET "stock" = "stock" - ${deductQty},
+              "updatedAt" = NOW()
+          WHERE "id" = ${prodId} AND "stock" >= ${deductQty}
+          RETURNING "stock"
+        `;
+
+        if (!updatedRows || updatedRows.length === 0) {
+          throw new Error(`INSUFFICIENT_STOCK: Inventario insuficiente para "${prodName}".`);
+        }
+      }
+
       verifiedSubtotal = Number(verifiedSubtotal.toFixed(2));
 
       // Determinar costo de envío legítimo en el servidor
@@ -564,7 +595,7 @@ export async function POST(request: Request) {
       const verifiedShippingCost = isRetiro ? 0.00 : 3.50;
       const verifiedTotal = Number((verifiedSubtotal + verifiedShippingCost).toFixed(2));
 
-      // 2. Crear la orden oficial de ecommerce con los precios y totales verificados
+      // 3. Crear la orden oficial de ecommerce con los precios y totales verificados
       return await tx.ecommerceOrder.create({
         data: {
           orderNumber: orderNumber || `WEB-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -637,6 +668,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, order: newOrder });
   } catch (error: any) {
     console.error('Error creating ecommerce order:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    const isInsufficientStock = String(error?.message || '').includes('INSUFFICIENT_STOCK');
+    const status = isInsufficientStock ? 409 : 400;
+    return NextResponse.json({ success: false, error: error.message }, { status });
   }
 }

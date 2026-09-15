@@ -165,8 +165,7 @@ export async function POST(request: Request) {
             stockDeltas.set(prod.id, currentDeduct + soldQty);
           }
 
-          // Preparar actualizaciones concurrentes de stock y movimientos de Kardex
-          const productUpdates = [];
+          // Descuento atómico de existencias y registro exacto en Kardex (REQ-DB-02)
           const kardexData: Array<{
             productId: string;
             type: 'OUT_SALE';
@@ -179,29 +178,32 @@ export async function POST(request: Request) {
 
           for (const [prodId, totalDeduct] of stockDeltas.entries()) {
             const prod = productMap.get(prodId)!;
-            const prevStock = prod.stock;
-            const nextStock = Math.max(0, prevStock - totalDeduct);
 
-            productUpdates.push(
-              tx.product.update({
-                where: { id: prodId },
-                data: { stock: nextStock },
-              })
-            );
+            const updatedRows: Array<{ stock: number }> = await tx.$queryRaw`
+              UPDATE "Product"
+              SET "stock" = "stock" - ${totalDeduct},
+                  "updatedAt" = NOW()
+              WHERE "id" = ${prodId} AND "stock" >= ${totalDeduct}
+              RETURNING "stock"
+            `;
+
+            if (!updatedRows || updatedRows.length === 0) {
+              throw new Error(`INSUFFICIENT_STOCK: Inventario insuficiente para "${prod.name}".`);
+            }
+
+            const newStock = updatedRows[0].stock;
+            const previousStock = newStock + totalDeduct;
 
             kardexData.push({
               productId: prodId,
               type: 'OUT_SALE',
               quantity: totalDeduct,
-              previousStock: prevStock,
-              newStock: nextStock,
+              previousStock,
+              newStock,
               reference: `Venta #${createdSale.saleNumber}`,
               notes: `Venta cobrada por ${cashierName || 'Caja'} (${paymentMethod})`,
             });
           }
-
-          // Ejecutar en paralelo dentro de la transacción
-          await Promise.all(productUpdates);
 
           // Inserción en lote en una sola instrucción SQL de Kardex
           if (kardexData.length > 0) {
@@ -218,6 +220,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, ...result });
   } catch (error: any) {
     console.error('Error procesando cobro de venta en Supabase:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    const isInsufficientStock = String(error?.message || '').includes('INSUFFICIENT_STOCK');
+    const status = isInsufficientStock ? 409 : 500;
+    return NextResponse.json({ success: false, error: error.message }, { status });
   }
 }
