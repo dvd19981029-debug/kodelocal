@@ -3,20 +3,49 @@ import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const sales = await prisma.sale.findMany({
-      include: {
-        customer: true,
-        items: true,
-        payments: true,
-        dteDocument: true,
-        shift: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const { searchParams } = new URL(request.url);
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '100', 10), 1), 250);
+    const page = Math.max(parseInt(searchParams.get('page') || '1', 10), 1);
+    const skip = (page - 1) * limit;
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
 
-    return NextResponse.json({ success: true, sales });
+    const where: any = {};
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate);
+      if (endDate) where.createdAt.lte = new Date(endDate);
+    }
+
+    const [sales, totalCount] = await Promise.all([
+      prisma.sale.findMany({
+        where,
+        include: {
+          customer: true,
+          items: true,
+          payments: true,
+          dteDocument: true,
+          shift: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip,
+      }),
+      prisma.sale.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      success: true,
+      sales,
+      pagination: {
+        total: totalCount,
+        page,
+        limit,
+        totalPages: Math.ceil(totalCount / limit),
+      },
+    });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
@@ -104,34 +133,81 @@ export async function POST(request: Request) {
         },
       });
 
-      // 3. Descontar existencias y asentar Kardex (OUT_SALE)
-      if (items && Array.isArray(items)) {
-        for (const it of items) {
-          if (it.productId) {
-            const prod = await tx.product.findUnique({ where: { id: it.productId } });
-            if (prod) {
-              const prev = prod.stock;
-              const isHalfOz = it.presentation === 'MEDIA_ONZA' || it.unit === '½ Onza' || String(it.name || '').includes('½');
-              const soldQty = isHalfOz ? Math.ceil(Number(it.quantity || 0) * 0.5) : Number(it.quantity || 0);
-              const nextStock = Math.max(0, prev - soldQty);
+      // 3. Descontar existencias y asentar Kardex en lote (OUT_SALE)
+      if (items && Array.isArray(items) && items.length > 0) {
+        const productIds = Array.from(
+          new Set(items.map((it: any) => it.productId).filter(Boolean))
+        ) as string[];
 
-              await tx.product.update({
-                where: { id: prod.id },
+        if (productIds.length > 0) {
+          // Consulta única en lote para todos los productos de la venta (elimina N+1)
+          const dbProducts = await tx.product.findMany({
+            where: { id: { in: productIds } },
+          });
+          const productMap = new Map(dbProducts.map((p) => [p.id, p]));
+
+          // Calcular reducciones agrupadas por producto
+          const stockDeltas = new Map<string, number>();
+          for (const it of items) {
+            if (!it.productId) continue;
+            const prod = productMap.get(it.productId);
+            if (!prod) continue;
+
+            const isHalfOz =
+              it.presentation === 'MEDIA_ONZA' ||
+              it.unit === '½ Onza' ||
+              String(it.name || '').includes('½');
+            const soldQty = isHalfOz
+              ? Math.ceil(Number(it.quantity || 0) * 0.5)
+              : Number(it.quantity || 0);
+
+            const currentDeduct = stockDeltas.get(prod.id) || 0;
+            stockDeltas.set(prod.id, currentDeduct + soldQty);
+          }
+
+          // Preparar actualizaciones concurrentes de stock y movimientos de Kardex
+          const productUpdates = [];
+          const kardexData: Array<{
+            productId: string;
+            type: 'OUT_SALE';
+            quantity: number;
+            previousStock: number;
+            newStock: number;
+            reference: string;
+            notes: string;
+          }> = [];
+
+          for (const [prodId, totalDeduct] of stockDeltas.entries()) {
+            const prod = productMap.get(prodId)!;
+            const prevStock = prod.stock;
+            const nextStock = Math.max(0, prevStock - totalDeduct);
+
+            productUpdates.push(
+              tx.product.update({
+                where: { id: prodId },
                 data: { stock: nextStock },
-              });
+              })
+            );
 
-              await tx.stockMovement.create({
-                data: {
-                  productId: prod.id,
-                  type: 'OUT_SALE',
-                  quantity: soldQty,
-                  previousStock: prev,
-                  newStock: nextStock,
-                  reference: `Venta #${createdSale.saleNumber}`,
-                  notes: `Venta cobrada por ${cashierName || 'Caja'} (${paymentMethod})`,
-                },
-              });
-            }
+            kardexData.push({
+              productId: prodId,
+              type: 'OUT_SALE',
+              quantity: totalDeduct,
+              previousStock: prevStock,
+              newStock: nextStock,
+              reference: `Venta #${createdSale.saleNumber}`,
+              notes: `Venta cobrada por ${cashierName || 'Caja'} (${paymentMethod})`,
+            });
+          }
+
+          // Ejecutar en paralelo dentro de la transacción
+          await Promise.all(productUpdates);
+
+          // Inserción en lote en una sola instrucción SQL de Kardex
+          if (kardexData.length > 0) {
+            await tx.stockMovement.createMany({
+              data: kardexData,
+            });
           }
         }
       }

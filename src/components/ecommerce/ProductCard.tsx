@@ -14,7 +14,7 @@ interface ProductCardProps {
   priority?: boolean;
 }
 
-export default function ProductCard({ product, priority = false }: ProductCardProps) {
+function ProductCardComponent({ product, priority = false }: ProductCardProps) {
   const { cart, addToCart, updateQuantity } = useEcommerceCart();
   const presentations = getPresentationsForProduct(product);
   
@@ -29,20 +29,27 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
   const activeOption = presentations.find(p => p.id === selectedPresentation) || presentations[0];
 
+  // Filtrar únicamente los ítems del carrito que afectan a este producto específico para evitar re-cálculos innecesarios
+  const relevantCartItems = React.useMemo(() => {
+    return cart.filter(item => 
+      item.product?.id === product.id || 
+      (item.kitDetails && item.kitDetails.essenceId === product.id)
+    );
+  }, [cart, product.id]);
+
   // Cálculo de inventario discreto 80/20 (80% onzas completas, 20% medias onzas)
-  // No vendemos producto fraccionable; cada presentación son onzas o medias onzas ya envasadas
   const isEssence = product.category === 'Esencias para Perfume';
   const totalStock = typeof product.stock === 'number' ? product.stock : 0;
   const isOutOfStock = totalStock <= 0;
 
-  const discreteStock = isEssence
-    ? getEssenceDiscreteStock(totalStock, cart, product.id)
-    : null;
+  const discreteStock = React.useMemo(() => {
+    return isEssence ? getEssenceDiscreteStock(totalStock, relevantCartItems, product.id) : null;
+  }, [isEssence, totalStock, relevantCartItems, product.id]);
 
   // Unidades disponibles según la presentación actualmente seleccionada
   const availableUnits = isEssence
     ? (selectedPresentation === 'MEDIA_ONZA' ? (discreteStock?.availableHalfOz ?? 0) : (discreteStock?.available1oz ?? 0))
-    : Math.max(0, totalStock - (cart.find(it => it.product.id === product.id)?.quantity || 0));
+    : Math.max(0, totalStock - (relevantCartItems.find(it => it.product?.id === product.id && !it.kitDetails)?.quantity || 0));
 
   const canAddMore = availableUnits >= 1;
 
@@ -53,10 +60,15 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   const isBelowMinAlert = availableUnits > 0 && availableUnits <= minStockThreshold;
 
   // Buscar si esta presentación específica ya está en el carrito
-  const matchingCartItems = selectedPresentation
-    ? cart.filter(item => item.product.id === product.id && item.presentation === selectedPresentation)
-    : [];
-  const currentQuantity = matchingCartItems.reduce((acc, it) => acc + it.quantity, 0);
+  const matchingCartItems = React.useMemo(() => {
+    return selectedPresentation
+      ? relevantCartItems.filter(item => item.product?.id === product.id && item.presentation === selectedPresentation && !item.kitDetails)
+      : [];
+  }, [selectedPresentation, relevantCartItems, product.id]);
+
+  const currentQuantity = React.useMemo(() => {
+    return matchingCartItems.reduce((acc, it) => acc + it.quantity, 0);
+  }, [matchingCartItems]);
 
   const triggerCardPulse = () => {
     setIsCardPulsing(true);
@@ -380,3 +392,15 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
     </>
   );
 }
+
+const ProductCard = React.memo(ProductCardComponent, (prev, next) => {
+  return (
+    prev.product.id === next.product.id &&
+    prev.product.stock === next.product.stock &&
+    prev.product.price === next.product.price &&
+    prev.priority === next.priority
+  );
+});
+
+export default ProductCard;
+

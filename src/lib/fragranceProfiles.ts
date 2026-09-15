@@ -3,7 +3,6 @@ import { ProductItem } from './store';
 import { getAccordColor } from './fragranceNotesData';
 import { getInspiracionPerfumeName } from './perfumeNames';
 import { CATALOG_PROFILES_48 } from './catalogProfilesData';
-import fragranceDatabaseRaw from './fragranceDatabase.json';
 
 export interface AccordBarItem {
   name: string;
@@ -27,7 +26,7 @@ export interface FragranceProfile {
   description: string;
 }
 
-interface FragranceDbEntry {
+export interface FragranceDbEntry {
   kodigo?: string;
   contratipo: string;
   marca: string;
@@ -43,7 +42,24 @@ interface FragranceDbEntry {
   description?: string;
 }
 
-const fragranceDatabase = fragranceDatabaseRaw as unknown as Record<string, FragranceDbEntry>;
+/**
+ * Consulta asíncrona de notas olfativas hacia el backend (/api/fragrance-profile)
+ * sin cargar los 378KB en el bundle de JavaScript del navegador.
+ */
+export async function fetchExternalFragranceProfile(name: string, inspiracion?: string): Promise<FragranceDbEntry | null> {
+  try {
+    const params = new URLSearchParams();
+    if (name) params.set('name', name);
+    if (inspiracion) params.set('inspiracion', inspiracion);
+
+    const res = await fetch(`/api/fragrance-profile?${params.toString()}`);
+    const data = await res.json();
+    return data.success && data.entry ? (data.entry as FragranceDbEntry) : null;
+  } catch (err) {
+    console.warn('No se pudo cargar perfil externo de fragancia:', err);
+    return null;
+  }
+}
 
 /**
  * Convierte los acordes de un perfil en barras porcentuales con color según la paleta armonizada.
@@ -99,43 +115,20 @@ export function getFragranceProfile(product: ProductItem): FragranceProfile {
     };
   }
 
-  // 2. Búsqueda en la base de datos externa de Fragrantica por nombre de perfume de inspiración
+  // 2. Búsqueda secundaria en los 48 perfiles por nombre o inspiración
   const normInspiracion = normalize(inspiracionName);
   const normName = normalize(displayName);
 
-  let entry: FragranceDbEntry | undefined;
-  if (normInspiracion || normName) {
-    const values = Object.values(fragranceDatabase);
-    entry = values.find(p => {
-      const dbOfficial = normalize(p.officialName);
-      const dbContratipo = normalize(p.contratipo);
-      return (normInspiracion && (dbOfficial === normInspiracion || dbContratipo === normInspiracion)) ||
-             (normName && (dbOfficial === normName || dbContratipo === normName));
-    });
-
-    if (!entry && normInspiracion) {
-      entry = values.find(p => {
-        const dbOfficial = normalize(p.officialName);
-        return dbOfficial.includes(normInspiracion) || normInspiracion.includes(dbOfficial);
-      });
+  for (const [profSku, p] of Object.entries(CATALOG_PROFILES_48)) {
+    const profName = normalize(p.family);
+    if ((normInspiracion && normInspiracion.includes(profSku)) || (normName && normName.includes(profSku))) {
+      return {
+        ...p,
+        officialName: displayName,
+        brand: product.brand || 'Aromaniak',
+        description: `Perfil olfativo oficial de alta fijación inspirado en ${inspiracionName || displayName}. Concentrado de perfumería fina con acordes equilibrados y notas de máxima calidad.`
+      };
     }
-  }
-
-  // Si se encontró en la base externa Y tiene notas válidas
-  if (entry && entry.topNotes && entry.topNotes.length > 0) {
-    return {
-      officialName: entry.officialName || displayName,
-      brand: entry.brand || product.brand || 'Aromaniak',
-      family: entry.family || 'Fragancia Fina',
-      accords: entry.accords && entry.accords.length > 0 ? entry.accords : ['amaderado', 'aromático', 'cítrico'],
-      topNotes: entry.topNotes,
-      heartNotes: entry.heartNotes && entry.heartNotes.length > 0 ? entry.heartNotes : ['Notas florales', 'Especias finas'],
-      baseNotes: entry.baseNotes && entry.baseNotes.length > 0 ? entry.baseNotes : ['Maderas nobles', 'Almizcle'],
-      season: 'Todo el año / Versátil',
-      occasion: 'Uso diario y ocasiones especiales',
-      intensity: 'Intensa',
-      description: `Perfil olfativo de alta fijación inspirado en ${inspiracionName || displayName}. Formulado con aceites concentrados franceses para brindar una estela duradera.`
-    };
   }
 
   // 3. Respaldo inteligente completo para productos nuevos o personalizados según género
