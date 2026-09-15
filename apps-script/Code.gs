@@ -26,11 +26,14 @@ function doPost(e) {
         "<p>Tu orden <strong>#" + data.orderNumber + "</strong> por un total de <strong>$" + Number(data.total).toFixed(2) + "</strong> está en preparación.</p>";
     }
 
+    var plainText = "¡Gracias por tu compra en Aromaniak! Tu orden #" + data.orderNumber + " ha sido recibida. Distribuidora de esencias y más.";
+
     MailApp.sendEmail({
       to: data.customerEmail,
       subject: subject,
+      body: plainText,
       htmlBody: htmlContent,
-      name: "Aromaniak SV"
+      name: "Aromaniak - Distribuidora de esencias y más"
     });
 
     return ContentService.createTextOutput(JSON.stringify({ 
