@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { ProductItem } from '@/lib/store';
 
 export type ProductPresentation = 
@@ -226,12 +226,12 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     }
   };
 
-  const triggerCartPulse = () => {
+  const triggerCartPulse = useCallback(() => {
     setIsCartPulsing(true);
     setTimeout(() => {
       setIsCartPulsing(false);
     }, 800);
-  };
+  }, []);
 
   useEffect(() => {
     setIsMounted(true);
@@ -262,7 +262,7 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     }
   }, [cart, isMounted]);
 
-  const addToCart = (
+  const addToCart = useCallback((
     product: ProductItem, 
     presentation: ProductPresentation = product.category === 'Esencias para Perfume' ? 'ONZA_COMPLETA' : 'UNIDAD',
     quantity: number = 1,
@@ -363,9 +363,9 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     });
 
     triggerCartPulse();
-  };
+  }, [triggerCartPulse]);
 
-  const addKitToCart = ({
+  const addKitToCart = useCallback(({
     essence,
     bottle,
     hasLabel,
@@ -463,9 +463,17 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     });
 
     triggerCartPulse();
-  };
+  }, [kitConfig, triggerCartPulse]);
 
-  const updateQuantity = (id: string, quantity: number) => {
+  const removeFromCart = useCallback((id: string) => {
+    setCart(prev => prev.filter(item => item.id !== id));
+  }, []);
+
+  const clearCart = useCallback(() => {
+    setCart([]);
+  }, []);
+
+  const updateQuantity = useCallback((id: string, quantity: number) => {
     if (quantity <= 0) {
       removeFromCart(id);
       return;
@@ -515,38 +523,47 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
           : item
       );
     });
-  };
+  }, [removeFromCart, triggerCartPulse]);
 
-  const removeFromCart = (id: string) => {
-    setCart(prev => prev.filter(item => item.id !== id));
-  };
+  const totalItems = useMemo(() => cart.reduce((acc, it) => acc + it.quantity, 0), [cart]);
+  const subtotal = useMemo(() => Number(cart.reduce((acc, it) => acc + it.totalPrice, 0).toFixed(2)), [cart]);
 
-  const clearCart = () => {
-    setCart([]);
-  };
-
-  const totalItems = cart.reduce((acc, it) => acc + it.quantity, 0);
-  const subtotal = Number(cart.reduce((acc, it) => acc + it.totalPrice, 0).toFixed(2));
+  const contextValue = useMemo(() => ({
+    cart,
+    addToCart,
+    addKitToCart,
+    updateQuantity,
+    removeFromCart,
+    clearCart,
+    isCartOpen,
+    setIsCartOpen,
+    isCartPulsing,
+    triggerCartPulse,
+    totalItems,
+    subtotal,
+    isArmaTuPerfumeActive,
+    setIsArmaTuPerfumeActive,
+    kitConfig,
+    refreshKitConfig
+  }), [
+    cart,
+    addToCart,
+    addKitToCart,
+    updateQuantity,
+    removeFromCart,
+    clearCart,
+    isCartOpen,
+    isCartPulsing,
+    triggerCartPulse,
+    totalItems,
+    subtotal,
+    isArmaTuPerfumeActive,
+    kitConfig,
+    refreshKitConfig
+  ]);
 
   return (
-    <EcommerceCartContext.Provider value={{
-      cart,
-      addToCart,
-      addKitToCart,
-      updateQuantity,
-      removeFromCart,
-      clearCart,
-      isCartOpen,
-      setIsCartOpen,
-      isCartPulsing,
-      triggerCartPulse,
-      totalItems,
-      subtotal,
-      isArmaTuPerfumeActive,
-      setIsArmaTuPerfumeActive,
-      kitConfig,
-      refreshKitConfig
-    }}>
+    <EcommerceCartContext.Provider value={contextValue}>
       {children}
     </EcommerceCartContext.Provider>
   );
