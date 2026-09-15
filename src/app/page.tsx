@@ -825,6 +825,71 @@ export default function EcommerceHomePage() {
             })
           }}
         />
+
+        {/* JSON-LD Schema.org Store & WebSite exclusivo para la tienda e-commerce */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "Store",
+                  "@id": "https://aromaniaksv.com/#store",
+                  "name": "Aromaniak SV",
+                  "alternateName": ["Aromaniak El Salvador", "Aromaniak Perfumería"],
+                  "url": "https://aromaniaksv.com",
+                  "logo": "https://aromaniaksv.com/apple-touch-icon.png",
+                  "image": "https://aromaniaksv.com/images/logo.png",
+                  "description": "Proveedor líder en El Salvador de esencias 100% puras para perfumería fina, contratipos de lujo, frascos y materias primas. Venta por onza y al mayoreo con envíos a los 14 departamentos.",
+                  "telephone": "+50370000000",
+                  "priceRange": "$",
+                  "currenciesAccepted": "USD",
+                  "paymentAccepted": "Cash, Credit Card, Debit Card, Wompi, Bank Transfer, Bitcoin",
+                  "address": {
+                    "@type": "PostalAddress",
+                    "addressLocality": "San Salvador",
+                    "addressRegion": "San Salvador",
+                    "addressCountry": "SV"
+                  },
+                  "geo": {
+                    "@type": "GeoCoordinates",
+                    "latitude": 13.6929,
+                    "longitude": -89.2182
+                  },
+                  "areaServed": [
+                    { "@type": "AdministrativeArea", "name": "San Salvador" },
+                    { "@type": "AdministrativeArea", "name": "La Libertad" },
+                    { "@type": "AdministrativeArea", "name": "Santa Ana" },
+                    { "@type": "AdministrativeArea", "name": "San Miguel" },
+                    { "@type": "Country", "name": "El Salvador" }
+                  ],
+                  "openingHoursSpecification": [
+                    {
+                      "@type": "OpeningHoursSpecification",
+                      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+                      "opens": "08:00",
+                      "closes": "17:30"
+                    }
+                  ]
+                },
+                {
+                  "@type": "WebSite",
+                  "@id": "https://aromaniaksv.com/#website",
+                  "url": "https://aromaniaksv.com",
+                  "name": "Aromaniak SV",
+                  "description": "Tienda en línea de esencias de perfumería fina y contratipos de lujo en El Salvador",
+                  "inLanguage": "es-SV",
+                  "potentialAction": {
+                    "@type": "SearchAction",
+                    "target": "https://aromaniaksv.com/?q={search_term_string}",
+                    "query-input": "required name=search_term_string"
+                  }
+                }
+              ]
+            })
+          }}
+        />
       </section>
 
     </div>

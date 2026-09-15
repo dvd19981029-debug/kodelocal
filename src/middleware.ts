@@ -50,9 +50,11 @@ export function middleware(request: NextRequest) {
   }
 
   // 2. En el dominio de clientes (aromaniaksv.com), bloquear páginas operativas
-  // Redirige al subdominio operativo pos.aromaniaksv.com
+  // Redirige al subdominio operativo pos.aromaniaksv.com con cabecera noindex
   if (isCustomerDomain && isOperational) {
-    return NextResponse.redirect(new URL(`https://pos.aromaniaksv.com${pathname}`, request.url));
+    const redirectRes = NextResponse.redirect(new URL(`https://pos.aromaniaksv.com${pathname}`, request.url));
+    redirectRes.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet');
+    return redirectRes;
   }
 
   // 3. En el dominio de clientes (aromaniaksv.com), bloquear APIs operacionales/administrativas
@@ -62,7 +64,10 @@ export function middleware(request: NextRequest) {
         success: false,
         error: 'Acceso denegado: API reservada exclusivamente para el entorno operativo pos.aromaniaksv.com',
       },
-      { status: 403 }
+      { 
+        status: 403,
+        headers: { 'X-Robots-Tag': 'noindex, nofollow, noarchive, nosnippet' }
+      }
     );
   }
 
@@ -73,11 +78,21 @@ export function middleware(request: NextRequest) {
         success: false,
         error: 'Acceso denegado: Modificación de productos reservada para el entorno operativo pos.aromaniaksv.com',
       },
-      { status: 403 }
+      { 
+        status: 403,
+        headers: { 'X-Robots-Tag': 'noindex, nofollow, noarchive, nosnippet' }
+      }
     );
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+
+  // 5. Blindaje absoluto de SEO: Cualquier ruta operativa o del subdominio POS recibe X-Robots-Tag
+  if (isPosSubdomain || isOperational || isOperationalApi) {
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet');
+  }
+
+  return response;
 }
 
 export const config = {
