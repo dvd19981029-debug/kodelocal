@@ -68,6 +68,12 @@ import {
   getMunicipiosByDepartamento 
 } from '@/lib/svTerritory';
 import { getStaffToken } from '@/lib/auth';
+import { 
+  syncSaleOnlineOrQueue, 
+  initOfflineSync, 
+  getOfflineQueueCount, 
+  flushOfflineQueue 
+} from '@/lib/offlineSync';
 
 export default function PosPage() {
   const router = useRouter();
@@ -199,6 +205,24 @@ export default function PosPage() {
   const [isEditingProductOpen, setIsEditingProductOpen] = useState(false);
   const [editingProductInPos, setEditingProductInPos] = useState<ProductItem | null>(null);
   const [isSavingProductInPos, setIsSavingProductInPos] = useState(false);
+
+  // Monitoreo y auto-sincronización de cola offline
+  const [offlineQueueCount, setOfflineQueueCount] = useState(0);
+
+  useEffect(() => {
+    setOfflineQueueCount(getOfflineQueueCount());
+    const handleQueueChange = (e: any) => {
+      setOfflineQueueCount(e.detail?.count ?? getOfflineQueueCount());
+    };
+    window.addEventListener('kodelocal_offline_queue_updated', handleQueueChange);
+    const cleanup = initOfflineSync((freshProds) => {
+      setProducts(freshProds);
+    });
+    return () => {
+      window.removeEventListener('kodelocal_offline_queue_updated', handleQueueChange);
+      cleanup();
+    };
+  }, []);
 
   // Guardar productos en localStorage
   useEffect(() => {
@@ -1239,47 +1263,35 @@ export default function PosPage() {
     setOrderToInvoice(null);
     setCompletedSale(completedRecord!);
 
-    // Sincronizar venta y descuento de existencias con Supabase en tiempo real
+    // Sincronizar venta y descuento de existencias con Supabase en tiempo real o encolar offline (REQ-POS-02)
     if (completedRecord!) {
-      fetch('/api/sales', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          saleNumber: completedRecord.saleNumber,
-          channel: 'POS',
-          subtotal: completedRecord.subtotal,
-          ivaTotal: completedRecord.ivaTotal,
-          total: completedRecord.total,
-          paymentMethod: completedRecord.paymentMethod || 'CASH',
-          cashReceived: completedRecord.cashReceived,
-          cashChange: completedRecord.cashChange,
-          notes: completedRecord.tipoComprobante,
-          tipoComprobante: completedRecord.tipoComprobante,
-          codigoGeneracion: completedRecord.dteInfo?.codigoGeneracion,
-          cashierName: completedRecord.cajero || 'Caja 1',
-          items: completedRecord.items.map(it => ({
-            productId: it.productId,
-            name: it.name,
-            quantity: it.quantity,
-            price: it.price,
-            total: it.total,
-          })),
-        }),
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            fetch('/api/products')
-              .then(r => r.json())
-              .then(pData => {
-                if (pData.success && Array.isArray(pData.products)) {
-                  setProducts(pData.products);
-                  localStorage.setItem('kodelocal_products', JSON.stringify(pData.products));
-                }
-              });
-          }
-        })
-        .catch(err => console.error('Error enviando venta a Supabase:', err));
+      syncSaleOnlineOrQueue({
+        saleNumber: completedRecord.saleNumber,
+        channel: 'POS',
+        subtotal: completedRecord.subtotal,
+        ivaTotal: completedRecord.ivaTotal,
+        total: completedRecord.total,
+        paymentMethod: completedRecord.paymentMethod || 'CASH',
+        cashReceived: completedRecord.cashReceived,
+        cashChange: completedRecord.cashChange,
+        notes: completedRecord.tipoComprobante,
+        tipoComprobante: completedRecord.tipoComprobante,
+        codigoGeneracion: completedRecord.dteInfo?.codigoGeneracion,
+        cashierName: completedRecord.cajero || 'Caja 1',
+        items: completedRecord.items.map(it => ({
+          productId: it.productId,
+          name: it.name,
+          quantity: it.quantity,
+          price: it.price,
+          total: it.total,
+        })),
+      }, (freshProds) => {
+        setProducts(freshProds);
+      }).then(syncRes => {
+        if (syncRes.offline) {
+          console.warn('📦 Venta resguardada en cola offline:', syncRes.error);
+        }
+      });
 
       // Si era una orden web de ventanilla, sincronizar estado ENTREGADO en base de datos
       if (isOrderFromWindow && orderToInvoice.orderNumber) {
@@ -1578,6 +1590,28 @@ export default function PosPage() {
                 <ExternalLink className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               )}
             </button>
+
+            {/* Indicador de Ventas Offline en Cola */}
+            {offlineQueueCount > 0 && (
+              <button
+                type="button"
+                onClick={() => flushOfflineQueue((p) => setProducts(p))}
+                className={`w-full flex items-center ${isSidebarExpanded ? 'justify-between px-3 py-2' : 'justify-center p-2'} rounded-xl text-[11px] font-bold bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 transition-all shadow-xs`}
+                title="Ventas guardadas localmente. Clic para forzar sincronización con Supabase"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <RotateCw className="w-3.5 h-3.5 text-amber-600 animate-spin shrink-0" />
+                  {isSidebarExpanded && (
+                    <span className="truncate">{offlineQueueCount} venta{offlineQueueCount > 1 ? 's' : ''} offline</span>
+                  )}
+                </div>
+                {isSidebarExpanded && (
+                  <span className="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded font-mono font-bold shrink-0">
+                    Sincronizar
+                  </span>
+                )}
+              </button>
+            )}
           </div>
 
           {/* Resumen del Día */}
