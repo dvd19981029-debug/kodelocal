@@ -32,27 +32,42 @@ export default function EcommerceHomePage() {
   const { setIsArmaTuPerfumeActive } = useEcommerceCart();
   const [products, setProducts] = useState<ProductItem[]>(INITIAL_PRODUCTS);
 
-  // Sincronizar con localStorage y con la API remota de Supabase para reflejar cambios en cualquier dispositivo
+  // Sincronizar con almacenamiento local y con la API de productos una sola vez de forma eficiente
   useEffect(() => {
-    setProducts(getStoredProducts());
+    let isMounted = true;
 
+    // 1. Cargar catálogo local inicial para visualización inmediata sin parpadeo
+    const localProds = getStoredProducts();
+    if (localProds && localProds.length > 0) {
+      setProducts(localProds);
+    }
+
+    // 2. Sincronizar con la API (aprovechando caché Stale-While-Revalidate)
     fetch('/api/products')
       .then(res => res.json())
       .then(data => {
-        if (data.success && Array.isArray(data.products) && data.products.length > 0) {
+        if (isMounted && data.success && Array.isArray(data.products) && data.products.length > 0) {
           setProducts(data.products);
-          localStorage.setItem('kodelocal_products', JSON.stringify(data.products));
+          saveStoredProducts(data.products);
         }
       })
       .catch(err => console.error('Error sincronizando productos con Supabase en ecommerce:', err));
 
+    // 3. Escuchar actualizaciones cuando otra pestaña o el POS modifique existencias
     const handleProductsUpdate = () => {
-      setProducts(getStoredProducts());
+      if (isMounted) {
+        const fresh = getStoredProducts();
+        if (fresh && fresh.length > 0) {
+          setProducts(fresh);
+        }
+      }
     };
 
     window.addEventListener('kodelocal_products_updated', handleProductsUpdate);
     window.addEventListener('storage', handleProductsUpdate);
+
     return () => {
+      isMounted = false;
       window.removeEventListener('kodelocal_products_updated', handleProductsUpdate);
       window.removeEventListener('storage', handleProductsUpdate);
     };
@@ -130,40 +145,13 @@ export default function EcommerceHomePage() {
 
   useEffect(() => {
     const updateColumns = () => {
-      if (window.innerWidth >= 1280) {
-        setColumns(4);
-      } else if (window.innerWidth >= 768) {
-        setColumns(3);
-      } else {
-        setColumns(2);
-      }
+      const nextCols = window.innerWidth >= 1280 ? 4 : window.innerWidth >= 768 ? 3 : 2;
+      setColumns(prev => (prev !== nextCols ? nextCols : prev));
     };
 
     updateColumns();
     window.addEventListener('resize', updateColumns);
     return () => window.removeEventListener('resize', updateColumns);
-  }, []);
-
-  useEffect(() => {
-    // Sincronizar con catálogo de Supabase manteniendo coherencia sin parpadeos
-    let isMounted = true;
-    const loadCatalog = async () => {
-      try {
-        const res = await fetch('/api/products', { cache: 'no-store' });
-        const data = await res.json();
-        if (isMounted && data.success && Array.isArray(data.products) && data.products.length > 0) {
-          setProducts(data.products);
-          saveStoredProducts(data.products);
-        }
-      } catch (err) {
-        console.error('Error conectando a /api/products, manteniendo catálogo local:', err);
-      }
-    };
-
-    loadCatalog();
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   // Filtrado reactivo de productos
