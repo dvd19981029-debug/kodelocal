@@ -5,6 +5,7 @@ import { verifyCustomerToken, verifyStaffInternalToken } from '@/lib/customerAut
 import { checkRateLimit } from '@/lib/rateLimit';
 import { sanitizeText, sanitizeEmail, sanitizePhone, sanitizeDocument } from '@/lib/sanitize';
 import { sendOrderConfirmationEmail } from '@/lib/orderEmailService';
+import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,10 +13,23 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const queryCustomerId = searchParams.get('customerId');
+    const queryOrderNumbers = searchParams.get('orderNumbers');
+    const queryOrderNumber = searchParams.get('orderNumber');
     const status = searchParams.get('status');
     const includeIncomplete = searchParams.get('includeIncomplete') === 'true';
 
-    // 1. Verificar autenticación: Staff vs Cliente
+    // Manejo de consulta de pedidos para INVITADOS (Guest Mode) por números de orden
+    const guestNumbersRaw = [
+      ...(queryOrderNumbers ? queryOrderNumbers.split(',') : []),
+      ...(queryOrderNumber ? [queryOrderNumber] : [])
+    ]
+      .map(num => num.trim().toUpperCase())
+      .filter(num => num.length > 0 && /^[A-Z0-9\-]+$/.test(num))
+      .slice(0, 20);
+
+    const isGuestQuery = guestNumbersRaw.length > 0;
+
+    // 1. Verificar autenticación: Staff vs Cliente (omitido si es consulta explícita de invitado con números de orden)
     const authHeader = request.headers.get('authorization') || '';
     const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : null;
     const staffHeaderToken = request.headers.get('x-staff-token');
@@ -23,7 +37,7 @@ export async function GET(request: Request) {
     const isStaff = verifyStaffInternalToken(staffHeaderToken) || verifyStaffInternalToken(bearerToken);
     const customerPayload = verifyCustomerToken(bearerToken);
 
-    if (!isStaff && !customerPayload) {
+    if (!isGuestQuery && !isStaff && !customerPayload) {
       return NextResponse.json(
         {
           success: false,
@@ -45,18 +59,29 @@ export async function GET(request: Request) {
 
     const orders = await prisma.ecommerceOrder.findMany({
       where: {
-        ...(targetCustomerId ? {
-          customerId: targetCustomerId,
-          // Para el cliente, excluir intentos de pago con tarjeta abandonados o nunca pagados
-          ...(!includeIncomplete ? {
-            NOT: {
-              AND: [
-                { paymentMethod: 'CARD' },
-                { OR: [{ paymentStatus: 'PENDING' }, { paymentStatus: 'CANCELLED' }] },
-              ],
-            },
+        ...(isGuestQuery ? {
+          orderNumber: { in: guestNumbersRaw },
+          // Para invitados, excluir intentos de pago con tarjeta abandonados o nunca pagados
+          NOT: {
+            AND: [
+              { paymentMethod: 'CARD' },
+              { OR: [{ paymentStatus: 'PENDING' }, { paymentStatus: 'CANCELLED' }] },
+            ],
+          },
+        } : {
+          ...(targetCustomerId ? {
+            customerId: targetCustomerId,
+            // Para el cliente, excluir intentos de pago con tarjeta abandonados o nunca pagados
+            ...(!includeIncomplete ? {
+              NOT: {
+                AND: [
+                  { paymentMethod: 'CARD' },
+                  { OR: [{ paymentStatus: 'PENDING' }, { paymentStatus: 'CANCELLED' }] },
+                ],
+              },
+            } : {}),
           } : {}),
-        } : {}),
+        }),
         ...(status ? { orderStatus: status as any } : {}),
       },
       include: {
@@ -100,21 +125,30 @@ export async function GET(request: Request) {
       updatedAt: o.updatedAt.toISOString(),
       customer: o.customer,
       sale: o.sale,
-      items: (o.items || []).map((it) => ({
-        id: it.id,
-        orderId: it.orderId,
-        productId: it.productId,
-        productName: it.productName,
-        presentation: it.presentation,
-        unitPrice: Number(it.unitPrice || 0),
-        quantity: Number(it.quantity || 1),
-        total: Number(it.total || 0),
-        product: it.product ? {
-          ...it.product,
-          price: Number(it.product.price || 0),
-          cost: Number(it.product.cost || 0),
-        } : null,
-      })),
+      items: (o.items || []).map((it) => {
+        const prod = it.product;
+        const officialName = prod?.officialName?.trim();
+        const displayName = officialName || it.productName;
+        const isEssence = String(it.presentation || '').toLowerCase().includes('onza') ||
+                          Boolean(prod?.name && prod?.name !== officialName);
+        const inspired = isEssence && prod ? getInspiracionPerfumeName(prod) : null;
+        return {
+          id: it.id,
+          orderId: it.orderId,
+          productId: it.productId,
+          productName: displayName,
+          inspiredBy: inspired,
+          presentation: it.presentation,
+          unitPrice: Number(it.unitPrice || 0),
+          quantity: Number(it.quantity || 1),
+          total: Number(it.total || 0),
+          product: prod ? {
+            ...prod,
+            price: Number(prod.price || 0),
+            cost: Number(prod.cost || 0),
+          } : null,
+        };
+      }),
     }));
 
     return NextResponse.json({ success: true, orders: formatted });
@@ -276,7 +310,14 @@ export async function PATCH(request: Request) {
         ...(trackingNumber ? { trackingNumber } : {}),
         ...(notes ? { notes: [order.notes, notes].filter(Boolean).join(' ') } : {}),
       },
-      include: { items: true, customer: true },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+        customer: true,
+      },
     });
 
     // Enviar confirmación por correo si el pago se completó exitosamente (ej. retorno de Wompi)
@@ -296,13 +337,22 @@ export async function PATCH(request: Request) {
           total: Number(updated.total || 0),
           paymentMethod: updated.paymentMethod,
           paymentStatus: updated.paymentStatus,
-          items: (updated.items || []).map((it) => ({
-            productName: it.productName,
-            presentation: it.presentation,
-            quantity: it.quantity,
-            unitPrice: Number(it.unitPrice || 0),
-            total: Number(it.total || 0),
-          })),
+          items: (updated.items || []).map((it) => {
+            const prod = (it as any).product;
+            const officialName = prod?.officialName?.trim();
+            const displayName = officialName || it.productName;
+            const isEssence = String(it.presentation || '').toLowerCase().includes('onza') ||
+                              Boolean(prod?.name && prod?.name !== officialName);
+            const inspired = isEssence && prod ? getInspiracionPerfumeName(prod) : null;
+            return {
+              productName: displayName,
+              inspiredBy: inspired,
+              presentation: it.presentation,
+              quantity: it.quantity,
+              unitPrice: Number(it.unitPrice || 0),
+              total: Number(it.total || 0),
+            };
+          }),
         });
       } catch (err) {
         console.error('Error enviando correo de confirmación de pedido (PATCH):', err);
@@ -632,7 +682,11 @@ export async function POST(request: Request) {
           },
         },
         include: {
-          items: true,
+          items: {
+            include: {
+              product: true,
+            },
+          },
           customer: true,
         },
       });
@@ -658,13 +712,22 @@ export async function POST(request: Request) {
           total: Number(newOrder.total || 0),
           paymentMethod: newOrder.paymentMethod,
           paymentStatus: newOrder.paymentStatus,
-          items: (newOrder.items || []).map((it) => ({
-            productName: it.productName,
-            presentation: it.presentation,
-            quantity: it.quantity,
-            unitPrice: Number(it.unitPrice || 0),
-            total: Number(it.total || 0),
-          })),
+          items: (newOrder.items || []).map((it) => {
+            const prod = (it as any).product;
+            const officialName = prod?.officialName?.trim();
+            const displayName = officialName || it.productName;
+            const isEssence = String(it.presentation || '').toLowerCase().includes('onza') ||
+                              Boolean(prod?.name && prod?.name !== officialName);
+            const inspired = isEssence && prod ? getInspiracionPerfumeName(prod) : null;
+            return {
+              productName: displayName,
+              inspiredBy: inspired,
+              presentation: it.presentation,
+              quantity: it.quantity,
+              unitPrice: Number(it.unitPrice || 0),
+              total: Number(it.total || 0),
+            };
+          }),
         });
       } catch (err) {
         console.error('Error enviando correo de confirmación de pedido (POST):', err);

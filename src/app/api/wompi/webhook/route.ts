@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { validateWompiWebhook } from '@/lib/wompi';
 import { sendOrderConfirmationEmail } from '@/lib/orderEmailService';
+import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 
 export const dynamic = 'force-dynamic';
 
@@ -81,7 +82,11 @@ export async function POST(request: Request) {
             ].filter(Boolean).join(' '),
           },
           include: {
-            items: true,
+            items: {
+              include: {
+                product: true,
+              },
+            },
           },
         });
 
@@ -102,13 +107,22 @@ export async function POST(request: Request) {
               total: Number(paidOrder.total || 0),
               paymentMethod: 'CARD',
               paymentStatus: 'COMPLETED',
-              items: (paidOrder.items || []).map((it) => ({
-                productName: it.productName,
-                presentation: it.presentation,
-                quantity: it.quantity,
-                unitPrice: Number(it.unitPrice || 0),
-                total: Number(it.total || 0),
-              })),
+              items: (paidOrder.items || []).map((it) => {
+                const prod = (it as any).product;
+                const officialName = prod?.officialName?.trim();
+                const displayName = officialName || it.productName;
+                const isEssence = String(it.presentation || '').toLowerCase().includes('onza') ||
+                                  Boolean(prod?.name && prod?.name !== officialName);
+                const inspired = isEssence && prod ? getInspiracionPerfumeName(prod) : null;
+                return {
+                  productName: displayName,
+                  inspiredBy: inspired,
+                  presentation: it.presentation,
+                  quantity: it.quantity,
+                  unitPrice: Number(it.unitPrice || 0),
+                  total: Number(it.total || 0),
+                };
+              }),
             });
           } catch (err) {
             console.error('Error enviando correo Wompi:', err);

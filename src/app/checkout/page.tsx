@@ -23,7 +23,8 @@ import {
   Copy,
   Check,
   Clock,
-  Loader2
+  Loader2,
+  Package
 } from 'lucide-react';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
@@ -32,11 +33,12 @@ import { DEPARTAMENTOS_CATALOG, getMunicipiosByDepartamento } from '@/lib/svTerr
 import { SaleRecord } from '@/lib/store';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
+import { saveGuestOrder } from '@/lib/guestOrderStorage';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, subtotal, totalItems, clearCart } = useEcommerceCart();
-  const { customer, isLoggedIn, openAuthModal } = useCustomerAuth();
+  const { customer, isLoggedIn, openAuthModal, openDrawer } = useCustomerAuth();
 
   // Método de entrega: Envío a domicilio o Retiro en sucursal
   const [metodoEntrega, setMetodoEntrega] = useState<'ENVIO' | 'RETIRO'>('ENVIO');
@@ -315,6 +317,16 @@ export default function CheckoutPage() {
         throw new Error(orderData.error || 'No fue posible confirmar el pedido');
       }
 
+      // Guardar pedido en localStorage del dispositivo para modo invitado
+      saveGuestOrder({
+        orderNumber: orderData.order?.orderNumber || orderNumber,
+        createdAt: now,
+        total: totalConEnvio,
+        paymentMethod: metodoPago,
+        customerName: nombre,
+        customerEmail: email || customer?.email,
+      });
+
       // Si el cliente paga con Tarjeta, generamos el enlace bancario de Wompi y lo redireccionamos
       if (metodoPago === 'CARD') {
         const wompiRes = await fetch('/api/wompi/create-checkout', {
@@ -493,6 +505,16 @@ export default function CheckoutPage() {
                 <span>Notificar por WhatsApp (7833-9470)</span>
               </a>
             )}
+            {/* Botón de Seguimiento Inmediato (Drawer de Pedidos en Modo Invitado o Usuario) */}
+            <button
+              type="button"
+              onClick={() => openDrawer('orders')}
+              className="clay-btn clay-btn-primary px-7 py-2.5 rounded-2xl font-black text-xs sm:text-sm active:scale-95 transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer w-full max-w-sm"
+            >
+              <Package className="w-4 h-4" />
+              <span>Ver Mi Pedido y Envío</span>
+            </button>
+
             <p className="text-[11px] text-slate-500 font-medium">
               WhatsApp oficial de validación: <strong className="text-slate-700 font-bold">7833-9470</strong>
             </p>
@@ -625,11 +647,19 @@ export default function CheckoutPage() {
 
         </div>
 
-        {/* Botón inferior Volver a la Tienda */}
-        <div className="text-center pt-1">
+        {/* Botones inferiores */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
+          <button
+            type="button"
+            onClick={() => openDrawer('orders')}
+            className="clay-btn clay-btn-primary px-5 py-2.5 text-xs font-black rounded-xl active:scale-95 transition-all inline-flex items-center gap-2 cursor-pointer shadow-md"
+          >
+            <Package className="w-4 h-4" />
+            <span>Ver Mi Pedido y Envío</span>
+          </button>
           <Link
             href="/"
-            className="clay-btn clay-btn-light px-5 py-2 text-xs font-bold rounded-xl active:scale-95 transition-all inline-flex items-center gap-2 cursor-pointer"
+            className="clay-btn clay-btn-light px-5 py-2.5 text-xs font-bold rounded-xl active:scale-95 transition-all inline-flex items-center gap-2 cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Volver a la Tienda</span>

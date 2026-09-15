@@ -19,10 +19,13 @@ import {
   Truck,
   Sparkles,
   ShoppingBag,
-  CreditCard
+  CreditCard,
+  Search,
+  LogIn
 } from 'lucide-react';
-import { useCustomerAuth, CustomerUser } from '@/context/CustomerAuthContext';
+import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { DEPARTAMENTOS_CATALOG, MUNICIPIOS_CATALOG } from '@/lib/svTerritory';
+import { getGuestOrders, addGuestOrderNumber } from '@/lib/guestOrderStorage';
 
 export default function CustomerDrawer() {
   const { 
@@ -32,13 +35,19 @@ export default function CustomerDrawer() {
     drawerTab, 
     setDrawerTab, 
     updateCustomerProfile,
-    logout 
+    logout,
+    openAuthModal 
   } = useCustomerAuth();
 
   // Orders state
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
   const [ordersError, setOrdersError] = useState('');
+
+  // Guest order manual search state
+  const [searchOrderInput, setSearchOrderInput] = useState('');
+  const [isSearchingOrder, setIsSearchingOrder] = useState(false);
+  const [searchOrderError, setSearchOrderError] = useState('');
 
   // Profile Form state
   const [name, setName] = useState('');
@@ -92,19 +101,35 @@ export default function CustomerDrawer() {
     }
   }, [customer, isDrawerOpen]);
 
-  // Fetch orders when drawer is open
+  // Fetch orders when drawer is open (supports both registered customers and guests)
   useEffect(() => {
-    if (!isDrawerOpen || !customer?.id) return;
+    if (!isDrawerOpen) return;
 
     let isMounted = true;
     setIsLoadingOrders(true);
     setOrdersError('');
 
-    fetch(`/api/ecommerce/orders?customerId=${customer.id}`, {
-      headers: {
-        ...(customer.sessionToken ? { 'Authorization': `Bearer ${customer.sessionToken}` } : {}),
-      },
-    })
+    let endpoint = '';
+    const headers: Record<string, string> = {};
+
+    if (customer?.id) {
+      endpoint = `/api/ecommerce/orders?customerId=${customer.id}`;
+      if (customer.sessionToken) {
+        headers['Authorization'] = `Bearer ${customer.sessionToken}`;
+      }
+    } else {
+      // Modo invitado: cargar desde localStorage
+      const guestOrders = getGuestOrders();
+      if (guestOrders.length === 0) {
+        setOrders([]);
+        setIsLoadingOrders(false);
+        return;
+      }
+      const orderNumbers = guestOrders.map(g => g.orderNumber).filter(Boolean);
+      endpoint = `/api/ecommerce/orders?orderNumbers=${encodeURIComponent(orderNumbers.join(','))}`;
+    }
+
+    fetch(endpoint, { headers })
       .then(async (res) => {
         const data = await res.json();
         if (isMounted) {
@@ -127,9 +152,9 @@ export default function CustomerDrawer() {
     };
   }, [isDrawerOpen, customer?.id]);
 
-  if (!isDrawerOpen || !customer) return null;
+  if (!isDrawerOpen) return null;
 
-  // Para el cliente, mostrar únicamente compras confirmadas o pedidos reales.
+  // Para el cliente/invitado, mostrar únicamente compras confirmadas o pedidos reales.
   // Excluir intentos de pago con tarjeta abandonados o nunca pagados para no saturar su historial.
   const visibleOrders = orders.filter(
     (order) => !(order.paymentMethod === 'CARD' && (order.paymentStatus === 'PENDING' || order.paymentStatus === 'CANCELLED'))
@@ -142,6 +167,40 @@ export default function CustomerDrawer() {
   const availableMunicipios = selectedDeptObj
     ? MUNICIPIOS_CATALOG.filter((m) => m.departamentoId === selectedDeptObj.id)
     : [];
+
+  const handleManualOrderLookup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanNum = searchOrderInput.trim().toUpperCase();
+    if (!cleanNum) return;
+
+    setIsSearchingOrder(true);
+    setSearchOrderError('');
+
+    try {
+      const res = await fetch(`/api/ecommerce/orders?orderNumber=${encodeURIComponent(cleanNum)}`);
+      const data = await res.json();
+      if (data.success && data.orders && data.orders.length > 0) {
+        const foundOrder = data.orders[0];
+        addGuestOrderNumber(foundOrder.orderNumber, {
+          total: foundOrder.total,
+          paymentMethod: foundOrder.paymentMethod,
+          customerName: foundOrder.customerName,
+          customerEmail: foundOrder.customerEmail,
+        });
+        setOrders((prev) => {
+          const filtered = prev.filter((o) => o.orderNumber !== foundOrder.orderNumber);
+          return [foundOrder, ...filtered];
+        });
+        setSearchOrderInput('');
+      } else {
+        setSearchOrderError('No se encontró ningún pedido con ese número. Verifica el código (ej. WEB-1234).');
+      }
+    } catch (err: any) {
+      setSearchOrderError('Error de conexión al consultar la orden.');
+    } finally {
+      setIsSearchingOrder(false);
+    }
+  };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -182,15 +241,18 @@ export default function CustomerDrawer() {
     }
     switch (status?.toUpperCase()) {
       case 'DELIVERED':
+      case 'ENTREGADO':
       case 'COMPLETED':
         return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200"><CheckCircle2 className="w-3 h-3" /> Entregado</span>;
       case 'SHIPPED':
+      case 'EN_RUTA':
         return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200"><Truck className="w-3 h-3" /> En camino</span>;
       case 'PREPARING':
+      case 'EN_PREPARACION':
       case 'PROCESSING':
         return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200"><Clock className="w-3 h-3" /> En preparación</span>;
       default:
-        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200"><Clock className="w-3 h-3" /> En espera</span>;
+        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200"><Clock className="w-3 h-3" /> Recibido</span>;
     }
   };
 
@@ -200,7 +262,7 @@ export default function CustomerDrawer() {
       return (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-300">
           <CreditCard className="w-2.5 h-2.5 text-emerald-600" />
-          {isWompi ? 'Pagado (Wompi)' : 'Pagado'}
+          {isWompi ? 'Pagado (Tarjeta)' : 'Pagado'}
         </span>
       );
     }
@@ -215,7 +277,7 @@ export default function CustomerDrawer() {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-50 text-amber-700 border border-amber-300">
         <Clock className="w-2.5 h-2.5 text-amber-600" />
-        {isWompi ? 'Pendiente Wompi' : 'Pendiente Transferencia'}
+        {isWompi ? 'Pendiente Tarjeta' : 'Pendiente Transferencia'}
       </span>
     );
   };
@@ -233,36 +295,57 @@ export default function CustomerDrawer() {
       <div className="fixed inset-y-0 left-0 w-full sm:w-[480px] max-w-full flex">
         <div className="w-full h-full bg-[#f8fafc] shadow-2xl flex flex-col border-r border-slate-200/90 relative z-10 overscroll-contain animate-in slide-in-from-left duration-300">
           
-          {/* ================= HEADER DEL CLIENTE ================= */}
+          {/* ================= HEADER DEL DRAWER ================= */}
           <div className="p-4 sm:p-5 bg-white border-b border-slate-200/80 shrink-0">
             <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                {customer.avatarUrl ? (
-                  <img
-                    src={customer.avatarUrl}
-                    alt={customer.name}
-                    className="w-12 h-12 rounded-2xl object-cover border-2 border-indigo-200 shadow-xs shrink-0"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-black text-lg shadow-xs shrink-0">
-                    {customer.name.charAt(0).toUpperCase()}
+              {customer ? (
+                <div className="flex items-center gap-3 min-w-0">
+                  {customer.avatarUrl ? (
+                    <img
+                      src={customer.avatarUrl}
+                      alt={customer.name}
+                      className="w-12 h-12 rounded-2xl object-cover border-2 border-indigo-200 shadow-xs shrink-0"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-black text-lg shadow-xs shrink-0">
+                      {customer.name?.charAt(0)?.toUpperCase() || 'C'}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <h3 className="text-base font-black text-slate-900 leading-tight truncate">
+                        {customer.name}
+                      </h3>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200/70">
+                        <Sparkles className="w-2.5 h-2.5 text-indigo-500" />
+                        Cliente Verificado
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 font-medium truncate mt-0.5">
+                      {customer.email}
+                    </p>
                   </div>
-                )}
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <h3 className="text-base font-black text-slate-900 leading-tight truncate">
-                      {customer.name}
-                    </h3>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200/70">
-                      <Sparkles className="w-2.5 h-2.5 text-indigo-500" />
-                      Cliente Verificado
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 font-medium truncate mt-0.5">
-                    {customer.email}
-                  </p>
                 </div>
-              </div>
+              ) : (
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-black shadow-xs shrink-0">
+                    <Package className="w-6 h-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <h3 className="text-base font-black text-slate-900 leading-tight">
+                        Mis Pedidos y Envíos
+                      </h3>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                        Modo Invitado
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 font-medium truncate mt-0.5">
+                      Guardados en este dispositivo
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Botón Cerrar */}
               <button
@@ -273,6 +356,24 @@ export default function CustomerDrawer() {
                 <X className="w-4 h-4" />
               </button>
             </div>
+
+            {/* Banner informativo para Invitados */}
+            {!customer && (
+              <div className="mt-3 p-3 bg-gradient-to-r from-indigo-50/90 to-purple-50/90 border border-indigo-100 rounded-2xl flex items-center justify-between gap-2.5 text-xs">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span className="text-slate-600 font-medium text-[11px] leading-tight">
+                    Inicia sesión con Google para sincronizar tus compras en cualquier dispositivo.
+                  </span>
+                </div>
+                <button
+                  onClick={() => openAuthModal('login')}
+                  className="shrink-0 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[10.5px] transition-all cursor-pointer shadow-xs active:scale-95"
+                >
+                  Acceder
+                </button>
+              </div>
+            )}
 
             {/* Selector de Pestañas (Tabs) */}
             <div className="flex items-center gap-2 mt-4 p-1 bg-slate-100 rounded-xl">
@@ -286,9 +387,9 @@ export default function CustomerDrawer() {
               >
                 <Package className="w-4 h-4 text-indigo-600" />
                 <span>Mis Pedidos</span>
-                {orders.length > 0 && (
+                {visibleOrders.length > 0 && (
                   <span className="px-1.5 py-0.2 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold">
-                    {orders.length}
+                    {visibleOrders.length}
                   </span>
                 )}
               </button>
@@ -313,10 +414,44 @@ export default function CustomerDrawer() {
             {/* ---------------- PESTAÑA 1: MIS PEDIDOS ---------------- */}
             {drawerTab === 'orders' && (
               <div className="space-y-3">
+                {/* Buscador de orden para modo invitado */}
+                {!customer && (
+                  <div className="space-y-1.5">
+                    <form onSubmit={handleManualOrderLookup} className="flex items-center gap-1.5 p-1 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
+                      <input
+                        type="text"
+                        value={searchOrderInput}
+                        onChange={(e) => setSearchOrderInput(e.target.value)}
+                        placeholder="Rastrear otra orden (ej. WEB-1234)..."
+                        className="flex-1 px-3 py-1.5 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none uppercase"
+                      />
+                      <button
+                        type="submit"
+                        disabled={isSearchingOrder || !searchOrderInput.trim()}
+                        className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs transition-colors cursor-pointer flex items-center gap-1"
+                      >
+                        {isSearchingOrder ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <>
+                            <Search className="w-3 h-3" />
+                            <span>Buscar</span>
+                          </>
+                        )}
+                      </button>
+                    </form>
+                    {searchOrderError && (
+                      <p className="text-[11px] text-rose-600 font-medium px-1">
+                        {searchOrderError}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {isLoadingOrders ? (
                   <div className="py-16 flex flex-col items-center justify-center gap-3 text-slate-400">
                     <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-                    <p className="text-xs font-semibold">Cargando tus pedidos...</p>
+                    <p className="text-xs font-semibold">Consultando estado de tus paquetes...</p>
                   </div>
                 ) : ordersError ? (
                   <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
@@ -328,15 +463,19 @@ export default function CustomerDrawer() {
                     <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3">
                       <ShoppingBag className="w-7 h-7" />
                     </div>
-                    <h4 className="text-sm font-black text-slate-900">Aún no tienes pedidos</h4>
-                    <p className="text-xs text-slate-500 max-w-[240px] mt-1 mb-4">
-                      Explora nuestro catálogo de perfumes y haz tu primer pedido con envío a todo el país.
+                    <h4 className="text-sm font-black text-slate-900">
+                      {!customer ? 'No hay pedidos guardados en este dispositivo' : 'Aún no tienes pedidos'}
+                    </h4>
+                    <p className="text-xs text-slate-500 max-w-[260px] mt-1 mb-4 leading-relaxed">
+                      {!customer 
+                        ? 'Si realizaste un pedido recientemente, ingresa tu número de orden arriba o haz tu primera compra.'
+                        : 'Explora nuestro catálogo de perfumes y haz tu primer pedido con entrega a todo El Salvador.'}
                     </p>
                     <button
                       onClick={closeDrawer}
                       className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-200 transition-all cursor-pointer active:scale-95"
                     >
-                      Ver Catálogo de Fragancias
+                      Explorar Catálogo
                     </button>
                   </div>
                 ) : (
@@ -351,14 +490,14 @@ export default function CustomerDrawer() {
 
                     return (
                       <div
-                        key={order.id}
+                        key={order.id || order.orderNumber}
                         className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs hover:shadow-md transition-shadow space-y-3"
                       >
                         {/* Cabecera del pedido */}
                         <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-2.5">
                           <div>
                             <span className="text-[11px] font-black text-indigo-700 font-mono">
-                              #{order.orderNumber || order.id.slice(-8).toUpperCase()}
+                              #{order.orderNumber || order.id?.slice(-8).toUpperCase()}
                             </span>
                             <p className="text-[10px] text-slate-400 font-medium">{orderDate}</p>
                           </div>
@@ -368,24 +507,48 @@ export default function CustomerDrawer() {
                           </div>
                         </div>
 
-                        {/* Artículos del pedido */}
-                        <div className="space-y-1.5">
+                        {/* Información de Courier y Rastreo si ya fue despachado */}
+                        {(order.courierName || order.trackingNumber) && (
+                          <div className="p-2.5 rounded-xl bg-purple-50/80 border border-purple-100 text-[11px] text-purple-900 flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5">
+                              <Truck className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                              <span>
+                                Envío: <strong>{order.courierName || 'Mensajería Express'}</strong>
+                              </span>
+                            </div>
+                            {order.trackingNumber && (
+                              <span className="font-mono font-black text-purple-700 bg-white px-2 py-0.5 rounded border border-purple-200 text-[10px]">
+                                Guía: {order.trackingNumber}
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Artículos del pedido con nombre oficial e inspiración dinámica */}
+                        <div className="space-y-2">
                           {order.items?.map((item: any, idx: number) => (
-                            <div key={idx} className="flex items-center justify-between text-xs">
-                              <div className="flex items-center gap-1.5 min-w-0 pr-2">
-                                <span className="font-bold text-slate-800 text-[11px]">
-                                  {item.quantity}x
-                                </span>
-                                <span className="text-slate-700 font-medium truncate text-[11px]">
-                                  {item.productName}
-                                </span>
-                                {item.presentation && (
-                                  <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 text-[9px] font-bold shrink-0">
-                                    {item.presentation}
+                            <div key={idx} className="flex items-start justify-between text-xs gap-2">
+                              <div className="flex flex-col min-w-0 pr-1">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-bold text-slate-800 text-[11px]">
+                                    {item.quantity}x
+                                  </span>
+                                  <span className="text-slate-800 font-bold truncate text-[11px]">
+                                    {item.productName}
+                                  </span>
+                                  {item.presentation && (
+                                    <span className="px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 text-[9px] font-bold shrink-0">
+                                      {item.presentation}
+                                    </span>
+                                  )}
+                                </div>
+                                {item.inspiredBy && (
+                                  <span className="text-[10px] text-indigo-600 font-semibold pl-4">
+                                    Inspirado en: <strong className="text-slate-600 font-medium">{item.inspiredBy}</strong>
                                   </span>
                                 )}
                               </div>
-                              <span className="font-bold text-slate-900 text-[11px] shrink-0">
+                              <span className="font-bold text-slate-900 text-[11px] shrink-0 font-mono">
                                 ${(item.total || 0).toFixed(2)}
                               </span>
                             </div>
@@ -394,7 +557,7 @@ export default function CustomerDrawer() {
 
                         {/* Resumen de Total */}
                         <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-500">Total</span>
+                          <span className="text-xs font-bold text-slate-500">Total Pagado / A Pagar</span>
                           <span className="text-sm font-black text-slate-900 font-mono">
                             ${(order.total || 0).toFixed(2)}
                           </span>
@@ -405,7 +568,7 @@ export default function CustomerDrawer() {
                           <div className="p-2 rounded-xl bg-slate-50 text-[10px] text-slate-500 flex items-start gap-1.5">
                             <MapPin className="w-3 h-3 text-slate-400 shrink-0 mt-0.5" />
                             <span className="truncate">
-                              {[order.municipality, order.department].filter(Boolean).join(', ')}
+                              {[order.shippingAddress, order.municipality, order.department].filter(Boolean).join(', ')}
                             </span>
                           </div>
                         )}
@@ -418,269 +581,275 @@ export default function CustomerDrawer() {
 
             {/* ---------------- PESTAÑA 2: DATOS Y FACTURACIÓN ---------------- */}
             {drawerTab === 'profile' && (
-              <form onSubmit={handleSaveProfile} className="space-y-4">
-                
-                {saveSuccess && (
-                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2 animate-in fade-in">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>¡Información actualizada correctamente!</span>
-                  </div>
-                )}
-
-                {saveError && (
-                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                    <span>{saveError}</span>
-                  </div>
-                )}
-
-                {/* Datos Personales Básicos */}
-                <div className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3 shadow-2xs">
-                  <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-indigo-600" />
-                    Datos Personales
-                  </h4>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Nombre Completo</label>
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Tu nombre completo"
-                      required
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none transition-all"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Teléfono / WhatsApp</label>
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="Ej. 7000-0000"
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none transition-all"
-                    />
-                  </div>
-
-                  {/* Documento para Factura Electrónica (DTE) */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 mb-1">Documento</label>
-                      <select
-                        value={documentType}
-                        onChange={(e) => setDocumentType(e.target.value)}
-                        className="w-full px-2 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none transition-all"
-                      >
-                        <option value="DUI">DUI</option>
-                        <option value="NIT">NIT</option>
-                        <option value="PASAPORTE">Pasaporte</option>
-                        <option value="OTRO">Otro</option>
-                      </select>
+              <>
+                {!customer ? (
+                  <div className="py-12 px-5 text-center space-y-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
+                    <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
+                      <User className="w-7 h-7" />
                     </div>
-                    <div className="col-span-2">
-                      <label className="block text-[11px] font-bold text-slate-700 mb-1">Número de Documento</label>
-                      <input
-                        type="text"
-                        value={documentNum}
-                        onChange={(e) => setDocumentNum(e.target.value)}
-                        placeholder="00000000-0"
-                        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none transition-all"
-                      />
+                    <div className="space-y-1.5">
+                      <h4 className="text-base font-black text-slate-900">
+                        Guarda tus Datos y Facturación
+                      </h4>
+                      <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
+                        Inicia sesión con Google o regístrate para autocompletar tu dirección de envío y emitir Factura o Crédito Fiscal automáticamente.
+                      </p>
                     </div>
+                    <button
+                      onClick={() => openAuthModal('login')}
+                      className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-200 transition-all cursor-pointer active:scale-95"
+                    >
+                      Iniciar Sesión / Registrarme
+                    </button>
                   </div>
-                </div>
+                ) : (
+                  <form onSubmit={handleSaveProfile} className="space-y-4">
+                    {saveSuccess && (
+                      <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2 animate-in fade-in">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>¡Información actualizada correctamente!</span>
+                      </div>
+                    )}
 
-                {/* Dirección y Ubicación de Entrega */}
-                <div className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3 shadow-2xs">
-                  <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-indigo-600" />
-                    Dirección de Entrega
-                  </h4>
+                    {saveError && (
+                      <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                        <span>{saveError}</span>
+                      </div>
+                    )}
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 mb-1">Departamento</label>
-                      <select
-                        value={department}
-                        onChange={(e) => {
-                          const newDept = e.target.value;
-                          setDepartment(newDept);
-                          const deptObj = DEPARTAMENTOS_CATALOG.find((d) => d.nombre === newDept);
-                          if (deptObj) {
-                            const firstMun = MUNICIPIOS_CATALOG.find((m) => m.departamentoId === deptObj.id);
-                            if (firstMun) setMunicipality(firstMun.nombre);
-                          }
-                        }}
-                        className="w-full px-2.5 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none transition-all"
-                      >
-                        {DEPARTAMENTOS_CATALOG.filter(d => d.id !== '00').map((d) => (
-                          <option key={d.id} value={d.nombre}>
-                            {d.nombre}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    {/* Datos Personales Básicos */}
+                    <div className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3 shadow-2xs">
+                      <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                        <User className="w-3.5 h-3.5 text-indigo-600" />
+                        Datos Personales
+                      </h4>
 
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 mb-1">Municipio</label>
-                      {availableMunicipios.length > 0 ? (
-                        <select
-                          value={municipality}
-                          onChange={(e) => setMunicipality(e.target.value)}
-                          className="w-full px-2.5 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none transition-all"
-                        >
-                          {availableMunicipios.map((m) => (
-                            <option key={m.id} value={m.nombre}>
-                              {m.nombre}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">Nombre Completo</label>
                         <input
                           type="text"
-                          value={municipality}
-                          onChange={(e) => setMunicipality(e.target.value)}
-                          placeholder="Municipio"
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none transition-all"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="Tu nombre completo"
+                          className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:bg-white focus:border-indigo-500 focus:outline-none transition-colors"
                         />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 mb-1">Teléfono</label>
+                          <input
+                            type="tel"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            placeholder="7000-0000"
+                            className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:bg-white focus:border-indigo-500 focus:outline-none transition-colors"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 mb-1">Tipo Documento</label>
+                          <select
+                            value={documentType}
+                            onChange={(e) => setDocumentType(e.target.value)}
+                            className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:bg-white focus:border-indigo-500 focus:outline-none transition-colors"
+                          >
+                            <option value="DUI">DUI</option>
+                            <option value="NIT">NIT</option>
+                            <option value="PASAPORTE">Pasaporte</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">Número de Documento</label>
+                        <input
+                          type="text"
+                          value={documentNum}
+                          onChange={(e) => setDocumentNum(e.target.value)}
+                          placeholder="00000000-0"
+                          className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:bg-white focus:border-indigo-500 focus:outline-none transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Dirección de Entrega Habitual */}
+                    <div className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3 shadow-2xs">
+                      <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-indigo-600" />
+                        Dirección de Envío Habitual
+                      </h4>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 mb-1">Departamento</label>
+                          <select
+                            value={department}
+                            onChange={(e) => {
+                              const newDept = e.target.value;
+                              setDepartment(newDept);
+                              const found = DEPARTAMENTOS_CATALOG.find(d => d.nombre.toLowerCase() === newDept.toLowerCase());
+                              if (found) {
+                                const newMunis = MUNICIPIOS_CATALOG.filter(m => m.departamentoId === found.id);
+                                if (newMunis.length > 0) setMunicipality(newMunis[0].nombre);
+                              }
+                            }}
+                            className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:bg-white focus:border-indigo-500 focus:outline-none transition-colors"
+                          >
+                            {DEPARTAMENTOS_CATALOG.map((d) => (
+                              <option key={d.id} value={d.nombre}>{d.nombre}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 mb-1">Municipio</label>
+                          <select
+                            value={municipality}
+                            onChange={(e) => setMunicipality(e.target.value)}
+                            className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:bg-white focus:border-indigo-500 focus:outline-none transition-colors"
+                          >
+                            {availableMunicipios.map((m) => (
+                              <option key={m.id} value={m.nombre}>{m.nombre}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">Dirección Exacta</label>
+                        <textarea
+                          rows={2}
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                          placeholder="Colonia, calle, número de casa..."
+                          className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:bg-white focus:border-indigo-500 focus:outline-none transition-colors resize-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Datos Fiscales (CCF) */}
+                    <div className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                          <Building2 className="w-3.5 h-3.5 text-indigo-600" />
+                          Facturación con Crédito Fiscal
+                        </h4>
+                        <input
+                          type="checkbox"
+                          id="creditFiscalToggle"
+                          checked={isCreditFiscal}
+                          onChange={(e) => setIsCreditFiscal(e.target.checked)}
+                          className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                        />
+                      </div>
+
+                      {isCreditFiscal && (
+                        <div className="space-y-3 pt-2 border-t border-slate-100 animate-in fade-in">
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-700 mb-1">Razón Social / Nombre Comercial</label>
+                            <input
+                              type="text"
+                              value={businessName}
+                              onChange={(e) => setBusinessName(e.target.value)}
+                              placeholder="Nombre de la empresa o negocio"
+                              className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:bg-white focus:border-indigo-500 focus:outline-none transition-colors"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[11px] font-bold text-slate-700 mb-1">NRC</label>
+                              <input
+                                type="text"
+                                value={nrc}
+                                onChange={(e) => setNrc(e.target.value)}
+                                placeholder="000000-0"
+                                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:bg-white focus:border-indigo-500 focus:outline-none transition-colors"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-bold text-slate-700 mb-1">Giro / Actividad Económica</label>
+                              <input
+                                type="text"
+                                value={activityDesc}
+                                onChange={(e) => setActivityDesc(e.target.value)}
+                                placeholder="Ej. Comercio al por menor"
+                                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:bg-white focus:border-indigo-500 focus:outline-none transition-colors"
+                              />
+                            </div>
+                          </div>
+                        </div>
                       )}
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Dirección Exacta y Referencias</label>
-                    <textarea
-                      rows={2}
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder="Colonia, calle, número de casa, punto de referencia para C807..."
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none transition-all resize-none"
-                    />
-                  </div>
-                </div>
-
-                {/* Crédito Fiscal para Empresas (Opcional) */}
-                <div className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3 shadow-2xs">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <Building2 className="w-3.5 h-3.5 text-indigo-600" />
-                      <span className="text-xs font-black text-slate-900">¿Requieres Crédito Fiscal?</span>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={isCreditFiscal}
-                        onChange={(e) => setIsCreditFiscal(e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
-                    </label>
-                  </div>
-
-                  {isCreditFiscal && (
-                    <div className="space-y-3 pt-2 border-t border-slate-100 animate-in fade-in">
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-700 mb-1">Razón Social o Empresa</label>
-                        <input
-                          type="text"
-                          value={businessName}
-                          onChange={(e) => setBusinessName(e.target.value)}
-                          placeholder="Nombre de la empresa S.A. de C.V."
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none transition-all"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-[11px] font-bold text-slate-700 mb-1">NRC</label>
-                          <input
-                            type="text"
-                            value={nrc}
-                            onChange={(e) => setNrc(e.target.value)}
-                            placeholder="Ej. 123456-7"
-                            className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none transition-all"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] font-bold text-slate-700 mb-1">Giro Comercial</label>
-                          <input
-                            type="text"
-                            value={activityDesc}
-                            onChange={(e) => setActivityDesc(e.target.value)}
-                            placeholder="Actividad económica"
-                            className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none transition-all"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Mensaje de Error */}
-                {saveError && (
-                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                    <span>{saveError}</span>
-                  </div>
+                    {/* Botón Guardar Cambios */}
+                    <button
+                      type="submit"
+                      disabled={isSaving || saveSuccess}
+                      className={`w-full py-3.5 px-4 rounded-xl font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 ${
+                        saveSuccess
+                          ? 'bg-emerald-600 text-white shadow-emerald-200 ring-2 ring-emerald-400/50'
+                          : isSaving
+                          ? 'bg-slate-400 text-white cursor-not-allowed opacity-80'
+                          : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200 hover:shadow-lg'
+                      }`}
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Guardando cambios en tu perfil...</span>
+                        </>
+                      ) : saveSuccess ? (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 text-white animate-bounce" />
+                          <span className="tracking-wide">¡Información Guardada con Éxito! ✓</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Guardar Información</span>
+                        </>
+                      )}
+                    </button>
+                  </form>
                 )}
-
-                {/* Botón Guardar Cambios con Feedback Visual Inmediato y Color de Marca Aromaniak */}
-                <button
-                  type="submit"
-                  disabled={isSaving || saveSuccess}
-                  className={`w-full py-3.5 px-4 rounded-xl font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 ${
-                    saveSuccess
-                      ? 'bg-emerald-600 text-white shadow-emerald-200 ring-2 ring-emerald-400/50'
-                      : isSaving
-                      ? 'bg-slate-400 text-white cursor-not-allowed opacity-80'
-                      : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200 hover:shadow-lg'
-                  }`}
-                >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Guardando cambios en tu perfil...</span>
-                    </>
-                  ) : saveSuccess ? (
-                    <>
-                      <CheckCircle2 className="w-4 h-4 text-white animate-bounce" />
-                      <span className="tracking-wide">¡Información Guardada con Éxito! ✓</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Guardar Información</span>
-                    </>
-                  )}
-                </button>
-              </form>
+              </>
             )}
 
           </div>
 
           {/* ================= FOOTER DEL DRAWER ================= */}
           <div className="p-4 bg-white border-t border-slate-200/80 shrink-0 flex items-center justify-between gap-3">
-            {/* Cerrar Sesión */}
-            <button
-              onClick={() => {
-                logout();
-              }}
-              className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Cerrar Sesión</span>
-            </button>
+            {customer ? (
+              <button
+                onClick={() => {
+                  logout();
+                }}
+                className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Cerrar Sesión</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => openAuthModal('login')}
+                className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all cursor-pointer"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>Iniciar Sesión / Registro</span>
+              </button>
+            )}
 
-            {/* Ayuda / WhatsApp */}
+            {/* Ayuda / WhatsApp Oficial */}
             <a
-              href="https://wa.me/50370000000?text=Hola%20Aromaniak,%20necesito%20ayuda%20con%20mi%20cuenta"
+              href="https://wa.me/50378339470?text=Hola%20Aromaniak,%20necesito%20ayuda%20con%20mi%20pedido"
               target="_blank"
               rel="noopener noreferrer"
               className="text-[11px] font-bold text-slate-500 hover:text-indigo-600 flex items-center gap-1 transition-colors"
             >
-              <span>¿Necesitas ayuda?</span>
+              <span>WhatsApp: 7833-9470</span>
               <ExternalLink className="w-3 h-3" />
             </a>
           </div>

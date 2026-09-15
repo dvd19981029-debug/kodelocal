@@ -95,7 +95,7 @@ function toTitleCase(str: string): string {
 /**
  * Devuelve el nombre de inspiración (contratipo) SIN la marca y en mayúsculas/minúsculas normales.
  */
-export function getInspiracionPerfumeName(product: { sku?: string; description?: string; name?: string; brand?: string; officialName?: string }): string {
+export function getInspiracionPerfumeName(product: { sku?: string | null; description?: string | null; name?: string | null; brand?: string | null; officialName?: string | null } | null | undefined): string {
   if (!product) return '';
 
   // 1. Si product.name tiene valor y es diferente a officialName, ese es el nombre de inspiración dinámico de la BD

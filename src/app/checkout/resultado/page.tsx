@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
+import { addGuestOrderNumber } from '@/lib/guestOrderStorage';
 
 function CheckoutResultadoContent() {
   const searchParams = useSearchParams();
@@ -32,11 +33,15 @@ function CheckoutResultadoContent() {
   const esAprobadaLower = (esAprobada || '').trim().toLowerCase();
   const isApproved = esAprobadaLower === 'true' || (!esAprobada && Boolean(idTransaccion));
 
-  // Confirmar pago en la base de datos inmediatamente al volver de Wompi y vaciar carrito
+  // Confirmar pago en la base de datos inmediatamente al volver de Wompi, guardar orden de invitado y vaciar carrito
   useEffect(() => {
     if (isApproved) {
       clearCart();
       if (identificador) {
+        addGuestOrderNumber(identificador, {
+          total: Number(monto || 0),
+          paymentMethod: 'CARD',
+        });
         fetch('/api/ecommerce/orders', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -49,7 +54,7 @@ function CheckoutResultadoContent() {
         }).catch((err) => console.error('Error actualizando estado de pago:', err));
       }
     }
-  }, [isApproved, identificador, idTransaccion]);
+  }, [isApproved, identificador, idTransaccion, monto, clearCart]);
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center py-10 px-4">
