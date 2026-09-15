@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { INITIAL_PRODUCTS, ProductItem } from '@/lib/store';
 import { prisma } from '@/lib/prisma';
-import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { getFragranceProfile } from '@/lib/fragranceProfiles';
 
 async function getProductForSEO(id: string): Promise<ProductItem | null> {
@@ -73,19 +72,26 @@ export async function generateMetadata({
 
   if (!product) {
     return {
-      title: 'Producto | Aromaniak SV - Perfumería Fina',
-      description: 'Catálogo de esencias para perfumería fina, contratipos y materias primas en El Salvador.',
+      title: 'Esencias de Perfumería Fina & Insumos | Aromaniak SV',
+      description: 'Venta de esencias de perfumería fina, aromas químicos, botes de vidrio y materias primas en El Salvador.',
     };
   }
 
   const profile = getFragranceProfile(product);
   const notesText = profile?.topNotes?.length
-    ? `Notas de salida: ${profile.topNotes.join(', ')}. `
+    ? `Notas olfativas: ${profile.topNotes.join(', ')}. `
     : '';
 
-  const inspiracion = getInspiracionPerfumeName(product);
-  const title = `Esencia de Perfume ${product.name} | Aromaniak SV`;
-  const description = `Compra esencia concentrada de perfumería fina ${product.name} (${product.officialName || inspiracion || 'Alta Gama'}). ${notesText}Venta por onza y media onza en El Salvador con envíos a todo el país.`;
+  const isBottle = product.category?.toLowerCase().includes('bote') || product.name.toLowerCase().includes('bote');
+
+  const title = isBottle
+    ? `${product.name} | Botes de Vidrio para Perfume Aromaniak SV`
+    : `Esencia ${product.officialName || product.name} | Perfumería Fina Aromaniak SV`;
+
+  const description = isBottle
+    ? `Bote de vidrio y envase con atomizador para elaboración y envasado de perfumes. Insumos y frascos de perfumería fina en El Salvador.`
+    : `Esencia pura concentrada y aromas de esencias para la elaboración de perfumería fina (${product.officialName || product.name}). ${notesText}Venta de materias primas e insumos por onza y media onza en El Salvador con envíos a todo el país.`;
+
   const canonical = `https://aromaniaksv.com/producto/${encodeURIComponent(product.id)}`;
   const imageUrl = product.imageUrl
     ? (product.imageUrl.startsWith('http') ? product.imageUrl : `https://aromaniaksv.com${product.imageUrl}`)
@@ -109,7 +115,7 @@ export async function generateMetadata({
           url: imageUrl,
           width: 600,
           height: 600,
-          alt: `${product.name} - Esencia de Perfume Aromaniak`,
+          alt: `${product.name} - Aromaniak SV`,
         },
       ],
     },
@@ -132,16 +138,22 @@ export default async function ProductLayout({
   const { id } = await params;
   const product = await getProductForSEO(id);
 
+  const isBottle = product ? (product.category?.toLowerCase().includes('bote') || product.name.toLowerCase().includes('bote')) : false;
+
   const jsonLd = product ? {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: `Esencia de Perfume ${product.name} (${product.officialName || 'Pura'})`,
-    description: `Esencia 100% concentrada para perfumería fina inspirada en ${product.brand || 'fragancia fina'}. Disponible por onza y media onza en El Salvador.`,
+    name: isBottle
+      ? `${product.name} - Bote de Vidrio para Perfume`
+      : `Esencia de Perfumería Fina ${product.officialName || product.name}`,
+    description: isBottle
+      ? 'Bote de vidrio y atomizador para envasado y elaboración de perfumes en El Salvador.'
+      : 'Esencia concentrada pura de perfumería fina y aromas químicos para formulación de fragancias.',
     image: product.imageUrl ? (product.imageUrl.startsWith('http') ? product.imageUrl : `https://aromaniaksv.com${product.imageUrl}`) : 'https://aromaniaksv.com/images/logo.png',
     sku: product.sku || product.id,
     brand: {
       '@type': 'Brand',
-      name: product.brand || 'Aromaniak SV',
+      name: 'Aromaniak SV',
     },
     offers: {
       '@type': 'Offer',
