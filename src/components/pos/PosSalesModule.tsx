@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Droplets, DollarSign, Tag, FileCheck, Flame, Search, Eye } from 'lucide-react';
+import { Droplets, DollarSign, Tag, FileCheck, Flame, Search, Eye, AlertCircle } from 'lucide-react';
 import { SaleRecord } from '@/lib/store';
 
 export interface PosSalesModuleProps {
@@ -242,11 +242,16 @@ export const PosSalesModule: React.FC<PosSalesModuleProps> = React.memo(({
                         }`}>
                           {sale.tipoComprobante === '03' ? 'Crédito Fiscal (03)' : sale.tipoComprobante === '01' ? 'Factura (01)' : 'Ticket'}
                         </span>
-                        {sale.dteInfo?.numeroControl && (
+                        {(sale.tipoComprobante === '01' || sale.tipoComprobante === '03') && !sale.dteInfo?.codigoGeneracion ? (
+                          <span className="inline-flex items-center gap-1 text-[9px] font-black text-amber-800 bg-amber-100 px-1.5 py-0.2 rounded mt-0.5 border border-amber-300">
+                            <AlertCircle className="w-2.5 h-2.5 text-amber-600" />
+                            <span>Pendiente MH</span>
+                          </span>
+                        ) : sale.dteInfo?.numeroControl ? (
                           <span className="block text-[9.5px] font-mono text-emerald-700 font-bold mt-0.5 truncate max-w-[140px]">
                             {sale.dteInfo.numeroControl}
                           </span>
-                        )}
+                        ) : null}
                       </td>
                       <td className="py-2.5 px-3 text-slate-600 font-bold text-[11px]">
                         {sale.paymentMethod === 'CASH' ? 'Efectivo' : sale.paymentMethod === 'CARD' ? 'Tarjeta' : 'Transferencia'}
