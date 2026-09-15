@@ -229,7 +229,7 @@ export default function CheckoutPage() {
     }
 
     try {
-      const orderNumber = `WEB-${Math.floor(1000 + Math.random() * 9000)}`;
+      const orderNumber = `WEB-${Math.floor(100000 + Math.random() * 900000)}`;
       const saleId = `sale-${Date.now()}`;
       const now = new Date().toISOString();
       const direccionFinal = metodoEntrega === 'RETIRO' 

@@ -37,6 +37,27 @@ export async function GET(request: Request) {
     const isStaff = verifyStaffInternalToken(staffHeaderToken) || verifyStaffInternalToken(bearerToken);
     const customerPayload = verifyCustomerToken(bearerToken);
 
+    // SEC-BOLA-01: Proteger consultas de invitados contra ataques de fuerza bruta / scraping
+    if (isGuestQuery && !isStaff && !customerPayload) {
+      const rl = await checkRateLimit(request, {
+        keyPrefix: 'guest_order_lookup',
+        maxRequests: 30,
+        windowMs: 60 * 1000,
+      });
+      if (!rl.allowed) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Has superado el límite de consultas de pedidos. Por favor espera ${rl.resetSeconds} segundos.`,
+          },
+          {
+            status: 429,
+            headers: { 'Retry-After': String(rl.resetSeconds) },
+          }
+        );
+      }
+    }
+
     if (!isGuestQuery && !isStaff && !customerPayload) {
       return NextResponse.json(
         {
@@ -116,8 +137,8 @@ export async function GET(request: Request) {
       notes: o.notes,
       createdAt: o.createdAt.toISOString(),
       updatedAt: o.updatedAt.toISOString(),
-      customer: o.customer,
-      sale: o.sale,
+      customer: isStaff ? o.customer : undefined,
+      sale: isStaff ? o.sale : undefined,
       items: (o.items || []).map((it) => {
         const prod = it.product;
         const officialName = prod?.officialName?.trim();
@@ -138,7 +159,7 @@ export async function GET(request: Request) {
           product: prod ? {
             ...prod,
             price: Number(prod.price || 0),
-            cost: Number(prod.cost || 0),
+            cost: isStaff ? Number(prod.cost || 0) : undefined,
           } : null,
         };
       }),
@@ -647,7 +668,7 @@ export async function POST(request: Request) {
       // 3. Crear la orden oficial de ecommerce con los precios y totales verificados
       return await tx.ecommerceOrder.create({
         data: {
-          orderNumber: orderNumber || `WEB-${Math.floor(1000 + Math.random() * 9000)}`,
+          orderNumber: orderNumber || `WEB-${Math.floor(100000 + Math.random() * 900000)}`,
           customerId: resolvedCustomerId || null,
           customerName: cleanCustomerName,
           customerEmail: cleanCustomerEmail || null,
