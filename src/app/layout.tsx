@@ -25,12 +25,13 @@ export const metadata: Metadata = {
   description: "Tienda online de fragancias y contratipos finos con esencias 100% puras. Envíos a todo El Salvador con C807.",
   icons: {
     icon: [
-      { url: "/favicon.ico" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png?v=2026_v2", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png?v=2026_v2", sizes: "16x16", type: "image/png" },
+      { url: "/favicon.ico?v=2026_v2" },
     ],
+    shortcut: "/favicon.ico?v=2026_v2",
     apple: [
-      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      { url: "/apple-touch-icon.png?v=2026_v2", sizes: "180x180", type: "image/png" },
     ],
   },
   verification: {
@@ -47,6 +48,10 @@ export default function RootLayout({
     <html lang="es" className={`h-full touch-manipulation ${quicksand.variable}`}>
       <head>
         <meta name="google-site-verification" content="NFHSyGtVLfg0Q_J3TbvRmNP4-S9l1zO00afYvcieTPw" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2026_v2" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2026_v2" />
+        <link rel="shortcut icon" href="/favicon.ico?v=2026_v2" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2026_v2" />
       </head>
       <body className={`${quicksand.className} min-h-full flex flex-col bg-[#f1f4f9] text-slate-800 antialiased touch-manipulation font-sans`}>
         <StorageInitializer />
