@@ -1280,12 +1280,25 @@ export default function PosPage() {
         tipoComprobante: completedRecord.tipoComprobante,
         codigoGeneracion: completedRecord.dteInfo?.codigoGeneracion,
         cashierName: completedRecord.cajero || 'Caja 1',
+        cliente: {
+          nombre: clienteNombre || completedRecord.cliente?.nombre || 'Consumidor Final',
+          numDocumento: clienteDoc || completedRecord.cliente?.numDocumento,
+          nrc: clienteNrc || completedRecord.cliente?.nrc,
+          email: clienteEmail || completedRecord.cliente?.correo,
+          giro: clienteGiro || completedRecord.cliente?.actividadEconomica,
+          telefono: selectedCustomerObj?.phone,
+          direccion: clienteDireccion || selectedCustomerObj?.direccion,
+          departamento: clienteDepartamento || selectedCustomerObj?.departamento || 'San Salvador',
+          municipio: clienteMunicipio || selectedCustomerObj?.municipio || 'San Salvador Centro',
+        },
+        requiresDte: (completedRecord.tipoComprobante === '01' || completedRecord.tipoComprobante === '03') && !completedRecord.dteInfo?.codigoGeneracion,
         items: completedRecord.items.map(it => ({
           productId: it.productId,
           name: it.name,
           quantity: it.quantity,
           price: it.price,
           total: it.total,
+          unit: it.unit,
         })),
       }, (freshProds) => {
         setProducts(freshProds);

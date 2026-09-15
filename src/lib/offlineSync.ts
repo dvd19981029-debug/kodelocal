@@ -19,6 +19,18 @@ export interface OfflineSalePayload {
   tipoComprobante?: string;
   codigoGeneracion?: string;
   cashierName?: string;
+  cliente?: {
+    nombre: string;
+    numDocumento?: string;
+    nrc?: string;
+    email?: string;
+    giro?: string;
+    telefono?: string;
+    direccion?: string;
+    departamento?: string;
+    municipio?: string;
+  };
+  requiresDte?: boolean;
   items: Array<{
     productId: string;
     name: string;
@@ -143,6 +155,87 @@ export async function flushOfflineQueue(
 
   for (const item of queue) {
     try {
+      // 1. Si la venta requería DTE fiscal (01 o 03) y aún no tiene código de generación (emitida offline / en contingencia)
+      if ((item.requiresDte || !item.codigoGeneracion) && (item.tipoComprobante === '01' || item.tipoComprobante === '03')) {
+        try {
+          console.log(`📡 [OfflineSync] Retransmitiendo DTE-${item.tipoComprobante} a Factura Llama para venta #${item.saleNumber}...`);
+          const dteRes = await fetch('/api/dte', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              tipoDte: item.tipoComprobante,
+              saleId: item.saleNumber,
+              cliente: item.cliente ? {
+                nombre: item.cliente.nombre,
+                numDocumento: item.cliente.numDocumento,
+                nrc: item.cliente.nrc,
+                email: item.cliente.email,
+                giro: item.cliente.giro,
+                telefono: item.cliente.telefono,
+                direccion: item.cliente.direccion,
+                departamento: item.cliente.departamento,
+                municipio: item.cliente.municipio,
+              } : undefined,
+              items: item.items.map((i) => ({
+                codigo: i.productId,
+                nombre: i.name,
+                cantidad: i.quantity,
+                precioUnitario: i.price,
+                total: i.total,
+                unit: i.unit,
+              })),
+              total: item.total,
+              subtotal: item.subtotal,
+              iva: item.ivaTotal,
+              metodoPago: item.paymentMethod,
+            }),
+          });
+
+          const dteData = await dteRes.json().catch(() => ({}));
+          if (dteData?.dte?.codigoGeneracion) {
+            item.codigoGeneracion = dteData.dte.codigoGeneracion;
+            item.requiresDte = false;
+            console.log(`✅ [OfflineSync] DTE certificado por Factura Llama / MH. Código: ${item.codigoGeneracion}`);
+
+            // Actualizar la venta en localStorage (kodelocal_sales) para que refleje el DTE certificado
+            try {
+              const rawSales = localStorage.getItem('kodelocal_sales');
+              if (rawSales) {
+                const salesList = JSON.parse(rawSales);
+                const updatedList = salesList.map((s: any) => {
+                  if (s.saleNumber === item.saleNumber || s.id === item.saleNumber) {
+                    return {
+                      ...s,
+                      dteInfo: {
+                        codigoGeneracion: dteData.dte.codigoGeneracion,
+                        numeroControl: dteData.dte.numeroControl,
+                        selloRecepcion: dteData.dte.selloRecepcion,
+                        estado: dteData.dte.estado,
+                        simulated: dteData.dte.simulated,
+                        mensaje: dteData.dte.mensaje,
+                        mhDteUrl: dteData.dte.mhDteUrl,
+                        pdfUrl: dteData.dte.pdfUrl,
+                        jsonUrl: dteData.dte.jsonUrl,
+                        fhProcesamiento: dteData.dte.fhProcesamiento,
+                      },
+                    };
+                  }
+                  return s;
+                });
+                localStorage.setItem('kodelocal_sales', JSON.stringify(updatedList));
+              }
+            } catch (err) {
+              console.error('Error actualizando venta local con dteInfo:', err);
+            }
+          } else {
+            console.warn(`⚠️ [OfflineSync] Factura Llama no emitió DTE:`, dteData?.error || dteData?.dte?.mensaje);
+          }
+        } catch (dteErr) {
+          console.warn('⚠️ [OfflineSync] Error conectando con /api/dte en este intento:', dteErr);
+        }
+      }
+
+      // 2. Asentar la venta en Supabase (POST /api/sales) vinculada al DTE
       const response = await fetch('/api/sales', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -224,6 +317,40 @@ export async function syncSaleOnlineOrQueue(
 
   // 2. Intentar envío en vivo
   try {
+    // Si la venta requiere DTE fiscal y no tiene código de generación todavía, intentar emitirlo ahora
+    let currentCodigoGeneracion = sale.codigoGeneracion;
+    if ((sale.requiresDte || !currentCodigoGeneracion) && (sale.tipoComprobante === '01' || sale.tipoComprobante === '03')) {
+      try {
+        const dteRes = await fetch('/api/dte', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tipoDte: sale.tipoComprobante,
+            saleId: sale.saleNumber,
+            cliente: sale.cliente,
+            items: sale.items.map((i) => ({
+              codigo: i.productId,
+              nombre: i.name,
+              cantidad: i.quantity,
+              precioUnitario: i.price,
+              total: i.total,
+              unit: i.unit,
+            })),
+            total: sale.total,
+            subtotal: sale.subtotal,
+            iva: sale.ivaTotal,
+            metodoPago: sale.paymentMethod,
+          }),
+        });
+        const dteData = await dteRes.json().catch(() => ({}));
+        if (dteData?.dte?.codigoGeneracion) {
+          currentCodigoGeneracion = dteData.dte.codigoGeneracion;
+          sale.codigoGeneracion = currentCodigoGeneracion;
+          sale.requiresDte = false;
+        }
+      } catch (_) {}
+    }
+
     const res = await fetch('/api/sales', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -238,7 +365,7 @@ export async function syncSaleOnlineOrQueue(
         cashChange: sale.cashChange,
         notes: sale.notes,
         tipoComprobante: sale.tipoComprobante,
-        codigoGeneracion: sale.codigoGeneracion,
+        codigoGeneracion: currentCodigoGeneracion,
         cashierName: sale.cashierName || 'Caja 1',
         items: sale.items,
       }),
