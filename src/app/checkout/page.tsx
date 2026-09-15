@@ -103,6 +103,20 @@ export default function CheckoutPage() {
     }
   }, [customer]);
 
+  // Preconectar a los dominios de Wompi para acelerar la pasarela bancaria en segundo plano
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const wompiDomains = ['https://id.wompi.sv', 'https://api.wompi.sv', 'https://enlace.wompi.sv'];
+      wompiDomains.forEach((domain) => {
+        const link = document.createElement('link');
+        link.rel = 'preconnect';
+        link.href = domain;
+        document.head.appendChild(link);
+      });
+    } catch (_) {}
+  }, []);
+
   // Método de pago: Tarjeta de Crédito/Débito o Transferencia Bancaria
   const [metodoPago, setMetodoPago] = useState<'CARD' | 'TRANSFER'>('CARD');
 
@@ -420,7 +434,26 @@ export default function CheckoutPage() {
           throw new Error(wompiData.error || 'No se pudo generar la pasarela segura de Wompi');
         }
 
-        // Esperar a que la cuenta regresiva de 8 segundos termine para dar la experiencia visual solicitada
+        // Cargar en segundo plano la pasarela bancaria en la caché del navegador mientras corre la cuenta regresiva visual falsa
+        try {
+          const parsedUrl = new URL(wompiData.urlEnlace);
+          const preconnect = document.createElement('link');
+          preconnect.rel = 'preconnect';
+          preconnect.href = parsedUrl.origin;
+          document.head.appendChild(preconnect);
+
+          const prefetch = document.createElement('link');
+          prefetch.rel = 'prefetch';
+          prefetch.href = wompiData.urlEnlace;
+          document.head.appendChild(prefetch);
+
+          const prerender = document.createElement('link');
+          prerender.rel = 'prerender';
+          prerender.href = wompiData.urlEnlace;
+          document.head.appendChild(prerender);
+        } catch (_) {}
+
+        // Esperar a que la cuenta regresiva visual termine para dar la experiencia visual solicitada
         await countdownFinishedPromise;
 
         // Redireccionar al usuario a la pasarela segura oficial de Wompi / Banco Agrícola
