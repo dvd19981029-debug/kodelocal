@@ -2,10 +2,13 @@ import type { Metadata } from 'next';
 import { INITIAL_PRODUCTS, ProductItem } from '@/lib/store';
 import { prisma } from '@/lib/prisma';
 import { getFragranceProfile } from '@/lib/fragranceProfiles';
+import { getProductUrl, resolveTargetProductId } from '@/lib/productUrl';
 
 async function getProductForSEO(id: string): Promise<ProductItem | null> {
-  const decoded = decodeURIComponent(id || '').toLowerCase().trim();
+  const targetId = resolveTargetProductId(id);
+  const decoded = decodeURIComponent(targetId || '').toLowerCase().trim();
   const cleanDecoded = decoded.replace(/^prod-/, '').replace(/^esencia-/, '');
+  const numericSku = cleanDecoded && /^\d+$/.test(cleanDecoded) ? String(parseInt(cleanDecoded, 10)) : '';
 
   try {
     if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('placeholder')) {
@@ -16,6 +19,7 @@ async function getProductForSEO(id: string): Promise<ProductItem | null> {
             { sku: decoded },
             { barcode: decoded },
             ...(cleanDecoded ? [{ sku: cleanDecoded }] : []),
+            ...(numericSku ? [{ sku: numericSku }] : []),
           ],
         },
         include: { category: true },
@@ -57,7 +61,7 @@ async function getProductForSEO(id: string): Promise<ProductItem | null> {
       pId === decoded ||
       pSku === decoded ||
       pBarcode === decoded ||
-      (cleanDecoded !== '' && (pCleanId === cleanDecoded || pSku === cleanDecoded))
+      (cleanDecoded !== '' && (pCleanId === cleanDecoded || pSku === cleanDecoded || (numericSku !== '' && pSku === numericSku)))
     );
   }) || null;
 }
@@ -94,7 +98,7 @@ export async function generateMetadata({
     ? `Esencia concentrada ${displayName} para elaboración de fragancias y perfumería fina. ${notesText}Venta por onza y media onza. Entregas a domicilio a todo El Salvador o retiro en local.`
     : `${displayName} - Insumos para elaboración de perfumería fina en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.`;
 
-  const canonical = `https://aromaniaksv.com/producto/${encodeURIComponent(product.id)}`;
+  const canonical = `https://aromaniaksv.com${getProductUrl(product)}`;
   const imageUrl = product.imageUrl
     ? (product.imageUrl.startsWith('http') ? product.imageUrl : `https://aromaniaksv.com${product.imageUrl}`)
     : 'https://aromaniaksv.com/images/logo.png';
@@ -158,7 +162,7 @@ export default async function ProductLayout({
     },
     offers: {
       '@type': 'Offer',
-      url: `https://aromaniaksv.com/producto/${encodeURIComponent(product.id)}`,
+      url: `https://aromaniaksv.com${getProductUrl(product)}`,
       priceCurrency: 'USD',
       price: product.price.toFixed(2),
       itemCondition: 'https://schema.org/NewCondition',

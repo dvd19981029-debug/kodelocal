@@ -548,12 +548,12 @@ export default function PerfumeKitBuilderModal({
                       >
                         <div className="w-full aspect-square rounded-xl overflow-hidden bg-white mb-2 flex items-center justify-center border border-slate-100 shadow-2xs p-1">
                           <img
-                            src={bottle.imageUrl || '/images/botes/bote_100ml_sauvage_degrade_negro.jpg'}
+                            src={bottle.imageUrl || '/images/botes/bote_100ml_degrade_azul_noche.jpg'}
                             alt={bottle.name}
                             loading="lazy"
                             decoding="async"
                             onError={(e) => {
-                              e.currentTarget.src = '/images/botes/bote_100ml_sauvage_degrade_negro.jpg';
+                              e.currentTarget.src = '/images/botes/bote_100ml_degrade_azul_noche.jpg';
                             }}
                             className="w-full h-full object-cover rounded-lg"
                           />
@@ -608,12 +608,12 @@ export default function PerfumeKitBuilderModal({
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-purple-200 shadow-2xs shrink-0 p-0.5">
                     <img
-                      src={activeBottle.imageUrl || '/images/botes/bote_100ml_sauvage_degrade_negro.jpg'}
+                      src={activeBottle.imageUrl || '/images/botes/bote_100ml_degrade_azul_noche.jpg'}
                       alt={activeBottle.name}
                       loading="lazy"
                       decoding="async"
                       onError={(e) => {
-                        e.currentTarget.src = '/images/botes/bote_100ml_sauvage_degrade_negro.jpg';
+                        e.currentTarget.src = '/images/botes/bote_100ml_degrade_azul_noche.jpg';
                       }}
                       className="w-full h-full object-cover rounded-lg"
                     />

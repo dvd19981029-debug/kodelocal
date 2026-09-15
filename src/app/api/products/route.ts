@@ -84,7 +84,7 @@ export async function GET(request: Request) {
       stock: p.stock,
       minStock: p.minStock,
       imageUrl: (p.category?.name === 'Botes' || p.category?.name === 'Botes & Envases')
-        ? (p.imageUrl && p.imageUrl.startsWith('/images/botes/') ? p.imageUrl : '/images/botes/bote_100ml_sauvage_degrade_negro.jpg')
+        ? (p.imageUrl && p.imageUrl.startsWith('/images/botes/') ? p.imageUrl : '/images/botes/bote_100ml_degrade_azul_noche.jpg')
         : (p.category?.name === 'Esencias para Perfume' || !p.category?.name)
         ? `/images/esencias/esencia_${p.sku || p.id}.webp?v=aroma_official_v3`
         : (p.imageUrl || '/images/essence_bottle_blank.webp'),

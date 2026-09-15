@@ -28,6 +28,7 @@ import ProductCard from '@/components/ecommerce/ProductCard';
 import FragranceNotesVisual from '@/components/ecommerce/FragranceNotesVisual';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { getFragranceDescription } from '@/lib/fragranceDescriptions';
+import { resolveTargetProductId } from '@/lib/productUrl';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -72,8 +73,10 @@ export default function ProductDetailPage() {
   const product = useMemo(() => {
     if (!productId) return null;
     const raw = String(productId).trim();
-    const decoded = decodeURIComponent(raw).toLowerCase().trim();
+    const resolvedId = resolveTargetProductId(raw);
+    const decoded = decodeURIComponent(resolvedId).toLowerCase().trim();
     const cleanDecoded = decoded.replace(/^prod-/, '').replace(/^esencia-/, '');
+    const numericSku = cleanDecoded && /^\d+$/.test(cleanDecoded) ? String(parseInt(cleanDecoded, 10)) : '';
 
     const matchProduct = (p: ProductItem) => {
       const pId = p.id.toLowerCase().trim();
@@ -83,9 +86,14 @@ export default function ProductDetailPage() {
 
       return (
         pId === decoded ||
+        pId === raw.toLowerCase().trim() ||
         pSku === decoded ||
         pBarcode === decoded ||
-        (cleanDecoded !== '' && (pCleanId === cleanDecoded || pSku === cleanDecoded))
+        (cleanDecoded !== '' && (
+          pCleanId === cleanDecoded || 
+          pSku === cleanDecoded || 
+          (numericSku !== '' && pSku === numericSku)
+        ))
       );
     };
 
@@ -297,7 +305,7 @@ export default function ProductDetailPage() {
                 decoding="async"
                 onError={(e) => {
                   e.currentTarget.src = isBottle 
-                    ? '/images/botes/bote_100ml_sauvage_degrade_negro.jpg'
+                    ? '/images/botes/bote_100ml_degrade_azul_noche.jpg'
                     : '/images/essence_bottle_blank.webp';
                 }}
                 className={`w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105 ${

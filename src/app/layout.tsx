@@ -91,13 +91,16 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon-32x32.png?v=2026_v2", sizes: "32x32", type: "image/png" },
-      { url: "/favicon-16x16.png?v=2026_v2", sizes: "16x16", type: "image/png" },
-      { url: "/favicon.ico?v=2026_v2" },
+      { url: "/favicon-48x48.png?v=3", sizes: "48x48", type: "image/png" },
+      { url: "/favicon-96x96.png?v=3", sizes: "96x96", type: "image/png" },
+      { url: "/favicon-192x192.png?v=3", sizes: "192x192", type: "image/png" },
+      { url: "/favicon-32x32.png?v=3", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png?v=3", sizes: "16x16", type: "image/png" },
+      { url: "/favicon.ico?v=3" },
     ],
-    shortcut: "/favicon.ico?v=2026_v2",
+    shortcut: "/favicon.ico?v=3",
     apple: [
-      { url: "/apple-touch-icon.png?v=2026_v2", sizes: "180x180", type: "image/png" },
+      { url: "/apple-touch-icon.png?v=3", sizes: "180x180", type: "image/png" },
     ],
   },
   verification: {
@@ -114,10 +117,13 @@ export default function RootLayout({
     <html lang="es" className={`h-full touch-manipulation ${quicksand.variable}`}>
       <head>
         <meta name="google-site-verification" content="NFHSyGtVLfg0Q_J3TbvRmNP4-S9l1zO00afYvcieTPw" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2026_v2" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2026_v2" />
-        <link rel="shortcut icon" href="/favicon.ico?v=2026_v2" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2026_v2" />
+        <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=3" />
+        <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=3" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png?v=3" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=3" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=3" />
+        <link rel="shortcut icon" href="/favicon.ico?v=3" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=3" />
       </head>
       <body className={`${quicksand.className} min-h-full flex flex-col bg-[#f1f4f9] text-slate-800 antialiased touch-manipulation font-sans`}>
         <StorageInitializer />

@@ -124,12 +124,12 @@ export default function CartDrawer() {
                             />
                             {/* Frasco Atomizador 100ml */}
                             <img
-                              src={item.kitDetails.bottleImageUrl || '/images/botes/bote_100ml_sauvage_degrade_negro.jpg'}
+                              src={item.kitDetails.bottleImageUrl || '/images/botes/bote_100ml_degrade_azul_noche.jpg'}
                               alt={item.kitDetails.bottleName}
                               loading="lazy"
                               decoding="async"
                               onError={(e) => {
-                                e.currentTarget.src = '/images/botes/bote_100ml_sauvage_degrade_negro.jpg';
+                                e.currentTarget.src = '/images/botes/bote_100ml_degrade_azul_noche.jpg';
                               }}
                               className="absolute right-1 bottom-1 w-9 h-9 sm:w-10 sm:h-10 rounded-lg object-cover border border-slate-300 z-20 shadow-xs"
                             />

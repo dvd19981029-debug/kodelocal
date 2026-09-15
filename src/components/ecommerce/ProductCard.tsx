@@ -7,6 +7,7 @@ import { ProductItem, INITIAL_PRODUCTS } from '@/lib/store';
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
+import { getProductUrl } from '@/lib/productUrl';
 
 interface ProductCardProps {
   product: ProductItem;
@@ -163,7 +164,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
         <div>
           {/* Contenedor de Imagen de Frasco con estilo Tarjeta Burbuja Claymórfica */}
           <Link 
-            href={`/producto/${product.id}`}
+            href={getProductUrl(product)}
             className={`block relative w-full aspect-square clay-card overflow-hidden mb-2 sm:mb-2.5 flex items-center justify-center cursor-pointer transition-all duration-300 ${
               isOutOfStock 
                 ? 'opacity-85 border-slate-200/90 bg-[#f8fafc]' 
@@ -182,7 +183,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
               decoding="async"
               onError={(e) => {
                 e.currentTarget.src = product.category === 'Botes' 
-                  ? '/images/botes/bote_100ml_sauvage_degrade_negro.jpg'
+                  ? '/images/botes/bote_100ml_degrade_azul_noche.jpg'
                   : '/images/essence_bottle_blank.webp';
               }}
               className={`w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-108 ${
@@ -224,7 +225,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
           {/* Detalles del producto (desplazados claramente a la derecha para acompañar la curva redondeada de la tarjeta) */}
           <div className="pl-3.5 pr-2 sm:pl-4 sm:pr-2.5">
             {/* Nombre Oficial de la Fragancia (Contratipo) - En BOLD y más grande */}
-            <Link href={`/producto/${product.id}`} className="block group/title">
+            <Link href={getProductUrl(product)} className="block group/title">
               <h3 className="font-bold text-base sm:text-lg text-slate-900 line-clamp-1 leading-snug group-hover/title:text-indigo-600 transition-colors" title={displayName}>
                 {displayName}
               </h3>

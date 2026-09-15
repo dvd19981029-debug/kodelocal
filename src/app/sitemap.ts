@@ -2,20 +2,27 @@ import type { MetadataRoute } from 'next';
 import { INITIAL_PRODUCTS } from '@/lib/store';
 import { prisma } from '@/lib/prisma';
 
+import { getProductUrl } from '@/lib/productUrl';
+
 export const revalidate = 86400; // Regenerar el sitemap al menos una vez cada 24 horas
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://aromaniaksv.com';
 
-  // Obtener productos de la base de datos de Supabase con fallback a INITIAL_PRODUCTS
-  let productEntries: Array<{ id: string; updatedAt?: Date }> = [];
+  // Obtener productos de la base de datos con fallback a INITIAL_PRODUCTS
+  let productEntries: Array<{ id: string; sku?: string | null; categoryName?: string | null; updatedAt?: Date }> = [];
   try {
     if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('placeholder')) {
       const dbProducts = await prisma.product.findMany({
-        select: { id: true, updatedAt: true },
+        select: { id: true, sku: true, category: { select: { name: true } }, updatedAt: true },
       });
       if (dbProducts.length > 0) {
-        productEntries = dbProducts;
+        productEntries = dbProducts.map(p => ({
+          id: p.id,
+          sku: p.sku,
+          categoryName: p.category?.name,
+          updatedAt: p.updatedAt,
+        }));
       }
     }
   } catch (err) {
@@ -24,11 +31,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Si no se pudieron cargar de BD, usar el catálogo estático para garantizar indexación completa
   if (productEntries.length === 0) {
-    productEntries = INITIAL_PRODUCTS.map(p => ({ id: p.id }));
+    productEntries = INITIAL_PRODUCTS.map(p => ({
+      id: p.id,
+      sku: p.sku,
+      categoryName: p.category,
+    }));
   }
 
   const productUrls: MetadataRoute.Sitemap = productEntries.map((p) => ({
-    url: `${baseUrl}/producto/${encodeURIComponent(p.id)}`,
+    url: `${baseUrl}${getProductUrl({ id: p.id, sku: p.sku, category: p.categoryName })}`,
     lastModified: p.updatedAt ? new Date(p.updatedAt) : new Date(),
     changeFrequency: 'weekly' as const,
     priority: 0.8,

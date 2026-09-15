@@ -1241,12 +1241,12 @@ export default function CheckoutPage() {
                             className="absolute left-0.5 top-0.5 w-6 h-6 rounded object-cover border border-amber-300 z-10"
                           />
                           <img
-                            src={it.kitDetails.bottleImageUrl || '/images/botes/bote_100ml_sauvage_degrade_negro.jpg'}
+                            src={it.kitDetails.bottleImageUrl || '/images/botes/bote_100ml_degrade_azul_noche.jpg'}
                             alt={it.kitDetails.bottleName}
                             loading="lazy"
                             decoding="async"
                             onError={(e) => {
-                              e.currentTarget.src = '/images/botes/bote_100ml_sauvage_degrade_negro.jpg';
+                              e.currentTarget.src = '/images/botes/bote_100ml_degrade_azul_noche.jpg';
                             }}
                             className="absolute right-0.5 bottom-0.5 w-6 h-6 rounded object-cover border border-slate-300 z-20"
                           />

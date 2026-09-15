@@ -83,12 +83,12 @@ export default function BuildYourPerfumeCard({ onOpenBuilder }: BuildYourPerfume
           {/* 2. Frasco Atomizador de 100ml */}
           <div className="relative z-20 -ml-2 sm:-ml-3 w-16 h-16 sm:w-20 sm:h-20 md:w-22 md:h-22 rounded-2xl overflow-hidden bg-white border-2 border-amber-300 shadow-md flex items-center justify-center">
             <img
-              src="/images/botes/bote_100ml_sauvage_degrade_negro.jpg"
+              src="/images/botes/bote_100ml_degrade_azul_noche.jpg"
               alt="Frasco de perfume 100ml"
               loading="lazy"
               decoding="async"
               onError={(e) => {
-                e.currentTarget.src = '/images/botes/bote_100ml_sauvage_degrade_negro.jpg';
+                e.currentTarget.src = '/images/botes/bote_100ml_degrade_azul_noche.jpg';
               }}
               className="w-full h-full object-cover object-center"
             />
