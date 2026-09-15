@@ -311,11 +311,11 @@ export async function PATCH(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    // 0. Rate Limiting para creación de pedidos (SEC-05)
-    const rl = checkRateLimit(request, {
+    // 0. Rate Limiting para creación de pedidos (SEC-05 / REQ-SEC-01)
+    const rl = await checkRateLimit(request, {
       keyPrefix: 'ecommerce_orders_create',
       maxRequests: 10,
-      windowMs: 5 * 60 * 1000,
+      windowMs: 60 * 1000,
     });
     if (!rl.allowed) {
       return NextResponse.json(

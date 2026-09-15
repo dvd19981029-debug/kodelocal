@@ -17,11 +17,11 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { action } = body;
 
-    // ================= RATE LIMITING (SEC-05) =================
+    // ================= RATE LIMITING (SEC-05 / REQ-SEC-01) =================
     if (action === 'login' || action === 'register' || action === 'google') {
-      const rl = checkRateLimit(request, {
+      const rl = await checkRateLimit(request, {
         keyPrefix: 'customer_auth',
-        maxRequests: 10,
+        maxRequests: 5,
         windowMs: 60 * 1000,
       });
       if (!rl.allowed) {

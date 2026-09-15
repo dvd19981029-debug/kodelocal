@@ -7,8 +7,8 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    // Rate Limiting para generación de pasarela Wompi (SEC-05)
-    const rl = checkRateLimit(request, {
+    // Rate Limiting para generación de pasarela Wompi (SEC-05 / REQ-SEC-01)
+    const rl = await checkRateLimit(request, {
       keyPrefix: 'wompi_checkout',
       maxRequests: 10,
       windowMs: 60 * 1000,

@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { INITIAL_PRODUCTS } from '@/lib/store';
 import { verifyStaffInternalToken } from '@/lib/customerAuthToken';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +19,19 @@ const NO_CACHE_HEADERS = {
 
 export async function GET(request: Request) {
   try {
+    // Rate Limiting para lectura de catálogo (REQ-SEC-01: máx 100 req/min por IP)
+    const rl = await checkRateLimit(request, {
+      keyPrefix: 'products_get',
+      maxRequests: 100,
+      windowMs: 60 * 1000,
+    });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { success: false, error: `Límite de consultas excedido. Por favor espera ${rl.resetSeconds} segundos.` },
+        { status: 429, headers: { 'Retry-After': String(rl.resetSeconds) } }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const inStockOnly = searchParams.get('inStock') === 'true';
     const isFreshRequested = searchParams.get('fresh') === 'true' || searchParams.has('_t');
