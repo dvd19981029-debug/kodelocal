@@ -5,6 +5,10 @@ import { verifyStaffInternalToken } from '@/lib/customerAuthToken';
 
 export const dynamic = 'force-dynamic';
 
+const CACHE_HEADERS = {
+  'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+};
+
 const NO_CACHE_HEADERS = {
   'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
   'Pragma': 'no-cache',
@@ -15,6 +19,8 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const inStockOnly = searchParams.get('inStock') === 'true';
+    const isFreshRequested = searchParams.get('fresh') === 'true' || searchParams.has('_t');
+    const responseHeaders = isFreshRequested ? NO_CACHE_HEADERS : CACHE_HEADERS;
 
     // Consultar productos en la base de datos de Supabase
     const dbProducts = await prisma.product.findMany({
@@ -85,7 +91,7 @@ export async function GET(request: Request) {
         inStock,
         outOfStock,
       }
-    }, { headers: NO_CACHE_HEADERS });
+    }, { headers: responseHeaders });
   } catch (error: any) {
     console.error('Error fetching products from DB:', error);
     // Fallback seguro en caso de error de conexión transitoria
