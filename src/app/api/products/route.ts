@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { INITIAL_PRODUCTS } from '@/lib/store';
 import { verifyStaffInternalToken } from '@/lib/customerAuthToken';
@@ -165,6 +166,11 @@ export async function PATCH(request: Request) {
         data: updateData,
       });
 
+      try {
+        revalidatePath('/api/products');
+        revalidatePath('/');
+      } catch (_) {}
+
       return NextResponse.json({ success: true, count: result.count });
     }
 
@@ -238,6 +244,11 @@ export async function PATCH(request: Request) {
       isAvailableOnline: updated.isAvailableOnline,
       puesto: updated.puesto || '',
     };
+
+    try {
+      revalidatePath('/api/products');
+      revalidatePath('/');
+    } catch (_) {}
 
     return NextResponse.json({ success: true, product: formattedUpdated });
   } catch (error: any) {

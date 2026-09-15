@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { verifyStaffInternalToken } from '@/lib/customerAuthToken';
 
@@ -169,6 +170,12 @@ export async function PATCH(request: Request) {
         finishedPerfumePrice: configToSave.basePrice,
       },
     });
+
+    try {
+      revalidatePath('/api/products');
+      revalidatePath('/api/kit-config');
+      revalidatePath('/');
+    } catch (_) {}
 
     return NextResponse.json({
       success: true,
