@@ -191,14 +191,16 @@ export default function CheckoutPage() {
     });
 
     if (metodoPago === 'CARD') {
-      setWompiCountdown(4);
-      let current = 4;
+      setWompiCountdown(8);
+      let current = 8;
       countdownTimer = setInterval(() => {
         current -= 1;
         if (current <= 0) {
           if (countdownTimer) clearInterval(countdownTimer);
-          setWompiCountdown(null);
-          countdownFinishedResolve();
+          setWompiCountdown(0);
+          setTimeout(() => {
+            countdownFinishedResolve();
+          }, 800);
         } else {
           setWompiCountdown(current);
         }
@@ -364,7 +366,7 @@ export default function CheckoutPage() {
           throw new Error(wompiData.error || 'No se pudo generar la pasarela segura de Wompi');
         }
 
-        // Esperar a que la cuenta regresiva de 4 segundos termine para dar la experiencia visual solicitada
+        // Esperar a que la cuenta regresiva de 8 segundos termine para dar la experiencia visual solicitada
         await countdownFinishedPromise;
 
         // Redireccionar al usuario a la pasarela segura oficial de Wompi / Banco Agrícola
@@ -1357,7 +1359,9 @@ export default function CheckoutPage() {
                     <Loader2 className="w-4 h-4 animate-spin text-white" />
                     <span>
                       {metodoPago === 'CARD' 
-                        ? `Dirigiendo a Wompi, por favor espere${wompiCountdown !== null ? ` (${wompiCountdown}s)` : ''}...` 
+                        ? (wompiCountdown === 0
+                            ? 'Entrando a Pago Seguro con Wompi...'
+                            : `Redirigiendo a Wompi, por favor espere${wompiCountdown !== null ? ` (${wompiCountdown}s)` : ''}...`)
                         : 'Procesando comanda...'}
                     </span>
                   </span>
