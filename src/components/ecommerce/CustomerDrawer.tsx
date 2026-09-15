@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { DEPARTAMENTOS_CATALOG, MUNICIPIOS_CATALOG } from '@/lib/svTerritory';
-import { getGuestOrders, addGuestOrderNumber } from '@/lib/guestOrderStorage';
+import { getGuestOrders, addGuestOrderNumber, getGuestShippingProfile, saveGuestShippingProfile } from '@/lib/guestOrderStorage';
 
 export default function CustomerDrawer() {
   const { 
@@ -84,7 +84,7 @@ export default function CustomerDrawer() {
     };
   }, [isDrawerOpen, closeDrawer]);
 
-  // Sync profile form with customer data
+  // Sync profile form with customer data or guest shipping profile
   useEffect(() => {
     if (customer) {
       setName(customer.name || '');
@@ -98,6 +98,19 @@ export default function CustomerDrawer() {
       setNrc(customer.nrc || '');
       setActivityDesc(customer.activityDesc || '');
       setIsCreditFiscal(Boolean(customer.nrc || customer.businessName));
+    } else {
+      const guest = getGuestShippingProfile();
+      setName(guest.name || '');
+      setPhone(guest.phone || '');
+      setDocumentType(guest.documentType || 'DUI');
+      setDocumentNum(guest.documentNum || '');
+      setDepartment(guest.department || 'San Salvador');
+      setMunicipality(guest.municipality || 'San Salvador Centro');
+      setAddress(guest.address || '');
+      setBusinessName(guest.businessName || '');
+      setNrc(guest.nrc || '');
+      setActivityDesc(guest.activityDesc || '');
+      setIsCreditFiscal(Boolean(guest.nrc || guest.businessName));
     }
   }, [customer, isDrawerOpen]);
 
@@ -154,11 +167,8 @@ export default function CustomerDrawer() {
 
   if (!isDrawerOpen) return null;
 
-  // Para el cliente/invitado, mostrar únicamente compras confirmadas o pedidos reales.
-  // Excluir intentos de pago con tarjeta abandonados o nunca pagados para no saturar su historial.
-  const visibleOrders = orders.filter(
-    (order) => !(order.paymentMethod === 'CARD' && (order.paymentStatus === 'PENDING' || order.paymentStatus === 'CANCELLED'))
-  );
+  // Mostrar todos los pedidos del usuario o del dispositivo sin ocultar compras recientes en verificación
+  const visibleOrders = orders;
 
   // Filter available municipalities by selected department
   const selectedDeptObj = DEPARTAMENTOS_CATALOG.find(
@@ -209,24 +219,43 @@ export default function CustomerDrawer() {
     setSaveSuccess(false);
 
     try {
-      const res = await updateCustomerProfile({
-        name,
-        phone,
-        documentType,
-        documentNum,
-        department,
-        municipality,
-        address,
-        businessName: isCreditFiscal ? businessName : '',
-        nrc: isCreditFiscal ? nrc : '',
-        activityDesc: isCreditFiscal ? activityDesc : '',
-      });
+      if (customer?.id) {
+        const res = await updateCustomerProfile({
+          name,
+          phone,
+          documentType,
+          documentNum,
+          department,
+          municipality,
+          address,
+          businessName: isCreditFiscal ? businessName : '',
+          nrc: isCreditFiscal ? nrc : '',
+          activityDesc: isCreditFiscal ? activityDesc : '',
+        });
 
-      if (res.success) {
+        if (res.success) {
+          setSaveSuccess(true);
+          setTimeout(() => setSaveSuccess(false), 3000);
+        } else {
+          setSaveError(res.error || 'No se pudieron guardar los cambios');
+        }
+      } else {
+        // Modo Invitado: Guardar perfil de despacho en localStorage para este navegador
+        saveGuestShippingProfile({
+          name,
+          phone,
+          documentType,
+          documentNum,
+          department,
+          municipality,
+          address,
+          businessName: isCreditFiscal ? businessName : '',
+          nrc: isCreditFiscal ? nrc : '',
+          activityDesc: isCreditFiscal ? activityDesc : '',
+          tipoComprobante: isCreditFiscal ? '03' : '01',
+        });
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
-      } else {
-        setSaveError(res.error || 'No se pudieron guardar los cambios');
       }
     } catch (err: any) {
       setSaveError(err.message || 'Error al guardar');
@@ -563,13 +592,28 @@ export default function CustomerDrawer() {
                           </span>
                         </div>
 
-                        {/* Info de envío si existe */}
-                        {(order.department || order.shippingAddress) && (
-                          <div className="p-2 rounded-xl bg-slate-50 text-[10px] text-slate-500 flex items-start gap-1.5">
-                            <MapPin className="w-3 h-3 text-slate-400 shrink-0 mt-0.5" />
-                            <span className="truncate">
-                              {[order.shippingAddress, order.municipality, order.department].filter(Boolean).join(', ')}
-                            </span>
+                        {/* Ficha de Envío y Destino */}
+                        {(order.department || order.shippingAddress || order.customerName) && (
+                          <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-[11px] text-slate-600 space-y-1">
+                            <div className="flex items-center gap-1.5 font-bold text-slate-800 text-[11px]">
+                              <MapPin className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                              <span>Destino de Envío</span>
+                            </div>
+                            {order.customerName && (
+                              <p className="text-slate-700 pl-5">
+                                Recibe: <strong>{order.customerName}</strong> {order.customerPhone ? `(${order.customerPhone})` : ''}
+                              </p>
+                            )}
+                            {order.shippingAddress && (
+                              <p className="text-slate-600 pl-5 leading-relaxed">
+                                {order.shippingAddress}
+                              </p>
+                            )}
+                            {order.deliveryReference && (
+                              <p className="text-slate-500 italic text-[10px] pl-5">
+                                Ref: {order.deliveryReference}
+                              </p>
+                            )}
                           </div>
                         )}
                       </div>
@@ -582,28 +626,17 @@ export default function CustomerDrawer() {
             {/* ---------------- PESTAÑA 2: DATOS Y FACTURACIÓN ---------------- */}
             {drawerTab === 'profile' && (
               <>
-                {!customer ? (
-                  <div className="py-12 px-5 text-center space-y-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
-                    <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
-                      <User className="w-7 h-7" />
+                <form onSubmit={handleSaveProfile} className="space-y-4">
+                  {!customer && (
+                    <div className="p-3 bg-amber-50/90 border border-amber-200 rounded-2xl flex items-center justify-between gap-2.5 text-xs">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+                        <span className="text-amber-900 font-medium text-[11px] leading-tight">
+                          <strong>Modo Invitado:</strong> Tus datos de entrega se guardan en este dispositivo y se autocompletarán en el checkout.
+                        </span>
+                      </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <h4 className="text-base font-black text-slate-900">
-                        Guarda tus Datos y Facturación
-                      </h4>
-                      <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
-                        Inicia sesión con Google o regístrate para autocompletar tu dirección de envío y emitir Factura o Crédito Fiscal automáticamente.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => openAuthModal('login')}
-                      className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-200 transition-all cursor-pointer active:scale-95"
-                    >
-                      Iniciar Sesión / Registrarme
-                    </button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleSaveProfile} className="space-y-4">
+                  )}
                     {saveSuccess && (
                       <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2 animate-in fade-in">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -799,22 +832,38 @@ export default function CustomerDrawer() {
                       {isSaving ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Guardando cambios en tu perfil...</span>
+                          <span>{customer ? 'Guardando cambios en tu perfil...' : 'Guardando en este dispositivo...'}</span>
                         </>
                       ) : saveSuccess ? (
                         <>
                           <CheckCircle2 className="w-4 h-4 text-white animate-bounce" />
-                          <span className="tracking-wide">¡Información Guardada con Éxito! ✓</span>
+                          <span className="tracking-wide">
+                            {customer ? '¡Información Guardada con Éxito! ✓' : '¡Datos de Envío Guardados en tu Dispositivo! ✓'}
+                          </span>
                         </>
                       ) : (
                         <>
                           <CheckCircle2 className="w-4 h-4" />
-                          <span>Guardar Información</span>
+                          <span>{customer ? 'Guardar Cambios de Perfil' : 'Guardar Datos de Envío (Modo Invitado)'}</span>
                         </>
                       )}
                     </button>
+
+                    {!customer && (
+                      <div className="p-3 bg-indigo-50/70 border border-indigo-100 rounded-2xl text-center space-y-2">
+                        <p className="text-[11px] text-slate-600 leading-snug">
+                          ¿Deseas sincronizar tus pedidos y direcciones en todos tus dispositivos?
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => openAuthModal('login')}
+                          className="px-4 py-1.5 rounded-xl bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-700 transition-colors shadow-2xs cursor-pointer"
+                        >
+                          Iniciar Sesión / Registrarme
+                        </button>
+                      </div>
+                    )}
                   </form>
-                )}
               </>
             )}
 

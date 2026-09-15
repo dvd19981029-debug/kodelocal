@@ -33,7 +33,7 @@ import { DEPARTAMENTOS_CATALOG, getMunicipiosByDepartamento } from '@/lib/svTerr
 import { SaleRecord } from '@/lib/store';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
-import { saveGuestOrder } from '@/lib/guestOrderStorage';
+import { saveGuestOrder, saveGuestShippingProfile, getGuestShippingProfile } from '@/lib/guestOrderStorage';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -83,6 +83,25 @@ export default function CheckoutPage() {
       if (customer.activityDesc) setGiro(customer.activityDesc);
     }
   }, [customer?.id, customer?.documentNum, customer?.nrc, customer?.address, customer?.phone, customer?.name]);
+
+  // Cargar datos de envío guardados previamente si el usuario es invitado
+  React.useEffect(() => {
+    if (!customer) {
+      const guestProfile = getGuestShippingProfile();
+      if (guestProfile.name) setNombre((prev) => prev || guestProfile.name || '');
+      if (guestProfile.phone) setTelefono((prev) => prev || guestProfile.phone || '');
+      if (guestProfile.email) setEmail((prev) => prev || guestProfile.email || '');
+      if (guestProfile.department) setDepartamento((prev) => (prev === 'San Salvador' ? guestProfile.department || prev : prev));
+      if (guestProfile.municipality) setMunicipio((prev) => (prev === 'San Salvador' ? guestProfile.municipality || prev : prev));
+      if (guestProfile.address) setDireccion((prev) => prev || guestProfile.address || '');
+      if (guestProfile.reference) setReferencia((prev) => prev || guestProfile.reference || '');
+      if (guestProfile.documentNum) setNumDoc((prev) => prev || guestProfile.documentNum || '');
+      if (guestProfile.tipoComprobante) setTipoComprobante((prev) => (prev === '01' ? guestProfile.tipoComprobante || prev : prev));
+      if (guestProfile.nrc) setNrc((prev) => prev || guestProfile.nrc || '');
+      if (guestProfile.activityDesc) setGiro((prev) => prev || guestProfile.activityDesc || '');
+      if (guestProfile.metodoEntrega) setMetodoEntrega((prev) => prev || guestProfile.metodoEntrega || 'ENVIO');
+    }
+  }, [customer]);
 
   // Método de pago: Tarjeta de Crédito/Débito o Transferencia Bancaria
   const [metodoPago, setMetodoPago] = useState<'CARD' | 'TRANSFER'>('CARD');
@@ -319,14 +338,49 @@ export default function CheckoutPage() {
         throw new Error(orderData.error || 'No fue posible confirmar el pedido');
       }
 
-      // Guardar pedido en localStorage del dispositivo para modo invitado
+      // Guardar perfil de envío del invitado para futuros pedidos y autocompletado
+      saveGuestShippingProfile({
+        name: nombre,
+        phone: telefono,
+        email: email || customer?.email,
+        department: metodoEntrega === 'RETIRO' ? 'San Salvador' : departamento,
+        municipality: metodoEntrega === 'RETIRO' ? 'San Salvador Centro' : municipio,
+        address: direccionFinal,
+        reference: referencia || undefined,
+        metodoEntrega,
+        documentType: tipoComprobante === '03' ? 'NIT' : 'DUI',
+        documentNum: numDoc || undefined,
+        tipoComprobante,
+        businessName: tipoComprobante === '03' ? nombre : undefined,
+        nrc: nrc || undefined,
+        activityDesc: giro || undefined,
+      });
+
+      // Guardar pedido detallado en localStorage del dispositivo para modo invitado
       saveGuestOrder({
         orderNumber: orderData.order?.orderNumber || orderNumber,
         createdAt: now,
         total: totalConEnvio,
+        subtotal: subtotal,
+        shippingCost: shippingCost,
         paymentMethod: metodoPago,
+        paymentStatus: metodoPago === 'CARD' ? 'PENDING' : 'PENDING',
+        orderStatus: 'NUEVO',
         customerName: nombre,
         customerEmail: email || customer?.email,
+        customerPhone: telefono,
+        shippingAddress: direccionFinal,
+        department: metodoEntrega === 'RETIRO' ? 'San Salvador' : departamento,
+        municipality: metodoEntrega === 'RETIRO' ? 'San Salvador Centro' : municipio,
+        deliveryReference: referencia || undefined,
+        items: cart.map(it => ({
+          productName: it.product.name,
+          inspiredBy: getInspiracionPerfumeName(it.product) || null,
+          presentation: it.presentationName,
+          quantity: it.quantity,
+          unitPrice: it.unitPrice,
+          total: it.totalPrice,
+        })),
       });
 
       // Si el cliente paga con Tarjeta, generamos el enlace bancario de Wompi y lo redireccionamos

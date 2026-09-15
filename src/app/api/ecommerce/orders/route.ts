@@ -61,13 +61,6 @@ export async function GET(request: Request) {
       where: {
         ...(isGuestQuery ? {
           orderNumber: { in: guestNumbersRaw },
-          // Para invitados, excluir intentos de pago con tarjeta abandonados o nunca pagados
-          NOT: {
-            AND: [
-              { paymentMethod: 'CARD' },
-              { OR: [{ paymentStatus: 'PENDING' }, { paymentStatus: 'CANCELLED' }] },
-            ],
-          },
         } : {
           ...(targetCustomerId ? {
             customerId: targetCustomerId,
