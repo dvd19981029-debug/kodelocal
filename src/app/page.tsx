@@ -397,6 +397,11 @@ export default function EcommerceHomePage() {
   return (
     <div className="space-y-4 sm:space-y-6 pb-16">
       
+      {/* ================= ENCABEZADO H1 SEMÁNTICO (SEO EL SALVADOR) ================= */}
+      <h1 className="sr-only">
+        Aromaniak SV | Esencias de Perfumería Fina, Contratipos e Insumos en El Salvador
+      </h1>
+
       {/* ================= BARRA DE BÚSQUEDA REACTIVA PERMANENTEMENTE STICKY (SE OCULTA EN ARMA TU PERFUME) ================= */}
       {selectedCategory !== 'Arma tu perfume' && (
         <ReactiveSearchBar
@@ -722,6 +727,104 @@ export default function EcommerceHomePage() {
             </li>
           </ul>
         </div>
+      </section>
+
+      {/* ================= SECCIÓN DE AUTORIDAD Y PREGUNTAS FRECUENTES (SEO GOOGLE EL SALVADOR) ================= */}
+      <section id="faq-perfumeria-el-salvador" className="clay-card p-5 sm:p-7 bg-white/95 space-y-4 text-slate-800 rounded-3xl border border-white/80 shadow-md">
+        <div className="space-y-1">
+          <span className="text-[11px] font-black uppercase tracking-wider text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200">
+            Guía de Perfumería Fina en El Salvador
+          </span>
+          <h2 className="text-base sm:text-xl font-black text-slate-900 tracking-tight pt-1">
+            Aromaniak SV: Tu Proveedor de Esencias Puras y Contratipos de Lujo
+          </h2>
+          <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-3xl">
+            Somos especialistas en fragancias de contratipo con la más alta concentración olfativa en San Salvador y los 14 departamentos de El Salvador. Venta por onza, media onza y materias primas para emprendedores.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 text-xs">
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+            <h3 className="font-extrabold text-slate-900 text-xs sm:text-[13px]">
+              ¿Dónde comprar esencias de perfumería fina en El Salvador?
+            </h3>
+            <p className="text-[11px] sm:text-xs text-slate-600 font-medium leading-relaxed">
+              En <strong className="text-slate-800">Aromaniak SV</strong> puedes adquirir en línea más de 100 esencias concentradas 100% puras inspiradas en marcas internacionales (Dior, Creed, Le Labo, Chanel, etc.), con envíos rápidos a todo el país o retiro en tienda.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+            <h3 className="font-extrabold text-slate-900 text-xs sm:text-[13px]">
+              ¿Tienen envíos a todo El Salvador con C807 Express?
+            </h3>
+            <p className="text-[11px] sm:text-xs text-slate-600 font-medium leading-relaxed">
+              Sí, despachamos pedidos a domicilio a los 14 departamentos de El Salvador (San Salvador, Santa Tecla, Santa Ana, San Miguel, Sonsonate, etc.) en un plazo de <strong className="text-slate-800">24 a 48 horas hábiles</strong> con número de rastreo.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+            <h3 className="font-extrabold text-slate-900 text-xs sm:text-[13px]">
+              ¿Venden esencias por onza y media onza para emprender?
+            </h3>
+            <p className="text-[11px] sm:text-xs text-slate-600 font-medium leading-relaxed">
+              Totalmente. Ofrecemos precios accesibles desde media onza (½ oz), onza completa (1 oz), frascos de vidrio con atomizador de lujo y alcohol especial para que inicies o abastezcas tu negocio de perfumería.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+            <h3 className="font-extrabold text-slate-900 text-xs sm:text-[13px]">
+              ¿Qué calidad y fijación tienen las esencias de Aromaniak?
+            </h3>
+            <p className="text-[11px] sm:text-xs text-slate-600 font-medium leading-relaxed">
+              Nuestras esencias son grado cosmético premium sin diluir, garantizando una fijación prolongada de más de 8 a 12 horas en piel y ropa al mezclarse con nuestra fórmula balanceada de perfumería.
+            </p>
+          </div>
+        </div>
+
+        {/* JSON-LD FAQPage para Google Rich Snippets */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "¿Dónde comprar esencias de perfumería fina en El Salvador?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "En Aromaniak SV puedes comprar en línea más de 100 esencias concentradas 100% puras de perfumería fina inspiradas en las marcas internacionales más exclusivas. Ofrecemos venta por onza y media onza con envíos a todo El Salvador con C807 Express."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "¿Tienen envíos de esencias a todo El Salvador con C807 Express?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Sí, despachamos a domicilio a los 14 departamentos de El Salvador (San Salvador, Santa Tecla, Santa Ana, San Miguel y todo el país) en 24 a 48 horas hábiles."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "¿Venden esencias por onza y media onza para emprender?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Sí, en Aromaniak vendemos esencias por onza y media onza, frascos con atomizador de lujo, alcohol especial e insumos completos para emprendedores de perfumería en El Salvador."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "¿Qué calidad y fijación tienen las esencias de Aromaniak?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Nuestras esencias son grado cosmético premium 100% puras sin diluir, con duración comprobada de más de 8 a 12 horas al formularse con alcohol de perfumería."
+                  }
+                }
+              ]
+            })
+          }}
+        />
       </section>
 
     </div>

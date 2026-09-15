@@ -21,8 +21,71 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Aromaniak SV - Perfumería Fina & Contratipos de Lujo",
-  description: "Tienda online de fragancias y contratipos finos con esencias 100% puras. Envíos a todo El Salvador con C807.",
+  metadataBase: new URL("https://aromaniaksv.com"),
+  title: {
+    default: "Aromaniak SV | Esencias de Perfumería Fina & Contratipos en El Salvador",
+    template: "%s | Aromaniak SV",
+  },
+  description: "Proveedor líder en El Salvador de esencias 100% puras para perfumería fina, contratipos de lujo y materias primas. Venta por onza y al mayoreo con envíos a todo el país con C807 Express.",
+  keywords: [
+    "esencias de perfumeria fina el salvador",
+    "esencias para perfume san salvador",
+    "contratipos de perfumes el salvador",
+    "venta de esencias por onza",
+    "proveedores de esencias de perfume el salvador",
+    "perfumeria fina el salvador",
+    "aromas creativos alternativa",
+    "ic del caribe fragancias alternativa",
+    "insumos para perfumes el salvador",
+    "envases y atomizadores para perfume el salvador",
+    "alcohol de perfumeria el salvador",
+    "fijador de perfume el salvador",
+    "arma tu perfume el salvador",
+  ],
+  authors: [{ name: "Aromaniak SV", url: "https://aromaniaksv.com" }],
+  creator: "Aromaniak SV",
+  publisher: "Aromaniak SV",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  alternates: {
+    canonical: "https://aromaniaksv.com",
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_SV",
+    url: "https://aromaniaksv.com",
+    siteName: "Aromaniak SV - Perfumería Fina",
+    title: "Aromaniak SV | Esencias de Perfumería Fina & Contratipos en El Salvador",
+    description: "Proveedor líder en El Salvador de esencias 100% puras para perfumería fina, contratipos de lujo y materia prima. Venta por onza y al mayoreo. Envíos a los 14 departamentos.",
+    images: [
+      {
+        url: "/images/logo.png",
+        width: 800,
+        height: 800,
+        alt: "Aromaniak SV - Esencias de Perfumería Fina El Salvador",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Aromaniak SV | Esencias de Perfumería Fina & Contratipos en El Salvador",
+    description: "Esencias 100% puras, contratipos de lujo y materia prima para perfumería en El Salvador.",
+    images: ["/images/logo.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   icons: {
     icon: [
       { url: "/favicon-32x32.png?v=2026_v2", sizes: "32x32", type: "image/png" },
@@ -39,6 +102,65 @@ export const metadata: Metadata = {
   },
 };
 
+const storeStructuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Store",
+      "@id": "https://aromaniaksv.com/#store",
+      "name": "Aromaniak SV",
+      "alternateName": ["Aromaniak El Salvador", "Aromaniak Perfumería"],
+      "url": "https://aromaniaksv.com",
+      "logo": "https://aromaniaksv.com/apple-touch-icon.png",
+      "image": "https://aromaniaksv.com/images/logo.png",
+      "description": "Proveedor líder en El Salvador de esencias 100% puras para perfumería fina, contratipos de lujo, frascos y materias primas. Venta por onza y al mayoreo con envíos a los 14 departamentos.",
+      "telephone": "+50370000000",
+      "priceRange": "$",
+      "currenciesAccepted": "USD",
+      "paymentAccepted": "Cash, Credit Card, Debit Card, Wompi, Bank Transfer, Bitcoin",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "San Salvador",
+        "addressRegion": "San Salvador",
+        "addressCountry": "SV",
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 13.6929,
+        "longitude": -89.2182,
+      },
+      "areaServed": [
+        { "@type": "AdministrativeArea", "name": "San Salvador" },
+        { "@type": "AdministrativeArea", "name": "La Libertad" },
+        { "@type": "AdministrativeArea", "name": "Santa Ana" },
+        { "@type": "AdministrativeArea", "name": "San Miguel" },
+        { "@type": "Country", "name": "El Salvador" },
+      ],
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+          "opens": "08:00",
+          "closes": "17:30",
+        },
+      ],
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://aromaniaksv.com/#website",
+      "url": "https://aromaniaksv.com",
+      "name": "Aromaniak SV",
+      "description": "Tienda en línea de esencias de perfumería fina y contratipos de lujo en El Salvador",
+      "inLanguage": "es-SV",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://aromaniaksv.com/?q={search_term_string}",
+        "query-input": "required name=search_term_string",
+      },
+    },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -52,6 +174,10 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2026_v2" />
         <link rel="shortcut icon" href="/favicon.ico?v=2026_v2" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2026_v2" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(storeStructuredData) }}
+        />
       </head>
       <body className={`${quicksand.className} min-h-full flex flex-col bg-[#f1f4f9] text-slate-800 antialiased touch-manipulation font-sans`}>
         <StorageInitializer />
