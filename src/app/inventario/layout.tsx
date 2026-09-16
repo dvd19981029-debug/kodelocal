@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Inventario y Kardex | Aromaniak',
+  title: 'Inventario y Kardex',
   robots: {
     index: false,
     follow: false,

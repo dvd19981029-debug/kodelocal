@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Control de Ventas y DTE | Aromaniak',
+  title: 'Control de Ventas',
   robots: {
     index: false,
     follow: false,

@@ -22,6 +22,24 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        source: '/:path(pos|admin|bodega|inventario|ventas|logistica|login|api)/:subpath*',
+        headers: [
+          {
+            key: 'X-Robots-Tag',
+            value: 'noindex, nofollow, noarchive, nosnippet, noimageindex',
+          },
+        ],
+      },
+      {
+        source: '/:path(pos|admin|bodega|inventario|ventas|logistica|login)',
+        headers: [
+          {
+            key: 'X-Robots-Tag',
+            value: 'noindex, nofollow, noarchive, nosnippet, noimageindex',
+          },
+        ],
+      },
     ];
   },
 };

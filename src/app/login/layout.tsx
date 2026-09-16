@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Acceso de Personal | Aromaniak',
+  title: 'Acceso al Sistema',
   robots: {
     index: false,
     follow: false,
