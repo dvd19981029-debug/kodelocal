@@ -100,6 +100,8 @@ function CheckoutResultadoContent() {
               <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
                 ¡Gracias por tu compra!
               </h1>
+            </div>
+
             {/* Ficha de Detalles del Cobro */}
             <div className="bg-slate-50 rounded-2xl border border-slate-200/80 p-4 text-left space-y-2.5 text-xs">
               {identificador && (
