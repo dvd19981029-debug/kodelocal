@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { 
   Calendar, 
   Clock, 
-  User, 
   ChevronRight, 
   ArrowLeft, 
   Sparkles, 
@@ -20,7 +19,6 @@ import {
 } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { formatBlogDate } from '@/lib/blog';
-import ShareButtons from '@/components/blog/ShareButtons';
 import ReadingProgressBar from '@/components/blog/ReadingProgressBar';
 import TableOfContents from '@/components/blog/TableOfContents';
 import BlogCatalogShowcase from '@/components/blog/BlogCatalogShowcase';
@@ -268,53 +266,75 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
         </ol>
       </nav>
 
-      {/* Cabecera del Artículo */}
-      <header className="mb-8">
-        <div className="flex flex-wrap items-center gap-2 mb-3">
+      {/* Cabecera del Artículo (Diseño Editorial Moderno y Llamativo) */}
+      <header className="mb-8 sm:mb-10 space-y-4 sm:space-y-5">
+        {/* Barra Superior: Volver al Blog, Categoría y Tiempo de Lectura */}
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
           <Link
             href="/blog"
-            className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-indigo-700 mr-2 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-[#7c3aed] bg-white/80 hover:bg-white px-3 py-1.5 rounded-full border border-slate-200/80 shadow-2xs transition-all active:scale-95"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            Volver al Blog
+            <span>Volver al Blog</span>
           </Link>
-          {post.category && (
-            <span className="clay-badge text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg">
-              {post.category}
-            </span>
-          )}
-        </div>
 
-        <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight mb-4">
-          {post.title}
-        </h1>
-
-        {post.excerpt && (
-          <p className="text-slate-600 text-base sm:text-lg leading-relaxed mb-6 font-medium">
-            {post.excerpt}
-          </p>
-        )}
-
-        {/* Metadatos de Autor, Fecha y Botones de Compartir */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 border-y border-slate-200/80">
-          <div className="flex items-center gap-4 text-xs text-slate-500">
-            <span className="flex items-center gap-1.5 font-semibold text-slate-700">
-              <User className="w-4 h-4 text-indigo-600" />
-              {post.author || 'Equipo Aromaniak'}
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1">
-              <Calendar className="w-4 h-4" />
-              {post.publishedAt ? formatBlogDate(post.publishedAt) : ''}
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
+          <div className="flex items-center gap-2">
+            {post.category && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-purple-50 text-[#7c3aed] border border-purple-200/80 shadow-2xs">
+                {post.category}
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200/70">
+              <Clock className="w-3.5 h-3.5 text-slate-400" />
               {post.readingTimeMin || 3} min de lectura
             </span>
           </div>
+        </div>
 
-          <ShareButtons url={canonicalUrl} title={post.title} />
+        {/* Título Principal de Alto Impacto Editorial */}
+        <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-[3.15rem] font-black text-slate-900 tracking-tight leading-[1.18] sm:leading-[1.12]">
+          {post.title}
+        </h1>
+
+        {/* Bajada Editorial con Acento de Marca en Púrpura */}
+        {post.excerpt && (
+          <div className="border-l-4 border-[#7c3aed] pl-4 sm:pl-5 py-1 bg-gradient-to-r from-purple-50/60 via-purple-50/20 to-transparent rounded-r-2xl">
+            <p className="text-slate-600 text-base sm:text-lg lg:text-xl font-normal leading-relaxed">
+              {post.excerpt}
+            </p>
+          </div>
+        )}
+
+        {/* Ficha Editorial de Autor y Fecha (Sin botones de redes sociales) */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 pb-3.5 border-t border-slate-200/80">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#7c3aed] to-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-2xs ring-2 ring-purple-100/80">
+              A
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-sm text-slate-900 leading-tight">
+                  {post.author || 'Equipo Aromaniak'}
+                </span>
+                <span className="text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded-md">
+                  Perfumería Fina
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-500 font-medium mt-0.5">
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                  {post.publishedAt ? formatBlogDate(post.publishedAt) : ''}
+                </span>
+                <span>•</span>
+                <span>El Salvador</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 bg-slate-50/90 px-3 py-1.5 rounded-xl border border-slate-200/70">
+            <Sparkles className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+            <span>Inspiración Olfativa • 100% Esencias Puras</span>
+          </div>
         </div>
       </header>
 
