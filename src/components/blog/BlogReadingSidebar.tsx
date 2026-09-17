@@ -4,18 +4,29 @@
 import React from 'react';
 import Link from 'next/link';
 import { Wand2, Truck, ShieldCheck } from 'lucide-react';
-import { ProductItem } from '@/lib/store';
+import { ProductItem, INITIAL_PRODUCTS } from '@/lib/store';
 import ProductCard from '@/components/ecommerce/ProductCard';
 import TableOfContents from '@/components/blog/TableOfContents';
 
 interface BlogReadingSidebarProps {
   product: ProductItem;
   bottleProduct?: ProductItem;
+  availableBottles?: ProductItem[];
   content: string;
 }
 
-export default function BlogReadingSidebar({ product, bottleProduct, content }: BlogReadingSidebarProps) {
+export default function BlogReadingSidebar({ product, bottleProduct, availableBottles, content }: BlogReadingSidebarProps) {
   const [activeTab, setActiveTab] = React.useState<'esencia' | 'bote'>('esencia');
+
+  const bottlesList = (availableBottles && availableBottles.length > 0)
+    ? availableBottles
+    : INITIAL_PRODUCTS.filter(p => p.category === 'Botes' && p.imageUrl?.startsWith('/images/botes/'));
+
+  const [selectedBottleId, setSelectedBottleId] = React.useState<string>(
+    bottleProduct?.id || (bottlesList[0]?.id || '')
+  );
+
+  const currentBottle = bottlesList.find(b => b.id === selectedBottleId) || bottleProduct || bottlesList[0] || product;
 
   return (
     <aside className="space-y-6">
@@ -34,7 +45,7 @@ export default function BlogReadingSidebar({ product, bottleProduct, content }: 
             </div>
 
             {/* Pestañas para alternar entre la esencia y el bote de vidrio */}
-            {bottleProduct && (
+            {bottlesList.length > 0 && (
               <div className="flex items-center gap-1 p-0.5 bg-slate-100/90 rounded-xl border border-slate-200/80 mb-2">
                 <button
                   type="button"
@@ -62,7 +73,7 @@ export default function BlogReadingSidebar({ product, bottleProduct, content }: 
             )}
 
             <h3 className="text-sm font-black text-slate-900">
-              {activeTab === 'esencia' ? 'Pruébala mientras lees' : 'Frasco con atomizador de lujo'}
+              {activeTab === 'esencia' ? 'Pruébala mientras lees' : (currentBottle.name.replace(/^Bote de Vidrio 100ml\s*/i, 'Frasco '))}
             </h3>
             <p className="text-[11px] text-slate-500 font-medium">
               {activeTab === 'esencia'
@@ -71,9 +82,43 @@ export default function BlogReadingSidebar({ product, bottleProduct, content }: 
             </p>
           </div>
 
+          {/* Selector Horizontal de Botes al ver la pestaña de botes */}
+          {activeTab === 'bote' && bottlesList.length > 0 && (
+            <div className="space-y-1.5 pb-1">
+              <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold">
+                <span>Modelos 100ml (Desliza):</span>
+                <span className="text-indigo-700">${currentBottle.price.toFixed(2)}</span>
+              </div>
+              <div className="flex gap-2 overflow-x-auto scrollbar-none py-1 snap-x">
+                {bottlesList.map((b) => {
+                  const isSelected = b.id === currentBottle.id;
+                  return (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => setSelectedBottleId(b.id)}
+                      className={`relative w-12 h-12 rounded-xl overflow-hidden border shrink-0 transition-all cursor-pointer ${
+                        isSelected
+                          ? 'ring-2 ring-[#7c3aed] border-[#7c3aed] scale-105 shadow-2xs'
+                          : 'border-slate-200/80 hover:border-slate-300 opacity-75 hover:opacity-100 bg-white'
+                      }`}
+                      title={b.name}
+                    >
+                      <img
+                        src={b.imageUrl}
+                        alt={b.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Tarjeta real de compra interactiva */}
           <div className="max-w-xs mx-auto">
-            <ProductCard product={activeTab === 'esencia' ? product : (bottleProduct || product)} />
+            <ProductCard product={activeTab === 'esencia' ? product : currentBottle} />
           </div>
 
           <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500 font-medium">

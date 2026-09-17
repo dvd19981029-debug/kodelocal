@@ -1,10 +1,10 @@
 // src/components/blog/BlogInlineProductCallout.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, Check, ShieldCheck, ArrowRight } from 'lucide-react';
-import { ProductItem } from '@/lib/store';
+import { ShoppingBag, Check, ShieldCheck, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ProductItem, INITIAL_PRODUCTS } from '@/lib/store';
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation } from '@/context/EcommerceCartContext';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
@@ -13,16 +13,40 @@ import { getProductUrl } from '@/lib/productUrl';
 interface InlineCalloutProps {
   product: ProductItem;
   bottleProduct?: ProductItem;
+  availableBottles?: ProductItem[];
 }
 
-export default function BlogInlineProductCallout({ product, bottleProduct }: InlineCalloutProps) {
+export default function BlogInlineProductCallout({ product, bottleProduct, availableBottles }: InlineCalloutProps) {
   const { addToCart } = useEcommerceCart();
   const presentations = getPresentationsForProduct(product);
   const [selectedPresentation, setSelectedPresentation] = useState<ProductPresentation>(
     product.category === 'Esencias para Perfume' ? 'ONZA_COMPLETA' : 'UNIDAD'
   );
   const [justAdded, setJustAdded] = useState(false);
-  const [bottleAdded, setBottleAdded] = useState(false);
+  const [addedBottleId, setAddedBottleId] = useState<string | null>(null);
+
+  // Lista de botes de vidrio para scroll horizontal
+  const bottlesList = (availableBottles && availableBottles.length > 0)
+    ? availableBottles
+    : INITIAL_PRODUCTS.filter(p => p.category === 'Botes' && p.imageUrl?.startsWith('/images/botes/'));
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollBottles = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = 240;
+      scrollContainerRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  const handleAddSpecificBottle = (bottle: ProductItem) => {
+    addToCart(bottle, 'UNIDAD', 1);
+    setAddedBottleId(bottle.id);
+    setTimeout(() => setAddedBottleId(null), 1500);
+  };
 
   const activeOption = presentations.find(p => p.id === selectedPresentation) || presentations[0];
   const displayName = product.officialName?.trim() || product.name;
@@ -35,12 +59,7 @@ export default function BlogInlineProductCallout({ product, bottleProduct }: Inl
     setTimeout(() => setJustAdded(false), 1500);
   };
 
-  const handleAddBottle = () => {
-    if (!bottleProduct) return;
-    addToCart(bottleProduct, 'UNIDAD', 1);
-    setBottleAdded(true);
-    setTimeout(() => setBottleAdded(false), 1500);
-  };
+
 
   return (
     <aside aria-label="Fragancia recomendada en este artículo" className="my-8 sm:my-10 p-4 sm:p-6 rounded-3xl clay-card bg-white/95 border border-white/80 shadow-md">
@@ -150,45 +169,106 @@ export default function BlogInlineProductCallout({ product, bottleProduct }: Inl
 
       </div>
 
-      {/* Opción de Frasco de Vidrio Complementario */}
-      {bottleProduct && (
-        <div className="mt-4 pt-3 border-t border-slate-100/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/60 p-3 rounded-2xl">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <img
-              src={bottleProduct.imageUrl}
-              alt={bottleProduct.name}
-              onError={(e) => {
-                e.currentTarget.src = '/images/botes/bote_100ml_degrade_azul_noche.jpg';
-              }}
-              className="w-10 h-10 rounded-xl object-cover border border-slate-200 shadow-2xs shrink-0"
-            />
-            <div className="text-xs min-w-0">
-              <span className="font-bold text-slate-800 block truncate">
-                {bottleProduct.name}
+      {/* Carrusel Desplazable Horizontal de Botes de Vidrio 100ml */}
+      {bottlesList.length > 0 && (
+        <div className="mt-5 pt-4 border-t border-slate-100/90 space-y-2.5">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs font-black text-slate-900 block">
+                Botes de Vidrio 100ml con Atomizador de Lujo
               </span>
-              <span className="text-[11px] text-indigo-700 font-extrabold">
-                ${bottleProduct.price.toFixed(2)} • Frasco de Vidrio 100ml con Atomizador
+              <span className="text-[11px] text-slate-500 font-medium">
+                Desplaza horizontalmente y elige tu envase favorito
               </span>
+            </div>
+
+            {/* Flechas de desplazamiento */}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => scrollBottles('left')}
+                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-colors cursor-pointer"
+                title="Ver anteriores"
+                aria-label="Anterior bote"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollBottles('right')}
+                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-colors cursor-pointer"
+                title="Ver siguientes"
+                aria-label="Siguiente bote"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleAddBottle}
-            className="clay-btn clay-btn-light px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-900 border border-slate-200/90 shadow-2xs shrink-0 flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
+          {/* Carrusel horizontal */}
+          <div
+            ref={scrollContainerRef}
+            className="flex gap-2.5 overflow-x-auto scrollbar-none py-1 scroll-smooth snap-x snap-mandatory"
           >
-            {bottleAdded ? (
-              <>
-                <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
-                <span className="text-emerald-700 font-black">¡Bote Agregado!</span>
-              </>
-            ) : (
-              <>
-                <ShoppingBag className="w-3.5 h-3.5 text-slate-600" />
-                <span>Agregar Bote de Vidrio</span>
-              </>
-            )}
-          </button>
+            {bottlesList.map((bottle) => {
+              const isAdded = addedBottleId === bottle.id;
+              const shortName = bottle.name
+                .replace(/^Bote de Vidrio 100ml\s*/i, '')
+                .replace(/^Bote de Vidrio\s*/i, '');
+
+              return (
+                <div
+                  key={bottle.id}
+                  className="w-36 sm:w-40 shrink-0 snap-start bg-slate-50/90 hover:bg-white rounded-2xl border border-slate-200/80 p-2 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between"
+                >
+                  <div className="relative aspect-square rounded-xl overflow-hidden bg-white mb-2 border border-slate-100 flex items-center justify-center">
+                    <img
+                      src={bottle.imageUrl}
+                      alt={bottle.name}
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/botes/bote_100ml_degrade_azul_noche.jpg';
+                      }}
+                      className="w-full h-full object-cover"
+                    />
+                    <span className="absolute top-1 left-1 bg-white/95 text-[8px] font-black text-slate-800 px-1 py-0.5 rounded shadow-2xs">
+                      100 ML
+                    </span>
+                  </div>
+
+                  <div className="mb-2">
+                    <h5 className="text-[11px] font-bold text-slate-800 line-clamp-1 leading-tight" title={bottle.name}>
+                      {shortName}
+                    </h5>
+                    <span className="text-xs font-black text-indigo-700 mt-0.5 block">
+                      ${bottle.price.toFixed(2)}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleAddSpecificBottle(bottle)}
+                    className={`w-full py-1.5 px-2 rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1 active:scale-95 cursor-pointer ${
+                      isAdded
+                        ? 'bg-emerald-600 text-white shadow-2xs'
+                        : 'bg-white hover:bg-purple-50 text-slate-700 border border-slate-200/80 shadow-2xs'
+                    }`}
+                  >
+                    {isAdded ? (
+                      <>
+                        <Check className="w-3 h-3 stroke-[3]" />
+                        <span className="font-black">¡Agregado!</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingBag className="w-3 h-3 text-slate-500" />
+                        <span>+ Bote</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 

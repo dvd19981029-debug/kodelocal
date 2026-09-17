@@ -3,7 +3,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Sparkles, ChevronRight, ShoppingBag, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Sparkles, ShoppingBag, ShieldCheck, ArrowRight } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import BlogLiveSearch from '@/components/blog/BlogLiveSearch';
 
@@ -96,7 +96,11 @@ export default async function BlogIndexPage() {
     },
   };
 
-  const categories = ['Todos', 'Guías', 'Tendencias', 'Reseñas', 'Cuidados & Fijación'];
+  // Categorías dinámicas sincronizadas con base de datos e IAs
+  const dbCategories = Array.from(new Set(posts.map(p => p.category).filter(Boolean))) as string[];
+  const defaultCategories = ['Guías & Rendimiento', 'Tendencias & Selección', 'Emprendimiento & Mayoreo', 'Perfumería Fina'];
+  const allUniqueCats = Array.from(new Set([...dbCategories, ...defaultCategories]));
+  const categories = ['Todos', ...allUniqueCats];
 
   // Serializar fechas para el Client Component
   const serializedPosts = posts.map(p => ({
@@ -111,23 +115,6 @@ export default async function BlogIndexPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-
-      {/* Migas de pan */}
-      <nav aria-label="Breadcrumb" className="mb-6">
-        <ol className="flex items-center space-x-2 text-xs text-slate-500 font-medium">
-          <li>
-            <Link href="/" className="hover:text-indigo-700 transition-colors">
-              Inicio
-            </Link>
-          </li>
-          <li>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-400 inline" />
-          </li>
-          <li className="text-slate-900 font-bold" aria-current="page">
-            Blog Aromaniak SV
-          </li>
-        </ol>
-      </nav>
 
       {/* Cabecera del Blog con enfoque en SEO El Salvador y diseño Claymorphic */}
       <header className="mb-8 text-center sm:text-left border-b border-slate-200/80 pb-6">

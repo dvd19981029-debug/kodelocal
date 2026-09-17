@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { 
   Calendar, 
   Clock, 
-  ChevronRight, 
   ArrowLeft, 
   Sparkles, 
   Tag, 
@@ -228,6 +227,9 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
   const featuredBottle = INITIAL_PRODUCTS.find(p => p.id === 'bote-100ml-acanalado-blanco') || 
                          INITIAL_PRODUCTS.find(p => p.category === 'Botes') || 
                          INITIAL_PRODUCTS[1];
+  const availableBottles = INITIAL_PRODUCTS.filter(p => 
+    p.category === 'Botes' && p.imageUrl && p.imageUrl.startsWith('/images/botes/')
+  );
   const contentParts = splitArticleContent(post.content);
 
   return (
@@ -241,38 +243,13 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* Migas de pan */}
-      <nav aria-label="Breadcrumb" className="mb-6">
-        <ol className="flex flex-wrap items-center space-x-2 text-xs text-slate-500 font-medium">
-          <li>
-            <Link href="/" className="hover:text-indigo-700 transition-colors">
-              Inicio
-            </Link>
-          </li>
-          <li>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-400 inline" />
-          </li>
-          <li>
-            <Link href="/blog" className="hover:text-indigo-700 transition-colors">
-              Blog
-            </Link>
-          </li>
-          <li>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-400 inline" />
-          </li>
-          <li className="text-slate-900 font-bold truncate max-w-[200px] sm:max-w-xs" aria-current="page">
-            {post.title}
-          </li>
-        </ol>
-      </nav>
-
-      {/* Cabecera del Artículo (Diseño Editorial Moderno y Llamativo) */}
+      {/* Cabecera del Artículo (Diseño Editorial Limpio y Llamativo) */}
       <header className="mb-8 sm:mb-10 space-y-4 sm:space-y-5">
-        {/* Barra Superior: Volver al Blog, Categoría y Tiempo de Lectura */}
-        <div className="flex flex-wrap items-center justify-between gap-2.5">
+        {/* Barra Superior: Volver al Blog + Categoría Enlazada + Tiempo de Lectura */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <Link
             href="/blog"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-[#7c3aed] bg-white/80 hover:bg-white px-3 py-1.5 rounded-full border border-slate-200/80 shadow-2xs transition-all active:scale-95"
+            className="inline-flex items-center gap-2 text-xs font-bold text-slate-700 hover:text-[#7c3aed] bg-white hover:bg-slate-50 px-3.5 py-1.5 rounded-full border border-slate-200/90 shadow-2xs transition-all active:scale-95 cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Volver al Blog</span>
@@ -280,60 +257,57 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
 
           <div className="flex items-center gap-2">
             {post.category && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-purple-50 text-[#7c3aed] border border-purple-200/80 shadow-2xs">
+              <Link
+                href={`/blog?category=${encodeURIComponent(post.category)}`}
+                className="inline-flex items-center px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-purple-50 hover:bg-purple-100 text-[#7c3aed] border border-purple-200/80 shadow-2xs transition-colors cursor-pointer"
+                title={`Ver artículos en ${post.category}`}
+              >
                 {post.category}
-              </span>
+              </Link>
             )}
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200/70">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-slate-500 bg-slate-100/90 border border-slate-200/60">
               <Clock className="w-3.5 h-3.5 text-slate-400" />
               {post.readingTimeMin || 3} min de lectura
             </span>
           </div>
         </div>
 
-        {/* Título Principal de Alto Impacto Editorial */}
-        <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-[3.15rem] font-black text-slate-900 tracking-tight leading-[1.18] sm:leading-[1.12]">
+        {/* Título Principal de Gran Escala Editorial */}
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] font-black text-slate-900 tracking-tight leading-[1.14] sm:leading-[1.1]">
           {post.title}
         </h1>
 
-        {/* Bajada Editorial con Acento de Marca en Púrpura */}
+        {/* Bajada Editorial / Resumen sin bordes pesados */}
         {post.excerpt && (
-          <div className="border-l-4 border-[#7c3aed] pl-4 sm:pl-5 py-1 bg-gradient-to-r from-purple-50/60 via-purple-50/20 to-transparent rounded-r-2xl">
-            <p className="text-slate-600 text-base sm:text-lg lg:text-xl font-normal leading-relaxed">
-              {post.excerpt}
-            </p>
-          </div>
+          <p className="text-base sm:text-lg lg:text-xl text-slate-600 font-normal leading-relaxed max-w-4xl">
+            {post.excerpt}
+          </p>
         )}
 
-        {/* Ficha Editorial de Autor y Fecha (Sin botones de redes sociales) */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 pb-3.5 border-t border-slate-200/80">
+        {/* Ficha Editorial de Autor y Procedencia */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3.5 pb-2 border-t border-slate-200/80 text-xs">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#7c3aed] to-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-2xs ring-2 ring-purple-100/80">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#7c3aed] to-indigo-600 flex items-center justify-center text-white font-black text-xs shadow-2xs">
               A
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-sm text-slate-900 leading-tight">
+                <span className="font-bold text-slate-900">
                   {post.author || 'Equipo Aromaniak'}
                 </span>
-                <span className="text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded-md">
+                <span className="text-[10px] uppercase font-black text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded-md">
                   Perfumería Fina
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500 font-medium mt-0.5">
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                  {post.publishedAt ? formatBlogDate(post.publishedAt) : ''}
-                </span>
-                <span>•</span>
-                <span>El Salvador</span>
+              <div className="text-[11px] text-slate-500 font-medium mt-0.5">
+                {post.publishedAt ? formatBlogDate(post.publishedAt) : ''} • San Salvador, El Salvador
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 bg-slate-50/90 px-3 py-1.5 rounded-xl border border-slate-200/70">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200/70">
             <Sparkles className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-            <span>Inspiración Olfativa • 100% Esencias Puras</span>
+            <span>Inspiración Olfativa • 100% Pura</span>
           </div>
         </div>
       </header>
@@ -372,7 +346,11 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
           />
 
           {/* ================= INCENTIVO DE COMPRA EN MEDIO DE LA LECTURA ================= */}
-          <BlogInlineProductCallout product={featuredProduct} bottleProduct={featuredBottle} />
+          <BlogInlineProductCallout
+            product={featuredProduct}
+            bottleProduct={featuredBottle}
+            availableBottles={availableBottles}
+          />
 
           {/* Segunda mitad del artículo */}
           {contentParts.after && (
@@ -456,7 +434,12 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
 
         {/* ================= COLUMNA LATERAL STICKY DE COMPRA (4 Cols - Solo Desktop) ================= */}
         <div className="hidden lg:block lg:col-span-4 min-w-0">
-          <BlogReadingSidebar product={featuredProduct} bottleProduct={featuredBottle} content={post.content} />
+          <BlogReadingSidebar
+            product={featuredProduct}
+            bottleProduct={featuredBottle}
+            availableBottles={availableBottles}
+            content={post.content}
+          />
         </div>
 
       </div>

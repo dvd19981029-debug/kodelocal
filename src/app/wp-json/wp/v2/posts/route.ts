@@ -106,6 +106,31 @@ export async function POST(req: NextRequest) {
     const isPublished = body.status !== 'draft';
     const readingTimeMin = calculateReadingTime(cleanContent);
 
+    // Mapeo flexible de categorías para IAs (soporta IDs numéricos de WP, arrays o nombres)
+    let categoryName = 'Perfumería Fina';
+    const WP_CAT_MAP: Record<number, string> = {
+      1: 'Guías & Rendimiento',
+      2: 'Tendencias & Selección',
+      3: 'Emprendimiento & Mayoreo',
+      4: 'Perfumería Fina',
+      5: 'Frascos & Envases',
+    };
+
+    if (Array.isArray(body.categories) && body.categories.length > 0) {
+      const firstCat = body.categories[0];
+      if (typeof firstCat === 'number' && WP_CAT_MAP[firstCat]) {
+        categoryName = WP_CAT_MAP[firstCat];
+      } else if (typeof firstCat === 'string' && firstCat.trim()) {
+        categoryName = firstCat.trim();
+      }
+    } else if (typeof body.category === 'string' && body.category.trim()) {
+      categoryName = body.category.trim();
+    } else if (typeof body.categories_names === 'string' && body.categories_names.trim()) {
+      categoryName = body.categories_names.trim();
+    } else if (Array.isArray(body.categories_names) && body.categories_names.length > 0) {
+      categoryName = String(body.categories_names[0]).trim();
+    }
+
     // Upsert
     const post = await prisma.blogPost.upsert({
       where: { slug },
@@ -116,7 +141,7 @@ export async function POST(req: NextRequest) {
         excerpt: finalExcerpt,
         coverImage: body.featured_media_url || body.coverImage || null,
         author: body.author_name || 'Equipo Aromaniak',
-        category: body.categories_names || 'Perfumería',
+        category: categoryName,
         metaTitle: `${title.trim()} | Aromaniak SV`,
         metaDescription: finalExcerpt,
         canonicalUrl: `https://aromaniaksv.com/blog/${slug}`,

@@ -28,6 +28,21 @@ export default function BlogLiveSearch({ initialPosts, categories }: BlogLiveSea
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
 
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlCat = params.get('category') || params.get('categoria');
+      if (urlCat) {
+        const match = categories.find((c) => c.toLowerCase() === urlCat.toLowerCase());
+        if (match) {
+          setSelectedCategory(match);
+        } else {
+          setSelectedCategory(urlCat);
+        }
+      }
+    }
+  }, [categories]);
+
   const filteredPosts = useMemo(() => {
     return initialPosts.filter((post) => {
       // Filtro por categoría
