@@ -388,6 +388,13 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
               </button>
             )}
           </div>
+
+          {/* Disponibilidad de retiro o envío */}
+          <div className="mt-1.5 text-center">
+            <span className="text-[8.5px] sm:text-[9.5px] text-slate-400 font-medium tracking-tight block">
+              Retiro en local o envíos a todo El Salvador
+            </span>
+          </div>
         </div>
       </div>
     </>

@@ -192,14 +192,14 @@ export default function BlogInlineProductCallout({ product, bottleProduct }: Inl
         </div>
       )}
 
-      {/* Nota legal y garantía */}
+      {/* Nota de inspiración y entrega */}
       <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
-        <span className="flex items-center gap-1 font-medium">
+        <span className="flex items-center gap-1 font-medium text-slate-600">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-          Inspiración olfativa de perfumería fina • NO comercializamos réplicas
+          Inspiración olfativa
         </span>
-        <span className="hidden sm:inline text-slate-400">
-          Envíos a todo El Salvador (24-48h)
+        <span className="text-slate-500 font-medium">
+          Retiro en local o envíos a todo El Salvador
         </span>
       </div>
     </aside>

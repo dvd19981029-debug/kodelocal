@@ -149,7 +149,7 @@ export default async function BlogIndexPage() {
       <aside className="mt-14 p-6 sm:p-8 rounded-3xl clay-card bg-white/95 border border-white/80 shadow-md flex flex-col sm:flex-row items-center justify-between gap-6">
         <div className="text-center sm:text-left">
           <span className="clay-badge text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg mb-2">
-            Inspiración Olfativa • No somos réplicas
+            Inspiración Olfativa
           </span>
           <h3 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
             Fragancias con más de 8 a 12 horas de fijación

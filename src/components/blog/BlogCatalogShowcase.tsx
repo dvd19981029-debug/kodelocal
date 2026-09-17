@@ -107,11 +107,11 @@ export default function BlogCatalogShowcase({ genderFilter, limit = 3 }: Showcas
         ))}
       </div>
 
-      {/* Nota legal y de autenticidad */}
+      {/* Nota de inspiración y entrega */}
       <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-2">
         <span className="flex items-center gap-1.5 font-medium text-slate-600">
           <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-          Aromaniak distribuye materias primas, frascos y contratipos propios de alta fijación. NO comercializamos réplicas ni imitaciones.
+          Esencias de inspiración olfativa, botes de vidrio y materias primas. Retiro en local o envíos a todo El Salvador.
         </span>
         <Link href="/" className="font-bold text-indigo-700 hover:underline shrink-0">
           Explorar tienda online

@@ -83,7 +83,7 @@ export default function BlogReadingSidebar({ product, bottleProduct, content }: 
             </span>
             <span className="flex items-center gap-1 text-slate-600">
               <Truck className="w-3.5 h-3.5 shrink-0 text-indigo-600" />
-              Entrega 24-48h
+              Retiro en local o envíos a todo El Salvador
             </span>
           </div>
         </div>

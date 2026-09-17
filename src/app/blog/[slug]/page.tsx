@@ -331,7 +331,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
         <div className="relative aspect-16/9 sm:aspect-21/9 rounded-3xl overflow-hidden mb-10 shadow-md border border-slate-200/60 bg-gradient-to-br from-indigo-50 via-purple-50 to-slate-100 flex flex-col items-center justify-center text-center p-6 text-slate-800">
           <span className="clay-badge text-[10px] font-black uppercase text-indigo-700 bg-white/90 px-3 py-1 rounded-lg shadow-2xs mb-2">Aromaniak SV</span>
           <h3 className="text-lg font-black text-slate-900">Perfumería Fina de Inspiración Olfativa</h3>
-          <p className="text-xs text-slate-500 mt-1 font-medium">Esencias 100% puras sin diluir • No comercializamos réplicas ni imitaciones</p>
+          <p className="text-xs text-slate-500 mt-1 font-medium">Esencias 100% puras de inspiración olfativa sin diluir • Retiro en local o envíos a todo El Salvador</p>
         </div>
       )}
 
@@ -386,7 +386,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
           {/* Bloque Estratégico de Conversión hacia el E-commerce */}
           <section className="my-12 p-6 sm:p-8 rounded-3xl clay-card bg-white/95 border border-white/80 shadow-md">
             <span className="clay-badge text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg mb-2">
-              Inspiración Olfativa • No somos réplicas
+              Inspiración Olfativa
             </span>
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug mt-1">
               Esencias Puras, Botes de Vidrio e Insumos de Perfumería
@@ -398,7 +398,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-6 text-xs font-semibold text-slate-700">
               <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/70 p-3 rounded-2xl shadow-2xs">
                 <Truck className="w-4 h-4 text-indigo-600 shrink-0" />
-                <span>Envíos a todo El Salvador (24-48h)</span>
+                <span>Retiro en local o envíos a todo El Salvador</span>
               </div>
               <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/70 p-3 rounded-2xl shadow-2xs">
                 <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
