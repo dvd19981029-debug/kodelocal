@@ -24,6 +24,10 @@ import ShareButtons from '@/components/blog/ShareButtons';
 import ReadingProgressBar from '@/components/blog/ReadingProgressBar';
 import TableOfContents from '@/components/blog/TableOfContents';
 import BlogCatalogShowcase from '@/components/blog/BlogCatalogShowcase';
+import BlogInlineProductCallout from '@/components/blog/BlogInlineProductCallout';
+import BlogReadingSidebar from '@/components/blog/BlogReadingSidebar';
+import BlogMobileStickyBar from '@/components/blog/BlogMobileStickyBar';
+import { INITIAL_PRODUCTS, ProductItem } from '@/lib/store';
 
 export const revalidate = 60; // Regeneración incremental cada 60 segundos
 
@@ -105,6 +109,51 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   }
 }
 
+function getFeaturedProductForPost(postTitle: string, postContent: string, category?: string | null): ProductItem {
+  const text = `${postTitle} ${postContent}`.toLowerCase();
+  
+  for (const prod of INITIAL_PRODUCTS) {
+    if (prod.category !== 'Esencias para Perfume') continue;
+    const official = (prod.officialName || '').toLowerCase();
+    const name = prod.name.toLowerCase();
+    if (official && text.includes(official)) return prod;
+    if (name && text.includes(name)) return prod;
+  }
+
+  if (text.includes('dama') || text.includes('mujer') || (category && category.toLowerCase().includes('dama'))) {
+    const damaProd = INITIAL_PRODUCTS.find(p => p.id === 'esencia-apae-013');
+    if (damaProd) return damaProd;
+  }
+
+  return INITIAL_PRODUCTS[0];
+}
+
+function splitArticleContent(htmlContent: string): { before: string; after: string } {
+  const h2Regex = /<h2[^>]*>/gi;
+  const matches = [...htmlContent.matchAll(h2Regex)];
+
+  if (matches.length >= 2) {
+    const targetMatch = matches[1];
+    const targetIndex = targetMatch.index!;
+    return {
+      before: htmlContent.slice(0, targetIndex),
+      after: htmlContent.slice(targetIndex),
+    };
+  }
+
+  const pRegex = /<\/p>/gi;
+  const pMatches = [...htmlContent.matchAll(pRegex)];
+  if (pMatches.length >= 4) {
+    const splitIdx = pMatches[1].index! + 4;
+    return {
+      before: htmlContent.slice(0, splitIdx),
+      after: htmlContent.slice(splitIdx),
+    };
+  }
+
+  return { before: htmlContent, after: '' };
+}
+
 export default async function BlogPostDetailPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
 
@@ -177,8 +226,11 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
     ? post.tags.split(',').map((t) => t.trim()).filter(Boolean)
     : [];
 
+  const featuredProduct = getFeaturedProductForPost(post.title, post.content, post.category);
+  const contentParts = splitArticleContent(post.content);
+
   return (
-    <article className="w-full max-w-4xl mx-auto px-4 py-6 sm:py-10">
+    <div className="w-full max-w-6xl mx-auto px-4 py-6 sm:py-10">
       {/* Barra de progreso de lectura interactiva */}
       <ReadingProgressBar />
 
@@ -265,7 +317,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
 
       {/* Imagen destacada con fallback elegante */}
       {post.coverImage ? (
-        <div className="relative aspect-16/9 rounded-3xl overflow-hidden mb-8 shadow-md border border-slate-200/60 bg-slate-100">
+        <div className="relative aspect-16/9 rounded-3xl overflow-hidden mb-10 shadow-md border border-slate-200/60 bg-slate-100">
           <img
             src={post.coverImage}
             alt={post.title}
@@ -273,92 +325,114 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
           />
         </div>
       ) : (
-        <div className="relative aspect-16/9 sm:aspect-21/9 rounded-3xl overflow-hidden mb-8 shadow-md border border-slate-200/60 bg-gradient-to-br from-indigo-50 via-purple-50 to-slate-100 flex flex-col items-center justify-center text-center p-6 text-slate-800">
+        <div className="relative aspect-16/9 sm:aspect-21/9 rounded-3xl overflow-hidden mb-10 shadow-md border border-slate-200/60 bg-gradient-to-br from-indigo-50 via-purple-50 to-slate-100 flex flex-col items-center justify-center text-center p-6 text-slate-800">
           <span className="clay-badge text-[10px] font-black uppercase text-indigo-700 bg-white/90 px-3 py-1 rounded-lg shadow-2xs mb-2">Aromaniak SV</span>
           <h3 className="text-lg font-black text-slate-900">Perfumería Fina de Inspiración Olfativa</h3>
           <p className="text-xs text-slate-500 mt-1 font-medium">Esencias 100% puras sin diluir • No comercializamos réplicas ni imitaciones</p>
         </div>
       )}
 
+      {/* Grid Editorial: Columna Principal de Lectura + Columna Sticky de Compra */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+        
+        {/* ================= COLUMNA PRINCIPAL DE LECTURA (8 Cols) ================= */}
+        <article className="lg:col-span-8 min-w-0">
+          {/* Índice de Contenidos desplegable para versión Móvil */}
+          <div className="lg:hidden mb-6">
+            <TableOfContents content={post.content} />
+          </div>
 
-      {/* Tabla de Contenidos interactiva para navegación rápida */}
-      <TableOfContents content={post.content} />
+          {/* Primera mitad del artículo */}
+          <div 
+            className="blog-prose leading-relaxed text-slate-800 text-base sm:text-lg"
+            dangerouslySetInnerHTML={{ __html: contentParts.before }}
+          />
 
-      {/* Cuerpo del Artículo con formato enriquecido */}
-      <div 
-        className="blog-prose leading-relaxed text-slate-800 text-base sm:text-lg"
-        dangerouslySetInnerHTML={{ __html: post.content }}
-      />
+          {/* ================= INCENTIVO DE COMPRA EN MEDIO DE LA LECTURA ================= */}
+          <BlogInlineProductCallout product={featuredProduct} />
 
-      {/* Showcase Interactivo de Perfumes Recomendados (Conversión Directa) */}
-      <BlogCatalogShowcase limit={3} />
+          {/* Segunda mitad del artículo */}
+          {contentParts.after && (
+            <div 
+              className="blog-prose leading-relaxed text-slate-800 text-base sm:text-lg"
+              dangerouslySetInnerHTML={{ __html: contentParts.after }}
+            />
+          )}
 
-      {/* Etiquetas / Tags */}
-      {tagList.length > 0 && (
-        <div className="mt-8 pt-6 border-t border-slate-200 flex flex-wrap items-center gap-2">
-          <Tag className="w-4 h-4 text-slate-400 mr-1" />
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mr-2">
-            Temas relacionados:
-          </span>
-          {tagList.map((tag, idx) => (
-            <span
-              key={idx}
-              className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold"
-            >
-              #{tag}
+          {/* Showcase de Perfumes Recomendados al final del artículo */}
+          <BlogCatalogShowcase limit={3} />
+
+          {/* Etiquetas / Tags */}
+          {tagList.length > 0 && (
+            <div className="mt-8 pt-6 border-t border-slate-200 flex flex-wrap items-center gap-2">
+              <Tag className="w-4 h-4 text-slate-400 mr-1" />
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mr-2">
+                Temas relacionados:
+              </span>
+              {tagList.map((tag, idx) => (
+                <span
+                  key={idx}
+                  className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Bloque Estratégico de Conversión hacia el E-commerce */}
+          <section className="my-12 p-6 sm:p-8 rounded-3xl clay-card bg-white/95 border border-white/80 shadow-md">
+            <span className="clay-badge text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg mb-2">
+              Inspiración Olfativa • No somos réplicas
             </span>
-          ))}
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug mt-1">
+              Prueba las Fragancias de Inspiración en Esencias 100% Puras
+            </h2>
+            <p className="mt-2 text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed font-medium">
+              En Aromaniak elaboramos contratipos propios de alta gama inspirados en las familias olfativas más reconocidas. Nuestras esencias son 100% puras sin diluir para formular perfumes de máxima duración.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-6 text-xs font-semibold text-slate-700">
+              <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/70 p-3 rounded-2xl shadow-2xs">
+                <Truck className="w-4 h-4 text-indigo-600 shrink-0" />
+                <span>Envíos a todo El Salvador (24-48h)</span>
+              </div>
+              <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/70 p-3 rounded-2xl shadow-2xs">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Pago seguro con tarjeta o transferencia</span>
+              </div>
+              <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/70 p-3 rounded-2xl shadow-2xs">
+                <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0" />
+                <span>Esencias 100% puras importadas</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <Link
+                href="/"
+                className="w-full sm:w-auto clay-btn clay-btn-primary px-6 py-3 rounded-xl text-white font-black text-xs sm:text-sm text-center shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                Explorar Catálogo de Esencias
+              </Link>
+              <Link
+                href="/?categoria=Arma+tu+perfume"
+                className="w-full sm:w-auto clay-btn clay-btn-light px-6 py-3 rounded-xl text-slate-700 font-bold text-xs sm:text-sm text-center transition-all border border-slate-200"
+              >
+                Arma tu propio perfume (100ml)
+              </Link>
+            </div>
+          </section>
+        </article>
+
+        {/* ================= COLUMNA LATERAL STICKY DE COMPRA (4 Cols - Solo Desktop) ================= */}
+        <div className="hidden lg:block lg:col-span-4 min-w-0">
+          <BlogReadingSidebar product={featuredProduct} content={post.content} />
         </div>
-      )}
 
-      {/* =========================================================================
-          BLOQUE ESTRATÉGICO DE CONVERSIÓN HACIA EL E-COMMERCE (DISEÑO CLAYMORFISTA)
-          Convierte el tráfico orgánico del blog en ventas del catálogo Aromaniak
-         ========================================================================= */}
-      <section className="my-12 p-6 sm:p-8 rounded-3xl clay-card bg-white/95 border border-white/80 shadow-md">
-        <span className="clay-badge text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg mb-2">
-          Inspiración Olfativa • No somos réplicas
-        </span>
-        <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug mt-1">
-          Prueba las Fragancias de Inspiración en Esencias 100% Puras
-        </h2>
-        <p className="mt-2 text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed font-medium">
-          En Aromaniak elaboramos contratipos propios de alta gama inspirados en las familias olfativas más reconocidas. Nuestras esencias son 100% puras sin diluir para formular perfumes de máxima duración.
-        </p>
+      </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-6 text-xs font-semibold text-slate-700">
-          <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/70 p-3 rounded-2xl shadow-2xs">
-            <Truck className="w-4 h-4 text-indigo-600 shrink-0" />
-            <span>Envíos a todo El Salvador (24-48h)</span>
-          </div>
-          <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/70 p-3 rounded-2xl shadow-2xs">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>Pago seguro con tarjeta o transferencia</span>
-          </div>
-          <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/70 p-3 rounded-2xl shadow-2xs">
-            <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0" />
-            <span>Esencias 100% puras importadas</span>
-          </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <Link
-            href="/"
-            className="w-full sm:w-auto clay-btn clay-btn-primary px-6 py-3 rounded-xl text-white font-black text-xs sm:text-sm text-center shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
-          >
-            <ShoppingBag className="w-4 h-4" />
-            Explorar Catálogo de Esencias
-          </Link>
-          <Link
-            href="/?categoria=Arma+tu+perfume"
-            className="w-full sm:w-auto clay-btn clay-btn-light px-6 py-3 rounded-xl text-slate-700 font-bold text-xs sm:text-sm text-center transition-all border border-slate-200"
-          >
-            Arma tu propio perfume (100ml)
-          </Link>
-        </div>
-      </section>
-
-      {/* Artículos Relacionados con Tarjetas Clay-Card */}
+      {/* ================= ARTÍCULOS RELACIONADOS (Ancho Completo) ================= */}
       {relatedPosts.length > 0 && (
         <section className="mt-14 pt-10 border-t border-slate-200">
           <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-6">
@@ -407,6 +481,9 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
           </div>
         </section>
       )}
-    </article>
+
+      {/* ================= BARRA FLOTANTE DE COMPRA RÁPIDA EN MÓVIL ================= */}
+      <BlogMobileStickyBar product={featuredProduct} />
+    </div>
   );
 }
