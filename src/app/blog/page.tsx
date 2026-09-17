@@ -129,6 +129,13 @@ export default async function BlogIndexPage() {
         </p>
       </header>
 
+      {/* Integración oficial Holo AI SEO Blog */}
+      <div id="holo-blog" className="mb-6" />
+      <script
+        src="https://prod-api-holo-ai.fly.dev/public/seo/embed/5d0a8196-de4d-42f1-94ff-34f39c3a4653.js"
+        defer
+      />
+
       {/* Buscador reactivo en tiempo real y Grid de Artículos */}
       <BlogLiveSearch initialPosts={serializedPosts} categories={categories} />
 

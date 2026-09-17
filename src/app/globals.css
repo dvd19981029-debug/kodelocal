@@ -433,3 +433,32 @@ html, body {
   margin: 2.5rem 0;
 }
 
+/* Integración Holo AI SEO Blog */
+#holo-blog .holo-blog-empty {
+  display: none !important;
+}
+
+#holo-blog .holo-blog-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 14px rgba(88, 28, 135, 0.08);
+  transition: all 0.3s ease;
+}
+
+#holo-blog .holo-blog-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(88, 28, 135, 0.12);
+}
+
+#holo-blog .holo-blog-card-title {
+  color: #0f172a;
+  font-weight: 800;
+}
+
+#holo-blog .holo-blog-back {
+  border-radius: 1rem;
+  font-weight: 700;
+}
+
+
