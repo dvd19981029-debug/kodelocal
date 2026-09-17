@@ -1,42 +1,102 @@
+// src/app/wp-json/wp/v2/posts/route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { slugify, formatContentForBlog, calculateReadingTime, extractExcerpt } from '@/lib/blog';
+import { isWpAuthorized, wpCorsHeaders } from '@/lib/wp-auth';
 
+export const dynamic = 'force-dynamic';
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: wpCorsHeaders,
+  });
+}
 
 /**
- * Valida la autenticación para WordPress REST API
+ * GET /wp-json/wp/v2/posts
+ * Endpoint compatible con WordPress REST API para consultar artículos existentes.
  */
-function isWpAuthorized(req: NextRequest): boolean {
-  const secret = process.env.BLOG_API_KEY;
-  if (!secret) return false;
+export async function GET(req: NextRequest) {
+  try {
+    const origin = req.nextUrl.origin || 'https://aromaniaksv.com';
+    const searchParams = req.nextUrl.searchParams;
+    const perPage = parseInt(searchParams.get('per_page') || '10', 10);
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const slug = searchParams.get('slug');
 
-  const authHeader = req.headers.get('authorization');
-  if (authHeader) {
-    // 1. Bearer Token
-    if (authHeader.startsWith('Bearer ') && authHeader.substring(7).trim() === secret) {
-      return true;
+    const where: any = { isPublished: true };
+    if (slug) {
+      where.slug = slug;
     }
-    // 2. Basic Auth (Username:Password o Application Password)
-    if (authHeader.startsWith('Basic ')) {
-      try {
-        const decoded = Buffer.from(authHeader.substring(6), 'base64').toString('utf-8');
-        const [user, pass] = decoded.split(':');
-        if (pass && pass.trim() === secret) return true;
-        if (user && user.trim() === secret) return true;
-      } catch (e) {
-        // Ignorar error de base64
-      }
-    }
+
+    const [total, posts] = await Promise.all([
+      prisma.blogPost.count({ where }),
+      prisma.blogPost.findMany({
+        where,
+        orderBy: { publishedAt: 'desc' },
+        skip: (page - 1) * perPage,
+        take: perPage,
+      }),
+    ]);
+
+    const totalPages = Math.ceil(total / perPage) || 1;
+
+    const formattedPosts = posts.map((post) => ({
+      id: post.id,
+      date: (post.publishedAt || post.createdAt).toISOString(),
+      date_gmt: (post.publishedAt || post.createdAt).toISOString(),
+      slug: post.slug,
+      status: post.isPublished ? 'publish' : 'draft',
+      type: 'post',
+      link: `${origin}/blog/${post.slug}`,
+      title: {
+        raw: post.title,
+        rendered: post.title,
+      },
+      content: {
+        raw: post.content,
+        rendered: post.content,
+        protected: false,
+      },
+      excerpt: {
+        raw: post.excerpt || '',
+        rendered: post.excerpt ? `<p>${post.excerpt}</p>` : '',
+        protected: false,
+      },
+      author: 1,
+      featured_media: 0,
+      comment_status: 'closed',
+      ping_status: 'closed',
+      sticky: false,
+      template: '',
+      format: 'standard',
+      meta: [],
+      categories: [1],
+      tags: [],
+      _links: {
+        self: [{ href: `${origin}/wp-json/wp/v2/posts/${post.id}` }],
+        collection: [{ href: `${origin}/wp-json/wp/v2/posts` }],
+      },
+    }));
+
+    return NextResponse.json(formattedPosts, {
+      status: 200,
+      headers: {
+        ...wpCorsHeaders,
+        'Content-Type': 'application/json',
+        'X-WP-Total': String(total),
+        'X-WP-TotalPages': String(totalPages),
+      },
+    });
+  } catch (error: any) {
+    console.error('Error al obtener posts en WP REST API:', error);
+    return NextResponse.json(
+      { code: 'internal_error', message: 'Error interno al consultar artículos.' },
+      { status: 500, headers: wpCorsHeaders }
+    );
   }
-
-  // 3. Fallback a custom header o query param
-  const customHeader = req.headers.get('x-api-key');
-  if (customHeader && customHeader.trim() === secret) return true;
-
-  const queryKey = req.nextUrl.searchParams.get('apiKey');
-  if (queryKey && queryKey.trim() === secret) return true;
-
-  return false;
 }
 
 /**
@@ -48,14 +108,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         code: 'rest_cannot_create',
-        message: 'Disculpa, no tienes autorización para publicar artículos.',
+        message: 'Disculpa, no tienes autorización para publicar artículos. Verifica tus credenciales de WordPress / Application Password.',
         data: { status: 401 },
       },
-      { status: 401 }
+      { status: 401, headers: wpCorsHeaders }
     );
   }
 
   try {
+    const origin = req.nextUrl.origin || 'https://aromaniaksv.com';
     const body = await req.json();
 
     // Extraer título (soporta { title: "..." } o { title: { raw: "..." } })
@@ -85,7 +146,7 @@ export async function POST(req: NextRequest) {
           message: 'Faltan parámetros requeridos: title o content.',
           data: { status: 400 },
         },
-        { status: 400 }
+        { status: 400, headers: wpCorsHeaders }
       );
     }
 
@@ -100,7 +161,6 @@ export async function POST(req: NextRequest) {
     }
 
     const cleanContent = formatContentForBlog(content);
-
     const finalExcerpt = excerpt.trim() ? excerpt.trim() : extractExcerpt(cleanContent, 160);
     const slug = slugify(body.slug ? String(body.slug) : title);
     const isPublished = body.status !== 'draft';
@@ -144,7 +204,7 @@ export async function POST(req: NextRequest) {
         category: categoryName,
         metaTitle: `${title.trim()} | Aromaniak SV`,
         metaDescription: finalExcerpt,
-        canonicalUrl: `https://aromaniaksv.com/blog/${slug}`,
+        canonicalUrl: `${origin}/blog/${slug}`,
         isPublished,
         publishedAt: new Date(),
         readingTimeMin,
@@ -167,18 +227,26 @@ export async function POST(req: NextRequest) {
         slug: post.slug,
         status: post.isPublished ? 'publish' : 'draft',
         type: 'post',
-        link: `https://aromaniaksv.com/blog/${post.slug}`,
+        link: `${origin}/blog/${post.slug}`,
         title: { rendered: post.title },
         content: { rendered: post.content },
         excerpt: { rendered: post.excerpt },
+        categories: [1],
       },
-      { status: 201 }
+      {
+        status: 201,
+        headers: {
+          ...wpCorsHeaders,
+          'Content-Type': 'application/json',
+          'Location': `${origin}/wp-json/wp/v2/posts/${post.id}`,
+        },
+      }
     );
   } catch (error: any) {
     console.error('Error en WordPress REST API endpoint:', error);
     return NextResponse.json(
       { code: 'internal_error', message: 'Error interno al procesar el artículo.' },
-      { status: 500 }
+      { status: 500, headers: wpCorsHeaders }
     );
   }
 }

@@ -3,8 +3,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { slugify } from '@/lib/blog';
+import { isWpAuthorized, wpCorsHeaders } from '@/lib/wp-auth';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: wpCorsHeaders,
+  });
+}
 
 const WP_DEFAULT_CATEGORIES = [
   { id: 1, name: 'Guías & Rendimiento', slug: 'guias-rendimiento', description: 'Técnicas de fijación, maceración y formulación de perfumes' },
@@ -19,6 +27,8 @@ const WP_DEFAULT_CATEGORIES = [
  * Retorna las categorías en formato WordPress REST API para Holo AI y conectores.
  */
 export async function GET(req: NextRequest) {
+  const origin = req.nextUrl.origin || 'https://aromaniaksv.com';
+
   try {
     const posts = await prisma.blogPost.findMany({
       where: { isPublished: true },
@@ -51,20 +61,24 @@ export async function GET(req: NextRequest) {
         id: catId,
         count,
         description: catDesc,
-        link: `https://aromaniaksv.com/blog?category=${encodeURIComponent(catName)}`,
+        link: `${origin}/blog?category=${encodeURIComponent(catName)}`,
         name: catName,
         slug: catSlug,
         taxonomy: 'category',
         parent: 0,
         meta: [],
+        _links: {
+          self: [{ href: `${origin}/wp-json/wp/v2/categories/${catId}` }],
+          collection: [{ href: `${origin}/wp-json/wp/v2/categories` }],
+        },
       };
     });
 
     return NextResponse.json(responseCategories, {
       status: 200,
       headers: {
+        ...wpCorsHeaders,
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
         'X-WP-Total': String(responseCategories.length),
         'X-WP-TotalPages': '1',
       },
@@ -75,14 +89,20 @@ export async function GET(req: NextRequest) {
       id: c.id,
       count: 1,
       description: c.description,
-      link: `https://aromaniaksv.com/blog?category=${encodeURIComponent(c.name)}`,
+      link: `${origin}/blog?category=${encodeURIComponent(c.name)}`,
       name: c.name,
       slug: c.slug,
       taxonomy: 'category',
       parent: 0,
       meta: [],
     }));
-    return NextResponse.json(fallback, { status: 200 });
+    return NextResponse.json(fallback, {
+      status: 200,
+      headers: {
+        ...wpCorsHeaders,
+        'Content-Type': 'application/json',
+      },
+    });
   }
 }
 
@@ -91,30 +111,21 @@ export async function GET(req: NextRequest) {
  * Permite a una IA registrar una nueva categoría.
  */
 export async function POST(req: NextRequest) {
+  if (!isWpAuthorized(req)) {
+    return NextResponse.json(
+      { code: 'rest_cannot_create', message: 'No autorizado.', data: { status: 401 } },
+      { status: 401, headers: wpCorsHeaders }
+    );
+  }
+
   try {
-    const secret = process.env.BLOG_API_KEY;
-    const authHeader = req.headers.get('authorization') || '';
-    const customHeader = req.headers.get('x-api-key') || '';
-    const queryKey = req.nextUrl.searchParams.get('apiKey') || '';
-
-    const isAuthed =
-      (secret && authHeader.includes(secret)) ||
-      (secret && customHeader === secret) ||
-      (secret && queryKey === secret);
-
-    if (!isAuthed) {
-      return NextResponse.json(
-        { code: 'rest_cannot_create', message: 'No autorizado.', data: { status: 401 } },
-        { status: 401 }
-      );
-    }
-
+    const origin = req.nextUrl.origin || 'https://aromaniaksv.com';
     const body = await req.json();
     const name = (body.name || '').trim();
     if (!name) {
       return NextResponse.json(
         { code: 'rest_missing_param', message: 'El nombre de categoría es requerido.' },
-        { status: 400 }
+        { status: 400, headers: wpCorsHeaders }
       );
     }
 
@@ -122,7 +133,7 @@ export async function POST(req: NextRequest) {
       id: Math.floor(Math.random() * 9000) + 1000,
       count: 0,
       description: body.description || `Artículos sobre ${name}`,
-      link: `https://aromaniaksv.com/blog?category=${encodeURIComponent(name)}`,
+      link: `${origin}/blog?category=${encodeURIComponent(name)}`,
       name,
       slug: slugify(name),
       taxonomy: 'category',
@@ -130,11 +141,17 @@ export async function POST(req: NextRequest) {
       meta: [],
     };
 
-    return NextResponse.json(newCat, { status: 201 });
+    return NextResponse.json(newCat, {
+      status: 201,
+      headers: {
+        ...wpCorsHeaders,
+        'Content-Type': 'application/json',
+      },
+    });
   } catch (err: any) {
     return NextResponse.json(
       { code: 'rest_error', message: err.message || 'Error al procesar categoría' },
-      { status: 500 }
+      { status: 500, headers: wpCorsHeaders }
     );
   }
 }

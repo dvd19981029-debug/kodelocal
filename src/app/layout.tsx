@@ -126,6 +126,8 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=4" />
         <link rel="shortcut icon" href="/favicon.ico?v=4" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=4" />
+        <link rel="https://api.w.org/" href="https://aromaniaksv.com/wp-json/" />
+        <link rel="alternate" type="application/json" href="https://aromaniaksv.com/wp-json/" />
       </head>
       <body className={`${quicksand.className} min-h-full flex flex-col bg-[#f1f4f9] text-slate-800 antialiased touch-manipulation font-sans`}>
         <MarketingScripts />
