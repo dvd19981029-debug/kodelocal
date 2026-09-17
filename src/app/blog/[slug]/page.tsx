@@ -227,6 +227,9 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
     : [];
 
   const featuredProduct = getFeaturedProductForPost(post.title, post.content, post.category);
+  const featuredBottle = INITIAL_PRODUCTS.find(p => p.id === 'bote-100ml-acanalado-blanco') || 
+                         INITIAL_PRODUCTS.find(p => p.category === 'Botes') || 
+                         INITIAL_PRODUCTS[1];
   const contentParts = splitArticleContent(post.content);
 
   return (
@@ -349,7 +352,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
           />
 
           {/* ================= INCENTIVO DE COMPRA EN MEDIO DE LA LECTURA ================= */}
-          <BlogInlineProductCallout product={featuredProduct} />
+          <BlogInlineProductCallout product={featuredProduct} bottleProduct={featuredBottle} />
 
           {/* Segunda mitad del artículo */}
           {contentParts.after && (
@@ -359,7 +362,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
             />
           )}
 
-          {/* Showcase de Perfumes Recomendados al final del artículo */}
+          {/* Showcase de Perfumes, Botes e Insumos Recomendados al final del artículo */}
           <BlogCatalogShowcase limit={3} />
 
           {/* Etiquetas / Tags */}
@@ -386,10 +389,10 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
               Inspiración Olfativa • No somos réplicas
             </span>
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug mt-1">
-              Prueba las Fragancias de Inspiración en Esencias 100% Puras
+              Esencias Puras, Botes de Vidrio e Insumos de Perfumería
             </h2>
             <p className="mt-2 text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed font-medium">
-              En Aromaniak elaboramos contratipos propios de alta gama inspirados en las familias olfativas más reconocidas. Nuestras esencias son 100% puras sin diluir para formular perfumes de máxima duración.
+              En Aromaniak encuentras todo para crear y envasar tus fragancias: esencias 100% puras sin diluir, frascos de vidrio con atomizador de lujo, alcohol especial de perfumería y cajas de empaque.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-6 text-xs font-semibold text-slate-700">
@@ -403,7 +406,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
               </div>
               <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/70 p-3 rounded-2xl shadow-2xs">
                 <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0" />
-                <span>Esencias 100% puras importadas</span>
+                <span>Esencias puras y botes con atomizador</span>
               </div>
             </div>
 
@@ -414,6 +417,12 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
               >
                 <ShoppingBag className="w-4 h-4" />
                 Explorar Catálogo de Esencias
+              </Link>
+              <Link
+                href="/?categoria=Botes"
+                className="w-full sm:w-auto clay-btn clay-btn-light px-6 py-3 rounded-xl text-slate-700 font-bold text-xs sm:text-sm text-center transition-all border border-slate-200"
+              >
+                Ver Botes y Frascos de Vidrio
               </Link>
               <Link
                 href="/?categoria=Arma+tu+perfume"
@@ -427,7 +436,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
 
         {/* ================= COLUMNA LATERAL STICKY DE COMPRA (4 Cols - Solo Desktop) ================= */}
         <div className="hidden lg:block lg:col-span-4 min-w-0">
-          <BlogReadingSidebar product={featuredProduct} content={post.content} />
+          <BlogReadingSidebar product={featuredProduct} bottleProduct={featuredBottle} content={post.content} />
         </div>
 
       </div>

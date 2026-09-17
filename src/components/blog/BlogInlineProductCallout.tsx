@@ -12,15 +12,17 @@ import { getProductUrl } from '@/lib/productUrl';
 
 interface InlineCalloutProps {
   product: ProductItem;
+  bottleProduct?: ProductItem;
 }
 
-export default function BlogInlineProductCallout({ product }: InlineCalloutProps) {
+export default function BlogInlineProductCallout({ product, bottleProduct }: InlineCalloutProps) {
   const { addToCart } = useEcommerceCart();
   const presentations = getPresentationsForProduct(product);
   const [selectedPresentation, setSelectedPresentation] = useState<ProductPresentation>(
     product.category === 'Esencias para Perfume' ? 'ONZA_COMPLETA' : 'UNIDAD'
   );
   const [justAdded, setJustAdded] = useState(false);
+  const [bottleAdded, setBottleAdded] = useState(false);
 
   const activeOption = presentations.find(p => p.id === selectedPresentation) || presentations[0];
   const displayName = product.officialName?.trim() || product.name;
@@ -31,6 +33,13 @@ export default function BlogInlineProductCallout({ product }: InlineCalloutProps
     addToCart(product, selectedPresentation, 1);
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1500);
+  };
+
+  const handleAddBottle = () => {
+    if (!bottleProduct) return;
+    addToCart(bottleProduct, 'UNIDAD', 1);
+    setBottleAdded(true);
+    setTimeout(() => setBottleAdded(false), 1500);
   };
 
   return (
@@ -140,6 +149,48 @@ export default function BlogInlineProductCallout({ product }: InlineCalloutProps
         </div>
 
       </div>
+
+      {/* Opción de Frasco de Vidrio Complementario */}
+      {bottleProduct && (
+        <div className="mt-4 pt-3 border-t border-slate-100/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/60 p-3 rounded-2xl">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <img
+              src={bottleProduct.imageUrl}
+              alt={bottleProduct.name}
+              onError={(e) => {
+                e.currentTarget.src = '/images/botes/bote_100ml_degrade_azul_noche.jpg';
+              }}
+              className="w-10 h-10 rounded-xl object-cover border border-slate-200 shadow-2xs shrink-0"
+            />
+            <div className="text-xs min-w-0">
+              <span className="font-bold text-slate-800 block truncate">
+                {bottleProduct.name}
+              </span>
+              <span className="text-[11px] text-indigo-700 font-extrabold">
+                ${bottleProduct.price.toFixed(2)} • Frasco de Vidrio 100ml con Atomizador
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleAddBottle}
+            className="clay-btn clay-btn-light px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-900 border border-slate-200/90 shadow-2xs shrink-0 flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
+          >
+            {bottleAdded ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
+                <span className="text-emerald-700 font-black">¡Bote Agregado!</span>
+              </>
+            ) : (
+              <>
+                <ShoppingBag className="w-3.5 h-3.5 text-slate-600" />
+                <span>Agregar Bote de Vidrio</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Nota legal y garantía */}
       <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
