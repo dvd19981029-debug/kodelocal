@@ -583,3 +583,30 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
 }
+
+model BlogPost {
+  id              String    @id @default(cuid())
+  slug            String    @unique
+  title           String
+  excerpt         String?   @db.Text
+  content         String    @db.Text
+  coverImage      String?
+  author          String?   @default("Equipo Aromaniak")
+  category        String?   @default("General")
+  tags            String?
+  metaTitle       String?
+  metaDescription String?
+  canonicalUrl    String?
+  isPublished     Boolean   @default(true)
+  publishedAt     DateTime? @default(now())
+  readingTimeMin  Int?      @default(3)
+  viewsCount      Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([isPublished])
+  @@index([category])
+  @@index([publishedAt])
+}
+

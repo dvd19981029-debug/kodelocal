@@ -45,6 +45,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
+  // Obtener artículos publicados del blog para indexación inmediata en Google
+  let blogUrls: MetadataRoute.Sitemap = [];
+  try {
+    if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('placeholder')) {
+      const dbPosts = await prisma.blogPost.findMany({
+        where: { isPublished: true },
+        select: { slug: true, updatedAt: true, publishedAt: true },
+      });
+      blogUrls = dbPosts.map((post) => ({
+        url: `${baseUrl}/blog/${post.slug}`,
+        lastModified: post.updatedAt || post.publishedAt || new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.8,
+      }));
+    }
+  } catch (err) {
+    console.error('Error cargando posts de blog para sitemap:', err);
+  }
+
   return [
     {
       url: baseUrl,
@@ -53,6 +72,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
     },
     ...productUrls,
+    {
+      url: `${baseUrl}/blog`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.9,
+    },
+    ...blogUrls,
     {
       url: `${baseUrl}/terminos`,
       lastModified: new Date(),
@@ -67,3 +93,4 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 }
+

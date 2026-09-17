@@ -3,6 +3,8 @@ import { Quicksand } from "next/font/google";
 import "./globals.css";
 import StorageInitializer from "@/components/StorageInitializer";
 import NavigationWrapper from "@/components/NavigationWrapper";
+import MarketingScripts from "@/components/analytics/MarketingScripts";
+
 
 const quicksand = Quicksand({
   subsets: ["latin"],
@@ -126,11 +128,13 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=4" />
       </head>
       <body className={`${quicksand.className} min-h-full flex flex-col bg-[#f1f4f9] text-slate-800 antialiased touch-manipulation font-sans`}>
+        <MarketingScripts />
         <StorageInitializer />
         <NavigationWrapper>
           {children}
         </NavigationWrapper>
       </body>
+
     </html>
   );
 }

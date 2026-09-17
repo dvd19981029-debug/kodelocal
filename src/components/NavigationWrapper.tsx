@@ -4,6 +4,7 @@ import React from 'react';
 import { usePathname } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
 import EcommerceHeader from '@/components/ecommerce/EcommerceHeader';
+import BlogHeader from '@/components/blog/BlogHeader';
 import PromoTickerBar from '@/components/ecommerce/PromoTickerBar';
 import EcommerceFooter from '@/components/ecommerce/EcommerceFooter';
 import CartDrawer from '@/components/ecommerce/CartDrawer';
@@ -25,6 +26,7 @@ export default function NavigationWrapper({ children }: { children: React.ReactN
     pathname.startsWith('/logistica');
 
   const isLoginPage = pathname === '/login';
+  const isBlogRoute = pathname.startsWith('/blog');
 
   return (
     <CustomerAuthProvider>
@@ -44,8 +46,17 @@ export default function NavigationWrapper({ children }: { children: React.ReactN
             {children}
           </main>
         </>
+      ) : isBlogRoute ? (
+        // En el Blog: Cabecera con opciones hacia el ecommerce, sin barra de promociones
+        <div className="flex flex-col min-h-screen">
+          <BlogHeader />
+          <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 lg:p-8">
+            {children}
+          </main>
+          <EcommerceFooter />
+        </div>
       ) : (
-        // En la tienda pública (E-commerce) se muestra la cabecera, barra de promociones y pie de Aromaniak
+        // En la tienda pública (E-commerce) se muestra la cabecera original, barra de promociones y pie de Aromaniak
         <div className="flex flex-col min-h-screen">
           <EcommerceHeader />
           <PromoTickerBar />
@@ -59,3 +70,4 @@ export default function NavigationWrapper({ children }: { children: React.ReactN
     </CustomerAuthProvider>
   );
 }
+
