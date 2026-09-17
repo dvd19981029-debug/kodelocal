@@ -192,7 +192,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
       <nav aria-label="Breadcrumb" className="mb-6">
         <ol className="flex flex-wrap items-center space-x-2 text-xs text-slate-500 font-medium">
           <li>
-            <Link href="/" className="hover:text-purple-700 transition-colors">
+            <Link href="/" className="hover:text-indigo-700 transition-colors">
               Inicio
             </Link>
           </li>
@@ -200,7 +200,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
             <ChevronRight className="w-3.5 h-3.5 text-slate-400 inline" />
           </li>
           <li>
-            <Link href="/blog" className="hover:text-purple-700 transition-colors">
+            <Link href="/blog" className="hover:text-indigo-700 transition-colors">
               Blog
             </Link>
           </li>
@@ -218,13 +218,13 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
         <div className="flex flex-wrap items-center gap-2 mb-3">
           <Link
             href="/blog"
-            className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-purple-700 mr-2 transition-colors"
+            className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-indigo-700 mr-2 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Volver al Blog
           </Link>
           {post.category && (
-            <span className="bg-purple-100 text-purple-900 text-xs font-bold px-3 py-0.5 rounded-full">
+            <span className="clay-badge text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg">
               {post.category}
             </span>
           )}
@@ -244,7 +244,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 border-y border-slate-200/80">
           <div className="flex items-center gap-4 text-xs text-slate-500">
             <span className="flex items-center gap-1.5 font-semibold text-slate-700">
-              <User className="w-4 h-4 text-purple-600" />
+              <User className="w-4 h-4 text-indigo-600" />
               {post.author || 'Equipo Aromaniak'}
             </span>
             <span>•</span>
@@ -273,10 +273,10 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
           />
         </div>
       ) : (
-        <div className="relative aspect-16/9 sm:aspect-21/9 rounded-3xl overflow-hidden mb-8 shadow-md border border-slate-200/60 bg-gradient-to-br from-purple-950 via-slate-900 to-indigo-950 flex flex-col items-center justify-center text-center p-6 text-white">
-          <Sparkles className="w-10 h-10 text-amber-300 mb-2" />
-          <span className="text-xs font-black tracking-widest uppercase text-amber-300">Aromaniak SV</span>
-          <span className="text-xs text-slate-300 mt-1">Esencias 100% Puras de Perfumería Fina</span>
+        <div className="relative aspect-16/9 sm:aspect-21/9 rounded-3xl overflow-hidden mb-8 shadow-md border border-slate-200/60 bg-gradient-to-br from-indigo-50 via-purple-50 to-slate-100 flex flex-col items-center justify-center text-center p-6 text-slate-800">
+          <span className="clay-badge text-[10px] font-black uppercase text-indigo-700 bg-white/90 px-3 py-1 rounded-lg shadow-2xs mb-2">Aromaniak SV</span>
+          <h3 className="text-lg font-black text-slate-900">Perfumería Fina de Inspiración Olfativa</h3>
+          <p className="text-xs text-slate-500 mt-1 font-medium">Esencias 100% puras sin diluir • No comercializamos réplicas ni imitaciones</p>
         </div>
       )}
 
@@ -312,55 +312,53 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
       )}
 
       {/* =========================================================================
-          BLOQUE ESTRATÉGICO DE CONVERSIÓN HACIA EL E-COMMERCE (SEO LOCAL EL SALVADOR)
+          BLOQUE ESTRATÉGICO DE CONVERSIÓN HACIA EL E-COMMERCE (DISEÑO CLAYMORFISTA)
           Convierte el tráfico orgánico del blog en ventas del catálogo Aromaniak
          ========================================================================= */}
-      <section className="my-12 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-purple-900 via-indigo-950 to-slate-950 text-white shadow-xl">
-        <div className="flex items-center gap-2 text-amber-300 text-xs font-black tracking-widest uppercase mb-2">
-          <Sparkles className="w-4 h-4" />
-          Perfumería Fina de Inspiración en El Salvador
-        </div>
-        <h2 className="text-xl sm:text-2xl font-black leading-snug">
-          Prueba las Fragancias que Inspiraron este Artículo
+      <section className="my-12 p-6 sm:p-8 rounded-3xl clay-card bg-white/95 border border-white/80 shadow-md">
+        <span className="clay-badge text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg mb-2">
+          Inspiración Olfativa • No somos réplicas
+        </span>
+        <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug mt-1">
+          Prueba las Fragancias de Inspiración en Esencias 100% Puras
         </h2>
-        <p className="mt-2 text-xs sm:text-sm text-slate-200 max-w-2xl leading-relaxed">
-          En Aromaniak distribuimos esencias 100% puras de perfumería fina e importadas para garantizar máxima fijación y estela prolongada en cada aplicación.
+        <p className="mt-2 text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed font-medium">
+          En Aromaniak elaboramos contratipos propios de alta gama inspirados en las familias olfativas más reconocidas. Nuestras esencias son 100% puras sin diluir para formular perfumes de máxima duración.
         </p>
 
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-6 text-xs font-semibold text-slate-300">
-          <div className="flex items-center gap-2 bg-white/10 p-2.5 rounded-xl backdrop-blur-xs">
-            <Truck className="w-4 h-4 text-amber-300 shrink-0" />
-            <span>Envíos a todo El Salvador</span>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-6 text-xs font-semibold text-slate-700">
+          <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/70 p-3 rounded-2xl shadow-2xs">
+            <Truck className="w-4 h-4 text-indigo-600 shrink-0" />
+            <span>Envíos a todo El Salvador (24-48h)</span>
           </div>
-          <div className="flex items-center gap-2 bg-white/10 p-2.5 rounded-xl backdrop-blur-xs">
-            <ShieldCheck className="w-4 h-4 text-emerald-300 shrink-0" />
-            <span>Pago seguro con Wompi SV</span>
+          <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/70 p-3 rounded-2xl shadow-2xs">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>Pago seguro con tarjeta o transferencia</span>
           </div>
-          <div className="flex items-center gap-2 bg-white/10 p-2.5 rounded-xl backdrop-blur-xs">
-            <CheckCircle2 className="w-4 h-4 text-amber-300 shrink-0" />
-            <span>Esencias importadas de lujo</span>
+          <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/70 p-3 rounded-2xl shadow-2xs">
+            <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0" />
+            <span>Esencias 100% puras importadas</span>
           </div>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-3">
           <Link
             href="/"
-            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs sm:text-sm text-center shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
+            className="w-full sm:w-auto clay-btn clay-btn-primary px-6 py-3 rounded-xl text-white font-black text-xs sm:text-sm text-center shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
           >
             <ShoppingBag className="w-4 h-4" />
-            Explorar Perfumes en Aromaniak
+            Explorar Catálogo de Esencias
           </Link>
           <Link
             href="/?categoria=Arma+tu+perfume"
-            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs sm:text-sm text-center transition-all"
+            className="w-full sm:w-auto clay-btn clay-btn-light px-6 py-3 rounded-xl text-slate-700 font-bold text-xs sm:text-sm text-center transition-all border border-slate-200"
           >
             Arma tu propio perfume (100ml)
           </Link>
         </div>
       </section>
 
-      {/* Artículos Relacionados */}
+      {/* Artículos Relacionados con Tarjetas Clay-Card */}
       {relatedPosts.length > 0 && (
         <section className="mt-14 pt-10 border-t border-slate-200">
           <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-6">
@@ -370,9 +368,9 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
             {relatedPosts.map((rel) => (
               <article
                 key={rel.id}
-                className="group bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col"
+                className="clay-card rounded-2xl overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:scale-[1.01]"
               >
-                <Link href={`/blog/${rel.slug}`} className="block relative aspect-16/10 overflow-hidden bg-purple-950">
+                <Link href={`/blog/${rel.slug}`} className="block relative aspect-16/10 overflow-hidden bg-slate-100 border-b border-slate-100">
                   {rel.coverImage ? (
                     <img
                       src={rel.coverImage}
@@ -381,25 +379,27 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-amber-300/80">
-                      <Sparkles className="w-8 h-8" />
+                    <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400">
+                      <span className="text-xs font-bold text-slate-400">Aromaniak SV</span>
+                    </div>
+                  )}
+                  {rel.category && (
+                    <div className="absolute top-2.5 left-2.5 z-10">
+                      <span className="bg-white/95 backdrop-blur-xs text-indigo-900 border border-slate-200/80 text-[9px] font-extrabold py-0.5 px-2 rounded-md shadow-xs uppercase tracking-wide">
+                        {rel.category}
+                      </span>
                     </div>
                   )}
                 </Link>
                 <div className="p-4 flex-1 flex flex-col">
-                  {rel.category && (
-                    <span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider mb-1">
-                      {rel.category}
-                    </span>
-                  )}
-                  <h4 className="text-sm font-bold text-slate-900 group-hover:text-purple-700 transition-colors line-clamp-2 mb-2">
+                  <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition-colors line-clamp-2 mb-2">
                     <Link href={`/blog/${rel.slug}`}>
                       {rel.title}
                     </Link>
                   </h4>
                   <div className="mt-auto text-[11px] text-slate-400 flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    {rel.readingTimeMin || 3} min
+                    {rel.readingTimeMin || 3} min de lectura
                   </div>
                 </div>
               </article>

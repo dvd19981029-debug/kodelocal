@@ -116,7 +116,7 @@ export default async function BlogIndexPage() {
       <nav aria-label="Breadcrumb" className="mb-6">
         <ol className="flex items-center space-x-2 text-xs text-slate-500 font-medium">
           <li>
-            <Link href="/" className="hover:text-purple-700 transition-colors">
+            <Link href="/" className="hover:text-indigo-700 transition-colors">
               Inicio
             </Link>
           </li>
@@ -131,39 +131,36 @@ export default async function BlogIndexPage() {
 
       {/* Cabecera del Blog con enfoque en SEO El Salvador y diseño Claymorphic */}
       <header className="mb-8 text-center sm:text-left border-b border-slate-200/80 pb-6">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-100/90 text-purple-900 text-xs font-black uppercase tracking-wider mb-3 shadow-2xs">
-          <Sparkles className="w-3.5 h-3.5 text-purple-700" />
+        <span className="clay-badge text-[10px] sm:text-xs font-black uppercase text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg mb-3">
           Perfumería Fina en El Salvador
-        </div>
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+        </span>
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight mt-2">
           Secretos Olfativos, Guías & Alta Fijación
         </h1>
-        <p className="mt-3 text-sm sm:text-base text-slate-600 max-w-3xl leading-relaxed">
-          Aprende a elegir tu fragancia ideal, maximizar su duración y descubrir las inspiraciones de lujo con entrega a domicilio en todos los departamentos de El Salvador.
+        <p className="mt-3 text-sm sm:text-base text-slate-600 max-w-3xl leading-relaxed font-medium">
+          Aprende a elegir tu fragancia ideal, maximizar su duración y conocer nuestras inspiraciones olfativas en esencias 100% puras con entregas a domicilio a todo El Salvador o retiro en local.
         </p>
       </header>
 
       {/* Buscador reactivo en tiempo real y Grid de Artículos */}
       <BlogLiveSearch initialPosts={serializedPosts} categories={categories} />
 
-      {/* Banner de Conversión hacia el E-commerce (Local SEO El Salvador) */}
-      <aside className="mt-14 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-purple-950 via-slate-900 to-purple-900 text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
+      {/* Banner de Conversión hacia el E-commerce (Diseño idéntico a la tienda) */}
+      <aside className="mt-14 p-6 sm:p-8 rounded-3xl clay-card bg-white/95 border border-white/80 shadow-md flex flex-col sm:flex-row items-center justify-between gap-6">
         <div className="text-center sm:text-left">
-          <span className="text-amber-400 text-xs font-black tracking-wider uppercase flex items-center justify-center sm:justify-start gap-1.5 mb-1">
-            <Sparkles className="w-4 h-4" />
-            Perfumería de Inspiración en El Salvador
+          <span className="clay-badge text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg mb-2">
+            Inspiración Olfativa • No somos réplicas
           </span>
-          <h3 className="text-xl sm:text-2xl font-black">
-            ¿Buscas fragancias con más de 8 horas de duración?
+          <h3 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
+            Fragancias con más de 8 a 12 horas de fijación
           </h3>
-          <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-xl">
-            Explora más de 100 contratipos de lujo en esencias 100% puras importadas de alta fijación. Envíos express a los 14 departamentos de El Salvador.
+          <p className="text-slate-600 text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed font-medium">
+            Conoce nuestras esencias 100% puras importadas sin diluir para formular perfumes de alta gama. Entregas express a los 14 departamentos de El Salvador o retiro en nuestro local en San Salvador.
           </p>
-
         </div>
         <Link
           href="/"
-          className="shrink-0 px-6 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs sm:text-sm tracking-wide shadow-md transition-all active:scale-95 flex items-center gap-2"
+          className="clay-btn clay-btn-primary shrink-0 px-6 py-3 rounded-2xl text-white font-black text-xs sm:text-sm tracking-wide shadow-md transition-all active:scale-95 flex items-center gap-2"
         >
           <ShoppingBag className="w-4 h-4" />
           Ver Catálogo Aromaniak
