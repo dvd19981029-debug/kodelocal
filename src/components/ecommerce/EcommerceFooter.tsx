@@ -129,7 +129,6 @@ export default function EcommerceFooter() {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <Link href="/terminos" className="hover:text-purple-700 transition-colors">Términos y Condiciones</Link>
             <Link href="/politica-privacidad" className="hover:text-purple-700 transition-colors">Política de Privacidad</Link>
-            <a href="/sitemap.xml" className="hover:text-purple-700 transition-colors font-bold text-indigo-700">Mapa del Sitio (XML)</a>
           </div>
         </div>
 
