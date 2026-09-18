@@ -8,24 +8,16 @@
   --clay-shadow-light: rgba(255, 255, 255, 0.95);
 }
 
-html {
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
-body {
+html, body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-quicksand), 'Quicksand', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  touch-action: pan-y;
+  touch-action: pan-x pan-y;
   overscroll-behavior-x: none;
   -webkit-text-size-adjust: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-  position: relative;
 }
 
 /* ================= CLAYMORPHISM DESIGN SYSTEM ================= */
