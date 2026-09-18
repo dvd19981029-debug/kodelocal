@@ -24,6 +24,7 @@ import BlogCatalogShowcase from '@/components/blog/BlogCatalogShowcase';
 import BlogInlineProductCallout from '@/components/blog/BlogInlineProductCallout';
 import BlogReadingSidebar from '@/components/blog/BlogReadingSidebar';
 import BlogMobileStickyBar from '@/components/blog/BlogMobileStickyBar';
+import BlogFloatingCartButton from '@/components/blog/BlogFloatingCartButton';
 import { INITIAL_PRODUCTS, ProductItem } from '@/lib/store';
 import { getRecommendationsForPost } from '@/lib/recommendations';
 
@@ -576,6 +577,9 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
           <span>Ver todo el catálogo</span>
         </Link>
       </div>
+
+      {/* ================= BOTÓN FLOTANTE DE CARRITO (Se muestra solo si hay productos en el carrito) ================= */}
+      <BlogFloatingCartButton />
 
       {/* ================= BARRA FLOTANTE DE COMPRA RÁPIDA EN MÓVIL ================= */}
       <BlogMobileStickyBar product={featuredProduct} catalog={liveCatalog} />

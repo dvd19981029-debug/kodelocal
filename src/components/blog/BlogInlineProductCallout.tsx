@@ -260,33 +260,38 @@ export default function BlogInlineProductCallout({
                   key={ess.id}
                   className="w-36 sm:w-40 shrink-0 snap-start bg-white rounded-2xl border border-slate-200/80 p-2.5 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between"
                 >
-                  <div className="relative aspect-square rounded-xl overflow-hidden bg-white mb-2 border border-slate-100 flex items-center justify-center shrink-0 p-1">
-                    <img
-                      src={essImg}
-                      alt={essName}
-                      onError={(e) => {
-                        e.currentTarget.src = '/images/essence_bottle_blank.webp';
-                      }}
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
+                  <Link
+                    href={getProductUrl(ess)}
+                    className="block group flex-1 cursor-pointer"
+                  >
+                    <div className="relative aspect-square rounded-xl overflow-hidden bg-white mb-2 border border-slate-100 flex items-center justify-center shrink-0 p-1">
+                      <img
+                        src={essImg}
+                        alt={essName}
+                        onError={(e) => {
+                          e.currentTarget.src = '/images/essence_bottle_blank.webp';
+                        }}
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-200"
+                      />
+                    </div>
 
-                  <div className="mb-2 flex flex-col justify-start">
-                    {ess.gender && (
-                      <span className="text-[9px] font-black text-indigo-700 uppercase mb-0.5 block">
-                        {ess.gender}
+                    <div className="mb-2 flex flex-col justify-start">
+                      {ess.gender && (
+                        <span className="text-[9px] font-black text-indigo-700 uppercase mb-0.5 block">
+                          {ess.gender}
+                        </span>
+                      )}
+                      <h5 className="text-xs font-black text-slate-800 line-clamp-1 leading-tight group-hover:text-[#7c3aed] transition-colors" title={essName}>
+                        {essName}
+                      </h5>
+                      <p className="text-[10px] text-slate-500 line-clamp-1 leading-tight mt-0.5" title={`Inspirado en ${essInspiracion}`}>
+                        Inspirado en {essInspiracion}
+                      </p>
+                      <span className="text-xs font-black text-[#7c3aed] mt-1 block">
+                        ${ess.price.toFixed(2)} <span className="text-[9px] text-slate-400 font-normal">/ 1 oz</span>
                       </span>
-                    )}
-                    <h5 className="text-xs font-black text-slate-800 line-clamp-1 leading-tight" title={essName}>
-                      {essName}
-                    </h5>
-                    <p className="text-[10px] text-slate-500 line-clamp-1 leading-tight mt-0.5" title={`Inspirado en ${essInspiracion}`}>
-                      Inspirado en {essInspiracion}
-                    </p>
-                    <span className="text-xs font-black text-[#7c3aed] mt-1 block">
-                      ${ess.price.toFixed(2)} <span className="text-[9px] text-slate-400 font-normal">/ 1 oz</span>
-                    </span>
-                  </div>
+                    </div>
+                  </Link>
 
                   <button
                     type="button"
@@ -367,28 +372,33 @@ export default function BlogInlineProductCallout({
                   key={bottle.id}
                   className="w-36 sm:w-40 shrink-0 snap-start bg-white rounded-2xl border border-slate-200/80 p-2.5 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between"
                 >
-                  <div className="relative aspect-square rounded-xl overflow-hidden bg-white mb-2 border border-slate-100 flex items-center justify-center shrink-0 p-1">
-                    <img
-                      src={bottle.imageUrl}
-                      alt={bottle.name}
-                      onError={(e) => {
-                        e.currentTarget.src = '/images/botes/bote_100ml_degrade_azul_noche.jpg';
-                      }}
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
+                  <Link
+                    href={getProductUrl(bottle)}
+                    className="block group flex-1 cursor-pointer"
+                  >
+                    <div className="relative aspect-square rounded-xl overflow-hidden bg-white mb-2 border border-slate-100 flex items-center justify-center shrink-0 p-1">
+                      <img
+                        src={bottle.imageUrl}
+                        alt={bottle.name}
+                        onError={(e) => {
+                          e.currentTarget.src = '/images/botes/bote_100ml_degrade_azul_noche.jpg';
+                        }}
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-200"
+                      />
+                    </div>
 
-                  <div className="mb-2 flex flex-col justify-start">
-                    <span className="text-[9px] font-black text-slate-500 uppercase mb-0.5 block">
-                      100 ML
-                    </span>
-                    <h5 className="text-xs font-bold text-slate-800 line-clamp-1 leading-tight" title={bottle.name}>
-                      {shortName}
-                    </h5>
-                    <span className="text-xs font-black text-[#7c3aed] mt-1 block">
-                      ${bottle.price.toFixed(2)}
-                    </span>
-                  </div>
+                    <div className="mb-2 flex flex-col justify-start">
+                      <span className="text-[9px] font-black text-slate-500 uppercase mb-0.5 block">
+                        100 ML
+                      </span>
+                      <h5 className="text-xs font-bold text-slate-800 line-clamp-1 leading-tight group-hover:text-[#7c3aed] transition-colors" title={bottle.name}>
+                        {shortName}
+                      </h5>
+                      <span className="text-xs font-black text-[#7c3aed] mt-1 block">
+                        ${bottle.price.toFixed(2)}
+                      </span>
+                    </div>
+                  </Link>
 
                   <button
                     type="button"
@@ -396,7 +406,7 @@ export default function BlogInlineProductCallout({
                     className={`w-full py-1.5 px-2 rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1 active:scale-95 cursor-pointer ${
                       isAdded
                         ? 'bg-emerald-600 text-white shadow-2xs'
-                        : 'bg-purple-50 hover:bg-[#7c3aed] text-[#7c3aed] hover:text-white border border-purple-100 shadow-2xs'
+                        : 'bg-[#7c3aed] hover:bg-[#6d28d9] text-white shadow-2xs'
                     }`}
                   >
                     {isAdded ? (
@@ -407,7 +417,7 @@ export default function BlogInlineProductCallout({
                     ) : (
                       <>
                         <ShoppingBag className="w-3 h-3" />
-                        <span>+ Bote</span>
+                        <span>+ Agregar</span>
                       </>
                     )}
                   </button>
