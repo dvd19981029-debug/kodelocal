@@ -477,7 +477,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
                 className="w-full sm:w-auto clay-btn clay-btn-primary px-6 py-3 rounded-xl text-white font-black text-xs sm:text-sm text-center shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
               >
                 <ShoppingBag className="w-4 h-4" />
-                Explorar Catálogo de Esencias
+                Ver todo el catálogo
               </Link>
               <Link
                 href="/?categoria=Botes"
@@ -565,6 +565,17 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
           </div>
         </section>
       )}
+
+      {/* ================= BOTÓN FINAL: VER TODO EL CATÁLOGO ================= */}
+      <div className="mt-12 mb-8 pt-8 border-t border-slate-200/80 flex flex-col items-center justify-center text-center">
+        <Link
+          href="/"
+          className="w-full sm:w-auto clay-btn clay-btn-primary px-8 py-4 rounded-2xl text-white font-black text-sm sm:text-base text-center shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2.5"
+        >
+          <ShoppingBag className="w-5 h-5" />
+          <span>Ver todo el catálogo</span>
+        </Link>
+      </div>
 
       {/* ================= BARRA FLOTANTE DE COMPRA RÁPIDA EN MÓVIL ================= */}
       <BlogMobileStickyBar product={featuredProduct} catalog={liveCatalog} />
