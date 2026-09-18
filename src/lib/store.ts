@@ -1517,7 +1517,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "minStock": 20,
     "imageUrl": "/images/essence_bottle_blank.webp",
     "description": "",
-    "isAvailableOnline": true,
+    "isAvailableOnline": false,
     "puesto": ""
   }
 ];

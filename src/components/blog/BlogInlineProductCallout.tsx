@@ -3,7 +3,7 @@
 
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, Check, ShieldCheck, ArrowRight, ChevronLeft, ChevronRight, Wand2 } from 'lucide-react';
+import { ShoppingBag, Check, ShieldCheck, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS } from '@/lib/store';
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation } from '@/context/EcommerceCartContext';
 import { getProductImage } from '@/lib/perfumeImages';
@@ -48,10 +48,6 @@ export default function BlogInlineProductCallout({
     ? availableBottles
     : INITIAL_PRODUCTS.filter((p) => p.category === 'Botes' && p.imageUrl?.startsWith('/images/botes/'));
 
-  // Insumos recomendados
-  const suppliesList = recommendations?.recommendedSupplies || [];
-  const alcoholProduct = suppliesList.find((s) => s.name.toLowerCase().includes('alcohol')) ||
-    INITIAL_PRODUCTS.find((p) => p.name.toLowerCase().includes('alcohol'));
 
   const scrollBottlesRef = useRef<HTMLDivElement>(null);
   const scrollEssencesRef = useRef<HTMLDivElement>(null);
@@ -407,39 +403,6 @@ export default function BlogInlineProductCallout({
                 </div>
               );
             })}
-          </div>
-        </div>
-      )}
-
-      {/* 4. BLOQUE DIY: Si el artículo trata sobre armar perfume o negocio, acceso a alcohol o kit */}
-      {recommendations?.intentType === 'diy' && alcoholProduct && (
-        <div className="p-3.5 bg-purple-50/70 border border-purple-100 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0">
-              <Wand2 className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="text-xs font-bold text-purple-950 block leading-tight">
-                Alcohol Especial de Perfumería 96°
-              </span>
-              <span className="text-[11px] text-purple-700 font-medium">
-                Grado cosmético sin olor residual para formulaciones de alta duración
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs font-black text-purple-900">${alcoholProduct.price.toFixed(2)}</span>
-            <button
-              type="button"
-              onClick={() => {
-                addToCart(alcoholProduct, 'UNIDAD', 1);
-                setJustAddedMain(true);
-                setTimeout(() => setJustAddedMain(false), 1500);
-              }}
-              className="clay-btn clay-btn-primary px-3 py-1.5 rounded-lg text-white font-bold text-xs cursor-pointer shadow-2xs"
-            >
-              + Insumo
-            </button>
           </div>
         </div>
       )}
