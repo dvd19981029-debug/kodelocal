@@ -237,15 +237,58 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
     ? post.tags.split(',').map((t) => t.trim()).filter(Boolean)
     : [];
 
-  const recommendations = getRecommendationsForPost(post.title, post.content, post.category);
-  const featuredProduct = recommendations.primaryProduct;
+  // Consultar catálogo activo en tiempo real desde la base de datos
+  const dbProducts = await prisma.product.findMany({
+    where: {
+      isActive: true,
+      isAvailableOnline: true,
+    },
+    include: {
+      category: true,
+    },
+    orderBy: [
+      { stock: 'desc' },
+      { sku: 'asc' },
+    ],
+  });
+
+  const liveCatalog: ProductItem[] = dbProducts.length > 0
+    ? dbProducts.map((p) => ({
+        id: p.id,
+        sku: p.sku || '',
+        barcode: p.barcode || '',
+        name: p.name,
+        officialName: (p as any).officialName || '',
+        brand: (p.category?.name === 'Botes' || p.brand === 'Yahua Industrial' || p.brand === 'APAESA') ? '' : (p.brand || ''),
+        gender: p.gender || 'Unisex',
+        category: p.category?.name || 'Esencias para Perfume',
+        unit: p.unit || 'Onza',
+        price: Number(p.price),
+        priceHalfOunce: p.priceHalfOunce != null ? Number(p.priceHalfOunce) : (p.category?.name === 'Esencias para Perfume' || !p.category?.name ? Number((Number(p.price) / 2).toFixed(2)) : undefined),
+        finishedPerfumePrice: p.finishedPerfumePrice != null ? Number(p.finishedPerfumePrice) : (p.category?.name === 'Esencias para Perfume' || !p.category?.name ? 15.00 : undefined),
+        cost: Number(p.cost || 0),
+        stock: p.stock,
+        minStock: p.minStock,
+        imageUrl: (p.category?.name === 'Botes' || p.category?.name === 'Botes & Envases')
+          ? (p.imageUrl && p.imageUrl.startsWith('/images/botes/') ? p.imageUrl : '/images/botes/bote_100ml_degrade_azul_noche.jpg')
+          : (p.category?.name === 'Esencias para Perfume' || !p.category?.name)
+          ? `/images/esencias/esencia_${p.sku || p.id}.webp?v=aroma_official_v3`
+          : (p.imageUrl || '/images/essence_bottle_blank.webp'),
+        description: p.description || '',
+        isAvailableOnline: p.isAvailableOnline,
+        puesto: (p as any).puesto || '',
+      }))
+    : INITIAL_PRODUCTS;
+
+  const recommendations = getRecommendationsForPost(post.title, post.content, post.category, liveCatalog);
+  const featuredProduct = recommendations.primaryProduct || liveCatalog.find(p => p.category === 'Esencias para Perfume') || liveCatalog[0];
   const featuredBottle = recommendations.recommendedBottles[0] ||
-                         INITIAL_PRODUCTS.find(p => p.id === 'bote-100ml-acanalado-blanco') || 
-                         INITIAL_PRODUCTS.find(p => p.category === 'Botes') || 
-                         INITIAL_PRODUCTS[1];
+                         liveCatalog.find(p => p.id === 'bote-100ml-acanalado-blanco') || 
+                         liveCatalog.find(p => p.category === 'Botes') || 
+                         liveCatalog[1];
   const availableBottles = recommendations.recommendedBottles.length > 0
     ? recommendations.recommendedBottles
-    : INITIAL_PRODUCTS.filter(p => 
+    : liveCatalog.filter(p => 
         p.category === 'Botes' && p.imageUrl && p.imageUrl.startsWith('/images/botes/')
       );
   const contentParts = splitArticleContent(post.content);
@@ -369,6 +412,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
             bottleProduct={featuredBottle}
             availableBottles={availableBottles}
             recommendations={recommendations}
+            catalog={liveCatalog}
           />
 
           {/* Segunda mitad del artículo */}
@@ -380,7 +424,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
           )}
 
           {/* Showcase de Perfumes, Botes e Insumos Recomendados al final del artículo */}
-          <BlogCatalogShowcase limit={3} recommendations={recommendations} />
+          <BlogCatalogShowcase limit={3} recommendations={recommendations} catalog={liveCatalog} />
 
           {/* Etiquetas / Tags */}
           {tagList.length > 0 && (
@@ -459,6 +503,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
             availableBottles={availableBottles}
             recommendations={recommendations}
             content={post.content}
+            catalog={liveCatalog}
           />
         </div>
 
@@ -522,7 +567,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
       )}
 
       {/* ================= BARRA FLOTANTE DE COMPRA RÁPIDA EN MÓVIL ================= */}
-      <BlogMobileStickyBar product={featuredProduct} />
+      <BlogMobileStickyBar product={featuredProduct} catalog={liveCatalog} />
     </div>
   );
 }

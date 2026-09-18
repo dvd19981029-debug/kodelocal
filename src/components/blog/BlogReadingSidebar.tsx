@@ -9,6 +9,7 @@ import ProductCard from '@/components/ecommerce/ProductCard';
 import TableOfContents from '@/components/blog/TableOfContents';
 import { PostRecommendations } from '@/lib/recommendations';
 import { getProductImage } from '@/lib/perfumeImages';
+import { useLiveProducts } from '@/hooks/useLiveProducts';
 
 interface BlogReadingSidebarProps {
   product?: ProductItem;
@@ -16,6 +17,7 @@ interface BlogReadingSidebarProps {
   availableBottles?: ProductItem[];
   recommendations?: PostRecommendations;
   content: string;
+  catalog?: ProductItem[];
 }
 
 export default function BlogReadingSidebar({
@@ -24,39 +26,46 @@ export default function BlogReadingSidebar({
   availableBottles,
   recommendations,
   content,
+  catalog,
 }: BlogReadingSidebarProps) {
   const [activeTab, setActiveTab] = React.useState<'esencia' | 'bote' | 'insumo'>('esencia');
+  const liveProducts = useLiveProducts(catalog);
+  const liveProductMap = React.useMemo(() => new Map(liveProducts.map(p => [p.id, p])), [liveProducts]);
 
-  // Esencias recomendadas
-  const matchedEssences = (recommendations?.matchedEssences && recommendations.matchedEssences.length > 0)
+  // Esencias recomendadas sincronizadas en vivo
+  const rawMatchedEssences = (recommendations?.matchedEssences && recommendations.matchedEssences.length > 0)
     ? recommendations.matchedEssences
     : product
     ? [product]
-    : [INITIAL_PRODUCTS[0]];
+    : [liveProducts[0] || INITIAL_PRODUCTS[0]];
+  const matchedEssences = rawMatchedEssences.map(e => liveProductMap.get(e.id) || e);
 
   const [selectedEssenceId, setSelectedEssenceId] = React.useState<string>(
     recommendations?.primaryProduct?.id || product?.id || matchedEssences[0]?.id || ''
   );
 
-  // Botes recomendados
-  const bottlesList = (recommendations?.recommendedBottles && recommendations.recommendedBottles.length > 0)
+  // Botes recomendados sincronizados en vivo
+  const rawBottlesList = (recommendations?.recommendedBottles && recommendations.recommendedBottles.length > 0)
     ? recommendations.recommendedBottles
     : (availableBottles && availableBottles.length > 0)
     ? availableBottles
-    : INITIAL_PRODUCTS.filter((p) => p.category === 'Botes' && p.imageUrl?.startsWith('/images/botes/'));
+    : liveProducts.filter((p) => p.category === 'Botes' && p.imageUrl?.startsWith('/images/botes/'));
+  const bottlesList = rawBottlesList.map(b => liveProductMap.get(b.id) || b);
 
   const [selectedBottleId, setSelectedBottleId] = React.useState<string>(
     bottleProduct?.id || (bottlesList[0]?.id || '')
   );
 
-  // Insumos recomendados
-  const suppliesList = recommendations?.recommendedSupplies || [];
+  // Insumos recomendados sincronizados en vivo
+  const rawSuppliesList = recommendations?.recommendedSupplies || [];
+  const suppliesList = rawSuppliesList.map(s => liveProductMap.get(s.id) || s);
   const [selectedSupplyId, setSelectedSupplyId] = React.useState<string>(
     suppliesList[0]?.id || ''
   );
 
   const currentEssence = matchedEssences.find((e) => e.id === selectedEssenceId) || matchedEssences[0];
-  const currentBottle = bottlesList.find((b) => b.id === selectedBottleId) || bottleProduct || bottlesList[0] || currentEssence;
+  const liveBottleProduct = bottleProduct ? liveProductMap.get(bottleProduct.id) || bottleProduct : undefined;
+  const currentBottle = bottlesList.find((b) => b.id === selectedBottleId) || liveBottleProduct || bottlesList[0] || currentEssence;
   const currentSupply = suppliesList.find((s) => s.id === selectedSupplyId) || suppliesList[0] || currentEssence;
 
   const displayedProduct = activeTab === 'esencia'

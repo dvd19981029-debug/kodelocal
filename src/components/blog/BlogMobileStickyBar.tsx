@@ -9,12 +9,16 @@ import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { getProductUrl } from '@/lib/productUrl';
+import { useLiveProducts } from '@/hooks/useLiveProducts';
 
 interface BlogMobileStickyBarProps {
   product: ProductItem;
+  catalog?: ProductItem[];
 }
 
-export default function BlogMobileStickyBar({ product }: BlogMobileStickyBarProps) {
+export default function BlogMobileStickyBar({ product, catalog }: BlogMobileStickyBarProps) {
+  const liveProducts = useLiveProducts(catalog);
+  const liveProduct = liveProducts.find(p => p.id === product.id) || product;
   const { addToCart } = useEcommerceCart();
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
@@ -36,13 +40,13 @@ export default function BlogMobileStickyBar({ product }: BlogMobileStickyBarProp
 
   if (isDismissed || !isVisible) return null;
 
-  const displayName = product.officialName?.trim() || product.name;
-  const productImage = getProductImage(product);
-  const inspiracionName = getInspiracionPerfumeName(product);
-  const price = product.price || 3.75;
+  const displayName = liveProduct.officialName?.trim() || liveProduct.name;
+  const productImage = getProductImage(liveProduct);
+  const inspiracionName = getInspiracionPerfumeName(liveProduct);
+  const price = liveProduct.price || 3.75;
 
   const handleAdd = () => {
-    addToCart(product, 'ONZA_COMPLETA', 1);
+    addToCart(liveProduct, 'ONZA_COMPLETA', 1);
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1500);
   };

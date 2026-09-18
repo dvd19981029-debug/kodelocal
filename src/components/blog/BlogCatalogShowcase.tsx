@@ -7,18 +7,30 @@ import { ArrowRight, ShieldCheck } from 'lucide-react';
 import { INITIAL_PRODUCTS, ProductItem } from '@/lib/store';
 import ProductCard from '@/components/ecommerce/ProductCard';
 import { PostRecommendations } from '@/lib/recommendations';
+import { useLiveProducts } from '@/hooks/useLiveProducts';
 
 interface ShowcaseProps {
   genderFilter?: string | null;
   limit?: number;
   recommendations?: PostRecommendations;
+  catalog?: ProductItem[];
 }
 
-export default function BlogCatalogShowcase({ genderFilter, limit = 3, recommendations }: ShowcaseProps) {
+export default function BlogCatalogShowcase({ genderFilter, limit = 3, recommendations, catalog }: ShowcaseProps) {
   const [activeTab, setActiveTab] = useState<'Esencias' | 'Botes' | 'Insumos'>('Esencias');
+  const liveProducts = useLiveProducts(catalog);
+  const liveProductMap = React.useMemo(() => new Map(liveProducts.map(p => [p.id, p])), [liveProducts]);
+
+  // Actualizar referencias de recomendaciones con datos en vivo
+  const matchedEssences = (recommendations?.matchedEssences || []).map(e => liveProductMap.get(e.id) || e);
+  const recommendedBottles = (recommendations?.recommendedBottles || []).map(b => liveProductMap.get(b.id) || b);
+  const recommendedSupplies = (recommendations?.recommendedSupplies || []).map(s => liveProductMap.get(s.id) || s);
 
   // 1. Esencias: Priorizar esencias detectadas por palabras clave en este artículo
-  let baseEssences = INITIAL_PRODUCTS.filter(p => p.isAvailableOnline && p.category === 'Esencias para Perfume');
+  let baseEssences = liveProducts.filter(p => p.isAvailableOnline && p.category === 'Esencias para Perfume' && p.stock > 0);
+  if (baseEssences.length === 0) {
+    baseEssences = liveProducts.filter(p => p.isAvailableOnline && p.category === 'Esencias para Perfume');
+  }
   if (genderFilter && genderFilter !== 'Todos') {
     const filtered = baseEssences.filter(p => p.gender?.toLowerCase() === genderFilter.toLowerCase());
     if (filtered.length >= limit) {
@@ -26,27 +38,32 @@ export default function BlogCatalogShowcase({ genderFilter, limit = 3, recommend
     }
   }
 
-  const matchedEssenceIds = new Set((recommendations?.matchedEssences || []).map(e => e.id));
+  const matchedEssenceIds = new Set(matchedEssences.map(e => e.id));
   const essenceCandidates = [
-    ...(recommendations?.matchedEssences || []),
+    ...matchedEssences,
     ...baseEssences.filter(e => !matchedEssenceIds.has(e.id)),
   ];
 
   // 2. Botes y Frascos de Vidrio: Priorizar botes recomendados
-  const baseBottles = INITIAL_PRODUCTS.filter(p => p.isAvailableOnline && p.category === 'Botes');
-  const matchedBottleIds = new Set((recommendations?.recommendedBottles || []).map(b => b.id));
+  let baseBottles = liveProducts.filter(p => p.isAvailableOnline && p.category === 'Botes' && p.stock > 0);
+  if (baseBottles.length === 0) {
+    baseBottles = liveProducts.filter(p => p.isAvailableOnline && p.category === 'Botes');
+  }
+  const matchedBottleIds = new Set(recommendedBottles.map(b => b.id));
   const bottleCandidates = [
-    ...(recommendations?.recommendedBottles || []),
+    ...recommendedBottles,
     ...baseBottles.filter(b => !matchedBottleIds.has(b.id)),
   ];
 
-  // 3. Insumos y Materias Primas / Empaque
-  const baseSupplies = INITIAL_PRODUCTS.filter(p => 
-    p.isAvailableOnline && (p.category === 'Insumos y Materia Prima' || p.category === 'Empaque' || p.category === 'Insumos')
+  // 3. Insumos y Materias Primas / Empaque (solo con inventario activo)
+  const baseSupplies = liveProducts.filter(p => 
+    p.isAvailableOnline && 
+    (p.category === 'Insumos y Materia Prima' || p.category === 'Empaque' || p.category === 'Insumos') &&
+    p.stock > 0
   );
-  const matchedSupplyIds = new Set((recommendations?.recommendedSupplies || []).map(s => s.id));
+  const matchedSupplyIds = new Set(recommendedSupplies.map(s => s.id));
   const supplyCandidates = [
-    ...(recommendations?.recommendedSupplies || []),
+    ...recommendedSupplies,
     ...baseSupplies.filter(s => !matchedSupplyIds.has(s.id)),
   ];
 

@@ -10,12 +10,14 @@ import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { getProductUrl } from '@/lib/productUrl';
 import { PostRecommendations } from '@/lib/recommendations';
+import { useLiveProducts } from '@/hooks/useLiveProducts';
 
 interface InlineCalloutProps {
   product?: ProductItem;
   bottleProduct?: ProductItem;
   availableBottles?: ProductItem[];
   recommendations?: PostRecommendations;
+  catalog?: ProductItem[];
 }
 
 export default function BlogInlineProductCallout({
@@ -23,11 +25,15 @@ export default function BlogInlineProductCallout({
   bottleProduct,
   availableBottles,
   recommendations,
+  catalog,
 }: InlineCalloutProps) {
   const { addToCart } = useEcommerceCart();
+  const liveProducts = useLiveProducts(catalog);
+  const liveProductMap = React.useMemo(() => new Map(liveProducts.map(p => [p.id, p])), [liveProducts]);
 
-  // Producto principal
-  const mainProduct = recommendations?.primaryProduct || product || INITIAL_PRODUCTS[0];
+  // Producto principal sincronizado en tiempo real
+  const initialMain = recommendations?.primaryProduct || product || INITIAL_PRODUCTS[0];
+  const mainProduct = (initialMain ? liveProductMap.get(initialMain.id) : null) || initialMain;
   const presentations = getPresentationsForProduct(mainProduct);
   const [selectedPresentation, setSelectedPresentation] = useState<ProductPresentation>(
     mainProduct.category === 'Esencias para Perfume' ? 'ONZA_COMPLETA' : 'UNIDAD'
@@ -37,17 +43,18 @@ export default function BlogInlineProductCallout({
   const [addedBottleId, setAddedBottleId] = useState<string | null>(null);
   const [addedEssenceId, setAddedEssenceId] = useState<string | null>(null);
 
-  // Esencias adicionales detectadas por palabras clave en el artículo
+  // Esencias adicionales detectadas por palabras clave en el artículo sincronizadas en tiempo real
   const additionalEssences = (recommendations?.matchedEssences || [])
-    .filter((e) => e.id !== mainProduct.id);
+    .filter((e) => e.id !== mainProduct.id)
+    .map((e) => liveProductMap.get(e.id) || e);
 
-  // Lista de botes de vidrio para scroll horizontal
-  const bottlesList = (recommendations?.recommendedBottles && recommendations.recommendedBottles.length > 0)
+  // Lista de botes de vidrio para scroll horizontal sincronizados en tiempo real
+  const rawBottles = (recommendations?.recommendedBottles && recommendations.recommendedBottles.length > 0)
     ? recommendations.recommendedBottles
     : (availableBottles && availableBottles.length > 0)
     ? availableBottles
-    : INITIAL_PRODUCTS.filter((p) => p.category === 'Botes' && p.imageUrl?.startsWith('/images/botes/'));
-
+    : liveProducts.filter((p) => p.category === 'Botes' && p.imageUrl?.startsWith('/images/botes/'));
+  const bottlesList = rawBottles.map((b) => liveProductMap.get(b.id) || b);
 
   const scrollBottlesRef = useRef<HTMLDivElement>(null);
   const scrollEssencesRef = useRef<HTMLDivElement>(null);
@@ -63,20 +70,23 @@ export default function BlogInlineProductCallout({
   };
 
   const handleAddMain = () => {
-    addToCart(mainProduct, selectedPresentation, 1);
+    const liveTarget = liveProductMap.get(mainProduct.id) || mainProduct;
+    addToCart(liveTarget, selectedPresentation, 1);
     setJustAddedMain(true);
     setTimeout(() => setJustAddedMain(false), 1500);
   };
 
   const handleAddEssence = (ess: ProductItem) => {
-    addToCart(ess, 'ONZA_COMPLETA', 1);
-    setAddedEssenceId(ess.id);
+    const liveTarget = liveProductMap.get(ess.id) || ess;
+    addToCart(liveTarget, 'ONZA_COMPLETA', 1);
+    setAddedEssenceId(liveTarget.id);
     setTimeout(() => setAddedEssenceId(null), 1500);
   };
 
   const handleAddBottle = (bottle: ProductItem) => {
-    addToCart(bottle, 'UNIDAD', 1);
-    setAddedBottleId(bottle.id);
+    const liveTarget = liveProductMap.get(bottle.id) || bottle;
+    addToCart(liveTarget, 'UNIDAD', 1);
+    setAddedBottleId(liveTarget.id);
     setTimeout(() => setAddedBottleId(null), 1500);
   };
 
@@ -157,7 +167,7 @@ export default function BlogInlineProductCallout({
                           : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
-                      {opt.id === 'MEDIA_ONZA' ? '½ oz ($1.90)' : '1 oz ($3.75)'}
+                      {opt.id === 'MEDIA_ONZA' ? `½ oz ($${opt.price.toFixed(2)})` : `1 oz ($${opt.price.toFixed(2)})`}
                     </button>
                   ))}
                 </div>
