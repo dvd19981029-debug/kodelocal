@@ -55,7 +55,7 @@ export default function BlogHeader() {
           </Link>
 
           <Link
-            href="/blog/guia-emprendedores-iniciar-negocio-perfumeria-el-salvador"
+            href="/blog/como-vender-perfumes-desde-casa-el-salvador-e3de2e19"
             className="px-3 py-1.5 rounded-xl text-xs lg:text-sm font-bold text-slate-700 hover:text-purple-700 hover:bg-white/80 transition-all flex items-center gap-1.5"
           >
             <Briefcase className="w-3.5 h-3.5 text-emerald-600" />
@@ -147,7 +147,7 @@ export default function BlogHeader() {
             Arma tu Perfume (100ml)
           </Link>
           <Link
-            href="/blog/guia-emprendedores-iniciar-negocio-perfumeria-el-salvador"
+            href="/blog/como-vender-perfumes-desde-casa-el-salvador-e3de2e19"
             onClick={() => setMobileMenuOpen(false)}
             className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-white bg-slate-50/50"
           >
