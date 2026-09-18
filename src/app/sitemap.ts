@@ -4,7 +4,8 @@ import { prisma } from '@/lib/prisma';
 
 import { getProductUrl } from '@/lib/productUrl';
 
-export const revalidate = 86400; // Regenerar el sitemap al menos una vez cada 24 horas
+export const dynamic = 'force-dynamic';
+export const revalidate = 0; // Sitemap en tiempo real sin caché retrasada para Googlebot
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://aromaniaksv.com';
