@@ -16,6 +16,48 @@ export function slugify(text: string): string {
 }
 
 /**
+ * Decodifica entidades HTML comunes generadas por conectores de IA o CMS (ej. &oacute; -> ó)
+ */
+export function decodeHtmlEntities(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/&oacute;/g, 'ó')
+    .replace(/&eacute;/g, 'é')
+    .replace(/&iacute;/g, 'í')
+    .replace(/&aacute;/g, 'á')
+    .replace(/&uacute;/g, 'ú')
+    .replace(/&ntilde;/g, 'ñ')
+    .replace(/&Oacute;/g, 'Ó')
+    .replace(/&Eacute;/g, 'É')
+    .replace(/&Iacute;/g, 'Í')
+    .replace(/&Aacute;/g, 'Á')
+    .replace(/&Uacute;/g, 'Ú')
+    .replace(/&Ntilde;/g, 'Ñ')
+    .replace(/&deg;/g, '°')
+    .replace(/&iquest;/g, '¿')
+    .replace(/&iexcl;/g, '¡')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, '&');
+}
+
+/**
+ * Extrae la primera URL de imagen encontrada en el contenido (Markdown o HTML)
+ */
+export function extractFirstImage(content: string): string | null {
+  if (!content) return null;
+  // 1. Markdown image: ![...](url)
+  const mdMatch = content.match(/!\[.*?\]\((https?:\/\/[^\s\)]+)\)/i);
+  if (mdMatch && mdMatch[1]) return mdMatch[1].trim();
+
+  // 2. HTML image: <img src="url" ...>
+  const htmlMatch = content.match(/<img[^>]+src=["'](https?:\/\/[^"']+)["']/i);
+  if (htmlMatch && htmlMatch[1]) return htmlMatch[1].trim();
+
+  return null;
+}
+
+/**
  * Sanitiza el HTML del artículo generado por IA para evitar XSS manteniendo el formato enriquecido (p, h1-h6, img, a, ul, ol, table, etc.)
  */
 export function sanitizeBlogHtml(html: string): string {
@@ -46,9 +88,15 @@ export function sanitizeBlogHtml(html: string): string {
  */
 export function formatContentForBlog(input: string): string {
   if (!input) return '';
-  let str = input.trim();
+  let str = decodeHtmlEntities(input.trim());
 
-  // Si no contiene etiquetas estructurales HTML (<p>, <h2>, etc.), convertir markdown
+  // Convertir imágenes Markdown independientes a etiquetas HTML figure/img
+  str = str.replace(
+    /!\[(.*?)\]\((https?:\/\/[^\s\)]+)\)/gi,
+    '<figure class="my-8 rounded-2xl overflow-hidden shadow-sm border border-slate-200/80"><img src="$2" alt="$1" class="w-full object-cover max-h-[480px]" loading="lazy" /></figure>'
+  );
+
+  // Si no contiene etiquetas estructurales HTML (<p>, <h2>, etc.), convertir markdown a HTML
   const hasHtml = /<(p|h[1-6]|ul|ol|table|blockquote|div)\b/i.test(str);
   if (!hasHtml) {
     str = str
@@ -69,7 +117,7 @@ export function formatContentForBlog(input: string): string {
       .map(p => {
         const trimmed = p.trim();
         if (!trimmed) return '';
-        if (/^<(h[1-6]|blockquote|ul|ol|table)/i.test(trimmed)) return trimmed;
+        if (/^<(h[1-6]|blockquote|ul|ol|table|figure)/i.test(trimmed)) return trimmed;
         if (trimmed.includes('\n- ') || trimmed.startsWith('- ')) {
           const items = trimmed.split(/\n?- /).filter(Boolean).map(item => `<li>${item.trim()}</li>`).join('');
           return `<ul>${items}</ul>`;
@@ -81,7 +129,6 @@ export function formatContentForBlog(input: string): string {
 
   return sanitizeBlogHtml(str);
 }
-
 
 /**
  * Calcula el tiempo estimado de lectura en minutos (asumiendo ~200 palabras por minuto).
@@ -100,10 +147,12 @@ export function calculateReadingTime(content: string): number {
  */
 export function extractExcerpt(content: string, maxLength: number = 160): string {
   if (!content) return '';
-  const plainText = content
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  const plainText = decodeHtmlEntities(
+    content
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+  );
   if (plainText.length <= maxLength) return plainText;
   return plainText.substring(0, maxLength).trim() + '...';
 }

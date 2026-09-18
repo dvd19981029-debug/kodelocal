@@ -3,7 +3,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
-import { slugify, formatContentForBlog, calculateReadingTime, extractExcerpt } from '@/lib/blog';
+import { 
+  slugify, 
+  formatContentForBlog, 
+  calculateReadingTime, 
+  extractExcerpt, 
+  extractFirstImage, 
+  decodeHtmlEntities 
+} from '@/lib/blog';
 import { isWpAuthorized, wpCorsHeaders } from '@/lib/wp-auth';
 
 export const dynamic = 'force-dynamic';
@@ -161,13 +168,36 @@ export async function POST(req: NextRequest) {
       excerpt = body.excerpt.rendered;
     }
 
+    title = decodeHtmlEntities(title);
     const cleanContent = formatContentForBlog(content);
     const finalExcerpt = excerpt.trim()
-      ? excerpt.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+      ? decodeHtmlEntities(excerpt.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim())
       : extractExcerpt(cleanContent, 160);
     const slug = slugify(body.slug ? String(body.slug) : title);
     const isPublished = body.status !== 'draft';
     const readingTimeMin = calculateReadingTime(cleanContent);
+
+    // Detección exhaustiva de imagen destacada (campos WP, Holo o dentro del markdown/HTML)
+    let coverImage =
+      body.featured_media_url ||
+      body.jetpack_featured_media_url ||
+      body.yoast_head_json?.og_image?.[0]?.url ||
+      body.coverImage ||
+      body.cover_image ||
+      body.image ||
+      body.featured_image ||
+      extractFirstImage(content) ||
+      null;
+
+    // Si la imagen ya fue extraída como portada, evitar duplicarla al inicio del cuerpo
+    let finalContent = cleanContent;
+    if (coverImage) {
+      const escapedUrl = coverImage.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      finalContent = finalContent.replace(
+        new RegExp(`<figure[^>]*><img[^>]+src=["']${escapedUrl}["'][^>]*>.*?</figure>`, 'i'),
+        ''
+      );
+    }
 
     // Mapeo flexible de categorías para IAs (soporta IDs numéricos de WP, arrays o nombres)
     let categoryName = 'Perfumería Fina';
@@ -200,9 +230,9 @@ export async function POST(req: NextRequest) {
       create: {
         slug,
         title: title.trim(),
-        content: cleanContent,
+        content: finalContent,
         excerpt: finalExcerpt,
-        coverImage: body.featured_media_url || body.coverImage || null,
+        coverImage,
         author: body.author_name || 'Equipo Aromaniak',
         category: categoryName,
         metaTitle: `${title.trim()} | Aromaniak SV`,
@@ -214,9 +244,9 @@ export async function POST(req: NextRequest) {
       },
       update: {
         title: title.trim(),
-        content: cleanContent,
+        content: finalContent,
         excerpt: finalExcerpt,
-        coverImage: body.featured_media_url || body.coverImage || undefined,
+        coverImage: coverImage || undefined,
         isPublished,
         readingTimeMin,
       },
