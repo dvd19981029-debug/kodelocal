@@ -251,7 +251,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
   const contentParts = splitArticleContent(post.content);
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 py-6 sm:py-10">
+    <div className="w-full max-w-6xl mx-auto px-1 sm:px-4 py-4 sm:py-10 min-w-0 overflow-hidden">
       {/* Barra de progreso de lectura interactiva */}
       <ReadingProgressBar />
 
@@ -348,10 +348,10 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
       )}
 
       {/* Grid Editorial: Columna Principal de Lectura + Columna Sticky de Compra */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start w-full max-w-full min-w-0">
         
         {/* ================= COLUMNA PRINCIPAL DE LECTURA (8 Cols) ================= */}
-        <article className="lg:col-span-8 min-w-0">
+        <article className="lg:col-span-8 min-w-0 w-full max-w-full overflow-hidden">
           {/* Índice de Contenidos desplegable para versión Móvil */}
           <div className="lg:hidden mb-6">
             <TableOfContents content={post.content} />

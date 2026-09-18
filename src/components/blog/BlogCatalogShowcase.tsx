@@ -57,7 +57,7 @@ export default function BlogCatalogShowcase({ genderFilter, limit = 3, recommend
     : supplyCandidates.slice(0, limit);
 
   return (
-    <div className="my-10 p-5 sm:p-7 rounded-3xl clay-card bg-white/95 border border-white/80 shadow-md">
+    <div className="my-8 sm:my-10 p-3.5 sm:p-7 rounded-3xl clay-card bg-white/95 border border-white/80 shadow-md w-full max-w-full min-w-0 overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 border-b border-slate-100 pb-4">
         <div>
           <span className="clay-badge text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg mb-1">
@@ -119,7 +119,7 @@ export default function BlogCatalogShowcase({ genderFilter, limit = 3, recommend
       </div>
 
       {/* Grid con las TARJETAS EXACTAS del E-commerce alineadas simétricamente */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-stretch">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 items-stretch w-full max-w-full min-w-0">
         {currentProducts.map((prod) => (
           <ProductCard key={prod.id} product={prod} />
         ))}
