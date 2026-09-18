@@ -139,6 +139,7 @@ function getFeaturedProductForPost(postTitle: string, postContent: string, categ
 }
 
 function splitArticleContent(htmlContent: string): { before: string; after: string } {
+  if (!htmlContent) return { before: '', after: '' };
   const h2Regex = /<h2[^>]*>/gi;
   const matches = [...htmlContent.matchAll(h2Regex)];
 
@@ -481,9 +482,6 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
                       src={rel.coverImage || '/images/promo/banner_aromas.webp'}
                       alt={rel.title}
                       loading="lazy"
-                      onError={(e) => {
-                        e.currentTarget.src = '/images/promo/banner_aromas.webp';
-                      }}
                       className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
                     />
                     {rel.category && (
