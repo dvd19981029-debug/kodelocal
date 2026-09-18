@@ -25,6 +25,7 @@ import ProductCard from '@/components/ecommerce/ProductCard';
 import PromoBannerCarousel from '@/components/ecommerce/PromoBannerCarousel';
 import ReactiveSearchBar from '@/components/ecommerce/ReactiveSearchBar';
 import PerfumeKitBuilderModal from '@/components/ecommerce/PerfumeKitBuilderModal';
+import HomeBlogSection from '@/components/ecommerce/HomeBlogSection';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 
@@ -728,6 +729,9 @@ export default function EcommerceHomePage() {
           </ul>
         </div>
       </section>
+
+      {/* ================= SECCIÓN DE ARTÍCULOS Y GUÍAS DEL BLOG EN LA PÁGINA PRINCIPAL ================= */}
+      <HomeBlogSection />
 
       {/* ================= SECCIÓN DE AUTORIDAD Y PREGUNTAS FRECUENTES (SEO GOOGLE EL SALVADOR) ================= */}
       <section id="faq-perfumeria-el-salvador" className="clay-card p-5 sm:p-7 bg-white/95 space-y-4 text-slate-800 rounded-3xl border border-white/80 shadow-md">

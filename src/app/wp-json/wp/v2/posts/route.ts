@@ -223,6 +223,7 @@ export async function POST(req: NextRequest) {
     });
 
     try {
+      revalidatePath('/');
       revalidatePath('/blog');
       revalidatePath(`/blog/${slug}`);
       revalidatePath('/sitemap.xml');

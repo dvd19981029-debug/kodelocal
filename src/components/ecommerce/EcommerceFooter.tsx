@@ -47,6 +47,11 @@ export default function EcommerceFooter() {
               <Sparkles className="w-4 h-4 text-amber-500" />
               <span>Esencias 100% Puras de Alta Concentración</span>
             </div>
+            <div className="pt-1">
+              <Link href="/blog" className="inline-flex items-center gap-1 text-indigo-700 hover:text-indigo-900 font-bold text-xs transition-colors">
+                <span>Blog & Guías Olfativas</span> →
+              </Link>
+            </div>
           </div>
 
           {/* Col 2: Cobertura y Envíos */}

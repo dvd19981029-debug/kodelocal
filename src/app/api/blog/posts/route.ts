@@ -1,8 +1,12 @@
 // src/app/api/blog/posts/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { slugify, formatContentForBlog, calculateReadingTime, extractExcerpt } from '@/lib/blog';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 
 /**
@@ -249,6 +253,15 @@ export async function POST(req: NextRequest) {
         readingTimeMin,
       },
     });
+
+    try {
+      revalidatePath('/');
+      revalidatePath('/blog');
+      revalidatePath(`/blog/${slug}`);
+      revalidatePath('/sitemap.xml');
+    } catch {
+      // Ignorar en entornos estáticos
+    }
 
     return NextResponse.json(
       {
