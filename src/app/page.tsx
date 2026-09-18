@@ -733,53 +733,53 @@ export default function EcommerceHomePage() {
       {/* ================= SECCIÓN DE ARTÍCULOS Y GUÍAS DEL BLOG EN LA PÁGINA PRINCIPAL ================= */}
       <HomeBlogSection />
 
-      {/* ================= SECCIÓN DE AUTORIDAD Y PREGUNTAS FRECUENTES (SEO GOOGLE EL SALVADOR) ================= */}
-      <section id="faq-perfumeria-el-salvador" className="clay-card p-5 sm:p-7 bg-white/95 space-y-4 text-slate-800 rounded-3xl border border-white/80 shadow-md">
-        <div className="space-y-1">
-          <span className="text-[11px] font-black uppercase tracking-wider text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200">
+      {/* ================= SECCIÓN DE AUTORIDAD Y PREGUNTAS FRECUENTES (SEO GOOGLE EL SALVADOR - VISIBLE PARA MOTORES DE BÚSQUEDA) ================= */}
+      <section id="faq-perfumeria-el-salvador" className="sr-only" aria-label="Información y Preguntas Frecuentes">
+        <div>
+          <span>
             Distribuidora de Esencias Perfumería Fina en El Salvador
           </span>
-          <h2 className="text-base sm:text-xl font-black text-slate-900 tracking-tight pt-1">
+          <h2>
             Aromaniak SV: Distribuidora de Esencias Perfumería Fina, Aromas Químicos y Botes de Vidrio
           </h2>
-          <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-3xl">
+          <p>
             Distribuidora de esencias de perfumería fina, aromas químicos, aromas de esencias, botes de vidrio y materias primas en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 text-xs">
-          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-            <h3 className="font-extrabold text-slate-900 text-xs sm:text-[13px]">
+        <div>
+          <div>
+            <h3>
               ¿Dónde comprar esencias de perfumería fina y materias primas en El Salvador?
             </h3>
-            <p className="text-[11px] sm:text-xs text-slate-600 font-medium leading-relaxed">
-              En <strong className="text-slate-800">Aromaniak SV</strong> puedes adquirir en línea esencias concentradas 100% puras, aromas químicos, aromas de esencias, botes de vidrio y materias primas para elaboración de perfumería fina con entregas a domicilio a todo El Salvador o retiro en local.
+            <p>
+              En <strong>Aromaniak SV</strong> puedes adquirir en línea esencias concentradas 100% puras, aromas químicos, aromas de esencias, botes de vidrio y materias primas para elaboración de perfumería fina con entregas a domicilio a todo El Salvador o retiro en local.
             </p>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-            <h3 className="font-extrabold text-slate-900 text-xs sm:text-[13px]">
+          <div>
+            <h3>
               ¿Tienen entregas a domicilio a todo El Salvador o retiro en local?
             </h3>
-            <p className="text-[11px] sm:text-xs text-slate-600 font-medium leading-relaxed">
-              Sí, contamos con <strong className="text-slate-800">entregas a domicilio a todo El Salvador</strong> en un plazo de 24 a 48 horas hábiles, o puedes pasar retirando tu pedido directamente en nuestro local en San Salvador.
+            <p>
+              Sí, contamos con <strong>entregas a domicilio a todo El Salvador</strong> en un plazo de 24 a 48 horas hábiles, o puedes pasar retirando tu pedido directamente en nuestro local en San Salvador.
             </p>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-            <h3 className="font-extrabold text-slate-900 text-xs sm:text-[13px]">
+          <div>
+            <h3>
               ¿Venden esencias por onza, media onza y botes de vidrio para elaborar perfumes?
             </h3>
-            <p className="text-[11px] sm:text-xs text-slate-600 font-medium leading-relaxed">
+            <p>
               Totalmente. Ofrecemos venta de esencias desde media onza (½ oz), onza completa (1 oz), frascos y botes de vidrio con atomizador de lujo (30ml, 50ml, 100ml), alcohol especial de perfumería y fijadores para que elabores tus fragancias.
             </p>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-            <h3 className="font-extrabold text-slate-900 text-xs sm:text-[13px]">
+          <div>
+            <h3>
               ¿Qué calidad y fijación tienen las esencias de Aromaniak?
             </h3>
-            <p className="text-[11px] sm:text-xs text-slate-600 font-medium leading-relaxed">
+            <p>
               Nuestras esencias son grado cosmético premium sin diluir, garantizando una fijación prolongada de más de 8 a 12 horas en piel y ropa al mezclarse con nuestra fórmula balanceada de alcohol de perfumería.
             </p>
           </div>
