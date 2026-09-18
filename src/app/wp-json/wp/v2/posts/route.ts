@@ -1,6 +1,7 @@
 // src/app/wp-json/wp/v2/posts/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { slugify, formatContentForBlog, calculateReadingTime, extractExcerpt } from '@/lib/blog';
 import { isWpAuthorized, wpCorsHeaders } from '@/lib/wp-auth';
@@ -161,7 +162,9 @@ export async function POST(req: NextRequest) {
     }
 
     const cleanContent = formatContentForBlog(content);
-    const finalExcerpt = excerpt.trim() ? excerpt.trim() : extractExcerpt(cleanContent, 160);
+    const finalExcerpt = excerpt.trim()
+      ? excerpt.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+      : extractExcerpt(cleanContent, 160);
     const slug = slugify(body.slug ? String(body.slug) : title);
     const isPublished = body.status !== 'draft';
     const readingTimeMin = calculateReadingTime(cleanContent);
@@ -218,6 +221,14 @@ export async function POST(req: NextRequest) {
         readingTimeMin,
       },
     });
+
+    try {
+      revalidatePath('/blog');
+      revalidatePath(`/blog/${slug}`);
+      revalidatePath('/sitemap.xml');
+    } catch {
+      // Ignorar en entornos estáticos
+    }
 
     // Formato de respuesta estándar de WordPress REST API
     return NextResponse.json(

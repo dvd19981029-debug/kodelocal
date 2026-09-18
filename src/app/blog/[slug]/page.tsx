@@ -26,7 +26,8 @@ import BlogReadingSidebar from '@/components/blog/BlogReadingSidebar';
 import BlogMobileStickyBar from '@/components/blog/BlogMobileStickyBar';
 import { INITIAL_PRODUCTS, ProductItem } from '@/lib/store';
 
-export const revalidate = 60; // Regeneración incremental cada 60 segundos
+export const dynamic = 'force-dynamic';
+export const revalidate = 0; // Carga en vivo inmediata de cualquier slug recién publicado
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;

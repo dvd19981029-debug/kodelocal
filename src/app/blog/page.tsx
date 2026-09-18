@@ -7,7 +7,8 @@ import { Sparkles, ShoppingBag, ShieldCheck, ArrowRight } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import BlogLiveSearch from '@/components/blog/BlogLiveSearch';
 
-export const revalidate = 60; // Regeneración incremental cada 60 segundos
+export const dynamic = 'force-dynamic';
+export const revalidate = 0; // Datos frescos inmediatos en cada visita
 
 export const metadata: Metadata = {
   title: 'Blog de Perfumería y Fragancias de Lujo en El Salvador',
