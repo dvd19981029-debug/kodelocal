@@ -118,8 +118,23 @@ export default function EcommerceFooter() {
 
         </div>
 
+        {/* Enlaces de Navegación, Legal y Mapa del Sitio para Indexación de Googlebot */}
+        <div className="pt-6 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-3 text-[11px] font-medium text-slate-500">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <Link href="/?categoria=Esencias+para+Perfume" className="hover:text-purple-700 transition-colors">Esencias Puras</Link>
+            <Link href="/?categoria=Botes" className="hover:text-purple-700 transition-colors">Botes de Vidrio</Link>
+            <Link href="/?categoria=Arma+tu+perfume" className="hover:text-purple-700 transition-colors">Arma tu Perfume</Link>
+            <Link href="/blog" className="hover:text-purple-700 transition-colors">Blog y Guías</Link>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <Link href="/terminos" className="hover:text-purple-700 transition-colors">Términos y Condiciones</Link>
+            <Link href="/politica-privacidad" className="hover:text-purple-700 transition-colors">Política de Privacidad</Link>
+            <a href="/sitemap.xml" className="hover:text-purple-700 transition-colors font-bold text-indigo-700">Mapa del Sitio (XML)</a>
+          </div>
+        </div>
+
         {/* Separador y Copyright */}
-        <div className="pt-6 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-400 text-[11px] font-semibold">
+        <div className="pt-3 border-t border-slate-200/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-400 text-[11px] font-semibold">
           <div className="space-y-0.5 text-center sm:text-left">
             <p>© 2026 Aromaniak SV®. Marca registrada. Todos los derechos reservados.</p>
             <p className="text-slate-400 font-medium">Propiedad de <strong>Grupo Kode SAS de C.V.</strong> — El Salvador</p>

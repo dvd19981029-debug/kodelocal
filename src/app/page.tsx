@@ -785,6 +785,24 @@ export default function EcommerceHomePage() {
           </div>
         </div>
 
+        {/* Directorio de enlaces crawlables para indexación inmediata de Googlebot desde la página principal */}
+        <nav aria-label="Directorio e Índice de Páginas para Googlebot">
+          <h4>Secciones y Catálogo Aromaniak</h4>
+          <ul>
+            <li><Link href="/">Catálogo Principal de Esencias</Link></li>
+            <li><Link href="/?categoria=Botes">Botes y Frascos de Vidrio 100ml con Atomizador</Link></li>
+            <li><Link href="/?categoria=Arma+tu+perfume">Arma tu Propio Perfume en El Salvador</Link></li>
+            <li><Link href="/?categoria=Insumos">Insumos y Materias Primas de Perfumería</Link></li>
+            <li><Link href="/blog">Blog y Guías de Perfumería en El Salvador</Link></li>
+            <li><Link href="/blog/por-que-aromaniak-es-la-mejor-opcion-para-emprender-en-el-salvador">Por Qué Aromaniak es la Mejor Opción para Emprender en El Salvador</Link></li>
+            <li><Link href="/blog/como-armar-tu-propio-perfume-en-casa-con-esencias">Cómo armar tu propio perfume en casa con esencias Aromaniak</Link></li>
+            <li><Link href="/blog/como-vender-perfumes-desde-casa-el-salvador-e3de2e19">Guía para principiantes: cómo empezar a vender perfumes desde casa en El Salvador</Link></li>
+            <li><Link href="/terminos">Términos y Condiciones del Servicio</Link></li>
+            <li><Link href="/politica-privacidad">Política de Privacidad y Tratamiento de Datos</Link></li>
+            <li><a href="/sitemap.xml">Mapa del Sitio XML Oficial</a></li>
+          </ul>
+        </nav>
+
         {/* JSON-LD FAQPage para Google Rich Snippets */}
         <script
           type="application/ld+json"

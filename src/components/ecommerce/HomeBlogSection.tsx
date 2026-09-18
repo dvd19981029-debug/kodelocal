@@ -18,23 +18,56 @@ interface BlogPostSummary {
   publishedAt: string | null;
 }
 
+const INITIAL_BLOG_POSTS: BlogPostSummary[] = [
+  {
+    id: 'post-emprender-sv',
+    slug: 'por-que-aromaniak-es-la-mejor-opcion-para-emprender-en-el-salvador',
+    title: 'Por Qué Aromaniak es la Mejor Opción para Emprender en El Salvador',
+    excerpt: 'Descubre por qué Aromaniak SV es el distribuidor directo líder para emprender en perfumería en El Salvador con bajo presupuesto.',
+    coverImage: '/images/promo/emprender_aromaniak_el_salvador.jpg',
+    author: 'Equipo Aromaniak',
+    category: 'Emprendimiento',
+    readingTimeMin: 4,
+    publishedAt: '2026-09-17T00:00:00.000Z',
+  },
+  {
+    id: 'post-como-armar',
+    slug: 'como-armar-tu-propio-perfume-en-casa-con-esencias',
+    title: 'Cómo armar tu propio perfume en casa con esencias Aromaniak',
+    excerpt: 'Guía práctica para crear y envasar tus fragancias con esencias 100% puras, frascos con atomizador y alcohol de perfumería.',
+    coverImage: '/images/promo/banner_aromas.webp',
+    author: 'Equipo Aromaniak',
+    category: 'Guías',
+    readingTimeMin: 3,
+    publishedAt: '2026-09-16T00:00:00.000Z',
+  },
+  {
+    id: 'post-como-vender',
+    slug: 'como-vender-perfumes-desde-casa-el-salvador-e3de2e19',
+    title: 'Guía para principiantes: cómo empezar a vender perfumes desde casa en El Salvador',
+    excerpt: 'Aprende a iniciar tu negocio de perfumería fina con esencias 100% puras, fórmulas de alta fijación y entrega en todo El Salvador.',
+    coverImage: '/images/promo/banner_emprendedor.webp',
+    author: 'Equipo Aromaniak',
+    category: 'Emprendimiento',
+    readingTimeMin: 4,
+    publishedAt: '2026-09-15T00:00:00.000Z',
+  },
+];
+
 export default function HomeBlogSection() {
-  const [posts, setPosts] = useState<BlogPostSummary[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [posts, setPosts] = useState<BlogPostSummary[]>(INITIAL_BLOG_POSTS);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
     fetch('/api/blog/posts?limit=3')
       .then((res) => res.json())
       .then((data) => {
-        if (isMounted && data.success && Array.isArray(data.data)) {
+        if (isMounted && data.success && Array.isArray(data.data) && data.data.length > 0) {
           setPosts(data.data);
         }
       })
-      .catch((err) => console.error('Error cargando artículos en HomeBlogSection:', err))
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
+      .catch((err) => console.error('Error cargando artículos en HomeBlogSection:', err));
 
     return () => {
       isMounted = false;
