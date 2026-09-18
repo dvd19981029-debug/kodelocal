@@ -133,25 +133,28 @@ export default function BlogLiveSearch({ initialPosts, categories }: BlogLiveSea
         )}
       </div>
 
-      {/* Grid de Artículos con el estilo Clay-Card exacto de Aromaniak */}
+      {/* Grid de Artículos con alineación estricta y alturas uniformes */}
       {filteredPosts.length > 0 ? (
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 items-stretch">
           {filteredPosts.map((post) => (
             <article
               key={post.id}
-              className="clay-card rounded-2xl overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:scale-[1.01]"
+              className="clay-card rounded-2xl overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:scale-[1.01] bg-white/95 h-full border border-slate-200/70 shadow-xs"
             >
-              <div>
-                {/* Imagen de portada */}
+              <div className="flex flex-col flex-1">
+                {/* Imagen de portada con aspect-ratio uniforme 16/10 */}
                 <Link
                   href={`/blog/${post.slug}`}
-                  className="block relative w-full aspect-16/9 overflow-hidden bg-slate-100 border-b border-slate-100"
+                  className="block relative w-full aspect-[16/10] overflow-hidden bg-slate-100 border-b border-slate-100 shrink-0"
                 >
                   <img
                     src={post.coverImage || '/images/promo/banner_aromas.webp'}
                     alt={post.title}
                     loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    onError={(e) => {
+                      e.currentTarget.src = '/images/promo/banner_aromas.webp';
+                    }}
+                    className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                   />
                   {post.category && (
                     <div className="absolute top-2.5 left-2.5 z-10">
@@ -162,42 +165,50 @@ export default function BlogLiveSearch({ initialPosts, categories }: BlogLiveSea
                   )}
                 </Link>
 
-                {/* Detalles de la tarjeta */}
-                <div className="p-4 sm:p-5">
-                  <div className="flex items-center gap-2 text-slate-400 text-[11px] mb-2 font-medium">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-slate-400" />
-                      {post.publishedAt ? formatBlogDate(post.publishedAt) : ''}
-                    </span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-slate-400" />
-                      {post.readingTimeMin || 3} min
-                    </span>
+                {/* Detalles de la tarjeta con alturas simétricas */}
+                <div className="p-4 sm:p-5 flex flex-col flex-1 justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 text-slate-400 text-[11px] mb-2 font-medium h-4">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-slate-400 shrink-0" />
+                        <span className="truncate">{post.publishedAt ? formatBlogDate(post.publishedAt) : ''}</span>
+                      </span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1 shrink-0">
+                        <Clock className="w-3 h-3 text-slate-400 shrink-0" />
+                        <span>{post.readingTimeMin || 3} min</span>
+                      </span>
+                    </div>
+
+                    <div className="h-14 flex items-start mb-1.5">
+                      <Link href={`/blog/${post.slug}`} className="block group/title w-full">
+                        <h2 className="font-bold text-base sm:text-lg text-slate-900 line-clamp-2 leading-snug group-hover/title:text-indigo-700 transition-colors">
+                          {post.title}
+                        </h2>
+                      </Link>
+                    </div>
+
+                    <div className="h-10 overflow-hidden">
+                      {post.excerpt && (
+                        <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed">
+                          {post.excerpt}
+                        </p>
+                      )}
+                    </div>
                   </div>
-
-                  <Link href={`/blog/${post.slug}`} className="block group/title">
-                    <h2 className="font-bold text-base sm:text-lg text-slate-900 line-clamp-2 leading-snug group-hover/title:text-indigo-700 transition-colors">
-                      {post.title}
-                    </h2>
-                  </Link>
-
-                  <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed mt-2">
-                    {post.excerpt}
-                  </p>
                 </div>
               </div>
 
-              {/* Pie de la tarjeta */}
-              <div className="px-4 pb-4 sm:px-5 sm:pb-5 pt-3 border-t border-slate-100/80 flex items-center justify-between mt-auto">
-                <span className="text-[11px] font-semibold text-slate-500">
+              {/* Pie de la tarjeta perfectamente alineado al fondo */}
+              <div className="px-4 pb-4 sm:px-5 sm:pb-5 pt-3.5 border-t border-slate-100/90 flex items-center justify-between mt-auto bg-slate-50/50">
+                <span className="text-[11px] font-semibold text-slate-500 truncate max-w-[140px]">
                   {post.author || 'Equipo Aromaniak'}
                 </span>
                 <Link
                   href={`/blog/${post.slug}`}
-                  className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 hover:text-indigo-900 transition-colors"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 hover:text-indigo-900 transition-colors shrink-0"
                 >
-                  Leer artículo
+                  <span>Leer artículo</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>

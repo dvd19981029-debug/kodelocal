@@ -157,15 +157,16 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
 
   return (
     <>
-      <div className={`flex flex-col justify-between transition-all duration-300 group relative ${
+      <div className={`h-full flex flex-col justify-between transition-all duration-300 group relative ${
         isOutOfStock ? 'opacity-85' : ''
       }`}>
         
-        <div>
+        {/* Sección Superior: Imagen y Datos del Producto */}
+        <div className="flex-1 flex flex-col">
           {/* Contenedor de Imagen de Frasco con estilo Tarjeta Burbuja Claymórfica */}
           <Link 
             href={getProductUrl(product)}
-            className={`block relative w-full aspect-square clay-card overflow-hidden mb-2 sm:mb-2.5 flex items-center justify-center cursor-pointer transition-all duration-300 ${
+            className={`block relative w-full aspect-square clay-card overflow-hidden mb-2 sm:mb-2.5 flex items-center justify-center cursor-pointer transition-all duration-300 shrink-0 ${
               isOutOfStock 
                 ? 'opacity-85 border-slate-200/90 bg-[#f8fafc]' 
                 : isCardPulsing
@@ -222,17 +223,19 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
             )}
           </Link>
 
-          {/* Detalles del producto (desplazados claramente a la derecha para acompañar la curva redondeada de la tarjeta) */}
-          <div className="pl-3.5 pr-2 sm:pl-4 sm:pr-2.5">
-            {/* Nombre Oficial de la Fragancia (Contratipo) - En BOLD y más grande */}
-            <Link href={getProductUrl(product)} className="block group/title">
-              <h3 className="font-bold text-base sm:text-lg text-slate-900 line-clamp-1 leading-snug group-hover/title:text-indigo-600 transition-colors" title={displayName}>
-                {displayName}
-              </h3>
-            </Link>
+          {/* Detalles del producto con alturas normalizadas */}
+          <div className="pl-3.5 pr-2 sm:pl-4 sm:pr-2.5 flex-1 flex flex-col justify-start">
+            {/* Nombre Oficial de la Fragancia (Contratipo) */}
+            <div className="h-6 sm:h-7 flex items-center">
+              <Link href={getProductUrl(product)} className="block group/title w-full">
+                <h3 className="font-bold text-base sm:text-lg text-slate-900 line-clamp-1 leading-snug group-hover/title:text-indigo-600 transition-colors" title={displayName}>
+                  {displayName}
+                </h3>
+              </Link>
+            </div>
 
             {/* Precio en BOLD a la par de Disponibilidad */}
-            <div className="mt-0.5 flex items-baseline gap-1.5 sm:gap-2">
+            <div className="mt-0.5 h-6 flex items-baseline gap-1.5 sm:gap-2">
               <span className="text-base sm:text-xl font-bold text-indigo-700 leading-tight tracking-tight">
                 ${activeOption.price.toFixed(2)}
               </span>
@@ -255,8 +258,8 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
               </span>
             </div>
 
-            {/* Inspirado en el perfume original (tamaño dinámico adaptable para que quepa dentro de la tarjeta) */}
-            <div className="mt-0.5 min-h-[26px] sm:min-h-[28px] flex items-center">
+            {/* Inspirado en el perfume original (altura fija de 2 líneas normalizada) */}
+            <div className="mt-0.5 h-8 sm:h-9 flex items-center">
               {isEssence ? (
                 <p 
                   className={`${inspiredSizeClass} text-slate-600 leading-tight line-clamp-2 break-words`} 
@@ -274,12 +277,14 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
               )}
             </div>
           </div>
+        </div>
 
-          {/* Selector de Presentación */}
-          {presentations.length > 1 ? (
-            <div className="mt-1">
-              {/* Botonera de Presentaciones Segmentada (1 Onza y ½ Onza) más arriba */}
-              <div className="grid grid-cols-2 gap-1 p-0.5 bg-slate-100/90 rounded-xl border border-slate-200/80 shadow-2xs">
+        {/* Sección Inferior: Selector de Presentación y Botón alineados al pie */}
+        <div className="mt-auto pt-2 flex flex-col justify-end">
+          {/* Selector de Presentación con altura fija uniforme (34px) */}
+          <div className="h-[34px] sm:h-[36px] flex items-center mb-1.5">
+            {presentations.length > 1 ? (
+              <div className="w-full grid grid-cols-2 gap-1 p-0.5 bg-slate-100/90 rounded-xl border border-slate-200/80 shadow-2xs h-full">
                 {presentations.map((opt) => {
                   const isSelected = selectedPresentation === opt.id;
                   
@@ -293,7 +298,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                       key={opt.id}
                       type="button"
                       onClick={() => setSelectedPresentation(opt.id)}
-                      className={`py-1.5 px-1.5 rounded-lg text-center transition-all cursor-pointer select-none flex items-center justify-center min-h-[32px] sm:min-h-[34px] relative ${
+                      className={`h-full rounded-lg text-center transition-all cursor-pointer select-none flex items-center justify-center px-1 relative ${
                         isSelected
                           ? 'bg-[#7c3aed] text-white shadow-xs font-black scale-[1.02]'
                           : isOptOutOfStock
@@ -308,15 +313,15 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                   );
                 })}
               </div>
-            </div>
-          ) : (
-            <div className="mt-1 text-[9px] text-slate-500 font-medium pl-3.5 pr-2 sm:pl-4 sm:pr-2.5 min-h-[14px]">
-              <span>{presentations[0]?.description}</span>
-            </div>
-          )}
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-slate-50/80 rounded-xl border border-slate-200/60 px-2 text-center text-[10px] sm:text-[11px] font-bold text-slate-600">
+                <span className="truncate">{presentations[0]?.description || 'Presentación única'}</span>
+              </div>
+            )}
+          </div>
 
-          {/* Botón de Agregar al Carrito SÓLIDO colocado directamente abajo con altura fija para no desalinear */}
-          <div className="mt-1.5">
+          {/* Botón de Agregar al Carrito SÓLIDO con altura fija para no desalinear */}
+          <div>
             {isOutOfStock ? (
               <button
                 disabled
@@ -325,7 +330,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                 Agotado
               </button>
             ) : currentQuantity > 0 ? (
-              /* YA ESTÁ EN EL CARRITO: Misma altura fija de 38px/40px sin texto que empuje hacia abajo */
+              /* YA ESTÁ EN EL CARRITO: Misma altura fija de 38px/40px */
               <div className={`transition-all duration-300 ${isCardPulsing ? 'scale-[1.02]' : ''}`}>
                 <div className="flex items-center justify-between gap-1 w-full bg-slate-100/90 p-0.5 rounded-xl border border-slate-200/80 shadow-2xs h-[38px] sm:h-[40px]">
                   <button

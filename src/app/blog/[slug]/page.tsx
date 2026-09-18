@@ -25,6 +25,7 @@ import BlogInlineProductCallout from '@/components/blog/BlogInlineProductCallout
 import BlogReadingSidebar from '@/components/blog/BlogReadingSidebar';
 import BlogMobileStickyBar from '@/components/blog/BlogMobileStickyBar';
 import { INITIAL_PRODUCTS, ProductItem } from '@/lib/store';
+import { getRecommendationsForPost } from '@/lib/recommendations';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0; // Carga en vivo inmediata de cualquier slug recién publicado
@@ -235,13 +236,17 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
     ? post.tags.split(',').map((t) => t.trim()).filter(Boolean)
     : [];
 
-  const featuredProduct = getFeaturedProductForPost(post.title, post.content, post.category);
-  const featuredBottle = INITIAL_PRODUCTS.find(p => p.id === 'bote-100ml-acanalado-blanco') || 
+  const recommendations = getRecommendationsForPost(post.title, post.content, post.category);
+  const featuredProduct = recommendations.primaryProduct;
+  const featuredBottle = recommendations.recommendedBottles[0] ||
+                         INITIAL_PRODUCTS.find(p => p.id === 'bote-100ml-acanalado-blanco') || 
                          INITIAL_PRODUCTS.find(p => p.category === 'Botes') || 
                          INITIAL_PRODUCTS[1];
-  const availableBottles = INITIAL_PRODUCTS.filter(p => 
-    p.category === 'Botes' && p.imageUrl && p.imageUrl.startsWith('/images/botes/')
-  );
+  const availableBottles = recommendations.recommendedBottles.length > 0
+    ? recommendations.recommendedBottles
+    : INITIAL_PRODUCTS.filter(p => 
+        p.category === 'Botes' && p.imageUrl && p.imageUrl.startsWith('/images/botes/')
+      );
   const contentParts = splitArticleContent(post.content);
 
   return (
@@ -362,6 +367,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
             product={featuredProduct}
             bottleProduct={featuredBottle}
             availableBottles={availableBottles}
+            recommendations={recommendations}
           />
 
           {/* Segunda mitad del artículo */}
@@ -373,7 +379,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
           )}
 
           {/* Showcase de Perfumes, Botes e Insumos Recomendados al final del artículo */}
-          <BlogCatalogShowcase limit={3} />
+          <BlogCatalogShowcase limit={3} recommendations={recommendations} />
 
           {/* Etiquetas / Tags */}
           {tagList.length > 0 && (
@@ -450,6 +456,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
             product={featuredProduct}
             bottleProduct={featuredBottle}
             availableBottles={availableBottles}
+            recommendations={recommendations}
             content={post.content}
           />
         </div>
@@ -462,43 +469,53 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
           <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-6">
             Otros artículos que te pueden interesar
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-stretch">
             {relatedPosts.map((rel) => (
               <article
                 key={rel.id}
-                className="clay-card rounded-2xl overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:scale-[1.01]"
+                className="clay-card rounded-2xl overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:scale-[1.01] bg-white/95 h-full border border-slate-200/70 shadow-xs"
               >
-                <Link href={`/blog/${rel.slug}`} className="block relative aspect-16/10 overflow-hidden bg-slate-100 border-b border-slate-100">
-                  {rel.coverImage ? (
+                <div className="flex flex-col flex-1">
+                  <Link href={`/blog/${rel.slug}`} className="block relative w-full aspect-[16/10] overflow-hidden bg-slate-100 border-b border-slate-100 shrink-0">
                     <img
-                      src={rel.coverImage}
+                      src={rel.coverImage || '/images/promo/banner_aromas.webp'}
                       alt={rel.title}
                       loading="lazy"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/promo/banner_aromas.webp';
+                      }}
+                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400">
-                      <span className="text-xs font-bold text-slate-400">Aromaniak SV</span>
+                    {rel.category && (
+                      <div className="absolute top-2.5 left-2.5 z-10">
+                        <span className="bg-white/95 backdrop-blur-xs text-indigo-900 border border-slate-200/80 text-[9px] font-extrabold py-0.5 px-2 rounded-md shadow-xs uppercase tracking-wide">
+                          {rel.category}
+                        </span>
+                      </div>
+                    )}
+                  </Link>
+                  <div className="p-4 sm:p-5 flex flex-col flex-1 justify-between">
+                    <div className="h-11 flex items-start mb-2">
+                      <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition-colors line-clamp-2 leading-snug">
+                        <Link href={`/blog/${rel.slug}`}>
+                          {rel.title}
+                        </Link>
+                      </h4>
                     </div>
-                  )}
-                  {rel.category && (
-                    <div className="absolute top-2.5 left-2.5 z-10">
-                      <span className="bg-white/95 backdrop-blur-xs text-indigo-900 border border-slate-200/80 text-[9px] font-extrabold py-0.5 px-2 rounded-md shadow-xs uppercase tracking-wide">
-                        {rel.category}
-                      </span>
-                    </div>
-                  )}
-                </Link>
-                <div className="p-4 flex-1 flex flex-col">
-                  <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition-colors line-clamp-2 mb-2">
-                    <Link href={`/blog/${rel.slug}`}>
-                      {rel.title}
-                    </Link>
-                  </h4>
-                  <div className="mt-auto text-[11px] text-slate-400 flex items-center gap-1">
+                  </div>
+                </div>
+                <div className="px-4 pb-4 sm:px-5 sm:pb-5 pt-3 border-t border-slate-100/90 flex items-center justify-between mt-auto bg-slate-50/50">
+                  <div className="text-[11px] text-slate-400 flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {rel.readingTimeMin || 3} min de lectura
                   </div>
+                  <Link
+                    href={`/blog/${rel.slug}`}
+                    className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 hover:text-indigo-900 transition-colors shrink-0"
+                  >
+                    <span>Leer</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </Link>
                 </div>
               </article>
             ))}

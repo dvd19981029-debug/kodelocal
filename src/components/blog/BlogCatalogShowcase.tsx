@@ -4,33 +4,51 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ShieldCheck } from 'lucide-react';
-import { INITIAL_PRODUCTS } from '@/lib/store';
+import { INITIAL_PRODUCTS, ProductItem } from '@/lib/store';
 import ProductCard from '@/components/ecommerce/ProductCard';
+import { PostRecommendations } from '@/lib/recommendations';
 
 interface ShowcaseProps {
   genderFilter?: string | null;
   limit?: number;
+  recommendations?: PostRecommendations;
 }
 
-export default function BlogCatalogShowcase({ genderFilter, limit = 3 }: ShowcaseProps) {
+export default function BlogCatalogShowcase({ genderFilter, limit = 3, recommendations }: ShowcaseProps) {
   const [activeTab, setActiveTab] = useState<'Esencias' | 'Botes' | 'Insumos'>('Esencias');
 
-  // 1. Esencias
-  let essenceCandidates = INITIAL_PRODUCTS.filter(p => p.isAvailableOnline && p.category === 'Esencias para Perfume');
+  // 1. Esencias: Priorizar esencias detectadas por palabras clave en este artículo
+  let baseEssences = INITIAL_PRODUCTS.filter(p => p.isAvailableOnline && p.category === 'Esencias para Perfume');
   if (genderFilter && genderFilter !== 'Todos') {
-    const filtered = essenceCandidates.filter(p => p.gender?.toLowerCase() === genderFilter.toLowerCase());
+    const filtered = baseEssences.filter(p => p.gender?.toLowerCase() === genderFilter.toLowerCase());
     if (filtered.length >= limit) {
-      essenceCandidates = filtered;
+      baseEssences = filtered;
     }
   }
 
-  // 2. Botes y Frascos de Vidrio
-  const bottleCandidates = INITIAL_PRODUCTS.filter(p => p.isAvailableOnline && p.category === 'Botes');
+  const matchedEssenceIds = new Set((recommendations?.matchedEssences || []).map(e => e.id));
+  const essenceCandidates = [
+    ...(recommendations?.matchedEssences || []),
+    ...baseEssences.filter(e => !matchedEssenceIds.has(e.id)),
+  ];
+
+  // 2. Botes y Frascos de Vidrio: Priorizar botes recomendados
+  const baseBottles = INITIAL_PRODUCTS.filter(p => p.isAvailableOnline && p.category === 'Botes');
+  const matchedBottleIds = new Set((recommendations?.recommendedBottles || []).map(b => b.id));
+  const bottleCandidates = [
+    ...(recommendations?.recommendedBottles || []),
+    ...baseBottles.filter(b => !matchedBottleIds.has(b.id)),
+  ];
 
   // 3. Insumos y Materias Primas / Empaque
-  const supplyCandidates = INITIAL_PRODUCTS.filter(p => 
+  const baseSupplies = INITIAL_PRODUCTS.filter(p => 
     p.isAvailableOnline && (p.category === 'Insumos y Materia Prima' || p.category === 'Empaque' || p.category === 'Insumos')
   );
+  const matchedSupplyIds = new Set((recommendations?.recommendedSupplies || []).map(s => s.id));
+  const supplyCandidates = [
+    ...(recommendations?.recommendedSupplies || []),
+    ...baseSupplies.filter(s => !matchedSupplyIds.has(s.id)),
+  ];
 
   const currentProducts = activeTab === 'Esencias'
     ? essenceCandidates.slice(0, limit)
@@ -100,8 +118,8 @@ export default function BlogCatalogShowcase({ genderFilter, limit = 3 }: Showcas
         </button>
       </div>
 
-      {/* Grid con las TARJETAS EXACTAS del E-commerce */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      {/* Grid con las TARJETAS EXACTAS del E-commerce alineadas simétricamente */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-stretch">
         {currentProducts.map((prod) => (
           <ProductCard key={prod.id} product={prod} />
         ))}

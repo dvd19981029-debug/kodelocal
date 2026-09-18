@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { BookOpen, Calendar, Clock, ArrowRight, Sparkles } from 'lucide-react';
+import { Calendar, Clock, ArrowRight } from 'lucide-react';
 import { formatBlogDate } from '@/lib/blog';
 
 interface BlogPostSummary {
@@ -70,36 +70,42 @@ export default function HomeBlogSection() {
         </Link>
       </div>
 
-      {/* Grid de los últimos artículos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+      {/* Grid perfectamente alineado de los últimos 3 artículos */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 items-stretch">
         {loading
           ? Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
-                className="clay-card rounded-2xl overflow-hidden p-4 space-y-3 bg-white/70 animate-pulse"
+                className="clay-card rounded-2xl overflow-hidden p-4 space-y-3 bg-white/70 animate-pulse h-[380px] flex flex-col justify-between"
               >
-                <div className="w-full aspect-16/9 bg-slate-200 rounded-xl" />
-                <div className="h-4 bg-slate-200 rounded-md w-3/4" />
-                <div className="h-3 bg-slate-200 rounded-md w-full" />
-                <div className="h-3 bg-slate-200 rounded-md w-1/2" />
+                <div className="w-full aspect-[16/10] bg-slate-200 rounded-xl shrink-0" />
+                <div className="space-y-2 flex-1">
+                  <div className="h-4 bg-slate-200 rounded-md w-3/4" />
+                  <div className="h-3 bg-slate-200 rounded-md w-full" />
+                  <div className="h-3 bg-slate-200 rounded-md w-1/2" />
+                </div>
+                <div className="h-4 bg-slate-200 rounded-md w-1/3 pt-2" />
               </div>
             ))
           : posts.map((post, idx) => (
               <article
                 key={post.id}
-                className="clay-card rounded-2xl overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:scale-[1.01] bg-white/95"
+                className="clay-card rounded-2xl overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:scale-[1.01] bg-white/95 h-full border border-slate-200/70 shadow-xs"
               >
-                <div>
-                  {/* Portada del artículo con badge de categoría y badge de NUEVO para el más reciente */}
+                {/* Portada uniforme con aspect-ratio fijo 16/10 */}
+                <div className="flex flex-col flex-1">
                   <Link
                     href={`/blog/${post.slug}`}
-                    className="block relative w-full aspect-16/9 overflow-hidden bg-slate-100 border-b border-slate-100"
+                    className="block relative w-full aspect-[16/10] overflow-hidden bg-slate-100 border-b border-slate-100 shrink-0"
                   >
                     <img
                       src={post.coverImage || '/images/promo/banner_aromas.webp'}
                       alt={post.title}
                       loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/promo/banner_aromas.webp';
+                      }}
+                      className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5">
                       {post.category && (
@@ -115,46 +121,55 @@ export default function HomeBlogSection() {
                     </div>
                   </Link>
 
-                  {/* Metadatos y títulos */}
-                  <div className="p-4 sm:p-5">
-                    <div className="flex items-center gap-2 text-slate-400 text-[11px] mb-2 font-medium">
-                      {post.publishedAt && (
-                        <>
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-slate-400" />
-                            {formatBlogDate(post.publishedAt)}
-                          </span>
-                          <span>•</span>
-                        </>
-                      )}
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-slate-400" />
-                        {post.readingTimeMin || 3} min
-                      </span>
+                  {/* Cuerpo del contenido alineado milimétricamente */}
+                  <div className="p-4 sm:p-5 flex flex-col flex-1 justify-between">
+                    <div>
+                      {/* Fecha y tiempo de lectura */}
+                      <div className="flex items-center gap-2 text-slate-400 text-[11px] mb-2 font-medium h-4">
+                        {post.publishedAt && (
+                          <>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3 text-slate-400 shrink-0" />
+                              <span className="truncate">{formatBlogDate(post.publishedAt)}</span>
+                            </span>
+                            <span>•</span>
+                          </>
+                        )}
+                        <span className="flex items-center gap-1 shrink-0">
+                          <Clock className="w-3 h-3 text-slate-400 shrink-0" />
+                          <span>{post.readingTimeMin || 3} min</span>
+                        </span>
+                      </div>
+
+                      {/* Título de altura controlada (2 líneas fijas) */}
+                      <div className="h-14 flex items-start mb-1.5">
+                        <Link href={`/blog/${post.slug}`} className="block group/title w-full">
+                          <h3 className="font-bold text-base text-slate-900 line-clamp-2 leading-snug group-hover/title:text-indigo-700 transition-colors">
+                            {post.title}
+                          </h3>
+                        </Link>
+                      </div>
+
+                      {/* Extracto de altura controlada (2 líneas fijas) */}
+                      <div className="h-10 overflow-hidden">
+                        {post.excerpt && (
+                          <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                            {post.excerpt}
+                          </p>
+                        )}
+                      </div>
                     </div>
-
-                    <Link href={`/blog/${post.slug}`} className="block group/title">
-                      <h3 className="font-bold text-base text-slate-900 line-clamp-2 leading-snug group-hover/title:text-indigo-700 transition-colors">
-                        {post.title}
-                      </h3>
-                    </Link>
-
-                    {post.excerpt && (
-                      <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed mt-2">
-                        {post.excerpt}
-                      </p>
-                    )}
                   </div>
                 </div>
 
-                {/* Pie de tarjeta con autor y enlace */}
-                <div className="px-4 pb-4 sm:px-5 sm:pb-5 pt-3 border-t border-slate-100/80 flex items-center justify-between mt-auto">
-                  <span className="text-[11px] font-semibold text-slate-500">
+                {/* Pie de tarjeta con autor y enlace perfectamente alineado al fondo */}
+                <div className="px-4 pb-4 sm:px-5 sm:pb-5 pt-3.5 border-t border-slate-100/90 flex items-center justify-between mt-auto bg-slate-50/50">
+                  <span className="text-[11px] font-semibold text-slate-500 truncate max-w-[140px]">
                     {post.author || 'Equipo Aromaniak'}
                   </span>
                   <Link
                     href={`/blog/${post.slug}`}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 hover:text-indigo-900 transition-colors"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 hover:text-indigo-900 transition-colors shrink-0"
                   >
                     <span>Leer artículo</span>
                     <ArrowRight className="w-3.5 h-3.5" />
