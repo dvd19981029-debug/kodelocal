@@ -8,9 +8,9 @@ import {
   formatContentForBlog, 
   calculateReadingTime, 
   extractExcerpt, 
-  extractFirstImage, 
   decodeHtmlEntities 
 } from '@/lib/blog';
+import { resolveFeaturedImage } from '@/lib/wp-media';
 import { isWpAuthorized, wpCorsHeaders } from '@/lib/wp-auth';
 
 export const dynamic = 'force-dynamic';
@@ -74,7 +74,28 @@ export async function GET(req: NextRequest) {
         protected: false,
       },
       author: 1,
-      featured_media: 0,
+      featured_media: 101,
+      featured_media_url: post.coverImage || null,
+      jetpack_featured_media_url: post.coverImage || null,
+      yoast_head_json: {
+        og_image: post.coverImage ? [{ url: post.coverImage }] : [],
+      },
+      _embedded: {
+        'wp:featuredmedia': post.coverImage
+          ? [
+              {
+                source_url: post.coverImage,
+                media_details: {
+                  sizes: {
+                    full: {
+                      source_url: post.coverImage,
+                    },
+                  },
+                },
+              },
+            ]
+          : [],
+      },
       comment_status: 'closed',
       ping_status: 'closed',
       sticky: false,
@@ -177,17 +198,8 @@ export async function POST(req: NextRequest) {
     const isPublished = body.status !== 'draft';
     const readingTimeMin = calculateReadingTime(cleanContent);
 
-    // Detección exhaustiva de imagen destacada (campos WP, Holo o dentro del markdown/HTML)
-    let coverImage =
-      body.featured_media_url ||
-      body.jetpack_featured_media_url ||
-      body.yoast_head_json?.og_image?.[0]?.url ||
-      body.coverImage ||
-      body.cover_image ||
-      body.image ||
-      body.featured_image ||
-      extractFirstImage(content) ||
-      null;
+    // Detección exhaustiva de imagen destacada (campos WP, Holo, Soro o dentro del markdown/HTML)
+    const coverImage = await resolveFeaturedImage(body, content);
 
     // Si la imagen ya fue extraída como portada, evitar duplicarla al inicio del cuerpo
     let finalContent = cleanContent;
@@ -273,6 +285,28 @@ export async function POST(req: NextRequest) {
         title: { rendered: post.title },
         content: { rendered: post.content },
         excerpt: { rendered: post.excerpt },
+        featured_media: 101,
+        featured_media_url: post.coverImage || null,
+        jetpack_featured_media_url: post.coverImage || null,
+        yoast_head_json: {
+          og_image: post.coverImage ? [{ url: post.coverImage }] : [],
+        },
+        _embedded: {
+          'wp:featuredmedia': post.coverImage
+            ? [
+                {
+                  source_url: post.coverImage,
+                  media_details: {
+                    sizes: {
+                      full: {
+                        source_url: post.coverImage,
+                      },
+                    },
+                  },
+                },
+              ]
+            : [],
+        },
         categories: [1],
       },
       {

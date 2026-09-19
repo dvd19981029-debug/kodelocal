@@ -610,3 +610,16 @@ model BlogPost {
   @@index([publishedAt])
 }
 
+model WpMedia {
+  id        Int      @id @default(autoincrement())
+  mediaId   Int      @unique
+  url       String
+  title     String?
+  mimeType  String?
+  postId    String?
+  createdAt DateTime @default(now())
+
+  @@index([mediaId])
+}
+
+

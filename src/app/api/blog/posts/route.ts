@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { slugify, formatContentForBlog, calculateReadingTime, extractExcerpt } from '@/lib/blog';
+import { resolveFeaturedImage } from '@/lib/wp-media';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -218,7 +219,13 @@ export async function POST(req: NextRequest) {
       ? canonicalUrl.trim()
       : `https://aromaniaksv.com/blog/${slug}`;
 
-    // 8. Upsert en base de datos (si ya existe por slug se actualiza, si no se crea)
+    // 8. Detección y resolución exhaustiva de portada (campos directos, URLs de IA, o WpMedia)
+    const resolvedCover = await resolveFeaturedImage(body, cleanContent);
+    const finalCoverImage =
+      resolvedCover ||
+      (coverImage && typeof coverImage === 'string' ? coverImage.trim() : null);
+
+    // 9. Upsert en base de datos (si ya existe por slug se actualiza, si no se crea)
     const post = await prisma.blogPost.upsert({
       where: { slug },
       create: {
@@ -226,7 +233,7 @@ export async function POST(req: NextRequest) {
         title: title.trim(),
         content: cleanContent,
         excerpt,
-        coverImage: coverImage && typeof coverImage === 'string' ? coverImage.trim() : null,
+        coverImage: finalCoverImage,
         author: author && typeof author === 'string' ? author.trim() : 'Equipo Aromaniak',
         category: category && typeof category === 'string' ? category.trim() : 'Perfumería',
         tags: tagsStr,
@@ -241,7 +248,7 @@ export async function POST(req: NextRequest) {
         title: title.trim(),
         content: cleanContent,
         excerpt,
-        coverImage: coverImage && typeof coverImage === 'string' ? coverImage.trim() : undefined,
+        coverImage: finalCoverImage || undefined,
         author: author && typeof author === 'string' ? author.trim() : undefined,
         category: category && typeof category === 'string' ? category.trim() : undefined,
         tags: tagsStr !== null ? tagsStr : undefined,

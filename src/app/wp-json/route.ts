@@ -57,6 +57,18 @@ export async function GET(req: NextRequest) {
         ],
         _links: { self: [{ href: `${origin}/wp-json/wp/v2/posts` }] },
       },
+      '/wp/v2/posts/(?P<id>[\\w-]+)': {
+        namespace: 'wp/v2',
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+        endpoints: [
+          { methods: ['GET'], args: {} },
+          { methods: ['POST'], args: {} },
+          { methods: ['PUT'], args: {} },
+          { methods: ['PATCH'], args: {} },
+          { methods: ['DELETE'], args: {} },
+        ],
+        _links: { self: [{ href: `${origin}/wp-json/wp/v2/posts` }] },
+      },
       '/wp/v2/categories': {
         namespace: 'wp/v2',
         methods: ['GET', 'POST'],
@@ -74,8 +86,20 @@ export async function GET(req: NextRequest) {
       },
       '/wp/v2/media': {
         namespace: 'wp/v2',
-        methods: ['POST'],
-        endpoints: [{ methods: ['POST'], args: {} }],
+        methods: ['GET', 'POST'],
+        endpoints: [
+          { methods: ['GET'], args: {} },
+          { methods: ['POST'], args: {} },
+        ],
+        _links: { self: [{ href: `${origin}/wp-json/wp/v2/media` }] },
+      },
+      '/wp/v2/media/(?P<id>[\\d]+)': {
+        namespace: 'wp/v2',
+        methods: ['GET', 'POST'],
+        endpoints: [
+          { methods: ['GET'], args: {} },
+          { methods: ['POST'], args: {} },
+        ],
         _links: { self: [{ href: `${origin}/wp-json/wp/v2/media` }] },
       },
     },
