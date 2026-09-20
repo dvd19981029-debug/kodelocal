@@ -864,7 +864,7 @@ export default function EcommerceHomePage() {
                   "logo": "https://aromaniaksv.com/apple-touch-icon.png",
                   "image": "https://aromaniaksv.com/images/logo.png",
                   "description": "Distribuidora de esencias de perfumería fina, aromas químicos, aromas de esencias, botes de vidrio y materias primas en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.",
-                  "telephone": "+50370000000",
+                  "telephone": "+50378339470",
                   "priceRange": "$",
                   "currenciesAccepted": "USD",
                   "paymentAccepted": "Cash, Credit Card, Debit Card, Wompi, Bank Transfer, Bitcoin",
@@ -891,9 +891,30 @@ export default function EcommerceHomePage() {
                       "@type": "OpeningHoursSpecification",
                       "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
                       "opens": "08:00",
-                      "closes": "17:30"
+                      "closes": "18:00"
                     }
-                  ]
+                  ],
+                  "hasOfferCatalog": {
+                    "@type": "OfferCatalog",
+                    "name": "Catálogo de Esencias y Perfumería Fina en El Salvador",
+                    "itemListElement": [
+                      {
+                        "@type": "OfferCatalog",
+                        "name": "Esencias Concentradas de Perfumería Fina",
+                        "description": "Esencias 100% puras para contratipos de alta fijación por onza y media onza en El Salvador"
+                      },
+                      {
+                        "@type": "OfferCatalog",
+                        "name": "Botes y Frascos de Vidrio con Atomizador",
+                        "description": "Envases y frascos de vidrio para perfumería al por mayor y al detalle"
+                      },
+                      {
+                        "@type": "OfferCatalog",
+                        "name": "Materias Primas e Insumos Químicos de Perfumería",
+                        "description": "Alcohol especial de perfumería y fijadores de aroma"
+                      }
+                    ]
+                  }
                 },
                 {
                   "@type": "WebSite",

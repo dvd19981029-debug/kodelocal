@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ShieldCheck, ArrowLeft, Lock, UserCheck, Eye, FileText } from 'lucide-react';
 
 export const metadata = {
-  title: 'Política de Privacidad - Aromaniak SV',
+  title: 'Política de Privacidad',
   description: 'Política de Privacidad y Tratamiento de Datos de Aromaniak SV. Información sobre el uso de datos en el inicio de sesión con Google.',
 };
 

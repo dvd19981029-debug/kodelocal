@@ -64,7 +64,12 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       };
     }
 
-    const title = post.metaTitle || `${post.title} | Aromaniak SV`;
+    const rawTitle = (post.metaTitle || post.title)
+      .replace(/\s*\|\s*Aromaniak.*$/i, '')
+      .replace(/\s*-\s*Aromaniak.*$/i, '')
+      .trim();
+    const title = rawTitle;
+    const fullSocialTitle = `${rawTitle} | Aromaniak SV`;
     const description = post.metaDescription || post.excerpt || 'Artículo de perfumería fina en El Salvador por Aromaniak.';
     const canonical = post.canonicalUrl || `https://aromaniaksv.com/blog/${slug}`;
     const cover = post.coverImage || 'https://aromaniaksv.com/images/logo.png';
@@ -77,7 +82,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       },
       openGraph: {
         type: 'article',
-        title,
+        title: fullSocialTitle,
         description,
         url: canonical,
         siteName: 'Aromaniak SV',
@@ -93,7 +98,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       },
       twitter: {
         card: 'summary_large_image',
-        title,
+        title: fullSocialTitle,
         description,
         images: [cover],
       },

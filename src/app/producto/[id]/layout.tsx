@@ -76,7 +76,7 @@ export async function generateMetadata({
 
   if (!product) {
     return {
-      title: 'Distribuidora de Esencias Perfumería Fina | Aromaniak SV',
+      title: 'Distribuidora de Esencias Perfumería Fina',
       description: 'Distribuidora de esencias de perfumería fina, aromas químicos, botes de vidrio y materias primas en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.',
     };
   }
@@ -90,7 +90,13 @@ export async function generateMetadata({
   const isBottle = product.category?.toLowerCase().includes('bote') || product.name.toLowerCase().includes('bote');
   const isEssence = product.category === 'Esencias para Perfume';
 
-  const title = `${displayName} | Aromaniak SV`;
+  const title = isBottle
+    ? `${displayName} - Frasco de Vidrio para Perfume`
+    : isEssence
+    ? `${displayName} - Esencia de Perfumería Fina`
+    : `${displayName} - Insumos para Perfumería`;
+
+  const fullSocialTitle = `${title} | Aromaniak SV`;
 
   const description = isBottle
     ? `${displayName} con atomizador para envasado y perfumería. Envases de vidrio disponibles en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.`
@@ -110,7 +116,7 @@ export async function generateMetadata({
       canonical,
     },
     openGraph: {
-      title,
+      title: fullSocialTitle,
       description,
       url: canonical,
       siteName: 'Aromaniak SV',
@@ -127,7 +133,7 @@ export async function generateMetadata({
     },
     twitter: {
       card: 'summary_large_image',
-      title,
+      title: fullSocialTitle,
       description,
       images: [imageUrl],
     },

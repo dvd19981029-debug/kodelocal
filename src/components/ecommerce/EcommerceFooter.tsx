@@ -104,7 +104,7 @@ export default function EcommerceFooter() {
             <div className="space-y-2 text-slate-500 font-medium">
               <p className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>WhatsApp: +503 7000-0000</span>
+                <span>WhatsApp: +503 7833-9470</span>
               </p>
               <p className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-indigo-600 shrink-0" />

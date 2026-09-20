@@ -33,6 +33,9 @@ export const metadata: Metadata = {
     "distribuidora de esencias perfumeria fina",
     "esencias de perfumeria fina el salvador",
     "venta de esencias el salvador",
+    "contratipos de perfumes el salvador",
+    "esencias por mayoreo el salvador",
+    "perfumes por mayoreo el salvador",
     "aromas quimicos el salvador",
     "aromas de esencias el salvador",
     "esencias para perfume san salvador",
@@ -45,6 +48,7 @@ export const metadata: Metadata = {
     "alcohol de perfumeria el salvador",
     "fijador de perfume el salvador",
     "venta de esencias por onza",
+    "distribuidora de esencias el salvador",
     "proveedores de esencias de perfume el salvador",
   ],
   authors: [{ name: "Aromaniak SV", url: "https://aromaniaksv.com" }],
@@ -107,6 +111,12 @@ export const metadata: Metadata = {
   },
   verification: {
     google: "NFHSyGtVLfg0Q_J3TbvRmNP4-S9l1zO00afYvcieTPw",
+  },
+  other: {
+    "geo.region": "SV-SS",
+    "geo.placename": "San Salvador, El Salvador",
+    "geo.position": "13.6929;-89.2182",
+    "ICBM": "13.6929, -89.2182",
   },
 };
 

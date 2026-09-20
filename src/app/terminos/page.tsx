@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { FileCheck, ArrowLeft, Shield, Sparkles } from 'lucide-react';
 
 export const metadata = {
-  title: 'Condiciones del Servicio - Aromaniak SV',
+  title: 'Condiciones del Servicio',
   description: 'Términos y Condiciones del Servicio de Aromaniak SV.',
 };
 
