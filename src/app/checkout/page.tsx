@@ -254,7 +254,7 @@ export default function CheckoutPage() {
         channel: 'ONLINE',
         shippingCost,
         deliveryNotes: metodoEntrega === 'RETIRO'
-          ? 'Retiro en Sucursal o Delivery Propio / Local San Salvador'
+          ? 'Retiro en Sucursal / Local San Salvador'
           : `Envío a domicilio - Departamento: ${departamento}, Municipio: ${municipio}. Ref: ${referencia || 'Sin referencias específicas'}`,
         status: 'PENDING_PREPARATION', // Llega directo a Bodega para preparar
         vendedor: 'Tienda Online Aromaniak',
@@ -317,7 +317,7 @@ export default function CheckoutPage() {
           department: metodoEntrega === 'RETIRO' ? 'San Salvador' : departamento,
           municipality: metodoEntrega === 'RETIRO' ? 'San Salvador' : municipio,
           shippingAddress: direccionFinal,
-          deliveryReference: metodoEntrega === 'RETIRO' ? 'Retiro en Sucursal o Delivery Propio' : (referencia || 'N/A'),
+          deliveryReference: metodoEntrega === 'RETIRO' ? 'Retiro en Sucursal' : (referencia || 'N/A'),
           subtotal,
           shippingCost,
           total: totalConEnvio,
@@ -466,7 +466,7 @@ export default function CheckoutPage() {
       `📦 *Orden:* #${completedOrder.orderNumber}\n` +
       `👤 *Cliente:* ${completedOrder.cliente.nombre}\n` +
       `📱 *Teléfono:* ${completedOrder.cliente.telefono}\n` +
-      `📍 *Modalidad:* ${metodoEntrega === 'RETIRO' ? 'Retiro en Sucursal o Delivery Propio' : 'Envío a Domicilio'}\n` +
+      `📍 *Modalidad:* ${metodoEntrega === 'RETIRO' ? 'Retiro en Sucursal' : 'Envío a Domicilio'}\n` +
       `🏠 *Destino:* ${completedOrder.cliente.direccion}\n\n` +
       `🛍️ *Detalle del Pedido:*\n` +
       completedOrder.items.map(it => `• ${it.quantity}x ${it.name} - $${it.total.toFixed(2)}`).join('\n') +
@@ -481,7 +481,7 @@ export default function CheckoutPage() {
       `📦 *Orden:* #${completedOrder.orderNumber}\n` +
       `👤 *Cliente:* ${completedOrder.cliente.nombre}\n` +
       `📱 *Teléfono:* ${completedOrder.cliente.telefono}\n` +
-      `📍 *Modalidad:* ${metodoEntrega === 'RETIRO' ? 'Retiro en Sucursal o Delivery Propio' : 'Envío a Domicilio'}\n` +
+      `📍 *Modalidad:* ${metodoEntrega === 'RETIRO' ? 'Retiro en Sucursal' : 'Envío a Domicilio'}\n` +
       `🏠 *Destino:* ${completedOrder.cliente.direccion}\n\n` +
       `🛍️ *Productos:*\n` +
       completedOrder.items.map(it => `• ${it.quantity}x ${it.name} - $${it.total.toFixed(2)}`).join('\n') +
@@ -950,7 +950,7 @@ export default function CheckoutPage() {
                         <Store className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="font-black text-slate-900 text-xs block">Retiro en Sucursal o Delivery Propio</span>
+                        <span className="font-black text-slate-900 text-xs block">Retiro en Sucursal</span>
                         <span className="text-[10px] font-bold text-emerald-600">Local San Salvador • ¡Gratis!</span>
                       </div>
                     </div>
@@ -1097,7 +1097,7 @@ export default function CheckoutPage() {
                   <div className="sm:col-span-2 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 space-y-1">
                     <p className="font-black flex items-center gap-1.5 text-emerald-800">
                       <Store className="w-4 h-4" />
-                      <span>Retiro en Local o Delivery Propio (San Salvador)</span>
+                      <span>Retiro en Sucursal (San Salvador)</span>
                     </p>
                     <p className="text-[11px] text-emerald-900 leading-relaxed">
                       Tu pedido será preparado en nuestro punto de San Salvador sin costo de envío. Puedes pasar a retirar personalmente o mandar tu propio delivery de <strong className="font-bold text-emerald-950">PedidosYa</strong> o de <strong className="font-bold text-emerald-950">Uber</strong> a recoger tu pedido; solo indícale al delivery el nombre de quien es la orden y ya. Te notificaremos vía WhatsApp al <strong>{telefono || 'número proporcionado'}</strong> en cuanto esté listo para retirar.
