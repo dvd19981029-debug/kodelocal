@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   ShoppingBag,
   ListOrdered,
@@ -21,9 +21,10 @@ import {
   Send,
   Check,
   User,
+  Sparkles,
   CreditCard,
   Building,
-  Sparkles
+  DollarSign
 } from 'lucide-react';
 import { DEPARTAMENTOS_CATALOG, MUNICIPIOS_CATALOG } from '@/lib/svTerritory';
 
@@ -149,7 +150,7 @@ export default function KodeSystemPage() {
     setTimeout(() => setToast(null), 4000);
   };
 
-  // Cargar catálogo y vendedoras al inicio
+  // Cargar datos
   useEffect(() => {
     fetchCatalogo();
     fetchVendedoras();
@@ -184,7 +185,6 @@ export default function KodeSystemPage() {
 
   const fetchPedidos = async () => {
     try {
-      setLoading(true);
       const res = await fetch('/api/kode/pedidos');
       const data = await res.json();
       if (data.success) {
@@ -192,8 +192,6 @@ export default function KodeSystemPage() {
       }
     } catch (e) {
       console.error('Error cargando pedidos:', e);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -209,31 +207,28 @@ export default function KodeSystemPage() {
     }
   };
 
-  // Municipios filtrados según depto seleccionado
+  // Municipios dinámicos
   const municipiosDisponibles = useMemo(() => {
     if (!clienteDepto) return [];
-    const deptoObj = DEPARTAMENTOS_CATALOG.find((d) => d.nombre.toLowerCase() === clienteDepto.toLowerCase());
-    if (!deptoObj) return [];
-    return MUNICIPIOS_CATALOG.filter((m) => m.departamentoId === deptoObj.id);
+    const depto = DEPARTAMENTOS_CATALOG.find((d) => d.nombre === clienteDepto);
+    if (!depto) return [];
+    return MUNICIPIOS_CATALOG.filter((m) => m.departamentoId === depto.id);
   }, [clienteDepto]);
 
-  // Perfumes filtrados para sugerencias
+  // Búsqueda en catálogo
   const perfumesSugeridos = useMemo(() => {
     if (!busquedaPerfume.trim()) return [];
-    const q = busquedaPerfume.toLowerCase().trim();
+    const q = busquedaPerfume.toLowerCase();
     return catalogo
-      .filter((p) => p.codigo.toLowerCase().includes(q) || p.contratipo.toLowerCase().includes(q) || p.marca_inspirada?.toLowerCase().includes(q))
+      .filter((p) => p.codigo.toLowerCase().includes(q) || p.contratipo.toLowerCase().includes(q) || p.marca_inspirada.toLowerCase().includes(q))
       .slice(0, 10);
-  }, [busquedaPerfume, catalogo]);
+  }, [catalogo, busquedaPerfume]);
 
-  // Agregar perfume al pedido
+  // Agregar perfume a la orden actual
   const handleAgregarItem = () => {
-    if (!perfumeSeleccionado) {
-      showToast('Seleccione un perfume del catálogo', 'error');
-      return;
-    }
-    const precio = versionSeleccionada === 'EXTRA_SHOT' 
-      ? parseFloat(perfumeSeleccionado.precio_extra_shot.toString()) 
+    if (!perfumeSeleccionado) return;
+    const precio = versionSeleccionada === 'EXTRA_SHOT'
+      ? parseFloat(perfumeSeleccionado.precio_extra_shot.toString())
       : parseFloat(perfumeSeleccionado.precio_normal.toString());
 
     const nuevoItem: PedidoItem = {
@@ -245,41 +240,52 @@ export default function KodeSystemPage() {
       cantidad: cantidadPerfume,
       precio_unitario: precio,
       subtotal: precio * cantidadPerfume,
+      insumo_comprado: false,
     };
 
-    setItemsPedido([...itemsPedido, nuevoItem]);
+    setItemsPedido((prev) => [...prev, nuevoItem]);
     setPerfumeSeleccionado(null);
     setBusquedaPerfume('');
     setCantidadPerfume(1);
     setVersionSeleccionada('NORMAL');
   };
 
-  const handleEliminarItem = (idx: number) => {
-    setItemsPedido(itemsPedido.filter((_, i) => i !== idx));
+  const handleEliminarItem = (index: number) => {
+    setItemsPedido((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleModificarCantidad = (index: number, delta: number) => {
+    setItemsPedido((prev) =>
+      prev.map((item, i) => {
+        if (i !== index) return item;
+        const nuevaCantidad = Math.max(1, item.cantidad + delta);
+        return {
+          ...item,
+          cantidad: nuevaCantidad,
+          subtotal: item.precio_unitario * nuevaCantidad,
+        };
+      })
+    );
   };
 
   // Totales
   const subtotalPedido = useMemo(() => {
-    return itemsPedido.reduce((acc, curr) => acc + curr.subtotal, 0);
+    return itemsPedido.reduce((acc, it) => acc + it.subtotal, 0);
   }, [itemsPedido]);
 
   const totalPedido = useMemo(() => {
     return subtotalPedido + (parseFloat(costoEnvio.toString()) || 0);
   }, [subtotalPedido, costoEnvio]);
 
-  // Guardar Pedido
-  const handleGuardarPedido = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!clienteNombre.trim() || !clienteTelefono.trim()) {
-      showToast('Nombre y teléfono del cliente son requeridos', 'error');
+  // Guardar Pedido Nuevo (Inicia en Rojo)
+  const handleGuardarPedido = async () => {
+    if (!clienteNombre.trim() || !clienteTelefono.trim() || !clienteDepto || !clienteMuni || !clienteDireccion.trim()) {
+      showToast('Por favor completa todos los datos obligatorios del cliente.', 'error');
       return;
     }
+
     if (itemsPedido.length === 0) {
-      showToast('Agregue al menos un perfume al pedido', 'error');
-      return;
-    }
-    if (!clienteDepto || !clienteMuni) {
-      showToast('Seleccione Departamento y Municipio', 'error');
+      showToast('Debes agregar al menos un perfume al pedido.', 'error');
       return;
     }
 
@@ -290,12 +296,12 @@ export default function KodeSystemPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           cliente: {
-            nombre_completo: clienteNombre.trim(),
-            telefono_whatsapp: clienteTelefono.trim(),
-            direccion_entrega: clienteDireccion.trim(),
+            nombre: clienteNombre.trim(),
+            telefono: clienteTelefono.trim(),
             departamento: clienteDepto,
             municipio: clienteMuni,
-            punto_referencia: clienteReferencia.trim(),
+            direccion: clienteDireccion.trim(),
+            referencia: clienteReferencia.trim() || undefined,
           },
           items: itemsPedido,
           tipo_pago: tipoPago,
@@ -308,15 +314,13 @@ export default function KodeSystemPage() {
 
       const data = await res.json();
       if (data.success) {
-        showToast(`¡Pedido ${data.pedido.numero_pedido} registrado en Rojo (Pendiente de compra)!`, 'success');
-        // Limpiar form
+        showToast(`Pedido ${data.pedido.numero_pedido} registrado en Rojo (Pendiente de compra)`, 'success');
         setClienteNombre('');
         setClienteTelefono('');
         setClienteDireccion('');
         setClienteReferencia('');
         setItemsPedido([]);
         setNotasPedido('');
-        // Recargar datos
         fetchPedidos();
         fetchInsumos();
         setActiveTab('listado_pedidos');
@@ -330,8 +334,8 @@ export default function KodeSystemPage() {
     }
   };
 
-  // Marcar insumo individual o agrupado como comprado
-  const handleMarcarInsumo = async (catalogo_id: string, version: string, totalCount: number) => {
+  // Marcar insumo comprado
+  const handleMarcarInsumo = async (catalogo_id: string, version: string) => {
     try {
       setLoading(true);
       const res = await fetch('/api/kode/insumos', {
@@ -340,13 +344,13 @@ export default function KodeSystemPage() {
         body: JSON.stringify({
           catalogo_id,
           version,
-          comprado_por: vendedoras.find(v => v.id === vendedoraSeleccionada)?.nombre || 'Bodega',
+          comprado_por: vendedoras.find((v) => v.id === vendedoraSeleccionada)?.nombre || 'Bodega',
         }),
       });
 
       const data = await res.json();
       if (data.success) {
-        showToast(`Insumo comprado marcado. Los pedidos con insumos completos pasaron a Amarillo (Pendiente de preparar).`, 'success');
+        showToast('Insumo marcado como comprado. Los pedidos completos pasaron a Amarillo automáticamente.', 'success');
         fetchInsumos();
         fetchPedidos();
       } else {
@@ -380,7 +384,7 @@ export default function KodeSystemPage() {
 
       const data = await res.json();
       if (data.success) {
-        showToast(`Guía ${numGuiaInput} asignada. Pedido en estado Azul (Guía Creada / Enviado).`, 'success');
+        showToast(`Guía ${numGuiaInput} asignada. Pedido en estado Azul.`, 'success');
         setGuiaModalPedido(null);
         setNumGuiaInput('');
         setLinkGuiaInput('');
@@ -395,7 +399,7 @@ export default function KodeSystemPage() {
     }
   };
 
-  // Filtro de pedidos
+  // Filtrado de pedidos
   const pedidosFiltrados = useMemo(() => {
     return pedidos.filter((p) => {
       const matchEstado = filtroEstado === 'TODOS' || p.estado === filtroEstado;
@@ -418,52 +422,57 @@ export default function KodeSystemPage() {
   }, [pedidos]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#f1f4f9] text-slate-800 flex flex-col font-sans antialiased pb-16">
       {/* Toast Notificación */}
       {toast && (
         <div
-          className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-xl text-sm font-medium flex items-center gap-2 border transition-all ${
+          className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-2xl shadow-xl text-xs font-bold flex items-center gap-2 border transition-all animate-in fade-in slide-in-from-top-2 ${
             toast.type === 'success'
-              ? 'bg-emerald-950 border-emerald-500 text-emerald-200'
+              ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
               : toast.type === 'error'
-              ? 'bg-rose-950 border-rose-500 text-rose-200'
-              : 'bg-blue-950 border-blue-500 text-blue-200'
+              ? 'bg-rose-50 border-rose-300 text-rose-800'
+              : 'bg-indigo-50 border-indigo-300 text-indigo-800'
           }`}
         >
-          {toast.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-emerald-400" /> : <AlertCircle className="w-5 h-5 text-rose-400" />}
+          {toast.type === 'success' ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          ) : (
+            <AlertCircle className="w-4 h-4 text-rose-600" />
+          )}
           <span>{toast.message}</span>
         </div>
       )}
 
-      {/* HEADER KODE */}
-      <header className="bg-slate-900 border-b border-slate-800 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      {/* HEADER CLAYMORPHIC AROMANIAK STYLE */}
+      <header className="sticky top-0 z-40 bg-[#f1f4f9]/95 backdrop-blur-md pt-4 pb-2 px-4 sm:px-6 max-w-7xl mx-auto w-full">
+        <div className="clay-card p-3 sm:p-4 flex flex-wrap items-center justify-between gap-4">
+          {/* Logo & Marca KODE */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center font-black text-slate-950 text-xl tracking-wider shadow-lg shadow-amber-500/20">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-indigo-500 text-white flex items-center justify-center font-black text-2xl shadow-md border border-white/40">
               K
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-xl tracking-tight text-white">KODE</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono">
+                <span className="font-extrabold text-2xl tracking-tight text-slate-900">KÖDE</span>
+                <span className="clay-badge text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">
                   kode.aromaniaksv.com
                 </span>
               </div>
-              <p className="text-xs text-slate-400">Sistema Independiente de Ventas, Insumos y Despacho</p>
+              <p className="text-xs text-slate-500 font-medium">Sistema de Ventas WhatsApp, Insumos y Envíos C807</p>
             </div>
           </div>
 
-          {/* Vendedora activa selector */}
-          <div className="flex items-center gap-2 bg-slate-950/70 border border-slate-800 px-3 py-1.5 rounded-lg text-xs">
-            <User className="w-3.5 h-3.5 text-amber-400" />
-            <span className="text-slate-400">Vendedora:</span>
+          {/* Vendedora Activa */}
+          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/80 px-3.5 py-1.5 rounded-2xl shadow-inner">
+            <User className="w-4 h-4 text-indigo-600" />
+            <span className="text-xs font-bold text-slate-600">Vendedora:</span>
             <select
               value={vendedoraSeleccionada}
               onChange={(e) => setVendedoraSeleccionada(e.target.value)}
-              className="bg-transparent text-white font-medium focus:outline-none cursor-pointer"
+              className="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
             >
               {vendedoras.map((v) => (
-                <option key={v.id} value={v.id} className="bg-slate-900 text-white">
+                <option key={v.id} value={v.id}>
                   {v.nombre}
                 </option>
               ))}
@@ -471,80 +480,86 @@ export default function KodeSystemPage() {
           </div>
         </div>
 
-        {/* NAVEGACIÓN DE TABS */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex overflow-x-auto border-t border-slate-800/60 no-scrollbar">
-          <button
-            onClick={() => setActiveTab('nuevo_pedido')}
-            className={`py-3 px-4 font-semibold text-sm flex items-center gap-2 border-b-2 whitespace-nowrap transition-colors ${
-              activeTab === 'nuevo_pedido'
-                ? 'border-amber-400 text-amber-400 bg-amber-500/5'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <ShoppingBag className="w-4 h-4" />
-            Nuevo Pedido WhatsApp
-          </button>
+        {/* CLAYMORPHIC TABS TRACK */}
+        <div className="mt-3">
+          <div className="clay-tabs-track p-1.5 flex gap-1.5 overflow-x-auto">
+            <button
+              onClick={() => setActiveTab('nuevo_pedido')}
+              className={`clay-tab-item flex-1 py-2.5 px-4 text-xs font-extrabold flex items-center justify-center gap-2 ${
+                activeTab === 'nuevo_pedido' ? 'clay-tab-active' : 'clay-tab-inactive'
+              }`}
+            >
+              <ShoppingBag className="w-4 h-4" />
+              <span>Nuevo Pedido WhatsApp</span>
+            </button>
 
-          <button
-            onClick={() => {
-              setActiveTab('listado_pedidos');
-              fetchPedidos();
-            }}
-            className={`py-3 px-4 font-semibold text-sm flex items-center gap-2 border-b-2 whitespace-nowrap transition-colors ${
-              activeTab === 'listado_pedidos'
-                ? 'border-amber-400 text-amber-400 bg-amber-500/5'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <ListOrdered className="w-4 h-4" />
-            Listado de Pedidos
-            <span className="ml-1 text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
-              {metricas.total}
-            </span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveTab('insumos_comprar');
-              fetchInsumos();
-            }}
-            className={`py-3 px-4 font-semibold text-sm flex items-center gap-2 border-b-2 whitespace-nowrap transition-colors ${
-              activeTab === 'insumos_comprar'
-                ? 'border-amber-400 text-amber-400 bg-amber-500/5'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <PackageCheck className="w-4 h-4" />
-            Insumos a Comprar
-            {insumos.length > 0 && (
-              <span className="ml-1 text-xs px-2 py-0.5 rounded-full bg-rose-950 text-rose-300 border border-rose-800">
-                {insumos.reduce((acc, i) => acc + parseInt(i.total_unidades.toString(), 10), 0)} pendientes
+            <button
+              onClick={() => {
+                setActiveTab('listado_pedidos');
+                fetchPedidos();
+              }}
+              className={`clay-tab-item flex-1 py-2.5 px-4 text-xs font-extrabold flex items-center justify-center gap-2 ${
+                activeTab === 'listado_pedidos' ? 'clay-tab-active' : 'clay-tab-inactive'
+              }`}
+            >
+              <ListOrdered className="w-4 h-4" />
+              <span>Listado de Pedidos</span>
+              <span
+                className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
+                  activeTab === 'listado_pedidos' ? 'bg-white/30 text-white' : 'bg-slate-200 text-slate-700'
+                }`}
+              >
+                {metricas.total}
               </span>
-            )}
-          </button>
+            </button>
 
-          <button
-            onClick={() => {
-              setActiveTab('rastreo_c807');
-              fetchPedidos();
-            }}
-            className={`py-3 px-4 font-semibold text-sm flex items-center gap-2 border-b-2 whitespace-nowrap transition-colors ${
-              activeTab === 'rastreo_c807'
-                ? 'border-amber-400 text-amber-400 bg-amber-500/5'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Truck className="w-4 h-4" />
-            Salida y Guías C807
-            <span className="ml-1 text-xs px-2 py-0.5 rounded-full bg-blue-950 text-blue-300 border border-blue-800">
-              {metricas.azules}
-            </span>
-          </button>
+            <button
+              onClick={() => {
+                setActiveTab('insumos_comprar');
+                fetchInsumos();
+              }}
+              className={`clay-tab-item flex-1 py-2.5 px-4 text-xs font-extrabold flex items-center justify-center gap-2 ${
+                activeTab === 'insumos_comprar' ? 'clay-tab-active' : 'clay-tab-inactive'
+              }`}
+            >
+              <PackageCheck className="w-4 h-4" />
+              <span>Insumos a Comprar</span>
+              {insumos.length > 0 && (
+                <span
+                  className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
+                    activeTab === 'insumos_comprar' ? 'bg-rose-500 text-white' : 'bg-rose-100 text-rose-700'
+                  }`}
+                >
+                  {insumos.reduce((acc, i) => acc + parseInt(i.total_unidades.toString(), 10), 0)}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('rastreo_c807');
+                fetchPedidos();
+              }}
+              className={`clay-tab-item flex-1 py-2.5 px-4 text-xs font-extrabold flex items-center justify-center gap-2 ${
+                activeTab === 'rastreo_c807' ? 'clay-tab-active' : 'clay-tab-inactive'
+              }`}
+            >
+              <Truck className="w-4 h-4" />
+              <span>Salida y Guías C807</span>
+              <span
+                className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
+                  activeTab === 'rastreo_c807' ? 'bg-white/30 text-white' : 'bg-sky-100 text-sky-700'
+                }`}
+              >
+                {metricas.azules}
+              </span>
+            </button>
+          </div>
         </div>
       </header>
 
       {/* CONTENIDO PRINCIPAL */}
-      <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1">
+      <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 pt-3 flex-1">
         {/* ============================================================== */}
         {/* TAB 1: NUEVO PEDIDO WHATSAPP                                   */}
         {/* ============================================================== */}
@@ -552,44 +567,44 @@ export default function KodeSystemPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Columna Izquierda: Datos del Cliente */}
             <div className="lg:col-span-7 space-y-6">
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
-                <h2 className="text-base font-bold text-white flex items-center gap-2 mb-4">
-                  <User className="w-5 h-5 text-amber-400" />
-                  Datos del Cliente (WhatsApp)
-                </h2>
+              <div className="clay-card p-6 space-y-4">
+                <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+                  <User className="w-5 h-5 text-indigo-600" />
+                  <h2 className="text-sm font-extrabold text-slate-800">Datos del Cliente (WhatsApp)</h2>
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Nombre Completo *</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Nombre Completo *</label>
                     <input
                       type="text"
                       placeholder="Ej. Carlos Mendoza"
                       value={clienteNombre}
                       onChange={(e) => setClienteNombre(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+                      className="clay-input w-full text-xs font-medium"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Teléfono WhatsApp *</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Teléfono WhatsApp *</label>
                     <input
                       type="text"
                       placeholder="Ej. 78901234"
                       value={clienteTelefono}
                       onChange={(e) => setClienteTelefono(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 font-mono"
+                      className="clay-input w-full text-xs font-mono font-bold"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Departamento *</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Departamento *</label>
                     <select
                       value={clienteDepto}
                       onChange={(e) => {
                         setClienteDepto(e.target.value);
                         setClienteMuni('');
                       }}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 cursor-pointer"
+                      className="clay-input w-full text-xs font-bold cursor-pointer"
                     >
                       <option value="">-- Seleccionar --</option>
                       {DEPARTAMENTOS_CATALOG.filter((d) => d.id !== '00').map((d) => (
@@ -601,12 +616,12 @@ export default function KodeSystemPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Municipio / Distrito *</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Municipio / Distrito *</label>
                     <select
                       value={clienteMuni}
                       onChange={(e) => setClienteMuni(e.target.value)}
                       disabled={!clienteDepto}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 disabled:opacity-50 cursor-pointer"
+                      className="clay-input w-full text-xs font-bold cursor-pointer disabled:opacity-50"
                     >
                       <option value="">-- Seleccionar Municipio --</option>
                       {municipiosDisponibles.map((m) => (
@@ -618,43 +633,43 @@ export default function KodeSystemPage() {
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Dirección de Entrega Exacta *</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Dirección Exacta de Entrega *</label>
                     <textarea
                       rows={2}
                       placeholder="Colonia, calle, pasaje, número de casa..."
                       value={clienteDireccion}
                       onChange={(e) => setClienteDireccion(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+                      className="clay-input w-full text-xs font-medium resize-none"
                     />
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Punto de Referencia (Opcional)</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Punto de Referencia (Opcional)</label>
                     <input
                       type="text"
                       placeholder="Frente a parque, portón negro..."
                       value={clienteReferencia}
                       onChange={(e) => setClienteReferencia(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+                      className="clay-input w-full text-xs font-medium"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Selector de Perfumes KODE */}
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
-                <h2 className="text-base font-bold text-white flex items-center gap-2 mb-4">
-                  <Sparkles className="w-5 h-5 text-amber-400" />
-                  Agregar Perfumes KODE al Pedido
-                </h2>
+              <div className="clay-card p-6 space-y-4">
+                <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+                  <Sparkles className="w-5 h-5 text-indigo-600" />
+                  <h2 className="text-sm font-extrabold text-slate-800">Agregar Perfumes KÖDE al Pedido</h2>
+                </div>
 
                 <div className="space-y-4">
                   <div className="relative">
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">
-                      Buscar en Catálogo KODE (por Código o Contratipo)
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Buscar en Catálogo KÖDE (por Código o Contratipo)
                     </label>
                     <div className="relative">
-                      <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+                      <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
                       <input
                         type="text"
                         placeholder="Ej. 100, 343, Sauvage, 1 Million..."
@@ -665,13 +680,13 @@ export default function KodeSystemPage() {
                             setPerfumeSeleccionado(null);
                           }
                         }}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+                        className="clay-input has-icon w-full text-xs font-bold"
                       />
                     </div>
 
                     {/* Dropdown de sugerencias */}
                     {perfumesSugeridos.length > 0 && !perfumeSeleccionado && (
-                      <div className="absolute z-20 w-full mt-1 bg-slate-900 border border-slate-800 rounded-lg shadow-2xl max-h-56 overflow-y-auto divide-y divide-slate-800/50">
+                      <div className="absolute z-20 w-full mt-1.5 clay-card p-2 max-h-56 overflow-y-auto divide-y divide-slate-100">
                         {perfumesSugeridos.map((p) => (
                           <div
                             key={p.id}
@@ -679,20 +694,31 @@ export default function KodeSystemPage() {
                               setPerfumeSeleccionado(p);
                               setBusquedaPerfume(`${p.codigo} - ${p.contratipo}`);
                             }}
-                            className="p-2.5 hover:bg-slate-800/80 cursor-pointer flex items-center justify-between transition-colors"
+                            className="p-2.5 hover:bg-indigo-50/70 rounded-xl cursor-pointer flex items-center justify-between transition-colors"
                           >
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono text-xs font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">
-                                  #{p.codigo}
+                            <div className="flex items-center gap-2.5">
+                              {p.imagen_url && (
+                                <img
+                                  src={p.imagen_url}
+                                  alt={p.contratipo}
+                                  className="w-8 h-8 rounded-lg object-cover bg-white shadow-sm border border-slate-200"
+                                />
+                              )}
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="clay-badge text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.2">
+                                    #{p.codigo}
+                                  </span>
+                                  <span className="text-xs font-extrabold text-slate-900">{p.contratipo}</span>
+                                </div>
+                                <span className="text-[11px] text-slate-500 font-medium">
+                                  {p.marca_inspirada} • {p.genero}
                                 </span>
-                                <span className="text-sm font-semibold text-white">{p.contratipo}</span>
                               </div>
-                              <span className="text-xs text-slate-400">{p.marca_inspirada} • {p.genero}</span>
                             </div>
                             <div className="text-right text-xs">
-                              <span className="text-emerald-400 font-bold font-mono">${p.precio_normal}</span>
-                              <span className="text-slate-500 block">Extra: ${p.precio_extra_shot}</span>
+                              <span className="text-emerald-700 font-black font-mono">${p.precio_normal}</span>
+                              <span className="text-slate-400 block text-[10px]">Extra: ${p.precio_extra_shot}</span>
                             </div>
                           </div>
                         ))}
@@ -701,31 +727,42 @@ export default function KodeSystemPage() {
                   </div>
 
                   {perfumeSeleccionado && (
-                    <div className="bg-slate-950/80 border border-amber-500/30 rounded-lg p-3.5 flex flex-wrap items-center justify-between gap-4">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded">
-                            #{perfumeSeleccionado.codigo}
+                    <div className="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-inner">
+                      <div className="flex items-center gap-3">
+                        {perfumeSeleccionado.imagen_url && (
+                          <img
+                            src={perfumeSeleccionado.imagen_url}
+                            alt={perfumeSeleccionado.contratipo}
+                            className="w-10 h-10 rounded-xl object-cover bg-white shadow-sm border border-indigo-200"
+                          />
+                        )}
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="clay-badge text-[10px] font-mono font-bold bg-indigo-100 text-indigo-800">
+                              #{perfumeSeleccionado.codigo}
+                            </span>
+                            <span className="font-extrabold text-slate-900 text-xs sm:text-sm">
+                              {perfumeSeleccionado.contratipo}
+                            </span>
+                          </div>
+                          <span className="text-xs text-slate-500 font-medium">
+                            {perfumeSeleccionado.marca_inspirada} ({perfumeSeleccionado.genero})
                           </span>
-                          <span className="font-bold text-white text-sm">{perfumeSeleccionado.contratipo}</span>
                         </div>
-                        <span className="text-xs text-slate-400">
-                          {perfumeSeleccionado.marca_inspirada} ({perfumeSeleccionado.genero})
-                        </span>
                       </div>
 
                       <div className="flex items-center gap-3">
-                        {/* Versión Normal vs Extra Shot */}
+                        {/* Selector Versión Normal vs Extra Shot */}
                         <div>
-                          <label className="block text-[10px] text-slate-400 font-medium mb-1">Versión</label>
-                          <div className="flex rounded-lg bg-slate-900 p-0.5 border border-slate-800">
+                          <label className="block text-[10px] text-slate-600 font-bold mb-1">Versión</label>
+                          <div className="flex rounded-xl bg-slate-200/80 p-0.5 border border-slate-300/80">
                             <button
                               type="button"
                               onClick={() => setVersionSeleccionada('NORMAL')}
-                              className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
+                              className={`px-3 py-1 rounded-lg text-xs font-extrabold transition-all ${
                                 versionSeleccionada === 'NORMAL'
-                                  ? 'bg-amber-500 text-slate-950'
-                                  : 'text-slate-400 hover:text-white'
+                                  ? 'bg-white text-indigo-700 shadow-sm'
+                                  : 'text-slate-600 hover:text-slate-900'
                               }`}
                             >
                               Normal ($20)
@@ -733,10 +770,10 @@ export default function KodeSystemPage() {
                             <button
                               type="button"
                               onClick={() => setVersionSeleccionada('EXTRA_SHOT')}
-                              className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
+                              className={`px-3 py-1 rounded-lg text-xs font-extrabold transition-all ${
                                 versionSeleccionada === 'EXTRA_SHOT'
-                                  ? 'bg-amber-500 text-slate-950'
-                                  : 'text-slate-400 hover:text-white'
+                                  ? 'bg-purple-600 text-white shadow-sm'
+                                  : 'text-slate-600 hover:text-slate-900'
                               }`}
                             >
                               Extra Shot ($25)
@@ -746,23 +783,23 @@ export default function KodeSystemPage() {
 
                         {/* Cantidad */}
                         <div>
-                          <label className="block text-[10px] text-slate-400 font-medium mb-1">Cant.</label>
+                          <label className="block text-[10px] text-slate-600 font-bold mb-1">Cant.</label>
                           <input
                             type="number"
                             min="1"
                             max="50"
                             value={cantidadPerfume}
                             onChange={(e) => setCantidadPerfume(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                            className="w-16 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-sm text-center text-white font-mono focus:outline-none"
+                            className="w-14 clay-input text-xs text-center font-mono font-bold py-1 px-1"
                           />
                         </div>
 
                         <button
                           type="button"
                           onClick={handleAgregarItem}
-                          className="mt-4 px-4 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-colors"
+                          className="clay-btn clay-btn-primary mt-4 px-4 py-2 text-xs font-extrabold"
                         >
-                          <Plus className="w-4 h-4" />
+                          <Plus className="w-3.5 h-3.5" />
                           Agregar
                         </button>
                       </div>
@@ -774,46 +811,50 @@ export default function KodeSystemPage() {
 
             {/* Columna Derecha: Resumen de Pedido y Pago */}
             <div className="lg:col-span-5 space-y-6">
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col h-full">
-                <h2 className="text-base font-bold text-white flex items-center justify-between mb-4">
-                  <span className="flex items-center gap-2">
-                    <ShoppingBag className="w-5 h-5 text-amber-400" />
-                    Perfumes del Pedido ({itemsPedido.length})
-                  </span>
+              <div className="clay-card p-6 flex flex-col h-full space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <ShoppingBag className="w-5 h-5 text-indigo-600" />
+                    <h2 className="text-sm font-extrabold text-slate-800">
+                      Perfumes del Pedido ({itemsPedido.length})
+                    </h2>
+                  </div>
                   {itemsPedido.length > 0 && (
                     <button
                       type="button"
                       onClick={() => setItemsPedido([])}
-                      className="text-xs text-rose-400 hover:text-rose-300"
+                      className="text-xs font-bold text-rose-500 hover:text-rose-700 transition-colors"
                     >
                       Vaciar
                     </button>
                   )}
-                </h2>
+                </div>
 
                 {/* Lista de perfumes agregados */}
-                <div className="flex-1 space-y-2.5 max-h-72 overflow-y-auto mb-4 pr-1">
+                <div className="flex-1 space-y-2.5 max-h-72 overflow-y-auto pr-1">
                   {itemsPedido.length === 0 ? (
-                    <div className="text-center py-10 border border-dashed border-slate-800 rounded-lg text-slate-500 text-xs">
+                    <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 text-xs font-medium">
                       No hay fragancias agregadas al pedido aún.
                     </div>
                   ) : (
                     itemsPedido.map((item, idx) => (
                       <div
                         key={idx}
-                        className="bg-slate-950 border border-slate-800/80 rounded-lg p-3 flex items-center justify-between gap-2"
+                        className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 flex items-center justify-between gap-2 shadow-sm"
                       >
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <span className="font-mono text-xs font-bold text-amber-400">#{item.codigo}</span>
-                            <span className="text-sm font-semibold text-white">{item.contratipo}</span>
+                            <span className="clay-badge text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700">
+                              #{item.codigo}
+                            </span>
+                            <span className="text-xs font-extrabold text-slate-900">{item.contratipo}</span>
                           </div>
-                          <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
+                          <div className="flex items-center gap-2 text-xs text-slate-500 mt-1 font-medium">
                             <span
-                              className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
+                              className={`px-1.5 py-0.2 rounded text-[10px] font-extrabold ${
                                 item.version === 'EXTRA_SHOT'
-                                  ? 'bg-purple-950 text-purple-300 border border-purple-800'
-                                  : 'bg-slate-800 text-slate-300'
+                                  ? 'bg-purple-100 text-purple-700'
+                                  : 'bg-slate-200 text-slate-700'
                               }`}
                             >
                               {item.version === 'EXTRA_SHOT' ? 'EXTRA SHOT' : 'NORMAL'}
@@ -825,13 +866,32 @@ export default function KodeSystemPage() {
                         </div>
 
                         <div className="flex items-center gap-3">
-                          <span className="font-mono font-bold text-emerald-400 text-sm">
+                          <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-0.5 shadow-inner">
+                            <button
+                              type="button"
+                              onClick={() => handleModificarCantidad(idx, -1)}
+                              className="w-5 h-5 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded text-xs font-bold"
+                            >
+                              -
+                            </button>
+                            <span className="w-5 text-center font-mono font-bold text-xs">{item.cantidad}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleModificarCantidad(idx, 1)}
+                              className="w-5 h-5 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded text-xs font-bold"
+                            >
+                              +
+                            </button>
+                          </div>
+
+                          <span className="font-mono font-black text-indigo-700 text-sm">
                             ${item.subtotal.toFixed(2)}
                           </span>
+
                           <button
                             type="button"
                             onClick={() => handleEliminarItem(idx)}
-                            className="text-slate-500 hover:text-rose-400 p-1"
+                            className="text-slate-400 hover:text-rose-500 p-1 transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -842,19 +902,17 @@ export default function KodeSystemPage() {
                 </div>
 
                 {/* Forma de Pago y Envío */}
-                <div className="border-t border-slate-800 pt-4 space-y-3">
+                <div className="border-t border-slate-100 pt-4 space-y-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Método de Pago *</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Método de Pago *</label>
                     <div className="grid grid-cols-3 gap-2">
                       {(['CONTRAENTREGA', 'TRANSFERENCIA', 'TARJETA'] as const).map((m) => (
                         <button
                           key={m}
                           type="button"
                           onClick={() => setTipoPago(m)}
-                          className={`py-2 px-1 text-center rounded-lg text-xs font-semibold border transition-all ${
-                            tipoPago === m
-                              ? 'bg-amber-500/10 border-amber-500 text-amber-400'
-                              : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                          className={`clay-btn py-2 px-1 text-center rounded-xl text-xs font-extrabold ${
+                            tipoPago === m ? 'clay-btn-primary' : 'clay-btn-light'
                           }`}
                         >
                           {m === 'CONTRAENTREGA' ? 'Contraentrega' : m === 'TRANSFERENCIA' ? 'Transferencia' : 'Tarjeta'}
@@ -865,11 +923,11 @@ export default function KodeSystemPage() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-300 mb-1">Estado de Pago</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">Estado de Pago</label>
                       <select
                         value={estadoPago}
                         onChange={(e: any) => setEstadoPago(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                        className="clay-input w-full text-xs font-bold"
                       >
                         <option value="PENDIENTE">PENDIENTE</option>
                         <option value="PAGADO">PAGADO</option>
@@ -877,42 +935,44 @@ export default function KodeSystemPage() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-slate-300 mb-1">Costo de Envío ($)</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">Costo de Envío ($)</label>
                       <input
                         type="number"
                         step="0.50"
                         min="0"
                         value={costoEnvio}
                         onChange={(e) => setCostoEnvio(parseFloat(e.target.value) || 0)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono"
+                        className="clay-input w-full text-xs font-mono font-bold"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Notas / Observaciones</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Notas / Observaciones</label>
                     <input
                       type="text"
-                      placeholder="Instrucciones especiales para despacho..."
+                      placeholder="Instrucciones para despacho..."
                       value={notasPedido}
                       onChange={(e) => setNotasPedido(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                      className="clay-input w-full text-xs font-medium"
                     />
                   </div>
 
                   {/* Resumen Total */}
-                  <div className="bg-slate-950 rounded-xl p-3.5 border border-slate-800 space-y-1.5 text-xs">
-                    <div className="flex justify-between text-slate-400">
+                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 space-y-1.5 text-xs shadow-inner">
+                    <div className="flex justify-between text-slate-600 font-medium">
                       <span>Subtotal Perfumes:</span>
-                      <span className="font-mono">${subtotalPedido.toFixed(2)}</span>
+                      <span className="font-mono font-bold text-slate-800">${subtotalPedido.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-slate-400">
+                    <div className="flex justify-between text-slate-600 font-medium">
                       <span>Envío:</span>
-                      <span className="font-mono">${(parseFloat(costoEnvio.toString()) || 0).toFixed(2)}</span>
+                      <span className="font-mono font-bold text-slate-800">
+                        ${(parseFloat(costoEnvio.toString()) || 0).toFixed(2)}
+                      </span>
                     </div>
-                    <div className="flex justify-between text-base font-extrabold text-white pt-2 border-t border-slate-800">
+                    <div className="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-slate-200">
                       <span>Total Pedido:</span>
-                      <span className="font-mono text-emerald-400">${totalPedido.toFixed(2)}</span>
+                      <span className="font-mono text-indigo-700 text-lg">${totalPedido.toFixed(2)}</span>
                     </div>
                   </div>
 
@@ -920,7 +980,7 @@ export default function KodeSystemPage() {
                     type="button"
                     onClick={handleGuardarPedido}
                     disabled={loading || itemsPedido.length === 0}
-                    className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
+                    className="clay-btn clay-btn-success w-full py-3.5 text-sm font-black shadow-lg disabled:opacity-50"
                   >
                     <Send className="w-4 h-4" />
                     Registrar Pedido (Entra en Rojo)
@@ -936,108 +996,98 @@ export default function KodeSystemPage() {
         {/* ============================================================== */}
         {activeTab === 'listado_pedidos' && (
           <div className="space-y-6">
-            {/* Tarjetas de Métricas */}
+            {/* Tarjetas de Métricas Claymorphic */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div
                 onClick={() => setFiltroEstado('TODOS')}
-                className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                  filtroEstado === 'TODOS'
-                    ? 'bg-slate-800/80 border-slate-600'
-                    : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                className={`clay-card p-4 cursor-pointer transition-all hover:scale-[1.02] ${
+                  filtroEstado === 'TODOS' ? 'border-2 border-indigo-400 bg-indigo-50/20' : ''
                 }`}
               >
-                <span className="text-xs text-slate-400 block mb-1">Total Pedidos</span>
-                <span className="text-2xl font-black text-white font-mono">{metricas.total}</span>
+                <span className="text-xs font-bold text-slate-500 block mb-1">Total Pedidos</span>
+                <span className="text-2xl font-black text-slate-900 font-mono">{metricas.total}</span>
               </div>
 
               <div
                 onClick={() => setFiltroEstado('PENDIENTE_COMPRA')}
-                className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                  filtroEstado === 'PENDIENTE_COMPRA'
-                    ? 'bg-rose-950/60 border-rose-500 shadow-lg shadow-rose-950/40'
-                    : 'bg-slate-900 border-slate-800 hover:border-rose-900'
+                className={`clay-card p-4 cursor-pointer transition-all hover:scale-[1.02] ${
+                  filtroEstado === 'PENDIENTE_COMPRA' ? 'border-2 border-rose-400 bg-rose-50/30' : ''
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-rose-400 font-bold flex items-center gap-1.5">
+                  <span className="text-xs text-rose-700 font-black flex items-center gap-1.5">
                     <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
-                    Rojo: Pendiente de Compra
+                    🔴 Pendiente Compra
                   </span>
                 </div>
-                <span className="text-2xl font-black text-rose-400 font-mono">{metricas.rojos}</span>
-                <span className="text-[11px] text-slate-400 block mt-0.5">Insumos por comprar</span>
+                <span className="text-2xl font-black text-rose-600 font-mono">{metricas.rojos}</span>
+                <span className="text-[11px] text-slate-500 font-medium block mt-0.5">Insumos por comprar</span>
               </div>
 
               <div
                 onClick={() => setFiltroEstado('PENDIENTE_PREPARAR')}
-                className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                  filtroEstado === 'PENDIENTE_PREPARAR'
-                    ? 'bg-amber-950/60 border-amber-500 shadow-lg shadow-amber-950/40'
-                    : 'bg-slate-900 border-slate-800 hover:border-amber-900'
+                className={`clay-card p-4 cursor-pointer transition-all hover:scale-[1.02] ${
+                  filtroEstado === 'PENDIENTE_PREPARAR' ? 'border-2 border-amber-400 bg-amber-50/30' : ''
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-amber-400 font-bold flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-                    Amarillo: Por Fabricar
+                  <span className="text-xs text-amber-800 font-black flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                    🟡 Pendiente Preparar
                   </span>
                 </div>
-                <span className="text-2xl font-black text-amber-400 font-mono">{metricas.amarillos}</span>
-                <span className="text-[11px] text-slate-400 block mt-0.5">Insumos completos listos</span>
+                <span className="text-2xl font-black text-amber-700 font-mono">{metricas.amarillos}</span>
+                <span className="text-[11px] text-slate-500 font-medium block mt-0.5">Insumos completos listos</span>
               </div>
 
               <div
                 onClick={() => setFiltroEstado('GUIA_CREADA')}
-                className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                  filtroEstado === 'GUIA_CREADA'
-                    ? 'bg-blue-950/60 border-blue-500 shadow-lg shadow-blue-950/40'
-                    : 'bg-slate-900 border-slate-800 hover:border-blue-900'
+                className={`clay-card p-4 cursor-pointer transition-all hover:scale-[1.02] ${
+                  filtroEstado === 'GUIA_CREADA' ? 'border-2 border-sky-400 bg-sky-50/30' : ''
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-blue-400 font-bold flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                    Azul: Guía Creada (C807)
+                  <span className="text-xs text-sky-700 font-black flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+                    🔵 Guía Creada C807
                   </span>
                 </div>
-                <span className="text-2xl font-black text-blue-400 font-mono">{metricas.azules}</span>
-                <span className="text-[11px] text-slate-400 block mt-0.5">Enviado / Guía lista</span>
+                <span className="text-2xl font-black text-sky-600 font-mono">{metricas.azules}</span>
+                <span className="text-[11px] text-slate-500 font-medium block mt-0.5">Enviado / Guía lista</span>
               </div>
             </div>
 
-            {/* Barra de Filtros y Búsqueda */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3">
+            {/* Barra de Búsqueda y Actualización */}
+            <div className="clay-card p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3">
               <div className="relative flex-1 min-w-[240px]">
-                <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+                <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Buscar por # Pedido, Cliente, Teléfono o Guía C807..."
                   value={busquedaPedido}
                   onChange={(e) => setBusquedaPedido(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+                  className="clay-input has-icon w-full text-xs font-bold"
                 />
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={fetchPedidos}
-                  className="px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1.5"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  Actualizar
-                </button>
-              </div>
+              <button
+                onClick={fetchPedidos}
+                className="clay-btn clay-btn-light px-4 py-2 text-xs font-bold flex items-center gap-1.5"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Actualizar
+              </button>
             </div>
 
             {/* Lista de Pedidos */}
             <div className="space-y-4">
               {pedidosFiltrados.length === 0 ? (
-                <div className="text-center py-16 bg-slate-900/50 border border-slate-800 rounded-2xl">
-                  <ListOrdered className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                  <p className="text-base font-semibold text-slate-300">No se encontraron pedidos</p>
-                  <p className="text-xs text-slate-500 mt-1">
+                <div className="clay-card text-center py-16">
+                  <ListOrdered className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                  <p className="text-base font-extrabold text-slate-800">No se encontraron pedidos</p>
+                  <p className="text-xs text-slate-500 mt-1 font-medium">
                     {filtroEstado !== 'TODOS'
-                      ? `No hay pedidos con estado ${filtroEstado}`
+                      ? `No hay pedidos con filtro ${filtroEstado}`
                       : 'Comienza ingresando un pedido en la pestaña "Nuevo Pedido WhatsApp"'}
                   </p>
                 </div>
@@ -1049,92 +1099,91 @@ export default function KodeSystemPage() {
                   return (
                     <div
                       key={p.id}
-                      className={`bg-slate-900 border rounded-xl overflow-hidden transition-all ${
+                      className={`clay-card p-5 space-y-3 transition-all hover:scale-[1.005] ${
                         p.estado === 'PENDIENTE_COMPRA'
-                          ? 'border-rose-900/60 shadow-md shadow-rose-950/20'
+                          ? 'border-l-4 border-l-rose-500'
                           : p.estado === 'PENDIENTE_PREPARAR'
-                          ? 'border-amber-600/60 shadow-md shadow-amber-950/20'
+                          ? 'border-l-4 border-l-amber-500'
                           : p.estado === 'GUIA_CREADA'
-                          ? 'border-blue-700/60 shadow-md shadow-blue-950/20'
-                          : 'border-slate-800'
+                          ? 'border-l-4 border-l-sky-500'
+                          : ''
                       }`}
                     >
-                      {/* Cabecera de la tarjeta del pedido */}
-                      <div className="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4">
+                      {/* Cabecera del Pedido */}
+                      <div className="flex flex-wrap items-center justify-between gap-4">
                         <div className="flex items-start gap-3">
-                          {/* Badge de Estado con Color Estricto */}
                           <div
-                            className={`w-3.5 h-3.5 rounded-full mt-1.5 flex-shrink-0 ${
+                            className={`w-3.5 h-3.5 rounded-full mt-1.5 shrink-0 ${
                               p.estado === 'PENDIENTE_COMPRA'
-                                ? 'bg-rose-500 shadow-lg shadow-rose-500/50'
+                                ? 'bg-rose-500 shadow-md shadow-rose-300'
                                 : p.estado === 'PENDIENTE_PREPARAR'
-                                ? 'bg-amber-400 shadow-lg shadow-amber-400/50'
+                                ? 'bg-amber-400 shadow-md shadow-amber-300'
                                 : p.estado === 'GUIA_CREADA'
-                                ? 'bg-blue-500 shadow-lg shadow-blue-500/50'
+                                ? 'bg-sky-500 shadow-md shadow-sky-300'
                                 : 'bg-emerald-500'
                             }`}
                           />
 
                           <div>
                             <div className="flex flex-wrap items-center gap-2">
-                              <span className="font-mono text-base font-extrabold text-white tracking-tight">
+                              <span className="font-mono text-base font-black text-slate-900 tracking-tight">
                                 {p.numero_pedido}
                               </span>
 
-                              {/* Etiquetas de estado visuales */}
+                              {/* Badges de Estado */}
                               {p.estado === 'PENDIENTE_COMPRA' && (
-                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-950 text-rose-300 border border-rose-700">
-                                  🔴 Pendiente de Compra ({insumosPendientesCount} insumos faltantes)
+                                <span className="clay-badge text-[11px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">
+                                  🔴 Pendiente de Compra ({insumosPendientesCount} faltantes)
                                 </span>
                               )}
 
                               {p.estado === 'PENDIENTE_PREPARAR' && (
-                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-950 text-amber-300 border border-amber-600">
-                                  🟡 Pendiente de Preparar / Fabricación
+                                <span className="clay-badge text-[11px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">
+                                  🟡 Listo para Preparar / Fabricación
                                 </span>
                               )}
 
                               {p.estado === 'GUIA_CREADA' && (
-                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-950 text-blue-300 border border-blue-600">
+                                <span className="clay-badge text-[11px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200">
                                   🔵 Guía C807: {p.c807_guia_numero}
                                 </span>
                               )}
                             </div>
 
                             {/* Cliente y Destino */}
-                            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-300">
-                              <span className="font-semibold text-white">{p.cliente_nombre}</span>
-                              <span className="text-slate-500">•</span>
+                            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-600 font-medium">
+                              <span className="font-bold text-slate-900">{p.cliente_nombre}</span>
+                              <span className="text-slate-300">•</span>
                               <a
                                 href={`https://wa.me/503${p.cliente_telefono}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-mono font-bold"
+                                className="clay-badge text-[11px] font-mono font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100"
                               >
-                                <Phone className="w-3 h-3" />
+                                <Phone className="w-3 h-3 text-emerald-600" />
                                 {p.cliente_telefono}
                               </a>
-                              <span className="text-slate-500">•</span>
-                              <span className="flex items-center gap-1 text-slate-400">
-                                <MapPin className="w-3 h-3 text-amber-400" />
+                              <span className="text-slate-300">•</span>
+                              <span className="flex items-center gap-1 text-slate-500">
+                                <MapPin className="w-3 h-3 text-indigo-600" />
                                 {p.cliente_municipio}, {p.cliente_departamento}
                               </span>
                             </div>
                           </div>
                         </div>
 
-                        {/* Columna Derecha: Total, Vendedora y Acciones */}
+                        {/* Total, Vendedora y Acciones */}
                         <div className="flex items-center gap-4 ml-auto">
                           <div className="text-right">
-                            <span className="text-xs text-slate-400 block">
+                            <span className="text-xs text-slate-500 block font-medium">
                               {p.tipo_pago} • {p.vendedora_nombre || 'WhatsApp'}
                             </span>
-                            <span className="text-lg font-black font-mono text-emerald-400">
+                            <span className="text-lg font-black font-mono text-indigo-700">
                               ${parseFloat(p.total.toString()).toFixed(2)}
                             </span>
                           </div>
 
-                          {/* Botón Acción Asignar Guía C807 */}
+                          {/* Botón Asignar Guía C807 */}
                           {p.estado !== 'GUIA_CREADA' && (
                             <button
                               onClick={() => {
@@ -1142,7 +1191,7 @@ export default function KodeSystemPage() {
                                 setNumGuiaInput(p.c807_guia_numero || '');
                                 setLinkGuiaInput(p.c807_link_rastreo || '');
                               }}
-                              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-blue-600/20 transition-colors"
+                              className="clay-btn clay-btn-primary px-3 py-1.5 text-xs font-black"
                             >
                               <Truck className="w-3.5 h-3.5" />
                               Asignar Guía C807
@@ -1154,7 +1203,7 @@ export default function KodeSystemPage() {
                               href={p.c807_link_rastreo || `https://app.c807.com/tracking?guide=${p.c807_guia_numero}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="px-3 py-1.5 rounded-lg bg-blue-950 hover:bg-blue-900 border border-blue-700 text-blue-300 font-bold text-xs flex items-center gap-1.5 transition-colors"
+                              className="clay-btn clay-btn-light text-sky-700 hover:bg-sky-50 border border-sky-300 px-3 py-1.5 text-xs font-bold"
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
                               Rastrear C807
@@ -1163,7 +1212,7 @@ export default function KodeSystemPage() {
 
                           <button
                             onClick={() => setExpandedPedidoId(isExpanded ? null : p.id)}
-                            className="p-1.5 text-slate-400 hover:text-white rounded-lg bg-slate-950 border border-slate-800"
+                            className="clay-btn clay-btn-light p-1.5 text-slate-500 hover:text-slate-800"
                           >
                             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                           </button>
@@ -1172,54 +1221,54 @@ export default function KodeSystemPage() {
 
                       {/* Vista Desplegada: Detalle de Perfumes y Dirección Completa */}
                       {isExpanded && (
-                        <div className="border-t border-slate-800/80 bg-slate-950/60 p-4 sm:p-5 space-y-4">
+                        <div className="border-t border-slate-100 pt-4 mt-2 space-y-4">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                            <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-lg">
-                              <span className="font-bold text-slate-400 block mb-1">Dirección Exacta de Entrega:</span>
-                              <p className="text-white">{p.cliente_direccion}</p>
+                            <div className="bg-slate-50 border border-slate-200/80 p-3 rounded-2xl">
+                              <span className="font-extrabold text-slate-700 block mb-1">Dirección Exacta de Entrega:</span>
+                              <p className="text-slate-800 font-medium">{p.cliente_direccion}</p>
                               {p.cliente_referencia && (
-                                <p className="text-amber-400 mt-1">Ref: {p.cliente_referencia}</p>
+                                <p className="text-indigo-600 mt-1 font-bold">Ref: {p.cliente_referencia}</p>
                               )}
                             </div>
 
-                            <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-lg">
-                              <span className="font-bold text-slate-400 block mb-1">Detalles de Envío y Pago:</span>
-                              <div className="flex justify-between text-slate-300">
+                            <div className="bg-slate-50 border border-slate-200/80 p-3 rounded-2xl">
+                              <span className="font-extrabold text-slate-700 block mb-1">Detalles de Envío y Pago:</span>
+                              <div className="flex justify-between text-slate-600 font-medium">
                                 <span>Método de Pago:</span>
-                                <span className="font-semibold text-white">{p.tipo_pago}</span>
+                                <span className="font-bold text-slate-900">{p.tipo_pago}</span>
                               </div>
-                              <div className="flex justify-between text-slate-300">
+                              <div className="flex justify-between text-slate-600 font-medium">
                                 <span>Estado Pago:</span>
-                                <span className="font-semibold text-emerald-400">{p.estado_pago}</span>
+                                <span className="font-bold text-emerald-700">{p.estado_pago}</span>
                               </div>
-                              <div className="flex justify-between text-slate-300">
+                              <div className="flex justify-between text-slate-600 font-medium">
                                 <span>Vendedora:</span>
-                                <span className="text-white">{p.vendedora_nombre || 'N/A'}</span>
+                                <span className="font-bold text-slate-900">{p.vendedora_nombre || 'N/A'}</span>
                               </div>
                             </div>
                           </div>
 
                           {/* Tabla de Perfumes Solicitados */}
                           <div>
-                            <span className="text-xs font-bold text-slate-300 block mb-2">
+                            <span className="text-xs font-extrabold text-slate-800 block mb-2">
                               Perfumes en este Pedido ({p.items.length}):
                             </span>
-                            <div className="divide-y divide-slate-800 border border-slate-800 rounded-lg overflow-hidden bg-slate-900">
+                            <div className="divide-y divide-slate-100 border border-slate-200/80 rounded-2xl overflow-hidden bg-white shadow-inner">
                               {p.items.map((it) => (
                                 <div
                                   key={it.id}
                                   className="p-3 flex flex-wrap items-center justify-between gap-3 text-xs"
                                 >
                                   <div className="flex items-center gap-2">
-                                    <span className="font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded">
+                                    <span className="clay-badge text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700">
                                       #{it.codigo}
                                     </span>
-                                    <span className="font-bold text-white text-sm">{it.contratipo}</span>
+                                    <span className="font-extrabold text-slate-900 text-sm">{it.contratipo}</span>
                                     <span
                                       className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
                                         it.version === 'EXTRA_SHOT'
-                                          ? 'bg-purple-950 text-purple-300 border border-purple-800'
-                                          : 'bg-slate-800 text-slate-300'
+                                          ? 'bg-purple-100 text-purple-700'
+                                          : 'bg-slate-100 text-slate-700'
                                       }`}
                                     >
                                       {it.version === 'EXTRA_SHOT' ? 'EXTRA SHOT' : 'NORMAL'}
@@ -1227,21 +1276,21 @@ export default function KodeSystemPage() {
                                   </div>
 
                                   <div className="flex items-center gap-4">
-                                    <span className="text-slate-400 font-mono">
-                                      Cant: <strong className="text-white">{it.cantidad}</strong>
+                                    <span className="text-slate-600 font-medium">
+                                      Cant: <strong className="text-slate-900 font-bold">{it.cantidad}</strong>
                                     </span>
-                                    <span className="text-emerald-400 font-mono font-bold">
+                                    <span className="text-indigo-700 font-mono font-black">
                                       ${parseFloat(it.subtotal.toString()).toFixed(2)}
                                     </span>
 
                                     {/* Estado del insumo */}
                                     {it.insumo_comprado ? (
-                                      <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 font-semibold flex items-center gap-1">
-                                        <Check className="w-3 h-3" /> Insumo Comprado
+                                      <span className="clay-badge text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                                        <Check className="w-3 h-3 text-emerald-600" /> Insumo Comprado
                                       </span>
                                     ) : (
-                                      <span className="px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-800 font-semibold flex items-center gap-1">
-                                        <Clock className="w-3 h-3" /> Falta Comprar
+                                      <span className="clay-badge text-[10px] font-bold bg-rose-50 text-rose-800 border border-rose-200 flex items-center gap-1">
+                                        <Clock className="w-3 h-3 text-rose-600" /> Falta Comprar
                                       </span>
                                     )}
                                   </div>
@@ -1264,76 +1313,73 @@ export default function KodeSystemPage() {
         {/* ============================================================== */}
         {activeTab === 'insumos_comprar' && (
           <div className="space-y-6">
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-wrap items-center justify-between gap-4">
+            <div className="clay-card p-5 flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <PackageCheck className="w-6 h-6 text-amber-400" />
+                <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                  <PackageCheck className="w-5 h-5 text-indigo-600" />
                   Insumos / Perfumes a Comprar al Proveedor
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">
-                  Lista consolidada de las fragancias requeridas para los pedidos en <strong>Rojo (Pendiente de compra)</strong>.
+                <p className="text-xs text-slate-500 mt-1 font-medium">
+                  Lista consolidada de fragancias requeridas para los pedidos en <strong>Rojo (Pendiente de compra)</strong>.
                   Márcalas aquí conforme las compres. Si a un pedido le falta comprar 1 perfume, permanece en Rojo; cuando todos sus perfumes estén comprados, pasará automáticamente a <strong>Amarillo (Pendiente de preparar)</strong>.
                 </p>
               </div>
 
               <button
                 onClick={fetchInsumos}
-                className="px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-2"
+                className="clay-btn clay-btn-light px-4 py-2 text-xs font-bold flex items-center gap-2"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className="w-3.5 h-3.5" />
                 Actualizar Lista
               </button>
             </div>
 
             {insumos.length === 0 ? (
-              <div className="text-center py-20 bg-slate-900/40 border border-slate-800 rounded-2xl">
-                <CheckCircle2 className="w-14 h-14 text-emerald-400 mx-auto mb-3" />
-                <h3 className="text-lg font-bold text-white">¡No hay insumos pendientes de compra!</h3>
-                <p className="text-xs text-slate-400 mt-1">
+              <div className="clay-card text-center py-20">
+                <CheckCircle2 className="w-14 h-14 text-emerald-600 mx-auto mb-3" />
+                <h3 className="text-base font-extrabold text-slate-900">¡No hay insumos pendientes de compra!</h3>
+                <p className="text-xs text-slate-500 mt-1 font-medium">
                   Todos los insumos solicitados ya han sido comprados o los pedidos se encuentran listos para fabricar.
                 </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {insumos.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl p-5 flex flex-col justify-between transition-all shadow-sm"
-                  >
+                  <div key={idx} className="clay-card p-5 flex flex-col justify-between space-y-4">
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-2">
-                        <span className="font-mono text-xs font-bold text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded border border-amber-500/20">
+                        <span className="clay-badge text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
                           #{item.codigo}
                         </span>
                         <span
                           className={`px-2 py-0.5 rounded text-[11px] font-bold ${
                             item.version === 'EXTRA_SHOT'
-                              ? 'bg-purple-950 text-purple-300 border border-purple-800'
-                              : 'bg-slate-800 text-slate-300'
+                              ? 'bg-purple-100 text-purple-700'
+                              : 'bg-slate-200 text-slate-700'
                           }`}
                         >
                           {item.version === 'EXTRA_SHOT' ? 'EXTRA SHOT' : 'NORMAL'}
                         </span>
                       </div>
 
-                      <h3 className="text-base font-bold text-white tracking-tight">{item.contratipo}</h3>
-                      <p className="text-xs text-slate-400 mb-3">{item.marca_inspirada}</p>
+                      <h3 className="text-sm font-extrabold text-slate-900 tracking-tight">{item.contratipo}</h3>
+                      <p className="text-xs text-slate-500 mb-3 font-medium">{item.marca_inspirada}</p>
 
-                      <div className="bg-slate-950 p-3 rounded-lg border border-slate-800/80 mb-4">
+                      <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 shadow-inner">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-slate-400">Total a Comprar:</span>
-                          <span className="font-mono text-xl font-extrabold text-amber-400">
+                          <span className="text-slate-600 font-bold">Total a Comprar:</span>
+                          <span className="font-mono text-xl font-black text-indigo-700">
                             {item.total_unidades} {parseInt(item.total_unidades.toString(), 10) === 1 ? 'unidad' : 'unidades'}
                           </span>
                         </div>
 
                         {/* Pedidos que esperan este perfume */}
-                        <div className="mt-2 pt-2 border-t border-slate-800/60 text-[11px] text-slate-400 space-y-1">
-                          <span className="block text-[10px] uppercase font-bold text-slate-500">Para los pedidos:</span>
+                        <div className="mt-2 pt-2 border-t border-slate-200 text-[11px] text-slate-500 space-y-1 font-medium">
+                          <span className="block text-[10px] uppercase font-bold text-slate-400">Para los pedidos:</span>
                           {item.pedidos.map((p, pIdx) => (
                             <div key={pIdx} className="flex justify-between">
-                              <span className="font-mono text-slate-300">{p.numero_pedido}</span>
-                              <span className="text-slate-400">{p.cliente_nombre}</span>
+                              <span className="font-mono text-slate-700 font-bold">{p.numero_pedido}</span>
+                              <span className="text-slate-600">{p.cliente_nombre}</span>
                             </div>
                           ))}
                         </div>
@@ -1341,9 +1387,9 @@ export default function KodeSystemPage() {
                     </div>
 
                     <button
-                      onClick={() => handleMarcarInsumo(item.catalogo_id, item.version, parseInt(item.total_unidades.toString(), 10))}
+                      onClick={() => handleMarcarInsumo(item.catalogo_id, item.version)}
                       disabled={loading}
-                      className="w-full py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
+                      className="clay-btn clay-btn-success w-full py-2.5 text-xs font-black shadow-md"
                     >
                       <Check className="w-4 h-4" />
                       Marcar como Comprado ({item.total_unidades})
@@ -1360,32 +1406,32 @@ export default function KodeSystemPage() {
         {/* ============================================================== */}
         {activeTab === 'rastreo_c807' && (
           <div className="space-y-6">
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-wrap items-center justify-between gap-4">
+            <div className="clay-card p-5 flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Truck className="w-6 h-6 text-blue-400" />
+                <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                  <Truck className="w-5 h-5 text-sky-600" />
                   Salida de Pedidos y Rastreo C807
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 mt-1 font-medium">
                   Pedidos con guía de paquetería generada en estado <strong>Azul (Guía creada / Enviado)</strong>.
                 </p>
               </div>
 
               <button
                 onClick={fetchPedidos}
-                className="px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-2"
+                className="clay-btn clay-btn-light px-4 py-2 text-xs font-bold flex items-center gap-2"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className="w-3.5 h-3.5" />
                 Actualizar Guías
               </button>
             </div>
 
             <div className="space-y-4">
               {pedidos.filter((p) => p.estado === 'GUIA_CREADA' || p.c807_guia_numero).length === 0 ? (
-                <div className="text-center py-20 bg-slate-900/40 border border-slate-800 rounded-2xl">
-                  <Truck className="w-14 h-14 text-slate-600 mx-auto mb-3" />
-                  <h3 className="text-lg font-bold text-white">No hay envíos con guía C807 generada aún</h3>
-                  <p className="text-xs text-slate-400 mt-1">
+                <div className="clay-card text-center py-20">
+                  <Truck className="w-14 h-14 text-slate-300 mx-auto mb-3" />
+                  <h3 className="text-base font-extrabold text-slate-900">No hay envíos con guía C807 generada aún</h3>
+                  <p className="text-xs text-slate-500 mt-1 font-medium">
                     Ve al listado de pedidos y presiona &quot;Asignar Guía C807&quot; para cambiar un pedido listo a estado Azul.
                   </p>
                 </div>
@@ -1395,21 +1441,21 @@ export default function KodeSystemPage() {
                   .map((p) => (
                     <div
                       key={p.id}
-                      className="bg-slate-900 border border-blue-900/50 rounded-xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 shadow-md"
+                      className="clay-card p-5 flex flex-wrap items-center justify-between gap-4 border-l-4 border-l-sky-500"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                        <div className="w-11 h-11 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 font-bold shadow-inner">
                           <Truck className="w-5 h-5" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-mono font-bold text-white text-base">{p.numero_pedido}</span>
-                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-950 text-blue-300 border border-blue-700">
+                            <span className="font-mono font-black text-slate-900 text-base">{p.numero_pedido}</span>
+                            <span className="clay-badge text-[11px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200">
                               Guía: {p.c807_guia_numero}
                             </span>
                           </div>
-                          <p className="text-xs text-slate-400 mt-0.5">
-                            Destino: <strong className="text-white">{p.cliente_nombre}</strong> ({p.cliente_municipio}, {p.cliente_departamento})
+                          <p className="text-xs text-slate-500 mt-1 font-medium">
+                            Destino: <strong className="text-slate-800">{p.cliente_nombre}</strong> ({p.cliente_municipio}, {p.cliente_departamento})
                           </p>
                         </div>
                       </div>
@@ -1419,7 +1465,7 @@ export default function KodeSystemPage() {
                           href={p.c807_link_rastreo || `https://app.c807.com/tracking?guide=${p.c807_guia_numero}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-blue-600/20 transition-colors"
+                          className="clay-btn clay-btn-primary px-4 py-2 text-xs font-black"
                         >
                           <ExternalLink className="w-4 h-4" />
                           Ver Rastreo en C807
@@ -1437,49 +1483,46 @@ export default function KodeSystemPage() {
       {/* MODAL: ASIGNAR GUÍA C807                                       */}
       {/* ============================================================== */}
       {guiaModalPedido && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <Truck className="w-5 h-5 text-blue-400" />
-              Asignar Guía C807 al Pedido
-            </h3>
-            <p className="text-xs text-slate-400">
-              Al guardar la guía de paquetería C807, el pedido {guiaModalPedido.numero_pedido} pasará automáticamente a estado <strong>Azul (Guía creada / Enviado)</strong>.
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="clay-card max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+              <Truck className="w-5 h-5 text-indigo-600" />
+              <h3 className="text-sm font-extrabold text-slate-900">Asignar Guía C807 al Pedido</h3>
+            </div>
+
+            <p className="text-xs text-slate-500 font-medium">
+              Al guardar la guía de paquetería C807, el pedido <strong>{guiaModalPedido.numero_pedido}</strong> pasará automáticamente a estado <strong>Azul (Guía creada / Enviado)</strong>.
             </p>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Número de Guía C807 *
-                </label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Número de Guía C807 *</label>
                 <input
                   type="text"
                   placeholder="Ej. C807-SV-981245"
                   value={numGuiaInput}
                   onChange={(e) => setNumGuiaInput(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 font-mono"
+                  className="clay-input w-full text-xs font-mono font-bold"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Enlace de Rastreo (Opcional)
-                </label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Enlace de Rastreo (Opcional)</label>
                 <input
                   type="text"
                   placeholder="https://app.c807.com/tracking?guide=..."
                   value={linkGuiaInput}
                   onChange={(e) => setLinkGuiaInput(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
+                  className="clay-input w-full text-xs font-mono font-medium"
                 />
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => setGuiaModalPedido(null)}
-                className="px-4 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs font-semibold text-slate-400 hover:text-white"
+                className="clay-btn clay-btn-light px-4 py-2 text-xs font-bold"
               >
                 Cancelar
               </button>
@@ -1487,7 +1530,7 @@ export default function KodeSystemPage() {
                 type="button"
                 onClick={handleGuardarGuiaC807}
                 disabled={!numGuiaInput.trim() || loading}
-                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-blue-600/20"
+                className="clay-btn clay-btn-primary px-4 py-2 text-xs font-black disabled:opacity-50"
               >
                 <Check className="w-4 h-4" />
                 Guardar y Cambiar a Azul
