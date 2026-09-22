@@ -523,17 +523,29 @@ export default function KodeSystemPage() {
     }
   };
 
-  const handleMarcarInsumo = async (catalogo_id: string, version: string) => {
+  const handleMarcarInsumo = async (
+    target: { item_id?: string; catalogo_id?: string; version?: string } | string,
+    versionFallback?: string
+  ) => {
     try {
       setLoading(true);
+      const payload: any = {
+        comprado_por: vendedoras.find((v) => v.id === vendedoraSeleccionada)?.nombre || 'Bodega KÖDE',
+      };
+
+      if (typeof target === 'string') {
+        payload.catalogo_id = target;
+        payload.version = versionFallback;
+      } else {
+        if (target.item_id) payload.item_id = target.item_id;
+        if (target.catalogo_id) payload.catalogo_id = target.catalogo_id;
+        if (target.version) payload.version = target.version;
+      }
+
       const res = await fetch('/api/kode/insumos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          catalogo_id,
-          version,
-          comprado_por: vendedoras.find((v) => v.id === vendedoraSeleccionada)?.nombre || 'Bodega KÖDE',
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -746,11 +758,11 @@ export default function KodeSystemPage() {
   }, [catalogo, searchQuery]);
 
   const pedidosRojos = useMemo(() => {
-    return pedidos.filter((p) => p.estado === 'PENDIENTE_COMPRA');
+    return pedidos.filter((p) => p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA');
   }, [pedidos]);
 
   const pedidosAmarillos = useMemo(() => {
-    return pedidos.filter((p) => p.estado === 'PENDIENTE_PREPARAR');
+    return pedidos.filter((p) => p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR');
   }, [pedidos]);
 
   const insumosSplitPane = useMemo(() => {
@@ -796,9 +808,9 @@ export default function KodeSystemPage() {
 
   // Métricas
   const metricas = useMemo(() => {
-    const rojos = pedidos.filter((p) => p.estado === 'PENDIENTE_COMPRA').length;
-    const amarillos = pedidos.filter((p) => p.estado === 'PENDIENTE_PREPARAR').length;
-    const azules = pedidos.filter((p) => p.estado === 'GUIA_CREADA').length;
+    const rojos = pedidos.filter((p) => p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA').length;
+    const amarillos = pedidos.filter((p) => p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR').length;
+    const azules = pedidos.filter((p) => p.estado === 'Enviado' || p.estado === 'GUIA_CREADA').length;
     const totalVentas = pedidos.reduce((acc, p) => acc + parseFloat(p.total?.toString() || '0'), 0);
     const totalGastosCompras = compras.reduce((acc, c) => acc + c.monto_total, 0);
     return { rojos, amarillos, azules, total: pedidos.length, totalVentas, totalGastosCompras };
@@ -2062,27 +2074,43 @@ export default function KodeSystemPage() {
                                       {item.version === 'Plus' || (item.version as any) === 'EXTRA_SHOT' ? '➕ Plus' : '⬇️ Normal'}
                                     </span>
                                   </div>
-                                  <div className="flex flex-wrap gap-1 mt-1 text-[10px] text-slate-500 font-mono">
+                                  <div className="flex flex-wrap items-center gap-1.5 mt-1.5 text-[10px] text-slate-500 font-mono">
                                     {item.pedidos.map((p, pIdx) => (
-                                      <span key={pIdx} className="bg-white border border-slate-200 px-1 rounded">
-                                        {p.numero_pedido}
-                                      </span>
+                                      <div
+                                        key={pIdx}
+                                        className="bg-white border border-slate-200 hover:border-emerald-400 pl-1.5 pr-1 py-0.5 rounded-lg flex items-center gap-1 shadow-2xs transition-all group"
+                                      >
+                                        <span className="font-bold text-slate-800">{p.numero_pedido}</span>
+                                        {p.cantidad > 1 && (
+                                          <span className="text-[9px] text-slate-400">({p.cantidad})</span>
+                                        )}
+                                        <button
+                                          type="button"
+                                          title={`Comprar insumo para ${p.numero_pedido}`}
+                                          onClick={() => handleMarcarInsumo({ item_id: p.item_id })}
+                                          disabled={loading}
+                                          className="text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded p-0.5 transition-colors"
+                                        >
+                                          <Check className="w-3 h-3 text-emerald-600" />
+                                        </button>
+                                      </div>
                                     ))}
                                   </div>
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-2.5">
                                 <span className="font-mono text-base font-black text-rose-600">
-                                  {item.total_unidades}
+                                  {item.total_unidades} {parseInt(item.total_unidades.toString(), 10) === 1 ? 'ud' : 'uds'}
                                 </span>
                                 <button
-                                  onClick={() => handleMarcarInsumo(item.catalogo_id, item.version)}
+                                  onClick={() => handleMarcarInsumo({ catalogo_id: item.catalogo_id, version: item.version })}
                                   disabled={loading}
-                                  className="clay-btn clay-btn-success px-3 py-1.5 text-xs font-bold"
+                                  className="clay-btn clay-btn-success px-3 py-1.5 text-xs font-bold flex items-center gap-1"
+                                  title="Marcar todas las unidades de esta fragancia como compradas"
                                 >
                                   <Check className="w-3.5 h-3.5" />
-                                  Comprar
+                                  Comprar todos
                                 </button>
                               </div>
                             </div>
