@@ -22,12 +22,14 @@ import {
   Check,
   User,
   Sparkles,
+  CreditCard,
+  Building,
   DollarSign,
+  ReceiptText,
   MessageCircle,
   Copy,
   Users,
   FlaskConical,
-  ReceiptText,
   ArrowDown,
   Layers,
   Calendar,
@@ -40,7 +42,7 @@ import {
   Box,
   FileText
 } from 'lucide-react';
-import { DEPARTAMENTOS_CATALOG, MUNICIPIOS_CATALOG } from '@/lib/svTerritory';
+import { DEPARTAMENTOS_CATALOG, MUNICIPIOS_CATALOG, resolveC807DeptoCode, getMunicipiosByDepto } from '@/lib/svTerritory';
 
 interface CatalogoItem {
   id: string;
@@ -227,6 +229,15 @@ export default function KodeSystemPage() {
   const [nuevaCompraCategoria, setNuevaCompraCategoria] = useState<'ESENCIAS' | 'CAJAS' | 'FRASCOS' | 'PAPEL' | 'OTROS INSUMOS'>('ESENCIAS');
   const [filtroCategoriaCompra, setFiltroCategoriaCompra] = useState<string>('TODAS');
 
+  const [generandoGuia, setGenerandoGuia] = useState(false);
+
+  // Modal y estado Factura Llama (DTE)
+  const [emitiendoDteId, setEmitiendoDteId] = useState<string | null>(null);
+  const [dteResultModal, setDteResultModal] = useState<{
+    pedido: Pedido;
+    result: any;
+  } | null>(null);
+
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
@@ -314,9 +325,7 @@ export default function KodeSystemPage() {
 
   const municipiosDisponibles = useMemo(() => {
     if (!clienteDepto) return [];
-    const depto = DEPARTAMENTOS_CATALOG.find((d) => d.nombre === clienteDepto);
-    if (!depto) return [];
-    return MUNICIPIOS_CATALOG.filter((m) => m.departamentoId === depto.id);
+    return getMunicipiosByDepto(clienteDepto);
   }, [clienteDepto]);
 
   // Directorio consolidado de clientes
@@ -542,6 +551,7 @@ export default function KodeSystemPage() {
     }
   };
 
+  // Asignar Guía C807 Manualmente
   const handleGuardarGuiaC807 = async () => {
     if (!guiaModalPedido || !numGuiaInput.trim()) {
       showToast('Ingrese el número de guía C807', 'error');
@@ -555,6 +565,7 @@ export default function KodeSystemPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           pedido_id: guiaModalPedido.id,
+          modo: 'manual',
           c807_guia_numero: numGuiaInput.trim(),
           c807_link_rastreo: linkGuiaInput.trim() || undefined,
         }),
@@ -622,6 +633,61 @@ export default function KodeSystemPage() {
     const actualizadas = compras.filter((c) => c.id !== id);
     guardarComprasLocal(actualizadas);
     showToast('Compra eliminada', 'info');
+  };
+
+  // Generar Guía Directamente con la API de C807 Express
+  const handleGenerarGuiaAutomaticaC807 = async () => {
+    if (!guiaModalPedido) return;
+
+    try {
+      setGenerandoGuia(true);
+      const res = await fetch('/api/kode/guia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pedido_id: guiaModalPedido.id,
+          modo: 'automatico',
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showToast(`🚀 ¡Guía ${data.numero_guia} generada en C807! Pedido en estado Azul.`, 'success');
+        setGuiaModalPedido(null);
+        setNumGuiaInput('');
+        setLinkGuiaInput('');
+        fetchPedidos();
+      } else {
+        showToast(data.error || 'Error al generar guía con C807 Express', 'error');
+      }
+    } catch (e: any) {
+      showToast(e.message, 'error');
+    } finally {
+      setGenerandoGuia(false);
+    }
+  };
+
+  // Emitir Factura Electrónica DTE mediante Factura Llama
+  const handleEmitirDte = async (pedido: Pedido) => {
+    try {
+      setEmitiendoDteId(pedido.id);
+      const res = await fetch('/api/kode/dte', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pedido_id: pedido.id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`✅ DTE emitido: ${data.codigo_generacion.slice(0, 8)}...`, 'success');
+        setDteResultModal({ pedido, result: data });
+      } else {
+        showToast(data.mensaje || data.error || 'Error al emitir DTE', 'error');
+      }
+    } catch (e: any) {
+      showToast(e.message || 'Error de conexión con Factura Llama', 'error');
+    } finally {
+      setEmitiendoDteId(null);
+    }
   };
 
   // Filtrado de pedidos
@@ -1178,9 +1244,9 @@ export default function KodeSystemPage() {
                               className="clay-input w-full text-xs font-bold cursor-pointer disabled:opacity-50"
                             >
                               <option value="">-- Seleccionar Municipio --</option>
-                              {municipiosDisponibles.map((m) => (
-                                <option key={m.id} value={m.nombre}>
-                                  {m.nombre}
+                              {municipiosDisponibles.map((m: any) => (
+                                <option key={m.id_municipio || m.id} value={m.nombre_municipio || m.nombre}>
+                                  {m.nombre_municipio || m.nombre}
                                 </option>
                               ))}
                             </select>
@@ -2485,6 +2551,39 @@ export default function KodeSystemPage() {
               Al guardar la guía de paquetería C807, el pedido <strong>{guiaModalPedido.numero_pedido}</strong> pasará a estado <strong>Azul (Guía creada / Enviado)</strong>.
             </p>
 
+            {guiaModalPedido.cliente_departamento && (
+              <div className="p-3 rounded-xl bg-sky-50 border border-sky-100 space-y-1.5 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-600 font-medium">
+                    Destino: <strong className="text-slate-800">{guiaModalPedido.cliente_municipio}, {guiaModalPedido.cliente_departamento}</strong>
+                  </span>
+                  <span className="clay-badge bg-sky-100 text-sky-800 font-black">C807: {resolveC807DeptoCode(guiaModalPedido.cliente_departamento)}</span>
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-slate-500">
+                  <span>Modalidad: <strong className="text-slate-700">{guiaModalPedido.tipo_pago}</strong></span>
+                  <span>{guiaModalPedido.tipo_pago === 'CONTRAENTREGA' ? `Cobro C807: $${Number(guiaModalPedido.total || 0).toFixed(2)}` : 'Servicio Pagado (SER)'}</span>
+                </div>
+              </div>
+            )}
+
+            {/* BOTÓN DE GENERACIÓN DIRECTA AUTOMÁTICA */}
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={handleGenerarGuiaAutomaticaC807}
+                disabled={generandoGuia || loading}
+                className="w-full clay-btn bg-gradient-to-r from-sky-500 to-blue-600 text-white font-extrabold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-md hover:from-sky-600 hover:to-blue-700 transition-all disabled:opacity-50 cursor-pointer"
+              >
+                <Truck className={`w-4 h-4 ${generandoGuia ? 'animate-spin' : ''}`} />
+                <span>{generandoGuia ? 'Generando en C807 Express...' : '🚀 Generar Guía Automática con C807'}</span>
+              </button>
+            </div>
+
+            <div className="relative my-1 text-center">
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200"></div></div>
+              <span className="relative bg-white px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">o ingresar guía existente</span>
+            </div>
+
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">Número de Guía C807 *</label>
@@ -2515,16 +2614,98 @@ export default function KodeSystemPage() {
                 onClick={() => setGuiaModalPedido(null)}
                 className="clay-btn clay-btn-light px-4 py-2 text-xs font-bold"
               >
-                Cancelar
+                Cerrar
               </button>
               <button
                 type="button"
                 onClick={handleGuardarGuiaC807}
-                disabled={!numGuiaInput.trim() || loading}
+                disabled={!numGuiaInput.trim() || loading || generandoGuia}
                 className="clay-btn clay-btn-primary px-4 py-2 text-xs font-black disabled:opacity-50"
               >
                 <Check className="w-4 h-4" />
-                Guardar y Cambiar a Azul
+                Guardar Manualmente
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ============================================================== */}
+      {/* MODAL: FACTURA ELECTRÓNICA DTE (FACTURA LLAMA)                */}
+      {/* ============================================================== */}
+      {dteResultModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="clay-card max-w-lg w-full p-6 space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                <ReceiptText className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-900">Factura Electrónica Emitida (DTE)</h3>
+                <p className="text-xs text-slate-500 font-medium">Pedido #{dteResultModal.pedido.numero_pedido} - {dteResultModal.pedido.cliente_nombre}</p>
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-600 font-bold">Estado Hacienda:</span>
+                <span className="clay-badge bg-emerald-100 text-emerald-800 font-black">
+                  ✓ {dteResultModal.result.estado || 'PROCESADO'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-600 font-bold">Código Generación:</span>
+                <span className="font-mono text-slate-800 font-black truncate max-w-[220px]" title={dteResultModal.result.codigo_generacion}>
+                  {dteResultModal.result.codigo_generacion}
+                </span>
+              </div>
+              {dteResultModal.result.numero_control && (
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-600 font-bold">Número Control:</span>
+                  <span className="font-mono text-slate-800 font-black">{dteResultModal.result.numero_control}</span>
+                </div>
+              )}
+              {dteResultModal.result.sello_recepcion && (
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-600 font-bold">Sello Recepción MH:</span>
+                  <span className="font-mono text-slate-800 font-bold truncate max-w-[220px]" title={dteResultModal.result.sello_recepcion}>
+                    {dteResultModal.result.sello_recepcion}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2 pt-2">
+              {dteResultModal.result.pdf_url && (
+                <a
+                  href={dteResultModal.result.pdf_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex-1 clay-btn clay-btn-primary py-2.5 px-4 text-xs font-black flex items-center justify-center gap-2"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Descargar PDF Factura
+                </a>
+              )}
+              {dteResultModal.result.json_url && (
+                <a
+                  href={dteResultModal.result.json_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="clay-btn clay-btn-light py-2.5 px-4 text-xs font-bold flex items-center justify-center gap-1.5"
+                >
+                  <FileText className="w-4 h-4 text-slate-600" />
+                  Ver JSON DTE
+                </a>
+              )}
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setDteResultModal(null)}
+                className="clay-btn clay-btn-light px-4 py-2 text-xs font-bold"
+              >
+                Cerrar
               </button>
             </div>
           </div>

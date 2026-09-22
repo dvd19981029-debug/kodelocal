@@ -622,4 +622,32 @@ model WpMedia {
   @@index([mediaId])
 }
 
+model Department {
+  id          Int         @id
+  nombreDepto String      @unique @map("nombre_depto")
+  codDepto    String      @unique @map("cod_depto") // Para C807 Express (ej. AHU, SLV)
+  deptoMh     String      @unique @map("depto_mh")   // Para Factura MH / DTE (ej. 01, 06)
+  municipios  Municipio[]
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  @@map("departamentos")
+}
+
+model Municipio {
+  idMunicipio     Int        @id @map("id_municipio") // Código para C807 Express
+  nombreMunicipio String     @map("nombre_municipio") // Lo que ven los asesores
+  idDepto         Int        @map("id_depto")         // Relación con departamentos(id)
+  municipioMh     String     @map("municipio_mh")     // Código para Factura Llama / MH
+  nombreMh        String     @map("nombre_mh")        // Nombre según nueva reestructuración
+  department      Department @relation(fields: [idDepto], references: [id])
+  createdAt       DateTime   @default(now()) @map("created_at")
+
+  @@index([idDepto])
+  @@index([nombreMunicipio])
+  @@index([municipioMh])
+  @@map("municipios")
+}
+
+
+
 

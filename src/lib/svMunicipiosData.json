@@ -1,0 +1,1836 @@
+[
+  {
+    "id_municipio": 2,
+    "nombre_municipio": "AHUACHAPAN",
+    "id_depto": 2,
+    "municipio_mh": "14",
+    "nombre_mh": "Ahuachapán Centro"
+  },
+  {
+    "id_municipio": 3,
+    "nombre_municipio": "APANECA",
+    "id_depto": 2,
+    "municipio_mh": "14",
+    "nombre_mh": "Ahuachapán Centro"
+  },
+  {
+    "id_municipio": 5,
+    "nombre_municipio": "CONCEPCION DE ATACO",
+    "id_depto": 2,
+    "municipio_mh": "14",
+    "nombre_mh": "Ahuachapán Centro"
+  },
+  {
+    "id_municipio": 13,
+    "nombre_municipio": "TACUBA",
+    "id_depto": 2,
+    "municipio_mh": "14",
+    "nombre_mh": "Ahuachapán Centro"
+  },
+  {
+    "id_municipio": 4,
+    "nombre_municipio": "ATIQUIZAYA",
+    "id_depto": 2,
+    "municipio_mh": "13",
+    "nombre_mh": "Ahuachapán Norte"
+  },
+  {
+    "id_municipio": 6,
+    "nombre_municipio": "EL REFUGIO",
+    "id_depto": 2,
+    "municipio_mh": "13",
+    "nombre_mh": "Ahuachapán Norte"
+  },
+  {
+    "id_municipio": 10,
+    "nombre_municipio": "SAN LORENZO",
+    "id_depto": 2,
+    "municipio_mh": "13",
+    "nombre_mh": "Ahuachapán Norte"
+  },
+  {
+    "id_municipio": 12,
+    "nombre_municipio": "TURIN",
+    "id_depto": 2,
+    "municipio_mh": "13",
+    "nombre_mh": "Ahuachapán Norte"
+  },
+  {
+    "id_municipio": 7,
+    "nombre_municipio": "GUAYMANGO",
+    "id_depto": 2,
+    "municipio_mh": "15",
+    "nombre_mh": "Ahuachapán Sur"
+  },
+  {
+    "id_municipio": 8,
+    "nombre_municipio": "JUJUTLA",
+    "id_depto": 2,
+    "municipio_mh": "15",
+    "nombre_mh": "Ahuachapán Sur"
+  },
+  {
+    "id_municipio": 9,
+    "nombre_municipio": "SAN FRANCISCO MENENDEZ",
+    "id_depto": 2,
+    "municipio_mh": "15",
+    "nombre_mh": "Ahuachapán Sur"
+  },
+  {
+    "id_municipio": 11,
+    "nombre_municipio": "SAN PEDRO PUXTLA",
+    "id_depto": 2,
+    "municipio_mh": "15",
+    "nombre_mh": "Ahuachapán Sur"
+  },
+  {
+    "id_municipio": 15,
+    "nombre_municipio": "DOLORES",
+    "id_depto": 3,
+    "municipio_mh": "11",
+    "nombre_mh": "Cabañas Este"
+  },
+  {
+    "id_municipio": 16,
+    "nombre_municipio": "GUACOTECTI",
+    "id_depto": 3,
+    "municipio_mh": "11",
+    "nombre_mh": "Cabañas Este"
+  },
+  {
+    "id_municipio": 19,
+    "nombre_municipio": "SAN ISIDRO",
+    "id_depto": 3,
+    "municipio_mh": "11",
+    "nombre_mh": "Cabañas Este"
+  },
+  {
+    "id_municipio": 20,
+    "nombre_municipio": "SENSUNTEPEQUE",
+    "id_depto": 3,
+    "municipio_mh": "11",
+    "nombre_mh": "Cabañas Este"
+  },
+  {
+    "id_municipio": 22,
+    "nombre_municipio": "VICTORIA",
+    "id_depto": 3,
+    "municipio_mh": "11",
+    "nombre_mh": "Cabañas Este"
+  },
+  {
+    "id_municipio": 14,
+    "nombre_municipio": "CINQUERA",
+    "id_depto": 3,
+    "municipio_mh": "10",
+    "nombre_mh": "Cabañas Oeste"
+  },
+  {
+    "id_municipio": 17,
+    "nombre_municipio": "ILOBASCO",
+    "id_depto": 3,
+    "municipio_mh": "10",
+    "nombre_mh": "Cabañas Oeste"
+  },
+  {
+    "id_municipio": 18,
+    "nombre_municipio": "JUTIAPA",
+    "id_depto": 3,
+    "municipio_mh": "10",
+    "nombre_mh": "Cabañas Oeste"
+  },
+  {
+    "id_municipio": 21,
+    "nombre_municipio": "TEJUTEPEQUE",
+    "id_depto": 3,
+    "municipio_mh": "10",
+    "nombre_mh": "Cabañas Oeste"
+  },
+  {
+    "id_municipio": 23,
+    "nombre_municipio": "AGUA CALIENTE",
+    "id_depto": 4,
+    "municipio_mh": "35",
+    "nombre_mh": "Chalatenango Centro"
+  },
+  {
+    "id_municipio": 30,
+    "nombre_municipio": "DULCE NOMBRE DE MARIA",
+    "id_depto": 4,
+    "municipio_mh": "35",
+    "nombre_mh": "Chalatenango Centro"
+  },
+  {
+    "id_municipio": 32,
+    "nombre_municipio": "EL PARAISO",
+    "id_depto": 4,
+    "municipio_mh": "35",
+    "nombre_mh": "Chalatenango Centro"
+  },
+  {
+    "id_municipio": 35,
+    "nombre_municipio": "LA REINA",
+    "id_depto": 4,
+    "municipio_mh": "35",
+    "nombre_mh": "Chalatenango Centro"
+  },
+  {
+    "id_municipio": 38,
+    "nombre_municipio": "NUEVA CONCEPCION",
+    "id_depto": 4,
+    "municipio_mh": "35",
+    "nombre_mh": "Chalatenango Centro"
+  },
+  {
+    "id_municipio": 44,
+    "nombre_municipio": "SAN FERNANDO",
+    "id_depto": 4,
+    "municipio_mh": "35",
+    "nombre_mh": "Chalatenango Centro"
+  },
+  {
+    "id_municipio": 46,
+    "nombre_municipio": "SAN FRANCISCO MORAZAN",
+    "id_depto": 4,
+    "municipio_mh": "35",
+    "nombre_mh": "Chalatenango Centro"
+  },
+  {
+    "id_municipio": 53,
+    "nombre_municipio": "SAN RAFAEL",
+    "id_depto": 4,
+    "municipio_mh": "35",
+    "nombre_mh": "Chalatenango Centro"
+  },
+  {
+    "id_municipio": 54,
+    "nombre_municipio": "SANTA RITA",
+    "id_depto": 4,
+    "municipio_mh": "35",
+    "nombre_mh": "Chalatenango Centro"
+  },
+  {
+    "id_municipio": 55,
+    "nombre_municipio": "TEJUTLA",
+    "id_depto": 4,
+    "municipio_mh": "35",
+    "nombre_mh": "Chalatenango Centro"
+  },
+  {
+    "id_municipio": 27,
+    "nombre_municipio": "CITALA",
+    "id_depto": 4,
+    "municipio_mh": "34",
+    "nombre_mh": "Chalatenango Norte"
+  },
+  {
+    "id_municipio": 34,
+    "nombre_municipio": "LA PALMA",
+    "id_depto": 4,
+    "municipio_mh": "34",
+    "nombre_mh": "Chalatenango Norte"
+  },
+  {
+    "id_municipio": 47,
+    "nombre_municipio": "SAN IGNACIO",
+    "id_depto": 4,
+    "municipio_mh": "34",
+    "nombre_mh": "Chalatenango Norte"
+  },
+  {
+    "id_municipio": 24,
+    "nombre_municipio": "ARCATAO",
+    "id_depto": 4,
+    "municipio_mh": "36",
+    "nombre_mh": "Chalatenango Sur"
+  },
+  {
+    "id_municipio": 25,
+    "nombre_municipio": "AZACUALPA",
+    "id_depto": 4,
+    "municipio_mh": "36",
+    "nombre_mh": "Chalatenango Sur"
+  },
+  {
+    "id_municipio": 26,
+    "nombre_municipio": "CHALATENANGO",
+    "id_depto": 4,
+    "municipio_mh": "36",
+    "nombre_mh": "Chalatenango Sur"
+  },
+  {
+    "id_municipio": 28,
+    "nombre_municipio": "COMALAPA",
+    "id_depto": 4,
+    "municipio_mh": "36",
+    "nombre_mh": "Chalatenango Sur"
+  },
+  {
+    "id_municipio": 29,
+    "nombre_municipio": "CONCEPCION QUEZALTEPEQUE",
+    "id_depto": 4,
+    "municipio_mh": "36",
+    "nombre_mh": "Chalatenango Sur"
+  },
+  {
+    "id_municipio": 31,
+    "nombre_municipio": "EL CARRIZAL",
+    "id_depto": 4,
+    "municipio_mh": "36",
+    "nombre_mh": "Chalatenango Sur"
+  },
+  {
+    "id_municipio": 33,
+    "nombre_municipio": "LA LAGUNA",
+    "id_depto": 4,
+    "municipio_mh": "36",
+    "nombre_mh": "Chalatenango Sur"
+  },
+  {
+    "id_municipio": 36,
+    "nombre_municipio": "LAS VUELTAS",
+    "id_depto": 4,
+    "municipio_mh": "36",
+    "nombre_mh": "Chalatenango Sur"
+  },
+  {
+    "id_municipio": 37,
+    "nombre_municipio": "NOMBRE DE JESUS",
+    "id_depto": 4,
+    "municipio_mh": "36",
+    "nombre_mh": "Chalatenango Sur"
+  },
+  {
+    "id_municipio": 39,
+    "nombre_municipio": "NUEVA TRINIDAD",
+    "id_depto": 4,
+    "municipio_mh": "36",
+    "nombre_mh": "Chalatenango Sur"
+  },
+  {
+    "id_municipio": 40,
+    "nombre_municipio": "OJOS DE AGUA",
+    "id_depto": 4,
+    "municipio_mh": "36",
+    "nombre_mh": "Chalatenango Sur"
+  },
+  {
+    "id_municipio": 41,
+    "nombre_municipio": "POTONICO",
+    "id_depto": 4,
+    "municipio_mh": "36",
+    "nombre_mh": "Chalatenango Sur"
+  },
+  {
+    "id_municipio": 42,
+    "nombre_municipio": "SAN ANTONIO DE LA CRUZ",
+    "id_depto": 4,
+    "municipio_mh": "36",
+    "nombre_mh": "Chalatenango Sur"
+  },
+  {
+    "id_municipio": 43,
+    "nombre_municipio": "SAN ANTONIO LOS RANCHOS",
+    "id_depto": 4,
+    "municipio_mh": "36",
+    "nombre_mh": "Chalatenango Sur"
+  },
+  {
+    "id_municipio": 45,
+    "nombre_municipio": "SAN FRANCISCO LEMPA",
+    "id_depto": 4,
+    "municipio_mh": "36",
+    "nombre_mh": "Chalatenango Sur"
+  },
+  {
+    "id_municipio": 48,
+    "nombre_municipio": "SAN ISIDRO LABRADOR",
+    "id_depto": 4,
+    "municipio_mh": "36",
+    "nombre_mh": "Chalatenango Sur"
+  },
+  {
+    "id_municipio": 49,
+    "nombre_municipio": "SAN JOSE CANCASQUE",
+    "id_depto": 4,
+    "municipio_mh": "36",
+    "nombre_mh": "Chalatenango Sur"
+  },
+  {
+    "id_municipio": 50,
+    "nombre_municipio": "SAN JOSE LAS FLORES",
+    "id_depto": 4,
+    "municipio_mh": "36",
+    "nombre_mh": "Chalatenango Sur"
+  },
+  {
+    "id_municipio": 51,
+    "nombre_municipio": "SAN LUIS DEL CARMEN",
+    "id_depto": 4,
+    "municipio_mh": "36",
+    "nombre_mh": "Chalatenango Sur"
+  },
+  {
+    "id_municipio": 52,
+    "nombre_municipio": "SAN MIGUEL DE MERCEDES",
+    "id_depto": 4,
+    "municipio_mh": "36",
+    "nombre_mh": "Chalatenango Sur"
+  },
+  {
+    "id_municipio": 61,
+    "nombre_municipio": "ORATORIO DE CONCEPCION",
+    "id_depto": 5,
+    "municipio_mh": "17",
+    "nombre_mh": "Cuscatlán Norte"
+  },
+  {
+    "id_municipio": 62,
+    "nombre_municipio": "SAN BARTOLOME PERULAPIA",
+    "id_depto": 5,
+    "municipio_mh": "17",
+    "nombre_mh": "Cuscatlán Norte"
+  },
+  {
+    "id_municipio": 64,
+    "nombre_municipio": "SAN JOSE GUAYABAL",
+    "id_depto": 5,
+    "municipio_mh": "17",
+    "nombre_mh": "Cuscatlán Norte"
+  },
+  {
+    "id_municipio": 65,
+    "nombre_municipio": "SAN PEDRO PERULAPAN",
+    "id_depto": 5,
+    "municipio_mh": "17",
+    "nombre_mh": "Cuscatlán Norte"
+  },
+  {
+    "id_municipio": 70,
+    "nombre_municipio": "SUCHITOTO",
+    "id_depto": 5,
+    "municipio_mh": "17",
+    "nombre_mh": "Cuscatlán Norte"
+  },
+  {
+    "id_municipio": 56,
+    "nombre_municipio": "CANDELARIA",
+    "id_depto": 5,
+    "municipio_mh": "18",
+    "nombre_mh": "Cuscatlán Sur"
+  },
+  {
+    "id_municipio": 57,
+    "nombre_municipio": "COJUTEPEQUE",
+    "id_depto": 5,
+    "municipio_mh": "18",
+    "nombre_mh": "Cuscatlán Sur"
+  },
+  {
+    "id_municipio": 58,
+    "nombre_municipio": "EL CARMEN",
+    "id_depto": 5,
+    "municipio_mh": "18",
+    "nombre_mh": "Cuscatlán Sur"
+  },
+  {
+    "id_municipio": 59,
+    "nombre_municipio": "EL ROSARIO",
+    "id_depto": 5,
+    "municipio_mh": "18",
+    "nombre_mh": "Cuscatlán Sur"
+  },
+  {
+    "id_municipio": 60,
+    "nombre_municipio": "MONTE SAN JUAN",
+    "id_depto": 5,
+    "municipio_mh": "18",
+    "nombre_mh": "Cuscatlán Sur"
+  },
+  {
+    "id_municipio": 63,
+    "nombre_municipio": "SAN CRISTOBAL",
+    "id_depto": 5,
+    "municipio_mh": "18",
+    "nombre_mh": "Cuscatlán Sur"
+  },
+  {
+    "id_municipio": 66,
+    "nombre_municipio": "SAN RAFAEL CEDROS",
+    "id_depto": 5,
+    "municipio_mh": "18",
+    "nombre_mh": "Cuscatlán Sur"
+  },
+  {
+    "id_municipio": 67,
+    "nombre_municipio": "SAN RAMON",
+    "id_depto": 5,
+    "municipio_mh": "18",
+    "nombre_mh": "Cuscatlán Sur"
+  },
+  {
+    "id_municipio": 68,
+    "nombre_municipio": "SANTA CRUZ ANALQUITO",
+    "id_depto": 5,
+    "municipio_mh": "18",
+    "nombre_mh": "Cuscatlán Sur"
+  },
+  {
+    "id_municipio": 69,
+    "nombre_municipio": "SANTA CRUZ MICHAPA",
+    "id_depto": 5,
+    "municipio_mh": "18",
+    "nombre_mh": "Cuscatlán Sur"
+  },
+  {
+    "id_municipio": 71,
+    "nombre_municipio": "TENANCINGO",
+    "id_depto": 5,
+    "municipio_mh": "18",
+    "nombre_mh": "Cuscatlán Sur"
+  },
+  {
+    "id_municipio": 74,
+    "nombre_municipio": "CIUDAD ARCE",
+    "id_depto": 6,
+    "municipio_mh": "24",
+    "nombre_mh": "La Libertad Centro"
+  },
+  {
+    "id_municipio": 83,
+    "nombre_municipio": "SAN JUAN OPICO",
+    "id_depto": 6,
+    "municipio_mh": "24",
+    "nombre_mh": "La Libertad Centro"
+  },
+  {
+    "id_municipio": 73,
+    "nombre_municipio": "CHILTIUPAN",
+    "id_depto": 6,
+    "municipio_mh": "27",
+    "nombre_mh": "La Libertad Costa"
+  },
+  {
+    "id_municipio": 79,
+    "nombre_municipio": "JICALAPA",
+    "id_depto": 6,
+    "municipio_mh": "27",
+    "nombre_mh": "La Libertad Costa"
+  },
+  {
+    "id_municipio": 80,
+    "nombre_municipio": "LA LIBERTAD",
+    "id_depto": 6,
+    "municipio_mh": "27",
+    "nombre_mh": "La Libertad Costa"
+  },
+  {
+    "id_municipio": 90,
+    "nombre_municipio": "TAMANIQUE",
+    "id_depto": 6,
+    "municipio_mh": "27",
+    "nombre_mh": "La Libertad Costa"
+  },
+  {
+    "id_municipio": 91,
+    "nombre_municipio": "TEOTEPEQUE",
+    "id_depto": 6,
+    "municipio_mh": "27",
+    "nombre_mh": "La Libertad Costa"
+  },
+  {
+    "id_municipio": 72,
+    "nombre_municipio": "ANTIGUO CUSCATLAN",
+    "id_depto": 6,
+    "municipio_mh": "26",
+    "nombre_mh": "La Libertad Este"
+  },
+  {
+    "id_municipio": 77,
+    "nombre_municipio": "HUIZUCAR",
+    "id_depto": 6,
+    "municipio_mh": "26",
+    "nombre_mh": "La Libertad Este"
+  },
+  {
+    "id_municipio": 82,
+    "nombre_municipio": "NUEVO CUSCATLAN",
+    "id_depto": 6,
+    "municipio_mh": "26",
+    "nombre_mh": "La Libertad Este"
+  },
+  {
+    "id_municipio": 86,
+    "nombre_municipio": "SAN JOSE VILLANUEVA",
+    "id_depto": 6,
+    "municipio_mh": "26",
+    "nombre_mh": "La Libertad Este"
+  },
+  {
+    "id_municipio": 93,
+    "nombre_municipio": "ZARAGOZA",
+    "id_depto": 6,
+    "municipio_mh": "26",
+    "nombre_mh": "La Libertad Este"
+  },
+  {
+    "id_municipio": 84,
+    "nombre_municipio": "QUEZALTEPEQUE",
+    "id_depto": 6,
+    "municipio_mh": "23",
+    "nombre_mh": "La Libertad Norte"
+  },
+  {
+    "id_municipio": 87,
+    "nombre_municipio": "SAN MATIAS",
+    "id_depto": 6,
+    "municipio_mh": "23",
+    "nombre_mh": "La Libertad Norte"
+  },
+  {
+    "id_municipio": 88,
+    "nombre_municipio": "SAN PABLO TACACHICO",
+    "id_depto": 6,
+    "municipio_mh": "23",
+    "nombre_mh": "La Libertad Norte"
+  },
+  {
+    "id_municipio": 75,
+    "nombre_municipio": "COLON",
+    "id_depto": 6,
+    "municipio_mh": "25",
+    "nombre_mh": "La Libertad Oeste"
+  },
+  {
+    "id_municipio": 78,
+    "nombre_municipio": "JAYAQUE",
+    "id_depto": 6,
+    "municipio_mh": "25",
+    "nombre_mh": "La Libertad Oeste"
+  },
+  {
+    "id_municipio": 85,
+    "nombre_municipio": "SACACOYO",
+    "id_depto": 6,
+    "municipio_mh": "25",
+    "nombre_mh": "La Libertad Oeste"
+  },
+  {
+    "id_municipio": 89,
+    "nombre_municipio": "TALNIQUE",
+    "id_depto": 6,
+    "municipio_mh": "25",
+    "nombre_mh": "La Libertad Oeste"
+  },
+  {
+    "id_municipio": 92,
+    "nombre_municipio": "TEPECOYO",
+    "id_depto": 6,
+    "municipio_mh": "25",
+    "nombre_mh": "La Libertad Oeste"
+  },
+  {
+    "id_municipio": 76,
+    "nombre_municipio": "COMASAGUA",
+    "id_depto": 6,
+    "municipio_mh": "28",
+    "nombre_mh": "La Libertad Sur"
+  },
+  {
+    "id_municipio": 81,
+    "nombre_municipio": "SANTA TECLA",
+    "id_depto": 6,
+    "municipio_mh": "28",
+    "nombre_mh": "La Libertad Sur"
+  },
+  {
+    "id_municipio": 95,
+    "nombre_municipio": "EL ROSARIO",
+    "id_depto": 7,
+    "municipio_mh": "24",
+    "nombre_mh": "La Paz Centro"
+  },
+  {
+    "id_municipio": 96,
+    "nombre_municipio": "JERUSALEN",
+    "id_depto": 7,
+    "municipio_mh": "24",
+    "nombre_mh": "La Paz Centro"
+  },
+  {
+    "id_municipio": 97,
+    "nombre_municipio": "MERCEDES DE LA CEIBA",
+    "id_depto": 7,
+    "municipio_mh": "24",
+    "nombre_mh": "La Paz Centro"
+  },
+  {
+    "id_municipio": 99,
+    "nombre_municipio": "PARAISO DE OSORIO",
+    "id_depto": 7,
+    "municipio_mh": "24",
+    "nombre_mh": "La Paz Centro"
+  },
+  {
+    "id_municipio": 100,
+    "nombre_municipio": "SAN ANTONIO MASAHUAT",
+    "id_depto": 7,
+    "municipio_mh": "24",
+    "nombre_mh": "La Paz Centro"
+  },
+  {
+    "id_municipio": 101,
+    "nombre_municipio": "SAN EMIGDIO",
+    "id_depto": 7,
+    "municipio_mh": "24",
+    "nombre_mh": "La Paz Centro"
+  },
+  {
+    "id_municipio": 105,
+    "nombre_municipio": "SAN JUAN TEPEZONTES",
+    "id_depto": 7,
+    "municipio_mh": "24",
+    "nombre_mh": "La Paz Centro"
+  },
+  {
+    "id_municipio": 106,
+    "nombre_municipio": "SAN LUIS LA HERRADURA",
+    "id_depto": 7,
+    "municipio_mh": "24",
+    "nombre_mh": "La Paz Centro"
+  },
+  {
+    "id_municipio": 108,
+    "nombre_municipio": "SAN MIGUEL TEPEZONTES",
+    "id_depto": 7,
+    "municipio_mh": "24",
+    "nombre_mh": "La Paz Centro"
+  },
+  {
+    "id_municipio": 110,
+    "nombre_municipio": "SAN PEDRO NONUALCO",
+    "id_depto": 7,
+    "municipio_mh": "24",
+    "nombre_mh": "La Paz Centro"
+  },
+  {
+    "id_municipio": 112,
+    "nombre_municipio": "SANTA MARIA OSTUMA",
+    "id_depto": 7,
+    "municipio_mh": "24",
+    "nombre_mh": "La Paz Centro"
+  },
+  {
+    "id_municipio": 113,
+    "nombre_municipio": "SANTIAGO NONUALCO",
+    "id_depto": 7,
+    "municipio_mh": "24",
+    "nombre_mh": "La Paz Centro"
+  },
+  {
+    "id_municipio": 103,
+    "nombre_municipio": "SAN JUAN NONUALCO",
+    "id_depto": 7,
+    "municipio_mh": "25",
+    "nombre_mh": "La Paz Este"
+  },
+  {
+    "id_municipio": 111,
+    "nombre_municipio": "SAN RAFAEL OBRAJUELO",
+    "id_depto": 7,
+    "municipio_mh": "25",
+    "nombre_mh": "La Paz Este"
+  },
+  {
+    "id_municipio": 115,
+    "nombre_municipio": "ZACATECOLUCA",
+    "id_depto": 7,
+    "municipio_mh": "25",
+    "nombre_mh": "La Paz Este"
+  },
+  {
+    "id_municipio": 94,
+    "nombre_municipio": "CUYULTITAN",
+    "id_depto": 7,
+    "municipio_mh": "23",
+    "nombre_mh": "La Paz Oeste"
+  },
+  {
+    "id_municipio": 98,
+    "nombre_municipio": "OLOCUILTA",
+    "id_depto": 7,
+    "municipio_mh": "23",
+    "nombre_mh": "La Paz Oeste"
+  },
+  {
+    "id_municipio": 102,
+    "nombre_municipio": "SAN FRANCISCO CHINAMECA",
+    "id_depto": 7,
+    "municipio_mh": "23",
+    "nombre_mh": "La Paz Oeste"
+  },
+  {
+    "id_municipio": 104,
+    "nombre_municipio": "SAN JUAN TALPA",
+    "id_depto": 7,
+    "municipio_mh": "23",
+    "nombre_mh": "La Paz Oeste"
+  },
+  {
+    "id_municipio": 107,
+    "nombre_municipio": "SAN LUIS TALPA",
+    "id_depto": 7,
+    "municipio_mh": "23",
+    "nombre_mh": "La Paz Oeste"
+  },
+  {
+    "id_municipio": 109,
+    "nombre_municipio": "SAN PEDRO MASAHUAT",
+    "id_depto": 7,
+    "municipio_mh": "23",
+    "nombre_mh": "La Paz Oeste"
+  },
+  {
+    "id_municipio": 114,
+    "nombre_municipio": "TAPALHUACA",
+    "id_depto": 7,
+    "municipio_mh": "23",
+    "nombre_mh": "La Paz Oeste"
+  },
+  {
+    "id_municipio": 116,
+    "nombre_municipio": "ANAMOROS",
+    "id_depto": 8,
+    "municipio_mh": "19",
+    "nombre_mh": "La Unión Norte"
+  },
+  {
+    "id_municipio": 117,
+    "nombre_municipio": "BOLIVAR",
+    "id_depto": 8,
+    "municipio_mh": "19",
+    "nombre_mh": "La Unión Norte"
+  },
+  {
+    "id_municipio": 118,
+    "nombre_municipio": "CONCEPCION DE ORIENTE",
+    "id_depto": 8,
+    "municipio_mh": "19",
+    "nombre_mh": "La Unión Norte"
+  },
+  {
+    "id_municipio": 121,
+    "nombre_municipio": "EL SAUCE",
+    "id_depto": 8,
+    "municipio_mh": "19",
+    "nombre_mh": "La Unión Norte"
+  },
+  {
+    "id_municipio": 124,
+    "nombre_municipio": "LISLIQUE",
+    "id_depto": 8,
+    "municipio_mh": "19",
+    "nombre_mh": "La Unión Norte"
+  },
+  {
+    "id_municipio": 126,
+    "nombre_municipio": "NUEVA ESPARTA",
+    "id_depto": 8,
+    "municipio_mh": "19",
+    "nombre_mh": "La Unión Norte"
+  },
+  {
+    "id_municipio": 127,
+    "nombre_municipio": "PASAQUINA",
+    "id_depto": 8,
+    "municipio_mh": "19",
+    "nombre_mh": "La Unión Norte"
+  },
+  {
+    "id_municipio": 128,
+    "nombre_municipio": "POLOROS",
+    "id_depto": 8,
+    "municipio_mh": "19",
+    "nombre_mh": "La Unión Norte"
+  },
+  {
+    "id_municipio": 130,
+    "nombre_municipio": "SAN JOSE LA FUENTE",
+    "id_depto": 8,
+    "municipio_mh": "19",
+    "nombre_mh": "La Unión Norte"
+  },
+  {
+    "id_municipio": 131,
+    "nombre_municipio": "SANTA ROSA DE LIMA",
+    "id_depto": 8,
+    "municipio_mh": "19",
+    "nombre_mh": "La Unión Norte"
+  },
+  {
+    "id_municipio": 119,
+    "nombre_municipio": "CONCHAGUA",
+    "id_depto": 8,
+    "municipio_mh": "20",
+    "nombre_mh": "La Unión Sur"
+  },
+  {
+    "id_municipio": 120,
+    "nombre_municipio": "EL CARMEN",
+    "id_depto": 8,
+    "municipio_mh": "20",
+    "nombre_mh": "La Unión Sur"
+  },
+  {
+    "id_municipio": 122,
+    "nombre_municipio": "INTIPUCA",
+    "id_depto": 8,
+    "municipio_mh": "20",
+    "nombre_mh": "La Unión Sur"
+  },
+  {
+    "id_municipio": 123,
+    "nombre_municipio": "LA UNION",
+    "id_depto": 8,
+    "municipio_mh": "20",
+    "nombre_mh": "La Unión Sur"
+  },
+  {
+    "id_municipio": 125,
+    "nombre_municipio": "MEANGUERA DEL GOLFO",
+    "id_depto": 8,
+    "municipio_mh": "20",
+    "nombre_mh": "La Unión Sur"
+  },
+  {
+    "id_municipio": 129,
+    "nombre_municipio": "SAN ALEJO",
+    "id_depto": 8,
+    "municipio_mh": "20",
+    "nombre_mh": "La Unión Sur"
+  },
+  {
+    "id_municipio": 132,
+    "nombre_municipio": "YAYANTIQUE",
+    "id_depto": 8,
+    "municipio_mh": "20",
+    "nombre_mh": "La Unión Sur"
+  },
+  {
+    "id_municipio": 133,
+    "nombre_municipio": "YUCUAIQUIN",
+    "id_depto": 8,
+    "municipio_mh": "20",
+    "nombre_mh": "La Unión Sur"
+  },
+  {
+    "id_municipio": 134,
+    "nombre_municipio": "ARAMBALA",
+    "id_depto": 9,
+    "municipio_mh": "27",
+    "nombre_mh": "Morazán Norte"
+  },
+  {
+    "id_municipio": 135,
+    "nombre_municipio": "CACAOPERA",
+    "id_depto": 9,
+    "municipio_mh": "27",
+    "nombre_mh": "Morazán Norte"
+  },
+  {
+    "id_municipio": 137,
+    "nombre_municipio": "CORINTO",
+    "id_depto": 9,
+    "municipio_mh": "27",
+    "nombre_mh": "Morazán Norte"
+  },
+  {
+    "id_municipio": 140,
+    "nombre_municipio": "EL ROSARIO",
+    "id_depto": 9,
+    "municipio_mh": "27",
+    "nombre_mh": "Morazán Norte"
+  },
+  {
+    "id_municipio": 143,
+    "nombre_municipio": "JOATECA",
+    "id_depto": 9,
+    "municipio_mh": "27",
+    "nombre_mh": "Morazán Norte"
+  },
+  {
+    "id_municipio": 144,
+    "nombre_municipio": "JOCOAITIQUE",
+    "id_depto": 9,
+    "municipio_mh": "27",
+    "nombre_mh": "Morazán Norte"
+  },
+  {
+    "id_municipio": 147,
+    "nombre_municipio": "MEANGUERA",
+    "id_depto": 9,
+    "municipio_mh": "27",
+    "nombre_mh": "Morazán Norte"
+  },
+  {
+    "id_municipio": 149,
+    "nombre_municipio": "PERQUIN",
+    "id_depto": 9,
+    "municipio_mh": "27",
+    "nombre_mh": "Morazán Norte"
+  },
+  {
+    "id_municipio": 151,
+    "nombre_municipio": "SAN FERNANDO",
+    "id_depto": 9,
+    "municipio_mh": "27",
+    "nombre_mh": "Morazán Norte"
+  },
+  {
+    "id_municipio": 153,
+    "nombre_municipio": "SAN ISIDRO",
+    "id_depto": 9,
+    "municipio_mh": "27",
+    "nombre_mh": "Morazán Norte"
+  },
+  {
+    "id_municipio": 157,
+    "nombre_municipio": "TOROLA",
+    "id_depto": 9,
+    "municipio_mh": "27",
+    "nombre_mh": "Morazán Norte"
+  },
+  {
+    "id_municipio": 136,
+    "nombre_municipio": "CHILANGA",
+    "id_depto": 9,
+    "municipio_mh": "28",
+    "nombre_mh": "Morazán Sur"
+  },
+  {
+    "id_municipio": 138,
+    "nombre_municipio": "DELICIAS DE CONCEPCION",
+    "id_depto": 9,
+    "municipio_mh": "28",
+    "nombre_mh": "Morazán Sur"
+  },
+  {
+    "id_municipio": 139,
+    "nombre_municipio": "EL DIVISADERO",
+    "id_depto": 9,
+    "municipio_mh": "28",
+    "nombre_mh": "Morazán Sur"
+  },
+  {
+    "id_municipio": 141,
+    "nombre_municipio": "GUALOCOCTI",
+    "id_depto": 9,
+    "municipio_mh": "28",
+    "nombre_mh": "Morazán Sur"
+  },
+  {
+    "id_municipio": 142,
+    "nombre_municipio": "GUATAJIAGUA",
+    "id_depto": 9,
+    "municipio_mh": "28",
+    "nombre_mh": "Morazán Sur"
+  },
+  {
+    "id_municipio": 145,
+    "nombre_municipio": "JOCORO",
+    "id_depto": 9,
+    "municipio_mh": "28",
+    "nombre_mh": "Morazán Sur"
+  },
+  {
+    "id_municipio": 146,
+    "nombre_municipio": "LOLOTIQUILLO",
+    "id_depto": 9,
+    "municipio_mh": "28",
+    "nombre_mh": "Morazán Sur"
+  },
+  {
+    "id_municipio": 148,
+    "nombre_municipio": "OSICALA",
+    "id_depto": 9,
+    "municipio_mh": "28",
+    "nombre_mh": "Morazán Sur"
+  },
+  {
+    "id_municipio": 150,
+    "nombre_municipio": "SAN CARLOS",
+    "id_depto": 9,
+    "municipio_mh": "28",
+    "nombre_mh": "Morazán Sur"
+  },
+  {
+    "id_municipio": 152,
+    "nombre_municipio": "SAN FRANCISCO GOTERA",
+    "id_depto": 9,
+    "municipio_mh": "28",
+    "nombre_mh": "Morazán Sur"
+  },
+  {
+    "id_municipio": 154,
+    "nombre_municipio": "SAN SIMON",
+    "id_depto": 9,
+    "municipio_mh": "28",
+    "nombre_mh": "Morazán Sur"
+  },
+  {
+    "id_municipio": 155,
+    "nombre_municipio": "SENSEMBRA",
+    "id_depto": 9,
+    "municipio_mh": "28",
+    "nombre_mh": "Morazán Sur"
+  },
+  {
+    "id_municipio": 156,
+    "nombre_municipio": "SOCIEDAD",
+    "id_depto": 9,
+    "municipio_mh": "28",
+    "nombre_mh": "Morazán Sur"
+  },
+  {
+    "id_municipio": 158,
+    "nombre_municipio": "YAMABAL",
+    "id_depto": 9,
+    "municipio_mh": "28",
+    "nombre_mh": "Morazán Sur"
+  },
+  {
+    "id_municipio": 159,
+    "nombre_municipio": "YOLOAIQUIN",
+    "id_depto": 9,
+    "municipio_mh": "28",
+    "nombre_mh": "Morazán Sur"
+  },
+  {
+    "id_municipio": 163,
+    "nombre_municipio": "CHIRILAGUA",
+    "id_depto": 10,
+    "municipio_mh": "22",
+    "nombre_mh": "San Miguel Centro"
+  },
+  {
+    "id_municipio": 165,
+    "nombre_municipio": "COMACARAN",
+    "id_depto": 10,
+    "municipio_mh": "22",
+    "nombre_mh": "San Miguel Centro"
+  },
+  {
+    "id_municipio": 168,
+    "nombre_municipio": "MONCAGUA",
+    "id_depto": 10,
+    "municipio_mh": "22",
+    "nombre_mh": "San Miguel Centro"
+  },
+  {
+    "id_municipio": 171,
+    "nombre_municipio": "QUELEPA",
+    "id_depto": 10,
+    "municipio_mh": "22",
+    "nombre_mh": "San Miguel Centro"
+  },
+  {
+    "id_municipio": 176,
+    "nombre_municipio": "SAN MIGUEL",
+    "id_depto": 10,
+    "municipio_mh": "22",
+    "nombre_mh": "San Miguel Centro"
+  },
+  {
+    "id_municipio": 179,
+    "nombre_municipio": "ULUAZAPA",
+    "id_depto": 10,
+    "municipio_mh": "22",
+    "nombre_mh": "San Miguel Centro"
+  },
+  {
+    "id_municipio": 160,
+    "nombre_municipio": "CAROLINA",
+    "id_depto": 10,
+    "municipio_mh": "21",
+    "nombre_mh": "San Miguel Norte"
+  },
+  {
+    "id_municipio": 161,
+    "nombre_municipio": "CHAPELTIQUE",
+    "id_depto": 10,
+    "municipio_mh": "21",
+    "nombre_mh": "San Miguel Norte"
+  },
+  {
+    "id_municipio": 164,
+    "nombre_municipio": "CIUDAD BARRIOS",
+    "id_depto": 10,
+    "municipio_mh": "21",
+    "nombre_mh": "San Miguel Norte"
+  },
+  {
+    "id_municipio": 170,
+    "nombre_municipio": "NUEVO EDEN DE SAN JUAN",
+    "id_depto": 10,
+    "municipio_mh": "21",
+    "nombre_mh": "San Miguel Norte"
+  },
+  {
+    "id_municipio": 172,
+    "nombre_municipio": "SAN ANTONIO DEL MOSCO",
+    "id_depto": 10,
+    "municipio_mh": "21",
+    "nombre_mh": "San Miguel Norte"
+  },
+  {
+    "id_municipio": 173,
+    "nombre_municipio": "SAN GERARDO",
+    "id_depto": 10,
+    "municipio_mh": "21",
+    "nombre_mh": "San Miguel Norte"
+  },
+  {
+    "id_municipio": 175,
+    "nombre_municipio": "SAN LUIS DE LA REINA",
+    "id_depto": 10,
+    "municipio_mh": "21",
+    "nombre_mh": "San Miguel Norte"
+  },
+  {
+    "id_municipio": 178,
+    "nombre_municipio": "SESORI",
+    "id_depto": 10,
+    "municipio_mh": "21",
+    "nombre_mh": "San Miguel Norte"
+  },
+  {
+    "id_municipio": 162,
+    "nombre_municipio": "CHINAMECA",
+    "id_depto": 10,
+    "municipio_mh": "23",
+    "nombre_mh": "San Miguel Oeste"
+  },
+  {
+    "id_municipio": 166,
+    "nombre_municipio": "EL TRANSITO",
+    "id_depto": 10,
+    "municipio_mh": "23",
+    "nombre_mh": "San Miguel Oeste"
+  },
+  {
+    "id_municipio": 167,
+    "nombre_municipio": "LOLOTIQUE",
+    "id_depto": 10,
+    "municipio_mh": "23",
+    "nombre_mh": "San Miguel Oeste"
+  },
+  {
+    "id_municipio": 169,
+    "nombre_municipio": "NUEVA GUADALUPE",
+    "id_depto": 10,
+    "municipio_mh": "23",
+    "nombre_mh": "San Miguel Oeste"
+  },
+  {
+    "id_municipio": 174,
+    "nombre_municipio": "SAN JORGE",
+    "id_depto": 10,
+    "municipio_mh": "23",
+    "nombre_mh": "San Miguel Oeste"
+  },
+  {
+    "id_municipio": 177,
+    "nombre_municipio": "SAN RAFAEL DE ORIENTE",
+    "id_depto": 10,
+    "municipio_mh": "23",
+    "nombre_mh": "San Miguel Oeste"
+  },
+  {
+    "id_municipio": 181,
+    "nombre_municipio": "AYUTUXTEPEQUE",
+    "id_depto": 11,
+    "municipio_mh": "23",
+    "nombre_mh": "San Salvador Centro"
+  },
+  {
+    "id_municipio": 183,
+    "nombre_municipio": "CIUDAD DELGADO",
+    "id_depto": 11,
+    "municipio_mh": "23",
+    "nombre_mh": "San Salvador Centro"
+  },
+  {
+    "id_municipio": 184,
+    "nombre_municipio": "CUSCATANCINGO",
+    "id_depto": 11,
+    "municipio_mh": "23",
+    "nombre_mh": "San Salvador Centro"
+  },
+  {
+    "id_municipio": 188,
+    "nombre_municipio": "MEJICANOS",
+    "id_depto": 11,
+    "municipio_mh": "23",
+    "nombre_mh": "San Salvador Centro"
+  },
+  {
+    "id_municipio": 194,
+    "nombre_municipio": "SAN SALVADOR",
+    "id_depto": 11,
+    "municipio_mh": "23",
+    "nombre_mh": "San Salvador Centro"
+  },
+  {
+    "id_municipio": 187,
+    "nombre_municipio": "ILOPANGO",
+    "id_depto": 11,
+    "municipio_mh": "22",
+    "nombre_mh": "San Salvador Este"
+  },
+  {
+    "id_municipio": 193,
+    "nombre_municipio": "SAN MARTIN",
+    "id_depto": 11,
+    "municipio_mh": "22",
+    "nombre_mh": "San Salvador Este"
+  },
+  {
+    "id_municipio": 197,
+    "nombre_municipio": "SOYAPANGO",
+    "id_depto": 11,
+    "municipio_mh": "22",
+    "nombre_mh": "San Salvador Este"
+  },
+  {
+    "id_municipio": 198,
+    "nombre_municipio": "TONACATEPEQUE",
+    "id_depto": 11,
+    "municipio_mh": "22",
+    "nombre_mh": "San Salvador Este"
+  },
+  {
+    "id_municipio": 180,
+    "nombre_municipio": "AGUILARES",
+    "id_depto": 11,
+    "municipio_mh": "20",
+    "nombre_mh": "San Salvador Norte"
+  },
+  {
+    "id_municipio": 185,
+    "nombre_municipio": "EL PAISNAL",
+    "id_depto": 11,
+    "municipio_mh": "20",
+    "nombre_mh": "San Salvador Norte"
+  },
+  {
+    "id_municipio": 186,
+    "nombre_municipio": "GUAZAPA",
+    "id_depto": 11,
+    "municipio_mh": "20",
+    "nombre_mh": "San Salvador Norte"
+  },
+  {
+    "id_municipio": 182,
+    "nombre_municipio": "APOPA",
+    "id_depto": 11,
+    "municipio_mh": "21",
+    "nombre_mh": "San Salvador Oeste"
+  },
+  {
+    "id_municipio": 189,
+    "nombre_municipio": "NEJAPA",
+    "id_depto": 11,
+    "municipio_mh": "21",
+    "nombre_mh": "San Salvador Oeste"
+  },
+  {
+    "id_municipio": 190,
+    "nombre_municipio": "PANCHIMALCO",
+    "id_depto": 11,
+    "municipio_mh": "24",
+    "nombre_mh": "San Salvador Sur"
+  },
+  {
+    "id_municipio": 191,
+    "nombre_municipio": "ROSARIO DE MORA",
+    "id_depto": 11,
+    "municipio_mh": "24",
+    "nombre_mh": "San Salvador Sur"
+  },
+  {
+    "id_municipio": 192,
+    "nombre_municipio": "SAN MARCOS",
+    "id_depto": 11,
+    "municipio_mh": "24",
+    "nombre_mh": "San Salvador Sur"
+  },
+  {
+    "id_municipio": 195,
+    "nombre_municipio": "SANTIAGO TEXACUANGOS",
+    "id_depto": 11,
+    "municipio_mh": "24",
+    "nombre_mh": "San Salvador Sur"
+  },
+  {
+    "id_municipio": 196,
+    "nombre_municipio": "SANTO TOMAS",
+    "id_depto": 11,
+    "municipio_mh": "24",
+    "nombre_mh": "San Salvador Sur"
+  },
+  {
+    "id_municipio": 199,
+    "nombre_municipio": "APASTEPEQUE",
+    "id_depto": 12,
+    "municipio_mh": "14",
+    "nombre_mh": "San Vicente Norte"
+  },
+  {
+    "id_municipio": 202,
+    "nombre_municipio": "SAN ESTEBAN CATARINA",
+    "id_depto": 12,
+    "municipio_mh": "14",
+    "nombre_mh": "San Vicente Norte"
+  },
+  {
+    "id_municipio": 203,
+    "nombre_municipio": "SAN ILDEFONSO",
+    "id_depto": 12,
+    "municipio_mh": "14",
+    "nombre_mh": "San Vicente Norte"
+  },
+  {
+    "id_municipio": 204,
+    "nombre_municipio": "SAN LORENZO",
+    "id_depto": 12,
+    "municipio_mh": "14",
+    "nombre_mh": "San Vicente Norte"
+  },
+  {
+    "id_municipio": 205,
+    "nombre_municipio": "SAN SEBASTIAN",
+    "id_depto": 12,
+    "municipio_mh": "14",
+    "nombre_mh": "San Vicente Norte"
+  },
+  {
+    "id_municipio": 207,
+    "nombre_municipio": "SANTA CLARA",
+    "id_depto": 12,
+    "municipio_mh": "14",
+    "nombre_mh": "San Vicente Norte"
+  },
+  {
+    "id_municipio": 208,
+    "nombre_municipio": "SANTO DOMINGO",
+    "id_depto": 12,
+    "municipio_mh": "14",
+    "nombre_mh": "San Vicente Norte"
+  },
+  {
+    "id_municipio": 200,
+    "nombre_municipio": "GUADALUPE",
+    "id_depto": 12,
+    "municipio_mh": "15",
+    "nombre_mh": "San Vicente Sur"
+  },
+  {
+    "id_municipio": 201,
+    "nombre_municipio": "SAN CAYETANO ISTEPEQUE",
+    "id_depto": 12,
+    "municipio_mh": "15",
+    "nombre_mh": "San Vicente Sur"
+  },
+  {
+    "id_municipio": 206,
+    "nombre_municipio": "SAN VICENTE",
+    "id_depto": 12,
+    "municipio_mh": "15",
+    "nombre_mh": "San Vicente Sur"
+  },
+  {
+    "id_municipio": 209,
+    "nombre_municipio": "TECOLUCA",
+    "id_depto": 12,
+    "municipio_mh": "15",
+    "nombre_mh": "San Vicente Sur"
+  },
+  {
+    "id_municipio": 210,
+    "nombre_municipio": "TEPETITAN",
+    "id_depto": 12,
+    "municipio_mh": "15",
+    "nombre_mh": "San Vicente Sur"
+  },
+  {
+    "id_municipio": 211,
+    "nombre_municipio": "VERAPAZ",
+    "id_depto": 12,
+    "municipio_mh": "15",
+    "nombre_mh": "San Vicente Sur"
+  },
+  {
+    "id_municipio": 221,
+    "nombre_municipio": "SANTA ANA",
+    "id_depto": 13,
+    "municipio_mh": "15",
+    "nombre_mh": "Santa Ana Centro"
+  },
+  {
+    "id_municipio": 214,
+    "nombre_municipio": "COATEPEQUE",
+    "id_depto": 13,
+    "municipio_mh": "16",
+    "nombre_mh": "Santa Ana Este"
+  },
+  {
+    "id_municipio": 215,
+    "nombre_municipio": "EL CONGO",
+    "id_depto": 13,
+    "municipio_mh": "16",
+    "nombre_mh": "Santa Ana Este"
+  },
+  {
+    "id_municipio": 217,
+    "nombre_municipio": "MASAHUAT",
+    "id_depto": 13,
+    "municipio_mh": "14",
+    "nombre_mh": "Santa Ana Norte"
+  },
+  {
+    "id_municipio": 218,
+    "nombre_municipio": "METAPAN",
+    "id_depto": 13,
+    "municipio_mh": "14",
+    "nombre_mh": "Santa Ana Norte"
+  },
+  {
+    "id_municipio": 222,
+    "nombre_municipio": "SANTA ROSA GUACHIPILIN",
+    "id_depto": 13,
+    "municipio_mh": "14",
+    "nombre_mh": "Santa Ana Norte"
+  },
+  {
+    "id_municipio": 224,
+    "nombre_municipio": "TEXISTEPEQUE",
+    "id_depto": 13,
+    "municipio_mh": "14",
+    "nombre_mh": "Santa Ana Norte"
+  },
+  {
+    "id_municipio": 212,
+    "nombre_municipio": "CANDELARIA DE LA FRONTERA",
+    "id_depto": 13,
+    "municipio_mh": "17",
+    "nombre_mh": "Santa Ana Oeste"
+  },
+  {
+    "id_municipio": 213,
+    "nombre_municipio": "CHALCHUAPA",
+    "id_depto": 13,
+    "municipio_mh": "17",
+    "nombre_mh": "Santa Ana Oeste"
+  },
+  {
+    "id_municipio": 216,
+    "nombre_municipio": "EL PORVENIR",
+    "id_depto": 13,
+    "municipio_mh": "17",
+    "nombre_mh": "Santa Ana Oeste"
+  },
+  {
+    "id_municipio": 219,
+    "nombre_municipio": "SAN ANTONIO PAJONAL",
+    "id_depto": 13,
+    "municipio_mh": "17",
+    "nombre_mh": "Santa Ana Oeste"
+  },
+  {
+    "id_municipio": 220,
+    "nombre_municipio": "SAN SEBASTIAN SALITRILLO",
+    "id_depto": 13,
+    "municipio_mh": "17",
+    "nombre_mh": "Santa Ana Oeste"
+  },
+  {
+    "id_municipio": 223,
+    "nombre_municipio": "SANTIAGO DE LA FRONTERA",
+    "id_depto": 13,
+    "municipio_mh": "17",
+    "nombre_mh": "Santa Ana Oeste"
+  },
+  {
+    "id_municipio": 232,
+    "nombre_municipio": "NAHULINGO",
+    "id_depto": 14,
+    "municipio_mh": "18",
+    "nombre_mh": "Sonsonate Centro"
+  },
+  {
+    "id_municipio": 234,
+    "nombre_municipio": "SAN ANTONIO DEL MONTE",
+    "id_depto": 14,
+    "municipio_mh": "18",
+    "nombre_mh": "Sonsonate Centro"
+  },
+  {
+    "id_municipio": 238,
+    "nombre_municipio": "SANTO DOMINGO DE GUZMAN",
+    "id_depto": 14,
+    "municipio_mh": "18",
+    "nombre_mh": "Sonsonate Centro"
+  },
+  {
+    "id_municipio": 239,
+    "nombre_municipio": "SONSONATE",
+    "id_depto": 14,
+    "municipio_mh": "18",
+    "nombre_mh": "Sonsonate Centro"
+  },
+  {
+    "id_municipio": 240,
+    "nombre_municipio": "SONZACATE",
+    "id_depto": 14,
+    "municipio_mh": "18",
+    "nombre_mh": "Sonsonate Centro"
+  },
+  {
+    "id_municipio": 226,
+    "nombre_municipio": "ARMENIA",
+    "id_depto": 14,
+    "municipio_mh": "19",
+    "nombre_mh": "Sonsonate Este"
+  },
+  {
+    "id_municipio": 227,
+    "nombre_municipio": "CALUCO",
+    "id_depto": 14,
+    "municipio_mh": "19",
+    "nombre_mh": "Sonsonate Este"
+  },
+  {
+    "id_municipio": 228,
+    "nombre_municipio": "CUISNAHUAT",
+    "id_depto": 14,
+    "municipio_mh": "19",
+    "nombre_mh": "Sonsonate Este"
+  },
+  {
+    "id_municipio": 229,
+    "nombre_municipio": "IZALCO",
+    "id_depto": 14,
+    "municipio_mh": "19",
+    "nombre_mh": "Sonsonate Este"
+  },
+  {
+    "id_municipio": 235,
+    "nombre_municipio": "SAN JULIAN",
+    "id_depto": 14,
+    "municipio_mh": "19",
+    "nombre_mh": "Sonsonate Este"
+  },
+  {
+    "id_municipio": 237,
+    "nombre_municipio": "SANTA ISABEL ISHUATAN",
+    "id_depto": 14,
+    "municipio_mh": "19",
+    "nombre_mh": "Sonsonate Este"
+  },
+  {
+    "id_municipio": 230,
+    "nombre_municipio": "JUAYUA",
+    "id_depto": 14,
+    "municipio_mh": "17",
+    "nombre_mh": "Sonsonate Norte"
+  },
+  {
+    "id_municipio": 231,
+    "nombre_municipio": "NAHUIZALCO",
+    "id_depto": 14,
+    "municipio_mh": "17",
+    "nombre_mh": "Sonsonate Norte"
+  },
+  {
+    "id_municipio": 233,
+    "nombre_municipio": "SALCOATITAN",
+    "id_depto": 14,
+    "municipio_mh": "17",
+    "nombre_mh": "Sonsonate Norte"
+  },
+  {
+    "id_municipio": 236,
+    "nombre_municipio": "SANTA CATARINA MASAHUAT",
+    "id_depto": 14,
+    "municipio_mh": "17",
+    "nombre_mh": "Sonsonate Norte"
+  },
+  {
+    "id_municipio": 225,
+    "nombre_municipio": "ACAJUTLA",
+    "id_depto": 14,
+    "municipio_mh": "20",
+    "nombre_mh": "Sonsonate Oeste"
+  },
+  {
+    "id_municipio": 243,
+    "nombre_municipio": "CALIFORNIA",
+    "id_depto": 15,
+    "municipio_mh": "25",
+    "nombre_mh": "Usulután Este"
+  },
+  {
+    "id_municipio": 244,
+    "nombre_municipio": "CONCEPCION BATRES",
+    "id_depto": 15,
+    "municipio_mh": "25",
+    "nombre_mh": "Usulután Este"
+  },
+  {
+    "id_municipio": 246,
+    "nombre_municipio": "EREGUAYQUIN",
+    "id_depto": 15,
+    "municipio_mh": "25",
+    "nombre_mh": "Usulután Este"
+  },
+  {
+    "id_municipio": 250,
+    "nombre_municipio": "JUCUARAN",
+    "id_depto": 15,
+    "municipio_mh": "25",
+    "nombre_mh": "Usulután Este"
+  },
+  {
+    "id_municipio": 253,
+    "nombre_municipio": "OZATLAN",
+    "id_depto": 15,
+    "municipio_mh": "25",
+    "nombre_mh": "Usulután Este"
+  },
+  {
+    "id_municipio": 257,
+    "nombre_municipio": "SAN DIONISIO",
+    "id_depto": 15,
+    "municipio_mh": "25",
+    "nombre_mh": "Usulután Este"
+  },
+  {
+    "id_municipio": 259,
+    "nombre_municipio": "SANTA ELENA",
+    "id_depto": 15,
+    "municipio_mh": "25",
+    "nombre_mh": "Usulután Este"
+  },
+  {
+    "id_municipio": 260,
+    "nombre_municipio": "SANTA MARIA",
+    "id_depto": 15,
+    "municipio_mh": "25",
+    "nombre_mh": "Usulután Este"
+  },
+  {
+    "id_municipio": 262,
+    "nombre_municipio": "TECAPAN",
+    "id_depto": 15,
+    "municipio_mh": "25",
+    "nombre_mh": "Usulután Este"
+  },
+  {
+    "id_municipio": 263,
+    "nombre_municipio": "USULUTAN",
+    "id_depto": 15,
+    "municipio_mh": "25",
+    "nombre_mh": "Usulután Este"
+  },
+  {
+    "id_municipio": 241,
+    "nombre_municipio": "ALEGRIA",
+    "id_depto": 15,
+    "municipio_mh": "24",
+    "nombre_mh": "Usulután Norte"
+  },
+  {
+    "id_municipio": 242,
+    "nombre_municipio": "BERLIN",
+    "id_depto": 15,
+    "municipio_mh": "24",
+    "nombre_mh": "Usulután Norte"
+  },
+  {
+    "id_municipio": 245,
+    "nombre_municipio": "EL TRIUNFO",
+    "id_depto": 15,
+    "municipio_mh": "24",
+    "nombre_mh": "Usulután Norte"
+  },
+  {
+    "id_municipio": 247,
+    "nombre_municipio": "ESTANZUELAS",
+    "id_depto": 15,
+    "municipio_mh": "24",
+    "nombre_mh": "Usulután Norte"
+  },
+  {
+    "id_municipio": 249,
+    "nombre_municipio": "JUCUAPA",
+    "id_depto": 15,
+    "municipio_mh": "24",
+    "nombre_mh": "Usulután Norte"
+  },
+  {
+    "id_municipio": 251,
+    "nombre_municipio": "MERCEDES UMAÑA",
+    "id_depto": 15,
+    "municipio_mh": "24",
+    "nombre_mh": "Usulután Norte"
+  },
+  {
+    "id_municipio": 252,
+    "nombre_municipio": "NUEVA GRANADA",
+    "id_depto": 15,
+    "municipio_mh": "24",
+    "nombre_mh": "Usulután Norte"
+  },
+  {
+    "id_municipio": 256,
+    "nombre_municipio": "SAN BUENAVENTURA",
+    "id_depto": 15,
+    "municipio_mh": "24",
+    "nombre_mh": "Usulután Norte"
+  },
+  {
+    "id_municipio": 261,
+    "nombre_municipio": "SANTIAGO DE MARIA",
+    "id_depto": 15,
+    "municipio_mh": "24",
+    "nombre_mh": "Usulután Norte"
+  },
+  {
+    "id_municipio": 248,
+    "nombre_municipio": "JIQUILISCO",
+    "id_depto": 15,
+    "municipio_mh": "26",
+    "nombre_mh": "Usulután Oeste"
+  },
+  {
+    "id_municipio": 254,
+    "nombre_municipio": "PUERTO EL TRIUNFO",
+    "id_depto": 15,
+    "municipio_mh": "26",
+    "nombre_mh": "Usulután Oeste"
+  },
+  {
+    "id_municipio": 255,
+    "nombre_municipio": "SAN AGUSTIN",
+    "id_depto": 15,
+    "municipio_mh": "26",
+    "nombre_mh": "Usulután Oeste"
+  },
+  {
+    "id_municipio": 258,
+    "nombre_municipio": "SAN FRANCISCO JAVIER",
+    "id_depto": 15,
+    "municipio_mh": "26",
+    "nombre_mh": "Usulután Oeste"
+  }
+]

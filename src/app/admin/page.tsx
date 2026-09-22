@@ -50,6 +50,7 @@ import {
 import { INITIAL_PRODUCTS, ProductItem, PERFUME_CATEGORIES, SaleRecord, resetDatabaseToZeroStock, getStoredProducts, DATA_VERSION } from '@/lib/store';
 import ComprasModule from '@/components/admin/ComprasModule';
 import KardexModule from '@/components/admin/KardexModule';
+import ConfiguracionKodeModule from '@/components/admin/ConfiguracionKodeModule';
 import {
   getStoredPurchases,
   saveStoredPurchases,
@@ -75,7 +76,8 @@ type AdminTab =
   | 'compras'
   | 'usuarios' 
   | 'roles' 
-  | 'configuracion';
+  | 'configuracion'
+  | 'configuracion-kode';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
@@ -813,6 +815,17 @@ export default function AdminPage() {
             >
               <Settings className="w-4 h-4" />
               <span>Factura Llama & Negocio</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('configuracion-kode')}
+              className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left mt-1 ${
+                activeTab === 'configuracion-kode'
+                  ? 'clay-btn-primary !shadow-[3px_4px_10px_rgba(79,70,229,0.35)]'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              }`}
+            >
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              <span>Configuración Kode</span>
             </button>
           </div>
 
@@ -1783,6 +1796,13 @@ export default function AdminPage() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ================= TAB 12: CONFIGURACIÓN KODE ================= */}
+        {activeTab === 'configuracion-kode' && (
+          <div className="animate-in fade-in duration-150">
+            <ConfiguracionKodeModule />
           </div>
         )}
 
