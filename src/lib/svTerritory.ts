@@ -1,9 +1,14 @@
 // src/lib/svTerritory.ts
 // Catálogo oficial de Departamentos y Municipios para DTE de El Salvador (Ministerio de Hacienda / Factura Llama)
 
+import svMunicipiosJson from './svMunicipiosData.json' with { type: 'json' };
+
 export interface DepartamentoCatalogItem {
-  id: string; // Código MH de 2 dígitos (ej. "06")
-  nombre: string;
+  id: string; // Código MH de 2 dígitos (ej. "06") - retrocompatibilidad
+  nombre: string; // Nombre amigable - retrocompatibilidad
+  nombre_depto: string; // Nombre oficial de la entidad (ej. "San Salvador")
+  cod_depto: string; // Código de 3 letras para C807 Express (ej. "SLV")
+  depto_mh: string; // Código oficial para Ministerio de Hacienda / DTE (ej. "06")
 }
 
 export interface MunicipioCatalogItem {
@@ -13,21 +18,21 @@ export interface MunicipioCatalogItem {
 }
 
 export const DEPARTAMENTOS_CATALOG: DepartamentoCatalogItem[] = [
-  { id: '01', nombre: 'Ahuachapán' },
-  { id: '02', nombre: 'Santa Ana' },
-  { id: '03', nombre: 'Sonsonate' },
-  { id: '04', nombre: 'Chalatenango' },
-  { id: '05', nombre: 'La Libertad' },
-  { id: '06', nombre: 'San Salvador' },
-  { id: '07', nombre: 'Cuscatlán' },
-  { id: '08', nombre: 'La Paz' },
-  { id: '09', nombre: 'Cabañas' },
-  { id: '10', nombre: 'San Vicente' },
-  { id: '11', nombre: 'Usulután' },
-  { id: '12', nombre: 'San Miguel' },
-  { id: '13', nombre: 'Morazán' },
-  { id: '14', nombre: 'La Unión' },
-  { id: '00', nombre: 'Otro (Para extranjeros)' }
+  { id: '01', nombre: 'Ahuachapán', nombre_depto: 'Ahuachapán', cod_depto: 'AHU', depto_mh: '01' },
+  { id: '02', nombre: 'Santa Ana', nombre_depto: 'Santa Ana', cod_depto: 'ANA', depto_mh: '02' },
+  { id: '03', nombre: 'Sonsonate', nombre_depto: 'Sonsonate', cod_depto: 'SON', depto_mh: '03' },
+  { id: '04', nombre: 'Chalatenango', nombre_depto: 'Chalatenango', cod_depto: 'CHA', depto_mh: '04' },
+  { id: '05', nombre: 'La Libertad', nombre_depto: 'La Libertad', cod_depto: 'LIB', depto_mh: '05' },
+  { id: '06', nombre: 'San Salvador', nombre_depto: 'San Salvador', cod_depto: 'SLV', depto_mh: '06' },
+  { id: '07', nombre: 'Cuscatlán', nombre_depto: 'Cuscatlán', cod_depto: 'CUS', depto_mh: '07' },
+  { id: '08', nombre: 'La Paz', nombre_depto: 'La Paz', cod_depto: 'PAZ', depto_mh: '08' },
+  { id: '09', nombre: 'Cabañas', nombre_depto: 'Cabañas', cod_depto: 'CAB', depto_mh: '09' },
+  { id: '10', nombre: 'San Vicente', nombre_depto: 'San Vicente', cod_depto: 'VIC', depto_mh: '10' },
+  { id: '11', nombre: 'Usulután', nombre_depto: 'Usulután', cod_depto: 'USU', depto_mh: '11' },
+  { id: '12', nombre: 'San Miguel', nombre_depto: 'San Miguel', cod_depto: 'MIG', depto_mh: '12' },
+  { id: '13', nombre: 'Morazán', nombre_depto: 'Morazán', cod_depto: 'MOR', depto_mh: '13' },
+  { id: '14', nombre: 'La Unión', nombre_depto: 'La Unión', cod_depto: 'UNI', depto_mh: '14' },
+  { id: '00', nombre: 'Otro (Para extranjeros)', nombre_depto: 'Otro (Para extranjeros)', cod_depto: 'EXT', depto_mh: '00' }
 ];
 
 export const MUNICIPIOS_CATALOG: MunicipioCatalogItem[] = [
@@ -286,3 +291,146 @@ export function getMunicipioNombre(deptCode: string, muniCode: string): string {
   const found = MUNICIPIOS_CATALOG.find(m => m.departamentoId === deptCode && m.id === muniCode);
   return found ? found.nombre : 'San Salvador Centro';
 }
+
+/**
+ * Mapeo de nombres de departamentos a códigos C807 Express (3 letras)
+ */
+export const DEPARTAMENTOS_C807_CODES: Record<string, string> = {
+  'Ahuachapán': 'AHU',
+  'Ahuachapan': 'AHU',
+  'Santa Ana': 'ANA',
+  'Sonsonate': 'SON',
+  'Chalatenango': 'CHA',
+  'La Libertad': 'LIB',
+  'San Salvador': 'SLV',
+  'Cuscatlán': 'CUS',
+  'Cuscatlan': 'CUS',
+  'La Paz': 'PAZ',
+  'Cabañas': 'CAB',
+  'Cabanas': 'CAB',
+  'San Vicente': 'VIC',
+  'Usulután': 'USU',
+  'Usulutan': 'USU',
+  'San Miguel': 'MIG',
+  'Morazán': 'MOR',
+  'Morazan': 'MOR',
+  'La Unión': 'UNI',
+  'La Union': 'UNI',
+};
+
+/**
+ * Resuelve el código de 3 letras requerido por C807 Express (ej. "SLV", "AHU", "LIB")
+ * a partir de un nombre de departamento o de su código MH.
+ */
+export function resolveC807DeptoCode(deptNameOrMhCode?: string): string {
+  if (!deptNameOrMhCode) return 'SLV';
+  const clean = deptNameOrMhCode.trim();
+
+  // Si ya es un código C807 de 3 letras válido
+  const upper = clean.toUpperCase();
+  const validCodes = Object.values(DEPARTAMENTOS_C807_CODES);
+  if (validCodes.includes(upper)) return upper;
+
+  // Búsqueda por código MH (ej. "06" -> "SLV")
+  const pad = clean.padStart(2, '0');
+  const byMh = DEPARTAMENTOS_CATALOG.find(d => d.depto_mh === pad || d.id === pad);
+  if (byMh) return byMh.cod_depto;
+
+  // Búsqueda en el diccionario de C807
+  for (const [key, val] of Object.entries(DEPARTAMENTOS_C807_CODES)) {
+    if (key.toUpperCase() === upper) return val;
+  }
+
+  // Búsqueda aproximada en el catálogo
+  const found = DEPARTAMENTOS_CATALOG.find(d =>
+    d.nombre_depto.toUpperCase().includes(upper) || upper.includes(d.nombre_depto.toUpperCase())
+  );
+  if (found) return found.cod_depto;
+
+  return 'SLV';
+}
+
+/**
+ * Resuelve el código de 2 dígitos requerido por el Ministerio de Hacienda / DTE (ej. "06", "01")
+ * a partir de un nombre de departamento o del código C807 de 3 letras.
+ */
+export function resolveMhDeptoCode(deptNameOrC807Code?: string): string {
+  if (!deptNameOrC807Code) return '06';
+  const clean = deptNameOrC807Code.trim().toUpperCase();
+
+  // Si es un código C807 (ej. "SLV" -> "06")
+  const byC807 = DEPARTAMENTOS_CATALOG.find(d => d.cod_depto.toUpperCase() === clean);
+  if (byC807) return byC807.depto_mh;
+
+  return resolveDepartamentoCode(deptNameOrC807Code);
+}
+
+export interface MunicipioRecord {
+  id_municipio: number;
+  nombre_municipio: string;
+  id_depto: number;
+  municipio_mh: string;
+  nombre_mh: string;
+}
+
+export const MUNICIPIOS_KODE: MunicipioRecord[] = (svMunicipiosJson as unknown) as MunicipioRecord[];
+
+/**
+ * Mapeo de departamento a su id_depto oficial (2 al 15)
+ */
+export const DEPTO_TO_ID: Record<string, number> = {
+  'Ahuachapán': 2, 'Ahuachapan': 2,
+  'Cabañas': 3, 'Cabanas': 3,
+  'Chalatenango': 4,
+  'Cuscatlán': 5, 'Cuscatlan': 5,
+  'La Libertad': 6,
+  'La Paz': 7,
+  'La Unión': 8, 'La Union': 8,
+  'Morazán': 9, 'Morazan': 9,
+  'San Miguel': 10,
+  'San Salvador': 11,
+  'San Vicente': 12,
+  'Santa Ana': 13,
+  'Sonsonate': 14,
+  'Usulután': 15, 'Usulutan': 15
+};
+
+/**
+ * Obtiene los municipios de un departamento por su id_depto (2 al 15) o nombre de departamento.
+ */
+export function getMunicipiosByDepto(deptoIdOrName: number | string): MunicipioRecord[] {
+  if (typeof deptoIdOrName === 'number') {
+    return MUNICIPIOS_KODE.filter(m => m.id_depto === deptoIdOrName);
+  }
+
+  const id = DEPTO_TO_ID[deptoIdOrName.trim()] || 11;
+  return MUNICIPIOS_KODE.filter(m => m.id_depto === id);
+}
+
+/**
+ * Resuelve el id_municipio numérico para C807 Express a partir del nombre del municipio
+ */
+export function resolveC807MunicipioId(muniName: string, idDepto?: number): number {
+  if (!muniName) return 194;
+  const clean = muniName.trim().toUpperCase();
+  const found = MUNICIPIOS_KODE.find(m => 
+    (!idDepto || m.id_depto === idDepto) && 
+    (m.nombre_municipio.toUpperCase() === clean || m.nombre_mh.toUpperCase().includes(clean))
+  );
+  return found ? found.id_municipio : 194;
+}
+
+/**
+ * Resuelve el código de 2 dígitos del municipio para Factura Llama / MH (ej. "23")
+ */
+export function resolveMhMunicipioCodeFromKode(muniName: string, idDepto?: number): string {
+  if (!muniName) return '23';
+  const clean = muniName.trim().toUpperCase();
+  const found = MUNICIPIOS_KODE.find(m => 
+    (!idDepto || m.id_depto === idDepto) && 
+    (m.nombre_municipio.toUpperCase() === clean || m.nombre_mh.toUpperCase().includes(clean))
+  );
+  return found ? found.municipio_mh : '23';
+}
+
+

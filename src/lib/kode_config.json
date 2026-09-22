@@ -1,0 +1,11 @@
+{
+  "ambiente": "sandbox",
+  "testApiKey": "test_sk_45b8180f-9dab-44d5-9575-ba1487c73ed1",
+  "liveApiKey": "live_sk_18558fbf-1c1b-445b-b124-b79fb4f45c67",
+  "facturaLlamaApiKey": "test_sk_45b8180f-9dab-44d5-9575-ba1487c73ed1",
+  "facturaLlamaApiVersion": "1",
+  "facturaLlamaBaseUrl": "https://api.facturallama.com",
+  "defaultEmail": "luisg@forbiddensoluciones.com",
+  "defaultDui": "123456789",
+  "updatedAt": "2026-09-22T20:00:00.000Z"
+}
