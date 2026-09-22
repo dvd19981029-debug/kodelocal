@@ -46,9 +46,16 @@ async function ensureUsuariosColumns() {
       INSERT INTO public.usuarios (nombre, email, username, password, telefono, rol, doc_tipo, doc_numero, departamento_mh, municipio_mh, direccion_complemento, comision_normal, comision_plus)
       VALUES 
         ('Virgen Cerna', 'virgicerna@gmail.com', 'virgencerna', 'Kode2026*', '7890-1122', 'VENDEDORA', 'DUI', '045812903', '06', '14', 'San Salvador Centro, El Salvador', 1.00, 1.50),
-        ('Patricia Mejía', 'pm3923193@gmail.com', 'patriciamejia', 'Kode2026*', '7654-3344', 'VENDEDORA', 'DUI', '034084662', '06', '14', 'Colonia Escalón, San Salvador', 1.00, 1.50),
+        ('Patricia Elizabeth Mejía Ramírez', 'pm3923193@gmail.com', 'patriciamejia', 'Kode2026*', '7230-4650', 'VENDEDORA', 'DUI', '068614130', '10', '15', 'Caserío Las Vegas, Cantón Cañas, Tepetitán, San Vicente', 1.00, 1.50),
         ('Erika Melgar', 'erikamelgargarcia@gmail.com', 'erikamelgar', 'Kode2026*', '7123-5566', 'VENDEDORA', 'DUI', '028913401', '06', '14', 'San Salvador, El Salvador', 1.00, 1.50)
-      ON CONFLICT (email) DO NOTHING;
+      ON CONFLICT (email) DO UPDATE SET
+        nombre = EXCLUDED.nombre,
+        telefono = EXCLUDED.telefono,
+        doc_tipo = EXCLUDED.doc_tipo,
+        doc_numero = EXCLUDED.doc_numero,
+        departamento_mh = EXCLUDED.departamento_mh,
+        municipio_mh = EXCLUDED.municipio_mh,
+        direccion_complemento = EXCLUDED.direccion_complemento;
     `);
   } catch (err) {
     console.error('Error ensuring usuarios table structure:', err);

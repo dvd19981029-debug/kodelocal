@@ -40,6 +40,21 @@ ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS comision_plus DECIMAL(10, 2
 ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS rol VARCHAR(50) DEFAULT 'VENDEDORA';
 ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT TRUE;
 
+-- Sembrar colaboradores iniciales
+INSERT INTO public.usuarios (nombre, email, username, password, telefono, rol, doc_tipo, doc_numero, departamento_mh, municipio_mh, direccion_complemento, comision_normal, comision_plus)
+VALUES 
+    ('Virgen Cerna', 'virgicerna@gmail.com', 'virgencerna', 'Kode2026*', '7890-1122', 'VENDEDORA', 'DUI', '045812903', '06', '14', 'San Salvador Centro, El Salvador', 1.00, 1.50),
+    ('Patricia Elizabeth Mejía Ramírez', 'pm3923193@gmail.com', 'patriciamejia', 'Kode2026*', '7230-4650', 'VENDEDORA', 'DUI', '068614130', '10', '15', 'Caserío Las Vegas, Cantón Cañas, Tepetitán, San Vicente', 1.00, 1.50),
+    ('Erika Melgar', 'erikamelgargarcia@gmail.com', 'erikamelgar', 'Kode2026*', '7123-5566', 'VENDEDORA', 'DUI', '028913401', '06', '14', 'San Salvador, El Salvador', 1.00, 1.50)
+ON CONFLICT (email) DO UPDATE SET
+    nombre = EXCLUDED.nombre,
+    telefono = EXCLUDED.telefono,
+    doc_tipo = EXCLUDED.doc_tipo,
+    doc_numero = EXCLUDED.doc_numero,
+    departamento_mh = EXCLUDED.departamento_mh,
+    municipio_mh = EXCLUDED.municipio_mh,
+    direccion_complemento = EXCLUDED.direccion_complemento;
+
 -- 2. TABLA FORMAS DE PAGO (Catálogo Maestro)
 CREATE TABLE IF NOT EXISTS public.formas_pago (
     id                      VARCHAR(50) PRIMARY KEY,
