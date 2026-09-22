@@ -29,7 +29,7 @@ export async function GET() {
       JOIN public.pedidos p ON pi.pedido_id = p.id
       JOIN public.clientes c ON p.cliente_id = c.id
       WHERE pi.insumo_comprado = FALSE 
-        AND p.estado = 'PENDIENTE_COMPRA'
+        AND p.estado IN ('Registrado', 'PENDIENTE_COMPRA')
       GROUP BY cat.id, cat.codigo, cat.contratipo, cat.marca_inspirada, pi.version
       ORDER BY total_unidades DESC, cat.contratipo ASC;
     `;
@@ -55,6 +55,18 @@ export async function POST(request: Request) {
          WHERE id = $2`,
         [comprado_por, item_id]
       );
+
+      // Auto-avanzar pedidos cuyos insumos estén 100% comprados a 'Insumos comprados'
+      await queryKode(
+        `UPDATE public.pedidos p
+         SET estado = 'Insumos comprados', updated_at = NOW()
+         WHERE p.estado IN ('Registrado', 'PENDIENTE_COMPRA')
+           AND NOT EXISTS (
+             SELECT 1 FROM public.pedido_items pi
+             WHERE pi.pedido_id = p.id AND pi.insumo_comprado = FALSE
+           )`
+      );
+
       return NextResponse.json({ success: true, message: 'Insumo marcado como comprado' });
     }
 
@@ -65,7 +77,7 @@ export async function POST(request: Request) {
         SET insumo_comprado = TRUE, fecha_compra_insumo = NOW(), comprado_por = $1
         FROM public.pedidos p
         WHERE pi.pedido_id = p.id 
-          AND p.estado = 'PENDIENTE_COMPRA'
+          AND p.estado IN ('Registrado', 'PENDIENTE_COMPRA')
           AND pi.catalogo_id = $2
           AND pi.insumo_comprado = FALSE
       `;
@@ -77,6 +89,18 @@ export async function POST(request: Request) {
       }
 
       const res = await queryKode(sql, params);
+
+      // Auto-avanzar pedidos que quedaron completos
+      await queryKode(
+        `UPDATE public.pedidos p
+         SET estado = 'Insumos comprados', updated_at = NOW()
+         WHERE p.estado IN ('Registrado', 'PENDIENTE_COMPRA')
+           AND NOT EXISTS (
+             SELECT 1 FROM public.pedido_items pi
+             WHERE pi.pedido_id = p.id AND pi.insumo_comprado = FALSE
+           )`
+      );
+
       return NextResponse.json({
         success: true,
         message: `${res.rowCount || 0} unidades marcadas como compradas`,

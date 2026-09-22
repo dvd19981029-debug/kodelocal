@@ -109,7 +109,7 @@ export async function POST(request: Request) {
          c807_link_rastreo = $2,
          c807_estado = $3,
          c807_fecha_guia = NOW(),
-         estado = 'GUIA_CREADA',
+         estado = 'Enviado',
          updated_at = NOW()
        WHERE id = $4
        RETURNING id, numero_pedido, estado, c807_guia_numero, c807_link_rastreo, c807_estado`,

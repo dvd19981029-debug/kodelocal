@@ -63,8 +63,20 @@ export async function GET(request: Request) {
     const params: any[] = [];
 
     if (estado && estado !== 'TODOS') {
-      params.push(estado);
-      sql += ` AND p.estado = $${params.length}`;
+      if (estado === 'Registrado' || estado === 'PENDIENTE_COMPRA') {
+        sql += ` AND (p.estado = 'Registrado' OR p.estado = 'PENDIENTE_COMPRA')`;
+      } else if (estado === 'Insumos comprados' || estado === 'Preparado' || estado === 'PENDIENTE_PREPARAR') {
+        sql += ` AND (p.estado = 'Insumos comprados' OR p.estado = 'Preparado' OR p.estado = 'PENDIENTE_PREPARAR')`;
+      } else if (estado === 'Enviado' || estado === 'GUIA_CREADA') {
+        sql += ` AND (p.estado = 'Enviado' OR p.estado = 'GUIA_CREADA')`;
+      } else if (estado === 'Entregado' || estado === 'ENTREGADO') {
+        sql += ` AND (p.estado = 'Entregado' OR p.estado = 'ENTREGADO')`;
+      } else if (estado === 'Cancelado' || estado === 'CANCELADO') {
+        sql += ` AND (p.estado = 'Cancelado' OR p.estado = 'CANCELADO')`;
+      } else {
+        params.push(estado);
+        sql += ` AND p.estado = $${params.length}`;
+      }
     }
 
     if (q) {
@@ -179,11 +191,11 @@ export async function POST(request: Request) {
     const envio = parseFloat(costo_envio) || 0;
     const total = subtotal + envio;
 
-    // 4. Crear el pedido (Estado inicial: PENDIENTE_COMPRA / ROJO)
+    // 4. Crear el pedido (Estado inicial: Registrado / Rojo)
     const newOrderRes = await client.query(
       `INSERT INTO public.pedidos (
         numero_pedido, cliente_id, vendedora_id, estado, tipo_pago, estado_pago, subtotal, costo_envio, total, notas
-      ) VALUES ($1, $2, $3, 'PENDIENTE_COMPRA', $4, $5, $6, $7, $8, $9)
+      ) VALUES ($1, $2, $3, 'Registrado', $4, $5, $6, $7, $8, $9)
       RETURNING id, numero_pedido, estado`,
       [
         numeroPedido,
@@ -219,11 +231,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Pedido registrado con éxito en estado PENDIENTE_COMPRA',
+      message: 'Pedido registrado con éxito en estado Registrado',
       pedido: {
         id: pedidoId,
         numero_pedido: numeroPedido,
-        estado: 'PENDIENTE_COMPRA',
+        estado: 'Registrado',
         total,
       },
     });

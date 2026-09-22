@@ -20,8 +20,13 @@ CREATE TABLE IF NOT EXISTS public.pedidos (
     notas                   TEXT,
 
     -- 3. ESTADOS OPERATIVOS
-    -- Ciclo de vida: 'PENDIENTE_COMPRA' (Rojo), 'PENDIENTE_PREPARAR' (Amarillo), 'GUIA_CREADA' (Azul), 'EN_RUTA', 'ENTREGADO', 'CANCELADO'
-    estado                  VARCHAR(30) NOT NULL DEFAULT 'PENDIENTE_COMPRA',
+    -- 'Registrado': Cuando el pedido recién está ingresado
+    -- 'Insumos comprados': Cuando en el detalle de pedido ya se marcaron los perfumes como comprados
+    -- 'Preparado': Cuando el perfume ya fue envasado/preparado (listo para envío)
+    -- 'Enviado': Cuando se le genera la guía al pedido (C807 Express)
+    -- 'Entregado': Cuando el Webhook de C807 nos confirma que se entregó el pedido
+    -- 'Cancelado': Pedidos cancelados
+    estado                  VARCHAR(30) NOT NULL DEFAULT 'Registrado',
 
     -- 4. VALORES FINANCIEROS Y PAGO
     tipo_pago               VARCHAR(30) NOT NULL DEFAULT 'CONTRAENTREGA', -- 'CONTRAENTREGA', 'TRANSFERENCIA', 'TARJETA'

@@ -63,7 +63,7 @@ interface PedidoItem {
 interface Pedido {
   id: string;
   numero_pedido: string;
-  estado: 'PENDIENTE_COMPRA' | 'PENDIENTE_PREPARAR' | 'GUIA_CREADA' | 'ENTREGADO' | 'CANCELADO';
+  estado: 'Registrado' | 'Insumos comprados' | 'Preparado' | 'Enviado' | 'Entregado' | 'Cancelado' | string;
   tipo_pago: string;
   estado_pago: string;
   subtotal: string | number;
@@ -466,7 +466,25 @@ export default function KodeSystemPage() {
   // Filtrado de pedidos
   const pedidosFiltrados = useMemo(() => {
     return pedidos.filter((p) => {
-      const matchEstado = filtroEstado === 'TODOS' || p.estado === filtroEstado;
+      let matchEstado = filtroEstado === 'TODOS';
+      if (!matchEstado) {
+        if (filtroEstado === 'Registrado') {
+          matchEstado = p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA';
+        } else if (filtroEstado === 'Insumos comprados') {
+          matchEstado = p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR';
+        } else if (filtroEstado === 'Preparado') {
+          matchEstado = p.estado === 'Preparado';
+        } else if (filtroEstado === 'Enviado') {
+          matchEstado = p.estado === 'Enviado' || p.estado === 'GUIA_CREADA';
+        } else if (filtroEstado === 'Entregado') {
+          matchEstado = p.estado === 'Entregado' || p.estado === 'ENTREGADO';
+        } else if (filtroEstado === 'Cancelado') {
+          matchEstado = p.estado === 'Cancelado' || p.estado === 'CANCELADO';
+        } else {
+          matchEstado = p.estado === filtroEstado;
+        }
+      }
+
       const matchQuery =
         !busquedaPedido.trim() ||
         p.numero_pedido.toLowerCase().includes(busquedaPedido.toLowerCase()) ||
@@ -479,10 +497,21 @@ export default function KodeSystemPage() {
 
   // Métricas
   const metricas = useMemo(() => {
-    const rojos = pedidos.filter((p) => p.estado === 'PENDIENTE_COMPRA').length;
-    const amarillos = pedidos.filter((p) => p.estado === 'PENDIENTE_PREPARAR').length;
-    const azules = pedidos.filter((p) => p.estado === 'GUIA_CREADA').length;
-    return { rojos, amarillos, azules, total: pedidos.length };
+    const registrados = pedidos.filter((p) => p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA').length;
+    const insumosComprados = pedidos.filter((p) => p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR').length;
+    const preparados = pedidos.filter((p) => p.estado === 'Preparado').length;
+    const enviados = pedidos.filter((p) => p.estado === 'Enviado' || p.estado === 'GUIA_CREADA').length;
+    const entregados = pedidos.filter((p) => p.estado === 'Entregado' || p.estado === 'ENTREGADO').length;
+    const cancelados = pedidos.filter((p) => p.estado === 'Cancelado' || p.estado === 'CANCELADO').length;
+    return {
+      registrados,
+      insumosComprados,
+      preparados,
+      enviados,
+      entregados,
+      cancelados,
+      total: pedidos.length,
+    };
   }, [pedidos]);
 
   return (
@@ -1061,63 +1090,85 @@ export default function KodeSystemPage() {
         {activeTab === 'listado_pedidos' && (
           <div className="space-y-6">
             {/* Tarjetas de Métricas Claymorphic */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               <div
                 onClick={() => setFiltroEstado('TODOS')}
-                className={`clay-card p-4 cursor-pointer transition-all hover:scale-[1.02] ${
+                className={`clay-card p-3 cursor-pointer transition-all hover:scale-[1.02] ${
                   filtroEstado === 'TODOS' ? 'border-2 border-indigo-400 bg-indigo-50/20' : ''
                 }`}
               >
-                <span className="text-xs font-bold text-slate-500 block mb-1">Total Pedidos</span>
-                <span className="text-2xl font-black text-slate-900 font-mono">{metricas.total}</span>
+                <span className="text-[11px] font-bold text-slate-500 block mb-0.5">Total Pedidos</span>
+                <span className="text-xl font-black text-slate-900 font-mono">{metricas.total}</span>
               </div>
 
               <div
-                onClick={() => setFiltroEstado('PENDIENTE_COMPRA')}
-                className={`clay-card p-4 cursor-pointer transition-all hover:scale-[1.02] ${
-                  filtroEstado === 'PENDIENTE_COMPRA' ? 'border-2 border-rose-400 bg-rose-50/30' : ''
+                onClick={() => setFiltroEstado('Registrado')}
+                className={`clay-card p-3 cursor-pointer transition-all hover:scale-[1.02] ${
+                  filtroEstado === 'Registrado' ? 'border-2 border-rose-400 bg-rose-50/30' : ''
                 }`}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-rose-700 font-black flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
-                    🔴 Pendiente Compra
-                  </span>
-                </div>
-                <span className="text-2xl font-black text-rose-600 font-mono">{metricas.rojos}</span>
-                <span className="text-[11px] text-slate-500 font-medium block mt-0.5">Insumos por comprar</span>
+                <span className="text-[11px] text-rose-700 font-black flex items-center gap-1 mb-0.5">
+                  <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                  🔴 Registrado
+                </span>
+                <span className="text-xl font-black text-rose-600 font-mono">{metricas.registrados}</span>
+                <span className="text-[10px] text-slate-400 block">Faltan insumos</span>
               </div>
 
               <div
-                onClick={() => setFiltroEstado('PENDIENTE_PREPARAR')}
-                className={`clay-card p-4 cursor-pointer transition-all hover:scale-[1.02] ${
-                  filtroEstado === 'PENDIENTE_PREPARAR' ? 'border-2 border-amber-400 bg-amber-50/30' : ''
+                onClick={() => setFiltroEstado('Insumos comprados')}
+                className={`clay-card p-3 cursor-pointer transition-all hover:scale-[1.02] ${
+                  filtroEstado === 'Insumos comprados' ? 'border-2 border-amber-400 bg-amber-50/30' : ''
                 }`}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-amber-800 font-black flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                    🟡 Pendiente Preparar
-                  </span>
-                </div>
-                <span className="text-2xl font-black text-amber-700 font-mono">{metricas.amarillos}</span>
-                <span className="text-[11px] text-slate-500 font-medium block mt-0.5">Insumos completos listos</span>
+                <span className="text-[11px] text-amber-800 font-black flex items-center gap-1 mb-0.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                  🟡 Insumos comprados
+                </span>
+                <span className="text-xl font-black text-amber-700 font-mono">{metricas.insumosComprados}</span>
+                <span className="text-[10px] text-slate-400 block">Listo preparar</span>
               </div>
 
               <div
-                onClick={() => setFiltroEstado('GUIA_CREADA')}
-                className={`clay-card p-4 cursor-pointer transition-all hover:scale-[1.02] ${
-                  filtroEstado === 'GUIA_CREADA' ? 'border-2 border-sky-400 bg-sky-50/30' : ''
+                onClick={() => setFiltroEstado('Enviado')}
+                className={`clay-card p-3 cursor-pointer transition-all hover:scale-[1.02] ${
+                  filtroEstado === 'Enviado' ? 'border-2 border-sky-400 bg-sky-50/30' : ''
                 }`}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-sky-700 font-black flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
-                    🔵 Guía Creada C807
-                  </span>
-                </div>
-                <span className="text-2xl font-black text-sky-600 font-mono">{metricas.azules}</span>
-                <span className="text-[11px] text-slate-500 font-medium block mt-0.5">Enviado / Guía lista</span>
+                <span className="text-[11px] text-sky-700 font-black flex items-center gap-1 mb-0.5">
+                  <span className="w-2 h-2 rounded-full bg-sky-500"></span>
+                  🔵 Enviado
+                </span>
+                <span className="text-xl font-black text-sky-600 font-mono">{metricas.enviados}</span>
+                <span className="text-[10px] text-slate-400 block">Con guía C807</span>
+              </div>
+
+              <div
+                onClick={() => setFiltroEstado('Entregado')}
+                className={`clay-card p-3 cursor-pointer transition-all hover:scale-[1.02] ${
+                  filtroEstado === 'Entregado' ? 'border-2 border-emerald-400 bg-emerald-50/30' : ''
+                }`}
+              >
+                <span className="text-[11px] text-emerald-700 font-black flex items-center gap-1 mb-0.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  🟢 Entregado
+                </span>
+                <span className="text-xl font-black text-emerald-600 font-mono">{metricas.entregados}</span>
+                <span className="text-[10px] text-slate-400 block">Confirmado C807</span>
+              </div>
+
+              <div
+                onClick={() => setFiltroEstado('Cancelado')}
+                className={`clay-card p-3 cursor-pointer transition-all hover:scale-[1.02] ${
+                  filtroEstado === 'Cancelado' ? 'border-2 border-slate-400 bg-slate-100' : ''
+                }`}
+              >
+                <span className="text-[11px] text-slate-600 font-black flex items-center gap-1 mb-0.5">
+                  <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                  ⚫ Cancelado
+                </span>
+                <span className="text-xl font-black text-slate-600 font-mono">{metricas.cancelados}</span>
+                <span className="text-[10px] text-slate-400 block">Cancelados</span>
               </div>
             </div>
 
@@ -1164,13 +1215,17 @@ export default function KodeSystemPage() {
                     <div
                       key={p.id}
                       className={`clay-card p-5 space-y-3 transition-all hover:scale-[1.005] ${
-                        p.estado === 'PENDIENTE_COMPRA'
+                        p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA'
                           ? 'border-l-4 border-l-rose-500'
-                          : p.estado === 'PENDIENTE_PREPARAR'
+                          : p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR'
                           ? 'border-l-4 border-l-amber-500'
-                          : p.estado === 'GUIA_CREADA'
+                          : p.estado === 'Preparado'
+                          ? 'border-l-4 border-l-purple-500'
+                          : p.estado === 'Enviado' || p.estado === 'GUIA_CREADA'
                           ? 'border-l-4 border-l-sky-500'
-                          : ''
+                          : p.estado === 'Entregado' || p.estado === 'ENTREGADO'
+                          ? 'border-l-4 border-l-emerald-500'
+                          : 'border-l-4 border-l-slate-400'
                       }`}
                     >
                       {/* Cabecera del Pedido */}
@@ -1178,13 +1233,17 @@ export default function KodeSystemPage() {
                         <div className="flex items-start gap-3">
                           <div
                             className={`w-3.5 h-3.5 rounded-full mt-1.5 shrink-0 ${
-                              p.estado === 'PENDIENTE_COMPRA'
+                              p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA'
                                 ? 'bg-rose-500 shadow-md shadow-rose-300'
-                                : p.estado === 'PENDIENTE_PREPARAR'
+                                : p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR'
                                 ? 'bg-amber-400 shadow-md shadow-amber-300'
-                                : p.estado === 'GUIA_CREADA'
+                                : p.estado === 'Preparado'
+                                ? 'bg-purple-500 shadow-md shadow-purple-300'
+                                : p.estado === 'Enviado' || p.estado === 'GUIA_CREADA'
                                 ? 'bg-sky-500 shadow-md shadow-sky-300'
-                                : 'bg-emerald-500'
+                                : p.estado === 'Entregado' || p.estado === 'ENTREGADO'
+                                ? 'bg-emerald-500 shadow-md shadow-emerald-300'
+                                : 'bg-slate-400'
                             }`}
                           />
 
@@ -1194,22 +1253,40 @@ export default function KodeSystemPage() {
                                 {p.numero_pedido}
                               </span>
 
-                              {/* Badges de Estado */}
-                              {p.estado === 'PENDIENTE_COMPRA' && (
+                              {/* Badges de Estado Oficiales */}
+                              {(p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA') && (
                                 <span className="clay-badge text-[11px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">
-                                  🔴 Pendiente de Compra ({insumosPendientesCount} faltantes)
+                                  🔴 Registrado ({insumosPendientesCount > 0 ? `${insumosPendientesCount} insumos por comprar` : 'Pendiente compra'})
                                 </span>
                               )}
 
-                              {p.estado === 'PENDIENTE_PREPARAR' && (
+                              {(p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR') && (
                                 <span className="clay-badge text-[11px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">
-                                  🟡 Listo para Preparar / Fabricación
+                                  🟡 Insumos comprados (Listo preparar)
                                 </span>
                               )}
 
-                              {p.estado === 'GUIA_CREADA' && (
+                              {p.estado === 'Preparado' && (
+                                <span className="clay-badge text-[11px] font-extrabold bg-purple-50 text-purple-800 border border-purple-200">
+                                  🟣 Preparado (Listo para envío)
+                                </span>
+                              )}
+
+                              {(p.estado === 'Enviado' || p.estado === 'GUIA_CREADA') && (
                                 <span className="clay-badge text-[11px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200">
-                                  🔵 Guía C807: {p.c807_guia_numero}
+                                  🔵 Enviado (Guía C807: {p.c807_guia_numero})
+                                </span>
+                              )}
+
+                              {(p.estado === 'Entregado' || p.estado === 'ENTREGADO') && (
+                                <span className="clay-badge text-[11px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                  🟢 Entregado (Confirmado C807)
+                                </span>
+                              )}
+
+                              {(p.estado === 'Cancelado' || p.estado === 'CANCELADO') && (
+                                <span className="clay-badge text-[11px] font-extrabold bg-slate-100 text-slate-700 border border-slate-300">
+                                  ⚫ Cancelado
                                 </span>
                               )}
                             </div>
@@ -1248,7 +1325,7 @@ export default function KodeSystemPage() {
                           </div>
 
                           {/* Botón Asignar Guía C807 */}
-                          {p.estado !== 'GUIA_CREADA' && (
+                          {p.estado !== 'Enviado' && p.estado !== 'GUIA_CREADA' && p.estado !== 'Entregado' && p.estado !== 'ENTREGADO' && p.estado !== 'Cancelado' && (
                             <button
                               onClick={() => {
                                 setGuiaModalPedido(p);
@@ -1262,7 +1339,7 @@ export default function KodeSystemPage() {
                             </button>
                           )}
 
-                          {p.estado === 'GUIA_CREADA' && p.c807_guia_numero && (
+                          {(p.estado === 'Enviado' || p.estado === 'GUIA_CREADA' || p.estado === 'Entregado' || p.estado === 'ENTREGADO') && p.c807_guia_numero && (
                             <a
                               href={p.c807_link_rastreo || `https://app.c807.com/tracking?guide=${p.c807_guia_numero}`}
                               target="_blank"
@@ -1488,7 +1565,7 @@ export default function KodeSystemPage() {
                   Salida de Pedidos y Rastreo C807
                 </h2>
                 <p className="text-xs text-slate-500 mt-1 font-medium">
-                  Pedidos con guía de paquetería generada en estado <strong>Azul (Guía creada / Enviado)</strong>.
+                  Pedidos con guía de paquetería generada en estado <strong>Azul (Enviado / En ruta)</strong> o <strong>Verde (Entregado)</strong>.
                 </p>
               </div>
 
@@ -1502,17 +1579,17 @@ export default function KodeSystemPage() {
             </div>
 
             <div className="space-y-4">
-              {pedidos.filter((p) => p.estado === 'GUIA_CREADA' || p.c807_guia_numero).length === 0 ? (
+              {pedidos.filter((p) => p.estado === 'Enviado' || p.estado === 'GUIA_CREADA' || p.estado === 'Entregado' || p.estado === 'ENTREGADO' || p.c807_guia_numero).length === 0 ? (
                 <div className="clay-card text-center py-20">
                   <Truck className="w-14 h-14 text-slate-300 mx-auto mb-3" />
                   <h3 className="text-base font-extrabold text-slate-900">No hay envíos con guía C807 generada aún</h3>
                   <p className="text-xs text-slate-500 mt-1 font-medium">
-                    Ve al listado de pedidos y presiona &quot;Asignar Guía C807&quot; para cambiar un pedido listo a estado Azul.
+                    Ve al listado de pedidos y presiona &quot;Asignar Guía C807&quot; para cambiar un pedido listo a estado Azul (Enviado).
                   </p>
                 </div>
               ) : (
                 pedidos
-                  .filter((p) => p.estado === 'GUIA_CREADA' || p.c807_guia_numero)
+                  .filter((p) => p.estado === 'Enviado' || p.estado === 'GUIA_CREADA' || p.estado === 'Entregado' || p.estado === 'ENTREGADO' || p.c807_guia_numero)
                   .map((p) => (
                     <div
                       key={p.id}

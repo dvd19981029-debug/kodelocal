@@ -40,9 +40,9 @@ export async function POST(request: Request) {
 
     const pedido = res.rows[0];
 
-    // Si el estatus indica entregado, actualizar estado general
+    // Si el estatus indica entregado, actualizar estado general a 'Entregado'
     const esEntregado = nuevoEstatus.toLowerCase().includes('entregad');
-    const sqlEstado = esEntregado ? "estado = 'ENTREGADO'," : "";
+    const sqlEstado = esEntregado ? "estado = 'Entregado'," : "";
 
     await queryKode(
       `UPDATE public.pedidos
