@@ -42,6 +42,8 @@ async function ensureUsuariosColumns() {
       ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS comision_porcentaje DECIMAL(5, 2) DEFAULT 5.00;
       ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS rol VARCHAR(50) DEFAULT 'VENDEDORA';
       ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT TRUE;
+      ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+      ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
       -- Sembrar vendedoras base si está vacía
       INSERT INTO public.usuarios (nombre, email, username, password, telefono, rol, doc_tipo, doc_numero, departamento_mh, municipio_mh, direccion_complemento, comision_normal, comision_plus, comision_porcentaje)
