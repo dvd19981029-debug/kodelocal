@@ -684,11 +684,11 @@ export default function ConfiguracionKodeModule() {
   const currentActiveKey = ambiente === 'sandbox' ? testApiKey : liveApiKey;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-4 animate-in fade-in duration-200 max-w-7xl mx-auto">
       {/* Toast Notificación */}
       {toast && (
         <div
-          className={`fixed top-5 right-5 z-50 p-4 rounded-2xl shadow-xl flex items-center gap-3 text-xs font-black animate-in slide-in-from-top-3 ${
+          className={`fixed top-5 right-5 z-50 p-3.5 rounded-xl shadow-xl flex items-center gap-2.5 text-xs font-black animate-in slide-in-from-top-3 ${
             toast.type === 'success'
               ? 'bg-emerald-600 text-white'
               : toast.type === 'error'
@@ -696,26 +696,26 @@ export default function ConfiguracionKodeModule() {
               : 'bg-indigo-600 text-white'
           }`}
         >
-          {toast.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+          {toast.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
           <span>{toast.message}</span>
         </div>
       )}
 
       {/* ============================================================== */}
-      {/* PESTAÑAS TIPO CARPETAS SUPERIORES: /Configuracion/Empleados/Comisiones/Reportes/ */}
+      {/* PESTAÑAS SUPERIORES COMPACTAS (1 SOLA FILA)                     */}
       {/* ============================================================== */}
-      <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-slate-200/80 backdrop-blur-md rounded-2xl border border-slate-300 shadow-inner">
+      <div className="flex items-center gap-1 p-1 bg-slate-100/90 backdrop-blur-md rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
         <button
           type="button"
           onClick={() => setActiveTab('configuracion')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition-all ${
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-all ${
             activeTab === 'configuracion'
-              ? 'bg-white text-indigo-700 shadow-md scale-[1.02]'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+              ? 'bg-white text-indigo-700 shadow-sm font-black'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
           }`}
         >
-          <Sliders className="w-4 h-4 text-indigo-600" />
-          <span>/ Configuración</span>
+          <Sliders className="w-3.5 h-3.5 text-indigo-600" />
+          <span>Configuración</span>
         </button>
 
         <button
@@ -724,15 +724,15 @@ export default function ConfiguracionKodeModule() {
             setActiveTab('empleados');
             fetchEmpleados();
           }}
-          className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition-all ${
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-all ${
             activeTab === 'empleados'
-              ? 'bg-white text-indigo-700 shadow-md scale-[1.02]'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+              ? 'bg-white text-indigo-700 shadow-sm font-black'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
           }`}
         >
-          <Users className="w-4 h-4 text-sky-600" />
-          <span>/ Empleados</span>
-          <span className="clay-badge text-[10px] font-mono font-bold bg-sky-100 text-sky-800 px-1.5 py-0.2">
+          <Users className="w-3.5 h-3.5 text-sky-600" />
+          <span>Empleados</span>
+          <span className="text-[10px] font-mono font-bold bg-sky-100 text-sky-800 px-1.5 py-0.2 rounded-md">
             {empleados.length}
           </span>
         </button>
@@ -743,15 +743,15 @@ export default function ConfiguracionKodeModule() {
             setActiveTab('formas_pago');
             fetchFormasPago();
           }}
-          className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition-all ${
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-all ${
             activeTab === 'formas_pago'
-              ? 'bg-white text-indigo-700 shadow-md scale-[1.02]'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+              ? 'bg-white text-indigo-700 shadow-sm font-black'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
           }`}
         >
-          <CreditCard className="w-4 h-4 text-amber-600" />
-          <span>/ Formas de Pago</span>
-          <span className="clay-badge text-[10px] font-mono font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2">
+          <CreditCard className="w-3.5 h-3.5 text-amber-600" />
+          <span>Formas de Pago</span>
+          <span className="text-[10px] font-mono font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-md">
             {formasPago.length}
           </span>
         </button>
@@ -763,14 +763,14 @@ export default function ConfiguracionKodeModule() {
             fetchEmpleados();
             fetchReportes();
           }}
-          className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition-all ${
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-all ${
             activeTab === 'comisiones'
-              ? 'bg-white text-indigo-700 shadow-md scale-[1.02]'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+              ? 'bg-white text-indigo-700 shadow-sm font-black'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
           }`}
         >
-          <DollarSign className="w-4 h-4 text-emerald-600" />
-          <span>/ Comisiones</span>
+          <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+          <span>Comisiones</span>
         </button>
 
         <button
@@ -779,14 +779,14 @@ export default function ConfiguracionKodeModule() {
             setActiveTab('reportes');
             fetchReportes();
           }}
-          className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition-all ${
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-all ${
             activeTab === 'reportes'
-              ? 'bg-white text-indigo-700 shadow-md scale-[1.02]'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+              ? 'bg-white text-indigo-700 shadow-sm font-black'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
           }`}
         >
-          <BarChart3 className="w-4 h-4 text-purple-600" />
-          <span>/ Reportes</span>
+          <BarChart3 className="w-3.5 h-3.5 text-purple-600" />
+          <span>Reportes</span>
         </button>
       </div>
 
@@ -794,18 +794,16 @@ export default function ConfiguracionKodeModule() {
       {/* VISTA 1: CONFIGURACIÓN GENERAL KODE & FACTURA LLAMA             */}
       {/* ============================================================== */}
       {activeTab === 'configuracion' && (
-        <form onSubmit={handleSaveConfig} className="space-y-6">
-          {/* Cabecera de Configuración */}
-          <div className="clay-card p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <form onSubmit={handleSaveConfig} className="space-y-3.5">
+          {/* Cabecera Compacta */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
             <div>
-              <div className="flex items-center gap-2">
-                <span className="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-md">
-                  <Sparkles className="w-4 h-4" />
-                </span>
-                <h3 className="text-base font-black text-slate-900 tracking-tight">Configuración Kode</h3>
-              </div>
-              <p className="text-xs text-slate-500 mt-1 font-medium">
-                Gestión de credenciales de Facturación Electrónica (Factura Llama) y parámetros operativos para la marca paralela KODE.
+              <h3 className="text-sm font-black text-slate-900 tracking-tight flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-indigo-600" />
+                <span>Configuración de Facturación Electrónica KÖDE</span>
+              </h3>
+              <p className="text-[11px] text-slate-500 font-medium">
+                Gestión de credenciales de Factura Llama (Ministerio de Hacienda) y ambiente operativo.
               </p>
             </div>
 
@@ -813,137 +811,112 @@ export default function ConfiguracionKodeModule() {
               <button
                 type="button"
                 onClick={fetchConfig}
-                className="clay-btn clay-btn-light px-3 py-2 text-xs font-bold flex items-center gap-1.5"
+                className="clay-btn clay-btn-light px-2.5 py-1 text-xs font-bold flex items-center gap-1.5"
                 disabled={loading}
               >
-                <RotateCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                <RotateCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
                 <span>Recargar</span>
               </button>
             </div>
           </div>
 
-          {/* SECCIÓN 1: AMBIENTE ACTIVO */}
-          <div className="clay-card p-6 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-              <div>
-                <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                  <span>Ambiente de Factura Llama (DTE)</span>
-                  <span className="text-[10px] text-slate-400 font-normal">| Selecciona el destino de las facturas</span>
-                </h4>
-                <p className="text-xs text-slate-500 mt-1 font-medium">
-                  En modo <strong>Sandbox</strong> todas las pruebas de facturación se envían con la API Key de test sin impacto fiscal.
+          {/* SECCIÓN 1: AMBIENTE ACTIVO COMPACTO */}
+          <div className="clay-card p-4 bg-white space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                    Ambiente de Facturación (DTE)
+                  </h4>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                      ambiente === 'sandbox'
+                        ? 'bg-amber-50 text-amber-800 border-amber-200'
+                        : 'bg-purple-50 text-purple-800 border-purple-200'
+                    }`}
+                  >
+                    {ambiente === 'sandbox' ? '🧪 Sandbox Activo (Pruebas)' : '🚀 Producción Activo (Hacienda)'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 font-medium">
+                  {ambiente === 'sandbox'
+                    ? 'En Sandbox las facturas y sujetos excluidos se emiten sin impacto tributario ni fiscal.'
+                    : '¡Atención! En Producción las emisiones tienen valor fiscal oficial ante el Ministerio de Hacienda.'}
                 </p>
               </div>
 
-              {/* Selector de Ambiente */}
-              <div className="flex items-center rounded-2xl bg-slate-100 p-1 border border-slate-200">
+              {/* Selector de Ambiente Compacto */}
+              <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200 shrink-0 self-start sm:self-auto">
                 <button
                   type="button"
                   onClick={() => setAmbiente('sandbox')}
-                  className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
                     ambiente === 'sandbox'
-                      ? 'bg-amber-500 text-white shadow-md shadow-amber-200'
+                      ? 'bg-amber-500 text-white shadow-sm font-black'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   <FlaskConical className="w-3.5 h-3.5" />
-                  <span>🧪 Sandbox (Pruebas)</span>
+                  <span>Sandbox (Test)</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setAmbiente('produccion')}
-                  className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
                     ambiente === 'produccion'
-                      ? 'bg-purple-600 text-white shadow-md shadow-purple-200'
+                      ? 'bg-purple-600 text-white shadow-sm font-black'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   <Rocket className="w-3.5 h-3.5" />
-                  <span>🚀 Producción (Live)</span>
+                  <span>Producción (Live)</span>
                 </button>
-              </div>
-            </div>
-
-            {/* Banner de Ambiente Activo */}
-            <div
-              className={`p-4 rounded-2xl border flex items-center justify-between gap-4 ${
-                ambiente === 'sandbox'
-                  ? 'bg-amber-50/70 border-amber-200 text-amber-900'
-                  : 'bg-purple-50/70 border-purple-200 text-purple-900'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0 shadow-sm ${
-                    ambiente === 'sandbox' ? 'bg-amber-500' : 'bg-purple-600'
-                  }`}
-                >
-                  {ambiente === 'sandbox' ? <FlaskConical className="w-5 h-5" /> : <Rocket className="w-5 h-5" />}
-                </div>
-                <div>
-                  <span className="text-xs font-black block">
-                    Ambiente Activo: {ambiente === 'sandbox' ? 'SANDBOX / PRUEBAS' : 'PRODUCCIÓN / LIVE'}
-                  </span>
-                  <span className="text-[11px] opacity-80 font-medium">
-                    {ambiente === 'sandbox'
-                      ? 'Todas las emisiones y pruebas de KODE se enviarán a Factura Llama con la API de pruebas.'
-                      : '¡ATENCIÓN! Las facturas emitidas tendrán valor fiscal real ante el Ministerio de Hacienda.'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="text-right">
-                <span className="text-[10px] uppercase font-mono font-bold tracking-wider block opacity-70">
-                  Clave Activa en Uso
-                </span>
-                <span className="font-mono text-xs font-black">
-                  {currentActiveKey.slice(0, 20)}...
-                </span>
               </div>
             </div>
           </div>
 
-          {/* SECCIÓN 2: CREDENCIALES DE API */}
-          <div className="clay-card p-6 space-y-5">
-            <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-              <span className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600">
-                <KeyRound className="w-4 h-4" />
-              </span>
-              <div>
+          {/* SECCIÓN 2: CREDENCIALES EN GRID DE 2 COLUMNAS */}
+          <div className="clay-card p-4 bg-white space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="w-6 h-6 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                  <KeyRound className="w-3.5 h-3.5" />
+                </span>
                 <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                  Credenciales de API de Factura Llama (DTE)
+                  Credenciales de API (X-API-Key)
                 </h4>
-                <p className="text-[11px] text-slate-400 font-medium">
-                  Claves utilizadas en los encabezados HTTP (X-API-Key) para emitir facturas en Kode
-                </p>
               </div>
+              <span className="text-[10px] text-slate-400 font-mono">
+                Activa: <strong className="text-slate-700">{ambiente.toUpperCase()}</strong>
+              </span>
             </div>
 
-            <div className="grid grid-cols-1 gap-5">
+            {/* Grid 2 Columnas para Sandbox y Producción */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {/* API Key Sandbox */}
               <div
-                className={`p-4 rounded-2xl border transition-all ${
+                className={`p-3 rounded-xl border transition-all ${
                   ambiente === 'sandbox'
-                    ? 'border-amber-400 bg-amber-50/20 shadow-sm'
-                    : 'border-slate-200 bg-slate-50/50'
+                    ? 'border-amber-300 bg-amber-50/30 ring-1 ring-amber-300/40'
+                    : 'border-slate-200 bg-slate-50/40'
                 }`}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-700">🧪 X-API-Key Sandbox (Pruebas)</span>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-slate-800">🧪 API Key Sandbox</span>
                     {ambiente === 'sandbox' && (
-                      <span className="clay-badge text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300">
-                        ACTIVA AHORA
+                      <span className="text-[9px] font-black bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.2 rounded-md">
+                        EN USO
                       </span>
                     )}
                   </div>
                   <button
                     type="button"
                     onClick={() => setTestApiKey('test_sk_45b8180f-9dab-44d5-9575-ba1487c73ed1')}
-                    className="text-[11px] text-amber-700 hover:underline font-bold"
+                    className="text-[10px] text-amber-700 hover:underline font-bold"
                   >
-                    Restaurar clave test por defecto
+                    Restaurar test
                   </button>
                 </div>
 
@@ -953,44 +926,44 @@ export default function ConfiguracionKodeModule() {
                     value={testApiKey}
                     onChange={(e) => setTestApiKey(e.target.value)}
                     placeholder="test_sk_..."
-                    className="clay-input w-full pr-10 font-mono text-xs font-bold"
+                    className="clay-input w-full pr-8 font-mono text-xs py-1.5 font-bold"
                   />
                   <button
                     type="button"
                     onClick={() => setShowTestKey(!showTestKey)}
-                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
+                    className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600"
                   >
-                    {showTestKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showTestKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
                 </div>
-                <p className="text-[11px] text-slate-500 mt-2 font-medium">
-                  Esta es la API Key que se envía a Factura Llama para todas las pruebas en ambiente sandbox.
+                <p className="text-[10px] text-slate-400 mt-1 truncate">
+                  Utilizada para pruebas seguras en ambiente sandbox.
                 </p>
               </div>
 
               {/* API Key Producción */}
               <div
-                className={`p-4 rounded-2xl border transition-all ${
+                className={`p-3 rounded-xl border transition-all ${
                   ambiente === 'produccion'
-                    ? 'border-purple-400 bg-purple-50/20 shadow-sm'
-                    : 'border-slate-200 bg-slate-50/50'
+                    ? 'border-purple-300 bg-purple-50/30 ring-1 ring-purple-300/40'
+                    : 'border-slate-200 bg-slate-50/40'
                 }`}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-700">🚀 X-API-Key Producción (Live)</span>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-slate-800">🚀 API Key Producción</span>
                     {ambiente === 'produccion' && (
-                      <span className="clay-badge text-[10px] font-extrabold bg-purple-100 text-purple-800 border border-purple-300">
-                        ACTIVA AHORA
+                      <span className="text-[9px] font-black bg-purple-100 text-purple-800 border border-purple-300 px-1.5 py-0.2 rounded-md">
+                        EN USO
                       </span>
                     )}
                   </div>
                   <button
                     type="button"
                     onClick={() => setLiveApiKey('live_sk_18558fbf-1c1b-445b-b124-b79fb4f45c67')}
-                    className="text-[11px] text-purple-700 hover:underline font-bold"
+                    className="text-[10px] text-purple-700 hover:underline font-bold"
                   >
-                    Restaurar clave live por defecto
+                    Restaurar live
                   </button>
                 </div>
 
@@ -1000,142 +973,129 @@ export default function ConfiguracionKodeModule() {
                     value={liveApiKey}
                     onChange={(e) => setLiveApiKey(e.target.value)}
                     placeholder="live_sk_..."
-                    className="clay-input w-full pr-10 font-mono text-xs font-bold"
+                    className="clay-input w-full pr-8 font-mono text-xs py-1.5 font-bold"
                   />
                   <button
                     type="button"
                     onClick={() => setShowLiveKey(!showLiveKey)}
-                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
+                    className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600"
                   >
-                    {showLiveKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showLiveKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
                 </div>
-                <p className="text-[11px] text-slate-500 mt-2 font-medium">
-                  Clave de emisión legal ante el Ministerio de Hacienda para ventas reales de Kode.
+                <p className="text-[10px] text-slate-400 mt-1 truncate">
+                  Emisión legal autorizada ante Hacienda en El Salvador.
                 </p>
               </div>
             </div>
 
-            {/* Parámetros Técnicos Adicionales */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            {/* Parámetros Técnicos Adicionales en 4 Columnas */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
                   X-API-Version
                 </label>
                 <input
                   type="text"
                   value={apiVersion}
                   onChange={(e) => setApiVersion(e.target.value)}
-                  className="clay-input w-full font-mono text-xs font-bold"
+                  className="clay-input w-full font-mono text-xs py-1.5 font-bold"
                   placeholder="1"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  URL Base del Servicio
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                  URL Base Factura Llama
                 </label>
                 <input
                   type="text"
                   value={baseUrl}
                   onChange={(e) => setBaseUrl(e.target.value)}
-                  className="clay-input w-full font-mono text-xs font-medium"
+                  className="clay-input w-full font-mono text-xs py-1.5 font-medium"
                   placeholder="https://api.facturallama.com"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  Correo Electrónico Receptor por Defecto (Contingencia)
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                  Email Contingencia
                 </label>
                 <input
                   type="email"
                   value={defaultEmail}
                   onChange={(e) => setDefaultEmail(e.target.value)}
-                  className="clay-input w-full text-xs font-medium"
+                  className="clay-input w-full text-xs py-1.5 font-medium"
                   placeholder="luisg@forbiddensoluciones.com"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  DUI Receptor por Defecto (Contingencia sin guiones)
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                  DUI Contingencia (9 dígitos)
                 </label>
                 <input
                   type="text"
                   value={defaultDui}
                   onChange={(e) => setDefaultDui(e.target.value)}
-                  className="clay-input w-full font-mono text-xs font-medium"
+                  className="clay-input w-full font-mono text-xs py-1.5 font-medium"
                   placeholder="123456789"
                 />
               </div>
             </div>
 
-            {/* Botón de Prueba de Conexión */}
-            <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <button
-                type="button"
-                onClick={handleTestConnection}
-                disabled={testing}
-                className="clay-btn clay-btn-light px-4 py-2 text-xs font-bold flex items-center gap-2 border border-slate-300"
-              >
-                <ShieldCheck className="w-4 h-4 text-indigo-600" />
-                <span>{testing ? 'Verificando...' : 'Probar Conexión con Factura Llama'}</span>
-              </button>
-
-              {testResult && (
-                <div
-                  className={`text-xs font-bold flex items-center gap-1.5 p-2 rounded-xl border ${
-                    testResult.ok
-                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                      : 'bg-rose-50 text-rose-800 border-rose-200'
-                  }`}
+            {/* Acciones y Pruebas */}
+            <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={handleTestConnection}
+                  disabled={testing}
+                  className="clay-btn clay-btn-light px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border border-slate-300"
                 >
-                  {testResult.ok ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <AlertCircle className="w-4 h-4 text-rose-600" />}
-                  <span>{testResult.message}</span>
-                </div>
-              )}
+                  <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>{testing ? 'Verificando...' : 'Probar Conexión'}</span>
+                </button>
+
+                {testResult && (
+                  <div
+                    className={`text-xs font-bold flex items-center gap-1.5 px-2.5 py-1 rounded-lg border ${
+                      testResult.ok
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                        : 'bg-rose-50 text-rose-800 border-rose-200'
+                    }`}
+                  >
+                    {testResult.ok ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <AlertCircle className="w-3.5 h-3.5 text-rose-600" />}
+                    <span className="text-[11px]">{testResult.message}</span>
+                  </div>
+                )}
+              </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="clay-btn clay-btn-primary px-5 py-2.5 text-xs font-black flex items-center gap-2 shadow-md shadow-indigo-200 ml-auto"
+                className="clay-btn clay-btn-primary px-4 py-2 text-xs font-black flex items-center gap-2 shadow-md shadow-indigo-200 self-end sm:self-auto"
               >
-                <Save className="w-4 h-4" />
-                <span>{loading ? 'Guardando...' : 'Guardar Configuración Kode'}</span>
+                <Save className="w-3.5 h-3.5" />
+                <span>{loading ? 'Guardando...' : 'Guardar Configuración'}</span>
               </button>
             </div>
           </div>
 
-          {/* SECCIÓN 3: RESUMEN DE INTEGRACIÓN CON C807 Y MH */}
-          <div className="clay-card p-6 bg-gradient-to-br from-white to-slate-50">
-            <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider mb-2 flex items-center gap-2">
-              <Layers className="w-4 h-4 text-indigo-600" />
-              <span>Resumen del Mapeo de Envíos y Facturación KODE</span>
-            </h4>
-            <p className="text-xs text-slate-500 font-medium mb-4">
-              Los departamentos y municipios de KODE se traducen automáticamente según el destino de cada operación:
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-sm space-y-1.5">
-                <div className="flex items-center gap-2 text-indigo-700 font-bold">
-                  <Truck className="w-4 h-4" />
-                  <span>C807 Express (Logística)</span>
-                </div>
-                <p className="text-slate-600 text-[11px]">
-                  Envía <code className="font-mono bg-indigo-50 px-1 py-0.5 rounded text-indigo-800">departamento_id</code> (del 2 al 15) y <code className="font-mono bg-indigo-50 px-1 py-0.5 rounded text-indigo-800">municipio_id</code> (del 2 al 262 de BD Kode).
-                </p>
+          {/* Resumen Mapeo Logística C807 y MH (Compacto) */}
+          <div className="p-3 bg-slate-50/80 rounded-xl border border-slate-200 text-xs">
+            <div className="flex items-center gap-1.5 text-slate-700 font-bold mb-1.5">
+              <Layers className="w-3.5 h-3.5 text-indigo-600" />
+              <span className="text-[11px] uppercase tracking-wide">Mapeo Integrado: C807 Express & Factura Llama</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-600">
+              <div className="bg-white p-2 rounded-lg border border-slate-200/60 flex items-center gap-2">
+                <Truck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                <span><strong>C807 Logística:</strong> IDs 02-15 Depto y 02-262 Municipio.</span>
               </div>
-
-              <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-sm space-y-1.5">
-                <div className="flex items-center gap-2 text-emerald-700 font-bold">
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>Factura Llama (Ministerio de Hacienda)</span>
-                </div>
-                <p className="text-slate-600 text-[11px]">
-                  Envía <code className="font-mono bg-emerald-50 px-1 py-0.5 rounded text-emerald-800">department</code> (01 al 14) y <code className="font-mono bg-emerald-50 px-1 py-0.5 rounded text-emerald-800">municipality</code> (01 al 23) según MH.
-                </p>
+              <div className="bg-white p-2 rounded-lg border border-slate-200/60 flex items-center gap-2">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span><strong>Factura Llama (MH):</strong> CAT-012 Depto (01-14) y CAT-013 Municipio (01-23).</span>
               </div>
             </div>
           </div>
@@ -1146,9 +1106,9 @@ export default function ConfiguracionKodeModule() {
       {/* VISTA 2: EMPLEADOS & VENDEDORAS DE KODE                         */}
       {/* ============================================================== */}
       {activeTab === 'empleados' && (
-        <div className="space-y-6">
+        <div className="space-y-3.5">
           {/* Header Superior y Barra de Acciones */}
-          <div className="clay-card p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="clay-card p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
                 <span className="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-md">
@@ -1489,9 +1449,9 @@ export default function ConfiguracionKodeModule() {
       {/* VISTA 3: FORMAS DE PAGO & PEDIDOS ASOCIADOS                     */}
       {/* ============================================================== */}
       {activeTab === 'formas_pago' && (
-        <div className="space-y-6 animate-in fade-in duration-150">
+        <div className="space-y-3.5 animate-in fade-in duration-150">
           {/* Cabecera de Formas de Pago */}
-          <div className="clay-card p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="clay-card p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
                 <span className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-600 flex items-center justify-center text-white shadow-md">
@@ -1871,8 +1831,8 @@ export default function ConfiguracionKodeModule() {
       {/* VISTA 4: COMISIONES & LIQUIDACIÓN KODE                          */}
       {/* ============================================================== */}
       {activeTab === 'comisiones' && (
-        <div className="space-y-6">
-          <div className="clay-card p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="space-y-3.5">
+          <div className="clay-card p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
                 <span className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-md">
@@ -2075,8 +2035,8 @@ export default function ConfiguracionKodeModule() {
       {/* VISTA 4: REPORTES & ANALÍTICA KODE                              */}
       {/* ============================================================== */}
       {activeTab === 'reportes' && (
-        <div className="space-y-6">
-          <div className="clay-card p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="space-y-3.5">
+          <div className="clay-card p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
                 <span className="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-500 to-indigo-600 flex items-center justify-center text-white shadow-md">
