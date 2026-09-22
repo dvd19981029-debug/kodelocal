@@ -8,7 +8,8 @@ const OPERATIONAL_ROUTES = [
   '/ventas',
   '/inventario',
   '/logistica',
-  '/login'
+  '/login',
+  '/kode'
 ];
 
 const OPERATIONAL_API_ROUTES = [
@@ -19,14 +20,25 @@ const OPERATIONAL_API_ROUTES = [
   '/api/sales',
   '/api/customers',
   '/api/staff',
+  '/api/kode'
 ];
 
 export function middleware(request: NextRequest) {
   const host = request.headers.get('host') || '';
   const { pathname } = request.nextUrl;
 
+  const isKodeSubdomain = host.startsWith('kode.') || host.includes('kode.aromaniaksv.com');
+  if (isKodeSubdomain) {
+    if (pathname === '/') {
+      return NextResponse.rewrite(new URL('/kode', request.url));
+    }
+    if (!pathname.startsWith('/kode') && !pathname.startsWith('/api')) {
+      return NextResponse.rewrite(new URL(`/kode${pathname}`, request.url));
+    }
+  }
+
   const isPosSubdomain = host.startsWith('pos.');
-  const isCustomerDomain = host.includes('aromaniaksv.com') && !isPosSubdomain;
+  const isCustomerDomain = host.includes('aromaniaksv.com') && !isPosSubdomain && !isKodeSubdomain;
 
   const isOperational = OPERATIONAL_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`)

@@ -25,17 +25,21 @@ export default function NavigationWrapper({ children }: { children: React.ReactN
     pathname.startsWith('/inventario') ||
     pathname.startsWith('/logistica');
 
+  const isKodeRoute = pathname.startsWith('/kode');
   const isLoginPage = pathname === '/login';
   const isBlogRoute = pathname.startsWith('/blog');
 
   return (
     <CustomerAuthProvider>
       <EcommerceCartProvider>
-        <CartDrawer />
-        <CustomerDrawer />
-        <CustomerAuthModal />
+        {!isKodeRoute && <CartDrawer />}
+        {!isKodeRoute && <CustomerDrawer />}
+        {!isKodeRoute && <CustomerAuthModal />}
 
-      {isLoginPage ? (
+      {isKodeRoute ? (
+        // En KODE: Sistema totalmente independiente (marca paralela sin mezclar con Aromaniak)
+        <main className="flex-1 w-full min-h-screen bg-slate-950 text-slate-100">{children}</main>
+      ) : isLoginPage ? (
         // En login solo se muestra el contenido limpio
         <main className="flex-1 w-full">{children}</main>
       ) : isOperationalRoute ? (
