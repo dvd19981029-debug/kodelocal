@@ -163,3 +163,132 @@ export async function emitirDteKode(input: EmitirDteKodeInput): Promise<KodeDteR
     };
   }
 }
+
+export interface EmitirDteFseKodeInput {
+  empleado_id?: string;
+  empleado_nombre: string;
+  empleado_correo?: string;
+  empleado_telefono?: string;
+  doc_tipo?: string; // 'DUI' | 'NIT' | 'PASAPORTE' | 'CARNET_RESIDENTE' | 'OTRO'
+  doc_numero: string;
+  departamento_mh?: string; // Código 2 dígitos ej: '06'
+  municipio_mh?: string;    // Código 2 dígitos ej: '14'
+  direccion_complemento: string;
+  concepto?: string;
+  monto: number;
+  retencion_renta?: number; // Monto o porcentaje de retención
+}
+
+/**
+ * Emite una Factura de Sujeto Excluido (FSE / DTE-14) para colaboradores por servicios profesionales
+ * Endpoint oficial: POST /dte/fse
+ */
+export async function emitirDteFseKode(input: EmitirDteFseKodeInput): Promise<KodeDteResult> {
+  const config = getKodeConfig();
+  const activeApiKey = getActiveFacturaLlamaApiKey(config);
+  const dteId = randomUUID();
+  const endpoint = `${config.facturaLlamaBaseUrl}/dte/fse`;
+
+  // Limpieza de documento (9 dígitos para DUI en El Salvador)
+  const cleanDoc = (input.doc_numero || config.defaultDui).replace(/\D/g, '');
+  // Teléfono (exactamente 8 dígitos numéricos según validación de Factura Llama)
+  let cleanPhone = (input.empleado_telefono || '').replace(/\D/g, '');
+  if (cleanPhone.length > 8) cleanPhone = cleanPhone.slice(-8);
+  if (cleanPhone.length < 8) cleanPhone = '70000000';
+
+  const deptoMh = resolveMhDeptoCode(input.departamento_mh || '06');
+  const muniMh = resolveMhMunicipioCodeFromKode(input.municipio_mh || '14');
+
+  const payload: any = {
+    id: dteId,
+    paymentType: 'CONTADO',
+    retentionRenta: Number(input.retencion_renta || 0),
+    retentionIva: 0,
+    recipient: {
+      name: input.empleado_nombre.trim(),
+      phone: cleanPhone,
+      email: input.empleado_correo?.trim() || config.defaultEmail,
+      identificationDocument: {
+        type: input.doc_tipo?.trim() || 'DUI',
+        number: cleanDoc || '123456789',
+      },
+      address: {
+        department: deptoMh || '06',
+        municipality: muniMh || '14',
+        complement: (input.direccion_complemento || 'San Salvador, El Salvador').slice(0, 200),
+      },
+    },
+    items: [
+      {
+        type: 'SERVICIOS',
+        internalCode: 'COM-01',
+        description: input.concepto || 'Servicios profesionales de intermediación comercial y comisiones por venta de fragancias',
+        quantity: 1,
+        unitPrice: Number(input.monto || 0),
+      },
+    ],
+  };
+
+  console.log(`[FacturaLlama KODE FSE] [${config.ambiente.toUpperCase()}] Transmitiendo Sujeto Excluido para ${input.empleado_nombre} a ${endpoint}...`);
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': activeApiKey,
+        'X-API-Version': config.facturaLlamaApiVersion,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      const errorMsg = Array.isArray(data.message)
+        ? data.message.join('; ')
+        : (data.message || data.error || `HTTP ${response.status} en Factura Llama`);
+
+      console.error('[FacturaLlama KODE FSE RECHAZO]', response.status, data);
+
+      return {
+        success: false,
+        codigo_generacion: dteId,
+        estado: 'RECHAZADO',
+        mensaje: errorMsg,
+        rawResponse: data,
+        sentPayload: payload,
+      };
+    }
+
+    const mhData = data.mhResponse?.data;
+    const dteData = data.dte?.identificacion;
+    const codGen = data.id || dteData?.codigoGeneracion || dteId;
+    const numCtrl = data.controlNumber || dteData?.numeroControl || '';
+    const sello = mhData?.selloRecibido || data.selloRecibido || data.dte?.selloRecibido;
+
+    return {
+      success: true,
+      codigo_generacion: codGen,
+      numero_control: numCtrl,
+      sello_recepcion: sello,
+      fh_procesamiento: mhData?.fhProcesamiento || data.generatedAt || new Date().toISOString(),
+      estado: 'PROCESADO',
+      mensaje: mhData?.descripcionMsg || 'Factura de Sujeto Excluido (DTE-14) emitida con éxito.',
+      pdf_url: `${config.facturaLlamaBaseUrl}/dte/${codGen}/download/pdf`,
+      json_url: `${config.facturaLlamaBaseUrl}/dte/${codGen}/download/json`,
+      rawResponse: data,
+      sentPayload: payload,
+    };
+  } catch (error: any) {
+    console.error('[FacturaLlama KODE FSE Network Error]', error);
+    return {
+      success: false,
+      codigo_generacion: dteId,
+      estado: 'ERROR',
+      mensaje: error.message || 'Error de conexión con Factura Llama',
+      sentPayload: payload,
+    };
+  }
+}
+
