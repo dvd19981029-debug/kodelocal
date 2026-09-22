@@ -46,7 +46,7 @@ import {
 } from 'lucide-react';
 import { DEPARTAMENTOS_CATALOG, MUNICIPIOS_CATALOG } from '@/lib/svTerritory';
 
-type KodeAdminTab = 'configuracion' | 'empleados' | 'comisiones' | 'reportes';
+type KodeAdminTab = 'configuracion' | 'empleados' | 'formas_pago' | 'comisiones' | 'reportes';
 
 interface Empleado {
   id: string;
@@ -63,11 +63,46 @@ interface Empleado {
   direccion_complemento?: string;
   comision_normal: number | string;
   comision_plus: number | string;
+  comision_porcentaje?: number | string;
   activo: boolean;
   total_pedidos?: number;
   pedidos_entregados?: number;
   total_ventas?: number | string;
   total_comisiones?: number | string;
+  comisiones_pendientes?: number | string;
+}
+
+interface FormaPagoAdmin {
+  id: string;
+  nombre: string;
+  tipo: string;
+  activo: boolean;
+  total_transacciones?: number;
+  total_monto?: number;
+  created_at?: string;
+}
+
+interface PagoTransaccion {
+  id: string;
+  pedido_id: string;
+  forma_pago_id: string;
+  forma_pago_nombre?: string;
+  forma_pago_tipo?: string;
+  monto: number | string;
+  fecha_pago: string;
+  num_documento_auto?: string;
+  estado_pago?: string;
+  usuario?: string;
+  observaciones?: string;
+  created_at: string;
+  numero_pedido?: string;
+  pedido_estado?: string;
+  pedido_estado_pago?: string;
+  pedido_total?: number | string;
+  pedido_subtotal?: number | string;
+  cliente_nombre?: string;
+  cliente_telefono?: string;
+  vendedora_nombre?: string;
 }
 
 export default function ConfiguracionKodeModule() {
@@ -129,9 +164,37 @@ export default function ConfiguracionKodeModule() {
   const [fseLoading, setFseLoading] = useState(false);
   const [fseResult, setFseResult] = useState<any | null>(null);
 
-  // Estado de Comisiones Generales
+  // Estado de Comisiones Generales (Predeterminado 5.00% sobre ventas)
   const [comisionGeneralNormal, setComisionGeneralNormal] = useState<number>(1.00);
   const [comisionGeneralPlus, setComisionGeneralPlus] = useState<number>(1.50);
+  const [comisionGlobalPct, setComisionGlobalPct] = useState<number>(5.00);
+  const [aplicandoComisionGlobal, setAplicandoComisionGlobal] = useState(false);
+  const [empleadoComisionPorcentaje, setEmpleadoComisionPorcentaje] = useState<number>(5.00);
+
+  // Estado de Formas de Pago y Pedidos Asociados
+  const [formasPago, setFormasPago] = useState<FormaPagoAdmin[]>([]);
+  const [loadingFormasPago, setLoadingFormasPago] = useState(false);
+  const [selectedFormaPago, setSelectedFormaPago] = useState<FormaPagoAdmin | null>(null);
+  const [transaccionesFormaPago, setTransaccionesFormaPago] = useState<PagoTransaccion[]>([]);
+  const [loadingTransacciones, setLoadingTransacciones] = useState(false);
+  const [searchFormaPago, setSearchFormaPago] = useState('');
+
+  // Modal para Crear / Editar Forma de Pago
+  const [modalFormaPago, setModalFormaPago] = useState<{
+    isOpen: boolean;
+    isEdit: boolean;
+    id: string;
+    nombre: string;
+    tipo: string;
+    activo: boolean;
+  }>({
+    isOpen: false,
+    isEdit: false,
+    id: '',
+    nombre: '',
+    tipo: 'BANCO',
+    activo: true,
+  });
 
   // Estado de Reportes
   const [reportesData, setReportesData] = useState<{
@@ -146,6 +209,7 @@ export default function ConfiguracionKodeModule() {
     fetchConfig();
     fetchEmpleados();
     fetchReportes();
+    fetchFormasPago();
   }, []);
 
   const fetchConfig = async () => {
@@ -196,6 +260,131 @@ export default function ConfiguracionKodeModule() {
       console.error('Error cargando reportes:', e);
     } finally {
       setLoadingReportes(false);
+    }
+  };
+
+  const fetchFormasPago = async () => {
+    try {
+      setLoadingFormasPago(true);
+      const res = await fetch('/api/kode/formas-pago');
+      const data = await res.json();
+      if (data.success && (data.formasPago || data.formas_pago)) {
+        const list: FormaPagoAdmin[] = data.formasPago || data.formas_pago || [];
+        setFormasPago(list);
+        if (!selectedFormaPago && list.length > 0) {
+          selectFormaPago(list[0]);
+        }
+      }
+    } catch (e: any) {
+      console.error('Error cargando formas de pago:', e);
+    } finally {
+      setLoadingFormasPago(false);
+    }
+  };
+
+  const selectFormaPago = async (fp: FormaPagoAdmin) => {
+    setSelectedFormaPago(fp);
+    try {
+      setLoadingTransacciones(true);
+      const res = await fetch(`/api/kode/pagos?forma_pago_id=${fp.id}`);
+      const data = await res.json();
+      if (data.success) {
+        setTransaccionesFormaPago(data.pagos || []);
+      } else {
+        setTransaccionesFormaPago([]);
+      }
+    } catch (e: any) {
+      console.error('Error cargando transacciones de forma de pago:', e);
+      setTransaccionesFormaPago([]);
+    } finally {
+      setLoadingTransacciones(false);
+    }
+  };
+
+  const handleToggleActivoFormaPago = async (fp: FormaPagoAdmin, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    try {
+      const res = await fetch('/api/kode/formas-pago', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: fp.id,
+          activo: !fp.activo,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showNotification(`Forma de pago ${fp.activo ? 'desactivada' : 'activada'} correctamente`, 'success');
+        fetchFormasPago();
+      } else {
+        showNotification(data.error || 'Error al actualizar forma de pago', 'error');
+      }
+    } catch (err: any) {
+      showNotification(err.message, 'error');
+    }
+  };
+
+  const handleGuardarFormaPago = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!modalFormaPago.nombre.trim()) {
+      showNotification('El nombre de la forma de pago es obligatorio', 'error');
+      return;
+    }
+    try {
+      const method = modalFormaPago.isEdit ? 'PUT' : 'POST';
+      const payload: any = {
+        nombre: modalFormaPago.nombre.trim(),
+        tipo: modalFormaPago.tipo,
+        activo: modalFormaPago.activo,
+      };
+      if (modalFormaPago.isEdit) {
+        payload.id = modalFormaPago.id;
+      }
+      const res = await fetch('/api/kode/formas-pago', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showNotification(modalFormaPago.isEdit ? 'Forma de pago actualizada' : 'Forma de pago agregada al catálogo', 'success');
+        setModalFormaPago((prev) => ({ ...prev, isOpen: false }));
+        fetchFormasPago();
+      } else {
+        showNotification(data.error || 'Error al guardar forma de pago', 'error');
+      }
+    } catch (err: any) {
+      showNotification(err.message, 'error');
+    }
+  };
+
+  const handleAplicarComisionGlobal = async () => {
+    if (comisionGlobalPct === undefined || comisionGlobalPct < 0) {
+      showNotification('Ingresa un porcentaje de comisión válido', 'error');
+      return;
+    }
+    try {
+      setAplicandoComisionGlobal(true);
+      const res = await fetch('/api/kode/empleados', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          aplicar_global: true,
+          comision_porcentaje: Number(comisionGlobalPct),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showNotification(`✅ Comisión global del ${comisionGlobalPct}% aplicada a todos los colaboradores`, 'success');
+        fetchEmpleados();
+        fetchReportes();
+      } else {
+        showNotification(data.error || 'Error al aplicar comisión global', 'error');
+      }
+    } catch (err: any) {
+      showNotification(err.message, 'error');
+    } finally {
+      setAplicandoComisionGlobal(false);
     }
   };
 
@@ -311,6 +500,7 @@ export default function ConfiguracionKodeModule() {
         direccion_complemento: empleadoDireccionComplemento.trim(),
         comision_normal: empleadoComisionNormal,
         comision_plus: empleadoComisionPlus,
+        comision_porcentaje: empleadoComisionPorcentaje,
       };
 
       if (isEditing) {
@@ -357,6 +547,7 @@ export default function ConfiguracionKodeModule() {
     setEmpleadoDireccionComplemento(emp.direccion_complemento || '');
     setEmpleadoComisionNormal(Number(emp.comision_normal || 1.00));
     setEmpleadoComisionPlus(Number(emp.comision_plus || 1.50));
+    setEmpleadoComisionPorcentaje(Number(emp.comision_porcentaje !== undefined ? emp.comision_porcentaje : 5.00));
     setIsEmpleadoModalOpen(true);
   };
 
@@ -482,6 +673,7 @@ export default function ConfiguracionKodeModule() {
     setEmpleadoDireccionComplemento('');
     setEmpleadoComisionNormal(1.00);
     setEmpleadoComisionPlus(1.50);
+    setEmpleadoComisionPorcentaje(5.00);
   };
 
   const showNotification = (message: string, type: 'success' | 'error' | 'info') => {
@@ -542,6 +734,25 @@ export default function ConfiguracionKodeModule() {
           <span>/ Empleados</span>
           <span className="clay-badge text-[10px] font-mono font-bold bg-sky-100 text-sky-800 px-1.5 py-0.2">
             {empleados.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('formas_pago');
+            fetchFormasPago();
+          }}
+          className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition-all ${
+            activeTab === 'formas_pago'
+              ? 'bg-white text-indigo-700 shadow-md scale-[1.02]'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+          }`}
+        >
+          <CreditCard className="w-4 h-4 text-amber-600" />
+          <span>/ Formas de Pago</span>
+          <span className="clay-badge text-[10px] font-mono font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2">
+            {formasPago.length}
           </span>
         </button>
 
@@ -1028,9 +1239,12 @@ export default function ConfiguracionKodeModule() {
                 <DollarSign className="w-4 h-4" />
               </span>
               <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">Comisiones Pend.</span>
-                <span className="font-mono text-sm font-black text-amber-700">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">Comisiones Ganadas</span>
+                <span className="font-mono text-sm font-black text-emerald-700">
                   ${empleados.reduce((acc, e) => acc + Number(e.total_comisiones || 0), 0).toFixed(2)}
+                </span>
+                <span className="text-[9px] font-mono text-amber-600 block">
+                  +${empleados.reduce((acc, e) => acc + Number(e.comisiones_pendientes || 0), 0).toFixed(2)} en camino
                 </span>
               </div>
             </div>
@@ -1201,14 +1415,15 @@ export default function ConfiguracionKodeModule() {
 
                             {/* 5. Tarifas Comisión */}
                             <td className="py-3 px-4 text-center font-mono">
-                              <div className="inline-flex gap-1.5">
-                                <div className="px-2 py-0.5 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700">
-                                  <span className="text-[9px] text-indigo-400 block font-sans">Normal</span>
-                                  <span className="font-bold text-[11px]">${Number(emp.comision_normal).toFixed(2)}</span>
-                                </div>
-                                <div className="px-2 py-0.5 rounded-lg bg-purple-50 border border-purple-100 text-purple-700">
-                                  <span className="text-[9px] text-purple-400 block font-sans">Plus</span>
-                                  <span className="font-bold text-[11px]">${Number(emp.comision_plus).toFixed(2)}</span>
+                              <div className="inline-flex flex-col gap-1 items-center">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-black">
+                                  <Percent className="w-3 h-3 text-emerald-600" />
+                                  <span>{Number(emp.comision_porcentaje !== undefined ? emp.comision_porcentaje : 5.00).toFixed(1)}% Ventas</span>
+                                </span>
+                                <div className="inline-flex gap-1 text-[9px] text-slate-400">
+                                  <span>N: ${Number(emp.comision_normal).toFixed(2)}</span>
+                                  <span>•</span>
+                                  <span>P: ${Number(emp.comision_plus).toFixed(2)}</span>
                                 </div>
                               </div>
                             </td>
@@ -1218,9 +1433,14 @@ export default function ConfiguracionKodeModule() {
                               <div className="font-mono text-xs font-black text-emerald-700">
                                 ${comisionTotal.toFixed(2)}
                               </div>
-                              <span className="text-[10px] text-slate-400 block">
-                                {emp.pedidos_entregados || 0} pedidos ent.
+                              <span className="text-[10px] text-slate-400 block font-medium">
+                                {emp.pedidos_entregados || 0} ent. / {emp.total_pedidos || 0} tot.
                               </span>
+                              {Number(emp.comisiones_pendientes || 0) > 0 && (
+                                <span className="text-[9px] font-mono text-amber-600 block">
+                                  +${Number(emp.comisiones_pendientes || 0).toFixed(2)} pend.
+                                </span>
+                              )}
                             </td>
 
                             {/* 7. Acciones */}
@@ -1266,7 +1486,389 @@ export default function ConfiguracionKodeModule() {
       )}
 
       {/* ============================================================== */}
-      {/* VISTA 3: COMISIONES & LIQUIDACIÓN KODE                          */}
+      {/* VISTA 3: FORMAS DE PAGO & PEDIDOS ASOCIADOS                     */}
+      {/* ============================================================== */}
+      {activeTab === 'formas_pago' && (
+        <div className="space-y-6 animate-in fade-in duration-150">
+          {/* Cabecera de Formas de Pago */}
+          <div className="clay-card p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-600 flex items-center justify-center text-white shadow-md">
+                  <CreditCard className="w-4 h-4" />
+                </span>
+                <h3 className="text-base font-black text-slate-900 tracking-tight">Catálogo y Gestión de Formas de Pago</h3>
+              </div>
+              <p className="text-xs text-slate-500 mt-1 font-medium">
+                Edita las cuentas bancarias, pasarelas y cobros contra entrega. Al seleccionar cualquier forma de pago verás en tiempo real todos los pedidos y abonos cobrados con ella.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={fetchFormasPago}
+                className="clay-btn clay-btn-light px-3 py-2 text-xs font-bold flex items-center gap-1.5"
+                disabled={loadingFormasPago}
+              >
+                <RotateCw className={`w-3.5 h-3.5 ${loadingFormasPago ? 'animate-spin' : ''}`} />
+                <span>Recargar</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setModalFormaPago({
+                    isOpen: true,
+                    isEdit: false,
+                    id: '',
+                    nombre: '',
+                    tipo: 'BANCO',
+                    activo: true,
+                  });
+                }}
+                className="clay-btn clay-btn-primary px-4 py-2 text-xs font-black flex items-center gap-1.5 shadow-md shadow-amber-200"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Nueva Forma de Pago</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Tarjetas KPI de Formas de Pago */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div className="clay-card p-4 flex items-center gap-3 bg-white">
+              <span className="p-2.5 rounded-xl bg-amber-50 text-amber-700 font-bold">
+                <CreditCard className="w-5 h-5" />
+              </span>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">Total Métodos de Pago</span>
+                <span className="font-mono text-xl font-black text-slate-900">{formasPago.length}</span>
+              </div>
+            </div>
+
+            <div className="clay-card p-4 flex items-center gap-3 bg-white">
+              <span className="p-2.5 rounded-xl bg-emerald-50 text-emerald-700 font-bold">
+                <CheckCircle2 className="w-5 h-5" />
+              </span>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">Formas de Pago Activas</span>
+                <span className="font-mono text-xl font-black text-emerald-700">
+                  {formasPago.filter((f) => f.activo).length}
+                </span>
+              </div>
+            </div>
+
+            <div className="clay-card p-4 flex items-center gap-3 bg-white">
+              <span className="p-2.5 rounded-xl bg-indigo-50 text-indigo-700 font-bold">
+                <DollarSign className="w-5 h-5" />
+              </span>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">Total Recaudado en Sistema</span>
+                <span className="font-mono text-xl font-black text-indigo-700">
+                  ${formasPago.reduce((acc, f) => acc + Number(f.total_monto || 0), 0).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Split Pane: Izquierda Lista de Cuentas / Derecha Pedidos Asociados */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            {/* PANEL IZQUIERDO: Formas de Pago (5 de 12) */}
+            <div className="lg:col-span-5 space-y-3">
+              <div className="clay-card p-4 space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <CreditCard className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Cuentas y Métodos ({formasPago.length})</span>
+                  </h4>
+                  <span className="text-[10px] text-slate-400">Clic para ver pedidos</span>
+                </div>
+
+                {/* Buscador */}
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Buscar forma de pago..."
+                    value={searchFormaPago}
+                    onChange={(e) => setSearchFormaPago(e.target.value)}
+                    className="clay-input w-full pl-9 pr-3 py-1.5 text-xs font-medium"
+                  />
+                  {searchFormaPago && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchFormaPago('')}
+                      className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Lista interactiva */}
+                <div className="space-y-2 max-h-[620px] overflow-y-auto pr-1">
+                  {loadingFormasPago ? (
+                    <div className="py-12 text-center text-slate-400">
+                      <RotateCw className="w-6 h-6 animate-spin mx-auto mb-2 text-amber-600" />
+                      <span className="text-xs font-bold">Cargando formas de pago...</span>
+                    </div>
+                  ) : formasPago.length === 0 ? (
+                    <div className="py-8 text-center text-slate-400">
+                      <p className="text-xs font-bold">No hay formas de pago registradas.</p>
+                    </div>
+                  ) : (
+                    formasPago
+                      .filter((fp) => {
+                        if (!searchFormaPago.trim()) return true;
+                        const q = searchFormaPago.toLowerCase();
+                        return fp.nombre.toLowerCase().includes(q) || fp.tipo.toLowerCase().includes(q);
+                      })
+                      .map((fp) => {
+                        const isSelected = selectedFormaPago?.id === fp.id;
+                        return (
+                          <div
+                            key={fp.id}
+                            onClick={() => selectFormaPago(fp)}
+                            className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                              isSelected
+                                ? 'bg-amber-50/80 border-amber-400 shadow-md ring-2 ring-amber-300/50 scale-[1.01]'
+                                : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/60'
+                            } ${!fp.activo ? 'opacity-60 bg-slate-50' : ''}`}
+                          >
+                            <div className="space-y-1 min-w-0 flex-1">
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={`w-2 h-2 rounded-full shrink-0 ${
+                                    fp.activo ? 'bg-emerald-500 ring-2 ring-emerald-200' : 'bg-slate-400'
+                                  }`}
+                                />
+                                <span className="font-black text-xs text-slate-900 truncate block">
+                                  {fp.nombre}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-2 text-[10px]">
+                                <span className="clay-badge text-[9px] font-mono font-bold bg-slate-100 text-slate-700 px-1.5 py-0.2">
+                                  {fp.tipo}
+                                </span>
+                                <span className="text-slate-400">•</span>
+                                <span className="font-mono text-slate-500">
+                                  {fp.total_transacciones || 0} pagos
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              <div className="text-right">
+                                <span className="font-mono text-xs font-black text-emerald-700 block">
+                                  ${Number(fp.total_monto || 0).toFixed(2)}
+                                </span>
+                                <span className="text-[9px] text-slate-400">Total cobrado</span>
+                              </div>
+
+                              <div className="flex items-center gap-1 border-l border-slate-200 pl-2">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setModalFormaPago({
+                                      isOpen: true,
+                                      isEdit: true,
+                                      id: fp.id,
+                                      nombre: fp.nombre,
+                                      tipo: fp.tipo,
+                                      activo: fp.activo,
+                                    });
+                                  }}
+                                  className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                  title="Editar forma de pago"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleToggleActivoFormaPago(fp, e)}
+                                  className={`p-1.5 rounded-lg transition-colors ${
+                                    fp.activo
+                                      ? 'text-emerald-600 hover:bg-emerald-50'
+                                      : 'text-slate-400 hover:bg-slate-100'
+                                  }`}
+                                  title={fp.activo ? 'Desactivar método' : 'Activar método'}
+                                >
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* PANEL DERECHO: Pedidos y Cobros de la Forma de Pago Seleccionada (7 de 12) */}
+            <div className="lg:col-span-7 space-y-3">
+              <div className="clay-card p-5 space-y-4">
+                {selectedFormaPago ? (
+                  <>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="p-1.5 rounded-xl bg-amber-100 text-amber-800">
+                            <CreditCard className="w-4 h-4" />
+                          </span>
+                          <h4 className="text-sm font-black text-slate-900">
+                            {selectedFormaPago.nombre}
+                          </h4>
+                          <span
+                            className={`clay-badge text-[10px] font-bold ${
+                              selectedFormaPago.activo
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                                : 'bg-slate-100 text-slate-600'
+                            }`}
+                          >
+                            {selectedFormaPago.activo ? 'Activa' : 'Inactiva'}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Historial de pedidos y abonos liquidados con este método de pago.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 text-right shrink-0">
+                        <div>
+                          <span className="text-[9px] uppercase font-bold text-slate-400 block">Pedidos Registrados</span>
+                          <span className="font-mono text-xs font-black text-slate-800">
+                            {transaccionesFormaPago.length} pagos
+                          </span>
+                        </div>
+                        <div className="border-l border-slate-200 pl-3">
+                          <span className="text-[9px] uppercase font-bold text-slate-400 block">Monto Total</span>
+                          <span className="font-mono text-xs font-black text-emerald-700">
+                            ${transaccionesFormaPago.reduce((acc, t) => acc + Number(t.monto || 0), 0).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Tabla de Transacciones */}
+                    <div className="overflow-x-auto">
+                      {loadingTransacciones ? (
+                        <div className="py-16 text-center text-slate-400">
+                          <RotateCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-600" />
+                          <span className="text-xs font-bold">Cargando pedidos de {selectedFormaPago.nombre}...</span>
+                        </div>
+                      ) : transaccionesFormaPago.length === 0 ? (
+                        <div className="py-12 text-center text-slate-400 space-y-1">
+                          <Receipt className="w-10 h-10 mx-auto text-slate-300 mb-2" />
+                          <p className="text-xs font-bold text-slate-700">Sin pedidos registrados con esta forma de pago</p>
+                          <p className="text-[11px] text-slate-400">
+                            Cuando se registre o confirme un abono mediante {selectedFormaPago.nombre}, aparecerá detallado aquí.
+                          </p>
+                        </div>
+                      ) : (
+                        <table className="w-full text-xs text-left">
+                          <thead>
+                            <tr className="border-b border-slate-200 text-slate-400 font-bold uppercase text-[10px]">
+                              <th className="py-2.5 px-3">Pedido & Fecha</th>
+                              <th className="py-2.5 px-3">Cliente</th>
+                              <th className="py-2.5 px-3">Asesora</th>
+                              <th className="py-2.5 px-3">Comprobante / Obs.</th>
+                              <th className="py-2.5 px-3 text-right">Abono</th>
+                              <th className="py-2.5 px-3 text-center">Estado Pedido</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {transaccionesFormaPago.map((t) => (
+                              <tr key={t.id} className="hover:bg-slate-50/60 transition-colors">
+                                <td className="py-2.5 px-3">
+                                  <div className="font-mono font-bold text-indigo-700 text-xs">
+                                    #{t.numero_pedido || t.pedido_id.slice(0, 8)}
+                                  </div>
+                                  <span className="text-[10px] text-slate-400 font-mono block">
+                                    {t.fecha_pago ? String(t.fecha_pago).slice(0, 10) : ''}
+                                  </span>
+                                </td>
+
+                                <td className="py-2.5 px-3">
+                                  <div className="font-bold text-slate-900 text-xs">
+                                    {t.cliente_nombre || 'Cliente general'}
+                                  </div>
+                                  {t.cliente_telefono && (
+                                    <a
+                                      href={`https://wa.me/503${t.cliente_telefono.replace(/\D/g, '')}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[10px] text-emerald-600 hover:underline font-mono flex items-center gap-1"
+                                    >
+                                      <Phone className="w-2.5 h-2.5" />
+                                      <span>{t.cliente_telefono}</span>
+                                    </a>
+                                  )}
+                                </td>
+
+                                <td className="py-2.5 px-3 text-slate-600 font-medium">
+                                  {t.vendedora_nombre || t.usuario || '-'}
+                                </td>
+
+                                <td className="py-2.5 px-3">
+                                  {t.num_documento_auto ? (
+                                    <span className="font-mono text-[11px] font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                                      {t.num_documento_auto}
+                                    </span>
+                                  ) : t.observaciones ? (
+                                    <span className="text-[10px] text-slate-500 italic truncate max-w-[120px] block" title={t.observaciones}>
+                                      {t.observaciones}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[10px] text-slate-400 italic">Sin comprobante</span>
+                                  )}
+                                </td>
+
+                                <td className="py-2.5 px-3 text-right font-mono font-black text-emerald-700 text-xs">
+                                  ${Number(t.monto).toFixed(2)}
+                                </td>
+
+                                <td className="py-2.5 px-3 text-center">
+                                  <span
+                                    className={`clay-badge text-[9px] font-black uppercase ${
+                                      t.pedido_estado?.toLowerCase() === 'entregado'
+                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                                        : t.pedido_estado?.toLowerCase() === 'cancelado'
+                                        ? 'bg-rose-50 text-rose-700 border-rose-300'
+                                        : 'bg-amber-50 text-amber-700 border-amber-300'
+                                    }`}
+                                  >
+                                    {t.pedido_estado || 'Registrado'}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="py-16 text-center text-slate-400">
+                    <CreditCard className="w-12 h-12 mx-auto text-slate-300 mb-2" />
+                    <p className="text-xs font-bold text-slate-700">Selecciona una forma de pago a la izquierda</p>
+                    <p className="text-[11px] text-slate-400">
+                      Haz clic en cualquier cuenta bancaria o método para ver sus transacciones asociadas.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* VISTA 4: COMISIONES & LIQUIDACIÓN KODE                          */}
       {/* ============================================================== */}
       {activeTab === 'comisiones' && (
         <div className="space-y-6">
@@ -1279,14 +1881,14 @@ export default function ConfiguracionKodeModule() {
                 <h3 className="text-base font-black text-slate-900 tracking-tight">Liquidación de Comisiones</h3>
               </div>
               <p className="text-xs text-slate-500 mt-1 font-medium">
-                Cálculo automatizado de comisiones por cada perfume vendido en versión Normal y Plus.
+                Cálculo automatizado de comisiones. Las comisiones solo se acumulan y liquidan al entregarse el pedido.
               </p>
             </div>
 
             <div className="flex items-center gap-3">
               <div className="text-right">
                 <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
-                  Total Comisiones Acumuladas
+                  Total Comisiones Ganadas (Entregados)
                 </span>
                 <span className="font-mono text-xl font-black text-emerald-700">
                   ${empleados.reduce((acc, e) => acc + Number(e.total_comisiones || 0), 0).toFixed(2)}
@@ -1295,33 +1897,95 @@ export default function ConfiguracionKodeModule() {
             </div>
           </div>
 
+          {/* Tarjeta de Configuración Global de Comisión al 5% */}
+          <div className="clay-card p-6 bg-gradient-to-r from-emerald-50/70 via-white to-teal-50/70 border border-emerald-200/80 shadow-sm space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="p-2 rounded-xl bg-emerald-600 text-white shadow-sm">
+                    <Percent className="w-4 h-4" />
+                  </span>
+                  <h4 className="text-sm font-black text-slate-900 tracking-tight">
+                    Configuración Global de Comisión de Ventas
+                  </h4>
+                  <span className="clay-badge text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800">
+                    Estándar: 5.00%
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
+                  Establece el porcentaje estándar asignado a las asesoras sobre el valor de cada venta.
+                </p>
+                <div className="mt-2 font-bold text-amber-900 bg-amber-50 p-2.5 rounded-xl border border-amber-200 text-[11px] flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>
+                    <strong>Regla de Negocio:</strong> La comisión de venta <u>solo se calcula y acumula cuando el pedido es entregado</u>. Los pedidos en preparación o en camino figuran como comisiones pendientes.
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 shrink-0 bg-white p-3.5 rounded-2xl border border-emerald-200 shadow-sm">
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">
+                    % Comisión Global
+                  </label>
+                  <div className="relative w-28">
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="100"
+                      value={comisionGlobalPct}
+                      onChange={(e) => setComisionGlobalPct(parseFloat(e.target.value) || 0)}
+                      className="clay-input w-full font-mono font-black text-emerald-700 text-sm py-1 px-2.5 pr-7"
+                    />
+                    <span className="absolute right-2.5 top-1.5 font-bold text-xs text-slate-400">%</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleAplicarComisionGlobal}
+                  disabled={aplicandoComisionGlobal}
+                  className="clay-btn bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2 text-xs font-black shadow-md shadow-emerald-200 flex items-center gap-1.5 self-end"
+                >
+                  {aplicandoComisionGlobal ? (
+                    <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Check className="w-3.5 h-3.5" />
+                  )}
+                  <span>{aplicandoComisionGlobal ? 'Aplicando...' : 'Aplicar a Todos'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* Tarjetas de Reglas de Comisión */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="clay-card p-5 flex items-center justify-between gap-4 border-l-4 border-l-indigo-500">
+            <div className="clay-card p-5 flex items-center justify-between gap-4 border-l-4 border-l-emerald-500">
               <div>
-                <span className="text-xs font-bold text-indigo-700 uppercase tracking-wider block mb-1">
-                  Comisión Base: Versión Normal
+                <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider block mb-1">
+                  Comisión de Ventas por Pedido Entregado
                 </span>
                 <p className="text-xs text-slate-500 font-medium">
-                  Monto por cada frasco de 100ml vendido en formulación Normal ($20.00).
+                  Porcentaje aplicado al valor de los pedidos efectivamente entregados.
                 </p>
               </div>
-              <div className="font-mono text-2xl font-black text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-200">
-                ${comisionGeneralNormal.toFixed(2)}
+              <div className="font-mono text-2xl font-black text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+                {comisionGlobalPct.toFixed(1)}%
               </div>
             </div>
 
-            <div className="clay-card p-5 flex items-center justify-between gap-4 border-l-4 border-l-purple-500">
+            <div className="clay-card p-5 flex items-center justify-between gap-4 border-l-4 border-l-indigo-500">
               <div>
-                <span className="text-xs font-bold text-purple-700 uppercase tracking-wider block mb-1">
-                  Comisión Base: Versión Plus
+                <span className="text-xs font-bold text-indigo-700 uppercase tracking-wider block mb-1">
+                  Tarifas Complementarias por Frasco
                 </span>
                 <p className="text-xs text-slate-500 font-medium">
-                  Monto por cada frasco vendido en formulación Plus / Extra Shot ($25.00).
+                  Normal: ${comisionGeneralNormal.toFixed(2)} | Plus / Shot: ${comisionGeneralPlus.toFixed(2)}
                 </p>
               </div>
-              <div className="font-mono text-2xl font-black text-purple-700 bg-purple-50 px-3 py-1.5 rounded-xl border border-purple-200">
-                ${comisionGeneralPlus.toFixed(2)}
+              <div className="font-mono text-xs font-bold text-slate-700 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                Tarifas Base
               </div>
             </div>
           </div>
@@ -1330,7 +1994,7 @@ export default function ConfiguracionKodeModule() {
           <div className="clay-card p-6 space-y-4">
             <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
               <Award className="w-4 h-4 text-emerald-600" />
-              <span>Estado de Cuenta por Asesora</span>
+              <span>Estado de Cuenta por Asesora (Comisiones por Pedidos Entregados)</span>
             </h4>
 
             <div className="overflow-x-auto">
@@ -1338,12 +2002,14 @@ export default function ConfiguracionKodeModule() {
                 <thead>
                   <tr className="border-b border-slate-200 text-slate-400 font-bold uppercase text-[10px]">
                     <th className="py-3 px-3">Asesora</th>
-                    <th className="py-3 px-3">Email</th>
+                    <th className="py-3 px-3">Email & Contacto</th>
                     <th className="py-3 px-3 text-center">Pedidos Registrados</th>
                     <th className="py-3 px-3 text-center">Pedidos Entregados</th>
-                    <th className="py-3 px-3 text-right">Ventas Totales</th>
-                    <th className="py-3 px-3 text-right">Comisión a Pagar</th>
-                    <th className="py-3 px-3 text-center">Acción</th>
+                    <th className="py-3 px-3 text-right">Ventas Entregadas</th>
+                    <th className="py-3 px-3 text-center">% Comisión</th>
+                    <th className="py-3 px-3 text-right">Comisión Ganada</th>
+                    <th className="py-3 px-3 text-right">Comisión Pendiente</th>
+                    <th className="py-3 px-3 text-center">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -1353,28 +2019,48 @@ export default function ConfiguracionKodeModule() {
                         {emp.nombre}
                       </td>
                       <td className="py-3 px-3 text-slate-500 font-mono text-[11px]">
-                        {emp.email}
+                        <div>{emp.email}</div>
+                        {emp.telefono && <span className="text-[10px] text-slate-400">{emp.telefono}</span>}
                       </td>
                       <td className="py-3 px-3 text-center font-mono font-bold text-slate-700">
                         {emp.total_pedidos || 0}
                       </td>
                       <td className="py-3 px-3 text-center font-mono font-bold text-emerald-700">
-                        {emp.pedidos_entregados || 0}
+                        <span className="clay-badge text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-300">
+                          {emp.pedidos_entregados || 0} entregados
+                        </span>
                       </td>
                       <td className="py-3 px-3 text-right font-mono font-bold text-slate-900">
                         ${Number(emp.total_ventas || 0).toFixed(2)}
                       </td>
+                      <td className="py-3 px-3 text-center font-mono font-black text-indigo-700">
+                        {Number(emp.comision_porcentaje !== undefined ? emp.comision_porcentaje : 5.00).toFixed(1)}%
+                      </td>
                       <td className="py-3 px-3 text-right font-mono font-black text-emerald-700 text-sm">
                         ${Number(emp.total_comisiones || 0).toFixed(2)}
                       </td>
+                      <td className="py-3 px-3 text-right font-mono font-medium text-amber-700 text-xs">
+                        ${Number(emp.comisiones_pendientes || 0).toFixed(2)}
+                      </td>
                       <td className="py-3 px-3 text-center">
-                        <button
-                          type="button"
-                          onClick={() => showNotification(`Liquidación de $${Number(emp.total_comisiones || 0).toFixed(2)} registrada para ${emp.nombre}`, 'success')}
-                          className="clay-btn bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 px-3 py-1 text-[11px] font-bold"
-                        >
-                          Liquidar
-                        </button>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => openFseModal(emp)}
+                            className="clay-btn bg-purple-50 text-purple-800 hover:bg-purple-100 border border-purple-300 px-2.5 py-1 text-[10px] font-bold flex items-center gap-1"
+                            title="Emitir Factura de Sujeto Excluido DTE-14"
+                          >
+                            <Receipt className="w-3 h-3" />
+                            <span>DTE-14</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => showNotification(`Liquidación de $${Number(emp.total_comisiones || 0).toFixed(2)} registrada para ${emp.nombre}`, 'success')}
+                            className="clay-btn bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 text-[10px] font-bold"
+                          >
+                            Liquidar
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -1674,13 +2360,35 @@ export default function ConfiguracionKodeModule() {
               <div className="space-y-3 pt-3 border-t border-slate-100">
                 <h4 className="text-xs font-black uppercase text-indigo-700 tracking-wider flex items-center gap-1.5">
                   <DollarSign className="w-3.5 h-3.5" />
-                  <span>3. Tarifas de Comisión por Perfume</span>
+                  <span>3. Tarifas y Porcentaje de Comisión</span>
                 </h4>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Comisión Versión Normal ($)
+                      Comisión Ventas (%) *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="100"
+                        value={empleadoComisionPorcentaje}
+                        onChange={(e) => setEmpleadoComisionPorcentaje(parseFloat(e.target.value) || 0)}
+                        className="clay-input w-full font-mono text-xs font-black text-emerald-700 pr-7"
+                        required
+                      />
+                      <span className="absolute right-2.5 top-2 font-bold text-xs text-slate-400">%</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">
+                      5% estándar sobre pedidos entregados
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Comisión Normal ($)
                     </label>
                     <input
                       type="number"
@@ -1694,7 +2402,7 @@ export default function ConfiguracionKodeModule() {
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Comisión Versión Plus ($)
+                      Comisión Plus ($)
                     </label>
                     <input
                       type="number"
@@ -2111,6 +2819,100 @@ export default function ConfiguracionKodeModule() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* MODAL 4: CREAR / EDITAR FORMA DE PAGO                          */}
+      {/* ============================================================== */}
+      {modalFormaPago.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
+          <div className="clay-card w-full max-w-md p-6 relative shadow-2xl animate-in zoom-in-95 space-y-4">
+            <button
+              type="button"
+              onClick={() => setModalFormaPago((prev) => ({ ...prev, isOpen: false }))}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+              <span className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 shadow-sm">
+                <CreditCard className="w-5 h-5" />
+              </span>
+              <div>
+                <h3 className="text-base font-black text-slate-900">
+                  {modalFormaPago.isEdit ? 'Editar Forma de Pago' : 'Nueva Forma de Pago'}
+                </h3>
+                <p className="text-[11px] text-slate-500 font-medium">
+                  Configura el nombre y tipo para el registro de cobros.
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleGuardarFormaPago} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Nombre de la Cuenta o Método *
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ej. Cuenta Bac 130693682, Contra Entrega..."
+                  value={modalFormaPago.nombre}
+                  onChange={(e) => setModalFormaPago((prev) => ({ ...prev, nombre: e.target.value }))}
+                  className="clay-input w-full text-xs font-bold"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Tipo de Forma de Pago
+                </label>
+                <select
+                  value={modalFormaPago.tipo}
+                  onChange={(e) => setModalFormaPago((prev) => ({ ...prev, tipo: e.target.value }))}
+                  className="clay-input w-full text-xs font-bold cursor-pointer"
+                >
+                  <option value="BANCO">BANCO (Transferencias / Cuentas)</option>
+                  <option value="CONTRA_ENTREGA">CONTRA_ENTREGA (Efectivo C807 al entregar)</option>
+                  <option value="EFECTIVO">EFECTIVO (Caja local)</option>
+                  <option value="PASARELA">PASARELA (Wompi, Nequi, etc.)</option>
+                  <option value="AJUSTE">AJUSTE (Cambio, Faltante, Descuento)</option>
+                  <option value="OTRO">OTRO</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="formaPagoActivo"
+                  checked={modalFormaPago.activo}
+                  onChange={(e) => setModalFormaPago((prev) => ({ ...prev, activo: e.target.checked }))}
+                  className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300"
+                />
+                <label htmlFor="formaPagoActivo" className="text-xs font-bold text-slate-700 cursor-pointer">
+                  Habilitar para selección en pedidos y abonos (Activo)
+                </label>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setModalFormaPago((prev) => ({ ...prev, isOpen: false }))}
+                  className="clay-btn clay-btn-light px-4 py-2 text-xs font-bold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="clay-btn bg-amber-600 text-white hover:bg-amber-700 px-5 py-2 text-xs font-black shadow-md shadow-amber-200"
+                >
+                  {modalFormaPago.isEdit ? 'Actualizar Forma de Pago' : 'Guardar Forma de Pago'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

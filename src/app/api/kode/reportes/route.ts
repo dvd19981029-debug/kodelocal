@@ -41,26 +41,27 @@ export async function GET() {
       LIMIT 10;
     `);
 
-    // 3. Resumen por Asesoras / Vendedoras
+    // 3. Resumen por Asesoras / Vendedoras (Comisión solo sobre pedidos Entregados)
     const vendedorasRes = await queryKode(`
       SELECT 
         COALESCE(u.nombre, 'Sin Asesor / Web') AS vendedora,
         u.email,
-        COUNT(p.id) AS pedidos_totales,
-        COUNT(p.id) FILTER (WHERE p.estado IN ('Entregado', 'ENTREGADO')) AS pedidos_entregados,
-        COALESCE(SUM(p.total), 0) AS ventas_totales,
+        COALESCE(u.comision_porcentaje, 5.00)::float AS comision_porcentaje,
+        COUNT(DISTINCT p.id) AS pedidos_totales,
+        COUNT(DISTINCT p.id) FILTER (WHERE p.estado IN ('Entregado', 'ENTREGADO')) AS pedidos_entregados,
+        COALESCE(SUM(DISTINCT p.total), 0) AS ventas_totales,
+        -- REGLA DE NEGOCIO: La comisión de venta solo se calcula y acumula cuando el pedido está ENTREGADO
         COALESCE(
-          SUM(
-            CASE 
-              WHEN pi.version = 'Plus' OR pi.version = 'EXTRA_SHOT' THEN pi.cantidad * COALESCE(u.comision_plus, 1.50)
-              ELSE pi.cantidad * COALESCE(u.comision_normal, 1.00)
-            END
+          (
+            SELECT SUM(COALESCE(ped.subtotal, ped.total, 0) * (COALESCE(u.comision_porcentaje, 5.00) / 100.0))
+            FROM public.pedidos ped
+            WHERE ped.vendedora_id = u.id
+              AND ped.estado IN ('Entregado', 'ENTREGADO')
           ), 0
-        ) AS comisiones_acumuladas
+        )::float AS comisiones_acumuladas
       FROM public.pedidos p
       LEFT JOIN public.usuarios u ON p.vendedora_id = u.id
-      LEFT JOIN public.pedido_items pi ON p.id = pi.pedido_id
-      GROUP BY u.id, u.nombre, u.email
+      GROUP BY u.id, u.nombre, u.email, u.comision_porcentaje
       ORDER BY ventas_totales DESC;
     `);
 

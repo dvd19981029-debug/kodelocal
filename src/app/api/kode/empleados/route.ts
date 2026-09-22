@@ -39,15 +39,16 @@ async function ensureUsuariosColumns() {
       ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS actividad_economica VARCHAR(20) DEFAULT '82990';
       ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS comision_normal DECIMAL(10, 2) DEFAULT 1.00;
       ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS comision_plus DECIMAL(10, 2) DEFAULT 1.50;
+      ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS comision_porcentaje DECIMAL(5, 2) DEFAULT 5.00;
       ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS rol VARCHAR(50) DEFAULT 'VENDEDORA';
       ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT TRUE;
 
       -- Sembrar vendedoras base si está vacía
-      INSERT INTO public.usuarios (nombre, email, username, password, telefono, rol, doc_tipo, doc_numero, departamento_mh, municipio_mh, direccion_complemento, comision_normal, comision_plus)
+      INSERT INTO public.usuarios (nombre, email, username, password, telefono, rol, doc_tipo, doc_numero, departamento_mh, municipio_mh, direccion_complemento, comision_normal, comision_plus, comision_porcentaje)
       VALUES 
-        ('Virgen Cerna', 'virgicerna@gmail.com', 'virgencerna', 'Kode2026*', '7890-1122', 'VENDEDORA', 'DUI', '045812903', '06', '14', 'San Salvador Centro, El Salvador', 1.00, 1.50),
-        ('Patricia Elizabeth Mejía Ramírez', 'pm3923193@gmail.com', 'patriciamejia', 'Kode2026*', '7230-4650', 'VENDEDORA', 'DUI', '068614130', '10', '15', 'Caserío Las Vegas, Cantón Cañas, Tepetitán, San Vicente', 1.00, 1.50),
-        ('Erika Melgar', 'erikamelgargarcia@gmail.com', 'erikamelgar', 'Kode2026*', '7123-5566', 'VENDEDORA', 'DUI', '028913401', '06', '14', 'San Salvador, El Salvador', 1.00, 1.50)
+        ('Virgen Cerna', 'virgicerna@gmail.com', 'virgencerna', 'Kode2026*', '7890-1122', 'VENDEDORA', 'DUI', '045812903', '06', '14', 'San Salvador Centro, El Salvador', 1.00, 1.50, 5.00),
+        ('Patricia Elizabeth Mejía Ramírez', 'pm3923193@gmail.com', 'patriciamejia', 'Kode2026*', '7230-4650', 'VENDEDORA', 'DUI', '068614130', '10', '15', 'Caserío Las Vegas, Cantón Cañas, Tepetitán, San Vicente', 1.00, 1.50, 5.00),
+        ('Erika Melgar', 'erikamelgargarcia@gmail.com', 'erikamelgar', 'Kode2026*', '7123-5566', 'VENDEDORA', 'DUI', '028913401', '06', '14', 'San Salvador, El Salvador', 1.00, 1.50, 5.00)
       ON CONFLICT (email) DO UPDATE SET
         nombre = EXCLUDED.nombre,
         telefono = EXCLUDED.telefono,
@@ -55,7 +56,8 @@ async function ensureUsuariosColumns() {
         doc_numero = EXCLUDED.doc_numero,
         departamento_mh = EXCLUDED.departamento_mh,
         municipio_mh = EXCLUDED.municipio_mh,
-        direccion_complemento = EXCLUDED.direccion_complemento;
+        direccion_complemento = EXCLUDED.direccion_complemento,
+        comision_porcentaje = COALESCE(public.usuarios.comision_porcentaje, 5.00);
     `);
   } catch (err) {
     console.error('Error ensuring usuarios table structure:', err);
@@ -66,7 +68,6 @@ export async function GET() {
   try {
     await ensureUsuariosColumns();
 
-    // Consulta de empleados con métricas de ventas, credenciales y Sujeto Excluido
     const sql = `
       SELECT 
         u.id,
@@ -83,27 +84,36 @@ export async function GET() {
         COALESCE(u.direccion_complemento, '') AS direccion_complemento,
         COALESCE(u.comision_normal, 1.00) AS comision_normal,
         COALESCE(u.comision_plus, 1.50) AS comision_plus,
+        COALESCE(u.comision_porcentaje, 5.00)::float AS comision_porcentaje,
         COALESCE(u.activo, TRUE) AS activo,
         u.created_at,
         COUNT(DISTINCT p.id) FILTER (WHERE p.id IS NOT NULL) AS total_pedidos,
         COUNT(DISTINCT p.id) FILTER (WHERE p.estado IN ('Entregado', 'ENTREGADO')) AS pedidos_entregados,
-        COALESCE(SUM(p.total) FILTER (WHERE p.id IS NOT NULL), 0) AS total_ventas,
-        -- Cálculo de comisiones generadas por los perfumes vendidos
+        COALESCE(SUM(DISTINCT p.total) FILTER (WHERE p.id IS NOT NULL), 0) AS total_ventas,
+        -- REGLA DE NEGOCIO: La comisión de venta (5% por defecto) SOLO se calcula y acumula cuando el pedido está ENTREGADO
         COALESCE(
-          SUM(
-            CASE 
-              WHEN pi.version = 'Plus' OR pi.version = 'EXTRA_SHOT' THEN pi.cantidad * COALESCE(u.comision_plus, 1.50)
-              ELSE pi.cantidad * COALESCE(u.comision_normal, 1.00)
-            END
-          ) FILTER (WHERE p.id IS NOT NULL), 0
-        ) AS total_comisiones
+          (
+            SELECT SUM(COALESCE(ped.subtotal, ped.total, 0) * (COALESCE(u.comision_porcentaje, 5.00) / 100.0))
+            FROM public.pedidos ped
+            WHERE ped.vendedora_id = u.id
+              AND ped.estado IN ('Entregado', 'ENTREGADO')
+          ), 0
+        )::float AS total_comisiones,
+        -- Comisiones de pedidos en curso pendientes de ser entregados
+        COALESCE(
+          (
+            SELECT SUM(COALESCE(ped.subtotal, ped.total, 0) * (COALESCE(u.comision_porcentaje, 5.00) / 100.0))
+            FROM public.pedidos ped
+            WHERE ped.vendedora_id = u.id
+              AND ped.estado NOT IN ('Entregado', 'ENTREGADO', 'Cancelado', 'CANCELADO')
+          ), 0
+        )::float AS comisiones_pendientes
       FROM public.usuarios u
       LEFT JOIN public.pedidos p ON u.id = p.vendedora_id
-      LEFT JOIN public.pedido_items pi ON p.id = pi.pedido_id
       GROUP BY 
         u.id, u.nombre, u.email, u.username, u.password, u.telefono, u.rol,
         u.doc_tipo, u.doc_numero, u.departamento_mh, u.municipio_mh, u.direccion_complemento,
-        u.comision_normal, u.comision_plus, u.activo, u.created_at
+        u.comision_normal, u.comision_plus, u.comision_porcentaje, u.activo, u.created_at
       ORDER BY u.activo DESC, u.nombre ASC;
     `;
 
@@ -133,6 +143,7 @@ export async function POST(request: Request) {
       direccion_complemento,
       comision_normal = 1.00,
       comision_plus = 1.50,
+      comision_porcentaje = 5.00,
     } = body;
 
     if (!nombre || !email) {
@@ -145,8 +156,8 @@ export async function POST(request: Request) {
       `INSERT INTO public.usuarios (
         nombre, email, username, password, telefono, rol,
         doc_tipo, doc_numero, departamento_mh, municipio_mh, direccion_complemento,
-        comision_normal, comision_plus, activo
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, TRUE)
+        comision_normal, comision_plus, comision_porcentaje, activo
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, TRUE)
       ON CONFLICT (email) DO UPDATE SET
         nombre = EXCLUDED.nombre,
         username = EXCLUDED.username,
@@ -160,6 +171,7 @@ export async function POST(request: Request) {
         direccion_complemento = EXCLUDED.direccion_complemento,
         comision_normal = EXCLUDED.comision_normal,
         comision_plus = EXCLUDED.comision_plus,
+        comision_porcentaje = EXCLUDED.comision_porcentaje,
         activo = TRUE,
         updated_at = NOW()
       RETURNING *`,
@@ -177,6 +189,7 @@ export async function POST(request: Request) {
         direccion_complemento?.trim() || '',
         comision_normal,
         comision_plus,
+        parseFloat(comision_porcentaje.toString()) || 5.00,
       ]
     );
 
@@ -190,6 +203,20 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
+
+    // Actualización masiva de comisión global a todos los empleados
+    if (body.aplicar_global) {
+      const nuevoPct = parseFloat(body.comision_porcentaje) || 5.00;
+      await queryKode(
+        `UPDATE public.usuarios SET comision_porcentaje = $1, updated_at = NOW()`,
+        [nuevoPct]
+      );
+      return NextResponse.json({
+        success: true,
+        message: `Comisión global del ${nuevoPct}% aplicada exitosamente a todos los empleados`,
+      });
+    }
+
     const {
       id,
       nombre,
@@ -205,6 +232,7 @@ export async function PUT(request: Request) {
       direccion_complemento,
       comision_normal,
       comision_plus,
+      comision_porcentaje,
       activo,
     } = body;
 
@@ -227,9 +255,10 @@ export async function PUT(request: Request) {
            direccion_complemento = COALESCE($11, direccion_complemento),
            comision_normal = COALESCE($12, comision_normal),
            comision_plus = COALESCE($13, comision_plus),
-           activo = COALESCE($14, activo),
+           comision_porcentaje = COALESCE($14, comision_porcentaje),
+           activo = COALESCE($15, activo),
            updated_at = NOW()
-       WHERE id = $15
+       WHERE id = $16
        RETURNING *`,
       [
         nombre,
@@ -245,6 +274,7 @@ export async function PUT(request: Request) {
         direccion_complemento,
         comision_normal,
         comision_plus,
+        comision_porcentaje !== undefined ? parseFloat(comision_porcentaje.toString()) : null,
         activo,
         id,
       ]

@@ -35,6 +35,7 @@ export async function GET(request: Request) {
     await ensurePagosTable();
     const { searchParams } = new URL(request.url);
     const pedidoId = searchParams.get('pedido_id');
+    const formaPagoId = searchParams.get('forma_pago_id');
 
     let sql = `
       SELECT 
@@ -50,17 +51,40 @@ export async function GET(request: Request) {
         COALESCE(pg.estado_pago, 'Confirmado') AS estado_pago,
         COALESCE(pg.usuario, '') AS usuario,
         COALESCE(pg.observaciones, '') AS observaciones,
-        pg.created_at
+        pg.created_at,
+        p.numero_pedido,
+        p.estado AS pedido_estado,
+        p.estado_pago AS pedido_estado_pago,
+        p.total AS pedido_total,
+        p.subtotal AS pedido_subtotal,
+        c.nombre_completo AS cliente_nombre,
+        c.telefono_whatsapp AS cliente_telefono,
+        u.nombre AS vendedora_nombre
       FROM public.pagos pg
       LEFT JOIN public.formas_pago fp ON pg.forma_pago_id = fp.id
+      LEFT JOIN public.pedidos p ON pg.pedido_id = p.id
+      LEFT JOIN public.clientes c ON p.cliente_id = c.id
+      LEFT JOIN public.usuarios u ON p.vendedora_id = u.id
     `;
 
     const params: any[] = [];
+    const whereClauses: string[] = [];
+
     if (pedidoId) {
       params.push(pedidoId);
-      sql += ` WHERE pg.pedido_id = $1`;
+      whereClauses.push(`pg.pedido_id = $${params.length}`);
     }
-    sql += ` ORDER BY pg.created_at ASC`;
+
+    if (formaPagoId) {
+      params.push(formaPagoId);
+      whereClauses.push(`pg.forma_pago_id = $${params.length}`);
+    }
+
+    if (whereClauses.length > 0) {
+      sql += ` WHERE ` + whereClauses.join(' AND ');
+    }
+
+    sql += ` ORDER BY pg.created_at DESC`;
 
     const res = await queryKode(sql, params);
     return NextResponse.json({ success: true, pagos: res.rows });
