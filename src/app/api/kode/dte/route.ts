@@ -81,6 +81,35 @@ export async function POST(request: Request) {
       comentarios: `Pedido ID: ${pedido.numero_pedido} | Kode Local`,
     });
 
+    // 4. Si la emisión fue exitosa, persistir en public.pedidos
+    if (dteResult.success) {
+      try {
+        await queryKode(
+          `UPDATE public.pedidos SET
+            dte_estado = $1,
+            dte_codigo_generacion = $2,
+            dte_numero_control = $3,
+            dte_sello_recepcion = $4,
+            dte_pdf_url = $5,
+            dte_json_url = $6,
+            dte_fecha_emision = NOW(),
+            updated_at = NOW()
+          WHERE id = $7`,
+          [
+            dteResult.estado || 'PROCESADO',
+            dteResult.codigo_generacion,
+            dteResult.numero_control || null,
+            dteResult.sello_recepcion || null,
+            dteResult.pdf_url || null,
+            dteResult.json_url || null,
+            pedido_id,
+          ]
+        );
+      } catch (dbErr) {
+        console.warn('Advertencia actualizando campos DTE en pedidos:', dbErr);
+      }
+    }
+
     return NextResponse.json(dteResult);
   } catch (error: any) {
     console.error('Error al emitir DTE para Kode:', error);
