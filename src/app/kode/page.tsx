@@ -74,6 +74,29 @@ interface PedidoItem {
   insumo_comprado?: boolean;
 }
 
+interface FormaPagoItem {
+  id: string;
+  nombre: string;
+  tipo: string;
+  activo: boolean;
+}
+
+interface PagoItem {
+  id: string;
+  pedido_id: string;
+  cliente_id?: string;
+  forma_pago_id: string;
+  forma_pago_nombre?: string;
+  forma_pago_tipo?: string;
+  monto: number;
+  fecha_pago: string;
+  num_documento_auto?: string;
+  estado_pago?: string;
+  usuario?: string;
+  observaciones?: string;
+  created_at?: string;
+}
+
 interface Pedido {
   id: string;
   numero_pedido: string;
@@ -83,6 +106,9 @@ interface Pedido {
   subtotal: string | number;
   costo_envio: string | number;
   total: string | number;
+  monto_cobrar_cce?: number | string;
+  total_pagado?: number;
+  pagos?: PagoItem[];
   c807_guia_numero?: string;
   c807_link_rastreo?: string;
   c807_estado?: string;
@@ -201,6 +227,20 @@ export default function KodeSystemPage() {
   const [pagoContraEntrega, setPagoContraEntrega] = useState<boolean>(true);
   const [solicitudesEspeciales, setSolicitudesEspeciales] = useState('');
 
+  // Catálogo de Formas de Pago y selección en nuevo pedido
+  const [formasPago, setFormasPago] = useState<FormaPagoItem[]>([]);
+  const [formaPagoSeleccionada, setFormaPagoSeleccionada] = useState<string>('1003');
+  const [numDocumentoAuto, setNumDocumentoAuto] = useState<string>('');
+
+  // Modal para Registrar Abono / Liquidación a Pedido Existente
+  const [modalAbonoPedido, setModalAbonoPedido] = useState<Pedido | null>(null);
+  const [abonoMonto, setAbonoMonto] = useState<string>('');
+  const [abonoFormaPagoId, setAbonoFormaPagoId] = useState<string>('1001');
+  const [abonoNumDoc, setAbonoNumDoc] = useState<string>('');
+  const [abonoFecha, setAbonoFecha] = useState<string>(() => new Date().toISOString().split('T')[0]);
+  const [abonoObservaciones, setAbonoObservaciones] = useState<string>('');
+  const [abonoLoading, setAbonoLoading] = useState(false);
+
   // Selector de perfumes en el form
   const [busquedaPerfume, setBusquedaPerfume] = useState('');
   const [perfumeSeleccionado, setPerfumeSeleccionado] = useState<CatalogoItem | null>(null);
@@ -248,6 +288,7 @@ export default function KodeSystemPage() {
     fetchVendedoras();
     fetchPedidos();
     fetchInsumos();
+    fetchFormasPago();
     cargarComprasLocal();
   }, []);
 
@@ -320,6 +361,23 @@ export default function KodeSystemPage() {
       }
     } catch (e) {
       console.error('Error cargando insumos:', e);
+    }
+  };
+
+  const fetchFormasPago = async () => {
+    try {
+      const res = await fetch('/api/kode/formas-pago');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.formasPago)) {
+        setFormasPago(data.formasPago);
+        if (data.formasPago.length > 0) {
+          // Default: Si existe 1003 (Contra Entrega), seleccionarla
+          const contraEntrega = data.formasPago.find((f: FormaPagoItem) => f.id === '1003');
+          setFormaPagoSeleccionada(contraEntrega ? contraEntrega.id : data.formasPago[0].id);
+        }
+      }
+    } catch (e) {
+      console.error('Error cargando formas de pago:', e);
     }
   };
 
@@ -473,6 +531,7 @@ export default function KodeSystemPage() {
         contactoAdicional.trim() ? `Contacto Adicional: ${contactoAdicional.trim()}` : null,
         descuento > 0 ? `Descuento: $${descuento}` : null,
         montoPagado > 0 ? `Anticipo Pagado: $${montoPagado}` : null,
+        numDocumentoAuto.trim() ? `Comprobante/Aut: ${numDocumentoAuto.trim()}` : null,
         `Cobrar en entrega: $${montoACobrar.toFixed(2)}`
       ].filter(Boolean).join(' | ');
 
@@ -494,12 +553,16 @@ export default function KodeSystemPage() {
           costo_envio: costoEnvio,
           vendedora_id: vendedoraSeleccionada,
           notas: notasConsolidadas,
+          anticipo_monto: parseFloat(montoPagado.toString()) || 0,
+          forma_pago_id: formaPagoSeleccionada,
+          num_documento_auto: numDocumentoAuto.trim(),
+          pago_contraentrega: pagoContraEntrega,
         }),
       });
 
       const data = await res.json();
       if (data.success) {
-        showToast(`Pedido ${data.pedido.numero_pedido} registrado en Rojo (Pendiente de compra)`, 'success');
+        showToast(`Pedido ${data.pedido.numero_pedido} registrado con éxito en estado Rojo (Pendiente de compra)`, 'success');
         setClienteNombre('');
         setClienteTelefono('');
         setClienteDireccion('');
@@ -509,12 +572,73 @@ export default function KodeSystemPage() {
         setSolicitudesEspeciales('');
         setDescuento(0);
         setMontoPagado(0);
+        setNumDocumentoAuto('');
         fetchPedidos();
         fetchInsumos();
         setActiveNav('VENTAS');
         setVentasView('pedidos');
       } else {
         showToast(data.error || 'Error al registrar pedido', 'error');
+      }
+    } catch (err: any) {
+      showToast(err.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegistrarAbono = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!modalAbonoPedido) return;
+    const monto = parseFloat(abonoMonto.toString());
+    if (isNaN(monto) || monto <= 0) {
+      showToast('Ingresa un monto válido para el abono ($)', 'error');
+      return;
+    }
+    try {
+      setAbonoLoading(true);
+      const res = await fetch('/api/kode/pagos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pedido_id: modalAbonoPedido.id,
+          cliente_id: modalAbonoPedido.cliente_id,
+          forma_pago_id: abonoFormaPagoId,
+          monto,
+          fecha_pago: abonoFecha,
+          num_documento_auto: abonoNumDoc.trim(),
+          observaciones: abonoObservaciones.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message || 'Abono registrado con éxito', 'success');
+        setModalAbonoPedido(null);
+        setAbonoMonto('');
+        setAbonoNumDoc('');
+        setAbonoObservaciones('');
+        await fetchPedidos();
+      } else {
+        showToast(data.error || 'Error al registrar abono', 'error');
+      }
+    } catch (err: any) {
+      showToast(err.message, 'error');
+    } finally {
+      setAbonoLoading(false);
+    }
+  };
+
+  const handleEliminarAbono = async (pagoId: string) => {
+    if (!confirm('¿Seguro que deseas eliminar este registro de abono bancario?')) return;
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/kode/pagos?id=${pagoId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Abono eliminado y saldo actualizado', 'success');
+        await fetchPedidos();
+      } else {
+        showToast(data.error || 'Error al eliminar abono', 'error');
       }
     } catch (err: any) {
       showToast(err.message, 'error');
@@ -1558,6 +1682,51 @@ export default function KodeSystemPage() {
                             </div>
                           </div>
 
+                          {/* Selector de Forma de Pago / Cuenta Bancaria y No. Documento si hay anticipo */}
+                          {montoPagado > 0 && (
+                            <div className="p-3.5 bg-gradient-to-br from-indigo-50/80 to-sky-50/80 rounded-2xl border border-indigo-100/90 space-y-2.5 shadow-sm animate-in fade-in duration-200">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1.5 text-xs font-black text-indigo-900">
+                                  <CreditCard className="w-4 h-4 text-indigo-600" />
+                                  <span>Detalle del Anticipo / Pago (${montoPagado.toFixed(2)})</span>
+                                </div>
+                                <span className="clay-badge text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                  Abono Inicial
+                                </span>
+                              </div>
+
+                              <div>
+                                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                                  Forma de Pago / Cuenta Bancaria *
+                                </label>
+                                <select
+                                  value={formaPagoSeleccionada}
+                                  onChange={(e) => setFormaPagoSeleccionada(e.target.value)}
+                                  className="clay-input w-full text-xs font-bold bg-white"
+                                >
+                                  {formasPago.map((fp) => (
+                                    <option key={fp.id} value={fp.id}>
+                                      {fp.nombre} ({fp.tipo})
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              <div>
+                                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                                  No. Comprobante / Autorización Bancaria
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="Ej. #Transf 491823, Ref #00129..."
+                                  value={numDocumentoAuto}
+                                  onChange={(e) => setNumDocumentoAuto(e.target.value)}
+                                  className="clay-input w-full text-xs font-mono font-medium bg-white"
+                                />
+                              </div>
+                            </div>
+                          )}
+
                           <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-1 text-xs">
                             <div className="flex justify-between font-bold text-slate-800">
                               <span>Total a Pagar:</span>
@@ -1642,6 +1811,7 @@ export default function KodeSystemPage() {
                         <thead className="bg-slate-50 border-b border-slate-200/80 text-slate-600 font-extrabold uppercase tracking-wider text-[11px]">
                           <tr>
                             <th className="py-3 px-4">Estado envío</th>
+                            <th className="py-3 px-4">Estado Pago</th>
                             <th className="py-3 px-4">Estado C807</th>
                             <th className="py-3 px-4">Numero de Pedido</th>
                             <th className="py-3 px-4">Cliente</th>
@@ -1654,13 +1824,16 @@ export default function KodeSystemPage() {
                         <tbody className="divide-y divide-slate-100 bg-white">
                           {pedidosFiltrados.length === 0 ? (
                             <tr>
-                              <td colSpan={8} className="py-12 text-center text-slate-400 font-medium">
+                              <td colSpan={9} className="py-12 text-center text-slate-400 font-medium">
                                 No se encontraron pedidos
                               </td>
                             </tr>
                           ) : (
                             pedidosFiltrados.map((p) => {
                               const isExpanded = expandedPedidoId === p.id;
+                              const totalNum = parseFloat(p.total?.toString() || '0');
+                              const totalPagadoNum = parseFloat(p.total_pagado?.toString() || '0');
+                              const saldoPendiente = Math.max(0, totalNum - totalPagadoNum);
                               return (
                                 <React.Fragment key={p.id}>
                                   <tr className="hover:bg-slate-50/80 transition-colors">
@@ -1678,6 +1851,21 @@ export default function KodeSystemPage() {
                                       {p.estado === 'GUIA_CREADA' && (
                                         <span className="clay-badge text-[10px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200">
                                           🔵 Guía C807
+                                        </span>
+                                      )}
+                                    </td>
+                                    <td className="py-3 px-4">
+                                      {p.estado_pago === 'PAGADO' ? (
+                                        <span className="clay-badge text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                          ✓ Pagado
+                                        </span>
+                                      ) : p.estado_pago === 'PARCIAL' ? (
+                                        <span className="clay-badge text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-200" title={`Abonado: $${totalPagadoNum.toFixed(2)}`}>
+                                          ⏳ Parcial (${totalPagadoNum.toFixed(2)})
+                                        </span>
+                                      ) : (
+                                        <span className="clay-badge text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200">
+                                          ✕ Pendiente
                                         </span>
                                       )}
                                     </td>
@@ -1703,8 +1891,15 @@ export default function KodeSystemPage() {
                                     <td className="py-3 px-4 text-slate-500 font-mono">
                                       {new Date(p.created_at).toLocaleDateString('es-SV')}
                                     </td>
-                                    <td className="py-3 px-4 text-right font-mono font-black text-slate-900">
-                                      ${parseFloat(p.total?.toString() || '0').toFixed(2)}
+                                    <td className="py-3 px-4 text-right">
+                                      <div className="font-mono font-black text-slate-900">
+                                        ${totalNum.toFixed(2)}
+                                      </div>
+                                      {totalPagadoNum > 0 && p.estado_pago !== 'PAGADO' && (
+                                        <div className="text-[10px] font-mono font-bold text-amber-700">
+                                          Resta: ${saldoPendiente.toFixed(2)}
+                                        </div>
+                                      )}
                                     </td>
                                     <td className="py-3 px-4 text-center">
                                       <button
@@ -1717,13 +1912,14 @@ export default function KodeSystemPage() {
                                   </tr>
                                   {isExpanded && (
                                     <tr className="bg-slate-50/50">
-                                      <td colSpan={8} className="p-4 border-t border-slate-100">
+                                      <td colSpan={9} className="p-4 border-t border-slate-100">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                                           <div className="bg-white p-3 rounded-xl border border-slate-200">
                                             <span className="font-bold text-slate-700 block mb-1">Destino:</span>
                                             <p className="text-slate-900">{p.cliente_direccion}</p>
                                             <p className="text-slate-500">{p.cliente_municipio}, {p.cliente_departamento}</p>
                                             {p.cliente_referencia && <p className="text-indigo-600 font-bold mt-1">Ref: {p.cliente_referencia}</p>}
+                                            {p.notas && <p className="text-slate-500 text-[11px] mt-2 pt-2 border-t border-slate-100 italic">Notas: {p.notas}</p>}
                                           </div>
                                           <div className="bg-white p-3 rounded-xl border border-slate-200">
                                             <span className="font-bold text-slate-700 block mb-1">Fragancias ({p.items.length}):</span>
@@ -1733,6 +1929,111 @@ export default function KodeSystemPage() {
                                                 <span className="font-mono font-bold">${it.subtotal}</span>
                                               </div>
                                             ))}
+                                          </div>
+
+                                          {/* MÓDULO DE CONTROL FINANCIERO Y ABONOS BANCARIOS */}
+                                          <div className="bg-white p-4 rounded-xl border border-slate-200 col-span-1 md:col-span-2 space-y-3 shadow-sm">
+                                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                                              <div className="flex items-center gap-2">
+                                                <CreditCard className="w-4 h-4 text-indigo-600" />
+                                                <span className="font-extrabold text-slate-800">
+                                                  Control de Pagos & Abonos Bancarios
+                                                </span>
+                                              </div>
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  setModalAbonoPedido(p);
+                                                  setAbonoMonto(saldoPendiente > 0 ? saldoPendiente.toFixed(2) : '');
+                                                  setAbonoFormaPagoId(formasPago[0]?.id || '1001');
+                                                  setAbonoNumDoc('');
+                                                  setAbonoObservaciones('');
+                                                }}
+                                                className="clay-btn clay-btn-primary px-3 py-1.5 text-xs font-black flex items-center gap-1.5 shadow-sm"
+                                              >
+                                                <Plus className="w-3.5 h-3.5" />
+                                                Registrar Abono / Pago
+                                              </button>
+                                            </div>
+
+                                            {/* Métricas del pedido */}
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200/70">
+                                              <div>
+                                                <span className="text-[10px] font-bold text-slate-400 block uppercase">Total Pedido</span>
+                                                <span className="font-mono font-black text-slate-800 text-sm">
+                                                  ${totalNum.toFixed(2)}
+                                                </span>
+                                              </div>
+                                              <div>
+                                                <span className="text-[10px] font-bold text-slate-400 block uppercase">Total Abonado</span>
+                                                <span className="font-mono font-black text-emerald-600 text-sm">
+                                                  ${totalPagadoNum.toFixed(2)}
+                                                </span>
+                                              </div>
+                                              <div>
+                                                <span className="text-[10px] font-bold text-slate-400 block uppercase">Saldo Pendiente</span>
+                                                <span className={`font-mono font-black text-sm ${saldoPendiente > 0 ? 'text-rose-600' : 'text-slate-400'}`}>
+                                                  ${saldoPendiente.toFixed(2)}
+                                                </span>
+                                              </div>
+                                              <div>
+                                                <span className="text-[10px] font-bold text-slate-400 block uppercase">Cobro C807 (CCE)</span>
+                                                <span className="font-mono font-black text-indigo-700 text-sm">
+                                                  ${parseFloat(p.monto_cobrar_cce?.toString() || '0').toFixed(2)}
+                                                </span>
+                                              </div>
+                                            </div>
+
+                                            {/* Historial de Abonos */}
+                                            <div className="space-y-1.5">
+                                              <span className="text-[11px] font-bold text-slate-600 block">
+                                                Historial de Transacciones / Abonos:
+                                              </span>
+                                              {(!p.pagos || p.pagos.length === 0) ? (
+                                                <div className="text-center py-3 text-slate-400 text-xs bg-slate-50/60 rounded-lg border border-dashed border-slate-200">
+                                                  No hay abonos registrados para este pedido. Usa el botón "Registrar Abono / Pago" para agregar uno.
+                                                </div>
+                                              ) : (
+                                                <div className="divide-y divide-slate-100 border border-slate-200/80 rounded-xl overflow-hidden">
+                                                  {p.pagos.map((pg) => (
+                                                    <div key={pg.id} className="p-2.5 bg-white flex flex-wrap items-center justify-between gap-2 text-xs hover:bg-slate-50/50 transition-colors">
+                                                      <div className="flex items-center gap-2 flex-wrap">
+                                                        <span className="clay-badge text-[10px] font-bold bg-slate-100 text-slate-700 font-mono">
+                                                          {pg.fecha_pago}
+                                                        </span>
+                                                        <span className="font-bold text-slate-800">
+                                                          {pg.forma_pago_nombre || 'Pago'}
+                                                        </span>
+                                                        {pg.num_documento_auto && (
+                                                          <span className="font-mono text-[11px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-100 font-bold">
+                                                            Doc: {pg.num_documento_auto}
+                                                          </span>
+                                                        )}
+                                                        {pg.usuario && (
+                                                          <span className="text-slate-400 text-[10px]">por {pg.usuario}</span>
+                                                        )}
+                                                        {pg.observaciones && (
+                                                          <span className="text-slate-500 text-[11px] italic">({pg.observaciones})</span>
+                                                        )}
+                                                      </div>
+                                                      <div className="flex items-center gap-3">
+                                                        <span className="font-mono font-black text-emerald-700 text-sm">
+                                                          +${parseFloat(pg.monto?.toString() || '0').toFixed(2)}
+                                                        </span>
+                                                        <button
+                                                          type="button"
+                                                          onClick={() => handleEliminarAbono(pg.id)}
+                                                          title="Eliminar este abono"
+                                                          className="text-slate-400 hover:text-rose-600 p-1 rounded transition-colors"
+                                                        >
+                                                          <Trash2 className="w-3.5 h-3.5" />
+                                                        </button>
+                                                      </div>
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              )}
+                                            </div>
                                           </div>
                                         </div>
                                       </td>
@@ -2764,6 +3065,136 @@ export default function KodeSystemPage() {
                 Cerrar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* MODAL: REGISTRAR ABONO / PAGO                                  */}
+      {/* ============================================================== */}
+      {modalAbonoPedido && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="clay-card max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in-95 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-indigo-600" />
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900">Registrar Abono / Pago</h3>
+                  <p className="text-[11px] text-slate-500 font-mono">
+                    Pedido #{modalAbonoPedido.numero_pedido} - {modalAbonoPedido.cliente_nombre}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setModalAbonoPedido(null)}
+                className="text-slate-400 hover:text-slate-600 p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span className="text-slate-500 block">Total del Pedido:</span>
+                <strong className="text-slate-900 font-mono text-sm">
+                  ${parseFloat(modalAbonoPedido.total?.toString() || '0').toFixed(2)}
+                </strong>
+              </div>
+              <div>
+                <span className="text-slate-500 block">Saldo Pendiente:</span>
+                <strong className="text-rose-600 font-mono text-sm">
+                  ${Math.max(
+                    0,
+                    parseFloat(modalAbonoPedido.total?.toString() || '0') -
+                      parseFloat(modalAbonoPedido.total_pagado?.toString() || '0')
+                  ).toFixed(2)}
+                </strong>
+              </div>
+            </div>
+
+            <form onSubmit={handleRegistrarAbono} className="space-y-3 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Monto del Abono ($) *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  placeholder="0.00"
+                  value={abonoMonto}
+                  onChange={(e) => setAbonoMonto(e.target.value)}
+                  className="clay-input w-full font-mono font-bold text-sm"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Forma de Pago / Cuenta Bancaria *</label>
+                <select
+                  value={abonoFormaPagoId}
+                  onChange={(e) => setAbonoFormaPagoId(e.target.value)}
+                  className="clay-input w-full font-bold cursor-pointer"
+                  required
+                >
+                  {formasPago.map((fp) => (
+                    <option key={fp.id} value={fp.id}>
+                      {fp.nombre} ({fp.tipo})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">No. Comprobante / Autorización Bancaria</label>
+                <input
+                  type="text"
+                  placeholder="Ej. #Transf 491823, Ref #00129..."
+                  value={abonoNumDoc}
+                  onChange={(e) => setAbonoNumDoc(e.target.value)}
+                  className="clay-input w-full font-mono font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Fecha del Pago</label>
+                <input
+                  type="date"
+                  value={abonoFecha}
+                  onChange={(e) => setAbonoFecha(e.target.value)}
+                  className="clay-input w-full font-bold"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Observaciones / Notas (Opcional)</label>
+                <input
+                  type="text"
+                  placeholder="Liquidación final, abono del 50%, etc."
+                  value={abonoObservaciones}
+                  onChange={(e) => setAbonoObservaciones(e.target.value)}
+                  className="clay-input w-full font-medium"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setModalAbonoPedido(null)}
+                  className="clay-btn clay-btn-light px-4 py-2 font-bold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={abonoLoading}
+                  className="clay-btn clay-btn-primary px-4 py-2 font-black flex items-center gap-1.5 shadow-md disabled:opacity-50"
+                >
+                  <Check className="w-4 h-4" />
+                  {abonoLoading ? 'Guardando...' : 'Guardar Abono'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

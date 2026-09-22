@@ -19,6 +19,27 @@ export async function GET(request: Request) {
         p.subtotal,
         p.costo_envio,
         p.total,
+        p.monto_cobrar_cce,
+        COALESCE((SELECT SUM(pg.monto) FROM public.pagos pg WHERE pg.pedido_id = p.id), 0)::float AS total_pagado,
+        COALESCE(
+          (
+            SELECT json_agg(
+              json_build_object(
+                'id', pg.id,
+                'monto', pg.monto,
+                'fecha_pago', pg.fecha_pago,
+                'forma_pago_id', pg.forma_pago_id,
+                'forma_pago_nombre', fp.nombre,
+                'num_documento_auto', pg.num_documento_auto,
+                'estado_pago', pg.estado_pago,
+                'usuario', pg.usuario
+              ) ORDER BY pg.created_at ASC
+            )
+            FROM public.pagos pg
+            LEFT JOIN public.formas_pago fp ON pg.forma_pago_id = fp.id
+            WHERE pg.pedido_id = p.id
+          ), '[]'::json
+        ) AS pagos,
         p.c807_guia_numero,
         p.c807_link_rastreo,
         p.c807_estado,
@@ -181,7 +202,7 @@ export async function POST(request: Request) {
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const numeroPedido = `KOD-${dateStr}-${randomSuffix}`;
 
-    // 3. Calcular montos
+    // 3. Calcular montos y estados de pago
     let subtotal = 0;
     for (const it of items) {
       const cant = Math.max(1, parseInt(it.cantidad, 10) || 1);
@@ -191,28 +212,53 @@ export async function POST(request: Request) {
     const envio = parseFloat(costo_envio) || 0;
     const total = subtotal + envio;
 
+    const anticipo = Math.max(0, parseFloat(body.anticipo_monto || body.monto_pagado) || 0);
+    const contraEntrega = body.pago_contraentrega !== undefined ? Boolean(body.pago_contraentrega) : true;
+    const balance = Math.max(0, total - anticipo);
+    const montoCobrarCce = contraEntrega ? balance : 0;
+    const finalTipoPago = contraEntrega ? 'CONTRAENTREGA' : (tipo_pago || 'TRANSFERENCIA');
+    const finalEstadoPago = anticipo >= total ? 'PAGADO' : anticipo > 0 ? 'PARCIAL' : 'PENDIENTE';
+
     // 4. Crear el pedido (Estado inicial: Registrado / Rojo)
     const newOrderRes = await client.query(
       `INSERT INTO public.pedidos (
-        numero_pedido, cliente_id, vendedora_id, estado, tipo_pago, estado_pago, subtotal, costo_envio, total, notas
-      ) VALUES ($1, $2, $3, 'Registrado', $4, $5, $6, $7, $8, $9)
+        numero_pedido, cliente_id, vendedora_id, estado, tipo_pago, estado_pago, subtotal, costo_envio, total, monto_cobrar_cce, notas
+      ) VALUES ($1, $2, $3, 'Registrado', $4, $5, $6, $7, $8, $9, $10)
       RETURNING id, numero_pedido, estado`,
       [
         numeroPedido,
         clienteId,
         vendedora_id || null,
-        tipo_pago || 'CONTRAENTREGA',
-        estado_pago,
+        finalTipoPago,
+        finalEstadoPago,
         subtotal,
         envio,
         total,
+        montoCobrarCce,
         notas,
       ]
     );
 
     const pedidoId = newOrderRes.rows[0].id;
 
-    // 5. Insertar items del pedido
+    // 5. Si hay anticipo y método de pago, registrar el abono en public.pagos
+    if (anticipo > 0 && body.forma_pago_id) {
+      await client.query(
+        `INSERT INTO public.pagos (
+          pedido_id, cliente_id, forma_pago_id, monto, fecha_pago, num_documento_auto, estado_pago, usuario, observaciones
+        ) VALUES ($1, $2, $3, $4, CURRENT_DATE, $5, 'Confirmado', $6, 'Anticipo inicial registrado al crear pedido')`,
+        [
+          pedidoId,
+          clienteId,
+          body.forma_pago_id,
+          anticipo,
+          (body.num_documento_auto || '').trim(),
+          vendedora_id || 'KÖDE',
+        ]
+      );
+    }
+
+    // 6. Insertar items del pedido
     for (const it of items) {
       const cant = Math.max(1, parseInt(it.cantidad, 10) || 1);
       const precio = parseFloat(it.precio_unitario) || 20.0;
