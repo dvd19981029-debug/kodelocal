@@ -77,7 +77,7 @@ interface PedidoItem {
 interface Pedido {
   id: string;
   numero_pedido: string;
-  estado: 'PENDIENTE_COMPRA' | 'PENDIENTE_PREPARAR' | 'GUIA_CREADA' | 'ENTREGADO' | 'CANCELADO';
+  estado: 'Registrado' | 'Insumos comprados' | 'Preparado' | 'Enviado' | 'Entregado' | 'Cancelado' | string;
   tipo_pago: string;
   estado_pago: string;
   subtotal: string | number;
@@ -693,7 +693,25 @@ export default function KodeSystemPage() {
   // Filtrado de pedidos
   const pedidosFiltrados = useMemo(() => {
     return pedidos.filter((p) => {
-      const matchEstado = filtroEstado === 'TODOS' || p.estado === filtroEstado;
+      let matchEstado = filtroEstado === 'TODOS';
+      if (!matchEstado) {
+        if (filtroEstado === 'Registrado') {
+          matchEstado = p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA';
+        } else if (filtroEstado === 'Insumos comprados') {
+          matchEstado = p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR';
+        } else if (filtroEstado === 'Preparado') {
+          matchEstado = p.estado === 'Preparado';
+        } else if (filtroEstado === 'Enviado') {
+          matchEstado = p.estado === 'Enviado' || p.estado === 'GUIA_CREADA';
+        } else if (filtroEstado === 'Entregado') {
+          matchEstado = p.estado === 'Entregado' || p.estado === 'ENTREGADO';
+        } else if (filtroEstado === 'Cancelado') {
+          matchEstado = p.estado === 'Cancelado' || p.estado === 'CANCELADO';
+        } else {
+          matchEstado = p.estado === filtroEstado;
+        }
+      }
+
       const matchQuery =
         !searchQuery.trim() ||
         p.numero_pedido.toLowerCase().includes(searchQuery.toLowerCase()) ||
