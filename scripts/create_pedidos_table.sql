@@ -92,21 +92,31 @@ CREATE INDEX IF NOT EXISTS idx_pedidos_c807_guia ON public.pedidos(c807_guia_num
 CREATE INDEX IF NOT EXISTS idx_pedidos_dte_codigo ON public.pedidos(dte_codigo_generacion);
 CREATE INDEX IF NOT EXISTS idx_pedidos_created_at ON public.pedidos(created_at DESC);
 
--- TABLA HIJA: DETALLE DE PERFUMES (ITEMS)
+-- TABLA HIJA: DETALLE DE PERFUMES (ITEMS / DETALLE PEDIDO)
+-- Depuración de AppSheet: 20 columnas reducidas a 10 columnas núcleo operativas
 CREATE TABLE IF NOT EXISTS public.pedido_items (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     pedido_id               UUID NOT NULL REFERENCES public.pedidos(id) ON DELETE CASCADE,
     catalogo_id             UUID NOT NULL REFERENCES public.catalogo(id),
-    version                 VARCHAR(20) NOT NULL DEFAULT 'NORMAL', -- 'NORMAL', 'EXTRA_SHOT'
+    version                 VARCHAR(20) NOT NULL DEFAULT 'Normal', -- 'Normal', 'Plus'
     cantidad                INT NOT NULL DEFAULT 1,
     precio_unitario         DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     subtotal                DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     insumo_comprado         BOOLEAN NOT NULL DEFAULT FALSE,
     fecha_compra_insumo     TIMESTAMPTZ,
+    comprado_por            VARCHAR(100),
+    usuario                 VARCHAR(100),                         -- Asesor/Vendedora que registró el item
     created_at              TIMESTAMPTZ DEFAULT NOW(),
     updated_at              TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Migraciones seguras para columnas si ya existe
+ALTER TABLE public.pedido_items ADD COLUMN IF NOT EXISTS version VARCHAR(20) DEFAULT 'Normal';
+ALTER TABLE public.pedido_items ADD COLUMN IF NOT EXISTS comprado_por VARCHAR(100);
+ALTER TABLE public.pedido_items ADD COLUMN IF NOT EXISTS usuario VARCHAR(100);
+
 CREATE INDEX IF NOT EXISTS idx_pedido_items_pedido_id ON public.pedido_items(pedido_id);
 CREATE INDEX IF NOT EXISTS idx_pedido_items_catalogo_id ON public.pedido_items(catalogo_id);
 CREATE INDEX IF NOT EXISTS idx_pedido_items_insumo_comprado ON public.pedido_items(insumo_comprado);
+CREATE INDEX IF NOT EXISTS idx_pedido_items_version ON public.pedido_items(version);
+

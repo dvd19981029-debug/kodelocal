@@ -67,7 +67,7 @@ interface PedidoItem {
   codigo: string;
   contratipo: string;
   marca?: string;
-  version: 'NORMAL' | 'EXTRA_SHOT';
+  version: 'Normal' | 'Plus' | 'NORMAL' | 'EXTRA_SHOT';
   cantidad: number;
   precio_unitario: number;
   subtotal: number;
@@ -204,7 +204,7 @@ export default function KodeSystemPage() {
   // Selector de perfumes en el form
   const [busquedaPerfume, setBusquedaPerfume] = useState('');
   const [perfumeSeleccionado, setPerfumeSeleccionado] = useState<CatalogoItem | null>(null);
-  const [versionSeleccionada, setVersionSeleccionada] = useState<'NORMAL' | 'EXTRA_SHOT'>('NORMAL');
+  const [versionSeleccionada, setVersionSeleccionada] = useState<'Normal' | 'Plus'>('Normal');
   const [cantidadPerfume, setCantidadPerfume] = useState<number>(1);
   const [itemsPedido, setItemsPedido] = useState<PedidoItem[]>([]);
 
@@ -397,9 +397,9 @@ export default function KodeSystemPage() {
 
   const handleAgregarItem = () => {
     if (!perfumeSeleccionado) return;
-    const precio = versionSeleccionada === 'EXTRA_SHOT'
-      ? parseFloat(perfumeSeleccionado.precio_extra_shot.toString())
-      : parseFloat(perfumeSeleccionado.precio_normal.toString());
+    const precio = (versionSeleccionada === 'Plus' || (versionSeleccionada as any) === 'EXTRA_SHOT')
+      ? parseFloat(perfumeSeleccionado.precio_extra_shot?.toString() || '25.00')
+      : parseFloat(perfumeSeleccionado.precio_normal?.toString() || '20.00');
 
     const nuevoItem: PedidoItem = {
       catalogo_id: perfumeSeleccionado.id,
@@ -417,7 +417,7 @@ export default function KodeSystemPage() {
     setPerfumeSeleccionado(null);
     setBusquedaPerfume('');
     setCantidadPerfume(1);
-    setVersionSeleccionada('NORMAL');
+    setVersionSeleccionada('Normal');
   };
 
   const handleEliminarItem = (index: number) => {
@@ -1378,27 +1378,27 @@ export default function KodeSystemPage() {
                               <div className="flex rounded-xl bg-slate-200/80 p-0.5 border border-slate-300/80">
                                 <button
                                   type="button"
-                                  onClick={() => setVersionSeleccionada('NORMAL')}
+                                  onClick={() => setVersionSeleccionada('Normal')}
                                   className={`px-3 py-1 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1 ${
-                                    versionSeleccionada === 'NORMAL'
+                                    versionSeleccionada === 'Normal' || (versionSeleccionada as any) === 'NORMAL'
                                       ? 'bg-white text-indigo-700 shadow-sm'
                                       : 'text-slate-600'
                                   }`}
                                 >
                                   <ArrowDown className="w-3 h-3" />
-                                  Normal ($20)
+                                  Normal (${perfumeSeleccionado.precio_normal || 20})
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => setVersionSeleccionada('EXTRA_SHOT')}
+                                  onClick={() => setVersionSeleccionada('Plus')}
                                   className={`px-3 py-1 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1 ${
-                                    versionSeleccionada === 'EXTRA_SHOT'
+                                    versionSeleccionada === 'Plus' || (versionSeleccionada as any) === 'EXTRA_SHOT'
                                       ? 'bg-purple-600 text-white shadow-sm'
                                       : 'text-slate-600'
                                   }`}
                                 >
                                   <Plus className="w-3 h-3" />
-                                  Extra Shot ($25)
+                                  Plus (${perfumeSeleccionado.precio_extra_shot || 25})
                                 </button>
                               </div>
 
@@ -1457,7 +1457,7 @@ export default function KodeSystemPage() {
                                 <div>
                                   <span className="font-extrabold text-slate-900">{it.contratipo}</span>
                                   <div className="text-slate-500 text-[11px]">
-                                    {it.version === 'EXTRA_SHOT' ? 'EXTRA SHOT' : 'NORMAL'} • {it.cantidad} x ${it.precio_unitario}
+                                    {(it.version === 'Plus' || (it.version as any) === 'EXTRA_SHOT') ? 'PLUS' : 'NORMAL'} • {it.cantidad} x ${it.precio_unitario}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -1717,7 +1717,7 @@ export default function KodeSystemPage() {
                                             <span className="font-bold text-slate-700 block mb-1">Fragancias ({p.items.length}):</span>
                                             {p.items.map((it, i) => (
                                               <div key={i} className="flex justify-between py-0.5 border-b border-slate-50 last:border-0">
-                                                <span>#{it.codigo} - {it.contratipo} ({it.version})</span>
+                                                <span>#{it.codigo} - {it.contratipo} ({it.version === 'Plus' || (it.version as any) === 'EXTRA_SHOT' ? 'Plus' : 'Normal'})</span>
                                                 <span className="font-mono font-bold">${it.subtotal}</span>
                                               </div>
                                             ))}
@@ -2054,12 +2054,12 @@ export default function KodeSystemPage() {
                                     <span className="text-xs font-extrabold text-slate-900">{item.contratipo}</span>
                                     <span
                                       className={`text-[10px] font-extrabold px-1.5 py-0.2 rounded ${
-                                        item.version === 'EXTRA_SHOT'
+                                        item.version === 'Plus' || (item.version as any) === 'EXTRA_SHOT'
                                           ? 'bg-purple-600 text-white'
                                           : 'bg-slate-200 text-slate-800'
                                       }`}
                                     >
-                                      {item.version === 'EXTRA_SHOT' ? '➕ Extra Shot' : '⬇️ Normal'}
+                                      {item.version === 'Plus' || (item.version as any) === 'EXTRA_SHOT' ? '➕ Plus' : '⬇️ Normal'}
                                     </span>
                                   </div>
                                   <div className="flex flex-wrap gap-1 mt-1 text-[10px] text-slate-500 font-mono">
@@ -2193,12 +2193,12 @@ export default function KodeSystemPage() {
                                   <span className="text-xs font-extrabold text-slate-900">{f.contratipo}</span>
                                   <span
                                     className={`text-[10px] font-extrabold px-1.5 py-0.2 rounded ${
-                                      f.version === 'EXTRA_SHOT'
+                                      f.version === 'Plus' || (f.version as any) === 'EXTRA_SHOT'
                                         ? 'bg-purple-600 text-white'
                                         : 'bg-slate-200 text-slate-800'
                                     }`}
                                   >
-                                    {f.version === 'EXTRA_SHOT' ? 'EXTRA SHOT' : 'NORMAL'}
+                                    {f.version === 'Plus' || (f.version as any) === 'EXTRA_SHOT' ? 'PLUS' : 'NORMAL'}
                                   </span>
                                 </div>
                                 <div className="text-[10px] text-slate-500 mt-0.5">

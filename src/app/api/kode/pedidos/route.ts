@@ -217,13 +217,14 @@ export async function POST(request: Request) {
       const cant = Math.max(1, parseInt(it.cantidad, 10) || 1);
       const precio = parseFloat(it.precio_unitario) || 20.0;
       const itemSubtotal = cant * precio;
-      const version = it.version === 'EXTRA_SHOT' ? 'EXTRA_SHOT' : 'NORMAL';
+      const version = (it.version === 'Plus' || it.version === 'EXTRA_SHOT') ? 'Plus' : 'Normal';
+      const usuario = body.vendedora_id || 'WhatsApp';
 
       await client.query(
         `INSERT INTO public.pedido_items (
-          pedido_id, catalogo_id, version, cantidad, precio_unitario, subtotal, insumo_comprado
-        ) VALUES ($1, $2, $3, $4, $5, $6, FALSE)`,
-        [pedidoId, it.catalogo_id, version, cant, precio, itemSubtotal]
+          pedido_id, catalogo_id, version, cantidad, precio_unitario, subtotal, insumo_comprado, usuario
+        ) VALUES ($1, $2, $3, $4, $5, $6, FALSE, $7)`,
+        [pedidoId, it.catalogo_id, version, cant, precio, itemSubtotal, usuario]
       );
     }
 
