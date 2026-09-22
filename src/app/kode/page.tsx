@@ -2336,6 +2336,16 @@ export default function KodeSystemPage() {
                                     <MessageCircle className="w-3 h-3" />
                                     <span>Enviar</span>
                                   </button>
+
+                                  <button
+                                    onClick={() => handleEmitirDte(p)}
+                                    disabled={emitiendoDteId === p.id}
+                                    className="clay-btn bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 text-[11px] font-bold flex items-center gap-1"
+                                    title="Emitir Factura Electrónica (DTE) con Factura Llama"
+                                  >
+                                    <ReceiptText className={`w-3 h-3 ${emitiendoDteId === p.id ? 'animate-spin' : 'text-emerald-600'}`} />
+                                    <span>{emitiendoDteId === p.id ? 'Emitiendo...' : 'Facturar DTE'}</span>
+                                  </button>
                                 </div>
                               </td>
                             </tr>
