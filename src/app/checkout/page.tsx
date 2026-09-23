@@ -122,7 +122,7 @@ export default function CheckoutPage() {
 
   // Estados de proceso
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [wompiCountdown, setWompiCountdown] = useState<number | null>(null);
+  const [wompiStatusText, setWompiStatusText] = useState<string | null>(null);
   const [completedOrder, setCompletedOrder] = useState<SaleRecord | null>(null);
   const [wompiCancelledNotice, setWompiCancelledNotice] = useState<string | null>(null);
 
@@ -162,12 +162,12 @@ export default function CheckoutPage() {
 
     const handlePageShow = () => {
       setIsSubmitting(false);
-      setWompiCountdown(null);
+      setWompiStatusText(null);
     };
 
     const handleFocus = () => {
       setIsSubmitting(false);
-      setWompiCountdown(null);
+      setWompiStatusText(null);
     };
 
     window.addEventListener('pageshow', handlePageShow);
@@ -220,17 +220,27 @@ export default function CheckoutPage() {
     let countdownTimer: NodeJS.Timeout | null = null;
 
     if (metodoPago === 'CARD') {
-      setWompiCountdown(8);
-      let current = 8;
+      setWompiStatusText('Redirigiendo a Wompi, por favor espere (5s)...');
+      let elapsedMs = 0;
       countdownTimer = setInterval(() => {
-        current -= 1;
-        if (current <= 0) {
-          if (countdownTimer) clearInterval(countdownTimer);
-          setWompiCountdown(0);
+        elapsedMs += 500;
+        const elapsedSec = elapsedMs / 1000;
+        if (elapsedSec < 1) {
+          setWompiStatusText('Redirigiendo a Wompi, por favor espere (5s)...');
+        } else if (elapsedSec < 2) {
+          setWompiStatusText('Redirigiendo a Wompi, por favor espere (4s)...');
+        } else if (elapsedSec < 3) {
+          setWompiStatusText('Redirigiendo a Wompi, por favor espere (3s)...');
+        } else if (elapsedSec < 4) {
+          setWompiStatusText('Redirigiendo a Wompi, por favor espere (2s)...');
+        } else if (elapsedSec < 5) {
+          setWompiStatusText('Redirigiendo a Wompi, por favor espere (1s)...');
+        } else if (elapsedSec < 7.5) {
+          setWompiStatusText('Cargando ahora...');
         } else {
-          setWompiCountdown(current);
+          setWompiStatusText('Redirigiendo...');
         }
-      }, 1000);
+      }, 500);
     }
 
     try {
@@ -429,7 +439,7 @@ export default function CheckoutPage() {
 
         // Detener el contador visual y mostrar inmediatamente el estado de entrada a Wompi
         if (countdownTimer) clearInterval(countdownTimer);
-        setWompiCountdown(0);
+        setWompiStatusText('Redirigiendo...');
 
         // Redireccionar al usuario inmediatamente a la pasarela oficial de Wompi / Banco Agrícola sin esperas artificiales
         window.location.href = wompiData.urlEnlace;
@@ -437,7 +447,7 @@ export default function CheckoutPage() {
         // Fallback de seguridad: si el usuario regresa con el botón de atrás
         setTimeout(() => {
           setIsSubmitting(false);
-          setWompiCountdown(null);
+          setWompiStatusText(null);
         }, 2500);
         return;
       }
@@ -446,10 +456,10 @@ export default function CheckoutPage() {
       clearCart();
       setCompletedOrder(newOrder);
       setIsSubmitting(false);
-      setWompiCountdown(null);
+      setWompiStatusText(null);
     } catch (error: any) {
       if (countdownTimer) clearInterval(countdownTimer);
-      setWompiCountdown(null);
+      setWompiStatusText(null);
       setIsSubmitting(false);
       console.error('Error procesando pedido online:', error);
       alert(error.message || 'Hubo un inconveniente al procesar tu pedido. Por favor verifica las existencias o escríbenos.');
@@ -1421,9 +1431,7 @@ export default function CheckoutPage() {
                     <Loader2 className="w-4 h-4 animate-spin text-white" />
                     <span>
                       {metodoPago === 'CARD' 
-                        ? (wompiCountdown === 0
-                            ? 'Entrando a Pago Seguro con Wompi...'
-                            : `Redirigiendo a Wompi, por favor espere${wompiCountdown !== null ? ` (${wompiCountdown}s)` : ''}...`)
+                        ? (wompiStatusText || 'Redirigiendo a Wompi, por favor espere (5s)...')
                         : 'Procesando comanda...'}
                     </span>
                   </span>
