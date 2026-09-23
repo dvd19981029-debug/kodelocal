@@ -11,6 +11,7 @@ export async function GET() {
         pi.id AS item_id,
         pi.pedido_id,
         p.numero_pedido,
+        p.estado AS pedido_estado,
         c.nombre_completo AS cliente_nombre,
         p.created_at AS fecha_registro,
         cat.id AS catalogo_id,

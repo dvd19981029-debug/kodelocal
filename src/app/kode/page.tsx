@@ -171,6 +171,7 @@ interface InsumoItem {
   item_id: string;
   pedido_id: string;
   numero_pedido: string;
+  pedido_estado?: string;
   cliente_nombre: string;
   fecha_registro: string;
   catalogo_id: string;
@@ -3160,8 +3161,16 @@ export default function KodeSystemPage() {
                                         </div>
                                       </td>
 
-                                      {/* 2. Cliente: Nombre del cliente */}
-                                      <td className="py-3 px-3 text-slate-800 font-bold whitespace-nowrap">
+                                      {/* 2. Cliente: Nombre del cliente (en rojo si está pendiente como en Estado Registrado) */}
+                                      <td className={`py-3 px-3 font-bold whitespace-nowrap ${
+                                        item.pedido_estado === 'Insumos comprados' || item.pedido_estado === 'PENDIENTE_PREPARAR'
+                                          ? 'text-amber-600'
+                                          : item.pedido_estado === 'Preparado' || item.pedido_estado === 'GUIA_CREADA'
+                                          ? 'text-sky-600'
+                                          : item.pedido_estado === 'Entregado'
+                                          ? 'text-emerald-600'
+                                          : 'text-red-600 hover:text-red-700'
+                                      }`}>
                                         {item.cliente_nombre}
                                       </td>
 
