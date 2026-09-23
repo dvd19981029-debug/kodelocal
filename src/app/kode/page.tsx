@@ -2139,26 +2139,24 @@ export default function KodeSystemPage() {
                                 <button
                                   type="button"
                                   onClick={() => setVersionSeleccionada('Normal')}
-                                  className={`px-3 py-1 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1 ${
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
                                     versionSeleccionada === 'Normal' || (versionSeleccionada as any) === 'NORMAL'
                                       ? 'bg-white text-indigo-700 shadow-sm'
-                                      : 'text-slate-600'
+                                      : 'text-slate-600 hover:text-slate-900'
                                   }`}
                                 >
-                                  <ArrowDown className="w-3 h-3" />
-                                  Normal (${perfumeSeleccionado.precio_normal || 20})
+                                  Normal
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => setVersionSeleccionada('Plus')}
-                                  className={`px-3 py-1 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1 ${
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
                                     versionSeleccionada === 'Plus' || (versionSeleccionada as any) === 'EXTRA_SHOT'
                                       ? 'bg-purple-600 text-white shadow-sm'
-                                      : 'text-slate-600'
+                                      : 'text-slate-600 hover:text-slate-900'
                                   }`}
                                 >
-                                  <Plus className="w-3 h-3" />
-                                  Plus (${perfumeSeleccionado.precio_extra_shot || 25})
+                                  Plus
                                 </button>
                               </div>
 
