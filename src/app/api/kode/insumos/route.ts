@@ -5,34 +5,28 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    // Consulta agrupada de insumos pendientes de compra
+    // Consulta de insumos individuales pendientes de compra
     const sql = `
       SELECT 
+        pi.id AS item_id,
+        pi.pedido_id,
+        p.numero_pedido,
+        c.nombre_completo AS cliente_nombre,
+        p.created_at AS fecha_registro,
         cat.id AS catalogo_id,
         cat.codigo,
         cat.contratipo,
         cat.marca_inspirada,
         cat.genero,
         pi.version,
-        SUM(pi.cantidad) AS total_unidades,
-        json_agg(
-          json_build_object(
-            'item_id', pi.id,
-            'pedido_id', p.id,
-            'numero_pedido', p.numero_pedido,
-            'cliente_nombre', c.nombre_completo,
-            'cantidad', pi.cantidad,
-            'created_at', p.created_at
-          ) ORDER BY p.created_at ASC
-        ) AS pedidos
+        pi.cantidad
       FROM public.pedido_items pi
       JOIN public.catalogo cat ON pi.catalogo_id = cat.id
       JOIN public.pedidos p ON pi.pedido_id = p.id
       JOIN public.clientes c ON p.cliente_id = c.id
       WHERE pi.insumo_comprado = FALSE 
         AND p.estado IN ('Registrado', 'PENDIENTE_COMPRA')
-      GROUP BY cat.id, cat.codigo, cat.contratipo, cat.marca_inspirada, cat.genero, pi.version
-      ORDER BY total_unidades DESC, cat.contratipo ASC;
+      ORDER BY p.created_at ASC, cat.contratipo ASC;
     `;
 
     const result = await queryKode(sql);

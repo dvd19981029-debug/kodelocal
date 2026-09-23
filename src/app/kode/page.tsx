@@ -166,21 +166,19 @@ interface Pedido {
   items: PedidoItem[];
 }
 
-interface InsumoAgrupado {
+interface InsumoItem {
+  item_id: string;
+  pedido_id: string;
+  numero_pedido: string;
+  cliente_nombre: string;
+  fecha_registro: string;
   catalogo_id: string;
   codigo: string;
   contratipo: string;
-  marca_inspirada: string;
+  marca_inspirada?: string;
   genero?: string;
-  version: string;
-  total_unidades: number | string;
-  pedidos: Array<{
-    item_id: string;
-    pedido_id: string;
-    numero_pedido: string;
-    cliente_nombre: string;
-    cantidad: number;
-  }>;
+  version: 'Normal' | 'Plus' | string;
+  cantidad: number;
 }
 
 interface CompraGasto {
@@ -243,7 +241,7 @@ export default function KodeSystemPage() {
   const [catalogo, setCatalogo] = useState<CatalogoItem[]>([]);
   const [vendedoras, setVendedoras] = useState<Vendedora[]>([]);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
-  const [insumos, setInsumos] = useState<InsumoAgrupado[]>([]);
+  const [insumos, setInsumos] = useState<InsumoItem[]>([]);
   const [compras, setCompras] = useState<CompraGasto[]>([]);
 
   // Loading & Toasts
@@ -1136,7 +1134,7 @@ export default function KodeSystemPage() {
 
   const insumosSplitPane = useMemo(() => {
     if (!selectedPedidoIdFab) return insumos;
-    return insumos.filter((item) => item.pedidos.some((p) => p.pedido_id === selectedPedidoIdFab));
+    return insumos.filter((item) => item.pedido_id === selectedPedidoIdFab);
   }, [insumos, selectedPedidoIdFab]);
 
   const fraganciasPorFabricar = useMemo(() => {
@@ -2966,7 +2964,7 @@ export default function KodeSystemPage() {
                       {/* ========================================================= */}
                       {/* TABLA IZQUIERDA: ESTADO REGISTRADO                        */}
                       {/* ========================================================= */}
-                      <div className="lg:col-span-7 flex flex-col">
+                      <div className="lg:col-span-5 flex flex-col">
                         {/* Barra Superior Header */}
                         <div className="px-4 py-3 bg-[#1e2024] border-b border-neutral-800 flex items-center justify-between gap-2">
                           <div className="flex items-center gap-3">
@@ -3074,12 +3072,19 @@ export default function KodeSystemPage() {
                       {/* ========================================================= */}
                       {/* TABLA DERECHA: INSUMOS PARA COMPRA                        */}
                       {/* ========================================================= */}
-                      <div className="lg:col-span-5 flex flex-col bg-[#16171a]">
+                      <div className="lg:col-span-7 flex flex-col bg-[#16171a]">
                         {/* Header Insumos */}
-                        <div className="px-4 py-3 bg-[#1e2024] border-b border-neutral-800 flex items-center justify-between">
-                          <h2 className="text-base font-bold text-neutral-100 tracking-tight">
-                            Insumos para compra
-                          </h2>
+                        <div className="px-4 py-3 bg-[#1e2024] border-b border-neutral-800 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <h2 className="text-base font-bold text-neutral-100 tracking-tight">
+                              Insumos para compra
+                            </h2>
+                            {selectedPedidoIdFab && (
+                              <span className="text-[10px] font-semibold bg-sky-950 text-sky-300 border border-sky-800 px-2 py-0.5 rounded">
+                                Filtrado por pedido
+                              </span>
+                            )}
+                          </div>
                           <span className="text-xs text-neutral-400 font-mono">
                             {insumosSplitPane.length} {insumosSplitPane.length === 1 ? 'insumo' : 'insumos'}
                           </span>
@@ -3090,77 +3095,70 @@ export default function KodeSystemPage() {
                           <table className="w-full text-left text-xs border-collapse">
                             <thead className="sticky top-0 bg-[#1e2024] border-b border-neutral-800 text-neutral-400 font-semibold">
                               <tr>
-                                <th className="py-2.5 px-4">Kodigo</th>
-                                <th className="py-2.5 px-3 text-right w-20">Uds</th>
+                                <th className="py-2.5 px-3">Kodigo</th>
+                                <th className="py-2.5 px-3">Cliente</th>
+                                <th className="py-2.5 px-3">Fecha registro</th>
+                                <th className="py-2.5 px-3 text-center">Version</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-neutral-800/80">
                               {insumosSplitPane.length === 0 ? (
                                 <tr>
-                                  <td colSpan={2} className="py-12 text-center text-neutral-500 font-medium">
+                                  <td colSpan={4} className="py-12 text-center text-neutral-500 font-medium">
                                     ¡Todos los insumos han sido comprados!
                                   </td>
                                 </tr>
                               ) : (
-                                insumosSplitPane.map((item, idx) => (
-                                  <tr key={idx} className="hover:bg-neutral-800/40 transition-colors">
-                                    <td className="py-2.5 px-4">
-                                      <div className="space-y-1">
-                                        <div className="flex items-center gap-2">
-                                          <button
-                                            type="button"
-                                            onClick={() =>
-                                              handleMarcarInsumo({ catalogo_id: item.catalogo_id, version: item.version })
-                                            }
-                                            disabled={loading}
-                                            title="Comprar todos los insumos de esta fragancia"
-                                            className="text-sky-400 hover:text-sky-300 shrink-0 transition-transform active:scale-95 cursor-pointer"
-                                          >
-                                            <PlusCircle className="w-4 h-4 fill-sky-500/20 text-sky-400" />
-                                          </button>
-                                          <span
-                                            onClick={() =>
-                                              handleMarcarInsumo({ catalogo_id: item.catalogo_id, version: item.version })
-                                            }
-                                            title="Clic para comprar insumo"
-                                            className="text-sky-400 hover:text-sky-300 font-medium cursor-pointer hover:underline text-xs"
-                                          >
-                                            {item.contratipo} - {item.marca_inspirada} - {item.genero || 'Unisex'} - {item.codigo}
+                                insumosSplitPane.map((item) => (
+                                  <tr key={item.item_id} className="hover:bg-neutral-800/40 transition-colors">
+                                    {/* 1. Kodigo: El nombre de la esencia y el código */}
+                                    <td className="py-3 px-3">
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleMarcarInsumo({ item_id: item.item_id })}
+                                          disabled={loading}
+                                          title="Comprar este insumo"
+                                          className="text-sky-400 hover:text-sky-300 shrink-0 transition-transform active:scale-95 cursor-pointer"
+                                        >
+                                          <PlusCircle className="w-4 h-4 fill-sky-500/20 text-sky-400" />
+                                        </button>
+                                        <span
+                                          onClick={() => handleMarcarInsumo({ item_id: item.item_id })}
+                                          title="Clic para marcar como comprado"
+                                          className="text-sky-400 hover:text-sky-300 font-medium cursor-pointer hover:underline text-xs"
+                                        >
+                                          {item.contratipo} - {item.codigo}
+                                        </span>
+                                        {item.cantidad > 1 && (
+                                          <span className="text-[10px] font-mono text-neutral-400 font-normal">
+                                            ({item.cantidad} uds)
                                           </span>
-                                          {item.version === 'Plus' && (
-                                            <span className="text-[9px] font-bold bg-purple-900/60 text-purple-300 border border-purple-700/50 px-1 py-0.2 rounded shrink-0">
-                                              Plus
-                                            </span>
-                                          )}
-                                        </div>
-
-                                        {/* Sub-pedidos asociados si hay más de 1 pedido */}
-                                        {item.pedidos.length > 1 && (
-                                          <div className="flex flex-wrap items-center gap-1 pl-6 pt-0.5">
-                                            {item.pedidos.map((ped, pedIdx) => (
-                                              <button
-                                                key={pedIdx}
-                                                type="button"
-                                                onClick={() => handleMarcarInsumo({ item_id: ped.item_id })}
-                                                disabled={loading}
-                                                title={`Comprar solo para ${ped.numero_pedido} (${ped.cliente_nombre})`}
-                                                className="text-[9px] font-mono bg-neutral-800 hover:bg-emerald-950 text-neutral-300 hover:text-emerald-400 border border-neutral-700 hover:border-emerald-600 rounded px-1.5 py-0.5 flex items-center gap-1 transition-colors cursor-pointer"
-                                              >
-                                                <span>{ped.numero_pedido}</span>
-                                                {ped.cantidad > 1 && (
-                                                  <span className="text-neutral-500">x{ped.cantidad}</span>
-                                                )}
-                                                <Check className="w-2.5 h-2.5 text-emerald-400" />
-                                              </button>
-                                            ))}
-                                          </div>
                                         )}
                                       </div>
                                     </td>
-                                    <td className="py-2.5 px-3 text-right align-top pt-3">
-                                      <span className="font-mono font-bold text-neutral-300 text-xs">
-                                        {item.total_unidades}
-                                      </span>
+
+                                    {/* 2. Cliente: Nombre del cliente */}
+                                    <td className="py-3 px-3 text-neutral-200 font-semibold whitespace-nowrap">
+                                      {item.cliente_nombre}
+                                    </td>
+
+                                    {/* 3. Fecha registro: Fecha y hora en que se registró */}
+                                    <td className="py-3 px-3 text-neutral-300 font-mono text-xs whitespace-nowrap">
+                                      {formatearMarcaTemporal(item.fecha_registro)}
+                                    </td>
+
+                                    {/* 4. Version: Normal o Plus */}
+                                    <td className="py-3 px-3 text-center whitespace-nowrap">
+                                      {item.version === 'Plus' || item.version === 'EXTRA_SHOT' ? (
+                                        <span className="text-[10px] font-bold bg-purple-900/60 text-purple-300 border border-purple-700/50 px-2.5 py-0.5 rounded">
+                                          Plus
+                                        </span>
+                                      ) : (
+                                        <span className="text-[10px] font-bold bg-neutral-800 text-neutral-300 border border-neutral-700/60 px-2.5 py-0.5 rounded">
+                                          Normal
+                                        </span>
+                                      )}
                                     </td>
                                   </tr>
                                 ))
