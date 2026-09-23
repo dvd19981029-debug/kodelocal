@@ -44,7 +44,8 @@ import {
   FileText,
   Mail,
   PlusCircle,
-  ArrowDownCircle
+  ArrowDownCircle,
+  Pencil
 } from 'lucide-react';
 import { DEPARTAMENTOS_CATALOG, MUNICIPIOS_CATALOG, resolveC807DeptoCode, getMunicipiosByDepto } from '@/lib/svTerritory';
 
@@ -92,6 +93,7 @@ interface CatalogoItem {
   genero: string;
   precio_normal: string | number;
   precio_extra_shot: string | number;
+  activo?: boolean;
   imagen_url?: string;
 }
 
@@ -277,7 +279,22 @@ export default function KodeSystemPage() {
 
   // Filtros del catálogo
   const [filtroGeneroCatalogo, setFiltroGeneroCatalogo] = useState<'TODOS' | 'CABALLERO' | 'DAMA' | 'UNISEX'>('TODOS');
+  const [filtroEstadoCatalogo, setFiltroEstadoCatalogo] = useState<'TODOS' | 'ACTIVOS' | 'INACTIVOS'>('TODOS');
   const [busquedaCatalogo, setBusquedaCatalogo] = useState('');
+
+  // Edición y disponibilidad de fragancias
+  const [perfumeEditando, setPerfumeEditando] = useState<CatalogoItem | null>(null);
+  const [formEdicionPerfume, setFormEdicionPerfume] = useState({
+    codigo: '',
+    contratipo: '',
+    marca_inspirada: '',
+    genero: 'Caballero',
+    precio_normal: '20.00',
+    precio_extra_shot: '25.00',
+    activo: true,
+  });
+  const [guardandoEdicionPerfume, setGuardandoEdicionPerfume] = useState(false);
+  const [togglingActivoId, setTogglingActivoId] = useState<string | null>(null);
 
   // Loading & Toasts
   const [loading, setLoading] = useState(false);
@@ -443,7 +460,7 @@ export default function KodeSystemPage() {
 
   const fetchCatalogo = async () => {
     try {
-      const res = await fetch('/api/kode/catalogo');
+      const res = await fetch('/api/kode/catalogo?all=true');
       const data = await res.json();
       if (data.success) {
         setCatalogo(data.perfumes);
@@ -722,6 +739,10 @@ export default function KodeSystemPage() {
   };
 
   const handleSeleccionarPerfume = (p: CatalogoItem) => {
+    if (p.activo === false) {
+      showToast(`La fragancia #${p.codigo} (${p.contratipo}) está inactiva/agotada y no se puede vender.`, 'error');
+      return;
+    }
     setPerfumeSeleccionado(p);
     setBusquedaPerfume(`${p.codigo} - ${p.contratipo}`);
     setActiveNav('VENTAS');
@@ -733,12 +754,17 @@ export default function KodeSystemPage() {
     if (!busquedaPerfume.trim()) return [];
     const q = busquedaPerfume.toLowerCase();
     return catalogo
+      .filter((p) => p.activo !== false)
       .filter((p) => p.codigo.toLowerCase().includes(q) || p.contratipo.toLowerCase().includes(q) || p.marca_inspirada.toLowerCase().includes(q))
       .slice(0, 10);
   }, [catalogo, busquedaPerfume]);
 
   const handleAgregarItem = () => {
     if (!perfumeSeleccionado) return;
+    if (perfumeSeleccionado.activo === false) {
+      showToast('Esta fragancia está inactiva/agotada y no se puede vender.', 'error');
+      return;
+    }
     const precio = (versionSeleccionada === 'Plus' || (versionSeleccionada as any) === 'EXTRA_SHOT')
       ? parseFloat(perfumeSeleccionado.precio_extra_shot?.toString() || '25.00')
       : parseFloat(perfumeSeleccionado.precio_normal?.toString() || '20.00');
@@ -1287,6 +1313,12 @@ export default function KodeSystemPage() {
 
   const catalogoFiltrado = useMemo(() => {
     let list = catalogo;
+    if (filtroEstadoCatalogo === 'ACTIVOS') {
+      list = list.filter((p) => p.activo !== false);
+    } else if (filtroEstadoCatalogo === 'INACTIVOS') {
+      list = list.filter((p) => p.activo === false);
+    }
+
     if (filtroGeneroCatalogo !== 'TODOS') {
       list = list.filter((p) => {
         const g = (p.genero || '').toUpperCase();
@@ -1305,13 +1337,18 @@ export default function KodeSystemPage() {
         p.marca_inspirada.toLowerCase().includes(q) ||
         (p.genero && p.genero.toLowerCase().includes(q))
     );
-  }, [catalogo, filtroGeneroCatalogo, busquedaCatalogo, searchQuery]);
+  }, [catalogo, filtroEstadoCatalogo, filtroGeneroCatalogo, busquedaCatalogo, searchQuery]);
 
   const conteosCatalogo = useMemo(() => {
     let cab = 0;
     let dam = 0;
     let uni = 0;
+    let act = 0;
+    let inact = 0;
     catalogo.forEach((p) => {
+      if (p.activo !== false) act++;
+      else inact++;
+
       const g = (p.genero || '').toUpperCase();
       if (g.includes('CABALLERO') || g.includes('HOMBRE') || g === 'H') cab++;
       else if (g.includes('DAMA') || g.includes('MUJER') || g === 'F') dam++;
@@ -1322,6 +1359,8 @@ export default function KodeSystemPage() {
       caballero: cab,
       dama: dam,
       unisex: uni,
+      activos: act,
+      inactivos: inact,
     };
   }, [catalogo]);
 
@@ -1353,6 +1392,89 @@ export default function KodeSystemPage() {
         {generoRaw || '-'}
       </span>
     );
+  };
+
+  const handleToggleActivo = async (p: CatalogoItem) => {
+    const nuevoEstado = !(p.activo !== false);
+    setTogglingActivoId(p.id);
+    try {
+      const res = await fetch('/api/kode/catalogo', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: p.id, activo: nuevoEstado }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCatalogo((prev) =>
+          prev.map((item) => (item.id === p.id ? { ...item, activo: nuevoEstado } : item))
+        );
+        showToast(
+          `Fragancia #${p.codigo} (${p.contratipo}) marcada como ${nuevoEstado ? 'ACTIVA (Disponible)' : 'INACTIVA (Agotada)'}`,
+          nuevoEstado ? 'success' : 'info'
+        );
+      } else {
+        showToast(data.error || 'Error al actualizar estado', 'error');
+      }
+    } catch (err) {
+      console.error('Error toggling activo:', err);
+      showToast('Error de red al actualizar estado', 'error');
+    } finally {
+      setTogglingActivoId(null);
+    }
+  };
+
+  const handleAbrirEdicionPerfume = (p: CatalogoItem) => {
+    setPerfumeEditando(p);
+    setFormEdicionPerfume({
+      codigo: p.codigo || '',
+      contratipo: p.contratipo || '',
+      marca_inspirada: p.marca_inspirada || '',
+      genero: p.genero || 'Caballero',
+      precio_normal: String(p.precio_normal || '20.00'),
+      precio_extra_shot: String(p.precio_extra_shot || '25.00'),
+      activo: p.activo !== false,
+    });
+  };
+
+  const handleGuardarEdicionPerfume = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!perfumeEditando) return;
+    if (!formEdicionPerfume.codigo.trim() || !formEdicionPerfume.contratipo.trim()) {
+      showToast('Código y Contratipo son obligatorios', 'error');
+      return;
+    }
+    setGuardandoEdicionPerfume(true);
+    try {
+      const res = await fetch('/api/kode/catalogo', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: perfumeEditando.id,
+          codigo: formEdicionPerfume.codigo,
+          contratipo: formEdicionPerfume.contratipo,
+          marca_inspirada: formEdicionPerfume.marca_inspirada,
+          genero: formEdicionPerfume.genero,
+          precio_normal: parseFloat(formEdicionPerfume.precio_normal) || 20.0,
+          precio_extra_shot: parseFloat(formEdicionPerfume.precio_extra_shot) || 25.0,
+          activo: formEdicionPerfume.activo,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCatalogo((prev) =>
+          prev.map((item) => (item.id === perfumeEditando.id ? { ...item, ...data.perfume } : item))
+        );
+        showToast(`Fragancia #${formEdicionPerfume.codigo} actualizada con éxito`, 'success');
+        setPerfumeEditando(null);
+      } else {
+        showToast(data.error || 'Error al guardar cambios de la fragancia', 'error');
+      }
+    } catch (err) {
+      console.error('Error guardando edicion:', err);
+      showToast('Error de red al guardar fragancia', 'error');
+    } finally {
+      setGuardandoEdicionPerfume(false);
+    }
   };
 
   const pedidosRojos = useMemo(() => {
@@ -3172,63 +3294,107 @@ export default function KodeSystemPage() {
 
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-slate-500 font-semibold font-mono bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-lg">
-                        {catalogoFiltrado.length} {catalogoFiltrado.length === 1 ? 'fragancia' : 'fragancias'} {filtroGeneroCatalogo !== 'TODOS' ? `(${filtroGeneroCatalogo.toLowerCase()})` : ''}
+                        {catalogoFiltrado.length} {catalogoFiltrado.length === 1 ? 'fragancia' : 'fragancias'} {filtroGeneroCatalogo !== 'TODOS' ? `(${filtroGeneroCatalogo.toLowerCase()})` : ''} {filtroEstadoCatalogo !== 'TODOS' ? `• ${filtroEstadoCatalogo.toLowerCase()}` : ''}
                       </span>
                     </div>
                   </div>
 
-                  {/* Barra de Filtros de Género y Buscador Rápido */}
+                  {/* Barra de Filtros de Género, Estado y Buscador Rápido */}
                   <div className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-wrap items-center justify-between gap-3">
-                    {/* Filtros de Género */}
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => setFiltroGeneroCatalogo('TODOS')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                          filtroGeneroCatalogo === 'TODOS'
-                            ? 'bg-slate-900 text-white shadow-xs'
-                            : 'bg-slate-100 hover:bg-slate-200/70 text-slate-600'
-                        }`}
-                      >
-                        Todos ({conteosCatalogo.todos})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setFiltroGeneroCatalogo('CABALLERO')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                          filtroGeneroCatalogo === 'CABALLERO'
-                            ? 'bg-sky-700 text-white shadow-xs'
-                            : 'bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200/60'
-                        }`}
-                      >
-                        Caballero ({conteosCatalogo.caballero})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setFiltroGeneroCatalogo('DAMA')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                          filtroGeneroCatalogo === 'DAMA'
-                            ? 'bg-pink-700 text-white shadow-xs'
-                            : 'bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200/60'
-                        }`}
-                      >
-                        Dama ({conteosCatalogo.dama})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setFiltroGeneroCatalogo('UNISEX')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                          filtroGeneroCatalogo === 'UNISEX'
-                            ? 'bg-purple-700 text-white shadow-xs'
-                            : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/60'
-                        }`}
-                      >
-                        Unisex ({conteosCatalogo.unisex})
-                      </button>
+                    {/* Filtros de Género y Disponibilidad */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {/* Géneros */}
+                      <div className="flex flex-wrap items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setFiltroGeneroCatalogo('TODOS')}
+                          className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            filtroGeneroCatalogo === 'TODOS'
+                              ? 'bg-slate-900 text-white shadow-xs'
+                              : 'bg-slate-100 hover:bg-slate-200/70 text-slate-600'
+                          }`}
+                        >
+                          Todos ({conteosCatalogo.todos})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFiltroGeneroCatalogo('CABALLERO')}
+                          className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            filtroGeneroCatalogo === 'CABALLERO'
+                              ? 'bg-sky-700 text-white shadow-xs'
+                              : 'bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200/60'
+                          }`}
+                        >
+                          Caballero ({conteosCatalogo.caballero})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFiltroGeneroCatalogo('DAMA')}
+                          className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            filtroGeneroCatalogo === 'DAMA'
+                              ? 'bg-pink-700 text-white shadow-xs'
+                              : 'bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200/60'
+                          }`}
+                        >
+                          Dama ({conteosCatalogo.dama})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFiltroGeneroCatalogo('UNISEX')}
+                          className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            filtroGeneroCatalogo === 'UNISEX'
+                              ? 'bg-purple-700 text-white shadow-xs'
+                              : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/60'
+                          }`}
+                        >
+                          Unisex ({conteosCatalogo.unisex})
+                        </button>
+                      </div>
+
+                      <span className="hidden sm:inline-block text-slate-300">|</span>
+
+                      {/* Disponibilidad / Estado */}
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setFiltroEstadoCatalogo('TODOS')}
+                          className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                            filtroEstadoCatalogo === 'TODOS'
+                              ? 'bg-slate-800 text-white shadow-2xs'
+                              : 'text-slate-600 hover:text-slate-900 bg-slate-100/80'
+                          }`}
+                        >
+                          Todas
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFiltroEstadoCatalogo('ACTIVOS')}
+                          className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer inline-flex items-center gap-1 ${
+                            filtroEstadoCatalogo === 'ACTIVOS'
+                              ? 'bg-emerald-600 text-white shadow-2xs'
+                              : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/60'
+                          }`}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          Activas ({conteosCatalogo.activos})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFiltroEstadoCatalogo('INACTIVOS')}
+                          className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer inline-flex items-center gap-1 ${
+                            filtroEstadoCatalogo === 'INACTIVOS'
+                              ? 'bg-rose-600 text-white shadow-2xs'
+                              : 'text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/60'
+                          }`}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                          Agotadas ({conteosCatalogo.inactivos})
+                        </button>
+                      </div>
                     </div>
 
                     {/* Buscador Rápido Local */}
-                    <div className="relative w-full sm:w-80">
+                    <div className="relative w-full sm:w-72">
                       <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
                         type="text"
@@ -3263,7 +3429,7 @@ export default function KodeSystemPage() {
                             <th className="py-3 px-4">Estado</th>
                             <th className="py-3 px-4 text-right">Precio Normal</th>
                             <th className="py-3 px-4 text-right">Precio Extra Shot</th>
-                            <th className="py-3 px-4 text-center">Acción</th>
+                            <th className="py-3 px-4 text-center">Acciones</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 bg-white">
@@ -3285,9 +3451,26 @@ export default function KodeSystemPage() {
                                 <td className="py-3 px-4 text-slate-600 font-medium">{p.marca_inspirada}</td>
                                 <td className="py-3 px-4">{renderGeneroBadge(p.genero)}</td>
                                 <td className="py-3 px-4">
-                                  <span className="inline-flex items-center text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                                    Activa
-                                  </span>
+                                  <button
+                                    type="button"
+                                    disabled={togglingActivoId === p.id}
+                                    onClick={() => handleToggleActivo(p)}
+                                    title={p.activo !== false ? 'Clic para desactivar (marcar agotada)' : 'Clic para activar (disponible para venta)'}
+                                    className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full transition-all cursor-pointer shadow-2xs ${
+                                      p.activo !== false
+                                        ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
+                                        : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
+                                    }`}
+                                  >
+                                    <span
+                                      className={`w-1.5 h-1.5 rounded-full ${
+                                        p.activo !== false ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'
+                                      }`}
+                                    />
+                                    <span>
+                                      {togglingActivoId === p.id ? '...' : p.activo !== false ? 'Activa' : 'Inactiva'}
+                                    </span>
+                                  </button>
                                 </td>
                                 <td className="py-3 px-4 text-right font-mono font-bold text-emerald-700">
                                   ${parseFloat(p.precio_normal?.toString() || '20').toFixed(2)}
@@ -3296,15 +3479,36 @@ export default function KodeSystemPage() {
                                   ${parseFloat(p.precio_extra_shot?.toString() || '25').toFixed(2)}
                                 </td>
                                 <td className="py-3 px-4 text-center">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleSeleccionarPerfume(p)}
-                                    className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors shadow-2xs cursor-pointer inline-flex items-center gap-1"
-                                    title={`Crear pedido con #${p.codigo} ${p.contratipo}`}
-                                  >
-                                    <Plus className="w-3 h-3" />
-                                    <span>Pedido</span>
-                                  </button>
+                                  <div className="flex items-center justify-center gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAbrirEdicionPerfume(p)}
+                                      className="px-2 py-1 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-lg text-xs font-bold transition-colors border border-slate-200 shadow-2xs cursor-pointer inline-flex items-center gap-1"
+                                      title={`Editar fragancia #${p.codigo} ${p.contratipo}`}
+                                    >
+                                      <Pencil className="w-3 h-3 text-slate-500" />
+                                      <span>Editar</span>
+                                    </button>
+
+                                    {p.activo !== false ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleSeleccionarPerfume(p)}
+                                        className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors shadow-2xs cursor-pointer inline-flex items-center gap-1"
+                                        title={`Crear pedido con #${p.codigo} ${p.contratipo}`}
+                                      >
+                                        <Plus className="w-3 h-3" />
+                                        <span>Pedido</span>
+                                      </button>
+                                    ) : (
+                                      <span
+                                        className="px-2 py-1 bg-slate-100 text-slate-400 rounded-lg text-xs font-semibold border border-slate-200 select-none cursor-not-allowed"
+                                        title="Fragancia inactiva / agotada. Actívala para poder venderla."
+                                      >
+                                        Agotada
+                                      </span>
+                                    )}
+                                  </div>
                                 </td>
                               </tr>
                             ))
@@ -3330,69 +3534,113 @@ export default function KodeSystemPage() {
                     INVENTARIO / CATÁLOGO GENERAL
                   </h2>
                   <p className="text-[11px] text-slate-400 font-medium">
-                    Listado completo de fragancias, contratipos, géneros y tarifas oficiales
+                    Listado completo de fragancias, tarifas y control de disponibilidad para venta
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-slate-500 font-semibold font-mono bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-lg">
-                    {catalogoFiltrado.length} {catalogoFiltrado.length === 1 ? 'fragancia' : 'fragancias disponibles'}
+                    {catalogoFiltrado.length} {catalogoFiltrado.length === 1 ? 'fragancia' : 'fragancias disponibles'} {filtroEstadoCatalogo !== 'TODOS' ? `• ${filtroEstadoCatalogo.toLowerCase()}` : ''}
                   </span>
                 </div>
               </div>
 
-              {/* Barra de Filtros de Género y Buscador Rápido */}
+              {/* Barra de Filtros de Género, Estado y Buscador Rápido */}
               <div className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-wrap items-center justify-between gap-3">
-                {/* Filtros de Género */}
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setFiltroGeneroCatalogo('TODOS')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      filtroGeneroCatalogo === 'TODOS'
-                        ? 'bg-slate-900 text-white shadow-xs'
-                        : 'bg-slate-100 hover:bg-slate-200/70 text-slate-600'
-                    }`}
-                  >
-                    Todos ({conteosCatalogo.todos})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFiltroGeneroCatalogo('CABALLERO')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      filtroGeneroCatalogo === 'CABALLERO'
-                        ? 'bg-sky-700 text-white shadow-xs'
-                        : 'bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200/60'
-                    }`}
-                  >
-                    Caballero ({conteosCatalogo.caballero})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFiltroGeneroCatalogo('DAMA')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      filtroGeneroCatalogo === 'DAMA'
-                        ? 'bg-pink-700 text-white shadow-xs'
-                        : 'bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200/60'
-                    }`}
-                  >
-                    Dama ({conteosCatalogo.dama})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFiltroGeneroCatalogo('UNISEX')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      filtroGeneroCatalogo === 'UNISEX'
-                        ? 'bg-purple-700 text-white shadow-xs'
-                        : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/60'
-                    }`}
-                  >
-                    Unisex ({conteosCatalogo.unisex})
-                  </button>
+                {/* Filtros de Género y Disponibilidad */}
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Géneros */}
+                  <div className="flex flex-wrap items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setFiltroGeneroCatalogo('TODOS')}
+                      className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        filtroGeneroCatalogo === 'TODOS'
+                          ? 'bg-slate-900 text-white shadow-xs'
+                          : 'bg-slate-100 hover:bg-slate-200/70 text-slate-600'
+                      }`}
+                    >
+                      Todos ({conteosCatalogo.todos})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFiltroGeneroCatalogo('CABALLERO')}
+                      className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        filtroGeneroCatalogo === 'CABALLERO'
+                          ? 'bg-sky-700 text-white shadow-xs'
+                          : 'bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200/60'
+                      }`}
+                    >
+                      Caballero ({conteosCatalogo.caballero})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFiltroGeneroCatalogo('DAMA')}
+                      className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        filtroGeneroCatalogo === 'DAMA'
+                          ? 'bg-pink-700 text-white shadow-xs'
+                          : 'bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200/60'
+                      }`}
+                    >
+                      Dama ({conteosCatalogo.dama})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFiltroGeneroCatalogo('UNISEX')}
+                      className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        filtroGeneroCatalogo === 'UNISEX'
+                          ? 'bg-purple-700 text-white shadow-xs'
+                          : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/60'
+                      }`}
+                    >
+                      Unisex ({conteosCatalogo.unisex})
+                    </button>
+                  </div>
+
+                  <span className="hidden sm:inline-block text-slate-300">|</span>
+
+                  {/* Disponibilidad / Estado */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setFiltroEstadoCatalogo('TODOS')}
+                      className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                        filtroEstadoCatalogo === 'TODOS'
+                          ? 'bg-slate-800 text-white shadow-2xs'
+                          : 'text-slate-600 hover:text-slate-900 bg-slate-100/80'
+                      }`}
+                    >
+                      Todas
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFiltroEstadoCatalogo('ACTIVOS')}
+                      className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer inline-flex items-center gap-1 ${
+                        filtroEstadoCatalogo === 'ACTIVOS'
+                          ? 'bg-emerald-600 text-white shadow-2xs'
+                          : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/60'
+                      }`}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      Activas ({conteosCatalogo.activos})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFiltroEstadoCatalogo('INACTIVOS')}
+                      className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer inline-flex items-center gap-1 ${
+                        filtroEstadoCatalogo === 'INACTIVOS'
+                          ? 'bg-rose-600 text-white shadow-2xs'
+                          : 'text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/60'
+                      }`}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                      Agotadas ({conteosCatalogo.inactivos})
+                    </button>
+                  </div>
                 </div>
 
                 {/* Buscador Rápido Local */}
-                <div className="relative w-full sm:w-80">
+                <div className="relative w-full sm:w-72">
                   <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
@@ -3427,7 +3675,7 @@ export default function KodeSystemPage() {
                         <th className="py-3 px-4">Estado</th>
                         <th className="py-3 px-4 text-right">Precio Normal</th>
                         <th className="py-3 px-4 text-right">Precio Extra Shot</th>
-                        <th className="py-3 px-4 text-center">Acción</th>
+                        <th className="py-3 px-4 text-center">Acciones</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
@@ -3449,9 +3697,26 @@ export default function KodeSystemPage() {
                             <td className="py-3 px-4 text-slate-600 font-medium">{p.marca_inspirada}</td>
                             <td className="py-3 px-4">{renderGeneroBadge(p.genero)}</td>
                             <td className="py-3 px-4">
-                              <span className="inline-flex items-center text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                                Activa
-                              </span>
+                              <button
+                                type="button"
+                                disabled={togglingActivoId === p.id}
+                                onClick={() => handleToggleActivo(p)}
+                                title={p.activo !== false ? 'Clic para desactivar (marcar agotada)' : 'Clic para activar (disponible para venta)'}
+                                className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full transition-all cursor-pointer shadow-2xs ${
+                                  p.activo !== false
+                                    ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
+                                    : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
+                                }`}
+                              >
+                                <span
+                                  className={`w-1.5 h-1.5 rounded-full ${
+                                    p.activo !== false ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'
+                                  }`}
+                                />
+                                <span>
+                                  {togglingActivoId === p.id ? '...' : p.activo !== false ? 'Activa' : 'Inactiva'}
+                                </span>
+                              </button>
                             </td>
                             <td className="py-3 px-4 text-right font-mono font-bold text-emerald-700">
                               ${parseFloat(p.precio_normal?.toString() || '20').toFixed(2)}
@@ -3460,15 +3725,36 @@ export default function KodeSystemPage() {
                               ${parseFloat(p.precio_extra_shot?.toString() || '25').toFixed(2)}
                             </td>
                             <td className="py-3 px-4 text-center">
-                              <button
-                                type="button"
-                                onClick={() => handleSeleccionarPerfume(p)}
-                                className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors shadow-2xs cursor-pointer inline-flex items-center gap-1"
-                                title={`Crear pedido con #${p.codigo} ${p.contratipo}`}
-                              >
-                                <Plus className="w-3 h-3" />
-                                <span>Pedido</span>
-                              </button>
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => handleAbrirEdicionPerfume(p)}
+                                  className="px-2 py-1 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-lg text-xs font-bold transition-colors border border-slate-200 shadow-2xs cursor-pointer inline-flex items-center gap-1"
+                                  title={`Editar fragancia #${p.codigo} ${p.contratipo}`}
+                                >
+                                  <Pencil className="w-3 h-3 text-slate-500" />
+                                  <span>Editar</span>
+                                </button>
+
+                                {p.activo !== false ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSeleccionarPerfume(p)}
+                                    className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors shadow-2xs cursor-pointer inline-flex items-center gap-1"
+                                    title={`Crear pedido con #${p.codigo} ${p.contratipo}`}
+                                  >
+                                    <Plus className="w-3 h-3" />
+                                    <span>Pedido</span>
+                                  </button>
+                                ) : (
+                                  <span
+                                    className="px-2 py-1 bg-slate-100 text-slate-400 rounded-lg text-xs font-semibold border border-slate-200 select-none cursor-not-allowed"
+                                    title="Fragancia inactiva / agotada. Actívala para poder venderla."
+                                  >
+                                    Agotada
+                                  </span>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         ))
@@ -4665,6 +4951,189 @@ export default function KodeSystemPage() {
                 >
                   <Check className="w-4 h-4" />
                   {abonoLoading ? 'Guardando...' : 'Guardar Abono'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* MODAL: EDITAR FRAGANCIA DE CATÁLOGO                            */}
+      {/* ============================================================== */}
+      {perfumeEditando && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 my-8">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600">
+                  <Pencil className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900">
+                    Editar Fragancia #{perfumeEditando.codigo}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    Actualiza información, precios y disponibilidad en inventario
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPerfumeEditando(null)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleGuardarEdicionPerfume} className="space-y-4 text-xs">
+              {/* Tarjeta de Disponibilidad / Estado Activa vs Inactiva */}
+              <div
+                onClick={() => setFormEdicionPerfume((prev) => ({ ...prev, activo: !prev.activo }))}
+                className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                  formEdicionPerfume.activo
+                    ? 'bg-emerald-50/70 border-emerald-300 text-emerald-900'
+                    : 'bg-rose-50/70 border-rose-300 text-rose-900'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${
+                      formEdicionPerfume.activo ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
+                    }`}
+                  >
+                    {formEdicionPerfume.activo ? '✓' : '✕'}
+                  </div>
+                  <div>
+                    <span className="font-extrabold block text-xs">
+                      {formEdicionPerfume.activo ? 'FRAGANCIA ACTIVA (Disponible)' : 'FRAGANCIA INACTIVA (Agotada)'}
+                    </span>
+                    <span className="text-[11px] opacity-80 block">
+                      {formEdicionPerfume.activo
+                        ? 'Se puede vender y aparecerá en el catálogo para pedidos.'
+                        : 'No se podrá vender ni seleccionar en pedidos nuevos.'}
+                    </span>
+                  </div>
+                </div>
+
+                <div
+                  className={`px-3 py-1 rounded-full text-[11px] font-black border uppercase tracking-wider shrink-0 ${
+                    formEdicionPerfume.activo
+                      ? 'bg-emerald-100 border-emerald-300 text-emerald-800'
+                      : 'bg-rose-100 border-rose-300 text-rose-800'
+                  }`}
+                >
+                  {formEdicionPerfume.activo ? 'Activa' : 'Inactiva'}
+                </div>
+              </div>
+
+              {/* Grid Código y Género */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Kodigo / Código *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formEdicionPerfume.codigo}
+                    onChange={(e) => setFormEdicionPerfume((prev) => ({ ...prev, codigo: e.target.value }))}
+                    className="w-full px-3 py-2 text-xs font-mono font-bold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    placeholder="Ej. 100"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Género *</label>
+                  <select
+                    value={formEdicionPerfume.genero}
+                    onChange={(e) => setFormEdicionPerfume((prev) => ({ ...prev, genero: e.target.value }))}
+                    className="w-full px-3 py-2 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+                  >
+                    <option value="Caballero">Caballero</option>
+                    <option value="Dama">Dama</option>
+                    <option value="Unisex">Unisex</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Contratipo (Nombre) */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Contratipo (Nombre de la fragancia) *</label>
+                <input
+                  type="text"
+                  required
+                  value={formEdicionPerfume.contratipo}
+                  onChange={(e) => setFormEdicionPerfume((prev) => ({ ...prev, contratipo: e.target.value }))}
+                  className="w-full px-3 py-2 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  placeholder="Ej. 1 Million Elixir H"
+                />
+              </div>
+
+              {/* Marca Inspirada */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Marca Inspirada / Diseñador</label>
+                <input
+                  type="text"
+                  value={formEdicionPerfume.marca_inspirada}
+                  onChange={(e) => setFormEdicionPerfume((prev) => ({ ...prev, marca_inspirada: e.target.value }))}
+                  className="w-full px-3 py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  placeholder="Ej. Paco Rabanne"
+                />
+              </div>
+
+              {/* Precios Normal y Extra Shot */}
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Precio Normal ($) *</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      required
+                      value={formEdicionPerfume.precio_normal}
+                      onChange={(e) => setFormEdicionPerfume((prev) => ({ ...prev, precio_normal: e.target.value }))}
+                      className="w-full pl-7 pr-3 py-2 text-xs font-mono font-bold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-emerald-700"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Precio Extra Shot ($) *</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      required
+                      value={formEdicionPerfume.precio_extra_shot}
+                      onChange={(e) =>
+                        setFormEdicionPerfume((prev) => ({ ...prev, precio_extra_shot: e.target.value }))
+                      }
+                      className="w-full pl-7 pr-3 py-2 text-xs font-mono font-bold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-purple-700"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Botones de acción */}
+              <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setPerfumeEditando(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors border border-slate-200 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={guardandoEdicionPerfume}
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black shadow-md transition-all disabled:opacity-50 inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>{guardandoEdicionPerfume ? 'Guardando...' : 'Guardar Cambios'}</span>
                 </button>
               </div>
             </form>
