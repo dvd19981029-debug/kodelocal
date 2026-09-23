@@ -50,10 +50,17 @@ export async function GET() {
         COUNT(DISTINCT p.id) AS pedidos_totales,
         COUNT(DISTINCT p.id) FILTER (WHERE p.estado IN ('Entregado', 'ENTREGADO')) AS pedidos_entregados,
         COALESCE(SUM(DISTINCT p.total), 0) AS ventas_totales,
-        -- REGLA DE NEGOCIO: La comisión de venta solo se calcula y acumula cuando el pedido está ENTREGADO
+        -- REGLA DE NEGOCIO: La comisión de venta se calcula línea por línea y solo se acumula cuando el pedido está ENTREGADO
         COALESCE(
           (
-            SELECT SUM(COALESCE(ped.subtotal, ped.total, 0) * (COALESCE(u.comision_porcentaje, 5.00) / 100.0))
+            SELECT SUM(
+              COALESCE(
+                (SELECT SUM(pi.subtotal) FROM public.pedido_items pi WHERE pi.pedido_id = ped.id),
+                ped.subtotal,
+                ped.total,
+                0
+              ) * (COALESCE(u.comision_porcentaje, 5.00) / 100.0)
+            )
             FROM public.pedidos ped
             WHERE ped.vendedora_id = u.id
               AND ped.estado IN ('Entregado', 'ENTREGADO')

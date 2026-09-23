@@ -1373,19 +1373,12 @@ export default function ConfiguracionKodeModule() {
                               </div>
                             </td>
 
-                            {/* 5. Tarifas Comisión */}
+                            {/* 5. Porcentaje Comisión */}
                             <td className="py-3 px-4 text-center font-mono">
-                              <div className="inline-flex flex-col gap-1 items-center">
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-black">
-                                  <Percent className="w-3 h-3 text-emerald-600" />
-                                  <span>{Number(emp.comision_porcentaje !== undefined ? emp.comision_porcentaje : 5.00).toFixed(1)}% Ventas</span>
-                                </span>
-                                <div className="inline-flex gap-1 text-[9px] text-slate-400">
-                                  <span>N: ${Number(emp.comision_normal).toFixed(2)}</span>
-                                  <span>•</span>
-                                  <span>P: ${Number(emp.comision_plus).toFixed(2)}</span>
-                                </div>
-                              </div>
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-black">
+                                <Percent className="w-3 h-3 text-emerald-600" />
+                                <span>{Number(emp.comision_porcentaje !== undefined ? emp.comision_porcentaje : 5.00).toFixed(1)}%</span>
+                              </span>
                             </td>
 
                             {/* 6. Comisiones Acumuladas */}
@@ -1905,14 +1898,14 @@ export default function ConfiguracionKodeModule() {
             <div className="clay-card p-5 flex items-center justify-between gap-4 border-l-4 border-l-indigo-500">
               <div>
                 <span className="text-xs font-bold text-indigo-700 uppercase tracking-wider block mb-1">
-                  Tarifas Complementarias por Frasco
+                  Regla de Cálculo por Línea de Producto
                 </span>
                 <p className="text-xs text-slate-500 font-medium">
-                  Normal: ${comisionGeneralNormal.toFixed(2)} | Plus / Shot: ${comisionGeneralPlus.toFixed(2)}
+                  Se calcula el % pactado (ej. 5%, 6%, 10%) por cada perfume o ítem del pedido, sin incluir flete ni cargos de envío.
                 </p>
               </div>
-              <div className="font-mono text-xs font-bold text-slate-700 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
-                Tarifas Base
+              <div className="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-200 shrink-0">
+                Línea x %
               </div>
             </div>
           </div>
@@ -2283,63 +2276,56 @@ export default function ConfiguracionKodeModule() {
                 </div>
               </div>
 
-              {/* SECCIÓN 3: TARIFAS DE COMISIÓN */}
+              {/* SECCIÓN 3: PORCENTAJE DE COMISIÓN */}
               <div className="space-y-3 pt-3 border-t border-slate-100">
                 <h4 className="text-xs font-black uppercase text-indigo-700 tracking-wider flex items-center gap-1.5">
-                  <DollarSign className="w-3.5 h-3.5" />
-                  <span>3. Tarifas y Porcentaje de Comisión</span>
+                  <Percent className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>3. Porcentaje de Comisión por Línea de Producto</span>
                 </h4>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Comisión Ventas (%) *
-                    </label>
-                    <div className="relative">
+                <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Comisión del Colaborador (%) *
+                  </label>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="relative w-32">
                       <input
                         type="number"
-                        step="0.1"
+                        step="0.5"
                         min="0"
                         max="100"
                         value={empleadoComisionPorcentaje}
                         onChange={(e) => setEmpleadoComisionPorcentaje(parseFloat(e.target.value) || 0)}
-                        className="clay-input w-full font-mono text-xs font-black text-emerald-700 pr-7"
+                        className="clay-input w-full font-mono text-sm font-black text-emerald-700 pr-7"
                         required
                       />
-                      <span className="absolute right-2.5 top-2 font-bold text-xs text-slate-400">%</span>
+                      <span className="absolute right-3 top-2.5 font-bold text-xs text-slate-400">%</span>
                     </div>
-                    <span className="text-[10px] text-slate-400 mt-0.5 block">
-                      5% estándar sobre pedidos entregados
-                    </span>
+
+                    <div className="flex items-center gap-1.5">
+                      {[5, 6, 8, 10].map((pct) => (
+                        <button
+                          key={pct}
+                          type="button"
+                          onClick={() => setEmpleadoComisionPorcentaje(pct)}
+                          className={`px-3 py-1.5 text-xs font-black rounded-xl border transition-all ${
+                            empleadoComisionPorcentaje === pct
+                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm shadow-emerald-200'
+                              : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                          }`}
+                        >
+                          {pct}%
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Comisión Normal ($)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.25"
-                      min="0"
-                      value={empleadoComisionNormal}
-                      onChange={(e) => setEmpleadoComisionNormal(parseFloat(e.target.value) || 0)}
-                      className="clay-input w-full font-mono text-xs font-bold"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Comisión Plus ($)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.25"
-                      min="0"
-                      value={empleadoComisionPlus}
-                      onChange={(e) => setEmpleadoComisionPlus(parseFloat(e.target.value) || 0)}
-                      className="clay-input w-full font-mono text-xs font-bold"
-                    />
-                  </div>
+                  <p className="text-[11px] text-slate-500 leading-relaxed pt-1">
+                    La comisión es exclusivamente un porcentaje aplicado sobre cada producto del pedido. 
+                    Por ejemplo, al <strong>{empleadoComisionPorcentaje}%</strong>: si lleva un perfume de $20.00 se calcula el {empleadoComisionPorcentaje}% de $20.00 (${(20 * (empleadoComisionPorcentaje / 100)).toFixed(2)}), 
+                    y si el segundo queda en $15.00 se calcula el {empleadoComisionPorcentaje}% de $15.00 (${(15 * (empleadoComisionPorcentaje / 100)).toFixed(2)}), 
+                    sumando una comisión total de ${( (20 + 15) * (empleadoComisionPorcentaje / 100) ).toFixed(2)} en ese pedido.
+                  </p>
                 </div>
               </div>
 

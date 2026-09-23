@@ -92,10 +92,18 @@ export async function GET() {
         COUNT(DISTINCT p.id) FILTER (WHERE p.id IS NOT NULL) AS total_pedidos,
         COUNT(DISTINCT p.id) FILTER (WHERE p.estado IN ('Entregado', 'ENTREGADO')) AS pedidos_entregados,
         COALESCE(SUM(DISTINCT p.total) FILTER (WHERE p.id IS NOT NULL), 0) AS total_ventas,
-        -- REGLA DE NEGOCIO: La comisión de venta (5% por defecto) SOLO se calcula y acumula cuando el pedido está ENTREGADO
+        -- REGLA DE NEGOCIO: La comisión se calcula línea por línea (cada ítem vendido) según el % asignado
+        -- SOLO se liquida y acumula cuando el pedido está ENTREGADO
         COALESCE(
           (
-            SELECT SUM(COALESCE(ped.subtotal, ped.total, 0) * (COALESCE(u.comision_porcentaje, 5.00) / 100.0))
+            SELECT SUM(
+              COALESCE(
+                (SELECT SUM(pi.subtotal) FROM public.pedido_items pi WHERE pi.pedido_id = ped.id),
+                ped.subtotal,
+                ped.total,
+                0
+              ) * (COALESCE(u.comision_porcentaje, 5.00) / 100.0)
+            )
             FROM public.pedidos ped
             WHERE ped.vendedora_id = u.id
               AND ped.estado IN ('Entregado', 'ENTREGADO')
@@ -104,7 +112,14 @@ export async function GET() {
         -- Comisiones de pedidos en curso pendientes de ser entregados
         COALESCE(
           (
-            SELECT SUM(COALESCE(ped.subtotal, ped.total, 0) * (COALESCE(u.comision_porcentaje, 5.00) / 100.0))
+            SELECT SUM(
+              COALESCE(
+                (SELECT SUM(pi.subtotal) FROM public.pedido_items pi WHERE pi.pedido_id = ped.id),
+                ped.subtotal,
+                ped.total,
+                0
+              ) * (COALESCE(u.comision_porcentaje, 5.00) / 100.0)
+            )
             FROM public.pedidos ped
             WHERE ped.vendedora_id = u.id
               AND ped.estado NOT IN ('Entregado', 'ENTREGADO', 'Cancelado', 'CANCELADO')
