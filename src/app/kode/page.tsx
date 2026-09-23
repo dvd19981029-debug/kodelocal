@@ -275,6 +275,10 @@ export default function KodeSystemPage() {
   const [insumos, setInsumos] = useState<InsumoItem[]>([]);
   const [compras, setCompras] = useState<CompraGasto[]>([]);
 
+  // Filtros del catálogo
+  const [filtroGeneroCatalogo, setFiltroGeneroCatalogo] = useState<'TODOS' | 'CABALLERO' | 'DAMA' | 'UNISEX'>('TODOS');
+  const [busquedaCatalogo, setBusquedaCatalogo] = useState('');
+
   // Loading & Toasts
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
@@ -715,6 +719,14 @@ export default function KodeSystemPage() {
     aplicarClienteSeleccionado(c);
     setActiveNav('VENTAS');
     setVentasView('nuevo_pedido');
+  };
+
+  const handleSeleccionarPerfume = (p: CatalogoItem) => {
+    setPerfumeSeleccionado(p);
+    setBusquedaPerfume(`${p.codigo} - ${p.contratipo}`);
+    setActiveNav('VENTAS');
+    setVentasView('nuevo_pedido');
+    showToast(`Fragancia #${p.codigo} (${p.contratipo}) seleccionada para nuevo pedido`, 'info');
   };
 
   const perfumesSugeridos = useMemo(() => {
@@ -1274,15 +1286,74 @@ export default function KodeSystemPage() {
   }, [directorioClientes, searchQuery]);
 
   const catalogoFiltrado = useMemo(() => {
-    if (!searchQuery.trim()) return catalogo;
-    const q = searchQuery.toLowerCase();
-    return catalogo.filter(
+    let list = catalogo;
+    if (filtroGeneroCatalogo !== 'TODOS') {
+      list = list.filter((p) => {
+        const g = (p.genero || '').toUpperCase();
+        if (filtroGeneroCatalogo === 'CABALLERO') return g.includes('CABALLERO') || g.includes('HOMBRE') || g === 'H';
+        if (filtroGeneroCatalogo === 'DAMA') return g.includes('DAMA') || g.includes('MUJER') || g === 'F';
+        if (filtroGeneroCatalogo === 'UNISEX') return g.includes('UNISEX') || g.includes('MIXTO');
+        return true;
+      });
+    }
+    const q = (busquedaCatalogo || searchQuery).toLowerCase().trim();
+    if (!q) return list;
+    return list.filter(
       (p) =>
         p.codigo.toLowerCase().includes(q) ||
         p.contratipo.toLowerCase().includes(q) ||
-        p.marca_inspirada.toLowerCase().includes(q)
+        p.marca_inspirada.toLowerCase().includes(q) ||
+        (p.genero && p.genero.toLowerCase().includes(q))
     );
-  }, [catalogo, searchQuery]);
+  }, [catalogo, filtroGeneroCatalogo, busquedaCatalogo, searchQuery]);
+
+  const conteosCatalogo = useMemo(() => {
+    let cab = 0;
+    let dam = 0;
+    let uni = 0;
+    catalogo.forEach((p) => {
+      const g = (p.genero || '').toUpperCase();
+      if (g.includes('CABALLERO') || g.includes('HOMBRE') || g === 'H') cab++;
+      else if (g.includes('DAMA') || g.includes('MUJER') || g === 'F') dam++;
+      else if (g.includes('UNISEX') || g.includes('MIXTO')) uni++;
+    });
+    return {
+      todos: catalogo.length,
+      caballero: cab,
+      dama: dam,
+      unisex: uni,
+    };
+  }, [catalogo]);
+
+  const renderGeneroBadge = (generoRaw: string | undefined | null) => {
+    const g = (generoRaw || '').toUpperCase();
+    if (g.includes('DAMA') || g.includes('MUJER') || g === 'F') {
+      return (
+        <span className="inline-flex items-center text-[10px] font-bold bg-pink-50 text-pink-700 border border-pink-200 px-2 py-0.5 rounded-full">
+          Dama
+        </span>
+      );
+    }
+    if (g.includes('CABALLERO') || g.includes('HOMBRE') || g === 'H') {
+      return (
+        <span className="inline-flex items-center text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 px-2 py-0.5 rounded-full">
+          Caballero
+        </span>
+      );
+    }
+    if (g.includes('UNISEX') || g.includes('MIXTO')) {
+      return (
+        <span className="inline-flex items-center text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full">
+          Unisex
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded-full">
+        {generoRaw || '-'}
+      </span>
+    );
+  };
 
   const pedidosRojos = useMemo(() => {
     return pedidos.filter((p) => p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA');
@@ -1591,21 +1662,22 @@ export default function KodeSystemPage() {
             )}
           </div>
 
-          {/* Buscador Centrado estilo AppSheet */}
+          {/* Buscador Centrado */}
           <div className="relative max-w-md w-full">
             <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-slate-400" />
             <input
               type="text"
-              placeholder={`Search ${activeNav.replace('_', ' ')}...`}
+              placeholder={`Buscar en ${activeNav.replace('_', ' ')}...`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="clay-input has-icon w-full text-xs font-bold py-2"
+              className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
             />
           </div>
 
           {/* Acciones Rápidas */}
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => {
                 fetchPedidos();
                 fetchInsumos();
@@ -1613,21 +1685,10 @@ export default function KodeSystemPage() {
                 fetchClientes();
                 showToast('Datos actualizados', 'info');
               }}
-              className="clay-btn clay-btn-light p-2 text-slate-600 hover:text-slate-900"
-              title="Actualizar / Sincronizar"
+              className="p-2 rounded-xl text-slate-500 hover:text-indigo-600 hover:bg-slate-100 transition-colors border border-slate-200/80 bg-white shadow-2xs cursor-pointer"
+              title="Actualizar / Sincronizar datos"
             >
               <RefreshCw className="w-4 h-4" />
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveNav('VENTAS');
-                setVentasView('nuevo_pedido');
-              }}
-              className="clay-btn clay-btn-primary px-3.5 py-2 text-xs font-black flex items-center gap-1.5 shadow-md"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add</span>
             </button>
           </div>
         </header>
@@ -3094,40 +3155,160 @@ export default function KodeSystemPage() {
               {/* VISTA 1D: CATALOGO */}
               {ventasView === 'catalogo' && (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <button
-                      onClick={() => setVentasView('hub')}
-                      className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1"
-                    >
-                      ← Volver a Ventas
-                    </button>
-                    <span className="text-xs text-slate-500 font-medium">Catálogo KÖDE ({catalogoFiltrado.length})</span>
+                  {/* Barra Superior de Navegación e Info */}
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setVentasView('hub')}
+                        className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        ← Volver a Ventas
+                      </button>
+                      <span className="text-xs text-slate-400">|</span>
+                      <span className="text-xs text-slate-700 font-bold uppercase tracking-wider">
+                        Catálogo de Fragancias KÖDE
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-500 font-semibold font-mono bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-lg">
+                        {catalogoFiltrado.length} {catalogoFiltrado.length === 1 ? 'fragancia' : 'fragancias'} {filtroGeneroCatalogo !== 'TODOS' ? `(${filtroGeneroCatalogo.toLowerCase()})` : ''}
+                      </span>
+                    </div>
                   </div>
 
+                  {/* Barra de Filtros de Género y Buscador Rápido */}
+                  <div className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+                    {/* Filtros de Género */}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setFiltroGeneroCatalogo('TODOS')}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          filtroGeneroCatalogo === 'TODOS'
+                            ? 'bg-slate-900 text-white shadow-xs'
+                            : 'bg-slate-100 hover:bg-slate-200/70 text-slate-600'
+                        }`}
+                      >
+                        Todos ({conteosCatalogo.todos})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFiltroGeneroCatalogo('CABALLERO')}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          filtroGeneroCatalogo === 'CABALLERO'
+                            ? 'bg-sky-700 text-white shadow-xs'
+                            : 'bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200/60'
+                        }`}
+                      >
+                        Caballero ({conteosCatalogo.caballero})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFiltroGeneroCatalogo('DAMA')}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          filtroGeneroCatalogo === 'DAMA'
+                            ? 'bg-pink-700 text-white shadow-xs'
+                            : 'bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200/60'
+                        }`}
+                      >
+                        Dama ({conteosCatalogo.dama})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFiltroGeneroCatalogo('UNISEX')}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          filtroGeneroCatalogo === 'UNISEX'
+                            ? 'bg-purple-700 text-white shadow-xs'
+                            : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/60'
+                        }`}
+                      >
+                        Unisex ({conteosCatalogo.unisex})
+                      </button>
+                    </div>
+
+                    {/* Buscador Rápido Local */}
+                    <div className="relative w-full sm:w-80">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={busquedaCatalogo}
+                        onChange={(e) => setBusquedaCatalogo(e.target.value)}
+                        placeholder="Buscar por código, contratipo, marca..."
+                        className="w-full pl-9 pr-8 py-1.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
+                      />
+                      {busquedaCatalogo && (
+                        <button
+                          type="button"
+                          onClick={() => setBusquedaCatalogo('')}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                          title="Limpiar búsqueda"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Tabla Administrativa Limpia */}
                   <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto max-h-[720px] overflow-y-auto">
                       <table className="w-full text-left text-xs border-collapse">
-                        <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                        <thead className="sticky top-0 bg-slate-50/95 backdrop-blur-xs border-b border-slate-200 text-slate-600 font-black uppercase text-[10px] tracking-wider z-10">
                           <tr>
-                            <th className="py-2.5 px-4">Kodigo</th>
-                            <th className="py-2.5 px-4">Contratipo</th>
-                            <th className="py-2.5 px-4">Marca Inspirada</th>
-                            <th className="py-2.5 px-4">Genero</th>
-                            <th className="py-2.5 px-4">Normal</th>
-                            <th className="py-2.5 px-4">Extra Shot</th>
+                            <th className="py-3 px-4">Kodigo</th>
+                            <th className="py-3 px-4">Contratipo</th>
+                            <th className="py-3 px-4">Marca Inspirada</th>
+                            <th className="py-3 px-4">Género</th>
+                            <th className="py-3 px-4">Estado</th>
+                            <th className="py-3 px-4 text-right">Precio Normal</th>
+                            <th className="py-3 px-4 text-right">Precio Extra Shot</th>
+                            <th className="py-3 px-4 text-center">Acción</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 bg-white">
-                          {catalogoFiltrado.map((p) => (
-                            <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
-                              <td className="py-3 px-4 font-mono font-bold text-indigo-700">#{p.codigo}</td>
-                              <td className="py-3 px-4 font-extrabold text-slate-900">{p.contratipo}</td>
-                              <td className="py-3 px-4 text-slate-600">{p.marca_inspirada}</td>
-                              <td className="py-3 px-4 text-slate-500">{p.genero}</td>
-                              <td className="py-3 px-4 font-mono font-bold text-emerald-700">${p.precio_normal}</td>
-                              <td className="py-3 px-4 font-mono font-bold text-purple-700">${p.precio_extra_shot}</td>
+                          {catalogoFiltrado.length === 0 ? (
+                            <tr>
+                              <td colSpan={8} className="py-12 text-center text-slate-400 font-medium">
+                                No se encontraron fragancias con los criterios seleccionados.
+                              </td>
                             </tr>
-                          ))}
+                          ) : (
+                            catalogoFiltrado.map((p) => (
+                              <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
+                                <td className="py-3 px-4">
+                                  <span className="font-mono font-bold text-indigo-700 bg-indigo-50/70 border border-indigo-100 px-2 py-0.5 rounded text-[11px]">
+                                    #{p.codigo}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 font-extrabold text-slate-900">{p.contratipo}</td>
+                                <td className="py-3 px-4 text-slate-600 font-medium">{p.marca_inspirada}</td>
+                                <td className="py-3 px-4">{renderGeneroBadge(p.genero)}</td>
+                                <td className="py-3 px-4">
+                                  <span className="inline-flex items-center text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                                    Activa
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 text-right font-mono font-bold text-emerald-700">
+                                  ${parseFloat(p.precio_normal?.toString() || '20').toFixed(2)}
+                                </td>
+                                <td className="py-3 px-4 text-right font-mono font-bold text-purple-700">
+                                  ${parseFloat(p.precio_extra_shot?.toString() || '25').toFixed(2)}
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSeleccionarPerfume(p)}
+                                    className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors shadow-2xs cursor-pointer inline-flex items-center gap-1"
+                                    title={`Crear pedido con #${p.codigo} ${p.contratipo}`}
+                                  >
+                                    <Plus className="w-3 h-3" />
+                                    <span>Pedido</span>
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          )}
                         </tbody>
                       </table>
                     </div>
@@ -3142,41 +3323,156 @@ export default function KodeSystemPage() {
           {/* ============================================================== */}
           {activeNav === 'INVENTARIO' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-black uppercase text-slate-700 tracking-wider">INVENTARIO / CATÁLOGO</h2>
-                <span className="text-xs text-slate-500 font-bold font-mono">{catalogoFiltrado.length} fragancias disponibles</span>
+              {/* Barra Superior de Título e Info */}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-sm font-black uppercase text-slate-700 tracking-wider">
+                    INVENTARIO / CATÁLOGO GENERAL
+                  </h2>
+                  <p className="text-[11px] text-slate-400 font-medium">
+                    Listado completo de fragancias, contratipos, géneros y tarifas oficiales
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-500 font-semibold font-mono bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-lg">
+                    {catalogoFiltrado.length} {catalogoFiltrado.length === 1 ? 'fragancia' : 'fragancias disponibles'}
+                  </span>
+                </div>
               </div>
 
+              {/* Barra de Filtros de Género y Buscador Rápido */}
+              <div className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+                {/* Filtros de Género */}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setFiltroGeneroCatalogo('TODOS')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      filtroGeneroCatalogo === 'TODOS'
+                        ? 'bg-slate-900 text-white shadow-xs'
+                        : 'bg-slate-100 hover:bg-slate-200/70 text-slate-600'
+                    }`}
+                  >
+                    Todos ({conteosCatalogo.todos})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFiltroGeneroCatalogo('CABALLERO')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      filtroGeneroCatalogo === 'CABALLERO'
+                        ? 'bg-sky-700 text-white shadow-xs'
+                        : 'bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200/60'
+                    }`}
+                  >
+                    Caballero ({conteosCatalogo.caballero})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFiltroGeneroCatalogo('DAMA')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      filtroGeneroCatalogo === 'DAMA'
+                        ? 'bg-pink-700 text-white shadow-xs'
+                        : 'bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200/60'
+                    }`}
+                  >
+                    Dama ({conteosCatalogo.dama})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFiltroGeneroCatalogo('UNISEX')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      filtroGeneroCatalogo === 'UNISEX'
+                        ? 'bg-purple-700 text-white shadow-xs'
+                        : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/60'
+                    }`}
+                  >
+                    Unisex ({conteosCatalogo.unisex})
+                  </button>
+                </div>
+
+                {/* Buscador Rápido Local */}
+                <div className="relative w-full sm:w-80">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={busquedaCatalogo}
+                    onChange={(e) => setBusquedaCatalogo(e.target.value)}
+                    placeholder="Buscar por código, contratipo, marca..."
+                    className="w-full pl-9 pr-8 py-1.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
+                  />
+                  {busquedaCatalogo && (
+                    <button
+                      type="button"
+                      onClick={() => setBusquedaCatalogo('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                      title="Limpiar búsqueda"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Tabla Administrativa Limpia */}
               <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto max-h-[720px] overflow-y-auto">
                   <table className="w-full text-left text-xs border-collapse">
-                    <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                    <thead className="sticky top-0 bg-slate-50/95 backdrop-blur-xs border-b border-slate-200 text-slate-600 font-black uppercase text-[10px] tracking-wider z-10">
                       <tr>
-                        <th className="py-2.5 px-4">Kodigo</th>
-                        <th className="py-2.5 px-4">Contratipo</th>
-                        <th className="py-2.5 px-4">Marca Inspirada</th>
-                        <th className="py-2.5 px-4">Genero</th>
-                        <th className="py-2.5 px-4">Estado</th>
-                        <th className="py-2.5 px-4">Precio Normal</th>
-                        <th className="py-2.5 px-4">Precio Extra Shot</th>
+                        <th className="py-3 px-4">Kodigo</th>
+                        <th className="py-3 px-4">Contratipo</th>
+                        <th className="py-3 px-4">Marca Inspirada</th>
+                        <th className="py-3 px-4">Género</th>
+                        <th className="py-3 px-4">Estado</th>
+                        <th className="py-3 px-4 text-right">Precio Normal</th>
+                        <th className="py-3 px-4 text-right">Precio Extra Shot</th>
+                        <th className="py-3 px-4 text-center">Acción</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
-                      {catalogoFiltrado.map((p) => (
-                        <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
-                          <td className="py-3 px-4 font-mono font-bold text-indigo-700">#{p.codigo}</td>
-                          <td className="py-3 px-4 font-extrabold text-slate-900">{p.contratipo}</td>
-                          <td className="py-3 px-4 text-slate-600">{p.marca_inspirada}</td>
-                          <td className="py-3 px-4 text-slate-500">{p.genero}</td>
-                          <td className="py-3 px-4">
-                            <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                              Activa
-                            </span>
+                      {catalogoFiltrado.length === 0 ? (
+                        <tr>
+                          <td colSpan={8} className="py-12 text-center text-slate-400 font-medium">
+                            No se encontraron fragancias con los criterios seleccionados.
                           </td>
-                          <td className="py-3 px-4 font-mono font-bold text-emerald-700">${p.precio_normal}</td>
-                          <td className="py-3 px-4 font-mono font-bold text-purple-700">${p.precio_extra_shot}</td>
                         </tr>
-                      ))}
+                      ) : (
+                        catalogoFiltrado.map((p) => (
+                          <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="py-3 px-4">
+                              <span className="font-mono font-bold text-indigo-700 bg-indigo-50/70 border border-indigo-100 px-2 py-0.5 rounded text-[11px]">
+                                #{p.codigo}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 font-extrabold text-slate-900">{p.contratipo}</td>
+                            <td className="py-3 px-4 text-slate-600 font-medium">{p.marca_inspirada}</td>
+                            <td className="py-3 px-4">{renderGeneroBadge(p.genero)}</td>
+                            <td className="py-3 px-4">
+                              <span className="inline-flex items-center text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                                Activa
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right font-mono font-bold text-emerald-700">
+                              ${parseFloat(p.precio_normal?.toString() || '20').toFixed(2)}
+                            </td>
+                            <td className="py-3 px-4 text-right font-mono font-bold text-purple-700">
+                              ${parseFloat(p.precio_extra_shot?.toString() || '25').toFixed(2)}
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <button
+                                type="button"
+                                onClick={() => handleSeleccionarPerfume(p)}
+                                className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors shadow-2xs cursor-pointer inline-flex items-center gap-1"
+                                title={`Crear pedido con #${p.codigo} ${p.contratipo}`}
+                              >
+                                <Plus className="w-3 h-3" />
+                                <span>Pedido</span>
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
