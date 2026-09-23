@@ -127,7 +127,21 @@ export async function GET(request: Request) {
   }
 }
 
+async function ensurePedidosSchema() {
+  try {
+    await queryKode(`
+      ALTER TABLE public.pedido_items ADD COLUMN IF NOT EXISTS usuario VARCHAR(100);
+      ALTER TABLE public.pedido_items ADD COLUMN IF NOT EXISTS version VARCHAR(20) DEFAULT 'Normal';
+      ALTER TABLE public.pedido_items ADD COLUMN IF NOT EXISTS comprado_por VARCHAR(100);
+      ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS monto_cobrar_cce NUMERIC;
+    `);
+  } catch (e) {
+    console.error('Error ensuring pedidos schema:', e);
+  }
+}
+
 export async function POST(request: Request) {
+  await ensurePedidosSchema();
   const client = await kodePool.connect();
   try {
     const body = await request.json();
