@@ -2468,20 +2468,20 @@ export default function KodeSystemPage() {
                     </div>
                   </div>
 
-                  <div className="clay-card overflow-hidden border border-slate-200/80 shadow-md">
+                  <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-50 border-b border-slate-200/80 text-slate-600 font-extrabold uppercase tracking-wider text-[11px]">
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
                           <tr>
-                            <th className="py-3 px-4">Estado envío</th>
-                            <th className="py-3 px-4">Estado Pago</th>
-                            <th className="py-3 px-4">Estado C807</th>
-                            <th className="py-3 px-4">Numero de Pedido</th>
-                            <th className="py-3 px-4">Cliente</th>
-                            <th className="py-3 px-4">Teléfono</th>
-                            <th className="py-3 px-4">Fecha Pedido</th>
-                            <th className="py-3 px-4 text-right">Total</th>
-                            <th className="py-3 px-4 text-center">Acciones</th>
+                            <th className="py-2.5 px-4">Estado envío</th>
+                            <th className="py-2.5 px-4">Estado Pago</th>
+                            <th className="py-2.5 px-4">Estado C807</th>
+                            <th className="py-2.5 px-4">Numero de Pedido</th>
+                            <th className="py-2.5 px-4">Cliente</th>
+                            <th className="py-2.5 px-4">Teléfono</th>
+                            <th className="py-2.5 px-4">Fecha Pedido</th>
+                            <th className="py-2.5 px-4 text-right">Total</th>
+                            <th className="py-2.5 px-4 text-center">Acciones</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 bg-white">
@@ -2502,42 +2502,42 @@ export default function KodeSystemPage() {
                                   <tr className="hover:bg-slate-50/80 transition-colors">
                                     <td className="py-3 px-4">
                                       {(p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA') && (
-                                        <span className="clay-badge text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">
+                                        <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full">
                                           🔴 Pendiente Compra
                                         </span>
                                       )}
                                       {(p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR') && (
-                                        <span className="clay-badge text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">
+                                        <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full">
                                           🟡 Listo Fabricar
                                         </span>
                                       )}
                                       {(p.estado === 'Preparado' || p.estado === 'Enviado' || p.estado === 'GUIA_CREADA') && (
-                                        <span className="clay-badge text-[10px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200">
+                                        <span className="text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 px-2.5 py-0.5 rounded-full">
                                           🔵 {p.c807_guia_numero ? 'Guía C807' : 'Preparado'}
                                         </span>
                                       )}
                                       {(p.estado === 'Entregado' || p.estado === 'ENTREGADO') && (
-                                        <span className="clay-badge text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full">
                                           🟢 Entregado
                                         </span>
                                       )}
                                       {(p.estado === 'Cancelado' || p.estado === 'CANCELADO') && (
-                                        <span className="clay-badge text-[10px] font-extrabold bg-slate-100 text-slate-500 border border-slate-300">
+                                        <span className="text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-300 px-2.5 py-0.5 rounded-full">
                                           ⚪ Cancelado
                                         </span>
                                       )}
                                     </td>
                                     <td className="py-3 px-4">
                                       {p.estado_pago === 'PAGADO' ? (
-                                        <span className="clay-badge text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full">
                                           ✓ Pagado
                                         </span>
                                       ) : p.estado_pago === 'PARCIAL' ? (
-                                        <span className="clay-badge text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-200" title={`Abonado: $${totalPagadoNum.toFixed(2)}`}>
+                                        <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full" title={`Abonado: $${totalPagadoNum.toFixed(2)}`}>
                                           ⏳ Parcial (${totalPagadoNum.toFixed(2)})
                                         </span>
                                       ) : (
-                                        <span className="clay-badge text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200">
+                                        <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full">
                                           ✕ Pendiente
                                         </span>
                                       )}
@@ -2753,16 +2753,16 @@ export default function KodeSystemPage() {
                     </button>
                   </div>
 
-                  <div className="clay-card overflow-hidden border border-slate-200/80 shadow-md">
+                  <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-50 border-b border-slate-200/80 text-slate-600 font-extrabold uppercase tracking-wider text-[11px]">
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
                           <tr>
-                            <th className="py-3 px-4">Nombre completo</th>
-                            <th className="py-3 px-4">Direccion</th>
-                            <th className="py-3 px-4">Punto de Referencia</th>
-                            <th className="py-3 px-4">Contacto Adicional</th>
-                            <th className="py-3 px-4 text-center">Acción</th>
+                            <th className="py-2.5 px-4">Nombre completo</th>
+                            <th className="py-2.5 px-4">Direccion</th>
+                            <th className="py-2.5 px-4">Punto de Referencia</th>
+                            <th className="py-2.5 px-4">Contacto Adicional</th>
+                            <th className="py-2.5 px-4 text-center">Acción</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 bg-white">
@@ -2783,7 +2783,7 @@ export default function KodeSystemPage() {
                                       <div className="flex items-center gap-1">
                                         <a
                                           href={`tel:503${c.telefono}`}
-                                          className="p-1 rounded-md text-indigo-600 hover:bg-indigo-50"
+                                          className="p-1 rounded-md text-indigo-600 hover:bg-indigo-50 transition-colors"
                                           title={`Llamar a ${c.nombre}`}
                                         >
                                           <Phone className="w-3.5 h-3.5" />
@@ -2792,7 +2792,7 @@ export default function KodeSystemPage() {
                                           href={`https://wa.me/503${c.telefono}`}
                                           target="_blank"
                                           rel="noreferrer"
-                                          className="p-1 rounded-md text-emerald-600 hover:bg-emerald-50"
+                                          className="p-1 rounded-md text-emerald-600 hover:bg-emerald-50 transition-colors"
                                           title={`Enviar WhatsApp a ${c.nombre}`}
                                         >
                                           <MessageCircle className="w-3.5 h-3.5" />
@@ -2802,13 +2802,13 @@ export default function KodeSystemPage() {
                                     {(c.numero_documento || c.email) && (
                                       <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                                         {c.numero_documento && (
-                                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-mono font-bold border border-slate-200/60">
+                                          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-mono font-bold border border-slate-200/80">
                                             <CreditCard className="w-2.5 h-2.5 text-slate-400" />
                                             <span>{c.tipo_documento || 'DOC'}: {c.numero_documento}</span>
                                           </span>
                                         )}
                                         {c.email && (
-                                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-medium border border-blue-100">
+                                          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium border border-blue-200">
                                             <Mail className="w-2.5 h-2.5 text-blue-500" />
                                             <span>{c.email}</span>
                                           </span>
@@ -2821,11 +2821,11 @@ export default function KodeSystemPage() {
                                   {c.direccion}, {c.municipio}
                                 </td>
                                 <td className="py-3 px-4 text-slate-500">{c.referencia || '-'}</td>
-                                <td className="py-3 px-4 text-slate-500">{c.telefono}</td>
+                                <td className="py-3 px-4 text-slate-500 font-mono">{c.telefono}</td>
                                 <td className="py-3 px-4 text-center">
                                   <button
                                     onClick={() => handleSeleccionarCliente(c)}
-                                    className="clay-btn clay-btn-primary px-2.5 py-1 text-[11px] font-bold"
+                                    className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors shadow-2xs cursor-pointer"
                                   >
                                     + Pedido
                                   </button>
@@ -2853,17 +2853,17 @@ export default function KodeSystemPage() {
                     <span className="text-xs text-slate-500 font-medium">Catálogo KÖDE ({catalogoFiltrado.length})</span>
                   </div>
 
-                  <div className="clay-card overflow-hidden border border-slate-200/80 shadow-md">
+                  <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-50 border-b border-slate-200/80 text-slate-600 font-extrabold uppercase tracking-wider text-[11px]">
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
                           <tr>
-                            <th className="py-3 px-4">Kodigo</th>
-                            <th className="py-3 px-4">Contratipo</th>
-                            <th className="py-3 px-4">Marca Inspirada</th>
-                            <th className="py-3 px-4">Genero</th>
-                            <th className="py-3 px-4">Normal</th>
-                            <th className="py-3 px-4">Extra Shot</th>
+                            <th className="py-2.5 px-4">Kodigo</th>
+                            <th className="py-2.5 px-4">Contratipo</th>
+                            <th className="py-2.5 px-4">Marca Inspirada</th>
+                            <th className="py-2.5 px-4">Genero</th>
+                            <th className="py-2.5 px-4">Normal</th>
+                            <th className="py-2.5 px-4">Extra Shot</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 bg-white">
@@ -2893,21 +2893,21 @@ export default function KodeSystemPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-black uppercase text-slate-700 tracking-wider">INVENTARIO / CATÁLOGO</h2>
-                <span className="text-xs text-slate-500">{catalogoFiltrado.length} fragancias disponibles</span>
+                <span className="text-xs text-slate-500 font-bold font-mono">{catalogoFiltrado.length} fragancias disponibles</span>
               </div>
 
-              <div className="clay-card overflow-hidden border border-slate-200/80 shadow-md">
+              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 border-b border-slate-200/80 text-slate-600 font-extrabold uppercase tracking-wider text-[11px]">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
                       <tr>
-                        <th className="py-3 px-4">Kodigo</th>
-                        <th className="py-3 px-4">Contratipo</th>
-                        <th className="py-3 px-4">Marca Inspirada</th>
-                        <th className="py-3 px-4">Genero</th>
-                        <th className="py-3 px-4">Estado</th>
-                        <th className="py-3 px-4">Precio Normal</th>
-                        <th className="py-3 px-4">Precio Extra Shot</th>
+                        <th className="py-2.5 px-4">Kodigo</th>
+                        <th className="py-2.5 px-4">Contratipo</th>
+                        <th className="py-2.5 px-4">Marca Inspirada</th>
+                        <th className="py-2.5 px-4">Genero</th>
+                        <th className="py-2.5 px-4">Estado</th>
+                        <th className="py-2.5 px-4">Precio Normal</th>
+                        <th className="py-2.5 px-4">Precio Extra Shot</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
@@ -2918,7 +2918,7 @@ export default function KodeSystemPage() {
                           <td className="py-3 px-4 text-slate-600">{p.marca_inspirada}</td>
                           <td className="py-3 px-4 text-slate-500">{p.genero}</td>
                           <td className="py-3 px-4">
-                            <span className="clay-badge text-[10px] font-bold bg-emerald-50 text-emerald-800">
+                            <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full">
                               Activa
                             </span>
                           </td>
@@ -3490,17 +3490,17 @@ export default function KodeSystemPage() {
                 <span className="text-xs text-slate-500">{metricas.azules} guías generadas</span>
               </div>
 
-              <div className="clay-card overflow-hidden border border-slate-200/80 shadow-md">
+              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 border-b border-slate-200/80 text-slate-600 font-extrabold uppercase tracking-wider text-[11px]">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
                       <tr>
-                        <th className="py-3 px-4">Numero de Pedido</th>
-                        <th className="py-3 px-4">Guía C807</th>
-                        <th className="py-3 px-4">Cliente</th>
-                        <th className="py-3 px-4">Destino</th>
-                        <th className="py-3 px-4">Estado C807</th>
-                        <th className="py-3 px-4 text-center">Acciones WhatsApp</th>
+                        <th className="py-2.5 px-4">Numero de Pedido</th>
+                        <th className="py-2.5 px-4">Guía C807</th>
+                        <th className="py-2.5 px-4">Cliente</th>
+                        <th className="py-2.5 px-4">Destino</th>
+                        <th className="py-2.5 px-4">Estado C807</th>
+                        <th className="py-2.5 px-4 text-center">Acciones WhatsApp</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
@@ -3531,16 +3531,16 @@ export default function KodeSystemPage() {
                                       setNumGuiaInput('');
                                       setLinkGuiaInput('');
                                     }}
-                                    className="clay-badge text-[10px] font-bold bg-amber-100 text-amber-800 hover:bg-amber-200"
+                                    className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-colors cursor-pointer"
                                   >
                                     Asignar Guía
                                   </button>
                                 )}
                               </td>
-                              <td className="py-3 px-4 font-bold text-slate-900">{p.cliente_nombre}</td>
+                              <td className={`py-3 px-4 ${getClienteColorPorEstado(p.estado)}`}>{p.cliente_nombre}</td>
                               <td className="py-3 px-4 text-slate-600">{p.cliente_municipio}, {p.cliente_departamento}</td>
                               <td className="py-3 px-4">
-                                <span className="clay-badge text-[10px] font-bold bg-sky-50 text-sky-700">
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
                                   {p.c807_estado || (tieneGuia ? 'Llegó a su destino' : 'Listo despacho')}
                                 </span>
                               </td>
@@ -3548,7 +3548,7 @@ export default function KodeSystemPage() {
                                 <div className="flex items-center justify-center gap-1.5">
                                   <button
                                     onClick={() => handleCopiarMensajeC807(p)}
-                                    className="clay-btn clay-btn-light px-2.5 py-1 text-[11px] font-bold"
+                                    className="px-2.5 py-1 text-[11px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
                                     title="Copiar mensaje WhatsApp"
                                   >
                                     {copiedTrackingId === p.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
@@ -3557,7 +3557,7 @@ export default function KodeSystemPage() {
 
                                   <button
                                     onClick={() => handleAbrirWhatsAppC807(p)}
-                                    className="clay-btn bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 text-[11px] font-bold"
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 text-[11px] font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
                                     title="Abrir WhatsApp"
                                   >
                                     <MessageCircle className="w-3 h-3" />
@@ -3567,7 +3567,7 @@ export default function KodeSystemPage() {
                                   <button
                                     onClick={() => handleEmitirDte(p)}
                                     disabled={emitiendoDteId === p.id}
-                                    className="clay-btn bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 text-[11px] font-bold flex items-center gap-1"
+                                    className="bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 text-[11px] font-bold flex items-center gap-1 rounded-lg transition-colors cursor-pointer shadow-2xs"
                                     title="Emitir Factura Electrónica (DTE) con Factura Llama"
                                   >
                                     <ReceiptText className={`w-3 h-3 ${emitiendoDteId === p.id ? 'animate-spin' : 'text-emerald-600'}`} />
