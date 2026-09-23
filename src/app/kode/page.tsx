@@ -43,7 +43,8 @@ import {
   Box,
   FileText,
   Mail,
-  PlusCircle
+  PlusCircle,
+  ArrowDownCircle
 } from 'lucide-react';
 import { DEPARTAMENTOS_CATALOG, MUNICIPIOS_CATALOG, resolveC807DeptoCode, getMunicipiosByDepto } from '@/lib/svTerritory';
 
@@ -2957,24 +2958,24 @@ export default function KodeSystemPage() {
                     <span className="text-xs text-rose-600 font-bold">Fase 1: Insumos por Comprar</span>
                   </div>
 
-                  {/* Contenedor tipo AppSheet (Sin contenedores de tarjetas, tablas normales puras) */}
-                  <div className="bg-[#18191c] text-neutral-100 rounded-xl border border-neutral-800 shadow-2xl overflow-hidden">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-neutral-800">
+                  {/* Tabla Normal limpia (sin fondo negro, sin elementos graficos de tarjetas) */}
+                  <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
                       
                       {/* ========================================================= */}
                       {/* TABLA IZQUIERDA: ESTADO REGISTRADO                        */}
                       {/* ========================================================= */}
-                      <div className="lg:col-span-5 flex flex-col">
+                      <div className="lg:col-span-5 flex flex-col bg-white">
                         {/* Barra Superior Header */}
-                        <div className="px-4 py-3 bg-[#1e2024] border-b border-neutral-800 flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-3">
-                            <h2 className="text-base font-bold text-neutral-100 tracking-tight">
+                        <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <h2 className="text-xs font-black uppercase text-slate-700 tracking-wider">
                               Estado Registrado
                             </h2>
                             {selectedPedidoIdFab && (
                               <button
                                 onClick={() => setSelectedPedidoIdFab(null)}
-                                className="text-[11px] text-sky-400 hover:text-sky-300 font-semibold underline cursor-pointer"
+                                className="text-[11px] text-indigo-600 hover:text-indigo-800 font-bold underline cursor-pointer"
                               >
                                 Ver todos ({pedidosRojos.length})
                               </button>
@@ -2988,7 +2989,7 @@ export default function KodeSystemPage() {
                                 setActiveNav('VENTAS');
                                 setVentasView('nuevo_pedido');
                               }}
-                              className="bg-[#1d63ed] hover:bg-blue-600 text-white font-bold text-xs px-3 py-1.5 rounded flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
                               title="Crear nuevo pedido"
                             >
                               <Plus className="w-3.5 h-3.5 stroke-[3]" /> Add
@@ -3000,7 +3001,7 @@ export default function KodeSystemPage() {
                                 fetchInsumos();
                               }}
                               title="Refrescar lista"
-                              className="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded transition-colors cursor-pointer"
+                              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-lg transition-colors cursor-pointer"
                             >
                               <RefreshCw className="w-3.5 h-3.5" />
                             </button>
@@ -3010,18 +3011,18 @@ export default function KodeSystemPage() {
                         {/* Tabla Estado Registrado */}
                         <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
                           <table className="w-full text-left text-xs border-collapse">
-                            <thead className="sticky top-0 bg-[#1e2024] border-b border-neutral-800 text-neutral-400 font-semibold">
+                            <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
                               <tr>
-                                <th className="py-2.5 px-4">Cliente</th>
-                                <th className="py-2.5 px-4">Marca Temporal</th>
-                                <th className="py-2.5 px-4">Usuario</th>
-                                <th className="py-2.5 px-2 w-8 text-center"></th>
+                                <th className="py-2.5 px-3">Cliente</th>
+                                <th className="py-2.5 px-3">Marca Temporal</th>
+                                <th className="py-2.5 px-3">Usuario</th>
+                                <th className="py-2.5 px-2 w-7 text-center"></th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-neutral-800/80">
+                            <tbody className="divide-y divide-slate-100 bg-white">
                               {pedidosRojos.length === 0 ? (
                                 <tr>
-                                  <td colSpan={4} className="py-12 text-center text-neutral-500 font-medium">
+                                  <td colSpan={4} className="py-12 text-center text-slate-400 font-medium">
                                     No hay pedidos en estado registrado
                                   </td>
                                 </tr>
@@ -3036,28 +3037,28 @@ export default function KodeSystemPage() {
                                       onClick={() => setSelectedPedidoIdFab(isSelected ? null : p.id)}
                                       className={`cursor-pointer transition-colors ${
                                         isSelected
-                                          ? 'bg-neutral-800 border-l-4 border-l-sky-500'
-                                          : 'hover:bg-neutral-800/50'
+                                          ? 'bg-indigo-50/80 border-l-4 border-l-indigo-600'
+                                          : 'hover:bg-slate-50/80'
                                       }`}
                                     >
-                                      <td className="py-3 px-4 font-bold text-red-500 hover:text-red-400">
+                                      <td className="py-3 px-3 font-bold text-red-600 hover:text-red-700">
                                         <span>{p.cliente_nombre}</span>
                                         {faltantes > 0 && (
-                                          <span className="ml-2 text-[10px] font-mono text-neutral-400 font-normal">
+                                          <span className="ml-1.5 text-[10px] font-mono text-slate-400 font-normal">
                                             ({faltantes} pend.)
                                           </span>
                                         )}
                                       </td>
-                                      <td className="py-3 px-4 text-neutral-200 font-mono">
+                                      <td className="py-3 px-3 text-slate-600 font-mono text-xs whitespace-nowrap">
                                         {formatearMarcaTemporal(p.created_at)}
                                       </td>
                                       <td
-                                        className="py-3 px-4 text-neutral-200 truncate max-w-[220px]"
+                                        className="py-3 px-3 text-slate-600 text-xs truncate max-w-[180px]"
                                         title={p.vendedora_email || p.vendedora_nombre || 'erikamelgarcia@gmail.com'}
                                       >
                                         {p.vendedora_email || p.vendedora_nombre || 'erikamelgarcia@gmail.com'}
                                       </td>
-                                      <td className="py-3 px-2 text-center text-neutral-400">
+                                      <td className="py-3 px-2 text-center text-slate-400">
                                         <ChevronRight className="w-4 h-4 inline opacity-60" />
                                       </td>
                                     </tr>
@@ -3072,20 +3073,20 @@ export default function KodeSystemPage() {
                       {/* ========================================================= */}
                       {/* TABLA DERECHA: INSUMOS PARA COMPRA                        */}
                       {/* ========================================================= */}
-                      <div className="lg:col-span-7 flex flex-col bg-[#16171a]">
+                      <div className="lg:col-span-7 flex flex-col bg-white">
                         {/* Header Insumos */}
-                        <div className="px-4 py-3 bg-[#1e2024] border-b border-neutral-800 flex items-center justify-between gap-2">
+                        <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
-                            <h2 className="text-base font-bold text-neutral-100 tracking-tight">
+                            <h2 className="text-xs font-black uppercase text-slate-700 tracking-wider">
                               Insumos para compra
                             </h2>
                             {selectedPedidoIdFab && (
-                              <span className="text-[10px] font-semibold bg-sky-950 text-sky-300 border border-sky-800 px-2 py-0.5 rounded">
+                              <span className="text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full">
                                 Filtrado por pedido
                               </span>
                             )}
                           </div>
-                          <span className="text-xs text-neutral-400 font-mono">
+                          <span className="text-xs text-slate-500 font-bold font-mono">
                             {insumosSplitPane.length} {insumosSplitPane.length === 1 ? 'insumo' : 'insumos'}
                           </span>
                         </div>
@@ -3093,7 +3094,7 @@ export default function KodeSystemPage() {
                         {/* Tabla Insumos */}
                         <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
                           <table className="w-full text-left text-xs border-collapse">
-                            <thead className="sticky top-0 bg-[#1e2024] border-b border-neutral-800 text-neutral-400 font-semibold">
+                            <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
                               <tr>
                                 <th className="py-2.5 px-3">Kodigo</th>
                                 <th className="py-2.5 px-3">Cliente</th>
@@ -3101,67 +3102,89 @@ export default function KodeSystemPage() {
                                 <th className="py-2.5 px-3 text-center">Version</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-neutral-800/80">
+                            <tbody className="divide-y divide-slate-100 bg-white">
                               {insumosSplitPane.length === 0 ? (
                                 <tr>
-                                  <td colSpan={4} className="py-12 text-center text-neutral-500 font-medium">
+                                  <td colSpan={4} className="py-12 text-center text-slate-400 font-medium">
                                     ¡Todos los insumos han sido comprados!
                                   </td>
                                 </tr>
                               ) : (
-                                insumosSplitPane.map((item) => (
-                                  <tr key={item.item_id} className="hover:bg-neutral-800/40 transition-colors">
-                                    {/* 1. Kodigo: El nombre de la esencia y el código */}
-                                    <td className="py-3 px-3">
-                                      <div className="flex items-center gap-2">
-                                        <button
-                                          type="button"
-                                          onClick={() => handleMarcarInsumo({ item_id: item.item_id })}
-                                          disabled={loading}
-                                          title="Comprar este insumo"
-                                          className="text-sky-400 hover:text-sky-300 shrink-0 transition-transform active:scale-95 cursor-pointer"
-                                        >
-                                          <PlusCircle className="w-4 h-4 fill-sky-500/20 text-sky-400" />
-                                        </button>
-                                        <span
-                                          onClick={() => handleMarcarInsumo({ item_id: item.item_id })}
-                                          title="Clic para marcar como comprado"
-                                          className="text-sky-400 hover:text-sky-300 font-medium cursor-pointer hover:underline text-xs"
-                                        >
-                                          {item.contratipo} - {item.codigo}
-                                        </span>
-                                        {item.cantidad > 1 && (
-                                          <span className="text-[10px] font-mono text-neutral-400 font-normal">
-                                            ({item.cantidad} uds)
+                                insumosSplitPane.map((item) => {
+                                  const isPlus = item.version === 'Plus' || item.version === 'EXTRA_SHOT';
+
+                                  return (
+                                    <tr key={item.item_id} className="hover:bg-slate-50/80 transition-colors">
+                                      {/* 1. Kodigo: En AMARILLO para Normal, en AZUL para Plus */}
+                                      <td className="py-3 px-3">
+                                        <div className="flex items-center gap-2">
+                                          {isPlus ? (
+                                            <button
+                                              type="button"
+                                              onClick={() => handleMarcarInsumo({ item_id: item.item_id })}
+                                              disabled={loading}
+                                              title="Comprar insumo (Plus)"
+                                              className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-black text-[11px] leading-none shrink-0 transition-transform active:scale-95 cursor-pointer shadow-2xs"
+                                            >
+                                              +
+                                            </button>
+                                          ) : (
+                                            <button
+                                              type="button"
+                                              onClick={() => handleMarcarInsumo({ item_id: item.item_id })}
+                                              disabled={loading}
+                                              title="Comprar insumo (Normal)"
+                                              className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-[11px] leading-none shrink-0 transition-transform active:scale-95 cursor-pointer shadow-2xs"
+                                            >
+                                              ↓
+                                            </button>
+                                          )}
+
+                                          <span
+                                            onClick={() => handleMarcarInsumo({ item_id: item.item_id })}
+                                            title="Clic para marcar como comprado"
+                                            className={`font-bold cursor-pointer hover:underline text-xs ${
+                                              isPlus
+                                                ? 'text-blue-600 hover:text-blue-700'
+                                                : 'text-amber-600 hover:text-amber-700'
+                                            }`}
+                                          >
+                                            {item.contratipo} - {item.codigo}
+                                          </span>
+
+                                          {item.cantidad > 1 && (
+                                            <span className="text-[10px] font-mono font-bold text-slate-400">
+                                              ({item.cantidad} uds)
+                                            </span>
+                                          )}
+                                        </div>
+                                      </td>
+
+                                      {/* 2. Cliente: Nombre del cliente */}
+                                      <td className="py-3 px-3 text-slate-800 font-bold whitespace-nowrap">
+                                        {item.cliente_nombre}
+                                      </td>
+
+                                      {/* 3. Fecha registro: Fecha y hora en que se registró */}
+                                      <td className="py-3 px-3 text-slate-600 font-mono text-xs whitespace-nowrap">
+                                        {formatearMarcaTemporal(item.fecha_registro)}
+                                      </td>
+
+                                      {/* 4. Version: Normal (amarillo) o Plus (azul) */}
+                                      <td className="py-3 px-3 text-center whitespace-nowrap">
+                                        {isPlus ? (
+                                          <span className="text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-0.5 rounded-full">
+                                            Plus
+                                          </span>
+                                        ) : (
+                                          <span className="text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full">
+                                            Normal
                                           </span>
                                         )}
-                                      </div>
-                                    </td>
-
-                                    {/* 2. Cliente: Nombre del cliente */}
-                                    <td className="py-3 px-3 text-neutral-200 font-semibold whitespace-nowrap">
-                                      {item.cliente_nombre}
-                                    </td>
-
-                                    {/* 3. Fecha registro: Fecha y hora en que se registró */}
-                                    <td className="py-3 px-3 text-neutral-300 font-mono text-xs whitespace-nowrap">
-                                      {formatearMarcaTemporal(item.fecha_registro)}
-                                    </td>
-
-                                    {/* 4. Version: Normal o Plus */}
-                                    <td className="py-3 px-3 text-center whitespace-nowrap">
-                                      {item.version === 'Plus' || item.version === 'EXTRA_SHOT' ? (
-                                        <span className="text-[10px] font-bold bg-purple-900/60 text-purple-300 border border-purple-700/50 px-2.5 py-0.5 rounded">
-                                          Plus
-                                        </span>
-                                      ) : (
-                                        <span className="text-[10px] font-bold bg-neutral-800 text-neutral-300 border border-neutral-700/60 px-2.5 py-0.5 rounded">
-                                          Normal
-                                        </span>
-                                      )}
-                                    </td>
-                                  </tr>
-                                ))
+                                      </td>
+                                    </tr>
+                                  );
+                                })
                               )}
                             </tbody>
                           </table>
