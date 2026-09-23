@@ -1139,40 +1139,42 @@ export default function KodeSystemPage() {
     return insumos.filter((item) => item.pedido_id === selectedPedidoIdFab);
   }, [insumos, selectedPedidoIdFab]);
 
-  const fraganciasPorFabricar = useMemo(() => {
-    const map = new Map<string, {
+  const selectedPedidoFab = useMemo(() => {
+    if (!selectedPedidoIdFab) return null;
+    return pedidosAmarillos.find((p) => p.id === selectedPedidoIdFab) || null;
+  }, [pedidosAmarillos, selectedPedidoIdFab]);
+
+  const fraganciasSplitPane = useMemo(() => {
+    const list: Array<{
+      item_id: string;
+      pedido_id: string;
+      numero_pedido: string;
+      cliente_nombre: string;
+      fecha_registro: string;
       codigo: string;
       contratipo: string;
-      marca: string;
       version: string;
-      cantidadTotal: number;
-      pedidos: string[];
-    }>();
+      cantidad: number;
+    }> = [];
 
     pedidosAmarillos.forEach((ped) => {
       if (selectedPedidoIdFab && ped.id !== selectedPedidoIdFab) return;
-      ped.items.forEach((it) => {
-        const key = `${it.codigo}_${it.version}`;
-        if (!map.has(key)) {
-          map.set(key, {
-            codigo: it.codigo,
-            contratipo: it.contratipo,
-            marca: it.marca || 'KÖDE',
-            version: it.version,
-            cantidadTotal: it.cantidad,
-            pedidos: [ped.numero_pedido],
-          });
-        } else {
-          const item = map.get(key)!;
-          item.cantidadTotal += it.cantidad;
-          if (!item.pedidos.includes(ped.numero_pedido)) {
-            item.pedidos.push(ped.numero_pedido);
-          }
-        }
+      (ped.items || []).forEach((it, idx) => {
+        list.push({
+          item_id: it.id || `${ped.id}-frag-${idx}`,
+          pedido_id: ped.id,
+          numero_pedido: ped.numero_pedido,
+          cliente_nombre: ped.cliente_nombre,
+          fecha_registro: ped.created_at,
+          codigo: it.codigo,
+          contratipo: it.contratipo,
+          version: it.version,
+          cantidad: it.cantidad,
+        });
       });
     });
 
-    return Array.from(map.values());
+    return list;
   }, [pedidosAmarillos, selectedPedidoIdFab]);
 
   // Métricas
@@ -2913,7 +2915,10 @@ export default function KodeSystemPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Tarjeta PEDIDOS COMPRA PENDIENTE */}
                     <div
-                      onClick={() => setFabView('compra_pendiente')}
+                      onClick={() => {
+                        setSelectedPedidoIdFab(null);
+                        setFabView('compra_pendiente');
+                      }}
                       className="clay-card p-5 cursor-pointer flex items-center gap-4 transition-all hover:scale-[1.02] hover:border-rose-300"
                     >
                       <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shrink-0 shadow-inner">
@@ -2929,7 +2934,10 @@ export default function KodeSystemPage() {
 
                     {/* Tarjeta PEDIDOS POR FABRICAR */}
                     <div
-                      onClick={() => setFabView('por_fabricar')}
+                      onClick={() => {
+                        setSelectedPedidoIdFab(null);
+                        setFabView('por_fabricar');
+                      }}
                       className="clay-card p-5 cursor-pointer flex items-center gap-4 transition-all hover:scale-[1.02] hover:border-amber-300"
                     >
                       <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shrink-0 shadow-inner">
@@ -2951,7 +2959,10 @@ export default function KodeSystemPage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <button
-                      onClick={() => setFabView('hub')}
+                      onClick={() => {
+                        setSelectedPedidoIdFab(null);
+                        setFabView('hub');
+                      }}
                       className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       ← Volver a Fabricación
@@ -3184,128 +3195,253 @@ export default function KodeSystemPage() {
                 </div>
               )}
 
-              {/* FASE 2: SPLIT-PANE PEDIDOS POR FABRICAR */}
+              {/* FASE 2: VISTA EXACTA APPSHEET: ESTADO LISTO FABRICAR Y FRAGANCIAS POR FABRICAR */}
               {fabView === 'por_fabricar' && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <button
-                      onClick={() => setFabView('hub')}
-                      className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1"
+                      onClick={() => {
+                        setSelectedPedidoIdFab(null);
+                        setFabView('hub');
+                      }}
+                      className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       ← Volver a Fabricación
                     </button>
-                    <span className="text-xs text-amber-700 font-bold">Fase 2: Laboratorio / Envasado</span>
+                    <span className="text-xs text-amber-700 font-bold">Fase 2: Pedidos por Fabricar</span>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* Panel Izquierdo: Pedidos Listos para Fabricar */}
-                    <div className="clay-card p-4 space-y-3">
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                        <span className="text-xs font-extrabold uppercase text-slate-700">
-                          Pedidos listos para Fabricar ({pedidosAmarillos.length})
-                        </span>
-                        {selectedPedidoIdFab && (
-                          <button
-                            onClick={() => setSelectedPedidoIdFab(null)}
-                            className="text-xs text-indigo-600 font-bold hover:underline"
-                          >
-                            Ver todos
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="space-y-2 max-h-[550px] overflow-y-auto pr-1">
-                        {pedidosAmarillos.length === 0 ? (
-                          <div className="text-center py-12 text-slate-400 text-xs font-medium border-2 border-dashed border-slate-200 rounded-2xl">
-                            No hay pedidos listos para fabricar
-                          </div>
-                        ) : (
-                          pedidosAmarillos.map((p) => {
-                            const isSelected = selectedPedidoIdFab === p.id;
-                            return (
-                              <div
-                                key={p.id}
-                                onClick={() => setSelectedPedidoIdFab(isSelected ? null : p.id)}
-                                className={`p-3.5 rounded-2xl border transition-all cursor-pointer ${
-                                  isSelected
-                                    ? 'bg-amber-50 border-amber-400 shadow-md scale-[1.01]'
-                                    : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-sm'
-                                }`}
+                  {/* Tabla Normal limpia (sin fondo negro, sin elementos graficos de tarjetas) */}
+                  <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
+                      
+                      {/* ========================================================= */}
+                      {/* TABLA IZQUIERDA: ESTADO LISTO FABRICAR                    */}
+                      {/* ========================================================= */}
+                      <div className="lg:col-span-5 flex flex-col bg-white">
+                        {/* Barra Superior Header */}
+                        <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <h2 className="text-xs font-black uppercase text-slate-700 tracking-wider">
+                              Estado Listo Fabricar
+                            </h2>
+                            {selectedPedidoIdFab && (
+                              <button
+                                onClick={() => setSelectedPedidoIdFab(null)}
+                                className="text-[11px] text-indigo-600 hover:text-indigo-800 font-bold underline cursor-pointer"
                               >
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="font-mono font-black text-amber-700 text-xs">{p.numero_pedido}</span>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setGuiaModalPedido(p);
-                                      setNumGuiaInput('');
-                                      setLinkGuiaInput('');
-                                    }}
-                                    className="clay-badge text-[10px] font-bold bg-sky-100 text-sky-800 hover:bg-sky-200"
-                                  >
-                                    Asignar C807 →
-                                  </button>
-                                </div>
-                                <p className="text-xs font-bold text-slate-800">{p.cliente_nombre}</p>
-                                <span className="text-[11px] text-slate-500 font-medium">
-                                  {p.items.length} fragancias en esta orden
-                                </span>
-                              </div>
-                            );
-                          })
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Panel Derecho: Fragancias Listas para Fabricar */}
-                    <div className="clay-card p-4 space-y-3">
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                        <span className="text-xs font-extrabold uppercase text-slate-700">
-                          Fragancias Listas para Fabricar ({fraganciasPorFabricar.length})
-                        </span>
-                      </div>
-
-                      <div className="space-y-2 max-h-[550px] overflow-y-auto pr-1">
-                        {fraganciasPorFabricar.length === 0 ? (
-                          <div className="text-center py-12 text-slate-400 text-xs font-medium">
-                            No hay fórmulas pendientes de formulación
+                                Ver todos ({pedidosAmarillos.length})
+                              </button>
+                            )}
                           </div>
-                        ) : (
-                          fraganciasPorFabricar.map((f, idx) => (
-                            <div
-                              key={idx}
-                              className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-sm"
-                            >
-                              <div>
-                                <div className="flex items-center gap-1.5">
-                                  <span className="font-mono font-black text-xs text-indigo-700">#{f.codigo}</span>
-                                  <span className="text-xs font-extrabold text-slate-900">{f.contratipo}</span>
-                                  <span
-                                    className={`text-[10px] font-extrabold px-1.5 py-0.2 rounded ${
-                                      f.version === 'Plus' || (f.version as any) === 'EXTRA_SHOT'
-                                        ? 'bg-purple-600 text-white'
-                                        : 'bg-slate-200 text-slate-800'
-                                    }`}
-                                  >
-                                    {f.version === 'Plus' || (f.version as any) === 'EXTRA_SHOT' ? 'PLUS' : 'NORMAL'}
-                                  </span>
-                                </div>
-                                <div className="text-[10px] text-slate-500 mt-0.5">
-                                  Marca: {f.marca} • Para: {f.pedidos.join(', ')}
-                                </div>
-                              </div>
 
-                              <div className="text-right">
-                                <span className="font-mono text-xl font-black text-amber-700">
-                                  {f.cantidadTotal}
-                                </span>
-                                <span className="text-[10px] text-slate-400 block font-medium">frascos</span>
-                              </div>
-                            </div>
-                          ))
-                        )}
+                          <span className="text-xs text-slate-500 font-bold font-mono">
+                            {pedidosAmarillos.length} {pedidosAmarillos.length === 1 ? 'pedido' : 'pedidos'}
+                          </span>
+                        </div>
+
+                        {/* Tabla Estado Listo Fabricar */}
+                        <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                              <tr>
+                                <th className="py-2.5 px-3">Cliente</th>
+                                <th className="py-2.5 px-3">Marca Temporal</th>
+                                <th className="py-2.5 px-3">Usuario</th>
+                                <th className="py-2.5 px-2 text-right"></th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 bg-white">
+                              {pedidosAmarillos.length === 0 ? (
+                                <tr>
+                                  <td colSpan={4} className="py-12 text-center text-slate-400 font-medium">
+                                    No hay pedidos listos para fabricar
+                                  </td>
+                                </tr>
+                              ) : (
+                                pedidosAmarillos.map((p) => {
+                                  const isSelected = selectedPedidoIdFab === p.id;
+
+                                  return (
+                                    <tr
+                                      key={p.id}
+                                      onClick={() => setSelectedPedidoIdFab(isSelected ? null : p.id)}
+                                      className={`cursor-pointer transition-colors ${
+                                        isSelected
+                                          ? 'bg-amber-50/80 border-l-4 border-l-amber-500'
+                                          : 'hover:bg-slate-50/80'
+                                      }`}
+                                    >
+                                      {/* Cliente en AMARILLO/ÁMBAR (determinado por el estado Listo Fabricar) */}
+                                      <td className="py-3 px-3 font-bold text-amber-600 hover:text-amber-700">
+                                        <span>{p.cliente_nombre}</span>
+                                        <span className="ml-1.5 text-[10px] font-mono text-slate-400 font-normal">
+                                          ({p.items.length} {p.items.length === 1 ? 'frag.' : 'frags.'})
+                                        </span>
+                                      </td>
+                                      <td className="py-3 px-3 text-slate-600 font-mono text-xs whitespace-nowrap">
+                                        {formatearMarcaTemporal(p.created_at)}
+                                      </td>
+                                      <td
+                                        className="py-3 px-3 text-slate-700 font-medium text-xs truncate max-w-[180px]"
+                                        title={p.vendedora_nombre || 'Erika Melgar'}
+                                      >
+                                        {p.vendedora_nombre || 'Erika Melgar'}
+                                      </td>
+                                      <td className="py-3 px-2 text-right whitespace-nowrap">
+                                        <div className="inline-flex items-center gap-1.5">
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setGuiaModalPedido(p);
+                                              setNumGuiaInput('');
+                                              setLinkGuiaInput('');
+                                            }}
+                                            title="Asignar Guía C807"
+                                            className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 transition-colors cursor-pointer"
+                                          >
+                                            C807 →
+                                          </button>
+                                          <ChevronRight className="w-4 h-4 inline opacity-60 text-slate-400" />
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  );
+                                })
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
+
+                      {/* ========================================================= */}
+                      {/* TABLA DERECHA: FRAGANCIAS POR FABRICAR                    */}
+                      {/* ========================================================= */}
+                      <div className="lg:col-span-7 flex flex-col bg-white">
+                        {/* Header Fragancias */}
+                        <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <h2 className="text-xs font-black uppercase text-slate-700 tracking-wider">
+                              Fragancias por fabricar
+                            </h2>
+                            {selectedPedidoIdFab && (
+                              <span className="text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">
+                                Filtrado por pedido
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {selectedPedidoFab && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setGuiaModalPedido(selectedPedidoFab);
+                                  setNumGuiaInput('');
+                                  setLinkGuiaInput('');
+                                }}
+                                className="text-[11px] font-bold px-2.5 py-1 bg-sky-600 hover:bg-sky-700 text-white rounded-lg transition-colors flex items-center gap-1 shadow-2xs cursor-pointer"
+                              >
+                                <Truck className="w-3.5 h-3.5" />
+                                <span>Asignar C807 ({selectedPedidoFab.numero_pedido})</span>
+                              </button>
+                            )}
+                            <span className="text-xs text-slate-500 font-bold font-mono">
+                              {fraganciasSplitPane.length} {fraganciasSplitPane.length === 1 ? 'fragancia' : 'fragancias'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Tabla Fragancias */}
+                        <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                              <tr>
+                                <th className="py-2.5 px-3">Kodigo</th>
+                                <th className="py-2.5 px-3">Cliente</th>
+                                <th className="py-2.5 px-3">Fecha registro</th>
+                                <th className="py-2.5 px-3 text-center">Version</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 bg-white">
+                              {fraganciasSplitPane.length === 0 ? (
+                                <tr>
+                                  <td colSpan={4} className="py-12 text-center text-slate-400 font-medium">
+                                    No hay fragancias pendientes de fabricar
+                                  </td>
+                                </tr>
+                              ) : (
+                                fraganciasSplitPane.map((item) => {
+                                  const isPlus = item.version === 'Plus' || item.version === 'EXTRA_SHOT';
+
+                                  return (
+                                    <tr key={item.item_id} className="hover:bg-slate-50/80 transition-colors">
+                                      {/* 1. Kodigo: En AMARILLO para Normal, en AZUL para Plus */}
+                                      <td className="py-3 px-3">
+                                        <div className="flex items-center gap-2">
+                                          {isPlus ? (
+                                            <span
+                                              className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-600 text-white font-black text-[11px] leading-none shrink-0 shadow-2xs"
+                                            >
+                                              +
+                                            </span>
+                                          ) : (
+                                            <span
+                                              className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-400 text-amber-950 font-black text-[11px] leading-none shrink-0 shadow-2xs"
+                                            >
+                                              ↓
+                                            </span>
+                                          )}
+
+                                          <span
+                                            className={`font-bold text-xs ${
+                                              isPlus
+                                                ? 'text-blue-600'
+                                                : 'text-amber-600'
+                                            }`}
+                                          >
+                                            {item.contratipo} - {item.codigo}
+                                          </span>
+
+                                          {item.cantidad > 1 && (
+                                            <span className="text-[10px] font-mono font-bold text-slate-400">
+                                              ({item.cantidad} uds)
+                                            </span>
+                                          )}
+                                        </div>
+                                      </td>
+
+                                      {/* 2. Cliente: Nombre del cliente (en amarillo/ámbar por estar en Estado Listo Fabricar) */}
+                                      <td className="py-3 px-3 font-bold text-amber-600 whitespace-nowrap">
+                                        {item.cliente_nombre}
+                                      </td>
+
+                                      {/* 3. Fecha registro: Fecha y hora en que se registró */}
+                                      <td className="py-3 px-3 text-slate-600 font-mono text-xs whitespace-nowrap">
+                                        {formatearMarcaTemporal(item.fecha_registro)}
+                                      </td>
+
+                                      {/* 4. Version: Normal (amarillo) o Plus (azul) */}
+                                      <td className="py-3 px-3 text-center whitespace-nowrap">
+                                        {isPlus ? (
+                                          <span className="text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-0.5 rounded-full">
+                                            Plus
+                                          </span>
+                                        ) : (
+                                          <span className="text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full">
+                                            Normal
+                                          </span>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  );
+                                })
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
                     </div>
                   </div>
                 </div>
