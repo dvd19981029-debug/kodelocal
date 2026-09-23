@@ -59,6 +59,7 @@ export async function GET(request: Request) {
         c.email AS cliente_email,
         u.id AS vendedora_id,
         u.nombre AS vendedora_nombre,
+        u.email AS vendedora_email,
         COALESCE(
           json_agg(
             json_build_object(

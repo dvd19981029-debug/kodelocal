@@ -42,9 +42,27 @@ import {
   Store,
   Box,
   FileText,
-  Mail
+  Mail,
+  PlusCircle
 } from 'lucide-react';
 import { DEPARTAMENTOS_CATALOG, MUNICIPIOS_CATALOG, resolveC807DeptoCode, getMunicipiosByDepto } from '@/lib/svTerritory';
+
+function formatearMarcaTemporal(fechaStr: string) {
+  if (!fechaStr) return '';
+  try {
+    const d = new Date(fechaStr);
+    if (isNaN(d.getTime())) return fechaStr;
+    const dia = d.getDate();
+    const mes = d.getMonth() + 1;
+    const anio = d.getFullYear();
+    const horas = String(d.getHours()).padStart(2, '0');
+    const mins = String(d.getMinutes()).padStart(2, '0');
+    const segs = String(d.getSeconds()).padStart(2, '0');
+    return `${dia}/${mes}/${anio} ${horas}:${mins}:${segs}`;
+  } catch {
+    return fechaStr;
+  }
+}
 
 interface CatalogoItem {
   id: string;
@@ -144,6 +162,7 @@ interface Pedido {
   cliente_email?: string;
   vendedora_id?: string;
   vendedora_nombre?: string;
+  vendedora_email?: string;
   items: PedidoItem[];
 }
 
@@ -152,6 +171,7 @@ interface InsumoAgrupado {
   codigo: string;
   contratipo: string;
   marca_inspirada: string;
+  genero?: string;
   version: string;
   total_unidades: number | string;
   pedidos: Array<{
@@ -2926,153 +2946,230 @@ export default function KodeSystemPage() {
                 </div>
               )}
 
-              {/* FASE 1: SPLIT-PANE PEDIDOS COMPRA PENDIENTE */}
+              {/* FASE 1: VISTA EXACTA APPSHEET: ESTADO REGISTRADO E INSUMOS PARA COMPRA */}
               {fabView === 'compra_pendiente' && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <button
                       onClick={() => setFabView('hub')}
-                      className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1"
+                      className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       ← Volver a Fabricación
                     </button>
                     <span className="text-xs text-rose-600 font-bold">Fase 1: Insumos por Comprar</span>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* Panel Izquierdo: Pedidos Estado Registrado */}
-                    <div className="clay-card p-4 space-y-3">
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                        <span className="text-xs font-extrabold uppercase text-slate-700">
-                          Pedidos en Estado Registrado ({pedidosRojos.length})
-                        </span>
-                        {selectedPedidoIdFab && (
-                          <button
-                            onClick={() => setSelectedPedidoIdFab(null)}
-                            className="text-xs text-indigo-600 font-bold hover:underline"
-                          >
-                            Ver todos
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="space-y-2 max-h-[550px] overflow-y-auto pr-1">
-                        {pedidosRojos.length === 0 ? (
-                          <div className="text-center py-12 text-slate-400 text-xs font-medium border-2 border-dashed border-slate-200 rounded-2xl">
-                            No hay pedidos pendientes de compra
-                          </div>
-                        ) : (
-                          pedidosRojos.map((p) => {
-                            const isSelected = selectedPedidoIdFab === p.id;
-                            const faltantes = p.items.filter((i) => !i.insumo_comprado).length;
-
-                            return (
-                              <div
-                                key={p.id}
-                                onClick={() => setSelectedPedidoIdFab(isSelected ? null : p.id)}
-                                className={`p-3.5 rounded-2xl border transition-all cursor-pointer ${
-                                  isSelected
-                                    ? 'bg-rose-50 border-rose-400 shadow-md scale-[1.01]'
-                                    : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-sm'
-                                }`}
+                  {/* Contenedor tipo AppSheet (Sin contenedores de tarjetas, tablas normales puras) */}
+                  <div className="bg-[#18191c] text-neutral-100 rounded-xl border border-neutral-800 shadow-2xl overflow-hidden">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-neutral-800">
+                      
+                      {/* ========================================================= */}
+                      {/* TABLA IZQUIERDA: ESTADO REGISTRADO                        */}
+                      {/* ========================================================= */}
+                      <div className="lg:col-span-7 flex flex-col">
+                        {/* Barra Superior Header */}
+                        <div className="px-4 py-3 bg-[#1e2024] border-b border-neutral-800 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-3">
+                            <h2 className="text-base font-bold text-neutral-100 tracking-tight">
+                              Estado Registrado
+                            </h2>
+                            {selectedPedidoIdFab && (
+                              <button
+                                onClick={() => setSelectedPedidoIdFab(null)}
+                                className="text-[11px] text-sky-400 hover:text-sky-300 font-semibold underline cursor-pointer"
                               >
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="font-mono font-black text-rose-600 text-xs">{p.numero_pedido}</span>
-                                  <span className="clay-badge text-[10px] font-bold bg-rose-100 text-rose-800">
-                                    {faltantes} pendientes
-                                  </span>
-                                </div>
-                                <p className="text-xs font-bold text-slate-800">{p.cliente_nombre}</p>
-                                <div className="flex justify-between text-[11px] text-slate-500 mt-1 font-medium">
-                                  <span>{p.vendedora_nombre || 'WhatsApp'}</span>
-                                  <span className="font-mono">
-                                    {new Date(p.created_at).toLocaleTimeString('es-SV', { hour: '2-digit', minute: '2-digit' })}
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Panel Derecho: Insumos para Compra (⬇️ Normal / ➕ Extra Shot) */}
-                    <div className="clay-card p-4 space-y-3">
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                        <span className="text-xs font-extrabold uppercase text-slate-700">
-                          Insumos para Compra ({insumosSplitPane.length})
-                        </span>
-                      </div>
-
-                      <div className="space-y-2 max-h-[550px] overflow-y-auto pr-1">
-                        {insumosSplitPane.length === 0 ? (
-                          <div className="text-center py-12 text-slate-400 text-xs font-medium">
-                            ¡Todos los insumos han sido comprados!
+                                Ver todos ({pedidosRojos.length})
+                              </button>
+                            )}
                           </div>
-                        ) : (
-                          insumosSplitPane.map((item, idx) => (
-                            <div
-                              key={idx}
-                              className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-sm"
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveNav('VENTAS');
+                                setVentasView('nuevo_pedido');
+                              }}
+                              className="bg-[#1d63ed] hover:bg-blue-600 text-white font-bold text-xs px-3 py-1.5 rounded flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                              title="Crear nuevo pedido"
                             >
-                              <div className="flex items-center gap-2.5">
-                                <span className="font-mono font-black text-xs text-indigo-700">#{item.codigo}</span>
-                                <div>
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-xs font-extrabold text-slate-900">{item.contratipo}</span>
-                                    <span
-                                      className={`text-[10px] font-extrabold px-1.5 py-0.2 rounded ${
-                                        item.version === 'Plus' || (item.version as any) === 'EXTRA_SHOT'
-                                          ? 'bg-purple-600 text-white'
-                                          : 'bg-slate-200 text-slate-800'
+                              <Plus className="w-3.5 h-3.5 stroke-[3]" /> Add
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                fetchPedidos();
+                                fetchInsumos();
+                              }}
+                              title="Refrescar lista"
+                              className="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded transition-colors cursor-pointer"
+                            >
+                              <RefreshCw className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Tabla Estado Registrado */}
+                        <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead className="sticky top-0 bg-[#1e2024] border-b border-neutral-800 text-neutral-400 font-semibold">
+                              <tr>
+                                <th className="py-2.5 px-4">Cliente</th>
+                                <th className="py-2.5 px-4">Marca Temporal</th>
+                                <th className="py-2.5 px-4">Usuario</th>
+                                <th className="py-2.5 px-2 w-8 text-center"></th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-neutral-800/80">
+                              {pedidosRojos.length === 0 ? (
+                                <tr>
+                                  <td colSpan={4} className="py-12 text-center text-neutral-500 font-medium">
+                                    No hay pedidos en estado registrado
+                                  </td>
+                                </tr>
+                              ) : (
+                                pedidosRojos.map((p) => {
+                                  const isSelected = selectedPedidoIdFab === p.id;
+                                  const faltantes = p.items.filter((i) => !i.insumo_comprado).length;
+
+                                  return (
+                                    <tr
+                                      key={p.id}
+                                      onClick={() => setSelectedPedidoIdFab(isSelected ? null : p.id)}
+                                      className={`cursor-pointer transition-colors ${
+                                        isSelected
+                                          ? 'bg-neutral-800 border-l-4 border-l-sky-500'
+                                          : 'hover:bg-neutral-800/50'
                                       }`}
                                     >
-                                      {item.version === 'Plus' || (item.version as any) === 'EXTRA_SHOT' ? '➕ Plus' : '⬇️ Normal'}
-                                    </span>
-                                  </div>
-                                  <div className="flex flex-wrap items-center gap-1.5 mt-1.5 text-[10px] text-slate-500 font-mono">
-                                    {item.pedidos.map((p, pIdx) => (
-                                      <div
-                                        key={pIdx}
-                                        className="bg-white border border-slate-200 hover:border-emerald-400 pl-1.5 pr-1 py-0.5 rounded-lg flex items-center gap-1 shadow-2xs transition-all group"
-                                      >
-                                        <span className="font-bold text-slate-800">{p.numero_pedido}</span>
-                                        {p.cantidad > 1 && (
-                                          <span className="text-[9px] text-slate-400">({p.cantidad})</span>
+                                      <td className="py-3 px-4 font-bold text-red-500 hover:text-red-400">
+                                        <span>{p.cliente_nombre}</span>
+                                        {faltantes > 0 && (
+                                          <span className="ml-2 text-[10px] font-mono text-neutral-400 font-normal">
+                                            ({faltantes} pend.)
+                                          </span>
                                         )}
-                                        <button
-                                          type="button"
-                                          title={`Comprar insumo para ${p.numero_pedido}`}
-                                          onClick={() => handleMarcarInsumo({ item_id: p.item_id })}
-                                          disabled={loading}
-                                          className="text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded p-0.5 transition-colors"
-                                        >
-                                          <Check className="w-3 h-3 text-emerald-600" />
-                                        </button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-2.5">
-                                <span className="font-mono text-base font-black text-rose-600">
-                                  {item.total_unidades} {parseInt(item.total_unidades.toString(), 10) === 1 ? 'ud' : 'uds'}
-                                </span>
-                                <button
-                                  onClick={() => handleMarcarInsumo({ catalogo_id: item.catalogo_id, version: item.version })}
-                                  disabled={loading}
-                                  className="clay-btn clay-btn-success px-3 py-1.5 text-xs font-bold flex items-center gap-1"
-                                  title="Marcar todas las unidades de esta fragancia como compradas"
-                                >
-                                  <Check className="w-3.5 h-3.5" />
-                                  Comprar todos
-                                </button>
-                              </div>
-                            </div>
-                          ))
-                        )}
+                                      </td>
+                                      <td className="py-3 px-4 text-neutral-200 font-mono">
+                                        {formatearMarcaTemporal(p.created_at)}
+                                      </td>
+                                      <td
+                                        className="py-3 px-4 text-neutral-200 truncate max-w-[220px]"
+                                        title={p.vendedora_email || p.vendedora_nombre || 'erikamelgarcia@gmail.com'}
+                                      >
+                                        {p.vendedora_email || p.vendedora_nombre || 'erikamelgarcia@gmail.com'}
+                                      </td>
+                                      <td className="py-3 px-2 text-center text-neutral-400">
+                                        <ChevronRight className="w-4 h-4 inline opacity-60" />
+                                      </td>
+                                    </tr>
+                                  );
+                                })
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
+
+                      {/* ========================================================= */}
+                      {/* TABLA DERECHA: INSUMOS PARA COMPRA                        */}
+                      {/* ========================================================= */}
+                      <div className="lg:col-span-5 flex flex-col bg-[#16171a]">
+                        {/* Header Insumos */}
+                        <div className="px-4 py-3 bg-[#1e2024] border-b border-neutral-800 flex items-center justify-between">
+                          <h2 className="text-base font-bold text-neutral-100 tracking-tight">
+                            Insumos para compra
+                          </h2>
+                          <span className="text-xs text-neutral-400 font-mono">
+                            {insumosSplitPane.length} {insumosSplitPane.length === 1 ? 'insumo' : 'insumos'}
+                          </span>
+                        </div>
+
+                        {/* Tabla Insumos */}
+                        <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead className="sticky top-0 bg-[#1e2024] border-b border-neutral-800 text-neutral-400 font-semibold">
+                              <tr>
+                                <th className="py-2.5 px-4">Kodigo</th>
+                                <th className="py-2.5 px-3 text-right w-20">Uds</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-neutral-800/80">
+                              {insumosSplitPane.length === 0 ? (
+                                <tr>
+                                  <td colSpan={2} className="py-12 text-center text-neutral-500 font-medium">
+                                    ¡Todos los insumos han sido comprados!
+                                  </td>
+                                </tr>
+                              ) : (
+                                insumosSplitPane.map((item, idx) => (
+                                  <tr key={idx} className="hover:bg-neutral-800/40 transition-colors">
+                                    <td className="py-2.5 px-4">
+                                      <div className="space-y-1">
+                                        <div className="flex items-center gap-2">
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              handleMarcarInsumo({ catalogo_id: item.catalogo_id, version: item.version })
+                                            }
+                                            disabled={loading}
+                                            title="Comprar todos los insumos de esta fragancia"
+                                            className="text-sky-400 hover:text-sky-300 shrink-0 transition-transform active:scale-95 cursor-pointer"
+                                          >
+                                            <PlusCircle className="w-4 h-4 fill-sky-500/20 text-sky-400" />
+                                          </button>
+                                          <span
+                                            onClick={() =>
+                                              handleMarcarInsumo({ catalogo_id: item.catalogo_id, version: item.version })
+                                            }
+                                            title="Clic para comprar insumo"
+                                            className="text-sky-400 hover:text-sky-300 font-medium cursor-pointer hover:underline text-xs"
+                                          >
+                                            {item.contratipo} - {item.marca_inspirada} - {item.genero || 'Unisex'} - {item.codigo}
+                                          </span>
+                                          {item.version === 'Plus' && (
+                                            <span className="text-[9px] font-bold bg-purple-900/60 text-purple-300 border border-purple-700/50 px-1 py-0.2 rounded shrink-0">
+                                              Plus
+                                            </span>
+                                          )}
+                                        </div>
+
+                                        {/* Sub-pedidos asociados si hay más de 1 pedido */}
+                                        {item.pedidos.length > 1 && (
+                                          <div className="flex flex-wrap items-center gap-1 pl-6 pt-0.5">
+                                            {item.pedidos.map((ped, pedIdx) => (
+                                              <button
+                                                key={pedIdx}
+                                                type="button"
+                                                onClick={() => handleMarcarInsumo({ item_id: ped.item_id })}
+                                                disabled={loading}
+                                                title={`Comprar solo para ${ped.numero_pedido} (${ped.cliente_nombre})`}
+                                                className="text-[9px] font-mono bg-neutral-800 hover:bg-emerald-950 text-neutral-300 hover:text-emerald-400 border border-neutral-700 hover:border-emerald-600 rounded px-1.5 py-0.5 flex items-center gap-1 transition-colors cursor-pointer"
+                                              >
+                                                <span>{ped.numero_pedido}</span>
+                                                {ped.cantidad > 1 && (
+                                                  <span className="text-neutral-500">x{ped.cantidad}</span>
+                                                )}
+                                                <Check className="w-2.5 h-2.5 text-emerald-400" />
+                                              </button>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </td>
+                                    <td className="py-2.5 px-3 text-right align-top pt-3">
+                                      <span className="font-mono font-bold text-neutral-300 text-xs">
+                                        {item.total_unidades}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
                     </div>
                   </div>
                 </div>

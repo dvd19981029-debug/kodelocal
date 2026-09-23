@@ -12,6 +12,7 @@ export async function GET() {
         cat.codigo,
         cat.contratipo,
         cat.marca_inspirada,
+        cat.genero,
         pi.version,
         SUM(pi.cantidad) AS total_unidades,
         json_agg(
@@ -30,7 +31,7 @@ export async function GET() {
       JOIN public.clientes c ON p.cliente_id = c.id
       WHERE pi.insumo_comprado = FALSE 
         AND p.estado IN ('Registrado', 'PENDIENTE_COMPRA')
-      GROUP BY cat.id, cat.codigo, cat.contratipo, cat.marca_inspirada, pi.version
+      GROUP BY cat.id, cat.codigo, cat.contratipo, cat.marca_inspirada, cat.genero, pi.version
       ORDER BY total_unidades DESC, cat.contratipo ASC;
     `;
 
