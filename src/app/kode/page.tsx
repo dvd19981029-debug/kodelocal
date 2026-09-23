@@ -1543,13 +1543,14 @@ export default function KodeSystemPage() {
                               const depto = e.target.value;
                               setNcDepto(depto);
                               const munis = getMunicipiosByDepto(depto);
-                              if (munis.length > 0) setNcMuni(munis[0]);
+                              if (munis.length > 0) setNcMuni(munis[0].nombre_municipio || munis[0].nombre_mh);
                             }}
                             className="clay-input w-full text-xs font-bold cursor-pointer"
                           >
-                            {DEPARTAMENTOS_CATALOG.map((d) => (
-                              <option key={d.code} value={d.name}>
-                                {d.name}
+                            <option value="">-- Seleccionar Departamento --</option>
+                            {DEPARTAMENTOS_CATALOG.filter((d) => d.id !== '00').map((d) => (
+                              <option key={d.id} value={d.nombre}>
+                                {d.nombre}
                               </option>
                             ))}
                           </select>
@@ -1564,11 +1565,15 @@ export default function KodeSystemPage() {
                             onChange={(e) => setNcMuni(e.target.value)}
                             className="clay-input w-full text-xs font-bold cursor-pointer"
                           >
-                            {ncMunicipiosDisponibles.map((m) => (
-                              <option key={m} value={m}>
-                                {m}
-                              </option>
-                            ))}
+                            <option value="">-- Seleccionar Municipio --</option>
+                            {ncMunicipiosDisponibles.map((m: any) => {
+                              const nombreMuni = m.nombre_municipio || m.nombre_mh || m.nombre || String(m);
+                              return (
+                                <option key={m.id_municipio || nombreMuni} value={nombreMuni}>
+                                  {nombreMuni}
+                                </option>
+                              );
+                            })}
                           </select>
                         </div>
                       </div>
