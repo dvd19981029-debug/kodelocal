@@ -2709,7 +2709,6 @@ export default function KodeSystemPage() {
                       <table className="w-full text-left text-xs">
                         <thead className="bg-slate-50 border-b border-slate-200/80 text-slate-600 font-extrabold uppercase tracking-wider text-[11px]">
                           <tr>
-                            <th className="py-3 px-4">Id Cliente</th>
                             <th className="py-3 px-4">Nombre completo</th>
                             <th className="py-3 px-4">Direccion</th>
                             <th className="py-3 px-4">Punto de Referencia</th>
@@ -2720,14 +2719,13 @@ export default function KodeSystemPage() {
                         <tbody className="divide-y divide-slate-100 bg-white">
                           {clientesFiltrados.length === 0 ? (
                             <tr>
-                              <td colSpan={6} className="py-12 text-center text-slate-400 font-medium">
+                              <td colSpan={5} className="py-12 text-center text-slate-400 font-medium">
                                 No se encontraron clientes
                               </td>
                             </tr>
                           ) : (
                             clientesFiltrados.map((c) => (
                               <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
-                                <td className="py-3 px-4 font-mono font-bold text-slate-500">{c.id}</td>
                                 <td className="py-3 px-4">
                                   <div className="space-y-1">
                                     <div className="flex items-center gap-3">
