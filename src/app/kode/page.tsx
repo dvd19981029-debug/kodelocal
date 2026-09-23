@@ -21,6 +21,7 @@ import {
   Send,
   Check,
   User,
+  UserPlus,
   Sparkles,
   CreditCard,
   Building,
@@ -72,6 +73,18 @@ interface PedidoItem {
   precio_unitario: number;
   subtotal: number;
   insumo_comprado?: boolean;
+}
+
+interface ClienteItem {
+  id: string;
+  nombre_completo: string;
+  telefono_whatsapp: string;
+  direccion_entrega: string;
+  departamento: string;
+  municipio: string;
+  punto_referencia?: string;
+  pedidos_count?: number;
+  total_gastado?: number;
 }
 
 interface FormaPagoItem {
@@ -241,6 +254,26 @@ export default function KodeSystemPage() {
   const [abonoObservaciones, setAbonoObservaciones] = useState<string>('');
   const [abonoLoading, setAbonoLoading] = useState(false);
 
+  // Directorio y formulario de Clientes
+  const [clientesDb, setClientesDb] = useState<ClienteItem[]>([]);
+  const [loadingClientes, setLoadingClientes] = useState(false);
+  const [ncNombre, setNcNombre] = useState('');
+  const [ncTelefono, setNcTelefono] = useState('');
+  const [ncDepto, setNcDepto] = useState('San Salvador');
+  const [ncMuni, setNcMuni] = useState('San Salvador Centro');
+  const [ncDireccion, setNcDireccion] = useState('');
+  const [ncReferencia, setNcReferencia] = useState('');
+  const [guardandoCliente, setGuardandoCliente] = useState(false);
+
+  const resetNuevoClienteForm = () => {
+    setNcNombre('');
+    setNcTelefono('');
+    setNcDepto('San Salvador');
+    setNcMuni('San Salvador Centro');
+    setNcDireccion('');
+    setNcReferencia('');
+  };
+
   // Selector de perfumes en el form
   const [busquedaPerfume, setBusquedaPerfume] = useState('');
   const [perfumeSeleccionado, setPerfumeSeleccionado] = useState<CatalogoItem | null>(null);
@@ -283,12 +316,28 @@ export default function KodeSystemPage() {
     setTimeout(() => setToast(null), 4000);
   };
 
+  const fetchClientes = async () => {
+    try {
+      setLoadingClientes(true);
+      const res = await fetch('/api/kode/clientes');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.clientes)) {
+        setClientesDb(data.clientes);
+      }
+    } catch (e) {
+      console.error('Error cargando clientes:', e);
+    } finally {
+      setLoadingClientes(false);
+    }
+  };
+
   useEffect(() => {
     fetchCatalogo();
     fetchVendedoras();
     fetchPedidos();
     fetchInsumos();
     fetchFormasPago();
+    fetchClientes();
     cargarComprasLocal();
   }, []);
 
@@ -386,7 +435,7 @@ export default function KodeSystemPage() {
     return getMunicipiosByDepto(clienteDepto);
   }, [clienteDepto]);
 
-  // Directorio consolidado de clientes
+  // Directorio consolidado de clientes (base de datos + pedidos históricos)
   const directorioClientes = useMemo(() => {
     const mapa = new Map<string, {
       id: string;
@@ -400,13 +449,33 @@ export default function KodeSystemPage() {
       totalGastado: number;
     }>();
 
+    // 1. Clientes registrados en base de datos
+    clientesDb.forEach((c) => {
+      const cleanPhone = (c.telefono_whatsapp || '').toString().replace(/\D/g, '');
+      const key = cleanPhone || (c.nombre_completo || '').trim().toLowerCase();
+      if (!key) return;
+      mapa.set(key, {
+        id: c.id,
+        nombre: c.nombre_completo,
+        telefono: c.telefono_whatsapp,
+        direccion: c.direccion_entrega,
+        departamento: c.departamento,
+        municipio: c.municipio,
+        referencia: c.punto_referencia,
+        pedidosCount: Number(c.pedidos_count || 0),
+        totalGastado: Number(c.total_gastado || 0),
+      });
+    });
+
+    // 2. Clientes históricos en pedidos
     pedidos.forEach((p) => {
-      const key = p.cliente_telefono || p.cliente_nombre;
+      const cleanPhone = (p.cliente_telefono || '').toString().replace(/\D/g, '');
+      const key = cleanPhone || (p.cliente_nombre || '').trim().toLowerCase();
       if (!key) return;
       const totalNum = parseFloat(p.total?.toString() || '0');
       if (!mapa.has(key)) {
         mapa.set(key, {
-          id: p.cliente_id || `CLIENTE-${p.cliente_telefono}`,
+          id: p.cliente_id || `CLIENTE-${p.cliente_telefono || cleanPhone}`,
           nombre: p.cliente_nombre,
           telefono: p.cliente_telefono,
           direccion: p.cliente_direccion,
@@ -418,13 +487,80 @@ export default function KodeSystemPage() {
         });
       } else {
         const c = mapa.get(key)!;
-        c.pedidosCount += 1;
-        c.totalGastado += totalNum;
+        if (!c.pedidosCount && !c.totalGastado) {
+          c.pedidosCount += 1;
+          c.totalGastado += totalNum;
+        }
       }
     });
 
     return Array.from(mapa.values());
-  }, [pedidos]);
+  }, [clientesDb, pedidos]);
+
+  const ncMunicipiosDisponibles = useMemo(() => {
+    if (!ncDepto) return [];
+    return getMunicipiosByDepto(ncDepto);
+  }, [ncDepto]);
+
+  const handleGuardarNuevoCliente = async (crearPedidoDirecto = false) => {
+    if (!ncNombre.trim()) {
+      showToast('Ingresa el nombre completo del cliente', 'error');
+      return;
+    }
+    if (!ncTelefono.trim()) {
+      showToast('Ingresa el teléfono WhatsApp del cliente', 'error');
+      return;
+    }
+    if (!ncDireccion.trim()) {
+      showToast('Ingresa la dirección de entrega del cliente', 'error');
+      return;
+    }
+
+    try {
+      setGuardandoCliente(true);
+      const res = await fetch('/api/kode/clientes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre_completo: ncNombre.trim(),
+          telefono_whatsapp: ncTelefono.trim(),
+          departamento: ncDepto,
+          municipio: ncMuni,
+          direccion_entrega: ncDireccion.trim(),
+          punto_referencia: ncReferencia.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        showToast(data.error || 'Error al guardar cliente', 'error');
+        return;
+      }
+
+      showToast(`Cliente "${ncNombre.trim()}" registrado con éxito`, 'success');
+      await fetchClientes();
+
+      if (crearPedidoDirecto) {
+        handleSeleccionarCliente({
+          nombre: ncNombre.trim(),
+          telefono: ncTelefono.trim(),
+          direccion: ncDireccion.trim(),
+          departamento: ncDepto,
+          municipio: ncMuni,
+          referencia: ncReferencia.trim(),
+        });
+      } else {
+        setVentasView('clientes');
+      }
+
+      resetNuevoClienteForm();
+    } catch (e: any) {
+      console.error('Error guardando cliente:', e);
+      showToast(e.message || 'Error al conectar con el servidor', 'error');
+    } finally {
+      setGuardandoCliente(false);
+    }
+  };
 
   const handleSeleccionarCliente = (c: {
     nombre: string;
@@ -1205,6 +1341,7 @@ export default function KodeSystemPage() {
                 fetchPedidos();
                 fetchInsumos();
                 fetchCatalogo();
+                fetchClientes();
                 showToast('Datos actualizados', 'info');
               }}
               className="clay-btn clay-btn-light p-2 text-slate-600 hover:text-slate-900"
@@ -1240,7 +1377,10 @@ export default function KodeSystemPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {/* Tarjeta NUEVO CLIENTE */}
                     <div
-                      onClick={() => setVentasView('nuevo_cliente')}
+                      onClick={() => {
+                        resetNuevoClienteForm();
+                        setVentasView('nuevo_cliente');
+                      }}
                       className="clay-card p-5 cursor-pointer flex items-center gap-4 transition-all hover:scale-[1.02] hover:border-indigo-300"
                     >
                       <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shrink-0 shadow-inner">
@@ -1317,6 +1457,185 @@ export default function KodeSystemPage() {
                 </div>
               )}
 
+              {/* VISTA 1E: NUEVO CLIENTE (FORMULARIO PROFESIONAL) */}
+              {ventasView === 'nuevo_cliente' && (
+                <div className="space-y-4 max-w-3xl mx-auto animate-in fade-in duration-150">
+                  <div className="flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setVentasView('hub')}
+                      className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1"
+                    >
+                      ← Volver a Ventas
+                    </button>
+                    <span className="text-xs text-slate-500 font-medium">Formulario de Registro de Cliente</span>
+                  </div>
+
+                  <div className="clay-card p-6 space-y-6 bg-white border border-slate-200/80 shadow-md">
+                    <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+                      <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shrink-0 shadow-inner">
+                        <User className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-black text-slate-900">Registrar Nuevo Cliente</h3>
+                        <p className="text-[11px] text-slate-500">
+                          Ingresa los datos de contacto y entrega del cliente para despachos y WhatsApp.
+                        </p>
+                      </div>
+                    </div>
+
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        handleGuardarNuevoCliente(false);
+                      }}
+                      className="space-y-4"
+                    >
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                            Nombre Completo *
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Ej. Juan Pérez / Silvia Menjívar"
+                            value={ncNombre}
+                            onChange={(e) => setNcNombre(e.target.value)}
+                            className="clay-input w-full text-xs font-bold"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                            <span>Teléfono WhatsApp *</span>
+                            {ncTelefono.length >= 8 && (
+                              <a
+                                href={`https://wa.me/503${ncTelefono.replace(/\D/g, '')}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[10px] text-emerald-600 font-bold hover:underline flex items-center gap-1"
+                              >
+                                <MessageCircle className="w-3 h-3" />
+                                <span>Probar chat</span>
+                              </a>
+                            )}
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Ej. 78901234"
+                            value={ncTelefono}
+                            onChange={(e) => setNcTelefono(e.target.value)}
+                            className="clay-input w-full text-xs font-mono font-bold"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                            Departamento *
+                          </label>
+                          <select
+                            value={ncDepto}
+                            onChange={(e) => {
+                              const depto = e.target.value;
+                              setNcDepto(depto);
+                              const munis = getMunicipiosByDepto(depto);
+                              if (munis.length > 0) setNcMuni(munis[0]);
+                            }}
+                            className="clay-input w-full text-xs font-bold cursor-pointer"
+                          >
+                            {DEPARTAMENTOS_CATALOG.map((d) => (
+                              <option key={d.code} value={d.name}>
+                                {d.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                            Municipio *
+                          </label>
+                          <select
+                            value={ncMuni}
+                            onChange={(e) => setNcMuni(e.target.value)}
+                            className="clay-input w-full text-xs font-bold cursor-pointer"
+                          >
+                            {ncMunicipiosDisponibles.map((m) => (
+                              <option key={m} value={m}>
+                                {m}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                          Dirección Exacta de Entrega *
+                        </label>
+                        <textarea
+                          rows={2}
+                          placeholder="Calle, número de casa, colonia, pasaje, residencial..."
+                          value={ncDireccion}
+                          onChange={(e) => setNcDireccion(e.target.value)}
+                          className="clay-input w-full text-xs font-medium resize-none"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                          Punto de Referencia (Opcional)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Ej. Frente a Farmacia San Nicolás, portón negro..."
+                          value={ncReferencia}
+                          onChange={(e) => setNcReferencia(e.target.value)}
+                          className="clay-input w-full text-xs font-medium"
+                        />
+                      </div>
+
+                      <div className="pt-4 flex flex-wrap items-center justify-end gap-3 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            resetNuevoClienteForm();
+                            setVentasView('hub');
+                          }}
+                          className="clay-btn clay-btn-light px-4 py-2 text-xs font-bold"
+                          disabled={guardandoCliente}
+                        >
+                          Cancelar
+                        </button>
+
+                        <button
+                          type="submit"
+                          disabled={guardandoCliente}
+                          className="clay-btn bg-slate-900 text-white hover:bg-slate-800 px-4 py-2 text-xs font-black shadow-sm"
+                        >
+                          {guardandoCliente ? 'Guardando...' : 'Guardar Cliente'}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleGuardarNuevoCliente(true)}
+                          disabled={guardandoCliente}
+                          className="clay-btn clay-btn-primary px-4 py-2 text-xs font-black flex items-center gap-1.5 shadow-md shadow-indigo-200"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Guardar y Crear Pedido</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
               {/* VISTA 1A: NUEVO PEDIDO / FORMULARIO */}
               {ventasView === 'nuevo_pedido' && (
                 <div className="space-y-4">
@@ -1336,15 +1655,28 @@ export default function KodeSystemPage() {
                       <div className="clay-card p-6 space-y-4">
                         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                           <h3 className="text-sm font-extrabold text-slate-800">Datos del Cliente</h3>
-                          {directorioClientes.length > 0 && (
+                          <div className="flex items-center gap-3">
                             <button
                               type="button"
-                              onClick={() => setVentasView('clientes')}
-                              className="text-xs text-indigo-600 font-bold hover:underline"
+                              onClick={() => {
+                                resetNuevoClienteForm();
+                                setVentasView('nuevo_cliente');
+                              }}
+                              className="text-xs text-emerald-600 font-bold hover:underline flex items-center gap-1"
                             >
-                              Seleccionar de Directorio ({directorioClientes.length})
+                              <UserPlus className="w-3 h-3" />
+                              <span>+ Registrar Cliente</span>
                             </button>
-                          )}
+                            {directorioClientes.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => setVentasView('clientes')}
+                                className="text-xs text-indigo-600 font-bold hover:underline"
+                              >
+                                Seleccionar ({directorioClientes.length})
+                              </button>
+                            )}
+                          </div>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -2053,14 +2385,31 @@ export default function KodeSystemPage() {
               {/* VISTA 1C: CLIENTES (TABLA EXACTA A APPSHEET CON 📞 Y 💬) */}
               {ventasView === 'clientes' && (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setVentasView('hub')}
+                        className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1"
+                      >
+                        ← Volver a Ventas
+                      </button>
+                      <span className="text-xs text-slate-400">|</span>
+                      <span className="text-xs text-slate-600 font-bold uppercase tracking-wider">
+                        Directorio de Clientes ({directorioClientes.length})
+                      </span>
+                    </div>
+
                     <button
-                      onClick={() => setVentasView('hub')}
-                      className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1"
+                      type="button"
+                      onClick={() => {
+                        resetNuevoClienteForm();
+                        setVentasView('nuevo_cliente');
+                      }}
+                      className="clay-btn clay-btn-primary px-3.5 py-1.5 text-xs font-black flex items-center gap-1.5 shadow-md shadow-indigo-200"
                     >
-                      ← Volver a Ventas
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>+ Nuevo Cliente</span>
                     </button>
-                    <span className="text-xs text-slate-500 font-medium">Directorio de Clientes</span>
                   </div>
 
                   <div className="clay-card overflow-hidden border border-slate-200/80 shadow-md">
