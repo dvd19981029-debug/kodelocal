@@ -152,6 +152,16 @@ interface PagoItem {
   created_at?: string;
 }
 
+interface PagoRegistroItem {
+  id: string;
+  forma_pago_id: string;
+  forma_pago_nombre: string;
+  forma_pago_tipo?: string;
+  monto: number;
+  num_documento_auto?: string;
+  observaciones?: string;
+}
+
 interface Pedido {
   id: string;
   numero_pedido: string;
@@ -295,6 +305,12 @@ export default function KodeSystemPage() {
   const [formasPago, setFormasPago] = useState<FormaPagoItem[]>([]);
   const [formaPagoSeleccionada, setFormaPagoSeleccionada] = useState<string>('1003');
   const [numDocumentoAuto, setNumDocumentoAuto] = useState<string>('');
+
+  // Formas de pago múltiples / mixtas para Nuevo Pedido
+  const [pagosPedido, setPagosPedido] = useState<PagoRegistroItem[]>([]);
+  const [pagoInputFormaId, setPagoInputFormaId] = useState<string>('1001');
+  const [pagoInputMonto, setPagoInputMonto] = useState<string>('');
+  const [pagoInputDoc, setPagoInputDoc] = useState<string>('');
 
   // Modal para Registrar Abono / Liquidación a Pedido Existente
   const [modalAbonoPedido, setModalAbonoPedido] = useState<Pedido | null>(null);
@@ -480,6 +496,8 @@ export default function KodeSystemPage() {
           // Default: Si existe 1003 (Contra Entrega), seleccionarla
           const contraEntrega = data.formasPago.find((f: FormaPagoItem) => f.id === '1003');
           setFormaPagoSeleccionada(contraEntrega ? contraEntrega.id : data.formasPago[0].id);
+          const primerBanco = data.formasPago.find((f: FormaPagoItem) => f.tipo === 'BANCO') || data.formasPago[0];
+          setPagoInputFormaId(primerBanco.id);
         }
       }
     } catch (e) {
@@ -759,13 +777,76 @@ export default function KodeSystemPage() {
     return Math.max(0, sub) + (parseFloat(costoEnvio.toString()) || 0);
   }, [subtotalPedido, descuento, costoEnvio]);
 
+  const totalPagadoPedido = useMemo(() => {
+    return pagosPedido.reduce((acc, p) => acc + (parseFloat(p.monto.toString()) || 0), 0);
+  }, [pagosPedido]);
+
+  const totalAnticipoBancos = useMemo(() => {
+    return pagosPedido
+      .filter((p) => p.forma_pago_id !== '1003')
+      .reduce((acc, p) => acc + (parseFloat(p.monto.toString()) || 0), 0);
+  }, [pagosPedido]);
+
+  const montoCobroEntrega = useMemo(() => {
+    return pagosPedido
+      .filter((p) => p.forma_pago_id === '1003')
+      .reduce((acc, p) => acc + (parseFloat(p.monto.toString()) || 0), 0);
+  }, [pagosPedido]);
+
   const balancePendiente = useMemo(() => {
-    return Math.max(0, totalPedido - (parseFloat(montoPagado.toString()) || 0));
-  }, [totalPedido, montoPagado]);
+    return Math.max(0, totalPedido - totalPagadoPedido);
+  }, [totalPedido, totalPagadoPedido]);
 
   const montoACobrar = useMemo(() => {
-    return pagoContraEntrega ? balancePendiente : 0;
-  }, [pagoContraEntrega, balancePendiente]);
+    return montoCobroEntrega > 0 ? montoCobroEntrega : (pagoContraEntrega ? balancePendiente : 0);
+  }, [montoCobroEntrega, pagoContraEntrega, balancePendiente]);
+
+  const handleAgregarPago = () => {
+    const monto = parseFloat(pagoInputMonto);
+    if (isNaN(monto) || monto <= 0) {
+      showToast('Ingresa un monto válido para el pago ($)', 'error');
+      return;
+    }
+    const forma = formasPago.find((f) => f.id === pagoInputFormaId);
+    const nuevoPago: PagoRegistroItem = {
+      id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      forma_pago_id: pagoInputFormaId,
+      forma_pago_nombre: forma ? forma.nombre : 'Pago',
+      forma_pago_tipo: forma?.tipo,
+      monto: Math.round(monto * 100) / 100,
+      num_documento_auto: pagoInputDoc.trim(),
+    };
+    setPagosPedido((prev) => [...prev, nuevoPago]);
+    setPagoInputMonto('');
+    setPagoInputDoc('');
+    showToast(`Pago de $${nuevoPago.monto.toFixed(2)} (${nuevoPago.forma_pago_nombre}) agregado`, 'success');
+  };
+
+  const handleAgregarPagoDirecto = (
+    formaId: string,
+    formaNombre: string,
+    formaTipo: string | undefined,
+    monto: number,
+    doc = '',
+    obs = ''
+  ) => {
+    if (monto <= 0) return;
+    const nuevoPago: PagoRegistroItem = {
+      id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      forma_pago_id: formaId,
+      forma_pago_nombre: formaNombre,
+      forma_pago_tipo: formaTipo,
+      monto: Math.round(monto * 100) / 100,
+      num_documento_auto: doc.trim(),
+      observaciones: obs,
+    };
+    setPagosPedido((prev) => [...prev, nuevoPago]);
+    showToast(`Asignado $${nuevoPago.monto.toFixed(2)} a ${formaNombre}`, 'success');
+  };
+
+  const handleEliminarPago = (index: number) => {
+    setPagosPedido((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleGuardarPedido = async () => {
     if (!clienteNombre.trim() || !clienteTelefono.trim() || !clienteDepto || !clienteMuni || !clienteDireccion.trim()) {
@@ -780,14 +861,68 @@ export default function KodeSystemPage() {
 
     try {
       setLoading(true);
+
+      // Resolver lista de pagos a enviar
+      let pagosFinales = [...pagosPedido];
+      const sumaActual = pagosFinales.reduce((acc, p) => acc + p.monto, 0);
+      const saldoRestante = Math.max(0, totalPedido - sumaActual);
+
+      if (pagosFinales.length === 0) {
+        // Por defecto registrar el total en Contra Entrega si no se agregaron pagos explícitos
+        const contraEntrega = formasPago.find((f) => f.id === '1003') || {
+          id: '1003',
+          nombre: 'Contra Entrega',
+          tipo: 'CONTRA_ENTREGA',
+        };
+        pagosFinales.push({
+          id: `${Date.now()}`,
+          forma_pago_id: contraEntrega.id,
+          forma_pago_nombre: contraEntrega.nombre,
+          forma_pago_tipo: contraEntrega.tipo,
+          monto: totalPedido,
+          num_documento_auto: '',
+          observaciones: 'Pago completo contra entrega',
+        });
+      } else if (saldoRestante > 0) {
+        // Si hay saldo pendiente no asignado, registrarlo en Contra Entrega automáticamente
+        const contraEntrega = formasPago.find((f) => f.id === '1003') || {
+          id: '1003',
+          nombre: 'Contra Entrega',
+          tipo: 'CONTRA_ENTREGA',
+        };
+        pagosFinales.push({
+          id: `${Date.now()}`,
+          forma_pago_id: contraEntrega.id,
+          forma_pago_nombre: contraEntrega.nombre,
+          forma_pago_tipo: contraEntrega.tipo,
+          monto: saldoRestante,
+          num_documento_auto: '',
+          observaciones: 'Saldo restante cobro contra entrega',
+        });
+      }
+
+      const resumenPagosTxt = pagosFinales
+        .map(
+          (p) =>
+            `${p.forma_pago_nombre}: $${p.monto.toFixed(2)}${
+              p.num_documento_auto ? ` (Ref: ${p.num_documento_auto})` : ''
+            }`
+        )
+        .join(', ');
+
+      const totalCCE = pagosFinales
+        .filter((p) => p.forma_pago_id === '1003')
+        .reduce((acc, p) => acc + p.monto, 0);
+
       const notasConsolidadas = [
         solicitudesEspeciales.trim() ? `Solicitudes: ${solicitudesEspeciales.trim()}` : null,
         contactoAdicional.trim() ? `Contacto Adicional: ${contactoAdicional.trim()}` : null,
         descuento > 0 ? `Descuento: $${descuento}` : null,
-        montoPagado > 0 ? `Anticipo Pagado: $${montoPagado}` : null,
-        numDocumentoAuto.trim() ? `Comprobante/Aut: ${numDocumentoAuto.trim()}` : null,
-        `Cobrar en entrega: $${montoACobrar.toFixed(2)}`
-      ].filter(Boolean).join(' | ');
+        resumenPagosTxt ? `Pagos: [${resumenPagosTxt}]` : null,
+        totalCCE > 0 ? `Cobro CCE: $${totalCCE.toFixed(2)}` : null,
+      ]
+        .filter(Boolean)
+        .join(' | ');
 
       const res = await fetch('/api/kode/pedidos', {
         method: 'POST',
@@ -805,21 +940,22 @@ export default function KodeSystemPage() {
             email: clienteEmail.trim() || undefined,
           },
           items: itemsPedido,
-          tipo_pago: tipoPago,
-          estado_pago: estadoPago,
           costo_envio: costoEnvio,
+          descuento: descuento,
           vendedora_id: vendedoraSeleccionada,
           notas: notasConsolidadas,
-          anticipo_monto: parseFloat(montoPagado.toString()) || 0,
-          forma_pago_id: formaPagoSeleccionada,
-          num_documento_auto: numDocumentoAuto.trim(),
-          pago_contraentrega: pagoContraEntrega,
+          pagos: pagosFinales.map((p) => ({
+            forma_pago_id: p.forma_pago_id,
+            monto: p.monto,
+            num_documento_auto: p.num_documento_auto || '',
+            observaciones: p.observaciones || '',
+          })),
         }),
       });
 
       const data = await res.json();
       if (data.success) {
-        showToast(`Pedido ${data.pedido.numero_pedido} registrado con éxito en estado Rojo (Pendiente de compra)`, 'success');
+        showToast(`Pedido ${data.pedido.numero_pedido} registrado con éxito en estado Registrado`, 'success');
         setClienteNombre('');
         setClienteTelefono('');
         setClienteTipoDoc('DUI');
@@ -835,6 +971,9 @@ export default function KodeSystemPage() {
         setDescuento(0);
         setMontoPagado(0);
         setNumDocumentoAuto('');
+        setPagosPedido([]);
+        setPagoInputMonto('');
+        setPagoInputDoc('');
         fetchPedidos();
         fetchInsumos();
         setActiveNav('VENTAS');
@@ -2274,9 +2413,10 @@ export default function KodeSystemPage() {
                           )}
                         </div>
 
-                        {/* Pagos, Descuentos & Totales (Campos exactos AppSheet) */}
+                        {/* Pagos, Descuentos & Totales */}
                         <div className="border-t border-slate-100 pt-3 space-y-3">
-                          <div className="grid grid-cols-2 gap-3">
+                          {/* Totales y Descuentos */}
+                          <div className="grid grid-cols-3 gap-3">
                             <div>
                               <label className="block text-[11px] font-bold text-slate-700 mb-1">Sub Total ($)</label>
                               <div className="clay-input w-full text-xs font-mono font-bold bg-slate-100">
@@ -2307,103 +2447,214 @@ export default function KodeSystemPage() {
                                 className="clay-input w-full text-xs font-mono font-bold"
                               />
                             </div>
-
-                            <div>
-                              <label className="block text-[11px] font-bold text-slate-700 mb-1">Monto Pagos ($)</label>
-                              <input
-                                type="number"
-                                min="0"
-                                step="0.5"
-                                value={montoPagado}
-                                onChange={(e) => setMontoPagado(parseFloat(e.target.value) || 0)}
-                                className="clay-input w-full text-xs font-mono font-bold"
-                              />
-                            </div>
                           </div>
 
-                          <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-200">
-                            <span className="text-xs font-bold text-slate-700">Pago contra entrega:</span>
-                            <div className="flex gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => setPagoContraEntrega(true)}
-                                className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
-                                  pagoContraEntrega ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'
-                                }`}
-                              >
-                                Sí
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setPagoContraEntrega(false)}
-                                className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
-                                  !pagoContraEntrega ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600'
-                                }`}
-                              >
-                                No
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Selector de Forma de Pago / Cuenta Bancaria y No. Documento si hay anticipo */}
-                          {montoPagado > 0 && (
-                            <div className="p-3.5 bg-gradient-to-br from-indigo-50/80 to-sky-50/80 rounded-2xl border border-indigo-100/90 space-y-2.5 shadow-sm animate-in fade-in duration-200">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-1.5 text-xs font-black text-indigo-900">
-                                  <CreditCard className="w-4 h-4 text-indigo-600" />
-                                  <span>Detalle del Anticipo / Pago (${montoPagado.toFixed(2)})</span>
-                                </div>
-                                <span className="clay-badge text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                                  Abono Inicial
+                          {/* MÓDULO DE FORMAS DE PAGO / ABONOS (SOPORTE MIXTO Y REGISTRO EN public.pagos) */}
+                          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                            {/* Header */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <CreditCard className="w-4 h-4 text-indigo-600" />
+                                <span className="text-xs font-extrabold text-slate-800">
+                                  Formas de Pago / Abonos
                                 </span>
                               </div>
-
-                              <div>
-                                <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                                  Forma de Pago / Cuenta Bancaria *
-                                </label>
-                                <select
-                                  value={formaPagoSeleccionada}
-                                  onChange={(e) => setFormaPagoSeleccionada(e.target.value)}
-                                  className="clay-input w-full text-xs font-bold bg-white"
-                                >
-                                  {formasPago.map((fp) => (
-                                    <option key={fp.id} value={fp.id}>
-                                      {fp.nombre} ({fp.tipo})
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-
-                              <div>
-                                <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                                  No. Comprobante / Autorización Bancaria
-                                </label>
-                                <input
-                                  type="text"
-                                  placeholder="Ej. #Transf 491823, Ref #00129..."
-                                  value={numDocumentoAuto}
-                                  onChange={(e) => setNumDocumentoAuto(e.target.value)}
-                                  className="clay-input w-full text-xs font-mono font-medium bg-white"
-                                />
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-1 text-xs">
-                            <div className="flex justify-between font-bold text-slate-800">
-                              <span>Total a Pagar:</span>
-                              <span className="font-mono text-indigo-700">${totalPedido.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between font-bold text-slate-600">
-                              <span>Balance Pendiente:</span>
-                              <span className="font-mono">${balancePendiente.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between font-black text-slate-900 pt-1 border-t border-slate-200">
-                              <span>Monto a Cobrar:</span>
-                              <span className="font-mono text-emerald-700 text-sm">
-                                ${montoACobrar.toFixed(2)}
+                              <span className="text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full">
+                                Pagos Mixtos
                               </span>
+                            </div>
+
+                            {/* Formulario para agregar una forma de pago */}
+                            <div className="bg-white p-3 rounded-xl border border-slate-200/80 space-y-2.5 shadow-sm">
+                              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                                {/* Selector de Forma de Pago */}
+                                <div className="sm:col-span-5">
+                                  <label className="block text-[10px] font-bold text-slate-600 mb-1 uppercase">
+                                    Forma de Pago / Cuenta *
+                                  </label>
+                                  <select
+                                    value={pagoInputFormaId}
+                                    onChange={(e) => setPagoInputFormaId(e.target.value)}
+                                    className="clay-input w-full text-xs font-bold bg-white cursor-pointer"
+                                  >
+                                    {formasPago.map((fp) => (
+                                      <option key={fp.id} value={fp.id}>
+                                        {fp.nombre} ({fp.tipo})
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+
+                                {/* Monto */}
+                                <div className="sm:col-span-3">
+                                  <label className="block text-[10px] font-bold text-slate-600 mb-1 uppercase">
+                                    Monto ($) *
+                                  </label>
+                                  <input
+                                    type="number"
+                                    min="0.01"
+                                    step="0.01"
+                                    placeholder={balancePendiente > 0 ? balancePendiente.toFixed(2) : "0.00"}
+                                    value={pagoInputMonto}
+                                    onChange={(e) => setPagoInputMonto(e.target.value)}
+                                    className="clay-input w-full text-xs font-mono font-bold"
+                                  />
+                                </div>
+
+                                {/* No. Documento / Comprobante */}
+                                <div className="sm:col-span-4">
+                                  <label className="block text-[10px] font-bold text-slate-600 mb-1 uppercase">
+                                    No. Voucher / Ref
+                                  </label>
+                                  <input
+                                    type="text"
+                                    placeholder="Ej. TRF-12345"
+                                    value={pagoInputDoc}
+                                    onChange={(e) => setPagoInputDoc(e.target.value)}
+                                    className="clay-input w-full text-xs font-mono font-medium"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Acciones y sugerencias */}
+                              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100">
+                                <div className="flex flex-wrap gap-1.5 items-center">
+                                  {balancePendiente > 0 && (
+                                    <>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const contraEntrega = formasPago.find(f => f.id === '1003') || { id: '1003', nombre: 'Contra Entrega', tipo: 'CONTRA_ENTREGA' };
+                                          handleAgregarPagoDirecto(contraEntrega.id, contraEntrega.nombre, contraEntrega.tipo, balancePendiente, '', 'Cobro contra entrega C807');
+                                        }}
+                                        className="text-[11px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1"
+                                        title="Asignar el saldo restante a cobrar en entrega"
+                                      >
+                                        ⚡ Saldar resto (${balancePendiente.toFixed(2)}) en Contra Entrega
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setPagoInputMonto(balancePendiente.toFixed(2))}
+                                        className="text-[11px] font-medium text-slate-500 hover:text-slate-800 underline px-1"
+                                      >
+                                        Usar saldo (${balancePendiente.toFixed(2)})
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={handleAgregarPago}
+                                  className="clay-btn clay-btn-primary px-3.5 py-1.5 text-xs font-black flex items-center gap-1.5 ml-auto"
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                  Agregar Pago
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Listado / Tabla de Pagos Agregados */}
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 px-1">
+                                <span>Pagos registrados para este pedido ({pagosPedido.length}):</span>
+                              </div>
+
+                              {pagosPedido.length === 0 ? (
+                                <div className="p-3 text-center bg-white rounded-xl border border-dashed border-slate-300 text-xs text-slate-500 space-y-1.5">
+                                  <p className="font-semibold text-slate-700">No has registrado formas de pago aún.</p>
+                                  <p className="text-[11px] text-slate-500">
+                                    Puedes registrar pagos mixtos (ej. $10 en transferencia Cuscatlán y $15 en contra entrega).
+                                  </p>
+                                  <div className="flex justify-center gap-2 pt-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const contraEntrega = formasPago.find(f => f.id === '1003') || { id: '1003', nombre: 'Contra Entrega', tipo: 'CONTRA_ENTREGA' };
+                                        handleAgregarPagoDirecto(contraEntrega.id, contraEntrega.nombre, contraEntrega.tipo, totalPedido, '', 'Cobro completo contra entrega');
+                                      }}
+                                      className="text-xs font-bold text-indigo-600 hover:underline"
+                                    >
+                                      📦 Registrar 100% Contra Entrega (${totalPedido.toFixed(2)})
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
+                                  <table className="w-full text-xs text-left">
+                                    <thead className="bg-slate-50 border-b border-slate-200 text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                                      <tr>
+                                        <th className="py-2 px-3">Forma de Pago</th>
+                                        <th className="py-2 px-3">Monto</th>
+                                        <th className="py-2 px-3">Comprobante / Ref</th>
+                                        <th className="py-2 px-3 text-center">Quitar</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                      {pagosPedido.map((pago, idx) => (
+                                        <tr key={pago.id || idx} className="hover:bg-slate-50/50">
+                                          <td className="py-2 px-3 font-bold text-slate-800">
+                                            <div className="flex items-center gap-1.5">
+                                              {pago.forma_pago_id === '1003' ? (
+                                                <span className="text-amber-600">📦</span>
+                                              ) : (
+                                                <span className="text-indigo-600">🏦</span>
+                                              )}
+                                              <span>{pago.forma_pago_nombre}</span>
+                                            </div>
+                                          </td>
+                                          <td className="py-2 px-3 font-mono font-bold text-slate-900">
+                                            ${pago.monto.toFixed(2)}
+                                          </td>
+                                          <td className="py-2 px-3 font-mono text-slate-500 text-[11px]">
+                                            {pago.num_documento_auto || '-'}
+                                          </td>
+                                          <td className="py-2 px-3 text-center">
+                                            <button
+                                              type="button"
+                                              onClick={() => handleEliminarPago(idx)}
+                                              className="p-1 text-slate-400 hover:text-rose-600 rounded"
+                                              title="Eliminar este pago"
+                                            >
+                                              <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Resumen Financiero en vivo */}
+                            <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1.5 text-xs shadow-sm">
+                              <div className="flex justify-between font-bold text-slate-700">
+                                <span>Total del Pedido:</span>
+                                <span className="font-mono text-indigo-700 text-sm font-black">${totalPedido.toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between text-slate-600">
+                                <span>Total Pagos Asignados:</span>
+                                <span className="font-mono font-bold text-emerald-600">${totalPagadoPedido.toFixed(2)}</span>
+                              </div>
+                              {totalAnticipoBancos > 0 && (
+                                <div className="flex justify-between text-slate-500 text-[11px]">
+                                  <span>↳ Anticipo Transferencia/Bancos/Efectivo:</span>
+                                  <span className="font-mono font-semibold text-slate-700">${totalAnticipoBancos.toFixed(2)}</span>
+                                </div>
+                              )}
+                              {montoCobroEntrega > 0 && (
+                                <div className="flex justify-between text-amber-700 text-[11px] font-bold">
+                                  <span>↳ Cobro Contra Entrega (C807):</span>
+                                  <span className="font-mono font-bold">${montoCobroEntrega.toFixed(2)}</span>
+                                </div>
+                              )}
+                              <div className="flex justify-between font-bold pt-1.5 border-t border-slate-100">
+                                <span>Saldo por asignar:</span>
+                                <span className={`font-mono font-black ${balancePendiente > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                                  ${balancePendiente.toFixed(2)}
+                                </span>
+                              </div>
                             </div>
                           </div>
 

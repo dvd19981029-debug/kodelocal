@@ -157,7 +157,9 @@ export async function POST(request: Request) {
 
     // 3. Recalcular saldo del pedido y actualizar estado financiero
     const sumRes = await queryKode(
-      `SELECT COALESCE(SUM(monto), 0)::float AS total_pagado FROM public.pagos WHERE pedido_id = $1`,
+      `SELECT COALESCE(SUM(monto), 0)::float AS total_pagado 
+       FROM public.pagos 
+       WHERE pedido_id = $1 AND (forma_pago_id != '1003' OR estado_pago = 'Confirmado')`,
       [pedido_id]
     );
 
@@ -172,8 +174,8 @@ export async function POST(request: Request) {
       nuevoEstadoPago = 'PARCIAL';
     }
 
-    // Si es contraentrega, ajustar monto_cobrar_cce al nuevo saldo
-    const nuevoCobroCce = pedido.tipo_pago === 'CONTRAENTREGA' ? nuevoBalance : 0;
+    // Si es contraentrega o mixto, ajustar monto_cobrar_cce al nuevo saldo
+    const nuevoCobroCce = (pedido.tipo_pago === 'CONTRAENTREGA' || pedido.tipo_pago === 'MIXTO') ? nuevoBalance : 0;
 
     await queryKode(
       `UPDATE public.pedidos 
@@ -223,7 +225,9 @@ export async function DELETE(request: Request) {
 
     // Recalcular
     const sumRes = await queryKode(
-      `SELECT COALESCE(SUM(monto), 0)::float AS total_pagado FROM public.pagos WHERE pedido_id = $1`,
+      `SELECT COALESCE(SUM(monto), 0)::float AS total_pagado 
+       FROM public.pagos 
+       WHERE pedido_id = $1 AND (forma_pago_id != '1003' OR estado_pago = 'Confirmado')`,
       [pedido_id]
     );
 
@@ -234,7 +238,7 @@ export async function DELETE(request: Request) {
     const totalPedido = parseFloat(pedido?.total || 0);
     const nuevoBalance = Math.max(0, totalPedido - totalPagado);
     const nuevoEstadoPago = totalPagado >= totalPedido ? 'PAGADO' : totalPagado > 0 ? 'PARCIAL' : 'PENDIENTE';
-    const nuevoCobroCce = pedido?.tipo_pago === 'CONTRAENTREGA' ? nuevoBalance : 0;
+    const nuevoCobroCce = (pedido?.tipo_pago === 'CONTRAENTREGA' || pedido?.tipo_pago === 'MIXTO') ? nuevoBalance : 0;
 
     await queryKode(
       `UPDATE public.pedidos 

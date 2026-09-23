@@ -20,7 +20,7 @@ export async function GET(request: Request) {
         p.costo_envio,
         p.total,
         p.monto_cobrar_cce,
-        COALESCE((SELECT SUM(pg.monto) FROM public.pagos pg WHERE pg.pedido_id = p.id), 0)::float AS total_pagado,
+        COALESCE((SELECT SUM(pg.monto) FROM public.pagos pg WHERE pg.pedido_id = p.id AND (pg.forma_pago_id != '1003' OR pg.estado_pago = 'Confirmado')), 0)::float AS total_pagado,
         COALESCE(
           (
             SELECT json_agg(
@@ -255,22 +255,97 @@ export async function POST(request: Request) {
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const numeroPedido = `KOD-${dateStr}-${randomSuffix}`;
 
-    // 3. Calcular montos y estados de pago
+    // 3. Calcular montos y formas de pago (soporte para pagos mixtos)
     let subtotal = 0;
     for (const it of items) {
       const cant = Math.max(1, parseInt(it.cantidad, 10) || 1);
       const precio = parseFloat(it.precio_unitario) || 20.0;
       subtotal += cant * precio;
     }
+    const descuento = Math.max(0, parseFloat(body.descuento) || 0);
     const envio = parseFloat(costo_envio) || 0;
-    const total = subtotal + envio;
+    const total = Math.max(0, subtotal - descuento) + envio;
 
-    const anticipo = Math.max(0, parseFloat(body.anticipo_monto || body.monto_pagado) || 0);
-    const contraEntrega = body.pago_contraentrega !== undefined ? Boolean(body.pago_contraentrega) : true;
-    const balance = Math.max(0, total - anticipo);
-    const montoCobrarCce = contraEntrega ? balance : 0;
-    const finalTipoPago = contraEntrega ? 'CONTRAENTREGA' : (tipo_pago || 'TRANSFERENCIA');
-    const finalEstadoPago = anticipo >= total ? 'PAGADO' : anticipo > 0 ? 'PARCIAL' : 'PENDIENTE';
+    // Procesar lista de pagos (soporte multi-pago / mixto)
+    interface PagoInputItem {
+      forma_pago_id: string;
+      monto: number;
+      num_documento_auto?: string;
+      observaciones?: string;
+      estado_pago?: string;
+    }
+
+    let listaPagos: PagoInputItem[] = [];
+
+    if (Array.isArray(body.pagos) && body.pagos.length > 0) {
+      listaPagos = body.pagos
+        .map((p: any) => ({
+          forma_pago_id: String(p.forma_pago_id || '').trim(),
+          monto: Math.max(0, parseFloat(p.monto) || 0),
+          num_documento_auto: String(p.num_documento_auto || '').trim(),
+          observaciones: String(p.observaciones || '').trim(),
+          estado_pago: p.estado_pago || (String(p.forma_pago_id) === '1003' ? 'Pendiente' : 'Confirmado'),
+        }))
+        .filter((p: PagoInputItem) => p.forma_pago_id && p.monto > 0);
+    } else {
+      // Compatibilidad con formulario previo o simple
+      const anticipo = Math.max(0, parseFloat(body.anticipo_monto || body.monto_pagado) || 0);
+      if (anticipo > 0 && body.forma_pago_id) {
+        listaPagos.push({
+          forma_pago_id: body.forma_pago_id,
+          monto: anticipo,
+          num_documento_auto: (body.num_documento_auto || '').trim(),
+          observaciones: 'Anticipo inicial registrado al crear pedido',
+          estado_pago: body.forma_pago_id === '1003' ? 'Pendiente' : 'Confirmado',
+        });
+      }
+    }
+
+    // Si aún hay saldo por cubrir y no se definió otra cosa o pago_contraentrega no es false
+    const totalPagosActuales = listaPagos.reduce((acc, p) => acc + p.monto, 0);
+    const saldoRestante = Math.max(0, total - totalPagosActuales);
+    const tieneContraEntrega = listaPagos.some((p) => p.forma_pago_id === '1003');
+
+    if (saldoRestante > 0 && (body.pago_contraentrega !== false || !tieneContraEntrega)) {
+      const idx = listaPagos.findIndex((p) => p.forma_pago_id === '1003');
+      if (idx >= 0) {
+        listaPagos[idx].monto += saldoRestante;
+      } else {
+        listaPagos.push({
+          forma_pago_id: '1003',
+          monto: saldoRestante,
+          num_documento_auto: '',
+          observaciones: 'Cobro contra entrega C807',
+          estado_pago: 'Pendiente',
+        });
+      }
+    }
+
+    // Categorizar pagos: anticipados (bancos/efectivo) vs contraentrega
+    const pagosAnticipo = listaPagos.filter((p) => p.forma_pago_id !== '1003');
+    const pagosContraEntrega = listaPagos.filter((p) => p.forma_pago_id === '1003');
+
+    const totalAnticipo = pagosAnticipo.reduce((acc, p) => acc + p.monto, 0);
+    const totalContraEntrega = pagosContraEntrega.reduce((acc, p) => acc + p.monto, 0);
+    const montoCobrarCce = totalContraEntrega;
+
+    let finalTipoPago = 'CONTRAENTREGA';
+    if (pagosAnticipo.length > 0 && pagosContraEntrega.length > 0) {
+      finalTipoPago = 'MIXTO';
+    } else if (pagosContraEntrega.length > 0) {
+      finalTipoPago = 'CONTRAENTREGA';
+    } else if (pagosAnticipo.length > 0) {
+      finalTipoPago = tipo_pago || 'TRANSFERENCIA';
+    }
+
+    let finalEstadoPago = 'PENDIENTE';
+    if (totalAnticipo >= total) {
+      finalEstadoPago = 'PAGADO';
+    } else if (totalAnticipo > 0) {
+      finalEstadoPago = 'PARCIAL';
+    } else {
+      finalEstadoPago = 'PENDIENTE';
+    }
 
     // 4. Crear el pedido (Estado inicial: Registrado / Rojo)
     const newOrderRes = await client.query(
@@ -294,19 +369,21 @@ export async function POST(request: Request) {
 
     const pedidoId = newOrderRes.rows[0].id;
 
-    // 5. Si hay anticipo y método de pago, registrar el abono en public.pagos
-    if (anticipo > 0 && body.forma_pago_id) {
+    // 5. Registrar cada uno de los pagos en la tabla public.pagos
+    for (const p of listaPagos) {
       await client.query(
         `INSERT INTO public.pagos (
           pedido_id, cliente_id, forma_pago_id, monto, fecha_pago, num_documento_auto, estado_pago, usuario, observaciones
-        ) VALUES ($1, $2, $3, $4, CURRENT_DATE, $5, 'Confirmado', $6, 'Anticipo inicial registrado al crear pedido')`,
+        ) VALUES ($1, $2, $3, $4, CURRENT_DATE, $5, $6, $7, $8)`,
         [
           pedidoId,
           clienteId,
-          body.forma_pago_id,
-          anticipo,
-          (body.num_documento_auto || '').trim(),
+          p.forma_pago_id,
+          p.monto,
+          (p.num_documento_auto || '').trim(),
+          p.estado_pago || (p.forma_pago_id === '1003' ? 'Pendiente' : 'Confirmado'),
           vendedora_id || 'KÖDE',
+          p.observaciones || (p.forma_pago_id === '1003' ? 'Cobro contra entrega C807' : 'Pago registrado al crear pedido'),
         ]
       );
     }
