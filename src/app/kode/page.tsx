@@ -296,6 +296,19 @@ export default function KodeSystemPage() {
   const [guardandoEdicionPerfume, setGuardandoEdicionPerfume] = useState(false);
   const [togglingActivoId, setTogglingActivoId] = useState<string | null>(null);
 
+  // Añadir nueva fragancia al catálogo
+  const [modalNuevaFragancia, setModalNuevaFragancia] = useState(false);
+  const [formNuevaFragancia, setFormNuevaFragancia] = useState({
+    codigo: '',
+    contratipo: '',
+    marca_inspirada: '',
+    genero: 'Caballero',
+    precio_normal: '20.00',
+    precio_extra_shot: '25.00',
+    activo: true,
+  });
+  const [guardandoNuevaFragancia, setGuardandoNuevaFragancia] = useState(false);
+
   // Loading & Toasts
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
@@ -1477,6 +1490,56 @@ export default function KodeSystemPage() {
     }
   };
 
+  const handleAbrirNuevaFragancia = () => {
+    setFormNuevaFragancia({
+      codigo: '',
+      contratipo: '',
+      marca_inspirada: '',
+      genero: 'Caballero',
+      precio_normal: '20.00',
+      precio_extra_shot: '25.00',
+      activo: true,
+    });
+    setModalNuevaFragancia(true);
+  };
+
+  const handleGuardarNuevaFragancia = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formNuevaFragancia.codigo.trim() || !formNuevaFragancia.contratipo.trim()) {
+      showToast('Código y Contratipo (nombre) son obligatorios', 'error');
+      return;
+    }
+    setGuardandoNuevaFragancia(true);
+    try {
+      const res = await fetch('/api/kode/catalogo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          codigo: formNuevaFragancia.codigo.trim(),
+          contratipo: formNuevaFragancia.contratipo.trim(),
+          marca_inspirada: formNuevaFragancia.marca_inspirada.trim(),
+          genero: formNuevaFragancia.genero,
+          precio_normal: parseFloat(formNuevaFragancia.precio_normal) || 20.0,
+          precio_extra_shot: parseFloat(formNuevaFragancia.precio_extra_shot) || 25.0,
+          activo: formNuevaFragancia.activo,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.perfume) {
+        setCatalogo((prev) => [data.perfume, ...prev]);
+        showToast(`Fragancia #${data.perfume.codigo} (${data.perfume.contratipo}) añadida con éxito`, 'success');
+        setModalNuevaFragancia(false);
+      } else {
+        showToast(data.error || 'Error al añadir la nueva fragancia', 'error');
+      }
+    } catch (err) {
+      console.error('Error guardando nueva fragancia:', err);
+      showToast('Error de red al registrar la nueva fragancia', 'error');
+    } finally {
+      setGuardandoNuevaFragancia(false);
+    }
+  };
+
   const pedidosRojos = useMemo(() => {
     return pedidos.filter((p) => p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA');
   }, [pedidos]);
@@ -1794,24 +1857,6 @@ export default function KodeSystemPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
             />
-          </div>
-
-          {/* Acciones Rápidas */}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                fetchPedidos();
-                fetchInsumos();
-                fetchCatalogo();
-                fetchClientes();
-                showToast('Datos actualizados', 'info');
-              }}
-              className="p-2 rounded-xl text-slate-500 hover:text-indigo-600 hover:bg-slate-100 transition-colors border border-slate-200/80 bg-white shadow-2xs cursor-pointer"
-              title="Actualizar / Sincronizar datos"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
           </div>
         </header>
 
@@ -3292,10 +3337,18 @@ export default function KodeSystemPage() {
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2.5">
                       <span className="text-xs text-slate-500 font-semibold font-mono bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-lg">
                         {catalogoFiltrado.length} {catalogoFiltrado.length === 1 ? 'fragancia' : 'fragancias'} {filtroGeneroCatalogo !== 'TODOS' ? `(${filtroGeneroCatalogo.toLowerCase()})` : ''} {filtroEstadoCatalogo !== 'TODOS' ? `• ${filtroEstadoCatalogo.toLowerCase()}` : ''}
                       </span>
+                      <button
+                        type="button"
+                        onClick={handleAbrirNuevaFragancia}
+                        className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md shadow-indigo-200 cursor-pointer transition-all"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>+ Añadir Fragancia</span>
+                      </button>
                     </div>
                   </div>
 
@@ -3538,10 +3591,18 @@ export default function KodeSystemPage() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   <span className="text-xs text-slate-500 font-semibold font-mono bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-lg">
                     {catalogoFiltrado.length} {catalogoFiltrado.length === 1 ? 'fragancia' : 'fragancias disponibles'} {filtroEstadoCatalogo !== 'TODOS' ? `• ${filtroEstadoCatalogo.toLowerCase()}` : ''}
                   </span>
+                  <button
+                    type="button"
+                    onClick={handleAbrirNuevaFragancia}
+                    className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md shadow-indigo-200 cursor-pointer transition-all"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>+ Añadir Fragancia</span>
+                  </button>
                 </div>
               </div>
 
@@ -5134,6 +5195,189 @@ export default function KodeSystemPage() {
                 >
                   <Check className="w-4 h-4" />
                   <span>{guardandoEdicionPerfume ? 'Guardando...' : 'Guardar Cambios'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* MODAL: AÑADIR NUEVA FRAGANCIA                                  */}
+      {/* ============================================================== */}
+      {modalNuevaFragancia && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 my-8">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 font-bold">
+                  <Plus className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900">
+                    Añadir Nueva Fragancia al Catálogo
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    Ingresa los datos para registrar un nuevo perfume en inventario
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setModalNuevaFragancia(false)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleGuardarNuevaFragancia} className="space-y-4 text-xs">
+              {/* Tarjeta de Disponibilidad Inicial */}
+              <div
+                onClick={() => setFormNuevaFragancia((prev) => ({ ...prev, activo: !prev.activo }))}
+                className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                  formNuevaFragancia.activo
+                    ? 'bg-emerald-50/70 border-emerald-300 text-emerald-900'
+                    : 'bg-rose-50/70 border-rose-300 text-rose-900'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${
+                      formNuevaFragancia.activo ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
+                    }`}
+                  >
+                    {formNuevaFragancia.activo ? '✓' : '✕'}
+                  </div>
+                  <div>
+                    <span className="font-extrabold block text-xs">
+                      {formNuevaFragancia.activo ? 'FRAGANCIA ACTIVA (Disponible para venta)' : 'FRAGANCIA INACTIVA (Agotada)'}
+                    </span>
+                    <span className="text-[11px] opacity-80 block">
+                      {formNuevaFragancia.activo
+                        ? 'Se activará inmediatamente para crear pedidos y cotizar.'
+                        : 'Se guardará como agotada en el catálogo sin opción a venderse.'}
+                    </span>
+                  </div>
+                </div>
+
+                <div
+                  className={`px-3 py-1 rounded-full text-[11px] font-black border uppercase tracking-wider shrink-0 ${
+                    formNuevaFragancia.activo
+                      ? 'bg-emerald-100 border-emerald-300 text-emerald-800'
+                      : 'bg-rose-100 border-rose-300 text-rose-800'
+                  }`}
+                >
+                  {formNuevaFragancia.activo ? 'Activa' : 'Inactiva'}
+                </div>
+              </div>
+
+              {/* Grid Código y Género */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Kodigo / Código *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formNuevaFragancia.codigo}
+                    onChange={(e) => setFormNuevaFragancia((prev) => ({ ...prev, codigo: e.target.value }))}
+                    className="w-full px-3 py-2 text-xs font-mono font-bold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    placeholder="Ej. 1007 o #250"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Género *</label>
+                  <select
+                    value={formNuevaFragancia.genero}
+                    onChange={(e) => setFormNuevaFragancia((prev) => ({ ...prev, genero: e.target.value }))}
+                    className="w-full px-3 py-2 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+                  >
+                    <option value="Caballero">Caballero</option>
+                    <option value="Dama">Dama</option>
+                    <option value="Unisex">Unisex</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Contratipo (Nombre) */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Contratipo (Nombre de la fragancia) *</label>
+                <input
+                  type="text"
+                  required
+                  value={formNuevaFragancia.contratipo}
+                  onChange={(e) => setFormNuevaFragancia((prev) => ({ ...prev, contratipo: e.target.value }))}
+                  className="w-full px-3 py-2 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  placeholder="Ej. Sauvage Elixir H"
+                />
+              </div>
+
+              {/* Marca Inspirada */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Marca Inspirada / Diseñador</label>
+                <input
+                  type="text"
+                  value={formNuevaFragancia.marca_inspirada}
+                  onChange={(e) => setFormNuevaFragancia((prev) => ({ ...prev, marca_inspirada: e.target.value }))}
+                  className="w-full px-3 py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  placeholder="Ej. Dior"
+                />
+              </div>
+
+              {/* Precios Normal y Extra Shot */}
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Precio Normal ($) *</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      required
+                      value={formNuevaFragancia.precio_normal}
+                      onChange={(e) => setFormNuevaFragancia((prev) => ({ ...prev, precio_normal: e.target.value }))}
+                      className="w-full pl-7 pr-3 py-2 text-xs font-mono font-bold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-emerald-700"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Precio Extra Shot ($) *</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      required
+                      value={formNuevaFragancia.precio_extra_shot}
+                      onChange={(e) =>
+                        setFormNuevaFragancia((prev) => ({ ...prev, precio_extra_shot: e.target.value }))
+                      }
+                      className="w-full pl-7 pr-3 py-2 text-xs font-mono font-bold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-purple-700"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Botones de acción */}
+              <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setModalNuevaFragancia(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors border border-slate-200 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={guardandoNuevaFragancia}
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black shadow-md transition-all disabled:opacity-50 inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>{guardandoNuevaFragancia ? 'Guardando...' : 'Añadir Fragancia'}</span>
                 </button>
               </div>
             </form>

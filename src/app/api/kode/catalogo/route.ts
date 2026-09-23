@@ -46,6 +46,61 @@ export async function GET(request: Request) {
   }
 }
 
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { codigo, contratipo, marca_inspirada, genero, precio_normal, precio_extra_shot, activo } = body;
+
+    if (!codigo || !String(codigo).trim()) {
+      return NextResponse.json({ success: false, error: 'El código de la fragancia es obligatorio' }, { status: 400 });
+    }
+    if (!contratipo || !String(contratipo).trim()) {
+      return NextResponse.json({ success: false, error: 'El contratipo (nombre de la fragancia) es obligatorio' }, { status: 400 });
+    }
+
+    const codClean = String(codigo).trim();
+    const contraClean = String(contratipo).trim();
+    const marcaClean = marca_inspirada ? String(marca_inspirada).trim() : '';
+    const genClean = genero ? String(genero).trim() : 'Caballero';
+    const pNormal = parseFloat(String(precio_normal)) || 20.00;
+    const pExtra = parseFloat(String(precio_extra_shot)) || 25.00;
+    const isActivo = activo !== undefined ? Boolean(activo) : true;
+
+    // Verificar si ya existe ese código
+    const checkExist = await queryKode('SELECT id FROM public.catalogo WHERE codigo = $1 LIMIT 1', [codClean]);
+    if (checkExist.rows.length > 0) {
+      return NextResponse.json({
+        success: false,
+        error: `Ya existe una fragancia registrada con el código #${codClean}. Por favor usa un código diferente.`
+      }, { status: 400 });
+    }
+
+    const sql = `
+      INSERT INTO public.catalogo (
+        codigo, contratipo, marca_inspirada, genero, precio_normal, precio_extra_shot, activo
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7
+      )
+      RETURNING id, codigo, contratipo, marca_inspirada, genero, precio_normal, precio_extra_shot, activo, imagen_url
+    `;
+
+    const result = await queryKode(sql, [
+      codClean,
+      contraClean,
+      marcaClean,
+      genClean,
+      pNormal,
+      pExtra,
+      isActivo
+    ]);
+
+    return NextResponse.json({ success: true, perfume: result.rows[0] });
+  } catch (error: any) {
+    console.error('Error insertando fragancia en catálogo:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
