@@ -242,6 +242,8 @@ export default function KodeSystemPage() {
   const [clienteDireccion, setClienteDireccion] = useState('');
   const [clienteReferencia, setClienteReferencia] = useState('');
   const [contactoAdicional, setContactoAdicional] = useState('');
+  const [mostrarSugerenciasCliente, setMostrarSugerenciasCliente] = useState(false);
+  const [clienteSeleccionadoId, setClienteSeleccionadoId] = useState<string | null>(null);
   const [tipoPago, setTipoPago] = useState<'TRANSFERENCIA' | 'TARJETA' | 'CONTRAENTREGA'>('CONTRAENTREGA');
   const [estadoPago, setEstadoPago] = useState<'PENDIENTE' | 'PAGADO'>('PENDIENTE');
   const [costoEnvio, setCostoEnvio] = useState<number>(0);
@@ -600,7 +602,23 @@ export default function KodeSystemPage() {
     }
   };
 
-  const handleSeleccionarCliente = (c: {
+  const clientesSugeridos = useMemo(() => {
+    if (!clienteNombre.trim() || clienteNombre.trim().length < 1) return [];
+    const q = clienteNombre.toLowerCase().trim();
+    const cleanNum = clienteNombre.replace(/\D/g, '');
+    return directorioClientes
+      .filter((c) => {
+        const matchName = c.nombre.toLowerCase().includes(q);
+        const matchPhone = cleanNum.length >= 3 && c.telefono.includes(cleanNum);
+        const matchDoc = c.numero_documento && c.numero_documento.toLowerCase().includes(q);
+        const matchEmail = c.email && c.email.toLowerCase().includes(q);
+        return matchName || matchPhone || matchDoc || matchEmail;
+      })
+      .slice(0, 8);
+  }, [directorioClientes, clienteNombre]);
+
+  const aplicarClienteSeleccionado = (c: {
+    id?: string;
     nombre: string;
     telefono: string;
     direccion: string;
@@ -620,9 +638,26 @@ export default function KodeSystemPage() {
     setClienteTipoDoc(c.tipo_documento || 'DUI');
     setClienteNumDoc(c.numero_documento || '');
     setClienteEmail(c.email || '');
+    setClienteSeleccionadoId(c.id || null);
+    setMostrarSugerenciasCliente(false);
+    showToast(`Cliente "${c.nombre}" seleccionado`, 'info');
+  };
+
+  const handleSeleccionarCliente = (c: {
+    id?: string;
+    nombre: string;
+    telefono: string;
+    direccion: string;
+    departamento: string;
+    municipio: string;
+    referencia?: string;
+    tipo_documento?: string;
+    numero_documento?: string;
+    email?: string;
+  }) => {
+    aplicarClienteSeleccionado(c);
     setActiveNav('VENTAS');
     setVentasView('nuevo_pedido');
-    showToast(`Cliente "${c.nombre}" seleccionado`, 'info');
   };
 
   const perfumesSugeridos = useMemo(() => {
@@ -754,6 +789,8 @@ export default function KodeSystemPage() {
         setClienteDireccion('');
         setClienteReferencia('');
         setContactoAdicional('');
+        setClienteSeleccionadoId(null);
+        setMostrarSugerenciasCliente(false);
         setItemsPedido([]);
         setSolicitudesEspeciales('');
         setDescuento(0);
@@ -1793,15 +1830,107 @@ export default function KodeSystemPage() {
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1.5">Nombre Completo *</label>
-                            <input
-                              type="text"
-                              placeholder="Ej. Carlos Mendoza"
-                              value={clienteNombre}
-                              onChange={(e) => setClienteNombre(e.target.value)}
-                              className="clay-input w-full text-xs font-medium"
-                            />
+                          <div className="relative">
+                            <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                              <span className="flex items-center gap-1.5">
+                                <Search className="w-3.5 h-3.5 text-indigo-600" />
+                                <span>Buscar Cliente / Nombre Completo *</span>
+                              </span>
+                              {clienteSeleccionadoId && (
+                                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-200">
+                                  <CheckCircle2 className="w-2.5 h-2.5" />
+                                  <span>Cliente Seleccionado</span>
+                                </span>
+                              )}
+                            </label>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                placeholder="Escribe nombre, teléfono o DUI para buscar..."
+                                value={clienteNombre}
+                                onFocus={() => setMostrarSugerenciasCliente(true)}
+                                onBlur={() => {
+                                  setTimeout(() => setMostrarSugerenciasCliente(false), 200);
+                                }}
+                                onChange={(e) => {
+                                  setClienteNombre(e.target.value);
+                                  setClienteSeleccionadoId(null);
+                                  setMostrarSugerenciasCliente(true);
+                                }}
+                                className="clay-input w-full text-xs font-bold pr-8"
+                                required
+                              />
+                              {clienteNombre && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setClienteNombre('');
+                                    setClienteTelefono('');
+                                    setClienteDireccion('');
+                                    setClienteReferencia('');
+                                    setClienteNumDoc('');
+                                    setClienteEmail('');
+                                    setClienteSeleccionadoId(null);
+                                    setMostrarSugerenciasCliente(false);
+                                  }}
+                                  className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 p-0.5 rounded"
+                                  title="Limpiar datos del cliente"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Dropdown flotante de sugerencias de clientes */}
+                            {mostrarSugerenciasCliente && clientesSugeridos.length > 0 && (
+                              <div className="absolute z-30 left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl overflow-hidden divide-y divide-slate-100 max-h-64 overflow-y-auto">
+                                <div className="px-3 py-1.5 bg-slate-50 text-[10px] font-bold text-slate-500 flex items-center justify-between">
+                                  <span>CLIENTES COINCIDENTES ({clientesSugeridos.length})</span>
+                                  <span className="text-[9px] text-indigo-600 font-semibold">Clic para autocompletar</span>
+                                </div>
+                                {clientesSugeridos.map((c) => (
+                                  <div
+                                    key={c.id}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      aplicarClienteSeleccionado(c);
+                                    }}
+                                    className="p-2.5 hover:bg-indigo-50/80 cursor-pointer transition-colors space-y-1"
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs font-black text-slate-900">{c.nombre}</span>
+                                      <span className="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 flex items-center gap-1">
+                                        <Phone className="w-2.5 h-2.5" />
+                                        <span>{c.telefono}</span>
+                                      </span>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-500">
+                                      {c.municipio && (
+                                        <span className="flex items-center gap-0.5 text-slate-600">
+                                          <MapPin className="w-2.5 h-2.5 text-slate-400" />
+                                          <span>{c.municipio}, {c.departamento}</span>
+                                        </span>
+                                      )}
+                                      {c.numero_documento && (
+                                        <span className="font-mono bg-slate-100 text-slate-700 px-1 py-0.2 rounded font-bold">
+                                          {c.tipo_documento || 'DOC'}: {c.numero_documento}
+                                        </span>
+                                      )}
+                                      {c.email && (
+                                        <span className="text-blue-600">
+                                          {c.email}
+                                        </span>
+                                      )}
+                                      {c.pedidosCount > 0 && (
+                                        <span className="text-slate-400 font-medium">
+                                          • {c.pedidosCount} pedido{c.pedidosCount > 1 ? 's' : ''}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
 
                           <div>
