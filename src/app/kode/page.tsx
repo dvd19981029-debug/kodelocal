@@ -65,6 +65,25 @@ function formatearMarcaTemporal(fechaStr: string) {
   }
 }
 
+function getClienteColorPorEstado(estado: string) {
+  if (estado === 'Registrado' || estado === 'PENDIENTE_COMPRA') {
+    return 'text-red-600 font-bold hover:text-red-700';
+  }
+  if (estado === 'Insumos comprados' || estado === 'PENDIENTE_PREPARAR') {
+    return 'text-amber-600 font-bold hover:text-amber-700';
+  }
+  if (estado === 'Preparado' || estado === 'Enviado' || estado === 'GUIA_CREADA') {
+    return 'text-blue-600 font-bold hover:text-blue-700';
+  }
+  if (estado === 'Entregado' || estado === 'ENTREGADO') {
+    return 'text-emerald-600 font-bold hover:text-emerald-700';
+  }
+  if (estado === 'Cancelado' || estado === 'CANCELADO') {
+    return 'text-slate-400 font-bold line-through';
+  }
+  return 'text-slate-900 font-bold';
+}
+
 interface CatalogoItem {
   id: string;
   codigo: string;
@@ -1074,14 +1093,14 @@ export default function KodeSystemPage() {
     return pedidos.filter((p) => {
       let matchEstado = filtroEstado === 'TODOS';
       if (!matchEstado) {
-        if (filtroEstado === 'Registrado') {
+        if (filtroEstado === 'Registrado' || filtroEstado === 'PENDIENTE_COMPRA') {
           matchEstado = p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA';
-        } else if (filtroEstado === 'Insumos comprados') {
+        } else if (filtroEstado === 'Insumos comprados' || filtroEstado === 'PENDIENTE_PREPARAR') {
           matchEstado = p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR';
         } else if (filtroEstado === 'Preparado') {
           matchEstado = p.estado === 'Preparado';
-        } else if (filtroEstado === 'Enviado') {
-          matchEstado = p.estado === 'Enviado' || p.estado === 'GUIA_CREADA';
+        } else if (filtroEstado === 'Enviado' || filtroEstado === 'GUIA_CREADA') {
+          matchEstado = p.estado === 'Enviado' || p.estado === 'GUIA_CREADA' || p.estado === 'Preparado';
         } else if (filtroEstado === 'Entregado') {
           matchEstado = p.estado === 'Entregado' || p.estado === 'ENTREGADO';
         } else if (filtroEstado === 'Cancelado') {
@@ -2482,19 +2501,29 @@ export default function KodeSystemPage() {
                                 <React.Fragment key={p.id}>
                                   <tr className="hover:bg-slate-50/80 transition-colors">
                                     <td className="py-3 px-4">
-                                      {p.estado === 'PENDIENTE_COMPRA' && (
+                                      {(p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA') && (
                                         <span className="clay-badge text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">
                                           🔴 Pendiente Compra
                                         </span>
                                       )}
-                                      {p.estado === 'PENDIENTE_PREPARAR' && (
+                                      {(p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR') && (
                                         <span className="clay-badge text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">
                                           🟡 Listo Fabricar
                                         </span>
                                       )}
-                                      {p.estado === 'GUIA_CREADA' && (
+                                      {(p.estado === 'Preparado' || p.estado === 'Enviado' || p.estado === 'GUIA_CREADA') && (
                                         <span className="clay-badge text-[10px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200">
-                                          🔵 Guía C807
+                                          🔵 {p.c807_guia_numero ? 'Guía C807' : 'Preparado'}
+                                        </span>
+                                      )}
+                                      {(p.estado === 'Entregado' || p.estado === 'ENTREGADO') && (
+                                        <span className="clay-badge text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                          🟢 Entregado
+                                        </span>
+                                      )}
+                                      {(p.estado === 'Cancelado' || p.estado === 'CANCELADO') && (
+                                        <span className="clay-badge text-[10px] font-extrabold bg-slate-100 text-slate-500 border border-slate-300">
+                                          ⚪ Cancelado
                                         </span>
                                       )}
                                     </td>
@@ -2519,7 +2548,7 @@ export default function KodeSystemPage() {
                                     <td className="py-3 px-4 font-mono font-bold text-indigo-700">
                                       {p.numero_pedido}
                                     </td>
-                                    <td className="py-3 px-4 font-bold text-slate-900">
+                                    <td className={`py-3 px-4 ${getClienteColorPorEstado(p.estado)}`}>
                                       {p.cliente_nombre}
                                     </td>
                                     <td className="py-3 px-4 font-mono">
