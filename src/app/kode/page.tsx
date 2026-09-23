@@ -3033,10 +3033,10 @@ export default function KodeSystemPage() {
                                         {formatearMarcaTemporal(p.created_at)}
                                       </td>
                                       <td
-                                        className="py-3 px-3 text-slate-600 text-xs truncate max-w-[180px]"
-                                        title={p.vendedora_email || p.vendedora_nombre || 'erikamelgarcia@gmail.com'}
+                                        className="py-3 px-3 text-slate-700 font-medium text-xs truncate max-w-[180px]"
+                                        title={p.vendedora_nombre || 'Erika Melgar'}
                                       >
-                                        {p.vendedora_email || p.vendedora_nombre || 'erikamelgarcia@gmail.com'}
+                                        {p.vendedora_nombre || 'Erika Melgar'}
                                       </td>
                                       <td className="py-3 px-2 text-center text-slate-400">
                                         <ChevronRight className="w-4 h-4 inline opacity-60" />
