@@ -41,7 +41,8 @@ import {
   X,
   Store,
   Box,
-  FileText
+  FileText,
+  Mail
 } from 'lucide-react';
 import { DEPARTAMENTOS_CATALOG, MUNICIPIOS_CATALOG, resolveC807DeptoCode, getMunicipiosByDepto } from '@/lib/svTerritory';
 
@@ -83,6 +84,9 @@ interface ClienteItem {
   departamento: string;
   municipio: string;
   punto_referencia?: string;
+  tipo_documento?: string;
+  numero_documento?: string;
+  email?: string;
   pedidos_count?: number;
   total_gastado?: number;
 }
@@ -135,6 +139,9 @@ interface Pedido {
   cliente_departamento: string;
   cliente_municipio: string;
   cliente_referencia?: string;
+  cliente_tipo_documento?: string;
+  cliente_numero_documento?: string;
+  cliente_email?: string;
   vendedora_id?: string;
   vendedora_nombre?: string;
   items: PedidoItem[];
@@ -227,6 +234,9 @@ export default function KodeSystemPage() {
   const [vendedoraSeleccionada, setVendedoraSeleccionada] = useState<string>('');
   const [clienteNombre, setClienteNombre] = useState('');
   const [clienteTelefono, setClienteTelefono] = useState('');
+  const [clienteTipoDoc, setClienteTipoDoc] = useState('DUI');
+  const [clienteNumDoc, setClienteNumDoc] = useState('');
+  const [clienteEmail, setClienteEmail] = useState('');
   const [clienteDepto, setClienteDepto] = useState('');
   const [clienteMuni, setClienteMuni] = useState('');
   const [clienteDireccion, setClienteDireccion] = useState('');
@@ -259,6 +269,9 @@ export default function KodeSystemPage() {
   const [loadingClientes, setLoadingClientes] = useState(false);
   const [ncNombre, setNcNombre] = useState('');
   const [ncTelefono, setNcTelefono] = useState('');
+  const [ncTipoDoc, setNcTipoDoc] = useState('DUI');
+  const [ncNumDoc, setNcNumDoc] = useState('');
+  const [ncEmail, setNcEmail] = useState('');
   const [ncDepto, setNcDepto] = useState('San Salvador');
   const [ncMuni, setNcMuni] = useState('San Salvador Centro');
   const [ncDireccion, setNcDireccion] = useState('');
@@ -268,6 +281,9 @@ export default function KodeSystemPage() {
   const resetNuevoClienteForm = () => {
     setNcNombre('');
     setNcTelefono('');
+    setNcTipoDoc('DUI');
+    setNcNumDoc('');
+    setNcEmail('');
     setNcDepto('San Salvador');
     setNcMuni('San Salvador Centro');
     setNcDireccion('');
@@ -445,6 +461,9 @@ export default function KodeSystemPage() {
       departamento: string;
       municipio: string;
       referencia?: string;
+      tipo_documento?: string;
+      numero_documento?: string;
+      email?: string;
       pedidosCount: number;
       totalGastado: number;
     }>();
@@ -462,6 +481,9 @@ export default function KodeSystemPage() {
         departamento: c.departamento,
         municipio: c.municipio,
         referencia: c.punto_referencia,
+        tipo_documento: c.tipo_documento || 'DUI',
+        numero_documento: c.numero_documento || '',
+        email: c.email || '',
         pedidosCount: Number(c.pedidos_count || 0),
         totalGastado: Number(c.total_gastado || 0),
       });
@@ -482,6 +504,9 @@ export default function KodeSystemPage() {
           departamento: p.cliente_departamento,
           municipio: p.cliente_municipio,
           referencia: p.cliente_referencia,
+          tipo_documento: p.cliente_tipo_documento || 'DUI',
+          numero_documento: p.cliente_numero_documento || '',
+          email: p.cliente_email || '',
           pedidosCount: 1,
           totalGastado: totalNum,
         });
@@ -490,6 +515,13 @@ export default function KodeSystemPage() {
         if (!c.pedidosCount && !c.totalGastado) {
           c.pedidosCount += 1;
           c.totalGastado += totalNum;
+        }
+        if (!c.numero_documento && p.cliente_numero_documento) {
+          c.numero_documento = p.cliente_numero_documento;
+          c.tipo_documento = p.cliente_tipo_documento || 'DUI';
+        }
+        if (!c.email && p.cliente_email) {
+          c.email = p.cliente_email;
         }
       }
     });
@@ -524,6 +556,9 @@ export default function KodeSystemPage() {
         body: JSON.stringify({
           nombre_completo: ncNombre.trim(),
           telefono_whatsapp: ncTelefono.trim(),
+          tipo_documento: ncTipoDoc.trim() || 'DUI',
+          numero_documento: ncNumDoc.trim() || null,
+          email: ncEmail.trim() || null,
           departamento: ncDepto,
           municipio: ncMuni,
           direccion_entrega: ncDireccion.trim(),
@@ -548,6 +583,9 @@ export default function KodeSystemPage() {
           departamento: ncDepto,
           municipio: ncMuni,
           referencia: ncReferencia.trim(),
+          tipo_documento: ncTipoDoc.trim() || 'DUI',
+          numero_documento: ncNumDoc.trim(),
+          email: ncEmail.trim(),
         });
       } else {
         setVentasView('clientes');
@@ -569,6 +607,9 @@ export default function KodeSystemPage() {
     departamento: string;
     municipio: string;
     referencia?: string;
+    tipo_documento?: string;
+    numero_documento?: string;
+    email?: string;
   }) => {
     setClienteNombre(c.nombre);
     setClienteTelefono(c.telefono);
@@ -576,6 +617,9 @@ export default function KodeSystemPage() {
     setClienteMuni(c.municipio);
     setClienteDireccion(c.direccion);
     setClienteReferencia(c.referencia || '');
+    setClienteTipoDoc(c.tipo_documento || 'DUI');
+    setClienteNumDoc(c.numero_documento || '');
+    setClienteEmail(c.email || '');
     setActiveNav('VENTAS');
     setVentasView('nuevo_pedido');
     showToast(`Cliente "${c.nombre}" seleccionado`, 'info');
@@ -676,12 +720,15 @@ export default function KodeSystemPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           cliente: {
-            nombre: clienteNombre.trim(),
-            telefono: clienteTelefono.trim(),
+            nombre_completo: clienteNombre.trim(),
+            telefono_whatsapp: clienteTelefono.trim(),
             departamento: clienteDepto,
             municipio: clienteMuni,
-            direccion: clienteDireccion.trim(),
-            referencia: clienteReferencia.trim() || undefined,
+            direccion_entrega: clienteDireccion.trim(),
+            punto_referencia: clienteReferencia.trim() || undefined,
+            tipo_documento: clienteTipoDoc.trim() || 'DUI',
+            numero_documento: clienteNumDoc.trim() || undefined,
+            email: clienteEmail.trim() || undefined,
           },
           items: itemsPedido,
           tipo_pago: tipoPago,
@@ -701,6 +748,9 @@ export default function KodeSystemPage() {
         showToast(`Pedido ${data.pedido.numero_pedido} registrado con éxito en estado Rojo (Pendiente de compra)`, 'success');
         setClienteNombre('');
         setClienteTelefono('');
+        setClienteTipoDoc('DUI');
+        setClienteNumDoc('');
+        setClienteEmail('');
         setClienteDireccion('');
         setClienteReferencia('');
         setContactoAdicional('');
@@ -1002,7 +1052,9 @@ export default function KodeSystemPage() {
         c.nombre.toLowerCase().includes(q) ||
         c.telefono.includes(q) ||
         (c.municipio && c.municipio.toLowerCase().includes(q)) ||
-        (c.departamento && c.departamento.toLowerCase().includes(q))
+        (c.departamento && c.departamento.toLowerCase().includes(q)) ||
+        (c.numero_documento && c.numero_documento.toLowerCase().includes(q)) ||
+        (c.email && c.email.toLowerCase().includes(q))
     );
   }, [directorioClientes, searchQuery]);
 
@@ -1532,6 +1584,62 @@ export default function KodeSystemPage() {
                         </div>
                       </div>
 
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1">
+                            <CreditCard className="w-3.5 h-3.5 text-slate-400" />
+                            <span>Tipo de Doc. (Opcional)</span>
+                          </label>
+                          <select
+                            value={ncTipoDoc}
+                            onChange={(e) => setNcTipoDoc(e.target.value)}
+                            className="clay-input w-full text-xs font-bold cursor-pointer"
+                          >
+                            <option value="DUI">DUI (El Salvador)</option>
+                            <option value="Pasaporte">Pasaporte</option>
+                            <option value="Carnet de Residente">Carnet de Residente</option>
+                            <option value="Licencia">Licencia de Conducir</option>
+                            <option value="NIT">NIT</option>
+                            <option value="Otro">Otro Documento</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                            N° de Documento (Opcional)
+                          </label>
+                          <input
+                            type="text"
+                            placeholder={
+                              ncTipoDoc === 'DUI'
+                                ? 'Ej. 01234567-8'
+                                : ncTipoDoc === 'Pasaporte'
+                                ? 'Ej. A12345678'
+                                : ncTipoDoc === 'NIT' || ncTipoDoc === 'Licencia'
+                                ? 'Ej. 0614-010190-001-1'
+                                : 'Ej. N° de identificación'
+                            }
+                            value={ncNumDoc}
+                            onChange={(e) => setNcNumDoc(e.target.value)}
+                            className="clay-input w-full text-xs font-mono font-bold"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1">
+                            <Mail className="w-3.5 h-3.5 text-slate-400" />
+                            <span>Correo Electrónico (Opcional)</span>
+                          </label>
+                          <input
+                            type="email"
+                            placeholder="Ej. cliente@correo.com"
+                            value={ncEmail}
+                            onChange={(e) => setNcEmail(e.target.value)}
+                            className="clay-input w-full text-xs font-medium"
+                          />
+                        </div>
+                      </div>
+
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-xs font-bold text-slate-700 mb-1.5">
@@ -1774,6 +1882,56 @@ export default function KodeSystemPage() {
                               onChange={(e) => setContactoAdicional(e.target.value)}
                               className="clay-input w-full text-xs font-medium"
                             />
+                          </div>
+
+                          <div className="sm:col-span-2 pt-2 border-t border-slate-100">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                              <div>
+                                <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1">
+                                  <CreditCard className="w-3 h-3 text-slate-400" />
+                                  <span>Tipo Doc. (Opcional)</span>
+                                </label>
+                                <select
+                                  value={clienteTipoDoc}
+                                  onChange={(e) => setClienteTipoDoc(e.target.value)}
+                                  className="clay-input w-full text-xs font-bold cursor-pointer"
+                                >
+                                  <option value="DUI">DUI (El Salvador)</option>
+                                  <option value="Pasaporte">Pasaporte</option>
+                                  <option value="Carnet de Residente">Carnet de Residente</option>
+                                  <option value="Licencia">Licencia</option>
+                                  <option value="NIT">NIT</option>
+                                  <option value="Otro">Otro</option>
+                                </select>
+                              </div>
+
+                              <div>
+                                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                                  N° Documento (Opcional)
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder={clienteTipoDoc === 'DUI' ? 'Ej. 01234567-8' : 'N° identificación'}
+                                  value={clienteNumDoc}
+                                  onChange={(e) => setClienteNumDoc(e.target.value)}
+                                  className="clay-input w-full text-xs font-mono font-bold"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1">
+                                  <Mail className="w-3 h-3 text-slate-400" />
+                                  <span>Correo (Opcional)</span>
+                                </label>
+                                <input
+                                  type="email"
+                                  placeholder="Ej. cliente@correo.com"
+                                  value={clienteEmail}
+                                  onChange={(e) => setClienteEmail(e.target.value)}
+                                  className="clay-input w-full text-xs font-medium"
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -2442,27 +2600,45 @@ export default function KodeSystemPage() {
                               <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
                                 <td className="py-3 px-4 font-mono font-bold text-slate-500">{c.id}</td>
                                 <td className="py-3 px-4">
-                                  <div className="flex items-center gap-3">
-                                    <span className="font-extrabold text-slate-900">{c.nombre}</span>
-                                    {/* Botones inline 📞 y 💬 exactos a AppSheet */}
-                                    <div className="flex items-center gap-1">
-                                      <a
-                                        href={`tel:503${c.telefono}`}
-                                        className="p-1 rounded-md text-indigo-600 hover:bg-indigo-50"
-                                        title={`Llamar a ${c.nombre}`}
-                                      >
-                                        <Phone className="w-3.5 h-3.5" />
-                                      </a>
-                                      <a
-                                        href={`https://wa.me/503${c.telefono}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="p-1 rounded-md text-emerald-600 hover:bg-emerald-50"
-                                        title={`Enviar WhatsApp a ${c.nombre}`}
-                                      >
-                                        <MessageCircle className="w-3.5 h-3.5" />
-                                      </a>
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-3">
+                                      <span className="font-extrabold text-slate-900">{c.nombre}</span>
+                                      {/* Botones inline 📞 y 💬 exactos a AppSheet */}
+                                      <div className="flex items-center gap-1">
+                                        <a
+                                          href={`tel:503${c.telefono}`}
+                                          className="p-1 rounded-md text-indigo-600 hover:bg-indigo-50"
+                                          title={`Llamar a ${c.nombre}`}
+                                        >
+                                          <Phone className="w-3.5 h-3.5" />
+                                        </a>
+                                        <a
+                                          href={`https://wa.me/503${c.telefono}`}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="p-1 rounded-md text-emerald-600 hover:bg-emerald-50"
+                                          title={`Enviar WhatsApp a ${c.nombre}`}
+                                        >
+                                          <MessageCircle className="w-3.5 h-3.5" />
+                                        </a>
+                                      </div>
                                     </div>
+                                    {(c.numero_documento || c.email) && (
+                                      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                                        {c.numero_documento && (
+                                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-mono font-bold border border-slate-200/60">
+                                            <CreditCard className="w-2.5 h-2.5 text-slate-400" />
+                                            <span>{c.tipo_documento || 'DOC'}: {c.numero_documento}</span>
+                                          </span>
+                                        )}
+                                        {c.email && (
+                                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-medium border border-blue-100">
+                                            <Mail className="w-2.5 h-2.5 text-blue-500" />
+                                            <span>{c.email}</span>
+                                          </span>
+                                        )}
+                                      </div>
+                                    )}
                                   </div>
                                 </td>
                                 <td className="py-3 px-4 text-slate-700 max-w-xs truncate">

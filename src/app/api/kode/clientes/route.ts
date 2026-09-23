@@ -14,9 +14,15 @@ async function ensureClientesTable() {
         departamento VARCHAR(100) NOT NULL,
         municipio VARCHAR(100) NOT NULL,
         punto_referencia TEXT,
+        tipo_documento VARCHAR(50) DEFAULT 'DUI',
+        numero_documento VARCHAR(50),
+        email VARCHAR(150),
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       );
+      ALTER TABLE public.clientes ADD COLUMN IF NOT EXISTS tipo_documento VARCHAR(50) DEFAULT 'DUI';
+      ALTER TABLE public.clientes ADD COLUMN IF NOT EXISTS numero_documento VARCHAR(50);
+      ALTER TABLE public.clientes ADD COLUMN IF NOT EXISTS email VARCHAR(150);
     `);
   } catch (err) {
     console.error('Error ensuring clientes table:', err);
@@ -38,6 +44,9 @@ export async function GET(request: Request) {
         c.departamento,
         c.municipio,
         c.punto_referencia,
+        c.tipo_documento,
+        c.numero_documento,
+        c.email,
         c.created_at,
         c.updated_at,
         COUNT(DISTINCT p.id) AS pedidos_count,
@@ -48,7 +57,14 @@ export async function GET(request: Request) {
 
     const params: any[] = [];
     if (q && q.trim()) {
-      sql += ` WHERE (c.nombre_completo ILIKE $1 OR c.telefono_whatsapp ILIKE $1 OR c.municipio ILIKE $1 OR c.departamento ILIKE $1)`;
+      sql += ` WHERE (
+        c.nombre_completo ILIKE $1 
+        OR c.telefono_whatsapp ILIKE $1 
+        OR c.municipio ILIKE $1 
+        OR c.departamento ILIKE $1
+        OR c.numero_documento ILIKE $1
+        OR c.email ILIKE $1
+      )`;
       params.push(`%${q.trim()}%`);
     }
 
@@ -73,6 +89,9 @@ export async function POST(request: Request) {
       departamento,
       municipio,
       punto_referencia,
+      tipo_documento,
+      numero_documento,
+      email,
     } = body;
 
     if (!nombre_completo?.trim()) {
@@ -88,6 +107,9 @@ export async function POST(request: Request) {
     const cleanTel = telefono_whatsapp.trim().replace(/\D/g, '');
     const cleanDepto = departamento?.trim() || 'San Salvador';
     const cleanMuni = municipio?.trim() || 'San Salvador Centro';
+    const cleanTipoDoc = tipo_documento?.trim() || 'DUI';
+    const cleanNumDoc = numero_documento?.trim() || null;
+    const cleanEmail = email?.trim() || null;
 
     // Verificar si ya existe cliente con este teléfono
     const existing = await queryKode(
@@ -104,8 +126,11 @@ export async function POST(request: Request) {
              departamento = $3,
              municipio = $4,
              punto_referencia = $5,
+             tipo_documento = $6,
+             numero_documento = $7,
+             email = $8,
              updated_at = NOW()
-         WHERE id = $6
+         WHERE id = $9
          RETURNING *`,
         [
           nombre_completo.trim(),
@@ -113,6 +138,9 @@ export async function POST(request: Request) {
           cleanDepto,
           cleanMuni,
           punto_referencia?.trim() || null,
+          cleanTipoDoc,
+          cleanNumDoc,
+          cleanEmail,
           existing.rows[0].id,
         ]
       );
@@ -126,9 +154,12 @@ export async function POST(request: Request) {
           departamento,
           municipio,
           punto_referencia,
+          tipo_documento,
+          numero_documento,
+          email,
           created_at,
           updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
         RETURNING *`,
         [
           nombre_completo.trim(),
@@ -137,6 +168,9 @@ export async function POST(request: Request) {
           cleanDepto,
           cleanMuni,
           punto_referencia?.trim() || null,
+          cleanTipoDoc,
+          cleanNumDoc,
+          cleanEmail,
         ]
       );
       cliente = insertRes.rows[0];

@@ -54,6 +54,9 @@ export async function GET(request: Request) {
         c.departamento AS cliente_departamento,
         c.municipio AS cliente_municipio,
         c.punto_referencia AS cliente_referencia,
+        c.tipo_documento AS cliente_tipo_documento,
+        c.numero_documento AS cliente_numero_documento,
+        c.email AS cliente_email,
         u.id AS vendedora_id,
         u.nombre AS vendedora_nombre,
         COALESCE(
@@ -138,7 +141,17 @@ export async function POST(request: Request) {
       notas = '',
     } = body;
 
-    if (!cliente || !cliente.nombre_completo || !cliente.telefono_whatsapp) {
+    const clientName = cliente?.nombre_completo || cliente?.nombre || '';
+    const clientPhone = cliente?.telefono_whatsapp || cliente?.telefono || '';
+    const clientAddress = cliente?.direccion_entrega || cliente?.direccion || '';
+    const clientDepto = cliente?.departamento || '';
+    const clientMuni = cliente?.municipio || '';
+    const clientRef = cliente?.punto_referencia || cliente?.referencia || '';
+    const clientTipoDoc = cliente?.tipo_documento || 'DUI';
+    const clientNumDoc = cliente?.numero_documento || null;
+    const clientEmail = cliente?.email || null;
+
+    if (!clientName.trim() || !clientPhone.toString().trim()) {
       return NextResponse.json(
         { success: false, error: 'Datos del cliente incompletos (nombre y teléfono requeridos)' },
         { status: 400 }
@@ -156,7 +169,7 @@ export async function POST(request: Request) {
 
     // 1. Buscar o crear cliente
     let clienteId: string;
-    const cleanPhone = cliente.telefono_whatsapp.toString().replace(/\D/g, '');
+    const cleanPhone = clientPhone.toString().replace(/\D/g, '');
 
     const existingClient = await client.query(
       'SELECT id FROM public.clientes WHERE telefono_whatsapp = $1 LIMIT 1',
@@ -168,29 +181,54 @@ export async function POST(request: Request) {
       // Actualizar datos de dirección si cambiaron
       await client.query(
         `UPDATE public.clientes 
-         SET nombre_completo = $1, direccion_entrega = $2, departamento = $3, municipio = $4, punto_referencia = $5, updated_at = NOW()
-         WHERE id = $6`,
+         SET nombre_completo = $1,
+             direccion_entrega = $2,
+             departamento = $3,
+             municipio = $4,
+             punto_referencia = $5,
+             tipo_documento = COALESCE($6, tipo_documento),
+             numero_documento = COALESCE($7, numero_documento),
+             email = COALESCE($8, email),
+             updated_at = NOW()
+         WHERE id = $9`,
         [
-          cliente.nombre_completo.trim(),
-          cliente.direccion_entrega?.trim() || '',
-          cliente.departamento?.trim() || '',
-          cliente.municipio?.trim() || '',
-          cliente.punto_referencia?.trim() || '',
+          clientName.trim(),
+          clientAddress.trim(),
+          clientDepto.trim(),
+          clientMuni.trim(),
+          clientRef.trim() || null,
+          clientTipoDoc ? clientTipoDoc.trim() : null,
+          clientNumDoc ? clientNumDoc.trim() : null,
+          clientEmail ? clientEmail.trim() : null,
           clienteId,
         ]
       );
     } else {
       const newClient = await client.query(
-        `INSERT INTO public.clientes (nombre_completo, telefono_whatsapp, direccion_entrega, departamento, municipio, punto_referencia)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         RETURNING id`,
+        `INSERT INTO public.clientes (
+          nombre_completo,
+          telefono_whatsapp,
+          direccion_entrega,
+          departamento,
+          municipio,
+          punto_referencia,
+          tipo_documento,
+          numero_documento,
+          email,
+          created_at,
+          updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+        RETURNING id`,
         [
-          cliente.nombre_completo.trim(),
+          clientName.trim(),
           cleanPhone,
-          cliente.direccion_entrega?.trim() || '',
-          cliente.departamento?.trim() || '',
-          cliente.municipio?.trim() || '',
-          cliente.punto_referencia?.trim() || '',
+          clientAddress.trim(),
+          clientDepto.trim(),
+          clientMuni.trim(),
+          clientRef.trim() || null,
+          clientTipoDoc ? clientTipoDoc.trim() : 'DUI',
+          clientNumDoc ? clientNumDoc.trim() : null,
+          clientEmail ? clientEmail.trim() : null,
         ]
       );
       clienteId = newClient.rows[0].id;
