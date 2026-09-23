@@ -2983,30 +2983,9 @@ export default function KodeSystemPage() {
                             )}
                           </div>
 
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActiveNav('VENTAS');
-                                setVentasView('nuevo_pedido');
-                              }}
-                              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
-                              title="Crear nuevo pedido"
-                            >
-                              <Plus className="w-3.5 h-3.5 stroke-[3]" /> Add
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                fetchPedidos();
-                                fetchInsumos();
-                              }}
-                              title="Refrescar lista"
-                              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-lg transition-colors cursor-pointer"
-                            >
-                              <RefreshCw className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
+                          <span className="text-xs text-slate-500 font-bold font-mono">
+                            {pedidosRojos.length} {pedidosRojos.length === 1 ? 'pedido' : 'pedidos'}
+                          </span>
                         </div>
 
                         {/* Tabla Estado Registrado */}
