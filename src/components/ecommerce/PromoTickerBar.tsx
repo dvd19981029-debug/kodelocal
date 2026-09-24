@@ -114,7 +114,7 @@ export default function PromoTickerBar() {
         .ticker-track {
           display: flex;
           width: max-content;
-          animation: seamlessTicker 32s linear infinite;
+          animation: seamlessTicker 25s linear infinite;
           will-change: transform;
         }
         @keyframes seamlessTicker {
