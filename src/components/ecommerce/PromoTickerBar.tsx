@@ -1,74 +1,40 @@
 'use client';
 
 import React from 'react';
-import { Sparkles, MapPin, Wand2, Droplets } from 'lucide-react';
+import { Truck, Droplets, Sparkles, ShieldCheck } from 'lucide-react';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 
-interface TickerItem {
+interface TickerMessage {
   id: string;
-  content: React.ReactNode;
+  badge?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  text: string;
+  highlight?: string;
 }
 
-const TICKER_ITEMS: TickerItem[] = [
+const TICKER_MESSAGES: TickerMessage[] = [
   {
-    id: 'entregas',
-    content: (
-      <div className="inline-flex items-center gap-2 text-xs font-black text-white shrink-0">
-        {/* Mini Camioncito 2D Estilo Claymorphic */}
-        <div className="relative inline-flex items-center justify-center drop-shadow-xs">
-          <svg 
-            className="w-7 h-5 animate-pulse" 
-            viewBox="0 0 48 32" 
-            fill="none" 
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <ellipse cx="24" cy="30" rx="20" ry="2" fill="rgba(0,0,0,0.3)" />
-            <rect x="2" y="6" width="30" height="19" rx="4" fill="#8b5cf6" />
-            <path d="M30 11H40C42.2091 11 44 12.7909 44 15V25H30V11Z" fill="#7c3aed" />
-            <path d="M32 13H39C40.1046 13 41 13.8954 41 15V18H32V13Z" fill="#ede9fe" />
-            <circle cx="11" cy="25" r="4.5" fill="#1e1b4b" />
-            <circle cx="11" cy="25" r="2" fill="#ede9fe" />
-            <circle cx="35" cy="25" r="4.5" fill="#1e1b4b" />
-            <circle cx="35" cy="25" r="2" fill="#ede9fe" />
-            <rect x="42" y="19" width="3" height="3" rx="1.5" fill="#fde047" />
-            <rect x="8" y="10" width="16" height="7" rx="2" fill="#ffffff" />
-            <text x="9" y="15.5" fill="#6d28d9" fontSize="5" fontWeight="900" fontFamily="sans-serif">ENVIOS</text>
-          </svg>
-        </div>
-        
-        <span className="bg-white text-[#7c3aed] text-[10px] font-black px-2 py-0.5 rounded-full shadow-2xs uppercase tracking-wider">
-          Envíos
-        </span>
-        <span>Entregas a domicilio a <strong className="text-purple-100 font-black">todo El Salvador</strong> o <strong className="text-purple-100 font-black">retiro en local</strong></span>
-      </div>
-    ),
+    id: 'envios',
+    badge: 'ENVÍOS',
+    icon: Truck,
+    text: 'Entregas a domicilio en los 14 departamentos de El Salvador o retiro en tienda',
   },
   {
-    id: 'esencias',
-    content: (
-      <div className="inline-flex items-center gap-1.5 text-xs font-bold text-white shrink-0">
-        <Droplets className="w-3.5 h-3.5 text-purple-200" />
-        <span>Esencias <strong className="text-purple-100 font-black">100% Puras</strong> de Máxima Calidad y Concentración</span>
-      </div>
-    ),
+    id: 'calidad',
+    icon: Droplets,
+    text: 'Esencias concentradas de perfumería fina',
+    highlight: 'Venta por onza y media onza',
   },
   {
-    id: 'productos-separados',
-    content: (
-      <div className="inline-flex items-center gap-1.5 text-xs font-bold text-white shrink-0">
-        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-        <span>Fragancias por onza y media onza • Frascos e insumos <strong className="text-amber-300 font-black">por separado</strong></span>
-      </div>
-    ),
+    id: 'insumos',
+    icon: Sparkles,
+    text: 'Envases de vidrio, atomizadores y materias primas',
+    highlight: 'Venta al por mayor y detalle',
   },
   {
-    id: 'cobertura',
-    content: (
-      <div className="inline-flex items-center gap-1.5 text-xs font-bold text-white shrink-0">
-        <MapPin className="w-3.5 h-3.5 text-rose-300" />
-        <span>Llegamos a los 14 departamentos de El Salvador</span>
-      </div>
-    ),
+    id: 'seguridad',
+    icon: ShieldCheck,
+    text: 'Compra 100% protegida y pago seguro con tarjeta o transferencia bancaria',
   },
 ];
 
@@ -81,41 +47,85 @@ export default function PromoTickerBar() {
   }
 
   return (
-    <div className="w-full bg-[#7c3aed] border-b border-purple-600 shadow-sm overflow-hidden relative py-1.5 select-none pointer-events-none">
-      
-      {/* Contenedor del Ticker: Inicia desde la derecha de la pantalla y se desplaza de continuo sin detenerse al tocarlo */}
-      <div className="flex items-center gap-8 whitespace-nowrap animate-marquee">
-        {/* Set 1 */}
-        {TICKER_ITEMS.map((item) => (
-          <React.Fragment key={`first-${item.id}`}>
-            {item.content}
-            <span className="text-purple-200 font-bold">•</span>
-          </React.Fragment>
-        ))}
-        {/* Set 2 */}
-        {TICKER_ITEMS.map((item) => (
-          <React.Fragment key={`second-${item.id}`}>
-            {item.content}
-            <span className="text-purple-400/80 font-bold">•</span>
-          </React.Fragment>
-        ))}
+    <aside
+      aria-label="Avisos y Beneficios de Aromaniak SV"
+      className="w-full bg-[#4338ca] text-white border-b border-indigo-500/25 overflow-hidden relative select-none pointer-events-none sm:pointer-events-auto z-30 pt-[env(safe-area-inset-top,0px)]"
+    >
+      <div className="relative py-2 sm:py-2.5 overflow-hidden flex items-center">
+        {/* Pista continua con animación infinita sin cortes ni espacios en blanco */}
+        <div className="ticker-track flex items-center whitespace-nowrap hover:[animation-play-state:paused]">
+          {/* Primer bloque */}
+          <div className="flex items-center gap-8 px-4 shrink-0">
+            {TICKER_MESSAGES.map((msg) => {
+              const Icon = msg.icon;
+              return (
+                <div key={`track1-${msg.id}`} className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-semibold tracking-tight text-white/95">
+                  <Icon className="w-3.5 h-3.5 text-indigo-200 shrink-0 stroke-[2.2]" />
+                  {msg.badge && (
+                    <span className="bg-white/15 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded tracking-wider uppercase border border-white/20">
+                      {msg.badge}
+                    </span>
+                  )}
+                  <span>
+                    {msg.text}
+                    {msg.highlight && (
+                      <>
+                        {' • '}
+                        <strong className="font-extrabold text-white">{msg.highlight}</strong>
+                      </>
+                    )}
+                  </span>
+                  <span className="text-indigo-300/40 text-xs ml-6" aria-hidden="true">✦</span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Bloque duplicado idéntico para efecto infinito 100% continuo */}
+          <div className="flex items-center gap-8 px-4 shrink-0" aria-hidden="true">
+            {TICKER_MESSAGES.map((msg) => {
+              const Icon = msg.icon;
+              return (
+                <div key={`track2-${msg.id}`} className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-semibold tracking-tight text-white/95">
+                  <Icon className="w-3.5 h-3.5 text-indigo-200 shrink-0 stroke-[2.2]" />
+                  {msg.badge && (
+                    <span className="bg-white/15 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded tracking-wider uppercase border border-white/20">
+                      {msg.badge}
+                    </span>
+                  )}
+                  <span>
+                    {msg.text}
+                    {msg.highlight && (
+                      <>
+                        {' • '}
+                        <strong className="font-extrabold text-white">{msg.highlight}</strong>
+                      </>
+                    )}
+                  </span>
+                  <span className="text-indigo-300/40 text-xs ml-6" aria-hidden="true">✦</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <style jsx>{`
-        @keyframes marquee {
-          0% {
-            transform: translateX(100vw);
-          }
-          100% {
-            transform: translateX(-100%);
-          }
-        }
-        .animate-marquee {
-          display: inline-flex;
-          animation: marquee 28s linear infinite;
+        .ticker-track {
+          display: flex;
+          width: max-content;
+          animation: seamlessTicker 32s linear infinite;
           will-change: transform;
         }
+        @keyframes seamlessTicker {
+          0% {
+            transform: translate3d(0, 0, 0);
+          }
+          100% {
+            transform: translate3d(-50%, 0, 0);
+          }
+        }
       `}</style>
-    </div>
+    </aside>
   );
 }

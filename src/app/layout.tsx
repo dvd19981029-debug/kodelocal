@@ -20,6 +20,7 @@ export const viewport: Viewport = {
   minimumScale: 1,
   userScalable: false,
   viewportFit: "cover",
+  themeColor: "#4338ca",
 };
 
 export const metadata: Metadata = {
@@ -83,6 +84,11 @@ export const metadata: Metadata = {
     title: "Aromaniak SV | Distribuidora de Esencias Perfumería Fina en El Salvador",
     description: "Distribuidora de esencias de perfumería fina, aromas químicos, botes de vidrio y materias primas en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.",
     images: ["/images/logo.png"],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Aromaniak SV",
   },
   robots: {
     index: true,

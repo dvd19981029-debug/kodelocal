@@ -60,10 +60,10 @@ export default function NavigationWrapper({ children }: { children: React.ReactN
           <EcommerceFooter />
         </div>
       ) : (
-        // En la tienda pública (E-commerce) se muestra la cabecera original, barra de promociones y pie de Aromaniak
+        // En la tienda pública (E-commerce) se muestra la barra de promociones en el tope superior, cabecera original y pie de Aromaniak
         <div className="flex flex-col min-h-screen">
-          <EcommerceHeader />
           <PromoTickerBar />
+          <EcommerceHeader />
           <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 lg:p-8">
             {children}
           </main>
