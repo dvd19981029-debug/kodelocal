@@ -49,7 +49,7 @@ export default function PromoTickerBar() {
   return (
     <aside
       aria-label="Avisos y Beneficios de Aromaniak SV"
-      className="w-full bg-[#4338ca] text-white border-b border-indigo-500/25 overflow-hidden relative select-none pointer-events-none sm:pointer-events-auto z-30 pt-[env(safe-area-inset-top,0px)]"
+      className="w-full bg-[#4338ca] text-white border-b border-indigo-500/25 overflow-hidden relative select-none pointer-events-none sm:pointer-events-auto z-30"
     >
       <div className="relative py-2 sm:py-2.5 overflow-hidden flex items-center">
         {/* Pista continua con animación infinita sin cortes ni espacios en blanco */}

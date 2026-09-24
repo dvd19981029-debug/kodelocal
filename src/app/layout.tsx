@@ -20,7 +20,7 @@ export const viewport: Viewport = {
   minimumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#4338ca",
+  themeColor: "#f1f4f9",
 };
 
 export const metadata: Metadata = {
@@ -85,11 +85,6 @@ export const metadata: Metadata = {
     description: "Distribuidora de esencias de perfumería fina, aromas químicos, botes de vidrio y materias primas en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.",
     images: ["/images/logo.png"],
   },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "Aromaniak SV",
-  },
   robots: {
     index: true,
     follow: true,
@@ -134,12 +129,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={`h-full touch-manipulation ${quicksand.variable}`}>
       <head>
-        <meta name="theme-color" content="#4338ca" />
-        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#4338ca" />
-        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#4338ca" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="msapplication-navbutton-color" content="#4338ca" />
+        <meta name="theme-color" content="#f1f4f9" />
         <meta name="google-site-verification" content="NFHSyGtVLfg0Q_J3TbvRmNP4-S9l1zO00afYvcieTPw" />
         <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=4" />
         <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=4" />
