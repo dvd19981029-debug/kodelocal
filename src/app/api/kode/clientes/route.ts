@@ -100,13 +100,19 @@ export async function POST(request: Request) {
     if (!telefono_whatsapp?.trim()) {
       return NextResponse.json({ success: false, error: 'El teléfono WhatsApp es requerido' }, { status: 400 });
     }
+    if (!departamento?.trim()) {
+      return NextResponse.json({ success: false, error: 'El departamento es requerido y no puede estar vacío' }, { status: 400 });
+    }
+    if (!municipio?.trim()) {
+      return NextResponse.json({ success: false, error: 'El municipio es requerido y no puede estar vacío' }, { status: 400 });
+    }
     if (!direccion_entrega?.trim()) {
-      return NextResponse.json({ success: false, error: 'La dirección de entrega es requerida' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'La dirección de entrega es requerida y no puede estar vacía' }, { status: 400 });
     }
 
     const cleanTel = telefono_whatsapp.trim().replace(/\D/g, '');
-    const cleanDepto = departamento?.trim() || 'San Salvador';
-    const cleanMuni = municipio?.trim() || 'San Salvador Centro';
+    const cleanDepto = departamento.trim();
+    const cleanMuni = municipio.trim();
     const cleanTipoDoc = tipo_documento?.trim() || 'DUI';
     const cleanNumDoc = numero_documento?.trim() || null;
     const cleanEmail = email?.trim() || null;

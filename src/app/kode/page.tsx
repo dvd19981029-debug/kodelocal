@@ -480,8 +480,8 @@ export default function KodeSystemPage() {
   const [ncTipoDoc, setNcTipoDoc] = useState('DUI');
   const [ncNumDoc, setNcNumDoc] = useState('');
   const [ncEmail, setNcEmail] = useState('');
-  const [ncDepto, setNcDepto] = useState('San Salvador');
-  const [ncMuni, setNcMuni] = useState('San Salvador Centro');
+  const [ncDepto, setNcDepto] = useState('');
+  const [ncMuni, setNcMuni] = useState('');
   const [ncDireccion, setNcDireccion] = useState('');
   const [ncReferencia, setNcReferencia] = useState('');
   const [guardandoCliente, setGuardandoCliente] = useState(false);
@@ -492,8 +492,8 @@ export default function KodeSystemPage() {
     setNcTipoDoc('DUI');
     setNcNumDoc('');
     setNcEmail('');
-    setNcDepto('San Salvador');
-    setNcMuni('San Salvador Centro');
+    setNcDepto('');
+    setNcMuni('');
     setNcDireccion('');
     setNcReferencia('');
   };
@@ -759,8 +759,16 @@ export default function KodeSystemPage() {
       showToast('Ingresa el teléfono WhatsApp del cliente', 'error');
       return;
     }
+    if (!ncDepto.trim()) {
+      showToast('Debes seleccionar el departamento del cliente', 'error');
+      return;
+    }
+    if (!ncMuni.trim()) {
+      showToast('Debes seleccionar el municipio del cliente', 'error');
+      return;
+    }
     if (!ncDireccion.trim()) {
-      showToast('Ingresa la dirección de entrega del cliente', 'error');
+      showToast('Ingresa la dirección exacta de entrega del cliente', 'error');
       return;
     }
 
@@ -2387,10 +2395,10 @@ export default function KodeSystemPage() {
                             onChange={(e) => {
                               const depto = e.target.value;
                               setNcDepto(depto);
-                              const munis = getMunicipiosByDepto(depto);
-                              if (munis.length > 0) setNcMuni(munis[0].nombre_municipio || munis[0].nombre_mh);
+                              setNcMuni('');
                             }}
                             className="clay-input w-full text-xs font-bold cursor-pointer"
+                            required
                           >
                             <option value="">-- Seleccionar Departamento --</option>
                             {DEPARTAMENTOS_CATALOG.filter((d) => d.id !== '00').map((d) => (
@@ -2408,9 +2416,13 @@ export default function KodeSystemPage() {
                           <select
                             value={ncMuni}
                             onChange={(e) => setNcMuni(e.target.value)}
-                            className="clay-input w-full text-xs font-bold cursor-pointer"
+                            disabled={!ncDepto}
+                            className="clay-input w-full text-xs font-bold cursor-pointer disabled:opacity-50"
+                            required
                           >
-                            <option value="">-- Seleccionar Municipio --</option>
+                            <option value="">
+                              {ncDepto ? '-- Seleccionar Municipio --' : '-- Primero selecciona departamento --'}
+                            </option>
                             {ncMunicipiosDisponibles.map((m: any) => {
                               const nombreMuni = m.nombre_municipio || m.nombre_mh || m.nombre || String(m);
                               return (
