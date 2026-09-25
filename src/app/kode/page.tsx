@@ -131,6 +131,21 @@ interface ClienteItem {
   total_gastado?: number;
 }
 
+interface ClienteDirectorioItem {
+  id: string;
+  nombre: string;
+  telefono: string;
+  direccion: string;
+  departamento: string;
+  municipio: string;
+  referencia?: string;
+  tipo_documento?: string;
+  numero_documento?: string;
+  email?: string;
+  pedidosCount?: number;
+  totalGastado?: number;
+}
+
 interface FormaPagoItem {
   id: string;
   nombre: string;
@@ -396,6 +411,7 @@ export default function KodeSystemPage() {
   // Directorio y formulario de Clientes
   const [clientesDb, setClientesDb] = useState<ClienteItem[]>([]);
   const [loadingClientes, setLoadingClientes] = useState(false);
+  const [clienteFichaModal, setClienteFichaModal] = useState<ClienteDirectorioItem | null>(null);
   const [ncNombre, setNcNombre] = useState('');
   const [ncTelefono, setNcTelefono] = useState('');
   const [ncTipoDoc, setNcTipoDoc] = useState('DUI');
@@ -1361,6 +1377,29 @@ export default function KodeSystemPage() {
         (c.email && c.email.toLowerCase().includes(q))
     );
   }, [directorioClientes, searchQuery]);
+
+  // Historial de pedidos asociados al cliente seleccionado en ficha
+  const pedidosClienteFicha = useMemo(() => {
+    if (!clienteFichaModal) return [];
+    const cleanPhone = (clienteFichaModal.telefono || '').toString().replace(/\D/g, '');
+    const nombreLower = (clienteFichaModal.nombre || '').trim().toLowerCase();
+    return pedidos
+      .filter((p) => {
+        const pCleanPhone = (p.cliente_telefono || '').toString().replace(/\D/g, '');
+        const pNombreLower = (p.cliente_nombre || '').trim().toLowerCase();
+        const matchId = clienteFichaModal.id && p.cliente_id === clienteFichaModal.id;
+        const matchPhone =
+          cleanPhone &&
+          pCleanPhone &&
+          (cleanPhone === pCleanPhone || pCleanPhone.endsWith(cleanPhone) || cleanPhone.endsWith(pCleanPhone));
+        const matchNombre =
+          nombreLower &&
+          pNombreLower &&
+          (nombreLower === pNombreLower || pNombreLower.includes(nombreLower) || nombreLower.includes(pNombreLower));
+        return matchId || matchPhone || matchNombre;
+      })
+      .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime());
+  }, [clienteFichaModal, pedidos]);
 
   const catalogoFiltrado = useMemo(() => {
     let list = catalogo;
@@ -3417,7 +3456,15 @@ export default function KodeSystemPage() {
                                 <td className="py-3 px-4">
                                   <div className="space-y-1">
                                     <div className="flex items-center gap-3">
-                                      <span className="font-extrabold text-slate-900">{c.nombre}</span>
+                                      <button
+                                        type="button"
+                                        onClick={() => setClienteFichaModal(c)}
+                                        className="font-extrabold text-slate-900 hover:text-indigo-600 hover:underline text-left cursor-pointer transition-colors flex items-center gap-1.5 group"
+                                        title="Ver ficha del cliente e historial de pedidos"
+                                      >
+                                        <span>{c.nombre}</span>
+                                        <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+                                      </button>
                                       {/* Botones inline 📞 y 💬 exactos a AppSheet */}
                                       <div className="flex items-center gap-1">
                                         <a
@@ -3462,12 +3509,24 @@ export default function KodeSystemPage() {
                                 <td className="py-3 px-4 text-slate-500">{c.referencia || '-'}</td>
                                 <td className="py-3 px-4 text-slate-500 font-mono">{c.telefono}</td>
                                 <td className="py-3 px-4 text-center">
-                                  <button
-                                    onClick={() => handleSeleccionarCliente(c)}
-                                    className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors shadow-2xs cursor-pointer"
-                                  >
-                                    + Pedido
-                                  </button>
+                                  <div className="inline-flex items-center gap-1.5 justify-center">
+                                    <button
+                                      type="button"
+                                      onClick={() => setClienteFichaModal(c)}
+                                      className="px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 hover:border-indigo-200 rounded-lg text-xs font-bold transition-colors cursor-pointer inline-flex items-center gap-1"
+                                      title="Ver ficha completa e historial"
+                                    >
+                                      <User className="w-3 h-3 text-slate-500" />
+                                      <span>Ficha</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSeleccionarCliente(c)}
+                                      className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors shadow-2xs cursor-pointer"
+                                    >
+                                      + Pedido
+                                    </button>
+                                  </div>
                                 </td>
                               </tr>
                             ))
@@ -5750,6 +5809,334 @@ export default function KodeSystemPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* MODAL: FICHA DE CLIENTE E HISTORIAL DE PEDIDOS                 */}
+      {/* ============================================================== */}
+      {clienteFichaModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-4xl w-full border border-slate-200 shadow-2xl overflow-hidden my-6 max-h-[92vh] flex flex-col">
+            {/* Header del Modal */}
+            <div className="p-5 sm:p-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-between gap-4 shrink-0">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-600/50 border border-indigo-400/40 flex items-center justify-center text-lg font-black text-white shadow-inner">
+                  {clienteFichaModal.nombre
+                    ? clienteFichaModal.nombre
+                        .split(' ')
+                        .filter(Boolean)
+                        .map((p) => p[0])
+                        .join('')
+                        .slice(0, 2)
+                        .toUpperCase()
+                    : 'CL'}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
+                      {clienteFichaModal.nombre}
+                    </h2>
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
+                      Ficha de Cliente
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 font-medium flex items-center gap-2 mt-0.5">
+                    <span>{clienteFichaModal.municipio || 'SV'}, {clienteFichaModal.departamento || 'El Salvador'}</span>
+                    <span>•</span>
+                    <span className="font-mono text-indigo-300 font-bold">{clienteFichaModal.telefono}</span>
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setClienteFichaModal(null)}
+                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                title="Cerrar ficha"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Contenido scrolleable */}
+            <div className="p-5 sm:p-6 overflow-y-auto space-y-6">
+              {/* Métricas rápidas del cliente */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center gap-3">
+                  <div className="p-2.5 bg-indigo-100 text-indigo-700 rounded-xl">
+                    <ShoppingBag className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Total Pedidos</span>
+                    <p className="text-lg font-black text-slate-900 leading-none mt-0.5">
+                      {pedidosClienteFicha.length}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center gap-3">
+                  <div className="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl">
+                    <DollarSign className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Total Facturado</span>
+                    <p className="text-lg font-black text-emerald-600 leading-none mt-0.5 font-mono">
+                      ${pedidosClienteFicha.reduce((sum, p) => sum + parseFloat(p.total?.toString() || '0'), 0).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center gap-3">
+                  <div className="p-2.5 bg-sky-100 text-sky-700 rounded-xl">
+                    <CheckCircle2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Entregados con éxito</span>
+                    <p className="text-lg font-black text-sky-700 leading-none mt-0.5">
+                      {pedidosClienteFicha.filter((p) => p.estado === 'Entregado' || p.estado === 'ENTREGADO').length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Datos Generales y Contacto */}
+              <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 sm:p-5">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                  <h3 className="text-xs font-black uppercase text-slate-700 tracking-wider flex items-center gap-2">
+                    <User className="w-4 h-4 text-indigo-600" />
+                    <span>Información Detallada del Cliente</span>
+                  </h3>
+
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={`tel:503${clienteFichaModal.telefono}`}
+                      className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition-colors"
+                    >
+                      <Phone className="w-3.5 h-3.5" />
+                      <span>Llamar</span>
+                    </a>
+                    <a
+                      href={`https://wa.me/503${clienteFichaModal.telefono}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition-colors"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>WhatsApp</span>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const target = clienteFichaModal;
+                        setClienteFichaModal(null);
+                        handleSeleccionarCliente(target);
+                      }}
+                      className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black inline-flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Nuevo Pedido</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                  <div className="bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Teléfono Móvil</span>
+                    <span className="font-mono font-bold text-slate-800 text-sm">{clienteFichaModal.telefono}</span>
+                  </div>
+
+                  <div className="bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Documento Identidad</span>
+                    <span className="font-mono font-bold text-slate-800">
+                      {clienteFichaModal.numero_documento
+                        ? `${clienteFichaModal.tipo_documento || 'DUI'}: ${clienteFichaModal.numero_documento}`
+                        : 'No registrado'}
+                    </span>
+                  </div>
+
+                  <div className="bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Correo Electrónico</span>
+                    <span className="text-slate-800 truncate block font-medium" title={clienteFichaModal.email || ''}>
+                      {clienteFichaModal.email || 'No registrado'}
+                    </span>
+                  </div>
+
+                  <div className="bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs sm:col-span-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Dirección de Entrega</span>
+                    <span className="text-slate-800 font-medium block">
+                      {clienteFichaModal.direccion || 'Sin dirección registrada'}
+                    </span>
+                    <span className="text-[11px] text-slate-500 font-semibold block mt-0.5">
+                      {clienteFichaModal.municipio}, {clienteFichaModal.departamento}
+                    </span>
+                  </div>
+
+                  <div className="bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Punto de Referencia</span>
+                    <span className="text-slate-700 italic block">
+                      {clienteFichaModal.referencia || 'Sin punto de referencia'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tabla: Historial de Pedidos */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-black uppercase text-slate-700 tracking-wider flex items-center gap-2">
+                    <ShoppingBag className="w-4 h-4 text-indigo-600" />
+                    <span>Historial de Pedidos ({pedidosClienteFicha.length})</span>
+                  </h3>
+                  <span className="text-[11px] text-slate-400 font-medium">
+                    Ordenados de más reciente a más antiguo
+                  </span>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                  {pedidosClienteFicha.length === 0 ? (
+                    <div className="py-12 text-center text-slate-400">
+                      <ShoppingBag className="w-8 h-8 mx-auto text-slate-300 mb-2 opacity-60" />
+                      <p className="font-bold text-xs">No hay pedidos registrados para este cliente</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Puedes crear su primer pedido con el botón "+ Nuevo Pedido"
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                          <tr>
+                            <th className="py-2.5 px-4">Pedido / Fecha</th>
+                            <th className="py-2.5 px-4">Estado</th>
+                            <th className="py-2.5 px-4">Pago / Total</th>
+                            <th className="py-2.5 px-4">Guía C807</th>
+                            <th className="py-2.5 px-4">Fragancias / Productos</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 bg-white">
+                          {pedidosClienteFicha.map((p) => {
+                            const totalNum = parseFloat(p.total?.toString() || '0');
+                            return (
+                              <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
+                                <td className="py-3 px-4">
+                                  <span className="font-mono font-black text-slate-900 block text-xs">
+                                    #{p.numero_pedido}
+                                  </span>
+                                  <span className="text-[10px] text-slate-400 font-medium flex items-center gap-1 mt-0.5">
+                                    <Clock className="w-3 h-3 text-slate-400" />
+                                    <span>{formatearMarcaTemporal(p.created_at)}</span>
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4">
+                                  {(p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA') && (
+                                    <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded-full inline-block">
+                                      🔴 Pendiente Compra
+                                    </span>
+                                  )}
+                                  {(p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR') && (
+                                    <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full inline-block">
+                                      🟡 Listo Fabricar
+                                    </span>
+                                  )}
+                                  {(p.estado === 'Preparado' || p.estado === 'Enviado' || p.estado === 'GUIA_CREADA') && (
+                                    <span className="text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 px-2 py-0.5 rounded-full inline-block">
+                                      🔵 {p.c807_guia_numero ? 'Guía C807' : 'Preparado'}
+                                    </span>
+                                  )}
+                                  {(p.estado === 'Entregado' || p.estado === 'ENTREGADO') && (
+                                    <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full inline-block">
+                                      🟢 Entregado
+                                    </span>
+                                  )}
+                                  {(p.estado === 'Cancelado' || p.estado === 'CANCELADO') && (
+                                    <span className="text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-300 px-2 py-0.5 rounded-full inline-block">
+                                      ⚪ Cancelado
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className="font-mono font-black text-slate-900 block text-xs">
+                                    ${totalNum.toFixed(2)}
+                                  </span>
+                                  <div className="mt-0.5">
+                                    {p.estado_pago === 'PAGADO' ? (
+                                      <span className="text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded">
+                                        ✓ Pagado
+                                      </span>
+                                    ) : p.estado_pago === 'PARCIAL' ? (
+                                      <span className="text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded">
+                                        ⏳ Parcial
+                                      </span>
+                                    ) : (
+                                      <span className="text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-1.5 py-0.5 rounded">
+                                        ✕ {p.tipo_pago || 'Pendiente'}
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4">
+                                  {p.c807_guia_numero ? (
+                                    <div className="space-y-0.5">
+                                      <span className="font-mono font-bold text-slate-800 text-[11px] block">
+                                        {p.c807_guia_numero}
+                                      </span>
+                                      {p.c807_link_rastreo && (
+                                        <a
+                                          href={p.c807_link_rastreo}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="text-[10px] text-indigo-600 hover:underline font-bold inline-flex items-center gap-1"
+                                        >
+                                          <span>Rastrear</span>
+                                          <ExternalLink className="w-2.5 h-2.5" />
+                                        </a>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <span className="text-slate-400 text-[11px] italic">Sin guía aún</span>
+                                  )}
+                                </td>
+                                <td className="py-3 px-4">
+                                  <div className="flex flex-wrap gap-1 max-w-sm">
+                                    {p.items && p.items.length > 0 ? (
+                                      p.items.map((it, idx) => (
+                                        <span
+                                          key={idx}
+                                          className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200/80 font-medium"
+                                        >
+                                          <span className="font-bold text-indigo-600">{it.cantidad}x</span>
+                                          <span>{it.contratipo || it.codigo}</span>
+                                          <span className="text-[9px] text-slate-400 font-mono">({it.version})</span>
+                                        </span>
+                                      ))
+                                    ) : (
+                                      <span className="text-slate-400 italic text-[11px]">Sin detalle de items</span>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer del Modal */}
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setClienteFichaModal(null)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200/80 transition-colors border border-slate-200 cursor-pointer"
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
         </div>
       )}
