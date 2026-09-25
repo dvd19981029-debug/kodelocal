@@ -34,12 +34,22 @@ src/app/kode/
 │   │   ├── DteResultModal.tsx           # Visualización y descarga de DTE Factura Llama (PDF)
 │   │   ├── ComprobanteLightboxModal.tsx # Visor en tamaño completo de comprobantes de pago
 │   │   ├── AbonoPedidoModal.tsx         # Registro de abonos bancarios con subida/pega de foto
+│   │   ├── EditarFraganciaModal.tsx     # Modificación de precios, datos y toggle activo/agotado
+│   │   ├── NuevaFraganciaModal.tsx      # Registro de nuevas fragancias al catálogo
+│   │   ├── ClienteDuplicadoModal.tsx    # Alerta y resolución de cliente duplicado por WhatsApp
 │   │   └── index.ts
 │   │
 │   ├── ventas/                  # 💼 Módulo Comercial & Pedidos
+│   │   ├── VentasHub.tsx        # Hub central con tarjetas de navegación de ventas
+│   │   ├── NuevoClienteForm.tsx # Formulario completo de registro de cliente con validaciones SV
+│   │   ├── NuevoPedidoForm.tsx  # Formulario de nuevo pedido con buscador, pagos mixtos y comprobantes
 │   │   ├── PedidosTabla.tsx     # Tabla de pedidos con orden homologado de 8+1 columnas
 │   │   ├── ClientesTabla.tsx    # Directorio de clientes con botones de llamada y WhatsApp
 │   │   ├── ClienteFichaView.tsx # Ficha técnica de cliente con métricas e historial de pedidos
+│   │   └── index.ts
+│   │
+│   ├── catalogo/                # 💎 Catálogo de Fragancias & Inventario
+│   │   ├── CatalogoGrid.tsx     # Tabla administrativa de fragancias con filtros de género y stock
 │   │   └── index.ts
 │   │
 │   ├── fabricacion/             # 🧪 Módulo de Producción & Laboratorio
@@ -58,7 +68,7 @@ src/app/kode/
 │       ├── ComprasGastosTabla.tsx    # Formulario y tabla de gastos y compras de insumos
 │       └── index.ts
 │
-├── page.tsx                     # 📄 Ensamblador principal de la vista KÖDE
+├── page.tsx                     # 📄 Orquestador principal ultralimpio (~570 líneas)
 └── MAPA_MODULOS.md              # 🗺️ Este mapa de navegación
 ```
 
@@ -68,9 +78,16 @@ src/app/kode/
 
 | Requerimiento / Elemento Visual | Archivo a Modificar | Qué contiene |
 | :--- | :--- | :--- |
+| **Hub principal de ventas** | `src/app/kode/components/ventas/VentasHub.tsx` | Tarjetas de acceso directo a Nuevo Cliente, Nuevo Pedido, Clientes, Pedidos y Catálogo con contadores. |
+| **Formulario de Registro de Cliente** | `src/app/kode/components/ventas/NuevoClienteForm.tsx` | Registro de nombre, WhatsApp con enlace directo, DUI/Doc, selectores de Depto/Municipio de SV y dirección. |
+| **Formulario de Nuevo Pedido** | `src/app/kode/components/ventas/NuevoPedidoForm.tsx` | Buscador predictivo de clientes, selector de fragancias (Normal/Plus), pagos mixtos, subida o pegado `Ctrl+V` de comprobantes. |
 | **Columnas de la tabla de pedidos** | `src/app/kode/components/ventas/PedidosTabla.tsx` | El orden oficial homologado de 8+1 columnas, botones de expansión, acciones de guía y abonos. |
 | **Directorio y tabla de clientes** | `src/app/kode/components/ventas/ClientesTabla.tsx` | Tabla de clientes, filtros, enlaces a WhatsApp (`wa.me`) y llamadas directas. |
 | **Ficha de cliente e historial** | `src/app/kode/components/ventas/ClienteFichaView.tsx` | Tarjetas de métricas (total pedidos, facturado), datos de entrega e historial de compras. |
+| **Catálogo de fragancias e inventario** | `src/app/kode/components/catalogo/CatalogoGrid.tsx` | Grid administrativo con pestañas de género (Caballero, Dama, Unisex), filtro de disponibilidad (Activas/Agotadas), búsqueda y acciones. |
+| **Modal para editar fragancia** | `src/app/kode/components/modals/EditarFraganciaModal.tsx` | Edición de código, contratipo, diseñador, precios normal/extra shot y toggle activo/agotado. |
+| **Modal para añadir nueva fragancia** | `src/app/kode/components/modals/NuevaFraganciaModal.tsx` | Formulario para dar de alta un perfume en el catálogo general e inventario. |
+| **Modal de cliente duplicado** | `src/app/kode/components/modals/ClienteDuplicadoModal.tsx` | Detección de colisión de teléfono de WhatsApp con opción de sobreescritura informada. |
 | **Fabricación: Hub principal** | `src/app/kode/components/fabricacion/FabricacionHub.tsx` | Tarjetas de acceso a pedidos en compra pendiente y pedidos por fabricar en laboratorio. |
 | **Fabricación: Insumos por comprar** | `src/app/kode/components/fabricacion/CompraPendienteTabla.tsx` | Split-pane con pedidos en estado Registrado e insumos clasificados (Normal/Plus) con botón de compra. |
 | **Fabricación: Pedidos por fabricar** | `src/app/kode/components/fabricacion/PorFabricarTabla.tsx` | Split-pane con pedidos Listos para fabricar y fragancias pendientes con botón directo de guía C807. |
