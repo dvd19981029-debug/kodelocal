@@ -345,6 +345,7 @@ const COMPRAS_INICIALES: CompraGasto[] = [
 export default function KodeSystemPage() {
   // Navegación Sidebar Principal
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeNav, setActiveNav] = useState<'VENTAS' | 'INVENTARIO' | 'FABRICACION' | 'LOGISTICA' | 'INTELIGENCIA_NEGOCIOS'>('VENTAS');
 
   // Sub-vistas dentro de cada sección (similar al sistema anterior)
@@ -2025,13 +2026,21 @@ export default function KodeSystemPage() {
         </div>
       )}
 
+      {/* Backdrop para Drawer Móvil */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 lg:hidden animate-in fade-in duration-200"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* ============================================================== */}
       {/* 1. BARRA LATERAL IZQUIERDA (SIDEBAR DE NAVEGACIÓN)             */}
       {/* ============================================================== */}
       <aside
-        className={`${
-          sidebarOpen ? 'w-64' : 'w-20'
-        } shrink-0 bg-white border-r border-slate-200/80 flex flex-col justify-between transition-all duration-300 z-30 sticky top-0 h-screen shadow-sm`}
+        className={`fixed inset-y-0 left-0 z-50 lg:static lg:z-30 h-screen bg-white border-r border-slate-200/80 flex flex-col justify-between transition-all duration-300 shadow-xl lg:shadow-sm ${
+          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        } ${sidebarOpen ? 'w-72 lg:w-64' : 'w-72 lg:w-20'} shrink-0`}
       >
         <div>
           {/* Logo y Encabezado del Sistema */}
@@ -2040,26 +2049,39 @@ export default function KodeSystemPage() {
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-indigo-500 text-white flex items-center justify-center font-black text-xl shadow-md border border-white/40 shrink-0">
                 K
               </div>
-              {sidebarOpen && (
-                <div className="animate-in fade-in duration-200">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-extrabold text-lg tracking-tight text-slate-900">KÖDE</span>
-                    <span className="text-[10px] font-bold bg-indigo-50 text-indigo-700 px-1.5 py-0.2 rounded border border-indigo-200">
-                      App
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-slate-400 font-medium block">kode.aromaniaksv.com</span>
+              <div className={`${sidebarOpen ? 'block' : 'block lg:hidden'} animate-in fade-in duration-200`}>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-extrabold text-lg tracking-tight text-slate-900">KÖDE</span>
+                  <span className="text-[10px] font-bold bg-indigo-50 text-indigo-700 px-1.5 py-0.2 rounded border border-indigo-200">
+                    App
+                  </span>
                 </div>
-              )}
+                <span className="text-[10px] text-slate-400 font-medium block">kode.aromaniaksv.com</span>
+              </div>
             </div>
 
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-              title={sidebarOpen ? 'Colapsar barra lateral' : 'Expandir barra lateral'}
-            >
-              <Menu className="w-4 h-4" />
-            </button>
+            {/* Acciones de cabecera de barra lateral */}
+            <div className="flex items-center">
+              {/* Botón Cerrar en Móvil */}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors lg:hidden cursor-pointer"
+                title="Cerrar menú"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Botón Colapsar en Escritorio */}
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors hidden lg:flex cursor-pointer"
+                title={sidebarOpen ? 'Colapsar barra lateral' : 'Expandir barra lateral'}
+              >
+                <Menu className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Menú de Módulos (Exacto a AppSheet) */}
@@ -2069,40 +2091,38 @@ export default function KodeSystemPage() {
                 setActiveNav('VENTAS');
                 setVentasView('hub');
                 setSearchQuery('');
+                setMobileMenuOpen(false);
               }}
-              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-extrabold transition-all text-left ${
+              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-extrabold transition-all text-left cursor-pointer ${
                 activeNav === 'VENTAS'
                   ? 'clay-btn-primary shadow-md'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               <DollarSign className="w-4 h-4 shrink-0" />
-              {sidebarOpen && (
-                <div className="flex-1 flex items-center justify-between">
-                  <span>VENTAS</span>
-                  <span className="text-[10px] font-mono opacity-80">{metricas.total}</span>
-                </div>
-              )}
+              <div className={`flex-1 items-center justify-between ${sidebarOpen ? 'flex' : 'flex lg:hidden'}`}>
+                <span>VENTAS</span>
+                <span className="text-[10px] font-mono opacity-80">{metricas.total}</span>
+              </div>
             </button>
 
             <button
               onClick={() => {
                 setActiveNav('INVENTARIO');
                 setSearchQuery('');
+                setMobileMenuOpen(false);
               }}
-              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-extrabold transition-all text-left ${
+              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-extrabold transition-all text-left cursor-pointer ${
                 activeNav === 'INVENTARIO'
                   ? 'clay-btn-primary shadow-md'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               <Package className="w-4 h-4 shrink-0" />
-              {sidebarOpen && (
-                <div className="flex-1 flex items-center justify-between">
-                  <span>INVENTARIO</span>
-                  <span className="text-[10px] font-mono opacity-80">{catalogo.length}</span>
-                </div>
-              )}
+              <div className={`flex-1 items-center justify-between ${sidebarOpen ? 'flex' : 'flex lg:hidden'}`}>
+                <span>INVENTARIO</span>
+                <span className="text-[10px] font-mono opacity-80">{catalogo.length}</span>
+              </div>
             </button>
 
             <button
@@ -2110,44 +2130,42 @@ export default function KodeSystemPage() {
                 setActiveNav('FABRICACION');
                 setFabView('hub');
                 setSearchQuery('');
+                setMobileMenuOpen(false);
               }}
-              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-extrabold transition-all text-left ${
+              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-extrabold transition-all text-left cursor-pointer ${
                 activeNav === 'FABRICACION'
                   ? 'clay-btn-primary shadow-md'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               <FlaskConical className="w-4 h-4 shrink-0" />
-              {sidebarOpen && (
-                <div className="flex-1 flex items-center justify-between">
-                  <span>FABRICACION</span>
-                  {(metricas.rojos > 0 || metricas.amarillos > 0) && (
-                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-rose-500 text-white font-bold">
-                      {metricas.rojos + metricas.amarillos}
-                    </span>
-                  )}
-                </div>
-              )}
+              <div className={`flex-1 items-center justify-between ${sidebarOpen ? 'flex' : 'flex lg:hidden'}`}>
+                <span>FABRICACION</span>
+                {(metricas.rojos > 0 || metricas.amarillos > 0) && (
+                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-rose-500 text-white font-bold">
+                    {metricas.rojos + metricas.amarillos}
+                  </span>
+                )}
+              </div>
             </button>
 
             <button
               onClick={() => {
                 setActiveNav('LOGISTICA');
                 setSearchQuery('');
+                setMobileMenuOpen(false);
               }}
-              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-extrabold transition-all text-left ${
+              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-extrabold transition-all text-left cursor-pointer ${
                 activeNav === 'LOGISTICA'
                   ? 'clay-btn-primary shadow-md'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               <Truck className="w-4 h-4 shrink-0" />
-              {sidebarOpen && (
-                <div className="flex-1 flex items-center justify-between">
-                  <span>LOGISTICA</span>
-                  <span className="text-[10px] font-mono opacity-80">{metricas.azules}</span>
-                </div>
-              )}
+              <div className={`flex-1 items-center justify-between ${sidebarOpen ? 'flex' : 'flex lg:hidden'}`}>
+                <span>LOGISTICA</span>
+                <span className="text-[10px] font-mono opacity-80">{metricas.azules}</span>
+              </div>
             </button>
 
             <button
@@ -2155,103 +2173,132 @@ export default function KodeSystemPage() {
                 setActiveNav('INTELIGENCIA_NEGOCIOS');
                 setBiView('hub');
                 setSearchQuery('');
+                setMobileMenuOpen(false);
               }}
-              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-extrabold transition-all text-left ${
+              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-extrabold transition-all text-left cursor-pointer ${
                 activeNav === 'INTELIGENCIA_NEGOCIOS'
                   ? 'clay-btn-primary shadow-md'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               <TrendingUp className="w-4 h-4 shrink-0" />
-              {sidebarOpen && (
-                <div className="flex-1 flex items-center justify-between">
-                  <span>INTELIGENCIA DE NEGOCIOS</span>
-                </div>
-              )}
+              <div className={`flex-1 items-center justify-between ${sidebarOpen ? 'flex' : 'flex lg:hidden'}`}>
+                <span>INTELIGENCIA DE NEGOCIOS</span>
+              </div>
             </button>
           </nav>
         </div>
 
         {/* Vendedora / Perfil activo al pie */}
-        {sidebarOpen && (
-          <div className="p-3 border-t border-slate-100 bg-slate-50/50 m-2 rounded-2xl">
-            <div className="flex items-center gap-2 mb-1.5">
-              <User className="w-3.5 h-3.5 text-indigo-600" />
-              <span className="text-[11px] font-bold text-slate-500">Vendedora en Turno:</span>
-            </div>
-            <select
-              value={vendedoraSeleccionada}
-              onChange={(e) => setVendedoraSeleccionada(e.target.value)}
-              className="w-full bg-white border border-slate-200 rounded-xl px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer shadow-sm"
-            >
-              {vendedoras.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.nombre}
-                </option>
-              ))}
-            </select>
+        <div className={`p-3 border-t border-slate-100 bg-slate-50/50 m-2 rounded-2xl ${sidebarOpen ? 'block' : 'block lg:hidden'}`}>
+          <div className="flex items-center gap-2 mb-1.5">
+            <User className="w-3.5 h-3.5 text-indigo-600" />
+            <span className="text-[11px] font-bold text-slate-500">Vendedora en Turno:</span>
           </div>
-        )}
+          <select
+            value={vendedoraSeleccionada}
+            onChange={(e) => setVendedoraSeleccionada(e.target.value)}
+            className="w-full bg-white border border-slate-200 rounded-xl px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer shadow-sm"
+          >
+            {vendedoras.map((v) => (
+              <option key={v.id} value={v.id}>
+                {v.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
       </aside>
 
       {/* ============================================================== */}
       {/* 2. ÁREA CENTRAL DE CONTENIDO                                   */}
       {/* ============================================================== */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 w-full overflow-hidden">
         {/* BARRA SUPERIOR (TOPBAR CON BUSCADOR Y ACCIÓN RÁPIDA) */}
-        <header className="sticky top-0 z-20 bg-[#f1f4f9]/95 backdrop-blur-md px-6 py-3 border-b border-slate-200/80 flex items-center justify-between gap-4">
-          {/* Breadcrumb de navegación */}
-          <div className="flex items-center gap-2 text-xs font-extrabold text-slate-500 min-w-max">
-            <button
-              onClick={() => {
-                if (activeNav === 'VENTAS') setVentasView('hub');
-                if (activeNav === 'FABRICACION') setFabView('hub');
-                if (activeNav === 'INTELIGENCIA_NEGOCIOS') setBiView('hub');
-              }}
-              className="text-slate-900 hover:text-indigo-600 transition-colors uppercase"
-            >
-              {activeNav.replace('_', ' ')}
-            </button>
+        <header className="sticky top-0 z-20 bg-[#f1f4f9]/95 backdrop-blur-md px-3.5 sm:px-6 py-2.5 sm:py-3 border-b border-slate-200/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-4">
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
+              {/* Botón Hamburguesa para Móvil */}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(true)}
+                className="p-1.5 -ml-1 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 transition-colors lg:hidden shrink-0 cursor-pointer"
+                title="Abrir menú de navegación"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
 
-            {activeNav === 'VENTAS' && ventasView !== 'hub' && (
-              <>
-                <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                <span className="text-indigo-600 uppercase">
-                  {ventasView === 'nuevo_pedido'
-                    ? 'Nuevo Pedido'
-                    : ventasView === 'nuevo_cliente'
-                    ? 'Nuevo Cliente'
-                    : ventasView === 'clientes'
-                    ? 'Clientes'
-                    : ventasView === 'pedidos'
-                    ? 'Listado Pedidos'
-                    : 'Catálogo'}
-                </span>
-              </>
-            )}
+              {/* Breadcrumb de navegación */}
+              <div className="flex items-center gap-1.5 text-xs font-extrabold text-slate-500 min-w-0 truncate">
+                <button
+                  onClick={() => {
+                    if (activeNav === 'VENTAS') setVentasView('hub');
+                    if (activeNav === 'FABRICACION') setFabView('hub');
+                    if (activeNav === 'INTELIGENCIA_NEGOCIOS') setBiView('hub');
+                  }}
+                  className="text-slate-900 hover:text-indigo-600 transition-colors uppercase shrink-0 cursor-pointer"
+                >
+                  {activeNav.replace('_', ' ')}
+                </button>
 
-            {activeNav === 'FABRICACION' && fabView !== 'hub' && (
-              <>
-                <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                <span className="text-indigo-600 uppercase">
-                  {fabView === 'compra_pendiente' ? 'Pedidos Compra Pendiente' : 'Pedidos a Fabricar'}
-                </span>
-              </>
-            )}
+                {activeNav === 'VENTAS' && ventasView !== 'hub' && (
+                  <>
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="text-indigo-600 uppercase truncate">
+                      {ventasView === 'nuevo_pedido'
+                        ? 'Nuevo Pedido'
+                        : ventasView === 'nuevo_cliente'
+                        ? 'Nuevo Cliente'
+                        : ventasView === 'clientes'
+                        ? 'Clientes'
+                        : ventasView === 'pedidos'
+                        ? 'Listado Pedidos'
+                        : 'Catálogo'}
+                    </span>
+                  </>
+                )}
 
-            {activeNav === 'INTELIGENCIA_NEGOCIOS' && biView !== 'hub' && (
-              <>
-                <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                <span className="text-indigo-600 uppercase">
-                  {biView === 'compras' ? 'Compras de Insumos' : 'Dashboard'}
-                </span>
-              </>
-            )}
+                {activeNav === 'FABRICACION' && fabView !== 'hub' && (
+                  <>
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="text-indigo-600 uppercase truncate">
+                      {fabView === 'compra_pendiente' ? 'Pedidos Compra Pendiente' : 'Pedidos a Fabricar'}
+                    </span>
+                  </>
+                )}
+
+                {activeNav === 'INTELIGENCIA_NEGOCIOS' && biView !== 'hub' && (
+                  <>
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="text-indigo-600 uppercase truncate">
+                      {biView === 'compras' ? 'Compras de Insumos' : 'Dashboard'}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Sincronizar en móvil */}
+            <div className="flex items-center gap-1 sm:hidden">
+              <button
+                type="button"
+                onClick={() => {
+                  fetchPedidos();
+                  fetchInsumos();
+                  fetchCatalogo();
+                  fetchClientes();
+                  showToast('Datos sincronizados', 'info');
+                }}
+                className="p-1.5 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 transition-colors cursor-pointer"
+                title="Sincronizar"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
-          {/* Buscador Centrado */}
+          {/* Buscador */}
           <div className="relative max-w-md w-full">
-            <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
             <input
               type="text"
               placeholder={`Buscar en ${activeNav.replace('_', ' ')}...`}
@@ -2263,7 +2310,7 @@ export default function KodeSystemPage() {
         </header>
 
         {/* CONTENIDO PRINCIPAL */}
-        <main className="p-6 flex-1 w-full mx-auto space-y-6">
+        <main className="p-3.5 sm:p-5 lg:p-6 flex-1 w-full mx-auto space-y-4 sm:space-y-6">
           {/* ============================================================== */}
           {/* MÓDULO: VENTAS                                                 */}
           {/* ============================================================== */}
@@ -3490,34 +3537,34 @@ export default function KodeSystemPage() {
               {/* VISTA 1B: LISTADO DE PEDIDOS (TABLA EXACTA A APPSHEET) */}
               {ventasView === 'pedidos' && (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
                     <button
                       onClick={() => setVentasView('hub')}
-                      className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1"
+                      className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1 self-start cursor-pointer"
                     >
                       ← Volver a Ventas
                     </button>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full">
                       <button
                         type="button"
                         onClick={() => {
                           fetchPedidos();
                           showToast('Actualizando pedidos...', 'info');
                         }}
-                        className="px-2.5 py-1 rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-indigo-600 hover:bg-slate-50 transition-all text-xs font-bold flex items-center gap-1.5 shadow-2xs"
+                        className="px-2.5 py-1 rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-indigo-600 hover:bg-slate-50 transition-all text-xs font-bold flex items-center gap-1.5 shadow-2xs shrink-0 cursor-pointer"
                         title="Actualizar tabla de pedidos en tiempo real"
                       >
                         <RefreshCw className="w-3 h-3 text-slate-500" />
                         <span className="hidden sm:inline">Actualizar</span>
                       </button>
 
-                      <div className="flex gap-1.5 text-xs">
+                      <div className="flex gap-1.5 text-xs overflow-x-auto shrink-0">
                         {['TODOS', 'PENDIENTE_COMPRA', 'PENDIENTE_PREPARAR', 'GUIA_CREADA'].map((st) => (
                           <button
                             key={st}
                             onClick={() => setFiltroEstado(st)}
-                            className={`px-3 py-1 rounded-xl font-bold transition-all ${
+                            className={`px-3 py-1 rounded-xl font-bold transition-all shrink-0 cursor-pointer ${
                               filtroEstado === st
                                 ? 'bg-indigo-600 text-white shadow-sm'
                                 : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
