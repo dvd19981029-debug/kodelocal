@@ -517,6 +517,7 @@ export default function KodeSystemPage() {
   const [numGuiaInput, setNumGuiaInput] = useState('');
   const [linkGuiaInput, setLinkGuiaInput] = useState('');
   const [copiedTrackingId, setCopiedTrackingId] = useState<string | null>(null);
+  const [generandoGuiaPedidoId, setGenerandoGuiaPedidoId] = useState<string | null>(null);
 
   // Formulario Compras
   const [nuevaCompraFecha, setNuevaCompraFecha] = useState(() => new Date().toISOString().split('T')[0]);
@@ -1363,6 +1364,42 @@ export default function KodeSystemPage() {
     const actualizadas = compras.filter((c) => c.id !== id);
     guardarComprasLocal(actualizadas);
     showToast('Compra eliminada', 'info');
+  };
+
+  // Generar Guía y DTE Directamente desde el botón inline de la tabla
+  const handleGenerarGuiaDirecta = async (pedido: Pedido) => {
+    try {
+      setGenerandoGuiaPedidoId(pedido.id);
+      const res = await fetch('/api/kode/guia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pedido_id: pedido.id,
+          modo: 'automatico',
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showToast(
+          data.dte?.success
+            ? `🚀 ¡Guía ${data.numero_guia} y Factura DTE generadas con éxito!`
+            : `🚀 ¡Guía ${data.numero_guia} generada en C807! Pedido en estado Enviado.`,
+          'success'
+        );
+        fetchPedidos();
+      } else {
+        showToast(data.error || 'Error al generar guía con C807 Express', 'error');
+        // Abrir modal como fallback si se requiere intervención manual
+        setGuiaModalPedido(pedido);
+        setNumGuiaInput('');
+        setLinkGuiaInput('');
+      }
+    } catch (e: any) {
+      showToast(e.message || 'Error de conexión', 'error');
+    } finally {
+      setGenerandoGuiaPedidoId(null);
+    }
   };
 
   // Generar Guía Directamente con la API de C807 Express
@@ -3347,7 +3384,7 @@ export default function KodeSystemPage() {
                                     </td>
                                     {/* Guia C807 */}
                                     <td className="py-3 px-4 font-mono text-xs whitespace-nowrap">
-                                      {p.c807_guia_numero ? (
+                                      {p.c807_guia_numero && p.c807_guia_numero !== 'PENDIENTE' ? (
                                         <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
                                           <span className="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 whitespace-nowrap">
                                             {p.c807_guia_numero}
@@ -3365,7 +3402,18 @@ export default function KodeSystemPage() {
                                           )}
                                         </div>
                                       ) : (
-                                        <span className="text-slate-400 text-[11px] italic">-</span>
+                                        <div className="inline-flex items-center gap-1.5">
+                                          <button
+                                            type="button"
+                                            onClick={() => handleGenerarGuiaDirecta(p)}
+                                            disabled={generandoGuiaPedidoId === p.id}
+                                            className="px-2.5 py-1 rounded-lg text-xs font-black bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                                            title="Generar Guía con C807 Express y emitir DTE automáticamente"
+                                          >
+                                            <Truck className={`w-3.5 h-3.5 ${generandoGuiaPedidoId === p.id ? 'animate-spin' : ''}`} />
+                                            <span>{generandoGuiaPedidoId === p.id ? 'Generando...' : 'Generar Guía'}</span>
+                                          </button>
+                                        </div>
                                       )}
                                     </td>
                                     {/* nun DTE */}
