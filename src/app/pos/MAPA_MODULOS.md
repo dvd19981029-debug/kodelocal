@@ -21,13 +21,13 @@ src/app/pos/
 │   ├── posHelpers.ts            # 🧮 Deducción de onzas / medias onzas, cálculos fiscales e IVA
 │   └── index.ts
 │
-├── components/                  # 🧩 Componentes modulares del POS (en proceso de modularización)
+├── components/                  # 🧩 Componentes modulares del POS
+│   ├── layout/                  # 🧭 Menú lateral dinámico y métricas rápidas (PosSidebar)
 │   ├── terminal/                # 🛒 Terminal de Venta, Cuadrícula de Productos y Carrito
-│   ├── caja/                    # 💳 Módulo de Cobro, Facturación DTE y Arqueo
-│   ├── clientes/                # 👥 Formulario y Directorio de Clientes Fiscales
-│   └── modals/                  # 🪟 Modales de Cotización, Ticket Térmico y Edición Rápida
+│   ├── modals/                  # 🪟 Modales de Cliente, Cobro/DTE, Ticket de Venta y Detalle
+│   └── index.ts
 │
-├── page.tsx                     # 📄 Ensamblador y Orquestador de Vistas del POS
+├── page.tsx                     # 📄 Orquestador Central del POS (vistas por pestañas y modales)
 └── MAPA_MODULOS.md              # 🗺️ Este mapa de navegación
 ```
 
@@ -37,6 +37,7 @@ src/app/pos/
 
 | Requerimiento / Elemento Visual | Archivo a Modificar | Qué contiene |
 | :--- | :--- | :--- |
+| **Menú Lateral / Navegación** | `src/app/pos/components/layout/PosSidebar.tsx` | Barra lateral colapsable, selector de pestañas, badges de comandas y métricas rápidas del día. |
 | **Buscador, Filtros y Catálogo** | `src/app/pos/components/terminal/PosProductGrid.tsx` | Búsqueda por SKU/nombre, selector de categoría, filtro de género y tarjetas con puestos y stock. |
 | **Carrito y Combobox de Cliente** | `src/app/pos/components/terminal/PosCartPanel.tsx` | Items seleccionados, switch 1 Oz / ½ Oz, búsqueda de cliente con DUI/NRC, desglose de totales y botones de acción. |
 | **Edición Rápida de Producto** | `src/app/pos/components/terminal/PosQuickEditProductModal.tsx` | Modal emergente para actualizar precios, nombre oficial, stock y catálogo en vivo. |
