@@ -3137,10 +3137,10 @@ export default function KodeSystemPage() {
                           {st === 'TODOS'
                             ? 'Todos'
                             : st === 'PENDIENTE_COMPRA'
-                            ? '🔴 Rojo'
+                            ? '🔴 Registrado'
                             : st === 'PENDIENTE_PREPARAR'
-                            ? '🟡 Amarillo'
-                            : '🔵 Azul'}
+                            ? '🟡 Insumos comprados'
+                            : '🔵 Enviado'}
                         </button>
                       ))}
                     </div>
@@ -3181,17 +3181,17 @@ export default function KodeSystemPage() {
                                     <td className="py-3 px-4">
                                       {(p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA') && (
                                         <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full">
-                                          🔴 Pendiente Compra
+                                          🔴 Registrado
                                         </span>
                                       )}
                                       {(p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR') && (
                                         <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                                          🟡 Listo Fabricar
+                                          🟡 Insumos comprados
                                         </span>
                                       )}
                                       {(p.estado === 'Preparado' || p.estado === 'Enviado' || p.estado === 'GUIA_CREADA') && (
                                         <span className="text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 px-2.5 py-0.5 rounded-full">
-                                          🔵 {p.c807_guia_numero ? 'Guía C807' : 'Preparado'}
+                                          🔵 {p.c807_guia_numero ? 'Guía C807' : 'Enviado'}
                                         </span>
                                       )}
                                       {(p.estado === 'Entregado' || p.estado === 'ENTREGADO') && (
@@ -6032,17 +6032,17 @@ export default function KodeSystemPage() {
                                 <td className="py-3 px-4">
                                   {(p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA') && (
                                     <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded-full inline-block">
-                                      🔴 Pendiente Compra
+                                      🔴 Registrado
                                     </span>
                                   )}
                                   {(p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR') && (
                                     <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full inline-block">
-                                      🟡 Listo Fabricar
+                                      🟡 Insumos comprados
                                     </span>
                                   )}
                                   {(p.estado === 'Preparado' || p.estado === 'Enviado' || p.estado === 'GUIA_CREADA') && (
                                     <span className="text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 px-2 py-0.5 rounded-full inline-block">
-                                      🔵 {p.c807_guia_numero ? 'Guía C807' : 'Preparado'}
+                                      🔵 {p.c807_guia_numero ? 'Guía C807' : 'Enviado'}
                                     </span>
                                   )}
                                   {(p.estado === 'Entregado' || p.estado === 'ENTREGADO') && (
