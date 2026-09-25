@@ -5309,22 +5309,25 @@ export default function KodeSystemPage() {
 
               <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                  <table className="w-full text-left text-xs border-collapse min-w-[1250px]">
+                    <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider whitespace-nowrap">
                       <tr>
-                        <th className="py-2.5 px-4">Numero de Pedido</th>
-                        <th className="py-2.5 px-4">Guía C807</th>
-                        <th className="py-2.5 px-4">Cliente</th>
-                        <th className="py-2.5 px-4">Destino</th>
-                        <th className="py-2.5 px-4">Fecha Guía</th>
-                        <th className="py-2.5 px-4">Estado C807</th>
-                        <th className="py-2.5 px-4 text-center">Acciones WhatsApp</th>
+                        <th className="py-2.5 px-4 whitespace-nowrap">Numero de Pedido</th>
+                        <th className="py-2.5 px-4 whitespace-nowrap">Cliente</th>
+                        <th className="py-2.5 px-4 whitespace-nowrap">Teléfono</th>
+                        <th className="py-2.5 px-4 whitespace-nowrap">Fecha Pedido</th>
+                        <th className="py-2.5 px-4 whitespace-nowrap">Total</th>
+                        <th className="py-2.5 px-4 whitespace-nowrap">Estado C807</th>
+                        <th className="py-2.5 px-4 whitespace-nowrap">Numero de DTE</th>
+                        <th className="py-2.5 px-4 whitespace-nowrap">Estado Envío</th>
+                        <th className="py-2.5 px-4 whitespace-nowrap">Destino</th>
+                        <th className="py-2.5 px-4 text-center whitespace-nowrap">Acciones WhatsApp</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
                       {pedidosLogistica.length === 0 ? (
                         <tr>
-                          <td colSpan={7} className="py-12 text-center text-slate-400 font-medium">
+                          <td colSpan={10} className="py-12 text-center text-slate-400 font-medium">
                             {filtroLogisticaDias === '20dias'
                               ? 'No hay envíos registrados en los últimos 20 días.'
                               : 'No hay envíos registrados en logística.'}
@@ -5332,48 +5335,172 @@ export default function KodeSystemPage() {
                         </tr>
                       ) : (
                         pedidosLogistica.map((p) => {
-                          const tieneGuia = !!p.c807_guia_numero;
+                          const tieneGuia = !!p.c807_guia_numero && p.c807_guia_numero !== 'PENDIENTE';
                           const linkRastreo = getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo);
+                          const totalNum = parseFloat(p.total?.toString() || '0');
+                          const totalPagadoNum = parseFloat(p.total_pagado?.toString() || '0');
 
                           return (
                             <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
-                              <td className="py-3 px-4 font-mono font-bold text-indigo-700">{p.numero_pedido}</td>
-                              <td className="py-3 px-4 font-mono font-bold">
+                              {/* 1. Numero de Pedido */}
+                              <td className="py-3 px-4 font-mono font-bold text-indigo-700 whitespace-nowrap">
+                                {p.numero_pedido}
+                              </td>
+
+                              {/* 2. Cliente */}
+                              <td className={`py-3 px-4 whitespace-nowrap ${getClienteColorPorEstado(p.estado)}`}>
+                                {p.cliente_nombre}
+                              </td>
+
+                              {/* 3. Teléfono */}
+                              <td className="py-3 px-4 font-mono whitespace-nowrap">
+                                <a
+                                  href={`https://wa.me/503${p.cliente_telefono}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-emerald-700 hover:underline font-bold"
+                                >
+                                  {p.cliente_telefono}
+                                </a>
+                              </td>
+
+                              {/* 4. Fecha Pedido */}
+                              <td className="py-3 px-4 text-slate-500 font-mono whitespace-nowrap">
+                                {new Date(p.created_at).toLocaleDateString('es-SV')}
+                              </td>
+
+                              {/* 5. Total */}
+                              <td className="py-3 px-4 whitespace-nowrap">
+                                <div className="font-mono font-black text-slate-900">
+                                  ${totalNum.toFixed(2)}
+                                </div>
+                                <div className="mt-0.5">
+                                  {p.estado_pago === 'PAGADO' ? (
+                                    <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full inline-block whitespace-nowrap">
+                                      ✓ Pagado
+                                    </span>
+                                  ) : p.estado_pago === 'PARCIAL' ? (
+                                    <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full inline-block whitespace-nowrap" title={`Abonado: $${totalPagadoNum.toFixed(2)}`}>
+                                      ⏳ Parcial (${totalPagadoNum.toFixed(2)})
+                                    </span>
+                                  ) : (
+                                    <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
+                                      ✕ Pendiente
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+
+                              {/* 6. Estado C807 */}
+                              <td className="py-3 px-4 whitespace-nowrap">
                                 {tieneGuia ? (
-                                  <a
-                                    href={linkRastreo}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-sky-700 hover:underline flex items-center gap-1"
-                                  >
-                                    <span>{p.c807_guia_numero}</span>
-                                    <ExternalLink className="w-3 h-3" />
-                                  </a>
+                                  <div className="flex flex-col gap-1 items-start whitespace-nowrap">
+                                    {renderBadgeEstadoC807(p.c807_estado, true)}
+                                    <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                                      <span className="font-mono text-[10px] font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 whitespace-nowrap">
+                                        {p.c807_guia_numero}
+                                      </span>
+                                      {linkRastreo && (
+                                        <a
+                                          href={linkRastreo}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="text-indigo-600 hover:text-indigo-800 p-0.5 rounded hover:bg-indigo-50 transition-colors inline-flex"
+                                          title="Rastrear Guía C807"
+                                        >
+                                          <ExternalLink className="w-3.5 h-3.5" />
+                                        </a>
+                                      )}
+                                    </div>
+                                  </div>
                                 ) : (
-                                  <button
-                                    onClick={() => {
-                                      setGuiaModalPedido(p);
-                                      setNumGuiaInput('');
-                                      setLinkGuiaInput('');
-                                    }}
-                                    className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-colors cursor-pointer"
-                                  >
-                                    Asignar Guía
-                                  </button>
+                                  <div className="inline-flex items-center gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleGenerarGuiaDirecta(p)}
+                                      disabled={generandoGuiaPedidoId === p.id}
+                                      className="px-2.5 py-1 rounded-lg text-xs font-black bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                                      title="Generar Guía con C807 Express y emitir DTE automáticamente"
+                                    >
+                                      <Truck className={`w-3.5 h-3.5 ${generandoGuiaPedidoId === p.id ? 'animate-spin' : ''}`} />
+                                      <span>{generandoGuiaPedidoId === p.id ? 'Generando...' : 'Generar Guía'}</span>
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setGuiaModalPedido(p);
+                                        setNumGuiaInput('');
+                                        setLinkGuiaInput('');
+                                      }}
+                                      className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 transition-colors cursor-pointer"
+                                      title="Asignar guía manual"
+                                    >
+                                      Manual
+                                    </button>
+                                  </div>
                                 )}
                               </td>
-                              <td className={`py-3 px-4 ${getClienteColorPorEstado(p.estado)}`}>{p.cliente_nombre}</td>
-                              <td className="py-3 px-4 text-slate-600">{p.cliente_municipio}, {p.cliente_departamento}</td>
-                              <td className="py-3 px-4 font-mono text-slate-600 whitespace-nowrap text-xs">
-                                {formatearMarcaTemporal(p.c807_fecha_guia || p.created_at)}
+
+                              {/* 7. Numero de DTE */}
+                              <td className="py-3 px-4 font-mono text-xs whitespace-nowrap">
+                                {p.dte_numero_control || p.dte_codigo_generacion ? (
+                                  <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                                    <span className="font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 whitespace-nowrap text-[11px]">
+                                      {p.dte_numero_control || p.dte_codigo_generacion?.slice(0, 15)}
+                                    </span>
+                                    {p.dte_pdf_url && (
+                                      <a
+                                        href={p.dte_pdf_url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-emerald-700 hover:text-emerald-900 p-0.5 rounded hover:bg-emerald-50 transition-colors inline-flex"
+                                        title="Ver DTE Factura Llama"
+                                      >
+                                        <FileText className="w-3.5 h-3.5" />
+                                      </a>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="text-slate-400 text-[11px] italic">-</span>
+                                )}
                               </td>
-                              <td className="py-3 px-4">
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
-                                  {p.c807_estado || (tieneGuia ? 'Llegó a su destino' : 'Listo despacho')}
-                                </span>
+
+                              {/* 8. Estado Envío */}
+                              <td className="py-3 px-4 whitespace-nowrap">
+                                {(p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA') && (
+                                  <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
+                                    🔴 Registrado
+                                  </span>
+                                )}
+                                {(p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR') && (
+                                  <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
+                                    🟡 Insumos comprados
+                                  </span>
+                                )}
+                                {(p.estado === 'Preparado' || p.estado === 'Enviado' || p.estado === 'GUIA_CREADA') && (
+                                  <span className="text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
+                                    🔵 Enviado
+                                  </span>
+                                )}
+                                {(p.estado === 'Entregado' || p.estado === 'ENTREGADO') && (
+                                  <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
+                                    🟢 Entregado
+                                  </span>
+                                )}
+                                {(p.estado === 'Cancelado' || p.estado === 'CANCELADO') && (
+                                  <span className="text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-300 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
+                                    ⚪ Cancelado
+                                  </span>
+                                )}
                               </td>
-                              <td className="py-3 px-4 text-center">
-                                <div className="flex items-center justify-center gap-1.5">
+
+                              {/* 9. Destino */}
+                              <td className="py-3 px-4 text-slate-600 whitespace-nowrap">
+                                {p.cliente_municipio ? `${p.cliente_municipio}, ${p.cliente_departamento}` : p.cliente_departamento || '-'}
+                              </td>
+
+                              {/* 10. Acciones WhatsApp */}
+                              <td className="py-3 px-4 text-center whitespace-nowrap">
+                                <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
                                   <button
                                     onClick={() => handleCopiarMensajeC807(p)}
                                     className="px-2.5 py-1 text-[11px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
@@ -6614,99 +6741,170 @@ export default function KodeSystemPage() {
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs border-collapse">
-                        <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                      <table className="w-full text-left text-xs border-collapse min-w-[1250px]">
+                        <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider whitespace-nowrap">
                           <tr>
-                            <th className="py-2.5 px-4">Pedido / Fecha</th>
-                            <th className="py-2.5 px-4">Estado</th>
-                            <th className="py-2.5 px-4">Pago / Total</th>
-                            <th className="py-2.5 px-4">Guía C807</th>
-                            <th className="py-2.5 px-4">Fragancias / Productos</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">Numero de Pedido</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">Cliente</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">Teléfono</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">Fecha Pedido</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">Total</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">Estado C807</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">Numero de DTE</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">Estado Envío</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">Fragancias / Productos</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 bg-white">
                           {pedidosClienteFicha.map((p) => {
+                            const tieneGuia = !!p.c807_guia_numero && p.c807_guia_numero !== 'PENDIENTE';
+                            const linkRastreo = getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo);
                             const totalNum = parseFloat(p.total?.toString() || '0');
+                            const totalPagadoNum = parseFloat(p.total_pagado?.toString() || '0');
+
                             return (
                               <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
-                                <td className="py-3 px-4">
-                                  <span className="font-mono font-black text-slate-900 block text-xs">
-                                    #{p.numero_pedido}
-                                  </span>
-                                  <span className="text-[10px] text-slate-400 font-medium flex items-center gap-1 mt-0.5">
-                                    <Clock className="w-3 h-3 text-slate-400" />
-                                    <span>{formatearMarcaTemporal(p.created_at)}</span>
-                                  </span>
+                                {/* 1. Numero de Pedido */}
+                                <td className="py-3 px-4 font-mono font-bold text-indigo-700 whitespace-nowrap">
+                                  {p.numero_pedido}
                                 </td>
-                                <td className="py-3 px-4">
-                                  {(p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA') && (
-                                    <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded-full inline-block">
-                                      🔴 Registrado
-                                    </span>
-                                  )}
-                                  {(p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR') && (
-                                    <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full inline-block">
-                                      🟡 Insumos comprados
-                                    </span>
-                                  )}
-                                  {(p.estado === 'Preparado' || p.estado === 'Enviado' || p.estado === 'GUIA_CREADA') && (
-                                    <span className="text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 px-2 py-0.5 rounded-full inline-block">
-                                      🔵 {p.c807_guia_numero ? 'Guía C807' : 'Enviado'}
-                                    </span>
-                                  )}
-                                  {(p.estado === 'Entregado' || p.estado === 'ENTREGADO') && (
-                                    <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full inline-block">
-                                      🟢 Entregado
-                                    </span>
-                                  )}
-                                  {(p.estado === 'Cancelado' || p.estado === 'CANCELADO') && (
-                                    <span className="text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-300 px-2 py-0.5 rounded-full inline-block">
-                                      ⚪ Cancelado
-                                    </span>
-                                  )}
+
+                                {/* 2. Cliente */}
+                                <td className={`py-3 px-4 whitespace-nowrap ${getClienteColorPorEstado(p.estado)}`}>
+                                  {p.cliente_nombre}
                                 </td>
-                                <td className="py-3 px-4">
-                                  <span className="font-mono font-black text-slate-900 block text-xs">
+
+                                {/* 3. Teléfono */}
+                                <td className="py-3 px-4 font-mono whitespace-nowrap">
+                                  <a
+                                    href={`https://wa.me/503${p.cliente_telefono}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-emerald-700 hover:underline font-bold"
+                                  >
+                                    {p.cliente_telefono}
+                                  </a>
+                                </td>
+
+                                {/* 4. Fecha Pedido */}
+                                <td className="py-3 px-4 text-slate-500 font-mono whitespace-nowrap">
+                                  {new Date(p.created_at).toLocaleDateString('es-SV')}
+                                </td>
+
+                                {/* 5. Total */}
+                                <td className="py-3 px-4 whitespace-nowrap">
+                                  <div className="font-mono font-black text-slate-900">
                                     ${totalNum.toFixed(2)}
-                                  </span>
+                                  </div>
                                   <div className="mt-0.5">
                                     {p.estado_pago === 'PAGADO' ? (
-                                      <span className="text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded">
+                                      <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full inline-block whitespace-nowrap">
                                         ✓ Pagado
                                       </span>
                                     ) : p.estado_pago === 'PARCIAL' ? (
-                                      <span className="text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded">
-                                        ⏳ Parcial
+                                      <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full inline-block whitespace-nowrap" title={`Abonado: $${totalPagadoNum.toFixed(2)}`}>
+                                        ⏳ Parcial (${totalPagadoNum.toFixed(2)})
                                       </span>
                                     ) : (
-                                      <span className="text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-1.5 py-0.5 rounded">
-                                        ✕ {p.tipo_pago || 'Pendiente'}
+                                      <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
+                                        ✕ Pendiente
                                       </span>
                                     )}
                                   </div>
                                 </td>
-                                <td className="py-3 px-4">
-                                  {p.c807_guia_numero ? (
-                                    <div className="space-y-0.5">
-                                      <span className="font-mono font-bold text-slate-800 text-[11px] block">
-                                        {p.c807_guia_numero}
+
+                                {/* 6. Estado C807 */}
+                                <td className="py-3 px-4 whitespace-nowrap">
+                                  {tieneGuia ? (
+                                    <div className="flex flex-col gap-1 items-start whitespace-nowrap">
+                                      {renderBadgeEstadoC807(p.c807_estado, true)}
+                                      <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                                        <span className="font-mono text-[10px] font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 whitespace-nowrap">
+                                          {p.c807_guia_numero}
+                                        </span>
+                                        {linkRastreo && (
+                                          <a
+                                            href={linkRastreo}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="text-indigo-600 hover:text-indigo-800 p-0.5 rounded hover:bg-indigo-50 transition-colors inline-flex"
+                                            title="Rastrear Guía C807"
+                                          >
+                                            <ExternalLink className="w-3.5 h-3.5" />
+                                          </a>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="inline-flex items-center gap-1.5">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleGenerarGuiaDirecta(p)}
+                                        disabled={generandoGuiaPedidoId === p.id}
+                                        className="px-2.5 py-1 rounded-lg text-xs font-black bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                                        title="Generar Guía con C807 Express y emitir DTE automáticamente"
+                                      >
+                                        <Truck className={`w-3.5 h-3.5 ${generandoGuiaPedidoId === p.id ? 'animate-spin' : ''}`} />
+                                        <span>{generandoGuiaPedidoId === p.id ? 'Generando...' : 'Generar Guía'}</span>
+                                      </button>
+                                    </div>
+                                  )}
+                                </td>
+
+                                {/* 7. Numero de DTE */}
+                                <td className="py-3 px-4 font-mono text-xs whitespace-nowrap">
+                                  {p.dte_numero_control || p.dte_codigo_generacion ? (
+                                    <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                                      <span className="font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 whitespace-nowrap text-[11px]">
+                                        {p.dte_numero_control || p.dte_codigo_generacion?.slice(0, 15)}
                                       </span>
-                                      {getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo) && (
+                                      {p.dte_pdf_url && (
                                         <a
-                                          href={getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo)}
+                                          href={p.dte_pdf_url}
                                           target="_blank"
                                           rel="noreferrer"
-                                          className="text-[10px] text-indigo-600 hover:underline font-bold inline-flex items-center gap-1"
+                                          className="text-emerald-700 hover:text-emerald-900 p-0.5 rounded hover:bg-emerald-50 transition-colors inline-flex"
+                                          title="Ver DTE Factura Llama"
                                         >
-                                          <span>Rastrear</span>
-                                          <ExternalLink className="w-2.5 h-2.5" />
+                                          <FileText className="w-3.5 h-3.5" />
                                         </a>
                                       )}
                                     </div>
                                   ) : (
-                                    <span className="text-slate-400 text-[11px] italic">Sin guía aún</span>
+                                    <span className="text-slate-400 text-[11px] italic">-</span>
                                   )}
                                 </td>
+
+                                {/* 8. Estado Envío */}
+                                <td className="py-3 px-4 whitespace-nowrap">
+                                  {(p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA') && (
+                                    <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
+                                      🔴 Registrado
+                                    </span>
+                                  )}
+                                  {(p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR') && (
+                                    <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
+                                      🟡 Insumos comprados
+                                    </span>
+                                  )}
+                                  {(p.estado === 'Preparado' || p.estado === 'Enviado' || p.estado === 'GUIA_CREADA') && (
+                                    <span className="text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
+                                      🔵 Enviado
+                                    </span>
+                                  )}
+                                  {(p.estado === 'Entregado' || p.estado === 'ENTREGADO') && (
+                                    <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
+                                      🟢 Entregado
+                                    </span>
+                                  )}
+                                  {(p.estado === 'Cancelado' || p.estado === 'CANCELADO') && (
+                                    <span className="text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-300 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
+                                      ⚪ Cancelado
+                                    </span>
+                                  )}
+                                </td>
+
+                                {/* 9. Fragancias / Productos */}
                                 <td className="py-3 px-4">
                                   <div className="flex flex-wrap gap-1 max-w-sm">
                                     {p.items && p.items.length > 0 ? (
