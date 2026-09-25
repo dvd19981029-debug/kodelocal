@@ -646,15 +646,16 @@ export default function KodeSystemPage() {
 
   const fetchFormasPago = async () => {
     try {
-      const res = await fetch('/api/kode/formas-pago');
+      const res = await fetch('/api/kode/formas-pago?activas_only=true');
       const data = await res.json();
       if (data.success && Array.isArray(data.formasPago)) {
-        setFormasPago(data.formasPago);
-        if (data.formasPago.length > 0) {
+        const activas = data.formasPago.filter((f: FormaPagoItem) => f.activo !== false);
+        setFormasPago(activas);
+        if (activas.length > 0) {
           // Default: Si existe 1003 (Contra Entrega), seleccionarla
-          const contraEntrega = data.formasPago.find((f: FormaPagoItem) => f.id === '1003');
-          setFormaPagoSeleccionada(contraEntrega ? contraEntrega.id : data.formasPago[0].id);
-          const primerBanco = data.formasPago.find((f: FormaPagoItem) => f.tipo === 'BANCO') || data.formasPago[0];
+          const contraEntrega = activas.find((f: FormaPagoItem) => f.id === '1003');
+          setFormaPagoSeleccionada(contraEntrega ? contraEntrega.id : activas[0].id);
+          const primerBanco = activas.find((f: FormaPagoItem) => f.tipo === 'BANCO') || activas[0];
           setPagoInputFormaId(primerBanco.id);
         }
       }
@@ -3046,7 +3047,7 @@ export default function KodeSystemPage() {
                                     onChange={(e) => setPagoInputFormaId(e.target.value)}
                                     className="clay-input w-full text-xs font-bold bg-white cursor-pointer"
                                   >
-                                    {formasPago.map((fp) => (
+                                    {formasPago.filter((fp) => fp.activo !== false).map((fp) => (
                                       <option key={fp.id} value={fp.id}>
                                         {fp.nombre} ({fp.tipo})
                                       </option>
@@ -3515,7 +3516,8 @@ export default function KodeSystemPage() {
                                                 onClick={() => {
                                                   setModalAbonoPedido(p);
                                                   setAbonoMonto(saldoPendiente > 0 ? saldoPendiente.toFixed(2) : '');
-                                                  setAbonoFormaPagoId(formasPago[0]?.id || '1001');
+                                                  const primerBanco = formasPago.find((f) => f.tipo === 'BANCO') || formasPago[0];
+                                                  setAbonoFormaPagoId(primerBanco?.id || formasPago[0]?.id || '');
                                                   setAbonoNumDoc('');
                                                   setAbonoObservaciones('');
                                                 }}
@@ -5638,7 +5640,7 @@ export default function KodeSystemPage() {
                   className="clay-input w-full font-bold cursor-pointer"
                   required
                 >
-                  {formasPago.map((fp) => (
+                  {formasPago.filter((fp) => fp.activo !== false).map((fp) => (
                     <option key={fp.id} value={fp.id}>
                       {fp.nombre} ({fp.tipo})
                     </option>
