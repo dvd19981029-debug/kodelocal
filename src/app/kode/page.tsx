@@ -2129,7 +2129,7 @@ export default function KodeSystemPage() {
         </header>
 
         {/* CONTENIDO PRINCIPAL */}
-        <main className="p-6 flex-1 max-w-7xl w-full mx-auto space-y-6">
+        <main className="p-6 flex-1 w-full mx-auto space-y-6">
           {/* ============================================================== */}
           {/* MÓDULO: VENTAS                                                 */}
           {/* ============================================================== */}
@@ -3566,20 +3566,20 @@ export default function KodeSystemPage() {
                     </button>
                   </div>
 
-                  <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs border-collapse min-w-[1300px]">
+                  <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden w-full">
+                    <div className="overflow-x-auto w-full">
+                      <table className="w-full text-left text-xs border-collapse">
                         <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider whitespace-nowrap">
                           <tr>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Nombre completo</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Teléfono / WhatsApp</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Documento</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Correo electrónico</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Departamento</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Municipio</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Dirección de entrega</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Punto de referencia</th>
-                            <th className="py-2.5 px-4 text-center whitespace-nowrap">Acción</th>
+                            <th className="py-2.5 px-3 whitespace-nowrap">Nombre completo</th>
+                            <th className="py-2.5 px-3 whitespace-nowrap">Teléfono / WhatsApp</th>
+                            <th className="py-2.5 px-3 whitespace-nowrap">Documento</th>
+                            <th className="py-2.5 px-3 whitespace-nowrap">Correo electrónico</th>
+                            <th className="py-2.5 px-3 whitespace-nowrap">Departamento</th>
+                            <th className="py-2.5 px-3 whitespace-nowrap">Municipio</th>
+                            <th className="py-2.5 px-3 whitespace-nowrap">Dirección de entrega</th>
+                            <th className="py-2.5 px-3 whitespace-nowrap">Punto de referencia</th>
+                            <th className="py-2.5 px-3 text-center whitespace-nowrap">Acción</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 bg-white">
@@ -3593,7 +3593,7 @@ export default function KodeSystemPage() {
                             clientesFiltrados.map((c) => (
                               <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
                                 {/* Nombre Completo */}
-                                <td className="py-3 px-4 whitespace-nowrap">
+                                <td className="py-3 px-3 whitespace-nowrap">
                                   <button
                                     type="button"
                                     onClick={() => setClienteFichaModal(c)}
@@ -3606,7 +3606,7 @@ export default function KodeSystemPage() {
                                 </td>
 
                                 {/* Teléfono / WhatsApp */}
-                                <td className="py-3 px-4 whitespace-nowrap">
+                                <td className="py-3 px-3 whitespace-nowrap">
                                   <div className="inline-flex items-center gap-2">
                                     <span className="font-mono font-bold text-slate-700">{c.telefono}</span>
                                     <div className="inline-flex items-center gap-0.5">
@@ -3631,7 +3631,7 @@ export default function KodeSystemPage() {
                                 </td>
 
                                 {/* Documento */}
-                                <td className="py-3 px-4 whitespace-nowrap">
+                                <td className="py-3 px-3 whitespace-nowrap">
                                   {c.numero_documento ? (
                                     <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-mono font-bold border border-slate-200">
                                       <CreditCard className="w-3 h-3 text-slate-400" />
@@ -3643,7 +3643,7 @@ export default function KodeSystemPage() {
                                 </td>
 
                                 {/* Correo Electrónico */}
-                                <td className="py-3 px-4 whitespace-nowrap">
+                                <td className="py-3 px-3 whitespace-nowrap">
                                   {c.email ? (
                                     <a
                                       href={`mailto:${c.email}`}
@@ -3658,27 +3658,27 @@ export default function KodeSystemPage() {
                                 </td>
 
                                 {/* Departamento */}
-                                <td className="py-3 px-4 whitespace-nowrap font-medium text-slate-800">
+                                <td className="py-3 px-3 whitespace-nowrap font-medium text-slate-800">
                                   {c.departamento || '-'}
                                 </td>
 
                                 {/* Municipio */}
-                                <td className="py-3 px-4 whitespace-nowrap font-medium text-slate-700">
+                                <td className="py-3 px-3 whitespace-nowrap font-medium text-slate-700">
                                   {c.municipio || '-'}
                                 </td>
 
                                 {/* Dirección de entrega */}
-                                <td className="py-3 px-4 text-slate-700 max-w-sm truncate whitespace-nowrap" title={c.direccion}>
+                                <td className="py-3 px-3 text-slate-700 max-w-xs truncate whitespace-nowrap" title={c.direccion}>
                                   {c.direccion || '-'}
                                 </td>
 
                                 {/* Punto de referencia */}
-                                <td className="py-3 px-4 text-slate-600 max-w-xs truncate whitespace-nowrap" title={c.referencia || ''}>
+                                <td className="py-3 px-3 text-slate-600 max-w-[200px] truncate whitespace-nowrap" title={c.referencia || ''}>
                                   {c.referencia || <span className="text-slate-400 text-[11px] italic">-</span>}
                                 </td>
 
                                 {/* Acción */}
-                                <td className="py-3 px-4 text-center whitespace-nowrap">
+                                <td className="py-3 px-3 text-center whitespace-nowrap">
                                   <div className="inline-flex items-center gap-1.5 justify-center">
                                     <button
                                       type="button"
