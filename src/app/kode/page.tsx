@@ -370,6 +370,9 @@ export default function KodeSystemPage() {
     });
   };
 
+  // Filtro de días en módulo de Logística ('20dias' | 'todos')
+  const [filtroLogisticaDias, setFiltroLogisticaDias] = useState<'20dias' | 'todos'>('20dias');
+
   // Catálogo de Formas de Pago y selección en nuevo pedido
   const [formasPago, setFormasPago] = useState<FormaPagoItem[]>([]);
   const [formaPagoSeleccionada, setFormaPagoSeleccionada] = useState<string>('1003');
@@ -1702,6 +1705,61 @@ export default function KodeSystemPage() {
     const totalGastosCompras = compras.reduce((acc, c) => acc + c.monto_total, 0);
     return { rojos, amarillos, azules, total: pedidos.length, totalVentas, totalGastosCompras };
   }, [pedidos, compras]);
+
+  // Módulo de Logística C807: Envíos filtrados y ordenados de más reciente a más antigua
+  const { pedidosLogistica, conteoLogistica20Dias, conteoLogisticaTodos } = useMemo(() => {
+    const ahora = Date.now();
+    const limite20Dias = ahora - 20 * 24 * 60 * 60 * 1000;
+
+    // Base de logística: pedidos con guía asignada o en estados de envío/despacho
+    const base = pedidos.filter(
+      (p) =>
+        p.c807_guia_numero ||
+        p.estado === 'GUIA_CREADA' ||
+        p.estado === 'PENDIENTE_PREPARAR' ||
+        p.estado === 'Enviado' ||
+        p.estado === 'Entregado'
+    );
+
+    const pedidosEn20Dias = base.filter((p) => {
+      const f = p.c807_fecha_guia || p.created_at;
+      if (!f) return true;
+      const t = new Date(f).getTime();
+      return !isNaN(t) && t >= limite20Dias;
+    });
+
+    const conteoLogistica20Dias = pedidosEn20Dias.length;
+    const conteoLogisticaTodos = base.length;
+
+    let list = filtroLogisticaDias === '20dias' ? pedidosEn20Dias : base;
+
+    // Filtro por buscador superior
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(
+        (p) =>
+          p.numero_pedido.toLowerCase().includes(q) ||
+          (p.c807_guia_numero || '').toLowerCase().includes(q) ||
+          p.cliente_nombre.toLowerCase().includes(q) ||
+          (p.cliente_municipio || '').toLowerCase().includes(q) ||
+          (p.cliente_departamento || '').toLowerCase().includes(q) ||
+          (p.c807_estado || '').toLowerCase().includes(q)
+      );
+    }
+
+    // Ordenar siempre de la más reciente a la más antigua
+    const sorted = [...list].sort((a, b) => {
+      const timeA = new Date(a.c807_fecha_guia || a.created_at || 0).getTime();
+      const timeB = new Date(b.c807_fecha_guia || b.created_at || 0).getTime();
+      return timeB - timeA;
+    });
+
+    return {
+      pedidosLogistica: sorted,
+      conteoLogistica20Dias,
+      conteoLogisticaTodos,
+    };
+  }, [pedidos, searchQuery, filtroLogisticaDias]);
 
   return (
     <div className="min-h-screen bg-[#f1f4f9] text-slate-800 flex font-sans antialiased overflow-x-hidden">
@@ -4637,11 +4695,50 @@ export default function KodeSystemPage() {
           {/* ============================================================== */}
           {activeNav === 'LOGISTICA' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-black uppercase text-slate-700 tracking-wider">
-                  LOGISTICA & ENVIOS C807
-                </h2>
-                <span className="text-xs text-slate-500">{metricas.azules} guías generadas</span>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-sm font-black uppercase text-slate-700 tracking-wider">
+                    LOGISTICA & ENVIOS C807
+                  </h2>
+                  <span className="text-xs text-slate-500 font-mono font-medium">
+                    {pedidosLogistica.length} {pedidosLogistica.length === 1 ? 'guía mostrada' : 'guías mostradas'}
+                  </span>
+                </div>
+
+                {/* BOTONES DE FILTRO: ÚLTIMOS 20 DÍAS / TODOS */}
+                <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 self-start sm:self-auto shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={() => setFiltroLogisticaDias('20dias')}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                      filtroLogisticaDias === '20dias'
+                        ? 'bg-white text-indigo-700 shadow-xs border border-slate-200'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Clock className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>Últimos 20 días</span>
+                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                      {conteoLogistica20Dias}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFiltroLogisticaDias('todos')}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                      filtroLogisticaDias === 'todos'
+                        ? 'bg-white text-indigo-700 shadow-xs border border-slate-200'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Layers className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Ver todos</span>
+                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-700">
+                      {conteoLogisticaTodos}
+                    </span>
+                  </button>
+                </div>
               </div>
 
               <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
@@ -4653,14 +4750,22 @@ export default function KodeSystemPage() {
                         <th className="py-2.5 px-4">Guía C807</th>
                         <th className="py-2.5 px-4">Cliente</th>
                         <th className="py-2.5 px-4">Destino</th>
+                        <th className="py-2.5 px-4">Fecha Guía</th>
                         <th className="py-2.5 px-4">Estado C807</th>
                         <th className="py-2.5 px-4 text-center">Acciones WhatsApp</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
-                      {pedidos
-                        .filter((p) => p.c807_guia_numero || p.estado === 'GUIA_CREADA' || p.estado === 'PENDIENTE_PREPARAR')
-                        .map((p) => {
+                      {pedidosLogistica.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="py-12 text-center text-slate-400 font-medium">
+                            {filtroLogisticaDias === '20dias'
+                              ? 'No hay envíos registrados en los últimos 20 días.'
+                              : 'No hay envíos registrados en logística.'}
+                          </td>
+                        </tr>
+                      ) : (
+                        pedidosLogistica.map((p) => {
                           const tieneGuia = !!p.c807_guia_numero;
                           const linkRastreo = p.c807_link_rastreo || `https://app.c807.com/tracking?guide=${p.c807_guia_numero || ''}`;
 
@@ -4693,6 +4798,9 @@ export default function KodeSystemPage() {
                               </td>
                               <td className={`py-3 px-4 ${getClienteColorPorEstado(p.estado)}`}>{p.cliente_nombre}</td>
                               <td className="py-3 px-4 text-slate-600">{p.cliente_municipio}, {p.cliente_departamento}</td>
+                              <td className="py-3 px-4 font-mono text-slate-600 whitespace-nowrap text-xs">
+                                {formatearMarcaTemporal(p.c807_fecha_guia || p.created_at)}
+                              </td>
                               <td className="py-3 px-4">
                                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
                                   {p.c807_estado || (tieneGuia ? 'Llegó a su destino' : 'Listo despacho')}
@@ -4731,7 +4839,8 @@ export default function KodeSystemPage() {
                               </td>
                             </tr>
                           );
-                        })}
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
