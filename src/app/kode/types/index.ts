@@ -72,6 +72,9 @@ export interface FormaPagoItem {
   cuenta_numero?: string;
 }
 
+export type FormaPago = FormaPagoItem;
+
+
 export interface PagoItem {
   id: string;
   pedido_id: string;

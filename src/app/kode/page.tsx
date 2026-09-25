@@ -75,83 +75,27 @@ function formatearMarcaTemporal(fechaStr: string) {
   }
 }
 
-function getClienteColorPorEstado(estado: string) {
-  if (estado === 'Registrado' || estado === 'PENDIENTE_COMPRA') {
-    return 'text-red-600 font-bold hover:text-red-700';
-  }
-  if (estado === 'Insumos comprados' || estado === 'PENDIENTE_PREPARAR') {
-    return 'text-amber-600 font-bold hover:text-amber-700';
-  }
-  if (estado === 'Preparado' || estado === 'Enviado' || estado === 'GUIA_CREADA') {
-    return 'text-blue-600 font-bold hover:text-blue-700';
-  }
-  if (estado === 'Entregado' || estado === 'ENTREGADO') {
-    return 'text-emerald-600 font-bold hover:text-emerald-700';
-  }
-  if (estado === 'Cancelado' || estado === 'CANCELADO') {
-    return 'text-slate-400 font-bold line-through';
-  }
-  return 'text-slate-900 font-bold';
-}
-
-function getC807TrackingUrl(guiaNumero?: string, existingLink?: string): string {
-  if (guiaNumero && guiaNumero.trim()) {
-    return `https://c807xpress.com/tracking/?guia=${encodeURIComponent(guiaNumero.trim())}`;
-  }
-  if (existingLink && existingLink.trim()) {
-    if (existingLink.includes('app.c807.com') && existingLink.includes('guide=')) {
-      const match = existingLink.match(/guide=([^&]+)/);
-      if (match && match[1]) {
-        return `https://c807xpress.com/tracking/?guia=${encodeURIComponent(match[1])}`;
-      }
-    }
-    return existingLink.trim();
-  }
-  return '';
-}
-
-function renderBadgeEstadoC807(estado?: string, tieneGuia?: boolean) {
-  if (!estado && !tieneGuia) {
-    return <span className="text-slate-400 text-[11px] italic">Pendiente guía</span>;
-  }
-  const est = (estado || (tieneGuia ? 'En ruta C807' : 'Pendiente guía')).trim();
-  const lower = est.toLowerCase();
-
-  if (lower.includes('llegó') || lower.includes('llego') || lower.includes('entregad')) {
-    return (
-      <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1 whitespace-nowrap">
-        <span>✅</span> {est}
-      </span>
-    );
-  }
-  if (lower.includes('problema') || lower.includes('fallid') || lower.includes('rechaz') || lower.includes('no responde')) {
-    return (
-      <span className="text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-300 px-2 py-0.5 rounded-full inline-flex items-center gap-1 whitespace-nowrap shadow-xs animate-pulse">
-        <span>⚠️</span> {est}
-      </span>
-    );
-  }
-  if (lower.includes('recogid') || lower.includes('origen')) {
-    return (
-      <span className="text-[10px] font-bold bg-sky-50 text-sky-800 border border-sky-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1 whitespace-nowrap">
-        <span>📦</span> {est}
-      </span>
-    );
-  }
-  if (lower.includes('ruta') || lower.includes('transito') || lower.includes('tránsito')) {
-    return (
-      <span className="text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1 whitespace-nowrap">
-        <span>🚚</span> {est}
-      </span>
-    );
-  }
-  return (
-    <span className="text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1 whitespace-nowrap">
-      <span>📄</span> {est}
-    </span>
-  );
-}
-
+import {
+  getClienteColorPorEstado,
+  getC807TrackingUrl,
+  renderBadgeEstadoC807,
+} from './utils/c807Helpers';
+import { compressAndUploadImage } from './utils/imageUpload';
+import {
+  KodeSidebar,
+  KodeHeader,
+} from './components/layout';
+import {
+  AsignarGuiaModal,
+  DteResultModal,
+  ComprobanteLightboxModal,
+  AbonoPedidoModal,
+} from './components/modals';
+import {
+  PedidosTabla,
+  ClientesTabla,
+  ClienteFichaView,
+} from './components/ventas';
 import {
   CatalogoItem,
   Vendedora,
@@ -159,12 +103,18 @@ import {
   ClienteItem,
   ClienteDirectorioItem,
   FormaPagoItem,
+  FormaPago,
   PagoItem,
   PagoRegistroItem,
   Pedido,
   InsumoItem,
   CompraGasto,
+  NavSection,
+  VentasView,
+  FabView,
+  BiView,
 } from './types';
+
 
 const COMPRAS_INICIALES: CompraGasto[] = [
   {
@@ -535,59 +485,6 @@ export default function KodeSystemPage() {
     } catch (e) {
       console.error('Error cargando formas de pago:', e);
     }
-  };
-
-  const compressAndUploadImage = async (file: File | Blob): Promise<string> => {
-    const compressedBlob = await new Promise<Blob>((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new (window as any).Image();
-        img.onload = () => {
-          const maxDim = 1280;
-          let width = img.width;
-          let height = img.height;
-          if (width > maxDim || height > maxDim) {
-            if (width > height) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
-            } else {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
-            }
-          }
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) return resolve(file instanceof Blob ? file : new Blob([file]));
-          ctx.drawImage(img, 0, 0, width, height);
-          canvas.toBlob(
-            (b) => {
-              if (b) resolve(b);
-              else resolve(file instanceof Blob ? file : new Blob([file]));
-            },
-            'image/jpeg',
-            0.82
-          );
-        };
-        img.onerror = () => resolve(file instanceof Blob ? file : new Blob([file]));
-        img.src = e.target?.result as string;
-      };
-      reader.onerror = () => resolve(file instanceof Blob ? file : new Blob([file]));
-      reader.readAsDataURL(file);
-    });
-
-    const fd = new FormData();
-    fd.append('file', compressedBlob, 'comprobante.jpg');
-    const res = await fetch('/api/kode/pagos/upload-comprobante', {
-      method: 'POST',
-      body: fd,
-    });
-    const data = await res.json();
-    if (!data.success || !data.url) {
-      throw new Error(data.error || 'No se pudo subir la imagen del comprobante');
-    }
-    return data.url;
   };
 
   const municipiosDisponibles = useMemo(() => {
@@ -1891,277 +1788,48 @@ export default function KodeSystemPage() {
       {/* ============================================================== */}
       {/* 1. BARRA LATERAL IZQUIERDA (SIDEBAR DE NAVEGACIÓN)             */}
       {/* ============================================================== */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 lg:static lg:z-30 h-screen bg-white border-r border-slate-200/80 flex flex-col justify-between transition-all duration-300 shadow-xl lg:shadow-sm ${
-          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        } ${sidebarOpen ? 'w-72 lg:w-64' : 'w-72 lg:w-20'} shrink-0`}
-      >
-        <div>
-          {/* Logo y Encabezado del Sistema */}
-          <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-indigo-500 text-white flex items-center justify-center font-black text-xl shadow-md border border-white/40 shrink-0">
-                K
-              </div>
-              <div className={`${sidebarOpen ? 'block' : 'block lg:hidden'} animate-in fade-in duration-200`}>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold text-lg tracking-tight text-slate-900">KÖDE</span>
-                  <span className="text-[10px] font-bold bg-indigo-50 text-indigo-700 px-1.5 py-0.2 rounded border border-indigo-200">
-                    App
-                  </span>
-                </div>
-                <span className="text-[10px] text-slate-400 font-medium block">kode.aromaniaksv.com</span>
-              </div>
-            </div>
-
-            {/* Acciones de cabecera de barra lateral */}
-            <div className="flex items-center">
-              {/* Botón Cerrar en Móvil */}
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors lg:hidden cursor-pointer"
-                title="Cerrar menú"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              {/* Botón Colapsar en Escritorio */}
-              <button
-                type="button"
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors hidden lg:flex cursor-pointer"
-                title={sidebarOpen ? 'Colapsar barra lateral' : 'Expandir barra lateral'}
-              >
-                <Menu className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Menú de Módulos (Exacto a AppSheet) */}
-          <nav className="p-3 space-y-1.5">
-            <button
-              onClick={() => {
-                setActiveNav('VENTAS');
-                setVentasView('hub');
-                setSearchQuery('');
-                setMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-extrabold transition-all text-left cursor-pointer ${
-                activeNav === 'VENTAS'
-                  ? 'clay-btn-primary shadow-md'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              <DollarSign className="w-4 h-4 shrink-0" />
-              <div className={`flex-1 items-center justify-between ${sidebarOpen ? 'flex' : 'flex lg:hidden'}`}>
-                <span>VENTAS</span>
-                <span className="text-[10px] font-mono opacity-80">{metricas.total}</span>
-              </div>
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveNav('INVENTARIO');
-                setSearchQuery('');
-                setMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-extrabold transition-all text-left cursor-pointer ${
-                activeNav === 'INVENTARIO'
-                  ? 'clay-btn-primary shadow-md'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              <Package className="w-4 h-4 shrink-0" />
-              <div className={`flex-1 items-center justify-between ${sidebarOpen ? 'flex' : 'flex lg:hidden'}`}>
-                <span>INVENTARIO</span>
-                <span className="text-[10px] font-mono opacity-80">{catalogo.length}</span>
-              </div>
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveNav('FABRICACION');
-                setFabView('hub');
-                setSearchQuery('');
-                setMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-extrabold transition-all text-left cursor-pointer ${
-                activeNav === 'FABRICACION'
-                  ? 'clay-btn-primary shadow-md'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              <FlaskConical className="w-4 h-4 shrink-0" />
-              <div className={`flex-1 items-center justify-between ${sidebarOpen ? 'flex' : 'flex lg:hidden'}`}>
-                <span>FABRICACION</span>
-                {(metricas.rojos > 0 || metricas.amarillos > 0) && (
-                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-rose-500 text-white font-bold">
-                    {metricas.rojos + metricas.amarillos}
-                  </span>
-                )}
-              </div>
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveNav('LOGISTICA');
-                setSearchQuery('');
-                setMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-extrabold transition-all text-left cursor-pointer ${
-                activeNav === 'LOGISTICA'
-                  ? 'clay-btn-primary shadow-md'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              <Truck className="w-4 h-4 shrink-0" />
-              <div className={`flex-1 items-center justify-between ${sidebarOpen ? 'flex' : 'flex lg:hidden'}`}>
-                <span>LOGISTICA</span>
-                <span className="text-[10px] font-mono opacity-80">{metricas.azules}</span>
-              </div>
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveNav('INTELIGENCIA_NEGOCIOS');
-                setBiView('hub');
-                setSearchQuery('');
-                setMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-extrabold transition-all text-left cursor-pointer ${
-                activeNav === 'INTELIGENCIA_NEGOCIOS'
-                  ? 'clay-btn-primary shadow-md'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              <TrendingUp className="w-4 h-4 shrink-0" />
-              <div className={`flex-1 items-center justify-between ${sidebarOpen ? 'flex' : 'flex lg:hidden'}`}>
-                <span>INTELIGENCIA DE NEGOCIOS</span>
-              </div>
-            </button>
-          </nav>
-        </div>
-
-        {/* Vendedora / Perfil activo al pie */}
-        <div className={`p-3 border-t border-slate-100 bg-slate-50/50 m-2 rounded-2xl ${sidebarOpen ? 'block' : 'block lg:hidden'}`}>
-          <div className="flex items-center gap-2 mb-1.5">
-            <User className="w-3.5 h-3.5 text-indigo-600" />
-            <span className="text-[11px] font-bold text-slate-500">Vendedora en Turno:</span>
-          </div>
-          <select
-            value={vendedoraSeleccionada}
-            onChange={(e) => setVendedoraSeleccionada(e.target.value)}
-            className="w-full bg-white border border-slate-200 rounded-xl px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer shadow-sm"
-          >
-            {vendedoras.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.nombre}
-              </option>
-            ))}
-          </select>
-        </div>
-      </aside>
+      <KodeSidebar
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        mobileMenuOpen={mobileMenuOpen}
+        setMobileMenuOpen={setMobileMenuOpen}
+        activeNav={activeNav}
+        setActiveNav={setActiveNav}
+        setVentasView={setVentasView}
+        setFabView={setFabView}
+        setBiView={setBiView}
+        setSearchQuery={setSearchQuery}
+        metricas={metricas}
+        catalogoCount={catalogo.length}
+        vendedoraSeleccionada={vendedoraSeleccionada}
+        setVendedoraSeleccionada={setVendedoraSeleccionada}
+        vendedoras={vendedoras}
+      />
 
       {/* ============================================================== */}
       {/* 2. ÁREA CENTRAL DE CONTENIDO                                   */}
       {/* ============================================================== */}
       <div className="flex-1 flex flex-col min-w-0 w-full overflow-hidden">
         {/* BARRA SUPERIOR (TOPBAR CON BUSCADOR Y ACCIÓN RÁPIDA) */}
-        <header className="sticky top-0 z-20 bg-[#f1f4f9]/95 backdrop-blur-md px-3.5 sm:px-6 py-2.5 sm:py-3 border-b border-slate-200/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-4">
-          <div className="flex items-center justify-between gap-2 min-w-0">
-            <div className="flex items-center gap-2 min-w-0">
-              {/* Botón Hamburguesa para Móvil */}
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen(true)}
-                className="p-1.5 -ml-1 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 transition-colors lg:hidden shrink-0 cursor-pointer"
-                title="Abrir menú de navegación"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-
-              {/* Breadcrumb de navegación */}
-              <div className="flex items-center gap-1.5 text-xs font-extrabold text-slate-500 min-w-0 truncate">
-                <button
-                  onClick={() => {
-                    if (activeNav === 'VENTAS') setVentasView('hub');
-                    if (activeNav === 'FABRICACION') setFabView('hub');
-                    if (activeNav === 'INTELIGENCIA_NEGOCIOS') setBiView('hub');
-                  }}
-                  className="text-slate-900 hover:text-indigo-600 transition-colors uppercase shrink-0 cursor-pointer"
-                >
-                  {activeNav.replace('_', ' ')}
-                </button>
-
-                {activeNav === 'VENTAS' && ventasView !== 'hub' && (
-                  <>
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <span className="text-indigo-600 uppercase truncate">
-                      {ventasView === 'nuevo_pedido'
-                        ? 'Nuevo Pedido'
-                        : ventasView === 'nuevo_cliente'
-                        ? 'Nuevo Cliente'
-                        : ventasView === 'clientes'
-                        ? 'Clientes'
-                        : ventasView === 'pedidos'
-                        ? 'Listado Pedidos'
-                        : 'Catálogo'}
-                    </span>
-                  </>
-                )}
-
-                {activeNav === 'FABRICACION' && fabView !== 'hub' && (
-                  <>
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <span className="text-indigo-600 uppercase truncate">
-                      {fabView === 'compra_pendiente' ? 'Pedidos Compra Pendiente' : 'Pedidos a Fabricar'}
-                    </span>
-                  </>
-                )}
-
-                {activeNav === 'INTELIGENCIA_NEGOCIOS' && biView !== 'hub' && (
-                  <>
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <span className="text-indigo-600 uppercase truncate">
-                      {biView === 'compras' ? 'Compras de Insumos' : 'Dashboard'}
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Sincronizar en móvil */}
-            <div className="flex items-center gap-1 sm:hidden">
-              <button
-                type="button"
-                onClick={() => {
-                  fetchPedidos();
-                  fetchInsumos();
-                  fetchCatalogo();
-                  fetchClientes();
-                  showToast('Datos sincronizados', 'info');
-                }}
-                className="p-1.5 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 transition-colors cursor-pointer"
-                title="Sincronizar"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Buscador */}
-          <div className="relative max-w-md w-full">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder={`Buscar en ${activeNav.replace('_', ' ')}...`}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
-            />
-          </div>
-        </header>
+        <KodeHeader
+          setMobileMenuOpen={setMobileMenuOpen}
+          activeNav={activeNav}
+          ventasView={ventasView}
+          setVentasView={setVentasView}
+          fabView={fabView}
+          setFabView={setFabView}
+          biView={biView}
+          setBiView={setBiView}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          onRefreshAll={() => {
+            fetchPedidos();
+            fetchInsumos();
+            fetchCatalogo();
+            fetchClientes();
+            showToast('Datos sincronizados', 'info');
+          }}
+        />
 
         {/* CONTENIDO PRINCIPAL */}
         <main className="p-3.5 sm:p-5 lg:p-6 flex-1 w-full mx-auto space-y-4 sm:space-y-6">
@@ -3390,560 +3058,46 @@ export default function KodeSystemPage() {
 
               {/* VISTA 1B: LISTADO DE PEDIDOS (TABLA EXACTA A APPSHEET) */}
               {ventasView === 'pedidos' && (
-                <div className="space-y-4">
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
-                    <button
-                      onClick={() => setVentasView('hub')}
-                      className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1 self-start cursor-pointer"
-                    >
-                      ← Volver a Ventas
-                    </button>
-
-                    <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          fetchPedidos();
-                          showToast('Actualizando pedidos...', 'info');
-                        }}
-                        className="px-2.5 py-1 rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-indigo-600 hover:bg-slate-50 transition-all text-xs font-bold flex items-center gap-1.5 shadow-2xs shrink-0 cursor-pointer"
-                        title="Actualizar tabla de pedidos en tiempo real"
-                      >
-                        <RefreshCw className="w-3 h-3 text-slate-500" />
-                        <span className="hidden sm:inline">Actualizar</span>
-                      </button>
-
-                      <div className="flex gap-1.5 text-xs overflow-x-auto shrink-0">
-                        {['TODOS', 'PENDIENTE_COMPRA', 'PENDIENTE_PREPARAR', 'GUIA_CREADA'].map((st) => (
-                          <button
-                            key={st}
-                            onClick={() => setFiltroEstado(st)}
-                            className={`px-3 py-1 rounded-xl font-bold transition-all shrink-0 cursor-pointer ${
-                              filtroEstado === st
-                                ? 'bg-indigo-600 text-white shadow-sm'
-                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
-                            }`}
-                          >
-                            {st === 'TODOS'
-                              ? 'Todos'
-                              : st === 'PENDIENTE_COMPRA'
-                              ? '🔴 Registrado'
-                              : st === 'PENDIENTE_PREPARAR'
-                              ? '🟡 Insumos comprados'
-                              : '🔵 Enviado'}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs border-collapse min-w-[1250px]">
-                        <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider whitespace-nowrap">
-                          <tr>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Numero de Pedido</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Cliente</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Teléfono</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Fecha Pedido</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Total</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Estado C807</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Numero de DTE</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Estado Envío</th>
-                            <th className="py-2.5 px-4 text-center whitespace-nowrap">Acciones</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 bg-white">
-                          {pedidosFiltrados.length === 0 ? (
-                            <tr>
-                              <td colSpan={9} className="py-12 text-center text-slate-400 font-medium">
-                                No se encontraron pedidos
-                              </td>
-                            </tr>
-                          ) : (
-                            pedidosFiltrados.map((p) => {
-                              const isExpanded = expandedPedidoId === p.id;
-                              const totalNum = parseFloat(p.total?.toString() || '0');
-                              const totalPagadoNum = parseFloat(p.total_pagado?.toString() || '0');
-                              const saldoPendiente = Math.max(0, totalNum - totalPagadoNum);
-                              return (
-                                <React.Fragment key={p.id}>
-                                  <tr className="hover:bg-slate-50/80 transition-colors">
-                                    {/* 1. Numero de Pedido */}
-                                    <td className="py-3 px-4 font-mono font-bold text-indigo-700 whitespace-nowrap">
-                                      {p.numero_pedido}
-                                    </td>
-
-                                    {/* 2. Cliente */}
-                                    <td className={`py-3 px-4 whitespace-nowrap ${getClienteColorPorEstado(p.estado)}`}>
-                                      {p.cliente_nombre}
-                                    </td>
-
-                                    {/* 3. Teléfono */}
-                                    <td className="py-3 px-4 font-mono whitespace-nowrap">
-                                      <a
-                                        href={`https://wa.me/503${p.cliente_telefono}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="text-emerald-700 hover:underline font-bold"
-                                      >
-                                        {p.cliente_telefono}
-                                      </a>
-                                    </td>
-
-                                    {/* 4. Fecha Pedido */}
-                                    <td className="py-3 px-4 text-slate-500 font-mono whitespace-nowrap">
-                                      {new Date(p.created_at).toLocaleDateString('es-SV')}
-                                    </td>
-
-                                    {/* 5. Total */}
-                                    <td className="py-3 px-4 whitespace-nowrap">
-                                      <div className="font-mono font-black text-slate-900">
-                                        ${totalNum.toFixed(2)}
-                                      </div>
-                                      <div className="mt-0.5">
-                                        {p.estado_pago === 'PAGADO' ? (
-                                          <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                            ✓ Pagado
-                                          </span>
-                                        ) : p.estado_pago === 'PARCIAL' ? (
-                                          <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full inline-block whitespace-nowrap" title={`Abonado: $${totalPagadoNum.toFixed(2)}`}>
-                                            ⏳ Parcial (${totalPagadoNum.toFixed(2)})
-                                          </span>
-                                        ) : (
-                                          <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                            ✕ Pendiente
-                                          </span>
-                                        )}
-                                      </div>
-                                    </td>
-
-                                    {/* 6. Estado C807 */}
-                                    <td className="py-3 px-4 whitespace-nowrap">
-                                      {p.c807_guia_numero && p.c807_guia_numero !== 'PENDIENTE' ? (
-                                        <div className="flex flex-col gap-1 items-start whitespace-nowrap">
-                                          {renderBadgeEstadoC807(p.c807_estado, true)}
-                                          <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
-                                            <span className="font-mono text-[10px] font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 whitespace-nowrap">
-                                              {p.c807_guia_numero}
-                                            </span>
-                                            {getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo) && (
-                                              <a
-                                                href={getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo)}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="text-indigo-600 hover:text-indigo-800 p-0.5 rounded hover:bg-indigo-50 transition-colors inline-flex"
-                                                title="Rastrear Guía C807"
-                                              >
-                                                <ExternalLink className="w-3.5 h-3.5" />
-                                              </a>
-                                            )}
-                                          </div>
-                                        </div>
-                                      ) : (
-                                        <div className="inline-flex items-center gap-1.5">
-                                          <button
-                                            type="button"
-                                            onClick={() => handleGenerarGuiaDirecta(p)}
-                                            disabled={generandoGuiaPedidoId === p.id}
-                                            className="px-2.5 py-1 rounded-lg text-xs font-black bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
-                                            title="Generar Guía con C807 Express y emitir DTE automáticamente"
-                                          >
-                                            <Truck className={`w-3.5 h-3.5 ${generandoGuiaPedidoId === p.id ? 'animate-spin' : ''}`} />
-                                            <span>{generandoGuiaPedidoId === p.id ? 'Generando...' : 'Generar Guía'}</span>
-                                          </button>
-                                        </div>
-                                      )}
-                                    </td>
-
-                                    {/* 7. Numero de DTE */}
-                                    <td className="py-3 px-4 font-mono text-xs whitespace-nowrap">
-                                      {p.dte_numero_control || p.dte_codigo_generacion ? (
-                                        <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
-                                          <span
-                                            className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 truncate max-w-[140px] whitespace-nowrap"
-                                            title={`DTE: ${p.dte_numero_control || p.dte_codigo_generacion}`}
-                                          >
-                                            {p.dte_numero_control || `${p.dte_codigo_generacion?.slice(0, 10)}...`}
-                                          </span>
-                                          {p.dte_pdf_url && (
-                                            <a
-                                              href={p.dte_pdf_url}
-                                              target="_blank"
-                                              rel="noreferrer"
-                                              className="text-emerald-600 hover:text-emerald-800 p-0.5 rounded hover:bg-emerald-100 transition-colors inline-flex"
-                                              title="Ver Factura DTE (PDF)"
-                                            >
-                                              <FileText className="w-3.5 h-3.5" />
-                                            </a>
-                                          )}
-                                        </div>
-                                      ) : (
-                                        <span className="text-slate-400 text-[11px] italic">-</span>
-                                      )}
-                                    </td>
-
-                                    {/* 8. Estado Envío */}
-                                    <td className="py-3 px-4 whitespace-nowrap">
-                                      {(p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA') && (
-                                        <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                          🔴 Registrado
-                                        </span>
-                                      )}
-                                      {(p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR') && (
-                                        <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                          🟡 Insumos comprados
-                                        </span>
-                                      )}
-                                      {(p.estado === 'Preparado' || p.estado === 'Enviado' || p.estado === 'GUIA_CREADA') && (
-                                        <span className="text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                          🔵 Enviado
-                                        </span>
-                                      )}
-                                      {(p.estado === 'Entregado' || p.estado === 'ENTREGADO') && (
-                                        <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                          🟢 Entregado
-                                        </span>
-                                      )}
-                                      {(p.estado === 'Cancelado' || p.estado === 'CANCELADO') && (
-                                        <span className="text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-300 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                          ⚪ Cancelado
-                                        </span>
-                                      )}
-                                    </td>
-
-                                    {/* 9. Acciones */}
-                                    <td className="py-3 px-4 text-center whitespace-nowrap">
-                                      <button
-                                        onClick={() => setExpandedPedidoId(isExpanded ? null : p.id)}
-                                        className="p-1 rounded-lg text-slate-400 hover:text-slate-800"
-                                      >
-                                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                                      </button>
-                                    </td>
-                                  </tr>
-                                  {isExpanded && (
-                                    <tr className="bg-slate-50/50">
-                                      <td colSpan={9} className="p-4 border-t border-slate-100">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                                          <div className="bg-white p-3 rounded-xl border border-slate-200">
-                                            <span className="font-bold text-slate-700 block mb-1">Destino:</span>
-                                            <p className="text-slate-900">{p.cliente_direccion}</p>
-                                            <p className="text-slate-500">{p.cliente_municipio}, {p.cliente_departamento}</p>
-                                            {p.cliente_referencia && <p className="text-indigo-600 font-bold mt-1">Ref: {p.cliente_referencia}</p>}
-                                            {p.notas && <p className="text-slate-500 text-[11px] mt-2 pt-2 border-t border-slate-100 italic">Notas: {p.notas}</p>}
-                                          </div>
-                                          <div className="bg-white p-3 rounded-xl border border-slate-200">
-                                            <span className="font-bold text-slate-700 block mb-1">Fragancias ({p.items.length}):</span>
-                                            {p.items.map((it, i) => (
-                                              <div key={i} className="flex justify-between py-0.5 border-b border-slate-50 last:border-0">
-                                                <span>#{it.codigo} - {it.contratipo} ({it.version === 'Plus' || (it.version as any) === 'EXTRA_SHOT' ? 'Plus' : 'Normal'})</span>
-                                                <span className="font-mono font-bold">${it.subtotal}</span>
-                                              </div>
-                                            ))}
-                                          </div>
-
-                                          {/* MÓDULO DE CONTROL FINANCIERO Y ABONOS BANCARIOS */}
-                                          <div className="bg-white p-4 rounded-xl border border-slate-200 col-span-1 md:col-span-2 space-y-3 shadow-sm">
-                                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
-                                              <div className="flex items-center gap-2">
-                                                <CreditCard className="w-4 h-4 text-indigo-600" />
-                                                <span className="font-extrabold text-slate-800">
-                                                  Control de Pagos & Abonos Bancarios
-                                                </span>
-                                              </div>
-                                              <button
-                                                type="button"
-                                                onClick={() => {
-                                                  setModalAbonoPedido(p);
-                                                  setAbonoMonto(saldoPendiente > 0 ? saldoPendiente.toFixed(2) : '');
-                                                  const primerBanco = formasPago.find((f) => f.tipo === 'BANCO') || formasPago[0];
-                                                  setAbonoFormaPagoId(primerBanco?.id || formasPago[0]?.id || '');
-                                                  setAbonoNumDoc('');
-                                                  setAbonoObservaciones('');
-                                                }}
-                                                className="clay-btn clay-btn-primary px-3 py-1.5 text-xs font-black flex items-center gap-1.5 shadow-sm"
-                                              >
-                                                <Plus className="w-3.5 h-3.5" />
-                                                Registrar Abono / Pago
-                                              </button>
-                                            </div>
-
-                                            {/* Métricas del pedido */}
-                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200/70">
-                                              <div>
-                                                <span className="text-[10px] font-bold text-slate-400 block uppercase">Total Pedido</span>
-                                                <span className="font-mono font-black text-slate-800 text-sm">
-                                                  ${totalNum.toFixed(2)}
-                                                </span>
-                                              </div>
-                                              <div>
-                                                <span className="text-[10px] font-bold text-slate-400 block uppercase">Total Abonado</span>
-                                                <span className="font-mono font-black text-emerald-600 text-sm">
-                                                  ${totalPagadoNum.toFixed(2)}
-                                                </span>
-                                              </div>
-                                              <div>
-                                                <span className="text-[10px] font-bold text-slate-400 block uppercase">Saldo Pendiente</span>
-                                                <span className={`font-mono font-black text-sm ${saldoPendiente > 0 ? 'text-rose-600' : 'text-slate-400'}`}>
-                                                  ${saldoPendiente.toFixed(2)}
-                                                </span>
-                                              </div>
-                                              <div>
-                                                <span className="text-[10px] font-bold text-slate-400 block uppercase">Cobro C807 (CCE)</span>
-                                                <span className="font-mono font-black text-indigo-700 text-sm">
-                                                  ${parseFloat(p.monto_cobrar_cce?.toString() || '0').toFixed(2)}
-                                                </span>
-                                              </div>
-                                            </div>
-
-                                            {/* Historial de Abonos */}
-                                            <div className="space-y-1.5">
-                                              <span className="text-[11px] font-bold text-slate-600 block">
-                                                Historial de Transacciones / Abonos:
-                                              </span>
-                                              {(!p.pagos || p.pagos.length === 0) ? (
-                                                <div className="text-center py-3 text-slate-400 text-xs bg-slate-50/60 rounded-lg border border-dashed border-slate-200">
-                                                  No hay abonos registrados para este pedido. Usa el botón "Registrar Abono / Pago" para agregar uno.
-                                                </div>
-                                              ) : (
-                                                <div className="divide-y divide-slate-100 border border-slate-200/80 rounded-xl overflow-hidden">
-                                                  {p.pagos.map((pg) => (
-                                                    <div key={pg.id} className="p-2.5 bg-white flex flex-wrap items-center justify-between gap-2 text-xs hover:bg-slate-50/50 transition-colors">
-                                                      <div className="flex items-center gap-2 flex-wrap">
-                                                        <span className="clay-badge text-[10px] font-bold bg-slate-100 text-slate-700 font-mono">
-                                                          {pg.fecha_pago}
-                                                        </span>
-                                                        <span className="font-bold text-slate-800">
-                                                          {pg.forma_pago_nombre || 'Pago'}
-                                                        </span>
-                                                        {pg.num_documento_auto && (
-                                                          <span className="font-mono text-[11px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-100 font-bold">
-                                                            Doc: {pg.num_documento_auto}
-                                                          </span>
-                                                        )}
-                                                        {pg.comprobante_url && (
-                                                          <button
-                                                            type="button"
-                                                            onClick={() => setModalComprobanteUrl(pg.comprobante_url || null)}
-                                                            className="inline-flex items-center gap-1 text-[11px] font-bold text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200 px-2 py-0.5 rounded transition-colors shadow-2xs"
-                                                            title="Ver captura o comprobante adjunto"
-                                                          >
-                                                            <ImageIcon className="w-3 h-3 text-violet-600" />
-                                                            <span>Ver Comprobante</span>
-                                                          </button>
-                                                        )}
-                                                        {pg.usuario && (
-                                                          <span className="text-slate-400 text-[10px]">por {pg.usuario}</span>
-                                                        )}
-                                                        {pg.observaciones && (
-                                                          <span className="text-slate-500 text-[11px] italic">({pg.observaciones})</span>
-                                                        )}
-                                                      </div>
-                                                      <div className="flex items-center gap-3">
-                                                        <span className="font-mono font-black text-emerald-700 text-sm">
-                                                          +${parseFloat(pg.monto?.toString() || '0').toFixed(2)}
-                                                        </span>
-                                                        <button
-                                                          type="button"
-                                                          onClick={() => handleEliminarAbono(pg.id)}
-                                                          title="Eliminar este abono"
-                                                          className="text-slate-400 hover:text-rose-600 p-1 rounded transition-colors"
-                                                        >
-                                                          <Trash2 className="w-3.5 h-3.5" />
-                                                        </button>
-                                                      </div>
-                                                    </div>
-                                                  ))}
-                                                </div>
-                                              )}
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  )}
-                                </React.Fragment>
-                              );
-                            })
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
+                <PedidosTabla
+                  pedidos={pedidosFiltrados}
+                  filtroEstado={filtroEstado}
+                  setFiltroEstado={setFiltroEstado}
+                  onVolver={() => setVentasView('hub')}
+                  onRefresh={() => {
+                    fetchPedidos();
+                    showToast('Actualizando pedidos...', 'info');
+                  }}
+                  onGenerarGuia={handleGenerarGuiaDirecta}
+                  generandoGuiaPedidoId={generandoGuiaPedidoId}
+                  onOpenAbonoModal={(p) => {
+                    setModalAbonoPedido(p);
+                    const totalNum = parseFloat(p.total?.toString() || '0');
+                    const totalPagadoNum = parseFloat(p.total_pagado?.toString() || '0');
+                    const saldoPendiente = Math.max(0, totalNum - totalPagadoNum);
+                    setAbonoMonto(saldoPendiente > 0 ? saldoPendiente.toFixed(2) : '');
+                    const primerBanco = formasPago.find((f) => f.tipo === 'BANCO') || formasPago[0];
+                    setAbonoFormaPagoId(primerBanco?.id || formasPago[0]?.id || '');
+                    setAbonoNumDoc('');
+                    setAbonoObservaciones('');
+                  }}
+                  onViewComprobante={(url) => setModalComprobanteUrl(url)}
+                  onEliminarAbono={handleEliminarAbono}
+                />
               )}
 
               {/* VISTA 1C: CLIENTES (TABLA EXACTA A APPSHEET CON 📞 Y 💬) */}
               {ventasView === 'clientes' && (
-                <div className="space-y-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => setVentasView('hub')}
-                        className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1"
-                      >
-                        ← Volver a Ventas
-                      </button>
-                      <span className="text-xs text-slate-400">|</span>
-                      <span className="text-xs text-slate-600 font-bold uppercase tracking-wider">
-                        Directorio de Clientes ({directorioClientes.length})
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        resetNuevoClienteForm();
-                        setVentasView('nuevo_cliente');
-                      }}
-                      className="clay-btn clay-btn-primary px-3.5 py-1.5 text-xs font-black flex items-center gap-1.5 shadow-md shadow-indigo-200"
-                    >
-                      <UserPlus className="w-3.5 h-3.5" />
-                      <span>+ Nuevo Cliente</span>
-                    </button>
-                  </div>
-
-                  <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden w-full">
-                    <div className="overflow-x-auto w-full">
-                      <table className="w-full text-left text-xs border-collapse">
-                        <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider whitespace-nowrap">
-                          <tr>
-                            <th className="py-2.5 px-3 whitespace-nowrap">Nombre completo</th>
-                            <th className="py-2.5 px-3 whitespace-nowrap">Teléfono / WhatsApp</th>
-                            <th className="py-2.5 px-3 whitespace-nowrap">Documento</th>
-                            <th className="py-2.5 px-3 whitespace-nowrap">Correo electrónico</th>
-                            <th className="py-2.5 px-3 whitespace-nowrap">Departamento</th>
-                            <th className="py-2.5 px-3 whitespace-nowrap">Municipio</th>
-                            <th className="py-2.5 px-3 whitespace-nowrap">Dirección de entrega</th>
-                            <th className="py-2.5 px-3 whitespace-nowrap">Punto de referencia</th>
-                            <th className="py-2.5 px-3 text-center whitespace-nowrap">Acción</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 bg-white">
-                          {clientesFiltrados.length === 0 ? (
-                            <tr>
-                              <td colSpan={9} className="py-12 text-center text-slate-400 font-medium">
-                                No se encontraron clientes
-                              </td>
-                            </tr>
-                          ) : (
-                            clientesFiltrados.map((c) => (
-                              <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
-                                {/* Nombre Completo */}
-                                <td className="py-3 px-3 whitespace-nowrap">
-                                  <button
-                                    type="button"
-                                    onClick={() => setClienteFichaModal(c)}
-                                    className="font-extrabold text-slate-900 hover:text-indigo-600 hover:underline text-left cursor-pointer transition-colors inline-flex items-center gap-1.5 group"
-                                    title="Ver ficha del cliente e historial de pedidos"
-                                  >
-                                    <span>{c.nombre}</span>
-                                    <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-indigo-600 transition-colors" />
-                                  </button>
-                                </td>
-
-                                {/* Teléfono / WhatsApp */}
-                                <td className="py-3 px-3 whitespace-nowrap">
-                                  <div className="inline-flex items-center gap-2">
-                                    <span className="font-mono font-bold text-slate-700">{c.telefono}</span>
-                                    <div className="inline-flex items-center gap-0.5">
-                                      <a
-                                        href={`tel:503${c.telefono}`}
-                                        className="p-1 rounded-md text-indigo-600 hover:bg-indigo-50 transition-colors"
-                                        title={`Llamar a ${c.nombre}`}
-                                      >
-                                        <Phone className="w-3.5 h-3.5" />
-                                      </a>
-                                      <a
-                                        href={`https://wa.me/503${c.telefono}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="p-1 rounded-md text-emerald-600 hover:bg-emerald-50 transition-colors"
-                                        title={`Enviar WhatsApp a ${c.nombre}`}
-                                      >
-                                        <MessageCircle className="w-3.5 h-3.5" />
-                                      </a>
-                                    </div>
-                                  </div>
-                                </td>
-
-                                {/* Documento */}
-                                <td className="py-3 px-3 whitespace-nowrap">
-                                  {c.numero_documento ? (
-                                    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-mono font-bold border border-slate-200">
-                                      <CreditCard className="w-3 h-3 text-slate-400" />
-                                      <span>{c.tipo_documento || 'DUI'}: {c.numero_documento}</span>
-                                    </span>
-                                  ) : (
-                                    <span className="text-slate-400 text-[11px] italic">-</span>
-                                  )}
-                                </td>
-
-                                {/* Correo Electrónico */}
-                                <td className="py-3 px-3 whitespace-nowrap">
-                                  {c.email ? (
-                                    <a
-                                      href={`mailto:${c.email}`}
-                                      className="inline-flex items-center gap-1.5 text-blue-700 hover:underline font-medium text-xs"
-                                    >
-                                      <Mail className="w-3.5 h-3.5 text-blue-500" />
-                                      <span>{c.email}</span>
-                                    </a>
-                                  ) : (
-                                    <span className="text-slate-400 text-[11px] italic">-</span>
-                                  )}
-                                </td>
-
-                                {/* Departamento */}
-                                <td className="py-3 px-3 whitespace-nowrap font-medium text-slate-800">
-                                  {c.departamento || '-'}
-                                </td>
-
-                                {/* Municipio */}
-                                <td className="py-3 px-3 whitespace-nowrap font-medium text-slate-700">
-                                  {c.municipio || '-'}
-                                </td>
-
-                                {/* Dirección de entrega */}
-                                <td className="py-3 px-3 text-slate-700 max-w-xs truncate whitespace-nowrap" title={c.direccion}>
-                                  {c.direccion || '-'}
-                                </td>
-
-                                {/* Punto de referencia */}
-                                <td className="py-3 px-3 text-slate-600 max-w-[200px] truncate whitespace-nowrap" title={c.referencia || ''}>
-                                  {c.referencia || <span className="text-slate-400 text-[11px] italic">-</span>}
-                                </td>
-
-                                {/* Acción */}
-                                <td className="py-3 px-3 text-center whitespace-nowrap">
-                                  <div className="inline-flex items-center gap-1.5 justify-center">
-                                    <button
-                                      type="button"
-                                      onClick={() => setClienteFichaModal(c)}
-                                      className="px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 hover:border-indigo-200 rounded-lg text-xs font-bold transition-colors cursor-pointer inline-flex items-center gap-1"
-                                      title="Ver ficha completa e historial"
-                                    >
-                                      <User className="w-3 h-3 text-slate-500" />
-                                      <span>Ficha</span>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleSeleccionarCliente(c)}
-                                      className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors shadow-2xs cursor-pointer"
-                                    >
-                                      + Pedido
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
+                <ClientesTabla
+                  clientes={clientesFiltrados}
+                  totalClientes={directorioClientes.length}
+                  onVolver={() => setVentasView('hub')}
+                  onNuevoCliente={() => {
+                    resetNuevoClienteForm();
+                    setVentasView('nuevo_cliente');
+                  }}
+                  onVerFicha={(c) => setClienteFichaModal(c)}
+                  onSeleccionarCliente={handleSeleccionarCliente}
+                />
               )}
 
               {/* VISTA 1D: CATALOGO */}
@@ -5679,410 +4833,60 @@ export default function KodeSystemPage() {
       {/* ============================================================== */}
       {/* MODAL: ASIGNAR GUÍA C807                                       */}
       {/* ============================================================== */}
-      {guiaModalPedido && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="clay-card max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in-95 shadow-2xl">
-            <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-              <Truck className="w-5 h-5 text-indigo-600" />
-              <h3 className="text-sm font-extrabold text-slate-900">Asignar Guía C807</h3>
-            </div>
+      <AsignarGuiaModal
+        pedido={guiaModalPedido}
+        onClose={() => setGuiaModalPedido(null)}
+        onGuardarManual={async (num, link) => {
+          if (!guiaModalPedido) return;
+          try {
+            setLoading(true);
+            const res = await fetch('/api/kode/guia', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                pedido_id: guiaModalPedido.id,
+                modo: 'manual',
+                c807_guia_numero: num,
+                c807_link_rastreo: link || undefined,
+              }),
+            });
+            const data = await res.json();
+            if (data.success) {
+              showToast(`Guía ${num} asignada.`, 'success');
+              setGuiaModalPedido(null);
+              fetchPedidos();
+            } else {
+              showToast(data.error || 'Error al asignar guía', 'error');
+            }
+          } catch (e: any) {
+            showToast(e.message, 'error');
+          } finally {
+            setLoading(false);
+          }
+        }}
+        onGenerarAutomatica={handleGenerarGuiaAutomaticaC807}
+        generandoGuia={generandoGuia}
+      />
 
-            <p className="text-xs text-slate-500 font-medium">
-              Al guardar la guía de paquetería C807, el pedido <strong>{guiaModalPedido.numero_pedido}</strong> pasará a estado <strong>Azul (Guía creada / Enviado)</strong>.
-            </p>
-
-            {guiaModalPedido.cliente_departamento && (
-              <div className="p-3 rounded-xl bg-sky-50 border border-sky-100 space-y-1.5 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-600 font-medium">
-                    Destino: <strong className="text-slate-800">{guiaModalPedido.cliente_municipio}, {guiaModalPedido.cliente_departamento}</strong>
-                  </span>
-                  <span className="clay-badge bg-sky-100 text-sky-800 font-black">C807: {resolveC807DeptoCode(guiaModalPedido.cliente_departamento)}</span>
-                </div>
-                <div className="flex items-center justify-between text-[11px] text-slate-500">
-                  <span>Modalidad: <strong className="text-slate-700">{guiaModalPedido.tipo_pago}</strong></span>
-                  <span>{guiaModalPedido.tipo_pago === 'CONTRAENTREGA' ? `Cobro C807: $${Number(guiaModalPedido.total || 0).toFixed(2)}` : 'Servicio Pagado (SER)'}</span>
-                </div>
-              </div>
-            )}
-
-            {/* BOTÓN DE GENERACIÓN DIRECTA AUTOMÁTICA */}
-            <div className="pt-1">
-              <button
-                type="button"
-                onClick={handleGenerarGuiaAutomaticaC807}
-                disabled={generandoGuia || loading}
-                className="w-full clay-btn bg-gradient-to-r from-sky-500 to-blue-600 text-white font-extrabold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-md hover:from-sky-600 hover:to-blue-700 transition-all disabled:opacity-50 cursor-pointer"
-              >
-                <Truck className={`w-4 h-4 ${generandoGuia ? 'animate-spin' : ''}`} />
-                <span>{generandoGuia ? 'Generando en C807 Express...' : '🚀 Generar Guía Automática con C807'}</span>
-              </button>
-            </div>
-
-            <div className="relative my-1 text-center">
-              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200"></div></div>
-              <span className="relative bg-white px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">o ingresar guía existente</span>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">Número de Guía C807 *</label>
-                <input
-                  type="text"
-                  placeholder="Ej. C807-SV-981245"
-                  value={numGuiaInput}
-                  onChange={(e) => setNumGuiaInput(e.target.value)}
-                  className="clay-input w-full text-xs font-mono font-bold"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">Enlace de Rastreo (Opcional)</label>
-                <input
-                  type="text"
-                  placeholder="https://c807xpress.com/tracking/?guia=..."
-                  value={linkGuiaInput}
-                  onChange={(e) => setLinkGuiaInput(e.target.value)}
-                  className="clay-input w-full text-xs font-mono font-medium"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setGuiaModalPedido(null)}
-                className="clay-btn clay-btn-light px-4 py-2 text-xs font-bold"
-              >
-                Cerrar
-              </button>
-              <button
-                type="button"
-                onClick={handleGuardarGuiaC807}
-                disabled={!numGuiaInput.trim() || loading || generandoGuia}
-                className="clay-btn clay-btn-primary px-4 py-2 text-xs font-black disabled:opacity-50"
-              >
-                <Check className="w-4 h-4" />
-                Guardar Manualmente
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       {/* ============================================================== */}
       {/* MODAL: FACTURA ELECTRÓNICA DTE (FACTURA LLAMA)                */}
       {/* ============================================================== */}
-      {dteResultModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="clay-card max-w-lg w-full p-6 space-y-4 animate-in fade-in zoom-in-95">
-            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
-                <ReceiptText className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-black text-slate-900">Factura Electrónica Emitida (DTE)</h3>
-                <p className="text-xs text-slate-500 font-medium">Pedido #{dteResultModal.pedido.numero_pedido} - {dteResultModal.pedido.cliente_nombre}</p>
-              </div>
-            </div>
-
-            <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-slate-600 font-bold">Estado Hacienda:</span>
-                <span className="clay-badge bg-emerald-100 text-emerald-800 font-black">
-                  ✓ {dteResultModal.result.estado || 'PROCESADO'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-600 font-bold">Código Generación:</span>
-                <span className="font-mono text-slate-800 font-black truncate max-w-[220px]" title={dteResultModal.result.codigo_generacion}>
-                  {dteResultModal.result.codigo_generacion}
-                </span>
-              </div>
-              {dteResultModal.result.numero_control && (
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-600 font-bold">Número Control:</span>
-                  <span className="font-mono text-slate-800 font-black">{dteResultModal.result.numero_control}</span>
-                </div>
-              )}
-              {dteResultModal.result.sello_recepcion && (
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-600 font-bold">Sello Recepción MH:</span>
-                  <span className="font-mono text-slate-800 font-bold truncate max-w-[220px]" title={dteResultModal.result.sello_recepcion}>
-                    {dteResultModal.result.sello_recepcion}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-2 pt-2">
-              {dteResultModal.result.pdf_url && (
-                <a
-                  href={dteResultModal.result.pdf_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex-1 clay-btn clay-btn-primary py-2.5 px-4 text-xs font-black flex items-center justify-center gap-2"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  Descargar PDF Factura
-                </a>
-              )}
-              {dteResultModal.result.json_url && (
-                <a
-                  href={dteResultModal.result.json_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="clay-btn clay-btn-light py-2.5 px-4 text-xs font-bold flex items-center justify-center gap-1.5"
-                >
-                  <FileText className="w-4 h-4 text-slate-600" />
-                  Ver JSON DTE
-                </a>
-              )}
-            </div>
-
-            <div className="flex justify-end pt-2 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setDteResultModal(null)}
-                className="clay-btn clay-btn-light px-4 py-2 text-xs font-bold"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DteResultModal
+        data={dteResultModal}
+        onClose={() => setDteResultModal(null)}
+      />
 
       {/* ============================================================== */}
       {/* MODAL: REGISTRAR ABONO / PAGO                                  */}
       {/* ============================================================== */}
-      {modalAbonoPedido && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="clay-card max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in-95 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-indigo-600" />
-                <div>
-                  <h3 className="text-sm font-extrabold text-slate-900">Registrar Abono / Pago</h3>
-                  <p className="text-[11px] text-slate-500 font-mono">
-                    Pedido #{modalAbonoPedido.numero_pedido} - {modalAbonoPedido.cliente_nombre}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setModalAbonoPedido(null)}
-                className="text-slate-400 hover:text-slate-600 p-1"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <span className="text-slate-500 block">Total del Pedido:</span>
-                <strong className="text-slate-900 font-mono text-sm">
-                  ${parseFloat(modalAbonoPedido.total?.toString() || '0').toFixed(2)}
-                </strong>
-              </div>
-              <div>
-                <span className="text-slate-500 block">Saldo Pendiente:</span>
-                <strong className="text-rose-600 font-mono text-sm">
-                  ${Math.max(
-                    0,
-                    parseFloat(modalAbonoPedido.total?.toString() || '0') -
-                      parseFloat(modalAbonoPedido.total_pagado?.toString() || '0')
-                  ).toFixed(2)}
-                </strong>
-              </div>
-            </div>
-
-            <form onSubmit={handleRegistrarAbono} className="space-y-3 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Monto del Abono ($) *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  placeholder="0.00"
-                  value={abonoMonto}
-                  onChange={(e) => setAbonoMonto(e.target.value)}
-                  className="clay-input w-full font-mono font-bold text-sm"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Forma de Pago / Cuenta Bancaria *</label>
-                <select
-                  value={abonoFormaPagoId}
-                  onChange={(e) => setAbonoFormaPagoId(e.target.value)}
-                  className="clay-input w-full font-bold cursor-pointer"
-                  required
-                >
-                  {formasPago.filter((fp) => fp.activo !== false).map((fp) => (
-                    <option key={fp.id} value={fp.id}>
-                      {fp.nombre} ({fp.tipo})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">No. Comprobante / Autorización Bancaria</label>
-                <input
-                  type="text"
-                  placeholder="Ej. #Transf 491823, Ref #00129..."
-                  value={abonoNumDoc}
-                  onChange={(e) => setAbonoNumDoc(e.target.value)}
-                  className="clay-input w-full font-mono font-medium"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Captura / Comprobante de Transferencia (Foto o Screenshot)
-                </label>
-                {abonoComprobante ? (
-                  <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl shadow-2xs">
-                    <div className="flex items-center gap-2.5">
-                      <img
-                        src={abonoComprobante}
-                        alt="Comprobante Abono"
-                        className="w-10 h-10 object-cover rounded-lg border border-emerald-300 cursor-pointer hover:opacity-85"
-                        onClick={() => setModalComprobanteUrl(abonoComprobante)}
-                        title="Clic para ver en tamaño completo"
-                      />
-                      <div>
-                        <span className="text-xs font-bold text-emerald-800 flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                          Comprobante adjuntado
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setModalComprobanteUrl(abonoComprobante)}
-                          className="text-[11px] text-indigo-600 hover:underline font-semibold block"
-                        >
-                          Ver en grande
-                        </button>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setAbonoComprobante('')}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-white"
-                      title="Quitar comprobante"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <div
-                    onPaste={async (e) => {
-                      const items = e.clipboardData?.items;
-                      if (!items) return;
-                      for (let i = 0; i < items.length; i++) {
-                        if (items[i].type.indexOf('image') !== -1) {
-                          const file = items[i].getAsFile();
-                          if (file) {
-                            e.preventDefault();
-                            try {
-                              setAbonoSubiendoComprobante(true);
-                              const url = await compressAndUploadImage(file);
-                              setAbonoComprobante(url);
-                              showToast('¡Comprobante adjuntado desde el portapapeles!', 'success');
-                            } catch (err: any) {
-                              showToast(err.message || 'Error al procesar captura', 'error');
-                            } finally {
-                              setAbonoSubiendoComprobante(false);
-                            }
-                            break;
-                          }
-                        }
-                      }
-                    }}
-                  >
-                    <label className="flex flex-col items-center justify-center p-3.5 border-2 border-dashed border-slate-300 hover:border-indigo-400 bg-slate-50 hover:bg-indigo-50/40 rounded-xl cursor-pointer transition-all">
-                      {abonoSubiendoComprobante ? (
-                        <div className="flex items-center gap-2 text-xs font-bold text-indigo-600">
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                          <span>Subiendo comprobante...</span>
-                        </div>
-                      ) : (
-                        <>
-                          <Upload className="w-5 h-5 text-slate-400 mb-1" />
-                          <span className="text-xs font-bold text-slate-700">Subir foto o captura del comprobante</span>
-                          <span className="text-[10px] text-slate-500">PNG, JPG o pega con Ctrl+V</span>
-                        </>
-                      )}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        disabled={abonoSubiendoComprobante}
-                        className="hidden"
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          try {
-                            setAbonoSubiendoComprobante(true);
-                            const url = await compressAndUploadImage(file);
-                            setAbonoComprobante(url);
-                            showToast('Comprobante adjuntado con éxito', 'success');
-                          } catch (err: any) {
-                            showToast(err.message || 'Error al subir imagen', 'error');
-                          } finally {
-                            setAbonoSubiendoComprobante(false);
-                            e.target.value = '';
-                          }
-                        }}
-                      />
-                    </label>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Fecha del Pago</label>
-                <input
-                  type="date"
-                  value={abonoFecha}
-                  onChange={(e) => setAbonoFecha(e.target.value)}
-                  className="clay-input w-full font-bold"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Observaciones / Notas (Opcional)</label>
-                <input
-                  type="text"
-                  placeholder="Liquidación final, abono del 50%, etc."
-                  value={abonoObservaciones}
-                  onChange={(e) => setAbonoObservaciones(e.target.value)}
-                  className="clay-input w-full font-medium"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setModalAbonoPedido(null)}
-                  className="clay-btn clay-btn-light px-4 py-2 font-bold"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={abonoLoading}
-                  className="clay-btn clay-btn-primary px-4 py-2 font-black flex items-center gap-1.5 shadow-md disabled:opacity-50"
-                >
-                  <Check className="w-4 h-4" />
-                  {abonoLoading ? 'Guardando...' : 'Guardar Abono'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <AbonoPedidoModal
+        pedido={modalAbonoPedido}
+        formasPago={formasPago}
+        onClose={() => setModalAbonoPedido(null)}
+        onSuccess={fetchPedidos}
+        onViewComprobante={(url) => setModalComprobanteUrl(url)}
+        showToast={showToast}
+      />
 
       {/* ============================================================== */}
       {/* MODAL: EDITAR FRAGANCIA DE CATÁLOGO                            */}
@@ -6453,401 +5257,17 @@ export default function KodeSystemPage() {
       {/* ============================================================== */}
       {/* MODAL: FICHA DE CLIENTE E HISTORIAL DE PEDIDOS                 */}
       {/* ============================================================== */}
-      {clienteFichaModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-4xl w-full border border-slate-200 shadow-2xl overflow-hidden my-6 max-h-[92vh] flex flex-col">
-            {/* Header del Modal */}
-            <div className="p-5 sm:p-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-between gap-4 shrink-0">
-              <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-600/50 border border-indigo-400/40 flex items-center justify-center text-lg font-black text-white shadow-inner">
-                  {clienteFichaModal.nombre
-                    ? clienteFichaModal.nombre
-                        .split(' ')
-                        .filter(Boolean)
-                        .map((p) => p[0])
-                        .join('')
-                        .slice(0, 2)
-                        .toUpperCase()
-                    : 'CL'}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
-                      {clienteFichaModal.nombre}
-                    </h2>
-                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
-                      Ficha de Cliente
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-300 font-medium flex items-center gap-2 mt-0.5">
-                    <span>{clienteFichaModal.municipio || 'SV'}, {clienteFichaModal.departamento || 'El Salvador'}</span>
-                    <span>•</span>
-                    <span className="font-mono text-indigo-300 font-bold">{clienteFichaModal.telefono}</span>
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setClienteFichaModal(null)}
-                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-colors cursor-pointer"
-                title="Cerrar ficha"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Contenido scrolleable */}
-            <div className="p-5 sm:p-6 overflow-y-auto space-y-6">
-              {/* Métricas rápidas del cliente */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center gap-3">
-                  <div className="p-2.5 bg-indigo-100 text-indigo-700 rounded-xl">
-                    <ShoppingBag className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400">Total Pedidos</span>
-                    <p className="text-lg font-black text-slate-900 leading-none mt-0.5">
-                      {pedidosClienteFicha.length}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center gap-3">
-                  <div className="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl">
-                    <DollarSign className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400">Total Facturado</span>
-                    <p className="text-lg font-black text-emerald-600 leading-none mt-0.5 font-mono">
-                      ${pedidosClienteFicha.reduce((sum, p) => sum + parseFloat(p.total?.toString() || '0'), 0).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center gap-3">
-                  <div className="p-2.5 bg-sky-100 text-sky-700 rounded-xl">
-                    <CheckCircle2 className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400">Entregados con éxito</span>
-                    <p className="text-lg font-black text-sky-700 leading-none mt-0.5">
-                      {pedidosClienteFicha.filter((p) => p.estado === 'Entregado' || p.estado === 'ENTREGADO').length}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Datos Generales y Contacto */}
-              <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 sm:p-5">
-                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                  <h3 className="text-xs font-black uppercase text-slate-700 tracking-wider flex items-center gap-2">
-                    <User className="w-4 h-4 text-indigo-600" />
-                    <span>Información Detallada del Cliente</span>
-                  </h3>
-
-                  <div className="flex items-center gap-2">
-                    <a
-                      href={`tel:503${clienteFichaModal.telefono}`}
-                      className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition-colors"
-                    >
-                      <Phone className="w-3.5 h-3.5" />
-                      <span>Llamar</span>
-                    </a>
-                    <a
-                      href={`https://wa.me/503${clienteFichaModal.telefono}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition-colors"
-                    >
-                      <MessageCircle className="w-3.5 h-3.5" />
-                      <span>WhatsApp</span>
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const target = clienteFichaModal;
-                        setClienteFichaModal(null);
-                        handleSeleccionarCliente(target);
-                      }}
-                      className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black inline-flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Nuevo Pedido</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
-                  <div className="bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Teléfono Móvil</span>
-                    <span className="font-mono font-bold text-slate-800 text-sm">{clienteFichaModal.telefono}</span>
-                  </div>
-
-                  <div className="bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Documento Identidad</span>
-                    <span className="font-mono font-bold text-slate-800">
-                      {clienteFichaModal.numero_documento
-                        ? `${clienteFichaModal.tipo_documento || 'DUI'}: ${clienteFichaModal.numero_documento}`
-                        : 'No registrado'}
-                    </span>
-                  </div>
-
-                  <div className="bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Correo Electrónico</span>
-                    <span className="text-slate-800 truncate block font-medium" title={clienteFichaModal.email || ''}>
-                      {clienteFichaModal.email || 'No registrado'}
-                    </span>
-                  </div>
-
-                  <div className="bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs sm:col-span-2">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Dirección de Entrega</span>
-                    <span className="text-slate-800 font-medium block">
-                      {clienteFichaModal.direccion || 'Sin dirección registrada'}
-                    </span>
-                    <span className="text-[11px] text-slate-500 font-semibold block mt-0.5">
-                      {clienteFichaModal.municipio}, {clienteFichaModal.departamento}
-                    </span>
-                  </div>
-
-                  <div className="bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Punto de Referencia</span>
-                    <span className="text-slate-700 italic block">
-                      {clienteFichaModal.referencia || 'Sin punto de referencia'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Tabla: Historial de Pedidos */}
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-black uppercase text-slate-700 tracking-wider flex items-center gap-2">
-                    <ShoppingBag className="w-4 h-4 text-indigo-600" />
-                    <span>Historial de Pedidos ({pedidosClienteFicha.length})</span>
-                  </h3>
-                  <span className="text-[11px] text-slate-400 font-medium">
-                    Ordenados de más reciente a más antiguo
-                  </span>
-                </div>
-
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-                  {pedidosClienteFicha.length === 0 ? (
-                    <div className="py-12 text-center text-slate-400">
-                      <ShoppingBag className="w-8 h-8 mx-auto text-slate-300 mb-2 opacity-60" />
-                      <p className="font-bold text-xs">No hay pedidos registrados para este cliente</p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
-                        Puedes crear su primer pedido con el botón "+ Nuevo Pedido"
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs border-collapse min-w-[1250px]">
-                        <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider whitespace-nowrap">
-                          <tr>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Numero de Pedido</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Cliente</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Teléfono</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Fecha Pedido</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Total</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Estado C807</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Numero de DTE</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Estado Envío</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Fragancias / Productos</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 bg-white">
-                          {pedidosClienteFicha.map((p) => {
-                            const tieneGuia = !!p.c807_guia_numero && p.c807_guia_numero !== 'PENDIENTE';
-                            const linkRastreo = getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo);
-                            const totalNum = parseFloat(p.total?.toString() || '0');
-                            const totalPagadoNum = parseFloat(p.total_pagado?.toString() || '0');
-
-                            return (
-                              <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
-                                {/* 1. Numero de Pedido */}
-                                <td className="py-3 px-4 font-mono font-bold text-indigo-700 whitespace-nowrap">
-                                  {p.numero_pedido}
-                                </td>
-
-                                {/* 2. Cliente */}
-                                <td className={`py-3 px-4 whitespace-nowrap ${getClienteColorPorEstado(p.estado)}`}>
-                                  {p.cliente_nombre}
-                                </td>
-
-                                {/* 3. Teléfono */}
-                                <td className="py-3 px-4 font-mono whitespace-nowrap">
-                                  <a
-                                    href={`https://wa.me/503${p.cliente_telefono}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-emerald-700 hover:underline font-bold"
-                                  >
-                                    {p.cliente_telefono}
-                                  </a>
-                                </td>
-
-                                {/* 4. Fecha Pedido */}
-                                <td className="py-3 px-4 text-slate-500 font-mono whitespace-nowrap">
-                                  {new Date(p.created_at).toLocaleDateString('es-SV')}
-                                </td>
-
-                                {/* 5. Total */}
-                                <td className="py-3 px-4 whitespace-nowrap">
-                                  <div className="font-mono font-black text-slate-900">
-                                    ${totalNum.toFixed(2)}
-                                  </div>
-                                  <div className="mt-0.5">
-                                    {p.estado_pago === 'PAGADO' ? (
-                                      <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                        ✓ Pagado
-                                      </span>
-                                    ) : p.estado_pago === 'PARCIAL' ? (
-                                      <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full inline-block whitespace-nowrap" title={`Abonado: $${totalPagadoNum.toFixed(2)}`}>
-                                        ⏳ Parcial (${totalPagadoNum.toFixed(2)})
-                                      </span>
-                                    ) : (
-                                      <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                        ✕ Pendiente
-                                      </span>
-                                    )}
-                                  </div>
-                                </td>
-
-                                {/* 6. Estado C807 */}
-                                <td className="py-3 px-4 whitespace-nowrap">
-                                  {tieneGuia ? (
-                                    <div className="flex flex-col gap-1 items-start whitespace-nowrap">
-                                      {renderBadgeEstadoC807(p.c807_estado, true)}
-                                      <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
-                                        <span className="font-mono text-[10px] font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 whitespace-nowrap">
-                                          {p.c807_guia_numero}
-                                        </span>
-                                        {linkRastreo && (
-                                          <a
-                                            href={linkRastreo}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="text-indigo-600 hover:text-indigo-800 p-0.5 rounded hover:bg-indigo-50 transition-colors inline-flex"
-                                            title="Rastrear Guía C807"
-                                          >
-                                            <ExternalLink className="w-3.5 h-3.5" />
-                                          </a>
-                                        )}
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <div className="inline-flex items-center gap-1.5">
-                                      <button
-                                        type="button"
-                                        onClick={() => handleGenerarGuiaDirecta(p)}
-                                        disabled={generandoGuiaPedidoId === p.id}
-                                        className="px-2.5 py-1 rounded-lg text-xs font-black bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
-                                        title="Generar Guía con C807 Express y emitir DTE automáticamente"
-                                      >
-                                        <Truck className={`w-3.5 h-3.5 ${generandoGuiaPedidoId === p.id ? 'animate-spin' : ''}`} />
-                                        <span>{generandoGuiaPedidoId === p.id ? 'Generando...' : 'Generar Guía'}</span>
-                                      </button>
-                                    </div>
-                                  )}
-                                </td>
-
-                                {/* 7. Numero de DTE */}
-                                <td className="py-3 px-4 font-mono text-xs whitespace-nowrap">
-                                  {p.dte_numero_control || p.dte_codigo_generacion ? (
-                                    <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
-                                      <span className="font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 whitespace-nowrap text-[11px]">
-                                        {p.dte_numero_control || p.dte_codigo_generacion?.slice(0, 15)}
-                                      </span>
-                                      {p.dte_pdf_url && (
-                                        <a
-                                          href={p.dte_pdf_url}
-                                          target="_blank"
-                                          rel="noreferrer"
-                                          className="text-emerald-700 hover:text-emerald-900 p-0.5 rounded hover:bg-emerald-50 transition-colors inline-flex"
-                                          title="Ver DTE Factura Llama"
-                                        >
-                                          <FileText className="w-3.5 h-3.5" />
-                                        </a>
-                                      )}
-                                    </div>
-                                  ) : (
-                                    <span className="text-slate-400 text-[11px] italic">-</span>
-                                  )}
-                                </td>
-
-                                {/* 8. Estado Envío */}
-                                <td className="py-3 px-4 whitespace-nowrap">
-                                  {(p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA') && (
-                                    <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                      🔴 Registrado
-                                    </span>
-                                  )}
-                                  {(p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR') && (
-                                    <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                      🟡 Insumos comprados
-                                    </span>
-                                  )}
-                                  {(p.estado === 'Preparado' || p.estado === 'Enviado' || p.estado === 'GUIA_CREADA') && (
-                                    <span className="text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                      🔵 Enviado
-                                    </span>
-                                  )}
-                                  {(p.estado === 'Entregado' || p.estado === 'ENTREGADO') && (
-                                    <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                      🟢 Entregado
-                                    </span>
-                                  )}
-                                  {(p.estado === 'Cancelado' || p.estado === 'CANCELADO') && (
-                                    <span className="text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-300 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                      ⚪ Cancelado
-                                    </span>
-                                  )}
-                                </td>
-
-                                {/* 9. Fragancias / Productos */}
-                                <td className="py-3 px-4">
-                                  <div className="flex flex-wrap gap-1 max-w-sm">
-                                    {p.items && p.items.length > 0 ? (
-                                      p.items.map((it, idx) => (
-                                        <span
-                                          key={idx}
-                                          className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200/80 font-medium"
-                                        >
-                                          <span className="font-bold text-indigo-600">{it.cantidad}x</span>
-                                          <span>{it.contratipo || it.codigo}</span>
-                                          <span className="text-[9px] text-slate-400 font-mono">({it.version})</span>
-                                        </span>
-                                      ))
-                                    ) : (
-                                      <span className="text-slate-400 italic text-[11px]">Sin detalle de items</span>
-                                    )}
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Footer del Modal */}
-            <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => setClienteFichaModal(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200/80 transition-colors border border-slate-200 cursor-pointer"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ClienteFichaView
+        cliente={clienteFichaModal}
+        pedidos={pedidosClienteFicha}
+        onClose={() => setClienteFichaModal(null)}
+        onNuevoPedido={(c) => {
+          setClienteFichaModal(null);
+          handleSeleccionarCliente(c);
+        }}
+        onGenerarGuia={handleGenerarGuiaDirecta}
+        generandoGuiaPedidoId={generandoGuiaPedidoId}
+      />
 
       {/* MODAL: ALERTA DE CLIENTE DUPLICADO POR TELÉFONO */}
       {clienteDuplicadoModal && (
@@ -6917,53 +5337,10 @@ export default function KodeSystemPage() {
       )}
 
       {/* Modal Lightbox para Visualizar Comprobante / Captura */}
-      {modalComprobanteUrl && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm"
-          onClick={() => setModalComprobanteUrl(null)}
-        >
-          <div
-            className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-150"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between p-3.5 border-b border-slate-100 bg-slate-50">
-              <div className="flex items-center gap-2">
-                <span className="text-base">📸</span>
-                <h3 className="font-bold text-slate-800 text-sm">
-                  Comprobante / Captura de Pago
-                </h3>
-              </div>
-              <div className="flex items-center gap-2">
-                <a
-                  href={modalComprobanteUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  download="comprobante-pago.jpg"
-                  className="clay-btn clay-btn-secondary px-2.5 py-1 text-xs font-bold flex items-center gap-1"
-                  title="Abrir en pestaña nueva o descargar"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  Abrir Original
-                </a>
-                <button
-                  type="button"
-                  onClick={() => setModalComprobanteUrl(null)}
-                  className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-200/50"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-            <div className="p-4 flex items-center justify-center bg-slate-100/50 overflow-auto max-h-[calc(90vh-70px)]">
-              <img
-                src={modalComprobanteUrl}
-                alt="Comprobante Bancario"
-                className="max-w-full max-h-[75vh] object-contain rounded-lg border border-slate-200 shadow-md"
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <ComprobanteLightboxModal
+        url={modalComprobanteUrl}
+        onClose={() => setModalComprobanteUrl(null)}
+      />
     </div>
   );
 }
