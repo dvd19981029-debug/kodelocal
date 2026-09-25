@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
+    await ensurePedidosSchema();
     const { searchParams } = new URL(request.url);
     const estado = searchParams.get('estado')?.trim() || '';
     const q = searchParams.get('q')?.trim() || '';
@@ -132,7 +133,9 @@ export async function GET(request: Request) {
   }
 }
 
+let schemaEnsured = false;
 async function ensurePedidosSchema() {
+  if (schemaEnsured) return;
   try {
     await queryKode(`
       ALTER TABLE public.pedido_items ADD COLUMN IF NOT EXISTS usuario VARCHAR(100);
@@ -144,6 +147,7 @@ async function ensurePedidosSchema() {
       ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_numero_control VARCHAR(100);
       ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_pdf_url TEXT;
     `);
+    schemaEnsured = true;
   } catch (e) {
     console.error('Error ensuring pedidos schema:', e);
   }
