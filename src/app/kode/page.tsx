@@ -195,6 +195,10 @@ interface Pedido {
   c807_link_rastreo?: string;
   c807_estado?: string;
   c807_fecha_guia?: string;
+  dte_estado?: string;
+  dte_codigo_generacion?: string;
+  dte_numero_control?: string;
+  dte_pdf_url?: string;
   notas?: string;
   created_at: string;
   cliente_id: string;
@@ -1322,6 +1326,7 @@ export default function KodeSystemPage() {
       if (data.success) {
         showToast(`✅ DTE emitido: ${data.codigo_generacion.slice(0, 8)}...`, 'success');
         setDteResultModal({ pedido, result: data });
+        fetchPedidos();
       } else {
         showToast(data.mensaje || data.error || 'Error al emitir DTE', 'error');
       }
@@ -3154,6 +3159,8 @@ export default function KodeSystemPage() {
                             <th className="py-2.5 px-4">Estado envío</th>
                             <th className="py-2.5 px-4">Estado Pago</th>
                             <th className="py-2.5 px-4">Estado C807</th>
+                            <th className="py-2.5 px-4">Guia C807</th>
+                            <th className="py-2.5 px-4">nun DTE</th>
                             <th className="py-2.5 px-4">Numero de Pedido</th>
                             <th className="py-2.5 px-4">Cliente</th>
                             <th className="py-2.5 px-4">Teléfono</th>
@@ -3165,7 +3172,7 @@ export default function KodeSystemPage() {
                         <tbody className="divide-y divide-slate-100 bg-white">
                           {pedidosFiltrados.length === 0 ? (
                             <tr>
-                              <td colSpan={9} className="py-12 text-center text-slate-400 font-medium">
+                              <td colSpan={11} className="py-12 text-center text-slate-400 font-medium">
                                 No se encontraron pedidos
                               </td>
                             </tr>
@@ -3223,6 +3230,55 @@ export default function KodeSystemPage() {
                                     <td className="py-3 px-4 text-slate-600 font-medium">
                                       {p.c807_estado || (p.c807_guia_numero ? 'En ruta C807' : 'Pendiente guía')}
                                     </td>
+                                    {/* Guia C807 */}
+                                    <td className="py-3 px-4 font-mono text-xs">
+                                      {p.c807_guia_numero ? (
+                                        <div className="flex items-center gap-1.5">
+                                          <span className="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                                            {p.c807_guia_numero}
+                                          </span>
+                                          {p.c807_link_rastreo && (
+                                            <a
+                                              href={p.c807_link_rastreo}
+                                              target="_blank"
+                                              rel="noreferrer"
+                                              className="text-indigo-600 hover:text-indigo-800 p-0.5 rounded hover:bg-indigo-50 transition-colors"
+                                              title="Rastrear Guía C807"
+                                            >
+                                              <ExternalLink className="w-3.5 h-3.5" />
+                                            </a>
+                                          )}
+                                        </div>
+                                      ) : (
+                                        <span className="text-slate-400 text-[11px] italic">-</span>
+                                      )}
+                                    </td>
+                                    {/* nun DTE */}
+                                    <td className="py-3 px-4 font-mono text-xs">
+                                      {p.dte_numero_control || p.dte_codigo_generacion ? (
+                                        <div className="flex items-center gap-1.5">
+                                          <span
+                                            className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 truncate max-w-[130px]"
+                                            title={`DTE: ${p.dte_numero_control || p.dte_codigo_generacion}`}
+                                          >
+                                            {p.dte_numero_control || `${p.dte_codigo_generacion?.slice(0, 10)}...`}
+                                          </span>
+                                          {p.dte_pdf_url && (
+                                            <a
+                                              href={p.dte_pdf_url}
+                                              target="_blank"
+                                              rel="noreferrer"
+                                              className="text-emerald-600 hover:text-emerald-800 p-0.5 rounded hover:bg-emerald-100 transition-colors"
+                                              title="Ver Factura DTE (PDF)"
+                                            >
+                                              <FileText className="w-3.5 h-3.5" />
+                                            </a>
+                                          )}
+                                        </div>
+                                      ) : (
+                                        <span className="text-slate-400 text-[11px] italic">-</span>
+                                      )}
+                                    </td>
                                     <td className="py-3 px-4 font-mono font-bold text-indigo-700">
                                       {p.numero_pedido}
                                     </td>
@@ -3263,7 +3319,7 @@ export default function KodeSystemPage() {
                                   </tr>
                                   {isExpanded && (
                                     <tr className="bg-slate-50/50">
-                                      <td colSpan={9} className="p-4 border-t border-slate-100">
+                                      <td colSpan={11} className="p-4 border-t border-slate-100">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                                           <div className="bg-white p-3 rounded-xl border border-slate-200">
                                             <span className="font-bold text-slate-700 block mb-1">Destino:</span>

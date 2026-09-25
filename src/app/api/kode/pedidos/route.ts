@@ -44,6 +44,10 @@ export async function GET(request: Request) {
         p.c807_link_rastreo,
         p.c807_estado,
         p.c807_fecha_guia,
+        p.dte_estado,
+        p.dte_codigo_generacion,
+        p.dte_numero_control,
+        p.dte_pdf_url,
         p.notas,
         p.created_at,
         p.updated_at,
@@ -135,6 +139,10 @@ async function ensurePedidosSchema() {
       ALTER TABLE public.pedido_items ADD COLUMN IF NOT EXISTS version VARCHAR(20) DEFAULT 'Normal';
       ALTER TABLE public.pedido_items ADD COLUMN IF NOT EXISTS comprado_por VARCHAR(100);
       ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS monto_cobrar_cce NUMERIC;
+      ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_estado VARCHAR(30) DEFAULT 'PENDIENTE';
+      ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_codigo_generacion VARCHAR(100);
+      ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_numero_control VARCHAR(100);
+      ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_pdf_url TEXT;
     `);
   } catch (e) {
     console.error('Error ensuring pedidos schema:', e);
