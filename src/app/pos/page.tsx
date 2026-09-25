@@ -94,6 +94,12 @@ import {
   PosCartPanel, 
   PosQuickEditProductModal 
 } from './components/terminal';
+import {
+  PosCustomerFormModal,
+  PosCheckoutModal,
+  PosCompletedSaleModal,
+  PosSaleDetailModal
+} from './components/modals';
 
 export default function PosPage() {
   const router = useRouter();
@@ -2099,990 +2105,99 @@ export default function PosPage() {
       {/* ========================================================================= */}
       {/* MODAL 1: FORMULARIO DE CLIENTE (ESTILO MECANIC OS PARA FC Y CCF)          */}
       {/* ========================================================================= */}
-      {isCustomerModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
-          <div className="clay-card w-full max-w-2xl p-6 relative bg-white animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
-            <button
-              type="button"
-              onClick={() => setIsCustomerModalOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="mb-4">
-              <h3 className="text-base font-black text-slate-800 flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-indigo-600" />
-                <span>{editingCustomerId ? 'Editar Datos del Cliente' : 'Registrar Nuevo Cliente'}</span>
-              </h3>
-              <p className="text-xs text-slate-500">
-                Formulario oficial para emisión de Facturas a Consumidor (FC) y Comprobantes de Crédito Fiscal (CCF).
-              </p>
-            </div>
-
-            <form onSubmit={handleSaveCustomer} className="space-y-4">
-              
-              {/* Tipo de Persona Toggle */}
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                  Tipo de Contribuyente / Persona *
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCustTipoPersona('NATURAL');
-                      setCustTipoDocumento('DUI');
-                      setCustDocumentoPreferido('01');
-                    }}
-                    className={`p-2.5 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-2 ${
-                      custTipoPersona === 'NATURAL'
-                        ? 'bg-indigo-600 text-white shadow-md border-indigo-600'
-                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    <User className="w-4 h-4" />
-                    <span>Persona Natural</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCustTipoPersona('JURIDICA');
-                      setCustTipoDocumento('NIT');
-                      setCustDocumentoPreferido('03');
-                    }}
-                    className={`p-2.5 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-2 ${
-                      custTipoPersona === 'JURIDICA'
-                        ? 'bg-purple-600 text-white shadow-md border-purple-600'
-                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    <Building2 className="w-4 h-4" />
-                    <span>Persona Jurídica (Empresa)</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Documento Tributario Preferido para Facturación */}
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                  Documento Tributario Preferido para Facturación *
-                </label>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => setCustDocumentoPreferido('01')}
-                    className={`p-2.5 rounded-xl text-xs font-bold transition-all border flex flex-col items-center justify-center text-center gap-1 ${
-                      custDocumentoPreferido === '01'
-                        ? 'bg-emerald-600 text-white shadow-md border-emerald-600'
-                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    <FileText className="w-4 h-4" />
-                    <span className="leading-tight">Factura FC (01)</span>
-                    <span className={`text-[9.5px] ${custDocumentoPreferido === '01' ? 'text-emerald-100' : 'text-slate-400'}`}>
-                      Consumidor Final
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setCustDocumentoPreferido('03')}
-                    className={`p-2.5 rounded-xl text-xs font-bold transition-all border flex flex-col items-center justify-center text-center gap-1 ${
-                      custDocumentoPreferido === '03'
-                        ? 'bg-purple-600 text-white shadow-md border-purple-600'
-                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    <Building2 className="w-4 h-4" />
-                    <span className="leading-tight">Crédito Fiscal CCF (03)</span>
-                    <span className={`text-[9.5px] ${custDocumentoPreferido === '03' ? 'text-purple-100' : 'text-slate-400'}`}>
-                      Contribuyentes
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setCustDocumentoPreferido('TICKET')}
-                    className={`p-2.5 rounded-xl text-xs font-bold transition-all border flex flex-col items-center justify-center text-center gap-1 ${
-                      custDocumentoPreferido === 'TICKET'
-                        ? 'bg-indigo-600 text-white shadow-md border-indigo-600'
-                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    <ReceiptText className="w-4 h-4" />
-                    <span className="leading-tight">Ticket de Venta</span>
-                    <span className={`text-[9.5px] ${custDocumentoPreferido === 'TICKET' ? 'text-indigo-100' : 'text-slate-400'}`}>
-                      Venta Mostrador
-                    </span>
-                  </button>
-                </div>
-                <p className="text-[10.5px] text-slate-500 mt-1">
-                  Este documento se seleccionará automáticamente al cotizar o mandar a bodega, y viajará a Caja al facturar.
-                </p>
-              </div>
-
-              {/* Nombre / Razón Social */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    {custTipoPersona === 'JURIDICA' ? 'Razón Social (según Tarjeta NRC) *' : 'Nombre Completo *'}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder={custTipoPersona === 'JURIDICA' ? 'Ej. Distribuidora Las Fragancias S.A. de C.V.' : 'Ej. María Julia Hernández'}
-                    value={custName}
-                    onChange={(e) => setCustName(e.target.value)}
-                    className="clay-input w-full text-xs font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Nombre Comercial (Opcional)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Ej. Boutique Elegance"
-                    value={custNombreComercial}
-                    onChange={(e) => setCustNombreComercial(e.target.value)}
-                    className="clay-input w-full text-xs"
-                  />
-                </div>
-              </div>
-
-              {/* Documentos de Identidad */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Tipo de Documento *
-                  </label>
-                  <select
-                    value={custTipoDocumento}
-                    onChange={(e) => setCustTipoDocumento(e.target.value as TipoDocumentoCliente)}
-                    className="clay-input w-full text-xs font-bold"
-                  >
-                    <option value="DUI">DUI (El Salvador)</option>
-                    <option value="NIT">NIT (El Salvador)</option>
-                    <option value="PASAPORTE">Pasaporte (Extranjero)</option>
-                    <option value="CARNET_RESIDENCIA">Carnet de Residente</option>
-                    <option value="OTRO">Otro Documento</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    N° de Documento ({custTipoDocumento}) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder={custTipoDocumento === 'DUI' ? '00000000-0' : '0614-000000-000-0'}
-                    value={custNumDocumento}
-                    onChange={(e) => setCustNumDocumento(e.target.value)}
-                    className="clay-input w-full text-xs font-mono font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    NRC {custTipoPersona === 'JURIDICA' ? '(Requerido CCF) *' : '(Si es Contribuyente)'}
-                  </label>
-                  <input
-                    type="text"
-                    required={custTipoPersona === 'JURIDICA'}
-                    placeholder="Ej. 123456-7"
-                    value={custNrc}
-                    onChange={(e) => setCustNrc(e.target.value)}
-                    className="clay-input w-full text-xs font-mono font-bold"
-                  />
-                </div>
-              </div>
-
-              {/* Giro / Actividad Económica para CCF */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Actividad Económica / Giro (para Hacienda CCF)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Ej. Venta al por menor de cosméticos y perfumes"
-                    value={custGiro}
-                    onChange={(e) => setCustGiro(e.target.value)}
-                    className="clay-input w-full text-xs font-medium"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Categoría Contribuyente
-                  </label>
-                  <select
-                    value={custCategoria}
-                    onChange={(e) => setCustCategoria(e.target.value as CategoriaContribuyente)}
-                    className="clay-input w-full text-xs font-bold"
-                  >
-                    <option value="OTRO">Otro / General</option>
-                    <option value="MEDIANO">Mediano Contribuyente</option>
-                    <option value="GRANDE">Gran Contribuyente</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Contacto */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Correo Electrónico (Recepción DTE PDF/JSON) *
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="facturacion@cliente.com"
-                    value={custEmail}
-                    onChange={(e) => setCustEmail(e.target.value)}
-                    className="clay-input w-full text-xs font-bold font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Teléfono / WhatsApp *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="7700-0000"
-                    value={custPhone}
-                    onChange={(e) => setCustPhone(e.target.value)}
-                    className="clay-input w-full text-xs font-mono"
-                  />
-                </div>
-              </div>
-
-              {/* Dirección */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Departamento
-                  </label>
-                  <select
-                    value={custDepartamento}
-                    onChange={(e) => {
-                      const newDept = e.target.value;
-                      setCustDepartamento(newDept);
-                      const munis = getMunicipiosByDepartamento(newDept);
-                      if (munis.length > 0) {
-                        setCustMunicipio(munis[0].nombre);
-                      }
-                    }}
-                    className="clay-input w-full text-xs font-bold"
-                  >
-                    {DEPARTAMENTOS_CATALOG.map(dep => (
-                      <option key={dep.id} value={dep.nombre}>{dep.nombre}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Municipio / Distrito (Oficial MH)
-                  </label>
-                  <select
-                    value={custMunicipio}
-                    onChange={(e) => setCustMunicipio(e.target.value)}
-                    className="clay-input w-full text-xs font-bold"
-                  >
-                    {getMunicipiosByDepartamento(custDepartamento).map(m => (
-                      <option key={m.id} value={m.nombre}>{m.nombre}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Dirección Detallada (Calle, Colonia, N° Local o Casa)
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ej. Colonia Escalón, Calle El Mirador #42"
-                  value={custDireccion}
-                  onChange={(e) => setCustDireccion(e.target.value)}
-                  className="clay-input w-full text-xs"
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setIsCustomerModalOpen(false)}
-                  className="clay-btn clay-btn-light px-4 py-2 text-xs font-bold"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="clay-btn clay-btn-primary px-5 py-2 text-xs font-black flex items-center gap-1.5"
-                >
-                  <Check className="w-4 h-4" />
-                  <span>Guardar Cliente</span>
-                </button>
-              </div>
-
-            </form>
-          </div>
-        </div>
-      )}
+      <PosCustomerFormModal
+        isOpen={isCustomerModalOpen}
+        onClose={() => setIsCustomerModalOpen(false)}
+        editingCustomerId={editingCustomerId}
+        custTipoPersona={custTipoPersona}
+        setCustTipoPersona={setCustTipoPersona}
+        custTipoDocumento={custTipoDocumento}
+        setCustTipoDocumento={setCustTipoDocumento}
+        custDocumentoPreferido={custDocumentoPreferido}
+        setCustDocumentoPreferido={setCustDocumentoPreferido}
+        custName={custName}
+        setCustName={setCustName}
+        custNombreComercial={custNombreComercial}
+        setCustNombreComercial={setCustNombreComercial}
+        custNumDocumento={custNumDocumento}
+        setCustNumDocumento={setCustNumDocumento}
+        custNrc={custNrc}
+        setCustNrc={setCustNrc}
+        custGiro={custGiro}
+        setCustGiro={setCustGiro}
+        custCategoria={custCategoria}
+        setCustCategoria={setCustCategoria}
+        custEmail={custEmail}
+        setCustEmail={setCustEmail}
+        custPhone={custPhone}
+        setCustPhone={setCustPhone}
+        custDepartamento={custDepartamento}
+        setCustDepartamento={setCustDepartamento}
+        custMunicipio={custMunicipio}
+        setCustMunicipio={setCustMunicipio}
+        custDireccion={custDireccion}
+        setCustDireccion={setCustDireccion}
+        onSaveCustomer={handleSaveCustomer}
+      />
 
       {/* ========================================================================= */}
       {/* MODAL 2: MODAL DE COBRO Y EMISIÓN DTE                                     */}
       {/* ========================================================================= */}
-      {isCheckoutOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="clay-card w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto relative animate-in fade-in zoom-in-95 duration-150 bg-white">
-            
-            <button 
-              onClick={() => setIsCheckoutOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="mb-4">
-              <h3 className="text-xl font-black text-slate-800 mb-0.5">
-                {orderToInvoice ? `Facturar Orden #${orderToInvoice.orderNumber || orderToInvoice.saleNumber}` : 'Finalizar Venta de Perfumería'}
-              </h3>
-              <p className="text-xs text-slate-500">
-                {orderToInvoice ? 'Orden preparada en ventanilla lista para emisión oficial de DTE' : 'Selecciona el cliente y comprobante legal a emitir.'}
-              </p>
-            </div>
-
-            {/* Resumen de items si se factura orden de ventanilla */}
-            {orderToInvoice && (
-              <div className="mb-4 p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200">
-                <div className="flex items-center justify-between text-xs font-bold text-emerald-900 mb-1.5">
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>Items preparados en comanda ({orderToInvoice.items.length})</span>
-                  </span>
-                  <span className="font-mono font-black text-emerald-800">
-                    Total: ${orderToInvoice.total.toFixed(2)}
-                  </span>
-                </div>
-                <div className="space-y-1 max-h-28 overflow-y-auto divide-y divide-emerald-100/80 text-[11px]">
-                  {orderToInvoice.items.map((it, idx) => (
-                    <div key={idx} className="pt-1 first:pt-0 flex justify-between items-center text-slate-700">
-                      <span className="truncate max-w-[260px] font-medium">{it.name} ({it.quantity} {it.unit || 'Oz'})</span>
-                      <span className="font-mono font-bold text-slate-900">${it.total.toFixed(2)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Selector Rápido de Clientes Registrados */}
-            <div className="mb-4 p-3 rounded-2xl bg-indigo-50/60 border border-indigo-100">
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-[11px] font-bold text-indigo-900 flex items-center gap-1">
-                  <Users className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Cliente para Facturación:</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={handleOpenNewCustomerModal}
-                  className="text-[10.5px] font-bold text-indigo-600 hover:underline"
-                >
-                  + Nuevo Cliente
-                </button>
-              </div>
-
-              <select
-                value={selectedCustomerId}
-                onChange={(e) => handleSelectCustomer(e.target.value)}
-                className="clay-input w-full text-xs py-2 font-bold bg-white"
-              >
-                <option value="">Consumidor Final (Venta Genérica)</option>
-                {customers.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} {c.nrc ? `(CCF: ${c.nrc})` : `(DUI: ${c.numDocumento})`}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Selector de Comprobante */}
-            <div className="mb-4">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block mb-1.5">
-                Tipo de Comprobante
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setTipoComprobante('TICKET')}
-                  className={`p-2.5 rounded-xl text-xs font-bold text-center transition-all ${
-                    tipoComprobante === 'TICKET' ? 'clay-btn-primary' : 'clay-btn-light'
-                  }`}
-                >
-                  Ticket Local
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTipoComprobante('01')}
-                  className={`p-2.5 rounded-xl text-xs font-bold text-center transition-all ${
-                    tipoComprobante === '01' ? 'clay-btn-primary' : 'clay-btn-light'
-                  }`}
-                >
-                  Factura (01)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTipoComprobante('03')}
-                  className={`p-2.5 rounded-xl text-xs font-bold text-center transition-all ${
-                    tipoComprobante === '03' ? 'clay-btn-primary' : 'clay-btn-light'
-                  }`}
-                >
-                  Crédito Fiscal (03)
-                </button>
-              </div>
-            </div>
-
-            {/* Datos del Cliente para DTE */}
-            {(tipoComprobante === '01' || tipoComprobante === '03') && (
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 mb-4 space-y-2.5">
-                <div className="flex items-center gap-1.5 text-indigo-700 font-bold text-xs">
-                  <FileCheck className="w-3.5 h-3.5" />
-                  <span>Datos Fiscales para Hacienda (DTE {tipoComprobante === '03' ? 'CCF-03' : 'FC-01'})</span>
-                </div>
-                
-                <div>
-                  <div className="flex justify-between items-center mb-0.5">
-                    <label className="text-[10.5px] font-semibold text-slate-600 block">
-                      {tipoComprobante === '03' ? 'Razón Social *' : 'Nombre del Cliente'}
-                    </label>
-                    {customers.length > 0 && (
-                      <select
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            handleSelectCustomer(e.target.value);
-                          }
-                        }}
-                        defaultValue=""
-                        className="text-[10.5px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg px-2 py-0.5 outline-none cursor-pointer hover:bg-indigo-100"
-                        title="Autocompletar con cliente registrado"
-                      >
-                        <option value="" disabled>🔍 Cargar cliente registrado...</option>
-                        {customers.map(c => (
-                          <option key={c.id} value={c.id}>
-                            {c.name} {c.numDocumento && c.numDocumento !== '00000000-0' ? `(${c.numDocumento})` : ''}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
-                  <input
-                    type="text"
-                    value={clienteNombre}
-                    onChange={(e) => setClienteNombre(e.target.value)}
-                    placeholder="Nombre o Empresa"
-                    className="clay-input w-full text-xs py-1.5"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[10.5px] font-semibold text-slate-600 block mb-0.5">
-                      {tipoComprobante === '03' ? 'NIT *' : 'DUI o NIT'}
-                    </label>
-                    <input
-                      type="text"
-                      value={clienteDoc}
-                      onChange={(e) => setClienteDoc(e.target.value)}
-                      placeholder="00000000-0"
-                      className="clay-input w-full text-xs py-1.5 font-mono"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[10.5px] font-semibold text-slate-600 block mb-0.5">
-                      {tipoComprobante === '03' ? 'NRC *' : 'NRC (Opcional)'}
-                    </label>
-                    <input
-                      type="text"
-                      value={clienteNrc}
-                      onChange={(e) => setClienteNrc(e.target.value)}
-                      placeholder="123456-7"
-                      className="clay-input w-full text-xs py-1.5 font-mono"
-                    />
-                  </div>
-                </div>
-
-                {tipoComprobante === '03' && (
-                  <div>
-                    <label className="text-[10.5px] font-semibold text-slate-600 block mb-0.5">
-                      Giro / Actividad Económica *
-                    </label>
-                    <input
-                      type="text"
-                      value={clienteGiro}
-                      onChange={(e) => setClienteGiro(e.target.value)}
-                      placeholder="Ej. Venta al por menor de cosméticos"
-                      className="clay-input w-full text-xs py-1.5"
-                    />
-                  </div>
-                )}
-
-                <div>
-                  <label className="text-[10.5px] font-semibold text-slate-600 block mb-0.5">
-                    Correo para envío de DTE
-                  </label>
-                  <input
-                    type="email"
-                    value={clienteEmail}
-                    onChange={(e) => setClienteEmail(e.target.value)}
-                    placeholder="correo@cliente.com"
-                    className="clay-input w-full text-xs py-1.5 font-mono"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[10.5px] font-semibold text-slate-600 block mb-0.5">
-                      Departamento *
-                    </label>
-                    <select
-                      value={clienteDepartamento}
-                      onChange={(e) => {
-                        const newDept = e.target.value;
-                        setClienteDepartamento(newDept);
-                        const munis = getMunicipiosByDepartamento(newDept);
-                        if (munis.length > 0) {
-                          setClienteMunicipio(munis[0].nombre);
-                        }
-                      }}
-                      className="clay-input w-full text-xs py-1.5 font-bold"
-                    >
-                      {DEPARTAMENTOS_CATALOG.map(dep => (
-                        <option key={dep.id} value={dep.nombre}>{dep.nombre}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-[10.5px] font-semibold text-slate-600 block mb-0.5">
-                      Municipio / Distrito (MH) *
-                    </label>
-                    <select
-                      value={clienteMunicipio}
-                      onChange={(e) => setClienteMunicipio(e.target.value)}
-                      className="clay-input w-full text-xs py-1.5 font-bold"
-                    >
-                      {getMunicipiosByDepartamento(clienteDepartamento).map(m => (
-                        <option key={m.id} value={m.nombre}>{m.nombre}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[10.5px] font-semibold text-slate-600 block mb-0.5">
-                    Dirección (Calle, Colonia o Local)
-                  </label>
-                  <input
-                    type="text"
-                    value={clienteDireccion}
-                    onChange={(e) => setClienteDireccion(e.target.value)}
-                    placeholder="Ej. Colonia Escalón, Calle El Mirador #42"
-                    className="clay-input w-full text-xs py-1.5"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Método de Pago */}
-            {orderToInvoice && orderToInvoice.paymentStatus === 'COMPLETED' && orderToInvoice.paymentMethod !== 'CASH' ? (
-              <div className="mb-4 p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/80 shadow-xs">
-                <div className="flex items-center gap-2 text-emerald-900 font-bold text-xs mb-1.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>
-                    PAGO YA PROCESADO EN LÍNEA ({orderToInvoice.paymentMethod === 'CARD' ? 'TARJETA (WOMPI)' : orderToInvoice.paymentMethod === 'TRANSFER' ? 'TRANSFERENCIA' : orderToInvoice.paymentMethod})
-                  </span>
-                </div>
-                <div className="text-[11px] text-emerald-800 space-y-1">
-                  <p>
-                    Monto Cobrado: <strong className="font-mono text-xs font-black text-emerald-950">${orderToInvoice.total.toFixed(2)} USD</strong> (Transacción Aprobada)
-                  </p>
-                  {orderToInvoice.notes && (
-                    <p className="text-[10px] text-slate-600 font-mono bg-white/80 p-1.5 rounded-lg border border-emerald-100 truncate" title={orderToInvoice.notes}>
-                      {orderToInvoice.notes}
-                    </p>
-                  )}
-                  <p className="text-[10px] text-emerald-700 font-medium">
-                    ✅ Esta orden fue pagada en la tienda online. No requiere cobro en caja; solo emitir el DTE y entregar el paquete al cliente.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="mb-4">
-                  <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block mb-1.5">
-                    Método de Pago
-                  </label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {[
-                      { id: 'CASH', label: 'Efectivo', icon: Banknote },
-                      { id: 'CARD', label: 'Tarjeta', icon: CreditCard },
-                      { id: 'TRANSFER', label: 'Transf.', icon: Building },
-                      { id: 'BITCOIN', label: 'Bitcoin', icon: QrCode },
-                    ].map((method) => {
-                      const Icon = method.icon;
-                      return (
-                        <button
-                          key={method.id}
-                          type="button"
-                          onClick={() => setPaymentMethod(method.id as any)}
-                          className={`p-2 rounded-xl text-xs font-bold flex flex-col items-center gap-1 transition-all ${
-                            paymentMethod === method.id ? 'clay-btn-primary' : 'clay-btn-light'
-                          }`}
-                        >
-                          <Icon className="w-4 h-4" />
-                          <span>{method.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Efectivo recibido */}
-                {paymentMethod === 'CASH' && (
-                  <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200 mb-4 space-y-2 shadow-sm">
-                    <label className="text-xs font-bold text-amber-950 block">
-                      Efectivo Recibido
-                    </label>
-                    <div className="flex gap-2">
-                      <div className="flex-1 flex items-center rounded-xl bg-white border border-amber-300 shadow-inner overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition-all">
-                        <span className="px-3.5 py-2.5 bg-amber-100/90 border-r border-amber-200 text-amber-950 font-black text-sm select-none">
-                          $
-                        </span>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          placeholder="0.00"
-                          value={cashAmount}
-                          onChange={(e) => setCashAmount(e.target.value)}
-                          className="w-full px-3 py-2 text-base font-mono font-bold text-slate-900 bg-transparent outline-none placeholder:text-slate-400"
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setCashAmount(currentBillingTotal.toFixed(2))}
-                        className="clay-btn clay-btn-light px-3.5 text-xs font-bold whitespace-nowrap text-amber-950 bg-amber-100/70 border border-amber-200 hover:bg-amber-100"
-                      >
-                        Exacto (${currentBillingTotal.toFixed(2)})
-                      </button>
-                    </div>
-                    {parseFloat(cashAmount) >= currentBillingTotal && (
-                      <div className="flex justify-between items-center text-xs font-bold text-emerald-800 pt-1">
-                        <span>Cambio a devolver:</span>
-                        <span className="font-mono text-base font-black">
-                          ${(parseFloat(cashAmount) - currentBillingTotal).toFixed(2)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Resumen Final y Botón Confirmar */}
-            <div className="pt-3 border-t border-slate-200 flex justify-between items-center mb-4">
-              <div>
-                <span className="text-xs text-slate-500 block">Total a Pagar:</span>
-                <span className="text-2xl font-black text-indigo-600 font-mono">
-                  ${currentBillingTotal.toFixed(2)}
-                </span>
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsCheckoutOpen(false);
-                    setOrderToInvoice(null);
-                  }}
-                  className="clay-btn clay-btn-light px-4 py-2.5 text-xs font-bold"
-                >
-                  Cancelar
-                </button>
-
-                <button
-                  type="button"
-                  disabled={isProcessing}
-                  onClick={handleCompleteSale}
-                  className="clay-btn clay-btn-success px-5 py-2.5 text-xs font-black flex items-center gap-1.5"
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>
-                    {isProcessing 
-                      ? 'Emitiendo DTE ante Hacienda...' 
-                      : orderToInvoice && orderToInvoice.paymentStatus === 'COMPLETED' && orderToInvoice.paymentMethod !== 'CASH'
-                      ? `Emitir ${tipoComprobante === '03' ? 'Crédito Fiscal (03)' : tipoComprobante === '01' ? 'Factura (01)' : 'Ticket'} y Entregar`
-                      : `Cobrar y Emitir ${tipoComprobante === '03' ? 'Crédito Fiscal (03)' : tipoComprobante === '01' ? 'Factura (01)' : 'Ticket'}`}
-                  </span>
-                </button>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      )}
+      <PosCheckoutModal
+        isOpen={isCheckoutOpen}
+        onClose={() => {
+          setIsCheckoutOpen(false);
+          setOrderToInvoice(null);
+        }}
+        orderToInvoice={orderToInvoice}
+        customers={customers}
+        selectedCustomerId={selectedCustomerId}
+        handleSelectCustomer={handleSelectCustomer}
+        handleOpenNewCustomerModal={handleOpenNewCustomerModal}
+        tipoComprobante={tipoComprobante}
+        setTipoComprobante={setTipoComprobante}
+        clienteNombre={clienteNombre}
+        setClienteNombre={setClienteNombre}
+        clienteDoc={clienteDoc}
+        setClienteDoc={setClienteDoc}
+        clienteNrc={clienteNrc}
+        setClienteNrc={setClienteNrc}
+        clienteGiro={clienteGiro}
+        setClienteGiro={setClienteGiro}
+        clienteEmail={clienteEmail}
+        setClienteEmail={setClienteEmail}
+        clienteDepartamento={clienteDepartamento}
+        setClienteDepartamento={setClienteDepartamento}
+        clienteMunicipio={clienteMunicipio}
+        setClienteMunicipio={setClienteMunicipio}
+        clienteDireccion={clienteDireccion}
+        setClienteDireccion={setClienteDireccion}
+        paymentMethod={paymentMethod}
+        setPaymentMethod={setPaymentMethod}
+        cashAmount={cashAmount}
+        setCashAmount={setCashAmount}
+        currentBillingTotal={currentBillingTotal}
+        isProcessing={isProcessing}
+        handleCompleteSale={handleCompleteSale}
+      />
 
       {/* ========================================================================= */}
       {/* MODAL 3: TICKET DE VENTA COMPLETADA                                       */}
       {/* ========================================================================= */}
-      {completedSale && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
-          <div className="clay-card w-full max-w-sm p-6 relative bg-white text-center">
-            <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3 shadow-inner">
-              <CheckCircle2 className="w-7 h-7" />
-            </div>
-
-            <h3 className="text-lg font-black text-slate-800">¡Venta Completada con Éxito!</h3>
-            <p className="text-xs text-slate-500 mt-1">Comprobante #{completedSale.saleNumber}</p>
-
-            <div className="my-4 p-3 rounded-2xl bg-indigo-50 border border-indigo-100 text-left text-xs space-y-1">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Cliente:</span>
-                <strong className="text-slate-800">{completedSale.cliente.nombre}</strong>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Comprobante:</span>
-                <span className="font-bold text-indigo-700">
-                  {completedSale.tipoComprobante === '03' ? 'Crédito Fiscal (03)' : completedSale.tipoComprobante === '01' ? 'Factura (01)' : 'Ticket'}
-                </span>
-              </div>
-              <div className="flex justify-between font-black text-slate-800 pt-1 border-t border-indigo-200">
-                <span>Total Cobrado:</span>
-                <span className="font-mono text-indigo-600">${completedSale.total.toFixed(2)}</span>
-              </div>
-            </div>
-
-            {completedSale.dteInfo && (
-              <div className="mb-4 p-3 rounded-2xl bg-emerald-50/80 border border-emerald-200 text-left text-xs space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-emerald-800 flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                    DTE Transmitido a Factura Llama
-                  </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-200/60 text-emerald-800">
-                    {completedSale.dteInfo.simulated ? 'Ambiente Test' : 'Hacienda OK'}
-                  </span>
-                </div>
-                {completedSale.dteInfo.numeroControl && (
-                  <div className="text-[11px] font-mono text-emerald-900 truncate" title={completedSale.dteInfo.numeroControl}>
-                    <span className="text-emerald-700 font-semibold">Control: </span>
-                    {completedSale.dteInfo.numeroControl}
-                  </div>
-                )}
-                {completedSale.dteInfo.codigoGeneracion && (
-                  <div className="text-[10px] font-mono text-slate-500 truncate" title={completedSale.dteInfo.codigoGeneracion}>
-                    <span className="text-slate-400">UUID: </span>
-                    {completedSale.dteInfo.codigoGeneracion}
-                  </div>
-                )}
-
-                <div className="pt-2 flex gap-1.5">
-                  <a
-                    href={`/api/dte/${completedSale.dteInfo.codigoGeneracion}/pdf`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 py-1.5 px-2 text-center rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] inline-flex items-center justify-center gap-1 shadow-sm transition-all"
-                  >
-                    <FileDown className="w-3.5 h-3.5" />
-                    <span>Descargar PDF</span>
-                  </a>
-                  {completedSale.dteInfo.mhDteUrl && (
-                    <a
-                      href={completedSale.dteInfo.mhDteUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="py-1.5 px-2 text-center rounded-lg bg-white border border-emerald-300 hover:bg-emerald-100/50 text-emerald-800 font-bold text-[11px] inline-flex items-center justify-center gap-1 transition-all"
-                      title="Ver consulta pública en Ministerio de Hacienda"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      <span>Hacienda</span>
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="clay-btn clay-btn-light flex-1 py-2 text-xs font-bold flex items-center justify-center gap-1"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                <span>Imprimir Ticket</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setCompletedSale(null)}
-                className="clay-btn clay-btn-primary flex-1 py-2 text-xs font-bold"
-              >
-                Nueva Venta
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <PosCompletedSaleModal
+        sale={completedSale}
+        onClose={() => setCompletedSale(null)}
+        onPrint={() => window.print()}
+      />
 
       {/* ========================================================================= */}
       {/* MODAL 4: DETALLE DE VENTA PARA CONSULTA                                   */}
       {/* ========================================================================= */}
-      {selectedSaleDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
-          <div className="clay-card w-full max-w-md p-5 relative bg-white">
-            <button
-              type="button"
-              onClick={() => setSelectedSaleDetail(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="text-center pb-3 border-b border-slate-100 mb-3">
-              <h4 className="text-sm font-black text-slate-800">Detalle de Comprobante</h4>
-              <p className="font-mono text-xs text-indigo-700 font-bold">#{selectedSaleDetail.saleNumber}</p>
-            </div>
-
-            <div className="space-y-2 text-xs mb-4">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Cliente:</span>
-                <strong className="text-slate-800">{selectedSaleDetail.cliente.nombre}</strong>
-              </div>
-              {selectedSaleDetail.cliente.numDocumento && (
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Documento:</span>
-                  <span className="font-mono">{selectedSaleDetail.cliente.numDocumento}</span>
-                </div>
-              )}
-              {selectedSaleDetail.dteInfo?.numeroControl && (
-                <div className="flex justify-between">
-                  <span className="text-slate-500">N° Control Hacienda:</span>
-                  <span className="font-mono font-bold text-emerald-700">{selectedSaleDetail.dteInfo.numeroControl}</span>
-                </div>
-              )}
-
-              <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl p-2 max-h-48 overflow-y-auto">
-                {selectedSaleDetail.items.map((it, idx) => (
-                  <div key={idx} className="py-1 flex justify-between items-center text-xs">
-                    <div>
-                      <span className="font-bold text-slate-800 block">{it.name}</span>
-                      <span className="text-[10px] text-slate-400">{it.quantity} {it.unit || 'Oz'} x ${it.price.toFixed(2)}</span>
-                    </div>
-                    <span className="font-mono font-black text-slate-800">${it.total.toFixed(2)}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-indigo-50/60 border border-indigo-100 space-y-1 text-xs">
-                <div className="flex justify-between">
-                  <span>Subtotal Neto:</span>
-                  <span className="font-mono font-bold">${selectedSaleDetail.subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>IVA (13%):</span>
-                  <span className="font-mono font-bold">${selectedSaleDetail.ivaTotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm font-black text-indigo-900 pt-1 border-t border-indigo-200">
-                  <span>Total:</span>
-                  <span className="font-mono text-indigo-600">${selectedSaleDetail.total.toFixed(2)}</span>
-                </div>
-              </div>
-
-              {selectedSaleDetail.dteInfo && (
-                <div className="p-3 rounded-2xl bg-emerald-50/80 border border-emerald-200 text-xs space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-emerald-800 flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      DTE Certificado por Factura Llama
-                    </span>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-200/60 text-emerald-800">
-                      {selectedSaleDetail.dteInfo.simulated ? 'Test' : 'Hacienda OK'}
-                    </span>
-                  </div>
-                  {selectedSaleDetail.dteInfo.numeroControl && (
-                    <div className="text-[11px] font-mono text-emerald-900 truncate" title={selectedSaleDetail.dteInfo.numeroControl}>
-                      <span className="text-emerald-700 font-semibold">Control: </span>
-                      {selectedSaleDetail.dteInfo.numeroControl}
-                    </div>
-                  )}
-                  {selectedSaleDetail.dteInfo.selloRecepcion && (
-                    <div className="text-[10px] font-mono text-emerald-900 truncate" title={selectedSaleDetail.dteInfo.selloRecepcion}>
-                      <span className="text-emerald-700 font-semibold">Sello: </span>
-                      {selectedSaleDetail.dteInfo.selloRecepcion}
-                    </div>
-                  )}
-                  {selectedSaleDetail.dteInfo.codigoGeneracion && (
-                    <div className="text-[10px] font-mono text-slate-500 truncate" title={selectedSaleDetail.dteInfo.codigoGeneracion}>
-                      <span className="text-slate-400">UUID: </span>
-                      {selectedSaleDetail.dteInfo.codigoGeneracion}
-                    </div>
-                  )}
-                  <div className="pt-2 flex gap-1.5">
-                    <a
-                      href={`/api/dte/${selectedSaleDetail.dteInfo.codigoGeneracion}/pdf`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 py-1.5 px-2 text-center rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] inline-flex items-center justify-center gap-1 shadow-sm transition-all"
-                    >
-                      <FileDown className="w-3.5 h-3.5" />
-                      <span>Descargar PDF</span>
-                    </a>
-                    {selectedSaleDetail.dteInfo.mhDteUrl && (
-                      <a
-                        href={selectedSaleDetail.dteInfo.mhDteUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="py-1.5 px-2 text-center rounded-lg bg-white border border-emerald-300 hover:bg-emerald-100/50 text-emerald-800 font-bold text-[11px] inline-flex items-center justify-center gap-1 transition-all"
-                        title="Ver consulta pública en Ministerio de Hacienda"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span>Hacienda</span>
-                      </a>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="clay-btn clay-btn-light flex-1 py-2 text-xs font-bold flex items-center justify-center gap-1.5"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                <span>Imprimir Ticket</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedSaleDetail(null)}
-                className="clay-btn clay-btn-primary flex-1 py-2 text-xs font-bold"
-              >
-                Cerrar
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
+      <PosSaleDetailModal
+        sale={selectedSaleDetail}
+        onClose={() => setSelectedSaleDetail(null)}
+        onPrint={() => window.print()}
+      />
 
       {/* ========================================================================= */}
       {/* MODAL 5: COTIZACIÓN / PREFACTURA (EXPORTAR PDF Y WHATSAPP)                 */}

@@ -44,8 +44,12 @@ src/app/pos/
 | **Peticiones HTTP (/api/dte, etc.)** | `src/app/pos/services/posApi.ts` | Llamadas a Factura Llama DTE, catálogo de productos, clientes y órdenes ecommerce. |
 | **Almacenamiento local (localStorage)** | `src/app/pos/services/posStorage.ts` | Gestión de `kodelocal_products`, `kodelocal_sales` y eventos de reactividad. |
 | **Cálculo de onzas y stock** | `src/app/pos/utils/posHelpers.ts` | Conversión de presentaciones (onza completa vs media onza) y cálculo del IVA 13% para CCF. |
-| **Impresión de tickets térmicos** | `src/components/pos/ThermalTicket.tsx` | Formato para impresoras térmicas de 80mm / 58mm. |
+| **Registro y Edición de Cliente** | `src/app/pos/components/modals/PosCustomerFormModal.tsx` | Formulario completo fiscal (Persona Natural/Jurídica, DUI, NIT, NRC, Giro, Depto/Municipio). |
+| **Cobro y Facturación DTE** | `src/app/pos/components/modals/PosCheckoutModal.tsx` | Pasarela de cobro (Efectivo con cálculo de cambio, Tarjeta, Transf., Bitcoin) y emisión Hacienda. |
+| **Comprobante de Venta Exitosa** | `src/app/pos/components/modals/PosCompletedSaleModal.tsx` | Resumen posventa, estado de sello DTE, descarga de PDF y enlace público a Hacienda. |
+| **Detalle de Venta Histórica** | `src/app/pos/components/modals/PosSaleDetailModal.tsx` | Consulta de venta, desglose de items e impuestos y reimpresión de comprobante. |
 | **Cotizaciones / Prefacturas** | `src/components/pos/CotizacionModal.tsx` | Popup para cotizar y prefacturar pedidos. |
+| **Impresión de tickets térmicos** | `src/components/pos/ThermalTicket.tsx` | Formato para impresoras térmicas de 80mm / 58mm. |
 
 ---
 
