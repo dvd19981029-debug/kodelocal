@@ -46,11 +46,17 @@ import {
   PlusCircle,
   ArrowDownCircle,
   Pencil,
-  Image as ImageIcon,
-  Upload,
-  Paperclip
+  Upload
 } from 'lucide-react';
 import { DEPARTAMENTOS_CATALOG, MUNICIPIOS_CATALOG, resolveC807DeptoCode, getMunicipiosByDepto } from '@/lib/svTerritory';
+
+function ImageIcon({ className = "w-3 h-3 text-violet-600" }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  );
+}
 
 function formatearMarcaTemporal(fechaStr: string) {
   if (!fechaStr) return '';
@@ -224,7 +230,7 @@ interface PagoItem {
   monto: number;
   fecha_pago: string;
   num_documento_auto?: string;
-  comprobante_url?: string;
+  comprobante_url?: string | null;
   estado_pago?: string;
   usuario?: string;
   observaciones?: string;
@@ -238,7 +244,7 @@ interface PagoRegistroItem {
   forma_pago_tipo?: string;
   monto: number;
   num_documento_auto?: string;
-  comprobante_url?: string;
+  comprobante_url?: string | null;
   observaciones?: string;
 }
 

@@ -291,7 +291,7 @@ export async function POST(request: Request) {
       forma_pago_id: string;
       monto: number;
       num_documento_auto?: string;
-      comprobante_url?: string;
+      comprobante_url?: string | null;
       observaciones?: string;
       estado_pago?: string;
     }
