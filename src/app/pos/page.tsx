@@ -78,6 +78,17 @@ import {
   getOfflineQueueCount, 
   flushOfflineQueue 
 } from '@/lib/offlineSync';
+import {
+  PosTab,
+  CajaSubTab,
+  DteFilterType,
+  PaymentMethod,
+  TipoComprobante,
+  BodegaOrdenesFilter,
+  CustomerFilterType,
+} from './types';
+import { posApi, posStorage } from './services';
+import { posHelpers } from './utils';
 
 export default function PosPage() {
   const router = useRouter();
@@ -89,7 +100,7 @@ export default function PosPage() {
   // 'clientes': Directorio y registro fiscal para FC y CCF
   // 'ventas': Resumen de onzas vendidas en el turno
   // 'bodega_ordenes': Monitoreo de comandas en preparación
-  const [posTab, setPosTab] = useState<'nueva_orden' | 'caja_facturacion' | 'clientes' | 'ventas' | 'bodega_ordenes' | 'pos'>('nueva_orden');
+  const [posTab, setPosTab] = useState<PosTab>('nueva_orden');
 
   // Menú lateral dinámico: colapsado por defecto para dar más espacio a las tarjetas, expandible al pasar el mouse
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
@@ -97,8 +108,8 @@ export default function PosPage() {
   const isSidebarExpanded = isSidebarPinned || isSidebarHovered;
 
   // Subpestañas en Caja & Facturación (Estilo Mecanic OS)
-  const [cajaSubTab, setCajaSubTab] = useState<'listas_facturar' | 'dtes_emitidos'>('listas_facturar');
-  const [dteFilterType, setDteFilterType] = useState<'ALL' | '01' | '03' | 'TICKET'>('ALL');
+  const [cajaSubTab, setCajaSubTab] = useState<CajaSubTab>('listas_facturar');
+  const [dteFilterType, setDteFilterType] = useState<DteFilterType>('ALL');
   const [dteSearchQuery, setDteSearchQuery] = useState('');
 
   // Cotización / Prefactura Modal
@@ -127,13 +138,13 @@ export default function PosPage() {
   const [selectedSaleDetail, setSelectedSaleDetail] = useState<SaleRecord | null>(null);
 
   // Filtros para la vista de Órdenes en Bodega
-  const [bodegaOrdenesFilter, setBodegaOrdenesFilter] = useState<'ALL' | 'PENDING' | 'READY' | 'COMPLETED'>('ALL');
+  const [bodegaOrdenesFilter, setBodegaOrdenesFilter] = useState<BodegaOrdenesFilter>('ALL');
   const [bodegaOrdenesSearch, setBodegaOrdenesSearch] = useState('');
 
   // Clientes
   const [customers, setCustomers] = useState<CustomerRecord[]>(() => getStoredCustomers());
   const [customerSearch, setCustomerSearch] = useState('');
-  const [customerFilterType, setCustomerFilterType] = useState<'TODOS' | 'NATURAL' | 'JURIDICA'>('TODOS');
+  const [customerFilterType, setCustomerFilterType] = useState<CustomerFilterType>('TODOS');
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const [editingCustomerId, setEditingCustomerId] = useState<string | null>(null);
   const [isSyncingCustomers, setIsSyncingCustomers] = useState(false);
@@ -164,9 +175,9 @@ export default function PosPage() {
   
   // Modal de Cobro
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD' | 'TRANSFER' | 'BITCOIN'>('CASH');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH');
   const [cashAmount, setCashAmount] = useState<string>('');
-  const [tipoComprobante, setTipoComprobante] = useState<'TICKET' | '01' | '03'>('01');
+  const [tipoComprobante, setTipoComprobante] = useState<TipoComprobante>('01');
   
   // Datos de cliente en venta activa
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
