@@ -335,6 +335,10 @@ export default function KodeSystemPage() {
   const [pagoContraEntrega, setPagoContraEntrega] = useState<boolean>(true);
   const [solicitudesEspeciales, setSolicitudesEspeciales] = useState('');
 
+  // Ordenamiento de tablas de Insumos y Fragancias por Kodigo (A-Z / Z-A)
+  const [sortInsumosKodigo, setSortInsumosKodigo] = useState<'asc' | 'desc' | 'none'>('asc');
+  const [sortFraganciasKodigo, setSortFraganciasKodigo] = useState<'asc' | 'desc' | 'none'>('asc');
+
   // Catálogo de Formas de Pago y selección en nuevo pedido
   const [formasPago, setFormasPago] = useState<FormaPagoItem[]>([]);
   const [formaPagoSeleccionada, setFormaPagoSeleccionada] = useState<string>('1003');
@@ -1549,9 +1553,26 @@ export default function KodeSystemPage() {
   }, [pedidos]);
 
   const insumosSplitPane = useMemo(() => {
-    if (!selectedPedidoIdFab) return insumos;
-    return insumos.filter((item) => item.pedido_id === selectedPedidoIdFab);
-  }, [insumos, selectedPedidoIdFab]);
+    const list = selectedPedidoIdFab
+      ? insumos.filter((item) => item.pedido_id === selectedPedidoIdFab)
+      : [...insumos];
+
+    if (sortInsumosKodigo === 'asc') {
+      return [...list].sort((a, b) => {
+        const valA = `${a.contratipo || ''} ${a.codigo || ''}`.trim();
+        const valB = `${b.contratipo || ''} ${b.codigo || ''}`.trim();
+        return valA.localeCompare(valB, 'es', { sensitivity: 'base' });
+      });
+    } else if (sortInsumosKodigo === 'desc') {
+      return [...list].sort((a, b) => {
+        const valA = `${a.contratipo || ''} ${a.codigo || ''}`.trim();
+        const valB = `${b.contratipo || ''} ${b.codigo || ''}`.trim();
+        return valB.localeCompare(valA, 'es', { sensitivity: 'base' });
+      });
+    }
+
+    return list;
+  }, [insumos, selectedPedidoIdFab, sortInsumosKodigo]);
 
   const selectedPedidoFab = useMemo(() => {
     if (!selectedPedidoIdFab) return null;
@@ -1588,8 +1609,22 @@ export default function KodeSystemPage() {
       });
     });
 
+    if (sortFraganciasKodigo === 'asc') {
+      return [...list].sort((a, b) => {
+        const valA = `${a.contratipo || ''} ${a.codigo || ''}`.trim();
+        const valB = `${b.contratipo || ''} ${b.codigo || ''}`.trim();
+        return valA.localeCompare(valB, 'es', { sensitivity: 'base' });
+      });
+    } else if (sortFraganciasKodigo === 'desc') {
+      return [...list].sort((a, b) => {
+        const valA = `${a.contratipo || ''} ${a.codigo || ''}`.trim();
+        const valB = `${b.contratipo || ''} ${b.codigo || ''}`.trim();
+        return valB.localeCompare(valA, 'es', { sensitivity: 'base' });
+      });
+    }
+
     return list;
-  }, [pedidosAmarillos, selectedPedidoIdFab]);
+  }, [pedidosAmarillos, selectedPedidoIdFab, sortFraganciasKodigo]);
 
   // Métricas
   const metricas = useMemo(() => {
@@ -4010,7 +4045,36 @@ export default function KodeSystemPage() {
                           <table className="w-full text-left text-xs border-collapse">
                             <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
                               <tr>
-                                <th className="py-2.5 px-3">Kodigo</th>
+                                <th
+                                  onClick={() =>
+                                    setSortInsumosKodigo((prev) =>
+                                      prev === 'asc' ? 'desc' : prev === 'desc' ? 'none' : 'asc'
+                                    )
+                                  }
+                                  className="py-2.5 px-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                                  title="Clic para alternar orden: de la A a la Z o de la Z a la A"
+                                >
+                                  <div className="flex items-center gap-1.5">
+                                    <span>Kodigo</span>
+                                    {sortInsumosKodigo === 'asc' && (
+                                      <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
+                                        <ChevronUp className="w-3 h-3" />
+                                        <span>A-Z</span>
+                                      </span>
+                                    )}
+                                    {sortInsumosKodigo === 'desc' && (
+                                      <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
+                                        <ChevronDown className="w-3 h-3" />
+                                        <span>Z-A</span>
+                                      </span>
+                                    )}
+                                    {sortInsumosKodigo === 'none' && (
+                                      <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]" title="Clic para ordenar A-Z">
+                                        ⇅
+                                      </span>
+                                    )}
+                                  </div>
+                                </th>
                                 <th className="py-2.5 px-3">Cliente</th>
                                 <th className="py-2.5 px-3">Fecha registro</th>
                                 <th className="py-2.5 px-3 text-center">Version</th>
@@ -4280,7 +4344,36 @@ export default function KodeSystemPage() {
                           <table className="w-full text-left text-xs border-collapse">
                             <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
                               <tr>
-                                <th className="py-2.5 px-3">Kodigo</th>
+                                <th
+                                  onClick={() =>
+                                    setSortFraganciasKodigo((prev) =>
+                                      prev === 'asc' ? 'desc' : prev === 'desc' ? 'none' : 'asc'
+                                    )
+                                  }
+                                  className="py-2.5 px-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                                  title="Clic para alternar orden: de la A a la Z o de la Z a la A"
+                                >
+                                  <div className="flex items-center gap-1.5">
+                                    <span>Kodigo</span>
+                                    {sortFraganciasKodigo === 'asc' && (
+                                      <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
+                                        <ChevronUp className="w-3 h-3" />
+                                        <span>A-Z</span>
+                                      </span>
+                                    )}
+                                    {sortFraganciasKodigo === 'desc' && (
+                                      <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
+                                        <ChevronDown className="w-3 h-3" />
+                                        <span>Z-A</span>
+                                      </span>
+                                    )}
+                                    {sortFraganciasKodigo === 'none' && (
+                                      <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]" title="Clic para ordenar A-Z">
+                                        ⇅
+                                      </span>
+                                    )}
+                                  </div>
+                                </th>
                                 <th className="py-2.5 px-3">Cliente</th>
                                 <th className="py-2.5 px-3">Fecha registro</th>
                                 <th className="py-2.5 px-3 text-center">Version</th>
