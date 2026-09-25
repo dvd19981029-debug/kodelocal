@@ -97,6 +97,19 @@ import {
   ClienteFichaView,
 } from './components/ventas';
 import {
+  FabricacionHub,
+  CompraPendienteTabla,
+  PorFabricarTabla,
+} from './components/fabricacion';
+import {
+  LogisticaView,
+} from './components/logistica';
+import {
+  BiHub,
+  DashboardMetricas,
+  ComprasGastosTabla,
+} from './components/bi';
+import {
   CatalogoItem,
   Vendedora,
   PedidoItem,
@@ -228,43 +241,6 @@ export default function KodeSystemPage() {
   const [pagoContraEntrega, setPagoContraEntrega] = useState<boolean>(true);
   const [solicitudesEspeciales, setSolicitudesEspeciales] = useState('');
 
-  // Ordenamiento interactivo de tablas de Insumos y Fragancias (Kodigo, Cliente, Fecha, Version)
-  const [sortInsumos, setSortInsumos] = useState<{
-    column: 'kodigo' | 'cliente' | 'fecha' | 'version';
-    direction: 'asc' | 'desc';
-  }>({
-    column: 'kodigo',
-    direction: 'asc',
-  });
-
-  const [sortFragancias, setSortFragancias] = useState<{
-    column: 'kodigo' | 'cliente' | 'fecha' | 'version';
-    direction: 'asc' | 'desc';
-  }>({
-    column: 'kodigo',
-    direction: 'asc',
-  });
-
-  const handleToggleSortInsumos = (col: 'kodigo' | 'cliente' | 'fecha' | 'version') => {
-    setSortInsumos((prev) => {
-      if (prev.column === col) {
-        return { column: col, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
-      }
-      return { column: col, direction: col === 'fecha' ? 'desc' : 'asc' };
-    });
-  };
-
-  const handleToggleSortFragancias = (col: 'kodigo' | 'cliente' | 'fecha' | 'version') => {
-    setSortFragancias((prev) => {
-      if (prev.column === col) {
-        return { column: col, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
-      }
-      return { column: col, direction: col === 'fecha' ? 'desc' : 'asc' };
-    });
-  };
-
-  // Filtro de días en módulo de Logística ('20dias' | 'todos')
-  const [filtroLogisticaDias, setFiltroLogisticaDias] = useState<'20dias' | 'todos'>('20dias');
 
   // Catálogo de Formas de Pago y selección en nuevo pedido
   const [formasPago, setFormasPago] = useState<FormaPagoItem[]>([]);
@@ -339,16 +315,7 @@ export default function KodeSystemPage() {
   const [guiaModalPedido, setGuiaModalPedido] = useState<Pedido | null>(null);
   const [numGuiaInput, setNumGuiaInput] = useState('');
   const [linkGuiaInput, setLinkGuiaInput] = useState('');
-  const [copiedTrackingId, setCopiedTrackingId] = useState<string | null>(null);
   const [generandoGuiaPedidoId, setGenerandoGuiaPedidoId] = useState<string | null>(null);
-
-  // Formulario Compras
-  const [nuevaCompraFecha, setNuevaCompraFecha] = useState(() => new Date().toISOString().split('T')[0]);
-  const [nuevaCompraConcepto, setNuevaCompraConcepto] = useState('');
-  const [nuevaCompraMonto, setNuevaCompraMonto] = useState<number>(0);
-  const [nuevaCompraProveedor, setNuevaCompraProveedor] = useState('');
-  const [nuevaCompraCategoria, setNuevaCompraCategoria] = useState<'ESENCIAS' | 'CAJAS' | 'FRASCOS' | 'PAPEL' | 'OTROS INSUMOS'>('ESENCIAS');
-  const [filtroCategoriaCompra, setFiltroCategoriaCompra] = useState<string>('TODAS');
 
   const [generandoGuia, setGenerandoGuia] = useState(false);
 
@@ -1148,46 +1115,6 @@ export default function KodeSystemPage() {
     }
   };
 
-  const handleCopiarMensajeC807 = (p: Pedido) => {
-    const link = getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo);
-    const mensaje = `Buenas tardes\nSu orden con el número de pedido ${p.numero_pedido} ya se encuentra en camino.\nLe comparto el número de rastreo: ${p.c807_guia_numero || 'Pendiente'}${link ? `\nPuede rastrearlo en este link: ${link}` : ''}`;
-    navigator.clipboard.writeText(mensaje);
-    setCopiedTrackingId(p.id);
-    showToast('Mensaje de WhatsApp copiado', 'info');
-    setTimeout(() => setCopiedTrackingId(null), 3000);
-  };
-
-  const handleAbrirWhatsAppC807 = (p: Pedido) => {
-    const link = getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo);
-    const mensaje = `Buenas tardes\nSu orden con el número de pedido ${p.numero_pedido} ya se encuentra en camino.\nLe comparto el número de rastreo: ${p.c807_guia_numero || ''}${link ? `\nPuede rastrearlo en este link: ${link}` : ''}`;
-    const url = `https://wa.me/503${p.cliente_telefono}?text=${encodeURIComponent(mensaje)}`;
-    window.open(url, '_blank');
-  };
-
-  const handleRegistrarCompra = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!nuevaCompraConcepto.trim() || nuevaCompraMonto <= 0) {
-      showToast('Ingrese un concepto y monto válido', 'error');
-      return;
-    }
-
-    const nueva: CompraGasto = {
-      id: `GASTO-${Date.now().toString().slice(-4)}`,
-      fecha_compra: nuevaCompraFecha,
-      concepto: nuevaCompraConcepto.trim(),
-      monto_total: parseFloat(nuevaCompraMonto.toString()),
-      proveedor: nuevaCompraProveedor.trim() || 'Proveedor Local',
-      categoria: nuevaCompraCategoria,
-      estado_pago: 'PAGADO'
-    };
-
-    const actualizadas = [nueva, ...compras];
-    guardarComprasLocal(actualizadas);
-    setNuevaCompraConcepto('');
-    setNuevaCompraMonto(0);
-    setNuevaCompraProveedor('');
-    showToast('Compra registrada exitosamente', 'success');
-  };
 
   const handleEliminarCompra = (id: string) => {
     const actualizadas = compras.filter((c) => c.id !== id);
@@ -1580,115 +1507,6 @@ export default function KodeSystemPage() {
     return pedidos.filter((p) => p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR');
   }, [pedidos]);
 
-  const insumosSplitPane = useMemo(() => {
-    const list = selectedPedidoIdFab
-      ? insumos.filter((item) => item.pedido_id === selectedPedidoIdFab)
-      : [...insumos];
-
-    return [...list].sort((a, b) => {
-      if (sortInsumos.column === 'kodigo') {
-        const valA = `${a.contratipo || ''} ${a.codigo || ''}`.trim();
-        const valB = `${b.contratipo || ''} ${b.codigo || ''}`.trim();
-        return sortInsumos.direction === 'asc'
-          ? valA.localeCompare(valB, 'es', { sensitivity: 'base' })
-          : valB.localeCompare(valA, 'es', { sensitivity: 'base' });
-      }
-
-      if (sortInsumos.column === 'cliente') {
-        const valA = (a.cliente_nombre || '').trim();
-        const valB = (b.cliente_nombre || '').trim();
-        return sortInsumos.direction === 'asc'
-          ? valA.localeCompare(valB, 'es', { sensitivity: 'base' })
-          : valB.localeCompare(valA, 'es', { sensitivity: 'base' });
-      }
-
-      if (sortInsumos.column === 'fecha') {
-        const timeA = new Date(a.fecha_registro || 0).getTime();
-        const timeB = new Date(b.fecha_registro || 0).getTime();
-        return sortInsumos.direction === 'desc' ? timeB - timeA : timeA - timeB;
-      }
-
-      if (sortInsumos.column === 'version') {
-        const valA = (a.version || '').trim();
-        const valB = (b.version || '').trim();
-        return sortInsumos.direction === 'asc'
-          ? valA.localeCompare(valB, 'es', { sensitivity: 'base' })
-          : valB.localeCompare(valA, 'es', { sensitivity: 'base' });
-      }
-
-      return 0;
-    });
-  }, [insumos, selectedPedidoIdFab, sortInsumos]);
-
-  const selectedPedidoFab = useMemo(() => {
-    if (!selectedPedidoIdFab) return null;
-    return pedidosAmarillos.find((p) => p.id === selectedPedidoIdFab) || null;
-  }, [pedidosAmarillos, selectedPedidoIdFab]);
-
-  const fraganciasSplitPane = useMemo(() => {
-    const list: Array<{
-      item_id: string;
-      pedido_id: string;
-      numero_pedido: string;
-      cliente_nombre: string;
-      fecha_registro: string;
-      codigo: string;
-      contratipo: string;
-      version: string;
-      cantidad: number;
-    }> = [];
-
-    pedidosAmarillos.forEach((ped) => {
-      if (selectedPedidoIdFab && ped.id !== selectedPedidoIdFab) return;
-      (ped.items || []).forEach((it, idx) => {
-        list.push({
-          item_id: it.id || `${ped.id}-frag-${idx}`,
-          pedido_id: ped.id,
-          numero_pedido: ped.numero_pedido,
-          cliente_nombre: ped.cliente_nombre,
-          fecha_registro: ped.created_at,
-          codigo: it.codigo,
-          contratipo: it.contratipo,
-          version: it.version,
-          cantidad: it.cantidad,
-        });
-      });
-    });
-
-    return [...list].sort((a, b) => {
-      if (sortFragancias.column === 'kodigo') {
-        const valA = `${a.contratipo || ''} ${a.codigo || ''}`.trim();
-        const valB = `${b.contratipo || ''} ${b.codigo || ''}`.trim();
-        return sortFragancias.direction === 'asc'
-          ? valA.localeCompare(valB, 'es', { sensitivity: 'base' })
-          : valB.localeCompare(valA, 'es', { sensitivity: 'base' });
-      }
-
-      if (sortFragancias.column === 'cliente') {
-        const valA = (a.cliente_nombre || '').trim();
-        const valB = (b.cliente_nombre || '').trim();
-        return sortFragancias.direction === 'asc'
-          ? valA.localeCompare(valB, 'es', { sensitivity: 'base' })
-          : valB.localeCompare(valA, 'es', { sensitivity: 'base' });
-      }
-
-      if (sortFragancias.column === 'fecha') {
-        const timeA = new Date(a.fecha_registro || 0).getTime();
-        const timeB = new Date(b.fecha_registro || 0).getTime();
-        return sortFragancias.direction === 'desc' ? timeB - timeA : timeA - timeB;
-      }
-
-      if (sortFragancias.column === 'version') {
-        const valA = (a.version || '').trim();
-        const valB = (b.version || '').trim();
-        return sortFragancias.direction === 'asc'
-          ? valA.localeCompare(valB, 'es', { sensitivity: 'base' })
-          : valB.localeCompare(valA, 'es', { sensitivity: 'base' });
-      }
-
-      return 0;
-    });
-  }, [pedidosAmarillos, selectedPedidoIdFab, sortFragancias]);
 
   // Métricas
   const metricas = useMemo(() => {
@@ -1700,60 +1518,6 @@ export default function KodeSystemPage() {
     return { rojos, amarillos, azules, total: pedidos.length, totalVentas, totalGastosCompras };
   }, [pedidos, compras]);
 
-  // Módulo de Logística C807: Envíos filtrados y ordenados de más reciente a más antigua
-  const { pedidosLogistica, conteoLogistica20Dias, conteoLogisticaTodos } = useMemo(() => {
-    const ahora = Date.now();
-    const limite20Dias = ahora - 20 * 24 * 60 * 60 * 1000;
-
-    // Base de logística: pedidos con guía asignada o en estados de envío/despacho
-    const base = pedidos.filter(
-      (p) =>
-        p.c807_guia_numero ||
-        p.estado === 'GUIA_CREADA' ||
-        p.estado === 'PENDIENTE_PREPARAR' ||
-        p.estado === 'Enviado' ||
-        p.estado === 'Entregado'
-    );
-
-    const pedidosEn20Dias = base.filter((p) => {
-      const f = p.c807_fecha_guia || p.created_at;
-      if (!f) return true;
-      const t = new Date(f).getTime();
-      return !isNaN(t) && t >= limite20Dias;
-    });
-
-    const conteoLogistica20Dias = pedidosEn20Dias.length;
-    const conteoLogisticaTodos = base.length;
-
-    let list = filtroLogisticaDias === '20dias' ? pedidosEn20Dias : base;
-
-    // Filtro por buscador superior
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      list = list.filter(
-        (p) =>
-          p.numero_pedido.toLowerCase().includes(q) ||
-          (p.c807_guia_numero || '').toLowerCase().includes(q) ||
-          p.cliente_nombre.toLowerCase().includes(q) ||
-          (p.cliente_municipio || '').toLowerCase().includes(q) ||
-          (p.cliente_departamento || '').toLowerCase().includes(q) ||
-          (p.c807_estado || '').toLowerCase().includes(q)
-      );
-    }
-
-    // Ordenar siempre de la más reciente a la más antigua
-    const sorted = [...list].sort((a, b) => {
-      const timeA = new Date(a.c807_fecha_guia || a.created_at || 0).getTime();
-      const timeB = new Date(b.c807_fecha_guia || b.created_at || 0).getTime();
-      return timeB - timeA;
-    });
-
-    return {
-      pedidosLogistica: sorted,
-      conteoLogistica20Dias,
-      conteoLogisticaTodos,
-    };
-  }, [pedidos, searchQuery, filtroLogisticaDias]);
 
   return (
     <div className="min-h-screen bg-[#f1f4f9] text-slate-800 flex font-sans antialiased overflow-x-hidden">
@@ -3609,1221 +3373,112 @@ export default function KodeSystemPage() {
           )}
 
           {/* ============================================================== */}
-          {/* MÓDULO: FABRICACIÓN (SPLIT-PANE EXACTO A APPSHEET)             */}
+          {/* MODULO: FABRICACION                                           */}
           {/* ============================================================== */}
           {activeNav === 'FABRICACION' && (
             <div className="space-y-4">
               {fabView === 'hub' && (
-                <div className="space-y-6">
-                  <h2 className="text-sm font-black uppercase text-slate-700 tracking-wider">FABRICACION</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* Tarjeta PEDIDOS COMPRA PENDIENTE */}
-                    <div
-                      onClick={() => {
-                        setSelectedPedidoIdFab(null);
-                        setFabView('compra_pendiente');
-                      }}
-                      className="clay-card p-5 cursor-pointer flex items-center gap-4 transition-all hover:scale-[1.02] hover:border-rose-300"
-                    >
-                      <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shrink-0 shadow-inner">
-                        <ShoppingBag className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-black text-slate-900">PEDIDOS COMPRA PENDIENTE</h3>
-                        <span className="text-[11px] text-slate-400 font-bold uppercase">
-                          {pedidosRojos.length} PEDIDOS EN ROJO
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Tarjeta PEDIDOS POR FABRICAR */}
-                    <div
-                      onClick={() => {
-                        setSelectedPedidoIdFab(null);
-                        setFabView('por_fabricar');
-                      }}
-                      className="clay-card p-5 cursor-pointer flex items-center gap-4 transition-all hover:scale-[1.02] hover:border-amber-300"
-                    >
-                      <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shrink-0 shadow-inner">
-                        <FlaskConical className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-black text-slate-900">PEDIDOS POR FABRICAR</h3>
-                        <span className="text-[11px] text-slate-400 font-bold uppercase">
-                          {pedidosAmarillos.length} PEDIDOS EN LABORATORIO
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <FabricacionHub
+                  pedidosRojosCount={pedidosRojos.length}
+                  pedidosAmarillosCount={pedidosAmarillos.length}
+                  onSelectView={(view) => {
+                    setSelectedPedidoIdFab(null);
+                    setFabView(view);
+                  }}
+                />
               )}
 
-              {/* FASE 1: VISTA EXACTA APPSHEET: ESTADO REGISTRADO E INSUMOS PARA COMPRA */}
               {fabView === 'compra_pendiente' && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <button
-                      onClick={() => {
-                        setSelectedPedidoIdFab(null);
-                        setFabView('hub');
-                      }}
-                      className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      ← Volver a Fabricación
-                    </button>
-                    <span className="text-xs text-rose-600 font-bold">Fase 1: Insumos por Comprar</span>
-                  </div>
-
-                  {/* Tabla Normal limpia (sin fondo negro, sin elementos graficos de tarjetas) */}
-                  <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
-                      
-                      {/* ========================================================= */}
-                      {/* TABLA IZQUIERDA: ESTADO REGISTRADO                        */}
-                      {/* ========================================================= */}
-                      <div className="lg:col-span-5 flex flex-col bg-white">
-                        {/* Barra Superior Header */}
-                        <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <h2 className="text-xs font-black uppercase text-slate-700 tracking-wider">
-                              Estado Registrado
-                            </h2>
-                            {selectedPedidoIdFab && (
-                              <button
-                                onClick={() => setSelectedPedidoIdFab(null)}
-                                className="text-[11px] text-indigo-600 hover:text-indigo-800 font-bold underline cursor-pointer"
-                              >
-                                Ver todos ({pedidosRojos.length})
-                              </button>
-                            )}
-                          </div>
-
-                          <span className="text-xs text-slate-500 font-bold font-mono">
-                            {pedidosRojos.length} {pedidosRojos.length === 1 ? 'pedido' : 'pedidos'}
-                          </span>
-                        </div>
-
-                        {/* Tabla Estado Registrado */}
-                        <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
-                          <table className="w-full text-left text-xs border-collapse">
-                            <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
-                              <tr>
-                                <th className="py-2.5 px-3">Cliente</th>
-                                <th className="py-2.5 px-3">Marca Temporal</th>
-                                <th className="py-2.5 px-3">Usuario</th>
-                                <th className="py-2.5 px-2 w-7 text-center"></th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 bg-white">
-                              {pedidosRojos.length === 0 ? (
-                                <tr>
-                                  <td colSpan={4} className="py-12 text-center text-slate-400 font-medium">
-                                    No hay pedidos en estado registrado
-                                  </td>
-                                </tr>
-                              ) : (
-                                pedidosRojos.map((p) => {
-                                  const isSelected = selectedPedidoIdFab === p.id;
-                                  const faltantes = p.items.filter((i) => !i.insumo_comprado).length;
-
-                                  return (
-                                    <tr
-                                      key={p.id}
-                                      onClick={() => setSelectedPedidoIdFab(isSelected ? null : p.id)}
-                                      className={`cursor-pointer transition-colors ${
-                                        isSelected
-                                          ? 'bg-indigo-50/80 border-l-4 border-l-indigo-600'
-                                          : 'hover:bg-slate-50/80'
-                                      }`}
-                                    >
-                                      <td className="py-3 px-3 font-bold text-red-600 hover:text-red-700">
-                                        <span>{p.cliente_nombre}</span>
-                                        {faltantes > 0 && (
-                                          <span className="ml-1.5 text-[10px] font-mono text-slate-400 font-normal">
-                                            ({faltantes} pend.)
-                                          </span>
-                                        )}
-                                      </td>
-                                      <td className="py-3 px-3 text-slate-600 font-mono text-xs whitespace-nowrap">
-                                        {formatearMarcaTemporal(p.created_at)}
-                                      </td>
-                                      <td
-                                        className="py-3 px-3 text-slate-700 font-medium text-xs truncate max-w-[180px]"
-                                        title={p.vendedora_nombre || 'Erika Melgar'}
-                                      >
-                                        {p.vendedora_nombre || 'Erika Melgar'}
-                                      </td>
-                                      <td className="py-3 px-2 text-center text-slate-400">
-                                        <ChevronRight className="w-4 h-4 inline opacity-60" />
-                                      </td>
-                                    </tr>
-                                  );
-                                })
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-
-                      {/* ========================================================= */}
-                      {/* TABLA DERECHA: INSUMOS PARA COMPRA                        */}
-                      {/* ========================================================= */}
-                      <div className="lg:col-span-7 flex flex-col bg-white">
-                        {/* Header Insumos */}
-                        <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <h2 className="text-xs font-black uppercase text-slate-700 tracking-wider">
-                              Insumos para compra
-                            </h2>
-                            {selectedPedidoIdFab && (
-                              <span className="text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full">
-                                Filtrado por pedido
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-xs text-slate-500 font-bold font-mono">
-                            {insumosSplitPane.length} {insumosSplitPane.length === 1 ? 'insumo' : 'insumos'}
-                          </span>
-                        </div>
-
-                        {/* Tabla Insumos */}
-                        <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
-                          <table className="w-full text-left text-xs border-collapse">
-                            <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
-                              <tr>
-                                {/* 1. Kodigo */}
-                                <th
-                                  onClick={() => handleToggleSortInsumos('kodigo')}
-                                  className="py-2.5 px-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
-                                  title="Clic para ordenar por Kodigo (A-Z / Z-A)"
-                                >
-                                  <div className="flex items-center gap-1.5">
-                                    <span>Kodigo</span>
-                                    {sortInsumos.column === 'kodigo' ? (
-                                      <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
-                                        {sortInsumos.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                                        <span>{sortInsumos.direction === 'asc' ? 'A-Z' : 'Z-A'}</span>
-                                      </span>
-                                    ) : (
-                                      <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]" title="Ordenar A-Z">
-                                        ⇅
-                                      </span>
-                                    )}
-                                  </div>
-                                </th>
-
-                                {/* 2. Cliente */}
-                                <th
-                                  onClick={() => handleToggleSortInsumos('cliente')}
-                                  className="py-2.5 px-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
-                                  title="Clic para ordenar por Cliente (A-Z / Z-A)"
-                                >
-                                  <div className="flex items-center gap-1.5">
-                                    <span>Cliente</span>
-                                    {sortInsumos.column === 'cliente' ? (
-                                      <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
-                                        {sortInsumos.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                                        <span>{sortInsumos.direction === 'asc' ? 'A-Z' : 'Z-A'}</span>
-                                      </span>
-                                    ) : (
-                                      <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]" title="Ordenar A-Z">
-                                        ⇅
-                                      </span>
-                                    )}
-                                  </div>
-                                </th>
-
-                                {/* 3. Fecha registro */}
-                                <th
-                                  onClick={() => handleToggleSortInsumos('fecha')}
-                                  className="py-2.5 px-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
-                                  title="Clic para ordenar por Fecha (Reciente / Antiguo)"
-                                >
-                                  <div className="flex items-center gap-1.5">
-                                    <span>Fecha registro</span>
-                                    {sortInsumos.column === 'fecha' ? (
-                                      <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
-                                        {sortInsumos.direction === 'desc' ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
-                                        <span>{sortInsumos.direction === 'desc' ? 'Más reciente' : 'Más antiguo'}</span>
-                                      </span>
-                                    ) : (
-                                      <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]" title="Ordenar por fecha">
-                                        ⇅
-                                      </span>
-                                    )}
-                                  </div>
-                                </th>
-
-                                {/* 4. Version */}
-                                <th
-                                  onClick={() => handleToggleSortInsumos('version')}
-                                  className="py-2.5 px-3 text-center cursor-pointer hover:bg-slate-100 transition-colors select-none group"
-                                  title="Clic para ordenar por Versión (A-Z / Z-A)"
-                                >
-                                  <div className="flex items-center justify-center gap-1.5">
-                                    <span>Version</span>
-                                    {sortInsumos.column === 'version' ? (
-                                      <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
-                                        {sortInsumos.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                                        <span>{sortInsumos.direction === 'asc' ? 'A-Z' : 'Z-A'}</span>
-                                      </span>
-                                    ) : (
-                                      <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]" title="Ordenar por versión">
-                                        ⇅
-                                      </span>
-                                    )}
-                                  </div>
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 bg-white">
-                              {insumosSplitPane.length === 0 ? (
-                                <tr>
-                                  <td colSpan={4} className="py-12 text-center text-slate-400 font-medium">
-                                    ¡Todos los insumos han sido comprados!
-                                  </td>
-                                </tr>
-                              ) : (
-                                insumosSplitPane.map((item) => {
-                                  const isPlus = item.version === 'Plus' || item.version === 'EXTRA_SHOT';
-
-                                  return (
-                                    <tr key={item.item_id} className="hover:bg-slate-50/80 transition-colors">
-                                      {/* 1. Kodigo: En AMARILLO para Normal, en AZUL para Plus */}
-                                      <td className="py-3 px-3">
-                                        <div className="flex items-center gap-2">
-                                          {isPlus ? (
-                                            <button
-                                              type="button"
-                                              onClick={() => handleMarcarInsumo({ item_id: item.item_id })}
-                                              disabled={loading}
-                                              title="Comprar insumo (Plus)"
-                                              className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-black text-[11px] leading-none shrink-0 transition-transform active:scale-95 cursor-pointer shadow-2xs"
-                                            >
-                                              +
-                                            </button>
-                                          ) : (
-                                            <button
-                                              type="button"
-                                              onClick={() => handleMarcarInsumo({ item_id: item.item_id })}
-                                              disabled={loading}
-                                              title="Comprar insumo (Normal)"
-                                              className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-[11px] leading-none shrink-0 transition-transform active:scale-95 cursor-pointer shadow-2xs"
-                                            >
-                                              ↓
-                                            </button>
-                                          )}
-
-                                          <span
-                                            onClick={() => handleMarcarInsumo({ item_id: item.item_id })}
-                                            title="Clic para marcar como comprado"
-                                            className={`font-bold cursor-pointer hover:underline text-xs ${
-                                              isPlus
-                                                ? 'text-blue-600 hover:text-blue-700'
-                                                : 'text-amber-600 hover:text-amber-700'
-                                            }`}
-                                          >
-                                            {item.contratipo} - {item.codigo}
-                                          </span>
-
-                                          {item.cantidad > 1 && (
-                                            <span className="text-[10px] font-mono font-bold text-slate-400">
-                                              ({item.cantidad} uds)
-                                            </span>
-                                          )}
-                                        </div>
-                                      </td>
-
-                                      {/* 2. Cliente: Nombre del cliente (en rojo si está pendiente como en Estado Registrado) */}
-                                      <td className={`py-3 px-3 font-bold whitespace-nowrap ${
-                                        item.pedido_estado === 'Insumos comprados' || item.pedido_estado === 'PENDIENTE_PREPARAR'
-                                          ? 'text-amber-600'
-                                          : item.pedido_estado === 'Preparado' || item.pedido_estado === 'GUIA_CREADA'
-                                          ? 'text-sky-600'
-                                          : item.pedido_estado === 'Entregado'
-                                          ? 'text-emerald-600'
-                                          : 'text-red-600 hover:text-red-700'
-                                      }`}>
-                                        {item.cliente_nombre}
-                                      </td>
-
-                                      {/* 3. Fecha registro: Fecha y hora en que se registró */}
-                                      <td className="py-3 px-3 text-slate-600 font-mono text-xs whitespace-nowrap">
-                                        {formatearMarcaTemporal(item.fecha_registro)}
-                                      </td>
-
-                                      {/* 4. Version: Normal (amarillo) o Plus (azul) */}
-                                      <td className="py-3 px-3 text-center whitespace-nowrap">
-                                        {isPlus ? (
-                                          <span className="text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-0.5 rounded-full">
-                                            Plus
-                                          </span>
-                                        ) : (
-                                          <span className="text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                                            Normal
-                                          </span>
-                                        )}
-                                      </td>
-                                    </tr>
-                                  );
-                                })
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-                </div>
+                <CompraPendienteTabla
+                  pedidosRojos={pedidosRojos}
+                  insumos={insumos}
+                  selectedPedidoId={selectedPedidoIdFab}
+                  onSelectPedidoId={setSelectedPedidoIdFab}
+                  onBack={() => {
+                    setSelectedPedidoIdFab(null);
+                    setFabView('hub');
+                  }}
+                  onMarcarInsumo={handleMarcarInsumo}
+                  loading={loading}
+                />
               )}
 
-              {/* FASE 2: VISTA EXACTA APPSHEET: ESTADO LISTO FABRICAR Y FRAGANCIAS POR FABRICAR */}
               {fabView === 'por_fabricar' && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <button
-                      onClick={() => {
-                        setSelectedPedidoIdFab(null);
-                        setFabView('hub');
-                      }}
-                      className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      ← Volver a Fabricación
-                    </button>
-                    <span className="text-xs text-amber-700 font-bold">Fase 2: Pedidos por Fabricar</span>
-                  </div>
-
-                  {/* Tabla Normal limpia (sin fondo negro, sin elementos graficos de tarjetas) */}
-                  <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
-                      
-                      {/* ========================================================= */}
-                      {/* TABLA IZQUIERDA: ESTADO LISTO FABRICAR                    */}
-                      {/* ========================================================= */}
-                      <div className="lg:col-span-5 flex flex-col bg-white">
-                        {/* Barra Superior Header */}
-                        <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <h2 className="text-xs font-black uppercase text-slate-700 tracking-wider">
-                              Estado Listo Fabricar
-                            </h2>
-                            {selectedPedidoIdFab && (
-                              <button
-                                onClick={() => setSelectedPedidoIdFab(null)}
-                                className="text-[11px] text-indigo-600 hover:text-indigo-800 font-bold underline cursor-pointer"
-                              >
-                                Ver todos ({pedidosAmarillos.length})
-                              </button>
-                            )}
-                          </div>
-
-                          <span className="text-xs text-slate-500 font-bold font-mono">
-                            {pedidosAmarillos.length} {pedidosAmarillos.length === 1 ? 'pedido' : 'pedidos'}
-                          </span>
-                        </div>
-
-                        {/* Tabla Estado Listo Fabricar */}
-                        <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
-                          <table className="w-full text-left text-xs border-collapse">
-                            <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
-                              <tr>
-                                <th className="py-2.5 px-3">Cliente</th>
-                                <th className="py-2.5 px-3">Marca Temporal</th>
-                                <th className="py-2.5 px-3">Usuario</th>
-                                <th className="py-2.5 px-2 text-right"></th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 bg-white">
-                              {pedidosAmarillos.length === 0 ? (
-                                <tr>
-                                  <td colSpan={4} className="py-12 text-center text-slate-400 font-medium">
-                                    No hay pedidos listos para fabricar
-                                  </td>
-                                </tr>
-                              ) : (
-                                pedidosAmarillos.map((p) => {
-                                  const isSelected = selectedPedidoIdFab === p.id;
-
-                                  return (
-                                    <tr
-                                      key={p.id}
-                                      onClick={() => setSelectedPedidoIdFab(isSelected ? null : p.id)}
-                                      className={`cursor-pointer transition-colors ${
-                                        isSelected
-                                          ? 'bg-amber-50/80 border-l-4 border-l-amber-500'
-                                          : 'hover:bg-slate-50/80'
-                                      }`}
-                                    >
-                                      {/* Cliente en AMARILLO/ÁMBAR (determinado por el estado Listo Fabricar) */}
-                                      <td className="py-3 px-3 font-bold text-amber-600 hover:text-amber-700">
-                                        <span>{p.cliente_nombre}</span>
-                                        <span className="ml-1.5 text-[10px] font-mono text-slate-400 font-normal">
-                                          ({p.items.length} {p.items.length === 1 ? 'frag.' : 'frags.'})
-                                        </span>
-                                      </td>
-                                      <td className="py-3 px-3 text-slate-600 font-mono text-xs whitespace-nowrap">
-                                        {formatearMarcaTemporal(p.created_at)}
-                                      </td>
-                                      <td
-                                        className="py-3 px-3 text-slate-700 font-medium text-xs truncate max-w-[180px]"
-                                        title={p.vendedora_nombre || 'Erika Melgar'}
-                                      >
-                                        {p.vendedora_nombre || 'Erika Melgar'}
-                                      </td>
-                                      <td className="py-3 px-2 text-right whitespace-nowrap">
-                                        <div className="inline-flex items-center gap-1.5">
-                                          <button
-                                            type="button"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setGuiaModalPedido(p);
-                                              setNumGuiaInput('');
-                                              setLinkGuiaInput('');
-                                            }}
-                                            title="Asignar Guía C807"
-                                            className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 transition-colors cursor-pointer"
-                                          >
-                                            C807 →
-                                          </button>
-                                          <ChevronRight className="w-4 h-4 inline opacity-60 text-slate-400" />
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  );
-                                })
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-
-                      {/* ========================================================= */}
-                      {/* TABLA DERECHA: FRAGANCIAS POR FABRICAR                    */}
-                      {/* ========================================================= */}
-                      <div className="lg:col-span-7 flex flex-col bg-white">
-                        {/* Header Fragancias */}
-                        <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <h2 className="text-xs font-black uppercase text-slate-700 tracking-wider">
-                              Fragancias por fabricar
-                            </h2>
-                            {selectedPedidoIdFab && (
-                              <span className="text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">
-                                Filtrado por pedido
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {selectedPedidoFab && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setGuiaModalPedido(selectedPedidoFab);
-                                  setNumGuiaInput('');
-                                  setLinkGuiaInput('');
-                                }}
-                                className="text-[11px] font-bold px-2.5 py-1 bg-sky-600 hover:bg-sky-700 text-white rounded-lg transition-colors flex items-center gap-1 shadow-2xs cursor-pointer"
-                              >
-                                <Truck className="w-3.5 h-3.5" />
-                                <span>Asignar C807 ({selectedPedidoFab.numero_pedido})</span>
-                              </button>
-                            )}
-                            <span className="text-xs text-slate-500 font-bold font-mono">
-                              {fraganciasSplitPane.length} {fraganciasSplitPane.length === 1 ? 'fragancia' : 'fragancias'}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Tabla Fragancias */}
-                        <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
-                          <table className="w-full text-left text-xs border-collapse">
-                            <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
-                              <tr>
-                                {/* 1. Kodigo */}
-                                <th
-                                  onClick={() => handleToggleSortFragancias('kodigo')}
-                                  className="py-2.5 px-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
-                                  title="Clic para ordenar por Kodigo (A-Z / Z-A)"
-                                >
-                                  <div className="flex items-center gap-1.5">
-                                    <span>Kodigo</span>
-                                    {sortFragancias.column === 'kodigo' ? (
-                                      <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
-                                        {sortFragancias.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                                        <span>{sortFragancias.direction === 'asc' ? 'A-Z' : 'Z-A'}</span>
-                                      </span>
-                                    ) : (
-                                      <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]" title="Ordenar A-Z">
-                                        ⇅
-                                      </span>
-                                    )}
-                                  </div>
-                                </th>
-
-                                {/* 2. Cliente */}
-                                <th
-                                  onClick={() => handleToggleSortFragancias('cliente')}
-                                  className="py-2.5 px-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
-                                  title="Clic para ordenar por Cliente (A-Z / Z-A)"
-                                >
-                                  <div className="flex items-center gap-1.5">
-                                    <span>Cliente</span>
-                                    {sortFragancias.column === 'cliente' ? (
-                                      <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
-                                        {sortFragancias.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                                        <span>{sortFragancias.direction === 'asc' ? 'A-Z' : 'Z-A'}</span>
-                                      </span>
-                                    ) : (
-                                      <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]" title="Ordenar A-Z">
-                                        ⇅
-                                      </span>
-                                    )}
-                                  </div>
-                                </th>
-
-                                {/* 3. Fecha registro */}
-                                <th
-                                  onClick={() => handleToggleSortFragancias('fecha')}
-                                  className="py-2.5 px-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
-                                  title="Clic para ordenar por Fecha (Reciente / Antiguo)"
-                                >
-                                  <div className="flex items-center gap-1.5">
-                                    <span>Fecha registro</span>
-                                    {sortFragancias.column === 'fecha' ? (
-                                      <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
-                                        {sortFragancias.direction === 'desc' ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
-                                        <span>{sortFragancias.direction === 'desc' ? 'Más reciente' : 'Más antiguo'}</span>
-                                      </span>
-                                    ) : (
-                                      <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]" title="Ordenar por fecha">
-                                        ⇅
-                                      </span>
-                                    )}
-                                  </div>
-                                </th>
-
-                                {/* 4. Version */}
-                                <th
-                                  onClick={() => handleToggleSortFragancias('version')}
-                                  className="py-2.5 px-3 text-center cursor-pointer hover:bg-slate-100 transition-colors select-none group"
-                                  title="Clic para ordenar por Versión (A-Z / Z-A)"
-                                >
-                                  <div className="flex items-center justify-center gap-1.5">
-                                    <span>Version</span>
-                                    {sortFragancias.column === 'version' ? (
-                                      <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
-                                        {sortFragancias.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                                        <span>{sortFragancias.direction === 'asc' ? 'A-Z' : 'Z-A'}</span>
-                                      </span>
-                                    ) : (
-                                      <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]" title="Ordenar por versión">
-                                        ⇅
-                                      </span>
-                                    )}
-                                  </div>
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 bg-white">
-                              {fraganciasSplitPane.length === 0 ? (
-                                <tr>
-                                  <td colSpan={4} className="py-12 text-center text-slate-400 font-medium">
-                                    No hay fragancias pendientes de fabricar
-                                  </td>
-                                </tr>
-                              ) : (
-                                fraganciasSplitPane.map((item) => {
-                                  const isPlus = item.version === 'Plus' || item.version === 'EXTRA_SHOT';
-
-                                  return (
-                                    <tr key={item.item_id} className="hover:bg-slate-50/80 transition-colors">
-                                      {/* 1. Kodigo: En AMARILLO para Normal, en AZUL para Plus */}
-                                      <td className="py-3 px-3">
-                                        <div className="flex items-center gap-2">
-                                          {isPlus ? (
-                                            <span
-                                              className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-600 text-white font-black text-[11px] leading-none shrink-0 shadow-2xs"
-                                            >
-                                              +
-                                            </span>
-                                          ) : (
-                                            <span
-                                              className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-400 text-amber-950 font-black text-[11px] leading-none shrink-0 shadow-2xs"
-                                            >
-                                              ↓
-                                            </span>
-                                          )}
-
-                                          <span
-                                            className={`font-bold text-xs ${
-                                              isPlus
-                                                ? 'text-blue-600'
-                                                : 'text-amber-600'
-                                            }`}
-                                          >
-                                            {item.contratipo} - {item.codigo}
-                                          </span>
-
-                                          {item.cantidad > 1 && (
-                                            <span className="text-[10px] font-mono font-bold text-slate-400">
-                                              ({item.cantidad} uds)
-                                            </span>
-                                          )}
-                                        </div>
-                                      </td>
-
-                                      {/* 2. Cliente: Nombre del cliente (en amarillo/ámbar por estar en Estado Listo Fabricar) */}
-                                      <td className="py-3 px-3 font-bold text-amber-600 whitespace-nowrap">
-                                        {item.cliente_nombre}
-                                      </td>
-
-                                      {/* 3. Fecha registro: Fecha y hora en que se registró */}
-                                      <td className="py-3 px-3 text-slate-600 font-mono text-xs whitespace-nowrap">
-                                        {formatearMarcaTemporal(item.fecha_registro)}
-                                      </td>
-
-                                      {/* 4. Version: Normal (amarillo) o Plus (azul) */}
-                                      <td className="py-3 px-3 text-center whitespace-nowrap">
-                                        {isPlus ? (
-                                          <span className="text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-0.5 rounded-full">
-                                            Plus
-                                          </span>
-                                        ) : (
-                                          <span className="text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                                            Normal
-                                          </span>
-                                        )}
-                                      </td>
-                                    </tr>
-                                  );
-                                })
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-                </div>
+                <PorFabricarTabla
+                  pedidosAmarillos={pedidosAmarillos}
+                  selectedPedidoId={selectedPedidoIdFab}
+                  onSelectPedidoId={setSelectedPedidoIdFab}
+                  onBack={() => {
+                    setSelectedPedidoIdFab(null);
+                    setFabView('hub');
+                  }}
+                  onAsignarGuia={(pedido) => {
+                    setGuiaModalPedido(pedido);
+                    setNumGuiaInput('');
+                    setLinkGuiaInput('');
+                  }}
+                />
               )}
             </div>
           )}
 
           {/* ============================================================== */}
-          {/* MÓDULO: LOGÍSTICA C807                                         */}
+          {/* MODULO: LOGISTICA C807                                        */}
           {/* ============================================================== */}
           {activeNav === 'LOGISTICA' && (
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-sm font-black uppercase text-slate-700 tracking-wider">
-                    LOGISTICA & ENVIOS C807
-                  </h2>
-                  <span className="text-xs text-slate-500 font-mono font-medium">
-                    {pedidosLogistica.length} {pedidosLogistica.length === 1 ? 'guía mostrada' : 'guías mostradas'}
-                  </span>
-                </div>
-
-                {/* BOTONES DE FILTRO: ÚLTIMOS 20 DÍAS / TODOS */}
-                <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 self-start sm:self-auto shadow-2xs">
-                  <button
-                    type="button"
-                    onClick={() => setFiltroLogisticaDias('20dias')}
-                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                      filtroLogisticaDias === '20dias'
-                        ? 'bg-white text-indigo-700 shadow-xs border border-slate-200'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    <Clock className="w-3.5 h-3.5 text-indigo-600" />
-                    <span>Últimos 20 días</span>
-                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
-                      {conteoLogistica20Dias}
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setFiltroLogisticaDias('todos')}
-                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                      filtroLogisticaDias === 'todos'
-                        ? 'bg-white text-indigo-700 shadow-xs border border-slate-200'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    <Layers className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Ver todos</span>
-                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-700">
-                      {conteoLogisticaTodos}
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse min-w-[1250px]">
-                    <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider whitespace-nowrap">
-                      <tr>
-                        <th className="py-2.5 px-4 whitespace-nowrap">Numero de Pedido</th>
-                        <th className="py-2.5 px-4 whitespace-nowrap">Cliente</th>
-                        <th className="py-2.5 px-4 whitespace-nowrap">Teléfono</th>
-                        <th className="py-2.5 px-4 whitespace-nowrap">Fecha Pedido</th>
-                        <th className="py-2.5 px-4 whitespace-nowrap">Total</th>
-                        <th className="py-2.5 px-4 whitespace-nowrap">Estado C807</th>
-                        <th className="py-2.5 px-4 whitespace-nowrap">Numero de DTE</th>
-                        <th className="py-2.5 px-4 whitespace-nowrap">Estado Envío</th>
-                        <th className="py-2.5 px-4 whitespace-nowrap">Destino</th>
-                        <th className="py-2.5 px-4 text-center whitespace-nowrap">Acciones WhatsApp</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
-                      {pedidosLogistica.length === 0 ? (
-                        <tr>
-                          <td colSpan={10} className="py-12 text-center text-slate-400 font-medium">
-                            {filtroLogisticaDias === '20dias'
-                              ? 'No hay envíos registrados en los últimos 20 días.'
-                              : 'No hay envíos registrados en logística.'}
-                          </td>
-                        </tr>
-                      ) : (
-                        pedidosLogistica.map((p) => {
-                          const tieneGuia = !!p.c807_guia_numero && p.c807_guia_numero !== 'PENDIENTE';
-                          const linkRastreo = getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo);
-                          const totalNum = parseFloat(p.total?.toString() || '0');
-                          const totalPagadoNum = parseFloat(p.total_pagado?.toString() || '0');
-
-                          return (
-                            <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
-                              {/* 1. Numero de Pedido */}
-                              <td className="py-3 px-4 font-mono font-bold text-indigo-700 whitespace-nowrap">
-                                {p.numero_pedido}
-                              </td>
-
-                              {/* 2. Cliente */}
-                              <td className={`py-3 px-4 whitespace-nowrap ${getClienteColorPorEstado(p.estado)}`}>
-                                {p.cliente_nombre}
-                              </td>
-
-                              {/* 3. Teléfono */}
-                              <td className="py-3 px-4 font-mono whitespace-nowrap">
-                                <a
-                                  href={`https://wa.me/503${p.cliente_telefono}`}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-emerald-700 hover:underline font-bold"
-                                >
-                                  {p.cliente_telefono}
-                                </a>
-                              </td>
-
-                              {/* 4. Fecha Pedido */}
-                              <td className="py-3 px-4 text-slate-500 font-mono whitespace-nowrap">
-                                {new Date(p.created_at).toLocaleDateString('es-SV')}
-                              </td>
-
-                              {/* 5. Total */}
-                              <td className="py-3 px-4 whitespace-nowrap">
-                                <div className="font-mono font-black text-slate-900">
-                                  ${totalNum.toFixed(2)}
-                                </div>
-                                <div className="mt-0.5">
-                                  {p.estado_pago === 'PAGADO' ? (
-                                    <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                      ✓ Pagado
-                                    </span>
-                                  ) : p.estado_pago === 'PARCIAL' ? (
-                                    <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full inline-block whitespace-nowrap" title={`Abonado: $${totalPagadoNum.toFixed(2)}`}>
-                                      ⏳ Parcial (${totalPagadoNum.toFixed(2)})
-                                    </span>
-                                  ) : (
-                                    <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                      ✕ Pendiente
-                                    </span>
-                                  )}
-                                </div>
-                              </td>
-
-                              {/* 6. Estado C807 */}
-                              <td className="py-3 px-4 whitespace-nowrap">
-                                {tieneGuia ? (
-                                  <div className="flex flex-col gap-1 items-start whitespace-nowrap">
-                                    {renderBadgeEstadoC807(p.c807_estado, true)}
-                                    <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
-                                      <span className="font-mono text-[10px] font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 whitespace-nowrap">
-                                        {p.c807_guia_numero}
-                                      </span>
-                                      {linkRastreo && (
-                                        <a
-                                          href={linkRastreo}
-                                          target="_blank"
-                                          rel="noreferrer"
-                                          className="text-indigo-600 hover:text-indigo-800 p-0.5 rounded hover:bg-indigo-50 transition-colors inline-flex"
-                                          title="Rastrear Guía C807"
-                                        >
-                                          <ExternalLink className="w-3.5 h-3.5" />
-                                        </a>
-                                      )}
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="inline-flex items-center gap-1.5">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleGenerarGuiaDirecta(p)}
-                                      disabled={generandoGuiaPedidoId === p.id}
-                                      className="px-2.5 py-1 rounded-lg text-xs font-black bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
-                                      title="Generar Guía con C807 Express y emitir DTE automáticamente"
-                                    >
-                                      <Truck className={`w-3.5 h-3.5 ${generandoGuiaPedidoId === p.id ? 'animate-spin' : ''}`} />
-                                      <span>{generandoGuiaPedidoId === p.id ? 'Generando...' : 'Generar Guía'}</span>
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setGuiaModalPedido(p);
-                                        setNumGuiaInput('');
-                                        setLinkGuiaInput('');
-                                      }}
-                                      className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 transition-colors cursor-pointer"
-                                      title="Asignar guía manual"
-                                    >
-                                      Manual
-                                    </button>
-                                  </div>
-                                )}
-                              </td>
-
-                              {/* 7. Numero de DTE */}
-                              <td className="py-3 px-4 font-mono text-xs whitespace-nowrap">
-                                {p.dte_numero_control || p.dte_codigo_generacion ? (
-                                  <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
-                                    <span className="font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 whitespace-nowrap text-[11px]">
-                                      {p.dte_numero_control || p.dte_codigo_generacion?.slice(0, 15)}
-                                    </span>
-                                    {p.dte_pdf_url && (
-                                      <a
-                                        href={p.dte_pdf_url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="text-emerald-700 hover:text-emerald-900 p-0.5 rounded hover:bg-emerald-50 transition-colors inline-flex"
-                                        title="Ver DTE Factura Llama"
-                                      >
-                                        <FileText className="w-3.5 h-3.5" />
-                                      </a>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <span className="text-slate-400 text-[11px] italic">-</span>
-                                )}
-                              </td>
-
-                              {/* 8. Estado Envío */}
-                              <td className="py-3 px-4 whitespace-nowrap">
-                                {(p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA') && (
-                                  <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                    🔴 Registrado
-                                  </span>
-                                )}
-                                {(p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR') && (
-                                  <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                    🟡 Insumos comprados
-                                  </span>
-                                )}
-                                {(p.estado === 'Preparado' || p.estado === 'Enviado' || p.estado === 'GUIA_CREADA') && (
-                                  <span className="text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                    🔵 Enviado
-                                  </span>
-                                )}
-                                {(p.estado === 'Entregado' || p.estado === 'ENTREGADO') && (
-                                  <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                    🟢 Entregado
-                                  </span>
-                                )}
-                                {(p.estado === 'Cancelado' || p.estado === 'CANCELADO') && (
-                                  <span className="text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-300 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                    ⚪ Cancelado
-                                  </span>
-                                )}
-                              </td>
-
-                              {/* 9. Destino */}
-                              <td className="py-3 px-4 text-slate-600 whitespace-nowrap">
-                                {p.cliente_municipio ? `${p.cliente_municipio}, ${p.cliente_departamento}` : p.cliente_departamento || '-'}
-                              </td>
-
-                              {/* 10. Acciones WhatsApp */}
-                              <td className="py-3 px-4 text-center whitespace-nowrap">
-                                <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
-                                  <button
-                                    onClick={() => handleCopiarMensajeC807(p)}
-                                    className="px-2.5 py-1 text-[11px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
-                                    title="Copiar mensaje WhatsApp"
-                                  >
-                                    {copiedTrackingId === p.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                                    <span>{copiedTrackingId === p.id ? 'Copiado' : 'Copiar'}</span>
-                                  </button>
-
-                                  <button
-                                    onClick={() => handleAbrirWhatsAppC807(p)}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 text-[11px] font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
-                                    title="Abrir WhatsApp"
-                                  >
-                                    <MessageCircle className="w-3 h-3" />
-                                    <span>Enviar</span>
-                                  </button>
-
-                                  <button
-                                    onClick={() => handleEmitirDte(p)}
-                                    disabled={emitiendoDteId === p.id}
-                                    className="bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 text-[11px] font-bold flex items-center gap-1 rounded-lg transition-colors cursor-pointer shadow-2xs"
-                                    title="Emitir Factura Electrónica (DTE) con Factura Llama"
-                                  >
-                                    <ReceiptText className={`w-3 h-3 ${emitiendoDteId === p.id ? 'animate-spin' : 'text-emerald-600'}`} />
-                                    <span>{emitiendoDteId === p.id ? 'Emitiendo...' : 'Facturar DTE'}</span>
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
+            <LogisticaView
+              pedidos={pedidos}
+              searchQuery={searchQuery}
+              onGenerarGuiaDirecta={handleGenerarGuiaDirecta}
+              generandoGuiaPedidoId={generandoGuiaPedidoId}
+              onAsignarGuiaManual={(pedido) => {
+                setGuiaModalPedido(pedido);
+                setNumGuiaInput('');
+                setLinkGuiaInput('');
+              }}
+              onEmitirDte={handleEmitirDte}
+              emitiendoDteId={emitiendoDteId}
+              showToast={showToast}
+            />
           )}
 
           {/* ============================================================== */}
-          {/* MÓDULO: INTELIGENCIA DE NEGOCIOS & COMPRAS                     */}
+          {/* MODULO: INTELIGENCIA DE NEGOCIOS & COMPRAS                    */}
           {/* ============================================================== */}
           {activeNav === 'INTELIGENCIA_NEGOCIOS' && (
             <div className="space-y-4">
               {biView === 'hub' && (
-                <div className="space-y-6">
-                  <h2 className="text-sm font-black uppercase text-slate-700 tracking-wider">INTELIGENCIA DE NEGOCIOS</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* Tarjeta DASHBOARD */}
-                    <div
-                      onClick={() => setBiView('dashboard')}
-                      className="clay-card p-5 cursor-pointer flex items-center gap-4 transition-all hover:scale-[1.02] hover:border-indigo-300"
-                    >
-                      <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 shrink-0 shadow-inner">
-                        <TrendingUp className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-black text-slate-900">DASHBOARD</h3>
-                        <span className="text-[11px] text-slate-400 font-bold uppercase">VENTAS & MÉTRICAS</span>
-                      </div>
-                    </div>
-
-                    {/* Tarjeta COMPRAS */}
-                    <div
-                      onClick={() => setBiView('compras')}
-                      className="clay-card p-5 cursor-pointer flex items-center gap-4 transition-all hover:scale-[1.02] hover:border-rose-300"
-                    >
-                      <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shrink-0 shadow-inner">
-                        <ReceiptText className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-black text-slate-900">Compras</h3>
-                        <span className="text-[11px] text-slate-400 font-bold uppercase">GASTOS DE INSUMOS</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <BiHub onSelectView={(view) => setBiView(view)} />
               )}
 
-              {/* DASHBOARD FINANCIERO */}
               {biView === 'dashboard' && (
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <button
-                      onClick={() => setBiView('hub')}
-                      className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1"
-                    >
-                      ← Volver a Inteligencia de Negocios
-                    </button>
-                    <span className="text-xs text-slate-500 font-medium">Dashboard General</span>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="clay-card p-4">
-                      <span className="text-xs font-bold text-slate-500 block mb-1">Ventas Totales</span>
-                      <span className="text-2xl font-black text-emerald-700 font-mono">
-                        ${metricas.totalVentas.toFixed(2)}
-                      </span>
-                    </div>
-
-                    <div className="clay-card p-4">
-                      <span className="text-xs font-bold text-slate-500 block mb-1">Gastos en Insumos</span>
-                      <span className="text-2xl font-black text-rose-600 font-mono">
-                        ${metricas.totalGastosCompras.toFixed(2)}
-                      </span>
-                    </div>
-
-                    <div className="clay-card p-4">
-                      <span className="text-xs font-bold text-slate-500 block mb-1">Margen Operativo Bruto</span>
-                      <span className="text-2xl font-black text-indigo-700 font-mono">
-                        ${(metricas.totalVentas - metricas.totalGastosCompras).toFixed(2)}
-                      </span>
-                    </div>
-
-                    <div className="clay-card p-4">
-                      <span className="text-xs font-bold text-slate-500 block mb-1">Total Pedidos</span>
-                      <span className="text-2xl font-black text-slate-900 font-mono">{metricas.total}</span>
-                    </div>
-                  </div>
-                </div>
+                <DashboardMetricas
+                  metricas={metricas}
+                  onBack={() => setBiView('hub')}
+                />
               )}
 
-              {/* COMPRAS DE INSUMOS (TABLA EXACTA A APPSHEET) */}
               {biView === 'compras' && (
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <button
-                      onClick={() => setBiView('hub')}
-                      className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1"
-                    >
-                      ← Volver a Inteligencia de Negocios
-                    </button>
-                    <span className="text-xs text-slate-500 font-medium">Registro de Compras / Gastos</span>
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    {/* Formulario */}
-                    <div className="lg:col-span-4">
-                      <div className="clay-card p-5 space-y-4">
-                        <h3 className="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-2">
-                          Nueva Compra de Insumo
-                        </h3>
-
-                        <form onSubmit={handleRegistrarCompra} className="space-y-3">
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Fecha Compra</label>
-                            <input
-                              type="date"
-                              value={nuevaCompraFecha}
-                              onChange={(e) => setNuevaCompraFecha(e.target.value)}
-                              className="clay-input w-full text-xs font-bold"
-                              required
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Categoría</label>
-                            <select
-                              value={nuevaCompraCategoria}
-                              onChange={(e: any) => setNuevaCompraCategoria(e.target.value)}
-                              className="clay-input w-full text-xs font-bold"
-                            >
-                              <option value="ESENCIAS">ESENCIAS</option>
-                              <option value="FRASCOS">FRASCOS</option>
-                              <option value="CAJAS">CAJAS</option>
-                              <option value="PAPEL">PAPEL</option>
-                              <option value="OTROS INSUMOS">OTROS INSUMOS</option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Concepto *</label>
-                            <input
-                              type="text"
-                              placeholder="Ej. 10 Litros Esencia Aventus..."
-                              value={nuevaCompraConcepto}
-                              onChange={(e) => setNuevaCompraConcepto(e.target.value)}
-                              className="clay-input w-full text-xs font-medium"
-                              required
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Proveedor</label>
-                            <input
-                              type="text"
-                              placeholder="Ej. Aromas Creativos, Inveromatic..."
-                              value={nuevaCompraProveedor}
-                              onChange={(e) => setNuevaCompraProveedor(e.target.value)}
-                              className="clay-input w-full text-xs font-medium"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Monto Total ($) *</label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              min="0.01"
-                              placeholder="0.00"
-                              value={nuevaCompraMonto || ''}
-                              onChange={(e) => setNuevaCompraMonto(parseFloat(e.target.value) || 0)}
-                              className="clay-input w-full text-xs font-mono font-bold"
-                              required
-                            />
-                          </div>
-
-                          <button
-                            type="submit"
-                            className="clay-btn clay-btn-primary w-full py-2.5 text-xs font-black shadow-md mt-2"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
-                            Guardar Compra
-                          </button>
-                        </form>
-                      </div>
-                    </div>
-
-                    {/* Tabla de Gastos estilo AppSheet */}
-                    <div className="lg:col-span-8">
-                      <div className="clay-card overflow-hidden border border-slate-200/80 shadow-md">
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left text-xs">
-                            <thead className="bg-slate-50 border-b border-slate-200/80 text-slate-600 font-extrabold uppercase tracking-wider text-[11px]">
-                              <tr>
-                                <th className="py-3 px-4">ID Gasto</th>
-                                <th className="py-3 px-4">Fecha Compra</th>
-                                <th className="py-3 px-4">Concepto</th>
-                                <th className="py-3 px-4">Proveedor</th>
-                                <th className="py-3 px-4">Categoría</th>
-                                <th className="py-3 px-4 text-right">Monto</th>
-                                <th className="py-3 px-4 text-center">Acción</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 bg-white">
-                              {compras.map((c) => (
-                                <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
-                                  <td className="py-3 px-4 font-mono font-bold text-slate-500">{c.id}</td>
-                                  <td className="py-3 px-4 font-mono">{c.fecha_compra}</td>
-                                  <td className="py-3 px-4 font-bold text-slate-900">{c.concepto}</td>
-                                  <td className="py-3 px-4 text-slate-600">{c.proveedor}</td>
-                                  <td className="py-3 px-4">
-                                    <span className="clay-badge text-[10px] font-bold bg-indigo-50 text-indigo-700">
-                                      {c.categoria}
-                                    </span>
-                                  </td>
-                                  <td className="py-3 px-4 text-right font-mono font-black text-rose-600">
-                                    ${c.monto_total.toFixed(2)}
-                                  </td>
-                                  <td className="py-3 px-4 text-center">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleEliminarCompra(c.id)}
-                                      className="text-slate-400 hover:text-rose-500 p-1"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <ComprasGastosTabla
+                  compras={compras}
+                  onRegistrarCompra={(compra) => {
+                    const nueva: CompraGasto = {
+                      id: `GASTO-${Date.now().toString().slice(-4)}`,
+                      fecha_compra: compra.fecha_compra,
+                      concepto: compra.concepto,
+                      monto_total: compra.monto_total,
+                      proveedor: compra.proveedor,
+                      categoria: compra.categoria,
+                      estado_pago: 'PAGADO',
+                    };
+                    const actualizadas = [nueva, ...compras];
+                    guardarComprasLocal(actualizadas);
+                    showToast('Compra registrada exitosamente', 'success');
+                  }}
+                  onEliminarCompra={handleEliminarCompra}
+                  onBack={() => setBiView('hub')}
+                  showToast={showToast}
+                />
               )}
             </div>
           )}

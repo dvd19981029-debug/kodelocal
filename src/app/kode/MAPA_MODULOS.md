@@ -20,6 +20,7 @@ src/app/kode/
 │
 ├── utils/
 │   ├── c807Helpers.tsx          # 🚚 Helpers de rastreo C807, badges de estado y colores
+│   ├── formatters.ts           # 🕒 Formateo de fechas, marcas temporales y valores
 │   └── imageUpload.ts          # 🖼️ Compresión automática en canvas y subida de comprobantes
 │
 ├── components/
@@ -35,10 +36,26 @@ src/app/kode/
 │   │   ├── AbonoPedidoModal.tsx         # Registro de abonos bancarios con subida/pega de foto
 │   │   └── index.ts
 │   │
-│   └── ventas/                  # 💼 Módulo Comercial & Pedidos
-│       ├── PedidosTabla.tsx     # Tabla de pedidos con orden homologado de 8+1 columnas
-│       ├── ClientesTabla.tsx    # Directorio de clientes con botones de llamada y WhatsApp
-│       ├── ClienteFichaView.tsx # Ficha técnica de cliente con métricas e historial de pedidos
+│   ├── ventas/                  # 💼 Módulo Comercial & Pedidos
+│   │   ├── PedidosTabla.tsx     # Tabla de pedidos con orden homologado de 8+1 columnas
+│   │   ├── ClientesTabla.tsx    # Directorio de clientes con botones de llamada y WhatsApp
+│   │   ├── ClienteFichaView.tsx # Ficha técnica de cliente con métricas e historial de pedidos
+│   │   └── index.ts
+│   │
+│   ├── fabricacion/             # 🧪 Módulo de Producción & Laboratorio
+│   │   ├── FabricacionHub.tsx        # Hub selector entre compras pendientes y laboratorio
+│   │   ├── CompraPendienteTabla.tsx  # Vista dividida (Pedidos en rojo / Insumos a comprar con ordenación)
+│   │   ├── PorFabricarTabla.tsx      # Vista dividida (Pedidos en amarillo / Fragancias a preparar)
+│   │   └── index.ts
+│   │
+│   ├── logistica/               # 🚚 Módulo de Envíos & Seguimiento C807
+│   │   ├── LogisticaView.tsx         # Tabla de guías (últimos 20 días / todos), WhatsApp y DTE
+│   │   └── index.ts
+│   │
+│   └── bi/                      # 📊 Módulo de Inteligencia de Negocios & Finanzas
+│       ├── BiHub.tsx                 # Selector entre Dashboard y Registro de Compras
+│       ├── DashboardMetricas.tsx     # Tarjetas de ingresos, gastos en insumos, margen y pedidos
+│       ├── ComprasGastosTabla.tsx    # Formulario y tabla de gastos y compras de insumos
 │       └── index.ts
 │
 ├── page.tsx                     # 📄 Ensamblador principal de la vista KÖDE
@@ -54,7 +71,14 @@ src/app/kode/
 | **Columnas de la tabla de pedidos** | `src/app/kode/components/ventas/PedidosTabla.tsx` | El orden oficial homologado de 8+1 columnas, botones de expansión, acciones de guía y abonos. |
 | **Directorio y tabla de clientes** | `src/app/kode/components/ventas/ClientesTabla.tsx` | Tabla de clientes, filtros, enlaces a WhatsApp (`wa.me`) y llamadas directas. |
 | **Ficha de cliente e historial** | `src/app/kode/components/ventas/ClienteFichaView.tsx` | Tarjetas de métricas (total pedidos, facturado), datos de entrega e historial de compras. |
-| **Subida de captura de transferencia / comprobante** | `src/app/kode/utils/imageUpload.ts` | Algoritmo de compresión canvas JPEG a 1280px máx y subida a `/api/kode/pagos/upload-comprobante`. |
+| **Fabricación: Hub principal** | `src/app/kode/components/fabricacion/FabricacionHub.tsx` | Tarjetas de acceso a pedidos en compra pendiente y pedidos por fabricar en laboratorio. |
+| **Fabricación: Insumos por comprar** | `src/app/kode/components/fabricacion/CompraPendienteTabla.tsx` | Split-pane con pedidos en estado Registrado e insumos clasificados (Normal/Plus) con botón de compra. |
+| **Fabricación: Pedidos por fabricar** | `src/app/kode/components/fabricacion/PorFabricarTabla.tsx` | Split-pane con pedidos Listos para fabricar y fragancias pendientes con botón directo de guía C807. |
+| **Logística: Envíos y rastreo C807** | `src/app/kode/components/logistica/LogisticaView.tsx` | Tabla con orden homologado 8+1, filtro 20 días / todos, generación de mensaje WhatsApp y emisión de DTE. |
+| **Inteligencia de Negocios: Hub** | `src/app/kode/components/bi/BiHub.tsx` | Tarjetas de acceso a Dashboard Financiero y Registro de Compras de insumos. |
+| **BI: Métricas y Dashboard** | `src/app/kode/components/bi/DashboardMetricas.tsx` | KPIs de Ventas Totales, Gastos en Insumos, Margen Operativo Bruto y Total de Pedidos. |
+| **BI: Registro de Compras y Gastos** | `src/app/kode/components/bi/ComprasGastosTabla.tsx` | Formulario para ingresar nuevas facturas de insumos (esencias, frascos, cajas) y tabla histórica de gastos. |
+| **Subida de captura / comprobante** | `src/app/kode/utils/imageUpload.ts` | Algoritmo de compresión canvas JPEG a 1280px máx y subida a `/api/kode/pagos/upload-comprobante`. |
 | **Modal para registrar abonos de pago** | `src/app/kode/components/modals/AbonoPedidoModal.tsx` | Formulario de pago, selección de banco, pegar comprobante con `Ctrl+V`. |
 | **Modal para guías C807 y DTE** | `src/app/kode/components/modals/AsignarGuiaModal.tsx` | Formulario de despacho C807 (peso, bultos) y asignación manual de guías. |
 | **Modal de resultado DTE Factura Llama** | `src/app/kode/components/modals/DteResultModal.tsx` | Visualización del código de generación DTE, sello de recepción y botón de PDF. |
