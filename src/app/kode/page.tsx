@@ -85,6 +85,22 @@ function getClienteColorPorEstado(estado: string) {
   return 'text-slate-900 font-bold';
 }
 
+function getC807TrackingUrl(guiaNumero?: string, existingLink?: string): string {
+  if (guiaNumero && guiaNumero.trim()) {
+    return `https://c807xpress.com/tracking/?guia=${encodeURIComponent(guiaNumero.trim())}`;
+  }
+  if (existingLink && existingLink.trim()) {
+    if (existingLink.includes('app.c807.com') && existingLink.includes('guide=')) {
+      const match = existingLink.match(/guide=([^&]+)/);
+      if (match && match[1]) {
+        return `https://c807xpress.com/tracking/?guia=${encodeURIComponent(match[1])}`;
+      }
+    }
+    return existingLink.trim();
+  }
+  return '';
+}
+
 interface CatalogoItem {
   id: string;
   codigo: string;
@@ -1235,8 +1251,8 @@ export default function KodeSystemPage() {
   };
 
   const handleCopiarMensajeC807 = (p: Pedido) => {
-    const link = p.c807_link_rastreo || `https://app.c807.com/tracking?guide=${p.c807_guia_numero || ''}`;
-    const mensaje = `Buenas tardes\nSu orden con el número de pedido ${p.numero_pedido} ya se encuentra en camino.\nLe comparto el número de rastreo: ${p.c807_guia_numero || 'Pendiente'}\nPuede rastrearlo en este link: ${link}`;
+    const link = getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo);
+    const mensaje = `Buenas tardes\nSu orden con el número de pedido ${p.numero_pedido} ya se encuentra en camino.\nLe comparto el número de rastreo: ${p.c807_guia_numero || 'Pendiente'}${link ? `\nPuede rastrearlo en este link: ${link}` : ''}`;
     navigator.clipboard.writeText(mensaje);
     setCopiedTrackingId(p.id);
     showToast('Mensaje de WhatsApp copiado', 'info');
@@ -1244,8 +1260,8 @@ export default function KodeSystemPage() {
   };
 
   const handleAbrirWhatsAppC807 = (p: Pedido) => {
-    const link = p.c807_link_rastreo || `https://app.c807.com/tracking?guide=${p.c807_guia_numero || ''}`;
-    const mensaje = `Buenas tardes\nSu orden con el número de pedido ${p.numero_pedido} ya se encuentra en camino.\nLe comparto el número de rastreo: ${p.c807_guia_numero || ''}\nPuede rastrearlo en este link: ${link}`;
+    const link = getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo);
+    const mensaje = `Buenas tardes\nSu orden con el número de pedido ${p.numero_pedido} ya se encuentra en camino.\nLe comparto el número de rastreo: ${p.c807_guia_numero || ''}${link ? `\nPuede rastrearlo en este link: ${link}` : ''}`;
     const url = `https://wa.me/503${p.cliente_telefono}?text=${encodeURIComponent(mensaje)}`;
     window.open(url, '_blank');
   };
@@ -3237,9 +3253,9 @@ export default function KodeSystemPage() {
                                           <span className="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 whitespace-nowrap">
                                             {p.c807_guia_numero}
                                           </span>
-                                          {p.c807_link_rastreo && (
+                                          {getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo) && (
                                             <a
-                                              href={p.c807_link_rastreo}
+                                              href={getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo)}
                                               target="_blank"
                                               rel="noreferrer"
                                               className="text-indigo-600 hover:text-indigo-800 p-0.5 rounded hover:bg-indigo-50 transition-colors inline-flex"
@@ -4882,7 +4898,7 @@ export default function KodeSystemPage() {
                       ) : (
                         pedidosLogistica.map((p) => {
                           const tieneGuia = !!p.c807_guia_numero;
-                          const linkRastreo = p.c807_link_rastreo || `https://app.c807.com/tracking?guide=${p.c807_guia_numero || ''}`;
+                          const linkRastreo = getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo);
 
                           return (
                             <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
@@ -5261,7 +5277,7 @@ export default function KodeSystemPage() {
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">Enlace de Rastreo (Opcional)</label>
                 <input
                   type="text"
-                  placeholder="https://app.c807.com/tracking?guide=..."
+                  placeholder="https://c807xpress.com/tracking/?guia=..."
                   value={linkGuiaInput}
                   onChange={(e) => setLinkGuiaInput(e.target.value)}
                   className="clay-input w-full text-xs font-mono font-medium"
@@ -6138,9 +6154,9 @@ export default function KodeSystemPage() {
                                       <span className="font-mono font-bold text-slate-800 text-[11px] block">
                                         {p.c807_guia_numero}
                                       </span>
-                                      {p.c807_link_rastreo && (
+                                      {getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo) && (
                                         <a
-                                          href={p.c807_link_rastreo}
+                                          href={getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo)}
                                           target="_blank"
                                           rel="noreferrer"
                                           className="text-[10px] text-indigo-600 hover:underline font-bold inline-flex items-center gap-1"

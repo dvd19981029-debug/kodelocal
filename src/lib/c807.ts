@@ -181,8 +181,8 @@ export class C807Client {
         'seguimiento',
       ]);
 
-      if (numGuia && !linkRastreo) {
-        linkRastreo = `https://app.c807.com/tracking?guide=${encodeURIComponent(numGuia)}`;
+      if (numGuia && (!linkRastreo || linkRastreo.includes('app.c807.com'))) {
+        linkRastreo = `https://c807xpress.com/tracking/?guia=${encodeURIComponent(numGuia)}`;
       }
 
       if (!numGuia) {
@@ -202,7 +202,7 @@ export class C807Client {
       return {
         success: true,
         numero_guia: String(numGuia),
-        link_rastreo: String(linkRastreo || `https://app.c807.com/tracking?guide=${encodeURIComponent(numGuia)}`),
+        link_rastreo: String(linkRastreo || `https://c807xpress.com/tracking/?guia=${encodeURIComponent(numGuia)}`),
         rawResponse: responseData,
         sentPayload: payload,
       };

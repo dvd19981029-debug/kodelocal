@@ -50,7 +50,7 @@ const mockResponseNested = {
       guias: [
         {
           numero_guia: 'C807-SV-2026-X',
-          tracking_url: 'https://app.c807.com/tracking?guide=C807-SV-2026-X'
+          tracking_url: 'https://c807xpress.com/tracking/?guia=C807-SV-2026-X'
         }
       ]
     }

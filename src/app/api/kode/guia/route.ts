@@ -96,9 +96,9 @@ export async function POST(request: Request) {
       rawC807Response = c807Result.rawResponse;
     }
 
-    // Asegurar link de rastreo
-    if (!finalLink) {
-      finalLink = `https://app.c807.com/tracking?guide=${encodeURIComponent(finalGuia)}`;
+    // Asegurar link de rastreo oficial
+    if (!finalLink || finalLink.includes('app.c807.com')) {
+      finalLink = `https://c807xpress.com/tracking/?guia=${encodeURIComponent(finalGuia)}`;
     }
 
     // 3. Persistir en la base de datos de Kode

@@ -146,6 +146,12 @@ async function ensurePedidosSchema() {
       ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_codigo_generacion VARCHAR(100);
       ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_numero_control VARCHAR(100);
       ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_pdf_url TEXT;
+
+      UPDATE public.pedidos
+      SET c807_link_rastreo = 'https://c807xpress.com/tracking/?guia=' || c807_guia_numero
+      WHERE c807_guia_numero IS NOT NULL 
+        AND c807_guia_numero != ''
+        AND (c807_link_rastreo IS NULL OR c807_link_rastreo LIKE '%app.c807.com%');
     `);
     schemaEnsured = true;
   } catch (e) {
