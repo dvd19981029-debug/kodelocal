@@ -37,6 +37,9 @@ src/app/pos/
 
 | Requerimiento / Elemento Visual | Archivo a Modificar | Qué contiene |
 | :--- | :--- | :--- |
+| **Buscador, Filtros y Catálogo** | `src/app/pos/components/terminal/PosProductGrid.tsx` | Búsqueda por SKU/nombre, selector de categoría, filtro de género y tarjetas con puestos y stock. |
+| **Carrito y Combobox de Cliente** | `src/app/pos/components/terminal/PosCartPanel.tsx` | Items seleccionados, switch 1 Oz / ½ Oz, búsqueda de cliente con DUI/NRC, desglose de totales y botones de acción. |
+| **Edición Rápida de Producto** | `src/app/pos/components/terminal/PosQuickEditProductModal.tsx` | Modal emergente para actualizar precios, nombre oficial, stock y catálogo en vivo. |
 | **Tipos de venta y estados** | `src/app/pos/types/index.ts` | Pestañas activas (`PosTab`), tipos de comprobante (`01`, `03`, `TICKET`) y métodos de pago. |
 | **Peticiones HTTP (/api/dte, etc.)** | `src/app/pos/services/posApi.ts` | Llamadas a Factura Llama DTE, catálogo de productos, clientes y órdenes ecommerce. |
 | **Almacenamiento local (localStorage)** | `src/app/pos/services/posStorage.ts` | Gestión de `kodelocal_products`, `kodelocal_sales` y eventos de reactividad. |
