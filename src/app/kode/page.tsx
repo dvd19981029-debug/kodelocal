@@ -152,165 +152,19 @@ function renderBadgeEstadoC807(estado?: string, tieneGuia?: boolean) {
   );
 }
 
-interface CatalogoItem {
-  id: string;
-  codigo: string;
-  contratipo: string;
-  marca_inspirada: string;
-  genero: string;
-  precio_normal: string | number;
-  precio_extra_shot: string | number;
-  activo?: boolean;
-  imagen_url?: string;
-}
-
-interface Vendedora {
-  id: string;
-  nombre: string;
-  email: string;
-}
-
-interface PedidoItem {
-  id?: string;
-  catalogo_id: string;
-  codigo: string;
-  contratipo: string;
-  marca?: string;
-  version: 'Normal' | 'Plus' | 'NORMAL' | 'EXTRA_SHOT';
-  cantidad: number;
-  precio_unitario: number;
-  subtotal: number;
-  insumo_comprado?: boolean;
-}
-
-interface ClienteItem {
-  id: string;
-  nombre_completo: string;
-  telefono_whatsapp: string;
-  direccion_entrega: string;
-  departamento: string;
-  municipio: string;
-  punto_referencia?: string;
-  tipo_documento?: string;
-  numero_documento?: string;
-  email?: string;
-  pedidos_count?: number;
-  total_gastado?: number;
-}
-
-interface ClienteDirectorioItem {
-  id: string;
-  nombre: string;
-  telefono: string;
-  direccion: string;
-  departamento: string;
-  municipio: string;
-  referencia?: string;
-  tipo_documento?: string;
-  numero_documento?: string;
-  email?: string;
-  pedidosCount?: number;
-  totalGastado?: number;
-}
-
-interface FormaPagoItem {
-  id: string;
-  nombre: string;
-  tipo: string;
-  activo: boolean;
-}
-
-interface PagoItem {
-  id: string;
-  pedido_id: string;
-  cliente_id?: string;
-  forma_pago_id: string;
-  forma_pago_nombre?: string;
-  forma_pago_tipo?: string;
-  monto: number;
-  fecha_pago: string;
-  num_documento_auto?: string;
-  comprobante_url?: string | null;
-  estado_pago?: string;
-  usuario?: string;
-  observaciones?: string;
-  created_at?: string;
-}
-
-interface PagoRegistroItem {
-  id: string;
-  forma_pago_id: string;
-  forma_pago_nombre: string;
-  forma_pago_tipo?: string;
-  monto: number;
-  num_documento_auto?: string;
-  comprobante_url?: string | null;
-  observaciones?: string;
-}
-
-interface Pedido {
-  id: string;
-  numero_pedido: string;
-  estado: 'Registrado' | 'Insumos comprados' | 'Preparado' | 'Enviado' | 'Entregado' | 'Cancelado' | string;
-  tipo_pago: string;
-  estado_pago: string;
-  subtotal: string | number;
-  costo_envio: string | number;
-  total: string | number;
-  monto_cobrar_cce?: number | string;
-  total_pagado?: number;
-  pagos?: PagoItem[];
-  c807_guia_numero?: string;
-  c807_link_rastreo?: string;
-  c807_estado?: string;
-  c807_fecha_guia?: string;
-  dte_estado?: string;
-  dte_codigo_generacion?: string;
-  dte_numero_control?: string;
-  dte_pdf_url?: string;
-  notas?: string;
-  created_at: string;
-  cliente_id: string;
-  cliente_nombre: string;
-  cliente_telefono: string;
-  cliente_direccion: string;
-  cliente_departamento: string;
-  cliente_municipio: string;
-  cliente_referencia?: string;
-  cliente_tipo_documento?: string;
-  cliente_numero_documento?: string;
-  cliente_email?: string;
-  vendedora_id?: string;
-  vendedora_nombre?: string;
-  vendedora_email?: string;
-  items: PedidoItem[];
-}
-
-interface InsumoItem {
-  item_id: string;
-  pedido_id: string;
-  numero_pedido: string;
-  pedido_estado?: string;
-  cliente_nombre: string;
-  fecha_registro: string;
-  catalogo_id: string;
-  codigo: string;
-  contratipo: string;
-  marca_inspirada?: string;
-  genero?: string;
-  version: 'Normal' | 'Plus' | string;
-  cantidad: number;
-}
-
-interface CompraGasto {
-  id: string;
-  fecha_compra: string;
-  concepto: string;
-  monto_total: number;
-  proveedor: string;
-  categoria: 'ESENCIAS' | 'CAJAS' | 'FRASCOS' | 'PAPEL' | 'OTROS INSUMOS';
-  estado_pago: string;
-}
+import {
+  CatalogoItem,
+  Vendedora,
+  PedidoItem,
+  ClienteItem,
+  ClienteDirectorioItem,
+  FormaPagoItem,
+  PagoItem,
+  PagoRegistroItem,
+  Pedido,
+  InsumoItem,
+  CompraGasto,
+} from './types';
 
 const COMPRAS_INICIALES: CompraGasto[] = [
   {
