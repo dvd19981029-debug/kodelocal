@@ -17,15 +17,17 @@ export async function POST(request: Request) {
   try {
     let body: any = null;
     try {
-      body = await request.json();
-    } catch {
-      const text = await request.text();
-      try {
-        body = JSON.parse(text);
-      } catch {
-        const params = new URLSearchParams(text);
-        body = Object.fromEntries(params.entries());
+      const rawText = await request.text();
+      if (rawText && rawText.trim()) {
+        try {
+          body = JSON.parse(rawText);
+        } catch {
+          const params = new URLSearchParams(rawText);
+          body = Object.fromEntries(params.entries());
+        }
       }
+    } catch (readErr: any) {
+      console.error('[C807 Webhook Body Read Error]:', readErr);
     }
 
     console.log('[C807 Webhook Recibido]:', JSON.stringify(body));
