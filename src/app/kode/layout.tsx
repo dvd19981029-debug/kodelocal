@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: 'KÖDE - Sistema de Ventas y Gestión de Pedidos',
   description: 'Panel de ventas por WhatsApp y gestión logística de KÖDE',
