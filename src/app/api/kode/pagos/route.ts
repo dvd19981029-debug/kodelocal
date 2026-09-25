@@ -24,6 +24,7 @@ async function ensurePagosTable() {
       CREATE INDEX IF NOT EXISTS idx_pagos_pedido_id ON public.pagos(pedido_id);
       CREATE INDEX IF NOT EXISTS idx_pagos_forma_pago ON public.pagos(forma_pago_id);
       CREATE INDEX IF NOT EXISTS idx_pagos_fecha ON public.pagos(fecha_pago DESC);
+      ALTER TABLE public.pagos ADD COLUMN IF NOT EXISTS comprobante_url TEXT;
     `);
   } catch (err) {
     console.error('Error asegurando tabla pagos:', err);
@@ -48,6 +49,7 @@ export async function GET(request: Request) {
         pg.monto,
         pg.fecha_pago,
         COALESCE(pg.num_documento_auto, '') AS num_documento_auto,
+        pg.comprobante_url,
         COALESCE(pg.estado_pago, 'Confirmado') AS estado_pago,
         COALESCE(pg.usuario, '') AS usuario,
         COALESCE(pg.observaciones, '') AS observaciones,
@@ -105,6 +107,7 @@ export async function POST(request: Request) {
       monto,
       fecha_pago = new Date().toISOString().slice(0, 10),
       num_documento_auto = '',
+      comprobante_url = '',
       usuario = 'KÖDE',
       observaciones = '',
     } = body;
@@ -138,8 +141,8 @@ export async function POST(request: Request) {
     // 2. Registrar el pago
     const insertRes = await queryKode(
       `INSERT INTO public.pagos (
-        pedido_id, cliente_id, forma_pago_id, monto, fecha_pago, num_documento_auto, estado_pago, usuario, observaciones
-      ) VALUES ($1, $2, $3, $4, $5, $6, 'Confirmado', $7, $8)
+        pedido_id, cliente_id, forma_pago_id, monto, fecha_pago, num_documento_auto, comprobante_url, estado_pago, usuario, observaciones
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'Confirmado', $8, $9)
       RETURNING *`,
       [
         pedido_id,
@@ -148,6 +151,7 @@ export async function POST(request: Request) {
         numMonto,
         fecha_pago,
         num_documento_auto.trim(),
+        comprobante_url ? comprobante_url.trim() : null,
         usuario,
         observaciones.trim(),
       ]

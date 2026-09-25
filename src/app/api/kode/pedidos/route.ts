@@ -32,6 +32,7 @@ export async function GET(request: Request) {
                 'forma_pago_id', pg.forma_pago_id,
                 'forma_pago_nombre', fp.nombre,
                 'num_documento_auto', pg.num_documento_auto,
+                'comprobante_url', pg.comprobante_url,
                 'estado_pago', pg.estado_pago,
                 'usuario', pg.usuario
               ) ORDER BY pg.created_at ASC
@@ -146,6 +147,7 @@ async function ensurePedidosSchema() {
       ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_codigo_generacion VARCHAR(100);
       ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_numero_control VARCHAR(100);
       ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_pdf_url TEXT;
+      ALTER TABLE public.pagos ADD COLUMN IF NOT EXISTS comprobante_url TEXT;
 
       UPDATE public.pedidos
       SET c807_link_rastreo = 'https://c807xpress.com/tracking/?guia=' || c807_guia_numero
@@ -289,6 +291,7 @@ export async function POST(request: Request) {
       forma_pago_id: string;
       monto: number;
       num_documento_auto?: string;
+      comprobante_url?: string;
       observaciones?: string;
       estado_pago?: string;
     }
@@ -301,6 +304,7 @@ export async function POST(request: Request) {
           forma_pago_id: String(p.forma_pago_id || '').trim(),
           monto: Math.max(0, parseFloat(p.monto) || 0),
           num_documento_auto: String(p.num_documento_auto || '').trim(),
+          comprobante_url: p.comprobante_url ? String(p.comprobante_url).trim() : null,
           observaciones: String(p.observaciones || '').trim(),
           estado_pago: p.estado_pago || (String(p.forma_pago_id) === '1003' ? 'Pendiente' : 'Confirmado'),
         }))
@@ -313,6 +317,7 @@ export async function POST(request: Request) {
           forma_pago_id: body.forma_pago_id,
           monto: anticipo,
           num_documento_auto: (body.num_documento_auto || '').trim(),
+          comprobante_url: body.comprobante_url ? String(body.comprobante_url).trim() : null,
           observaciones: 'Anticipo inicial registrado al crear pedido',
           estado_pago: body.forma_pago_id === '1003' ? 'Pendiente' : 'Confirmado',
         });
@@ -391,14 +396,15 @@ export async function POST(request: Request) {
     for (const p of listaPagos) {
       await client.query(
         `INSERT INTO public.pagos (
-          pedido_id, cliente_id, forma_pago_id, monto, fecha_pago, num_documento_auto, estado_pago, usuario, observaciones
-        ) VALUES ($1, $2, $3, $4, CURRENT_DATE, $5, $6, $7, $8)`,
+          pedido_id, cliente_id, forma_pago_id, monto, fecha_pago, num_documento_auto, comprobante_url, estado_pago, usuario, observaciones
+        ) VALUES ($1, $2, $3, $4, CURRENT_DATE, $5, $6, $7, $8, $9)`,
         [
           pedidoId,
           clienteId,
           p.forma_pago_id,
           p.monto,
           (p.num_documento_auto || '').trim(),
+          p.comprobante_url || null,
           p.estado_pago || (p.forma_pago_id === '1003' ? 'Pendiente' : 'Confirmado'),
           vendedora_id || 'KÖDE',
           p.observaciones || (p.forma_pago_id === '1003' ? 'Cobro contra entrega C807' : 'Pago registrado al crear pedido'),

@@ -45,7 +45,10 @@ import {
   Mail,
   PlusCircle,
   ArrowDownCircle,
-  Pencil
+  Pencil,
+  Image as ImageIcon,
+  Upload,
+  Paperclip
 } from 'lucide-react';
 import { DEPARTAMENTOS_CATALOG, MUNICIPIOS_CATALOG, resolveC807DeptoCode, getMunicipiosByDepto } from '@/lib/svTerritory';
 
@@ -221,6 +224,7 @@ interface PagoItem {
   monto: number;
   fecha_pago: string;
   num_documento_auto?: string;
+  comprobante_url?: string;
   estado_pago?: string;
   usuario?: string;
   observaciones?: string;
@@ -234,6 +238,7 @@ interface PagoRegistroItem {
   forma_pago_tipo?: string;
   monto: number;
   num_documento_auto?: string;
+  comprobante_url?: string;
   observaciones?: string;
 }
 
@@ -460,6 +465,8 @@ export default function KodeSystemPage() {
   const [pagoInputFormaId, setPagoInputFormaId] = useState<string>('1001');
   const [pagoInputMonto, setPagoInputMonto] = useState<string>('');
   const [pagoInputDoc, setPagoInputDoc] = useState<string>('');
+  const [pagoInputComprobante, setPagoInputComprobante] = useState<string>('');
+  const [subiendoComprobante, setSubiendoComprobante] = useState<boolean>(false);
 
   // Modal para Registrar Abono / Liquidación a Pedido Existente
   const [modalAbonoPedido, setModalAbonoPedido] = useState<Pedido | null>(null);
@@ -467,8 +474,13 @@ export default function KodeSystemPage() {
   const [abonoFormaPagoId, setAbonoFormaPagoId] = useState<string>('1001');
   const [abonoNumDoc, setAbonoNumDoc] = useState<string>('');
   const [abonoFecha, setAbonoFecha] = useState<string>(() => new Date().toISOString().split('T')[0]);
+  const [abonoComprobante, setAbonoComprobante] = useState<string>('');
+  const [abonoSubiendoComprobante, setAbonoSubiendoComprobante] = useState<boolean>(false);
   const [abonoObservaciones, setAbonoObservaciones] = useState<string>('');
   const [abonoLoading, setAbonoLoading] = useState(false);
+
+  // Modal Lightbox para previsualizar comprobante a pantalla completa
+  const [modalComprobanteUrl, setModalComprobanteUrl] = useState<string | null>(null);
 
   // Directorio y formulario de Clientes
   const [clientesDb, setClientesDb] = useState<ClienteItem[]>([]);
@@ -662,6 +674,59 @@ export default function KodeSystemPage() {
     } catch (e) {
       console.error('Error cargando formas de pago:', e);
     }
+  };
+
+  const compressAndUploadImage = async (file: File | Blob): Promise<string> => {
+    const compressedBlob = await new Promise<Blob>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new (window as any).Image();
+        img.onload = () => {
+          const maxDim = 1280;
+          let width = img.width;
+          let height = img.height;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return resolve(file instanceof Blob ? file : new Blob([file]));
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob(
+            (b) => {
+              if (b) resolve(b);
+              else resolve(file instanceof Blob ? file : new Blob([file]));
+            },
+            'image/jpeg',
+            0.82
+          );
+        };
+        img.onerror = () => resolve(file instanceof Blob ? file : new Blob([file]));
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => resolve(file instanceof Blob ? file : new Blob([file]));
+      reader.readAsDataURL(file);
+    });
+
+    const fd = new FormData();
+    fd.append('file', compressedBlob, 'comprobante.jpg');
+    const res = await fetch('/api/kode/pagos/upload-comprobante', {
+      method: 'POST',
+      body: fd,
+    });
+    const data = await res.json();
+    if (!data.success || !data.url) {
+      throw new Error(data.error || 'No se pudo subir la imagen del comprobante');
+    }
+    return data.url;
   };
 
   const municipiosDisponibles = useMemo(() => {
@@ -1010,10 +1075,12 @@ export default function KodeSystemPage() {
       forma_pago_tipo: forma?.tipo,
       monto: Math.round(monto * 100) / 100,
       num_documento_auto: pagoInputDoc.trim(),
+      comprobante_url: pagoInputComprobante ? pagoInputComprobante.trim() : undefined,
     };
     setPagosPedido((prev) => [...prev, nuevoPago]);
     setPagoInputMonto('');
     setPagoInputDoc('');
+    setPagoInputComprobante('');
     showToast(`Pago de $${nuevoPago.monto.toFixed(2)} (${nuevoPago.forma_pago_nombre}) agregado`, 'success');
   };
 
@@ -1143,6 +1210,7 @@ export default function KodeSystemPage() {
             forma_pago_id: p.forma_pago_id,
             monto: p.monto,
             num_documento_auto: p.num_documento_auto || '',
+            comprobante_url: p.comprobante_url || '',
             observaciones: p.observaciones || '',
           })),
         }),
@@ -1203,6 +1271,7 @@ export default function KodeSystemPage() {
           monto,
           fecha_pago: abonoFecha,
           num_documento_auto: abonoNumDoc.trim(),
+          comprobante_url: abonoComprobante.trim(),
           observaciones: abonoObservaciones.trim(),
         }),
       });
@@ -1212,6 +1281,7 @@ export default function KodeSystemPage() {
         setModalAbonoPedido(null);
         setAbonoMonto('');
         setAbonoNumDoc('');
+        setAbonoComprobante('');
         setAbonoObservaciones('');
         await fetchPedidos();
       } else {
@@ -3086,6 +3156,143 @@ export default function KodeSystemPage() {
                                 </div>
                               </div>
 
+                              {/* Adjuntar comprobante / captura de pantalla */}
+                              {(() => {
+                                const formaActual = formasPago.find((f) => f.id === pagoInputFormaId);
+                                const esBanco = formaActual?.tipo === 'BANCO';
+                                return (
+                                  <div
+                                    onPaste={async (e) => {
+                                      const items = e.clipboardData?.items;
+                                      if (!items) return;
+                                      for (let i = 0; i < items.length; i++) {
+                                        if (items[i].type.indexOf('image') !== -1) {
+                                          const file = items[i].getAsFile();
+                                          if (file) {
+                                            e.preventDefault();
+                                            try {
+                                              setSubiendoComprobante(true);
+                                              const url = await compressAndUploadImage(file);
+                                              setPagoInputComprobante(url);
+                                              showToast('¡Comprobante adjuntado desde el portapapeles!', 'success');
+                                            } catch (err: any) {
+                                              showToast(err.message || 'Error al procesar captura', 'error');
+                                            } finally {
+                                              setSubiendoComprobante(false);
+                                            }
+                                            break;
+                                          }
+                                        }
+                                      }
+                                    }}
+                                    className={`p-2.5 rounded-xl border transition-all ${
+                                      esBanco
+                                        ? 'bg-amber-50/70 border-amber-200'
+                                        : 'bg-slate-50/80 border-slate-200/70'
+                                    }`}
+                                  >
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                      <div className="flex items-center gap-2">
+                                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm ${
+                                          esBanco ? 'bg-amber-100 text-amber-800' : 'bg-slate-200 text-slate-600'
+                                        }`}>
+                                          📸
+                                        </div>
+                                        <div>
+                                          <div className="flex items-center gap-1.5 flex-wrap">
+                                            <span className="text-xs font-bold text-slate-800">
+                                              Comprobante o Captura de Transferencia
+                                            </span>
+                                            {esBanco && (
+                                              <span className="text-[10px] font-extrabold bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded">
+                                                Requerido para Banco
+                                              </span>
+                                            )}
+                                          </div>
+                                          <span className="text-[11px] text-slate-500 block">
+                                            Sube la captura que mandó el cliente o pégala con <kbd className="px-1 py-0.5 bg-white border border-slate-300 rounded font-mono text-[10px]">Ctrl+V</kbd>
+                                          </span>
+                                        </div>
+                                      </div>
+
+                                      {pagoInputComprobante ? (
+                                        <div className="flex items-center gap-2 bg-white px-2.5 py-1.5 rounded-lg border border-emerald-300 shadow-2xs">
+                                          <img
+                                            src={pagoInputComprobante}
+                                            alt="Captura comprobante"
+                                            className="w-8 h-8 rounded object-cover border border-slate-200 cursor-pointer hover:opacity-85"
+                                            onClick={() => setModalComprobanteUrl(pagoInputComprobante)}
+                                            title="Clic para ver en tamaño completo"
+                                          />
+                                          <div className="text-[11px]">
+                                            <span className="font-bold text-emerald-700 flex items-center gap-1">
+                                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                              Captura lista
+                                            </span>
+                                            <button
+                                              type="button"
+                                              onClick={() => setModalComprobanteUrl(pagoInputComprobante)}
+                                              className="text-indigo-600 hover:underline font-semibold block text-[10px]"
+                                            >
+                                              Ver comprobante
+                                            </button>
+                                          </div>
+                                          <button
+                                            type="button"
+                                            onClick={() => setPagoInputComprobante('')}
+                                            className="text-slate-400 hover:text-rose-600 p-1 ml-1 rounded hover:bg-rose-50"
+                                            title="Eliminar captura"
+                                          >
+                                            <X className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <label className={`cursor-pointer px-3 py-1.5 text-xs font-bold rounded-lg border flex items-center gap-1.5 transition-all shadow-2xs ${
+                                          subiendoComprobante
+                                            ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
+                                            : esBanco
+                                              ? 'bg-amber-600 hover:bg-amber-700 text-white border-amber-600'
+                                              : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-300'
+                                        }`}>
+                                          {subiendoComprobante ? (
+                                            <>
+                                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                              <span>Subiendo captura...</span>
+                                            </>
+                                          ) : (
+                                            <>
+                                              <Upload className="w-3.5 h-3.5" />
+                                              <span>Adjuntar Captura / Voucher</span>
+                                            </>
+                                          )}
+                                          <input
+                                            type="file"
+                                            accept="image/*"
+                                            disabled={subiendoComprobante}
+                                            className="hidden"
+                                            onChange={async (e) => {
+                                              const file = e.target.files?.[0];
+                                              if (!file) return;
+                                              try {
+                                                setSubiendoComprobante(true);
+                                                const url = await compressAndUploadImage(file);
+                                                setPagoInputComprobante(url);
+                                                showToast('Comprobante adjuntado con éxito', 'success');
+                                              } catch (err: any) {
+                                                showToast(err.message || 'Error al subir imagen', 'error');
+                                              } finally {
+                                                setSubiendoComprobante(false);
+                                                e.target.value = '';
+                                              }
+                                            }}
+                                          />
+                                        </label>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+
                               {/* Acciones y sugerencias */}
                               <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100">
                                 <div className="flex flex-wrap gap-1.5 items-center">
@@ -3176,8 +3383,27 @@ export default function KodeSystemPage() {
                                           <td className="py-2 px-3 font-mono font-bold text-slate-900">
                                             ${pago.monto.toFixed(2)}
                                           </td>
-                                          <td className="py-2 px-3 font-mono text-slate-500 text-[11px]">
-                                            {pago.num_documento_auto || '-'}
+                                          <td className="py-2 px-3 text-xs">
+                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                              {pago.num_documento_auto && (
+                                                <span className="font-mono text-slate-700 font-semibold bg-slate-100 px-1.5 py-0.5 rounded text-[11px]">
+                                                  #{pago.num_documento_auto}
+                                                </span>
+                                              )}
+                                              {pago.comprobante_url ? (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => setModalComprobanteUrl(pago.comprobante_url || null)}
+                                                  className="inline-flex items-center gap-1 text-[11px] font-bold text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200 px-2 py-0.5 rounded transition-colors shadow-2xs"
+                                                  title="Ver comprobante adjunto"
+                                                >
+                                                  <ImageIcon className="w-3 h-3 text-violet-600" />
+                                                  <span>Ver Captura</span>
+                                                </button>
+                                              ) : (
+                                                !pago.num_documento_auto && <span className="text-slate-400 font-mono text-[11px]">-</span>
+                                              )}
+                                            </div>
                                           </td>
                                           <td className="py-2 px-3 text-center">
                                             <button
@@ -3580,6 +3806,17 @@ export default function KodeSystemPage() {
                                                           <span className="font-mono text-[11px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-100 font-bold">
                                                             Doc: {pg.num_documento_auto}
                                                           </span>
+                                                        )}
+                                                        {pg.comprobante_url && (
+                                                          <button
+                                                            type="button"
+                                                            onClick={() => setModalComprobanteUrl(pg.comprobante_url || null)}
+                                                            className="inline-flex items-center gap-1 text-[11px] font-bold text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200 px-2 py-0.5 rounded transition-colors shadow-2xs"
+                                                            title="Ver captura o comprobante adjunto"
+                                                          >
+                                                            <ImageIcon className="w-3 h-3 text-violet-600" />
+                                                            <span>Ver Comprobante</span>
+                                                          </button>
                                                         )}
                                                         {pg.usuario && (
                                                           <span className="text-slate-400 text-[10px]">por {pg.usuario}</span>
@@ -5660,6 +5897,108 @@ export default function KodeSystemPage() {
               </div>
 
               <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Captura / Comprobante de Transferencia (Foto o Screenshot)
+                </label>
+                {abonoComprobante ? (
+                  <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl shadow-2xs">
+                    <div className="flex items-center gap-2.5">
+                      <img
+                        src={abonoComprobante}
+                        alt="Comprobante Abono"
+                        className="w-10 h-10 object-cover rounded-lg border border-emerald-300 cursor-pointer hover:opacity-85"
+                        onClick={() => setModalComprobanteUrl(abonoComprobante)}
+                        title="Clic para ver en tamaño completo"
+                      />
+                      <div>
+                        <span className="text-xs font-bold text-emerald-800 flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          Comprobante adjuntado
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setModalComprobanteUrl(abonoComprobante)}
+                          className="text-[11px] text-indigo-600 hover:underline font-semibold block"
+                        >
+                          Ver en grande
+                        </button>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setAbonoComprobante('')}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-white"
+                      title="Quitar comprobante"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onPaste={async (e) => {
+                      const items = e.clipboardData?.items;
+                      if (!items) return;
+                      for (let i = 0; i < items.length; i++) {
+                        if (items[i].type.indexOf('image') !== -1) {
+                          const file = items[i].getAsFile();
+                          if (file) {
+                            e.preventDefault();
+                            try {
+                              setAbonoSubiendoComprobante(true);
+                              const url = await compressAndUploadImage(file);
+                              setAbonoComprobante(url);
+                              showToast('¡Comprobante adjuntado desde el portapapeles!', 'success');
+                            } catch (err: any) {
+                              showToast(err.message || 'Error al procesar captura', 'error');
+                            } finally {
+                              setAbonoSubiendoComprobante(false);
+                            }
+                            break;
+                          }
+                        }
+                      }
+                    }}
+                  >
+                    <label className="flex flex-col items-center justify-center p-3.5 border-2 border-dashed border-slate-300 hover:border-indigo-400 bg-slate-50 hover:bg-indigo-50/40 rounded-xl cursor-pointer transition-all">
+                      {abonoSubiendoComprobante ? (
+                        <div className="flex items-center gap-2 text-xs font-bold text-indigo-600">
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>Subiendo comprobante...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <Upload className="w-5 h-5 text-slate-400 mb-1" />
+                          <span className="text-xs font-bold text-slate-700">Subir foto o captura del comprobante</span>
+                          <span className="text-[10px] text-slate-500">PNG, JPG o pega con Ctrl+V</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={abonoSubiendoComprobante}
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          try {
+                            setAbonoSubiendoComprobante(true);
+                            const url = await compressAndUploadImage(file);
+                            setAbonoComprobante(url);
+                            showToast('Comprobante adjuntado con éxito', 'success');
+                          } catch (err: any) {
+                            showToast(err.message || 'Error al subir imagen', 'error');
+                          } finally {
+                            setAbonoSubiendoComprobante(false);
+                            e.target.value = '';
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              <div>
                 <label className="block font-bold text-slate-700 mb-1">Fecha del Pago</label>
                 <input
                   type="date"
@@ -6459,6 +6798,55 @@ export default function KodeSystemPage() {
               >
                 Sobreescribir datos
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Lightbox para Visualizar Comprobante / Captura */}
+      {modalComprobanteUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm"
+          onClick={() => setModalComprobanteUrl(null)}
+        >
+          <div
+            className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-3.5 border-b border-slate-100 bg-slate-50">
+              <div className="flex items-center gap-2">
+                <span className="text-base">📸</span>
+                <h3 className="font-bold text-slate-800 text-sm">
+                  Comprobante / Captura de Pago
+                </h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href={modalComprobanteUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  download="comprobante-pago.jpg"
+                  className="clay-btn clay-btn-secondary px-2.5 py-1 text-xs font-bold flex items-center gap-1"
+                  title="Abrir en pestaña nueva o descargar"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  Abrir Original
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setModalComprobanteUrl(null)}
+                  className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-200/50"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            <div className="p-4 flex items-center justify-center bg-slate-100/50 overflow-auto max-h-[calc(90vh-70px)]">
+              <img
+                src={modalComprobanteUrl}
+                alt="Comprobante Bancario"
+                className="max-w-full max-h-[75vh] object-contain rounded-lg border border-slate-200 shadow-md"
+              />
             </div>
           </div>
         </div>
