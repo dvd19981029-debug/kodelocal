@@ -3153,20 +3153,20 @@ export default function KodeSystemPage() {
 
                   <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs border-collapse">
-                        <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                      <table className="w-full text-left text-xs border-collapse min-w-[1250px]">
+                        <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider whitespace-nowrap">
                           <tr>
-                            <th className="py-2.5 px-4">Estado envío</th>
-                            <th className="py-2.5 px-4">Estado Pago</th>
-                            <th className="py-2.5 px-4">Estado C807</th>
-                            <th className="py-2.5 px-4">Guia C807</th>
-                            <th className="py-2.5 px-4">nun DTE</th>
-                            <th className="py-2.5 px-4">Numero de Pedido</th>
-                            <th className="py-2.5 px-4">Cliente</th>
-                            <th className="py-2.5 px-4">Teléfono</th>
-                            <th className="py-2.5 px-4">Fecha Pedido</th>
-                            <th className="py-2.5 px-4 text-right">Total</th>
-                            <th className="py-2.5 px-4 text-center">Acciones</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">Estado envío</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">Estado Pago</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">Estado C807</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">Guia C807</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">nun DTE</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">Numero de Pedido</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">Cliente</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">Teléfono</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">Fecha Pedido</th>
+                            <th className="py-2.5 px-4 text-right whitespace-nowrap">Total</th>
+                            <th className="py-2.5 px-4 text-center whitespace-nowrap">Acciones</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 bg-white">
@@ -3185,56 +3185,56 @@ export default function KodeSystemPage() {
                               return (
                                 <React.Fragment key={p.id}>
                                   <tr className="hover:bg-slate-50/80 transition-colors">
-                                    <td className="py-3 px-4">
+                                    <td className="py-3 px-4 whitespace-nowrap">
                                       {(p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA') && (
-                                        <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full">
+                                        <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
                                           🔴 Registrado
                                         </span>
                                       )}
                                       {(p.estado === 'Insumos comprados' || p.estado === 'PENDIENTE_PREPARAR') && (
-                                        <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full">
+                                        <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
                                           🟡 Insumos comprados
                                         </span>
                                       )}
                                       {(p.estado === 'Preparado' || p.estado === 'Enviado' || p.estado === 'GUIA_CREADA') && (
-                                        <span className="text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 px-2.5 py-0.5 rounded-full">
+                                        <span className="text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
                                           🔵 {p.c807_guia_numero ? 'Guía C807' : 'Enviado'}
                                         </span>
                                       )}
                                       {(p.estado === 'Entregado' || p.estado === 'ENTREGADO') && (
-                                        <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                                        <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
                                           🟢 Entregado
                                         </span>
                                       )}
                                       {(p.estado === 'Cancelado' || p.estado === 'CANCELADO') && (
-                                        <span className="text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-300 px-2.5 py-0.5 rounded-full">
+                                        <span className="text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-300 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
                                           ⚪ Cancelado
                                         </span>
                                       )}
                                     </td>
-                                    <td className="py-3 px-4">
+                                    <td className="py-3 px-4 whitespace-nowrap">
                                       {p.estado_pago === 'PAGADO' ? (
-                                        <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                                        <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
                                           ✓ Pagado
                                         </span>
                                       ) : p.estado_pago === 'PARCIAL' ? (
-                                        <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full" title={`Abonado: $${totalPagadoNum.toFixed(2)}`}>
+                                        <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap" title={`Abonado: $${totalPagadoNum.toFixed(2)}`}>
                                           ⏳ Parcial (${totalPagadoNum.toFixed(2)})
                                         </span>
                                       ) : (
-                                        <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full">
+                                        <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
                                           ✕ Pendiente
                                         </span>
                                       )}
                                     </td>
-                                    <td className="py-3 px-4 text-slate-600 font-medium">
+                                    <td className="py-3 px-4 text-slate-600 font-medium whitespace-nowrap">
                                       {p.c807_estado || (p.c807_guia_numero ? 'En ruta C807' : 'Pendiente guía')}
                                     </td>
                                     {/* Guia C807 */}
-                                    <td className="py-3 px-4 font-mono text-xs">
+                                    <td className="py-3 px-4 font-mono text-xs whitespace-nowrap">
                                       {p.c807_guia_numero ? (
-                                        <div className="flex items-center gap-1.5">
-                                          <span className="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                                        <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                                          <span className="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 whitespace-nowrap">
                                             {p.c807_guia_numero}
                                           </span>
                                           {p.c807_link_rastreo && (
@@ -3242,7 +3242,7 @@ export default function KodeSystemPage() {
                                               href={p.c807_link_rastreo}
                                               target="_blank"
                                               rel="noreferrer"
-                                              className="text-indigo-600 hover:text-indigo-800 p-0.5 rounded hover:bg-indigo-50 transition-colors"
+                                              className="text-indigo-600 hover:text-indigo-800 p-0.5 rounded hover:bg-indigo-50 transition-colors inline-flex"
                                               title="Rastrear Guía C807"
                                             >
                                               <ExternalLink className="w-3.5 h-3.5" />
@@ -3254,11 +3254,11 @@ export default function KodeSystemPage() {
                                       )}
                                     </td>
                                     {/* nun DTE */}
-                                    <td className="py-3 px-4 font-mono text-xs">
+                                    <td className="py-3 px-4 font-mono text-xs whitespace-nowrap">
                                       {p.dte_numero_control || p.dte_codigo_generacion ? (
-                                        <div className="flex items-center gap-1.5">
+                                        <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
                                           <span
-                                            className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 truncate max-w-[130px]"
+                                            className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 truncate max-w-[140px] whitespace-nowrap"
                                             title={`DTE: ${p.dte_numero_control || p.dte_codigo_generacion}`}
                                           >
                                             {p.dte_numero_control || `${p.dte_codigo_generacion?.slice(0, 10)}...`}
@@ -3268,7 +3268,7 @@ export default function KodeSystemPage() {
                                               href={p.dte_pdf_url}
                                               target="_blank"
                                               rel="noreferrer"
-                                              className="text-emerald-600 hover:text-emerald-800 p-0.5 rounded hover:bg-emerald-100 transition-colors"
+                                              className="text-emerald-600 hover:text-emerald-800 p-0.5 rounded hover:bg-emerald-100 transition-colors inline-flex"
                                               title="Ver Factura DTE (PDF)"
                                             >
                                               <FileText className="w-3.5 h-3.5" />
@@ -3279,13 +3279,13 @@ export default function KodeSystemPage() {
                                         <span className="text-slate-400 text-[11px] italic">-</span>
                                       )}
                                     </td>
-                                    <td className="py-3 px-4 font-mono font-bold text-indigo-700">
+                                    <td className="py-3 px-4 font-mono font-bold text-indigo-700 whitespace-nowrap">
                                       {p.numero_pedido}
                                     </td>
-                                    <td className={`py-3 px-4 ${getClienteColorPorEstado(p.estado)}`}>
+                                    <td className={`py-3 px-4 whitespace-nowrap ${getClienteColorPorEstado(p.estado)}`}>
                                       {p.cliente_nombre}
                                     </td>
-                                    <td className="py-3 px-4 font-mono">
+                                    <td className="py-3 px-4 font-mono whitespace-nowrap">
                                       <a
                                         href={`https://wa.me/503${p.cliente_telefono}`}
                                         target="_blank"
@@ -3295,10 +3295,10 @@ export default function KodeSystemPage() {
                                         {p.cliente_telefono}
                                       </a>
                                     </td>
-                                    <td className="py-3 px-4 text-slate-500 font-mono">
+                                    <td className="py-3 px-4 text-slate-500 font-mono whitespace-nowrap">
                                       {new Date(p.created_at).toLocaleDateString('es-SV')}
                                     </td>
-                                    <td className="py-3 px-4 text-right">
+                                    <td className="py-3 px-4 text-right whitespace-nowrap">
                                       <div className="font-mono font-black text-slate-900">
                                         ${totalNum.toFixed(2)}
                                       </div>
@@ -3308,7 +3308,7 @@ export default function KodeSystemPage() {
                                         </div>
                                       )}
                                     </td>
-                                    <td className="py-3 px-4 text-center">
+                                    <td className="py-3 px-4 text-center whitespace-nowrap">
                                       <button
                                         onClick={() => setExpandedPedidoId(isExpanded ? null : p.id)}
                                         className="p-1 rounded-lg text-slate-400 hover:text-slate-800"
