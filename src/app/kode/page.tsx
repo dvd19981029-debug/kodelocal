@@ -3535,23 +3535,21 @@ export default function KodeSystemPage() {
                       <table className="w-full text-left text-xs border-collapse min-w-[1250px]">
                         <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider whitespace-nowrap">
                           <tr>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Estado envío</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Estado Pago</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Estado C807</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">Guia C807</th>
-                            <th className="py-2.5 px-4 whitespace-nowrap">nun DTE</th>
                             <th className="py-2.5 px-4 whitespace-nowrap">Numero de Pedido</th>
                             <th className="py-2.5 px-4 whitespace-nowrap">Cliente</th>
                             <th className="py-2.5 px-4 whitespace-nowrap">Teléfono</th>
                             <th className="py-2.5 px-4 whitespace-nowrap">Fecha Pedido</th>
-                            <th className="py-2.5 px-4 text-right whitespace-nowrap">Total</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">Total</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">Estado C807</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">Numero de DTE</th>
+                            <th className="py-2.5 px-4 whitespace-nowrap">Estado Envío</th>
                             <th className="py-2.5 px-4 text-center whitespace-nowrap">Acciones</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 bg-white">
                           {pedidosFiltrados.length === 0 ? (
                             <tr>
-                              <td colSpan={11} className="py-12 text-center text-slate-400 font-medium">
+                              <td colSpan={9} className="py-12 text-center text-slate-400 font-medium">
                                 No se encontraron pedidos
                               </td>
                             </tr>
@@ -3564,6 +3562,121 @@ export default function KodeSystemPage() {
                               return (
                                 <React.Fragment key={p.id}>
                                   <tr className="hover:bg-slate-50/80 transition-colors">
+                                    {/* 1. Numero de Pedido */}
+                                    <td className="py-3 px-4 font-mono font-bold text-indigo-700 whitespace-nowrap">
+                                      {p.numero_pedido}
+                                    </td>
+
+                                    {/* 2. Cliente */}
+                                    <td className={`py-3 px-4 whitespace-nowrap ${getClienteColorPorEstado(p.estado)}`}>
+                                      {p.cliente_nombre}
+                                    </td>
+
+                                    {/* 3. Teléfono */}
+                                    <td className="py-3 px-4 font-mono whitespace-nowrap">
+                                      <a
+                                        href={`https://wa.me/503${p.cliente_telefono}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-emerald-700 hover:underline font-bold"
+                                      >
+                                        {p.cliente_telefono}
+                                      </a>
+                                    </td>
+
+                                    {/* 4. Fecha Pedido */}
+                                    <td className="py-3 px-4 text-slate-500 font-mono whitespace-nowrap">
+                                      {new Date(p.created_at).toLocaleDateString('es-SV')}
+                                    </td>
+
+                                    {/* 5. Total */}
+                                    <td className="py-3 px-4 whitespace-nowrap">
+                                      <div className="font-mono font-black text-slate-900">
+                                        ${totalNum.toFixed(2)}
+                                      </div>
+                                      <div className="mt-0.5">
+                                        {p.estado_pago === 'PAGADO' ? (
+                                          <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full inline-block whitespace-nowrap">
+                                            ✓ Pagado
+                                          </span>
+                                        ) : p.estado_pago === 'PARCIAL' ? (
+                                          <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full inline-block whitespace-nowrap" title={`Abonado: $${totalPagadoNum.toFixed(2)}`}>
+                                            ⏳ Parcial (${totalPagadoNum.toFixed(2)})
+                                          </span>
+                                        ) : (
+                                          <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
+                                            ✕ Pendiente
+                                          </span>
+                                        )}
+                                      </div>
+                                    </td>
+
+                                    {/* 6. Estado C807 */}
+                                    <td className="py-3 px-4 whitespace-nowrap">
+                                      {p.c807_guia_numero && p.c807_guia_numero !== 'PENDIENTE' ? (
+                                        <div className="flex flex-col gap-1 items-start whitespace-nowrap">
+                                          {renderBadgeEstadoC807(p.c807_estado, true)}
+                                          <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                                            <span className="font-mono text-[10px] font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 whitespace-nowrap">
+                                              {p.c807_guia_numero}
+                                            </span>
+                                            {getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo) && (
+                                              <a
+                                                href={getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo)}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="text-indigo-600 hover:text-indigo-800 p-0.5 rounded hover:bg-indigo-50 transition-colors inline-flex"
+                                                title="Rastrear Guía C807"
+                                              >
+                                                <ExternalLink className="w-3.5 h-3.5" />
+                                              </a>
+                                            )}
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <div className="inline-flex items-center gap-1.5">
+                                          <button
+                                            type="button"
+                                            onClick={() => handleGenerarGuiaDirecta(p)}
+                                            disabled={generandoGuiaPedidoId === p.id}
+                                            className="px-2.5 py-1 rounded-lg text-xs font-black bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                                            title="Generar Guía con C807 Express y emitir DTE automáticamente"
+                                          >
+                                            <Truck className={`w-3.5 h-3.5 ${generandoGuiaPedidoId === p.id ? 'animate-spin' : ''}`} />
+                                            <span>{generandoGuiaPedidoId === p.id ? 'Generando...' : 'Generar Guía'}</span>
+                                          </button>
+                                        </div>
+                                      )}
+                                    </td>
+
+                                    {/* 7. Numero de DTE */}
+                                    <td className="py-3 px-4 font-mono text-xs whitespace-nowrap">
+                                      {p.dte_numero_control || p.dte_codigo_generacion ? (
+                                        <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                                          <span
+                                            className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 truncate max-w-[140px] whitespace-nowrap"
+                                            title={`DTE: ${p.dte_numero_control || p.dte_codigo_generacion}`}
+                                          >
+                                            {p.dte_numero_control || `${p.dte_codigo_generacion?.slice(0, 10)}...`}
+                                          </span>
+                                          {p.dte_pdf_url && (
+                                            <a
+                                              href={p.dte_pdf_url}
+                                              target="_blank"
+                                              rel="noreferrer"
+                                              className="text-emerald-600 hover:text-emerald-800 p-0.5 rounded hover:bg-emerald-100 transition-colors inline-flex"
+                                              title="Ver Factura DTE (PDF)"
+                                            >
+                                              <FileText className="w-3.5 h-3.5" />
+                                            </a>
+                                          )}
+                                        </div>
+                                      ) : (
+                                        <span className="text-slate-400 text-[11px] italic">-</span>
+                                      )}
+                                    </td>
+
+                                    {/* 8. Estado Envío */}
                                     <td className="py-3 px-4 whitespace-nowrap">
                                       {(p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA') && (
                                         <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
@@ -3591,113 +3704,8 @@ export default function KodeSystemPage() {
                                         </span>
                                       )}
                                     </td>
-                                    <td className="py-3 px-4 whitespace-nowrap">
-                                      {p.estado_pago === 'PAGADO' ? (
-                                        <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                          ✓ Pagado
-                                        </span>
-                                      ) : p.estado_pago === 'PARCIAL' ? (
-                                        <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap" title={`Abonado: $${totalPagadoNum.toFixed(2)}`}>
-                                          ⏳ Parcial (${totalPagadoNum.toFixed(2)})
-                                        </span>
-                                      ) : (
-                                        <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                          ✕ Pendiente
-                                        </span>
-                                      )}
-                                    </td>
-                                    <td className="py-3 px-4 whitespace-nowrap">
-                                      {renderBadgeEstadoC807(p.c807_estado, !!p.c807_guia_numero)}
-                                    </td>
-                                    {/* Guia C807 */}
-                                    <td className="py-3 px-4 font-mono text-xs whitespace-nowrap">
-                                      {p.c807_guia_numero && p.c807_guia_numero !== 'PENDIENTE' ? (
-                                        <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
-                                          <span className="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 whitespace-nowrap">
-                                            {p.c807_guia_numero}
-                                          </span>
-                                          {getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo) && (
-                                            <a
-                                              href={getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo)}
-                                              target="_blank"
-                                              rel="noreferrer"
-                                              className="text-indigo-600 hover:text-indigo-800 p-0.5 rounded hover:bg-indigo-50 transition-colors inline-flex"
-                                              title="Rastrear Guía C807"
-                                            >
-                                              <ExternalLink className="w-3.5 h-3.5" />
-                                            </a>
-                                          )}
-                                        </div>
-                                      ) : (
-                                        <div className="inline-flex items-center gap-1.5">
-                                          <button
-                                            type="button"
-                                            onClick={() => handleGenerarGuiaDirecta(p)}
-                                            disabled={generandoGuiaPedidoId === p.id}
-                                            className="px-2.5 py-1 rounded-lg text-xs font-black bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
-                                            title="Generar Guía con C807 Express y emitir DTE automáticamente"
-                                          >
-                                            <Truck className={`w-3.5 h-3.5 ${generandoGuiaPedidoId === p.id ? 'animate-spin' : ''}`} />
-                                            <span>{generandoGuiaPedidoId === p.id ? 'Generando...' : 'Generar Guía'}</span>
-                                          </button>
-                                        </div>
-                                      )}
-                                    </td>
-                                    {/* nun DTE */}
-                                    <td className="py-3 px-4 font-mono text-xs whitespace-nowrap">
-                                      {p.dte_numero_control || p.dte_codigo_generacion ? (
-                                        <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
-                                          <span
-                                            className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 truncate max-w-[140px] whitespace-nowrap"
-                                            title={`DTE: ${p.dte_numero_control || p.dte_codigo_generacion}`}
-                                          >
-                                            {p.dte_numero_control || `${p.dte_codigo_generacion?.slice(0, 10)}...`}
-                                          </span>
-                                          {p.dte_pdf_url && (
-                                            <a
-                                              href={p.dte_pdf_url}
-                                              target="_blank"
-                                              rel="noreferrer"
-                                              className="text-emerald-600 hover:text-emerald-800 p-0.5 rounded hover:bg-emerald-100 transition-colors inline-flex"
-                                              title="Ver Factura DTE (PDF)"
-                                            >
-                                              <FileText className="w-3.5 h-3.5" />
-                                            </a>
-                                          )}
-                                        </div>
-                                      ) : (
-                                        <span className="text-slate-400 text-[11px] italic">-</span>
-                                      )}
-                                    </td>
-                                    <td className="py-3 px-4 font-mono font-bold text-indigo-700 whitespace-nowrap">
-                                      {p.numero_pedido}
-                                    </td>
-                                    <td className={`py-3 px-4 whitespace-nowrap ${getClienteColorPorEstado(p.estado)}`}>
-                                      {p.cliente_nombre}
-                                    </td>
-                                    <td className="py-3 px-4 font-mono whitespace-nowrap">
-                                      <a
-                                        href={`https://wa.me/503${p.cliente_telefono}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="text-emerald-700 hover:underline font-bold"
-                                      >
-                                        {p.cliente_telefono}
-                                      </a>
-                                    </td>
-                                    <td className="py-3 px-4 text-slate-500 font-mono whitespace-nowrap">
-                                      {new Date(p.created_at).toLocaleDateString('es-SV')}
-                                    </td>
-                                    <td className="py-3 px-4 text-right whitespace-nowrap">
-                                      <div className="font-mono font-black text-slate-900">
-                                        ${totalNum.toFixed(2)}
-                                      </div>
-                                      {totalPagadoNum > 0 && p.estado_pago !== 'PAGADO' && (
-                                        <div className="text-[10px] font-mono font-bold text-amber-700">
-                                          Resta: ${saldoPendiente.toFixed(2)}
-                                        </div>
-                                      )}
-                                    </td>
+
+                                    {/* 9. Acciones */}
                                     <td className="py-3 px-4 text-center whitespace-nowrap">
                                       <button
                                         onClick={() => setExpandedPedidoId(isExpanded ? null : p.id)}
@@ -3709,7 +3717,7 @@ export default function KodeSystemPage() {
                                   </tr>
                                   {isExpanded && (
                                     <tr className="bg-slate-50/50">
-                                      <td colSpan={11} className="p-4 border-t border-slate-100">
+                                      <td colSpan={9} className="p-4 border-t border-slate-100">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                                           <div className="bg-white p-3 rounded-xl border border-slate-200">
                                             <span className="font-bold text-slate-700 block mb-1">Destino:</span>
