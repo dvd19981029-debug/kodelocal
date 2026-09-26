@@ -353,6 +353,17 @@ export default function CheckoutPage() {
         throw new Error(orderData.error || 'No fue posible confirmar el pedido');
       }
 
+      // Propagar inmediatamente el pedido a comanda local (0ms para Bodega abierta en el mismo navegador)
+      try {
+        const currentSalesRaw = localStorage.getItem('kodelocal_sales');
+        const currentSales = currentSalesRaw ? JSON.parse(currentSalesRaw) : [];
+        if (!currentSales.some((s: any) => s.saleNumber === newOrder.saleNumber)) {
+          const updatedSales = [newOrder, ...currentSales];
+          localStorage.setItem('kodelocal_sales', JSON.stringify(updatedSales));
+          window.dispatchEvent(new Event('kodelocal_sales_updated'));
+        }
+      } catch (_) {}
+
       // Guardar perfil de envío del invitado para futuros pedidos y autocompletado
       saveGuestShippingProfile({
         name: nombre,

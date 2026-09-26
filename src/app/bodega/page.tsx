@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { 
   Box, 
   CheckCircle2, 
@@ -12,6 +12,7 @@ import {
   ArrowRight,
   Printer,
   RotateCcw,
+  RefreshCw,
   Package,
   Truck,
   MapPin,
@@ -26,12 +27,16 @@ import {
   FileText,
   User,
   PlusCircle,
-  ExternalLink
+  ExternalLink,
+  Volume2,
+  VolumeX,
+  Radio
 } from 'lucide-react';
 import { 
   SaleRecord, 
   ProductItem, 
   PERFUME_CATEGORIES, 
+  DATA_VERSION,
   getStoredProducts, 
   saveStoredProducts 
 } from '@/lib/store';
@@ -42,6 +47,43 @@ import {
   applyBodegaReceptionToProducts 
 } from '@/lib/purchases';
 import { getActiveUser, UserAccount, getStaffToken } from '@/lib/auth';
+import { supabase } from '@/lib/supabaseClient';
+
+// Sonido sintético de campanilla doble para alertar nuevas comandas web en tiempo real
+function playNewOrderChime() {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const now = ctx.currentTime;
+    
+    // Tono 1 (D5 - 587Hz)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(587.33, now);
+    gain1.gain.setValueAtTime(0.28, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.36);
+
+    // Tono 2 (A5 - 880Hz)
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(880, now + 0.14);
+    gain2.gain.setValueAtTime(0.28, now + 0.14);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(now + 0.14);
+    osc2.stop(now + 0.66);
+  } catch (e) {
+    // AudioContext puede estar en estado suspendido hasta interacción inicial del usuario
+  }
+}
 
 type BodegaTab = 'por_preparar' | 'listos' | 'entregados' | 'inventario' | 'ingreso_compras';
 
@@ -50,11 +92,18 @@ export default function BodegaPage() {
   const [bodegaTab, setBodegaTab] = useState<BodegaTab>('por_preparar');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Estados de Sincronización en Tiempo Real
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date());
+  const knownOrderIdsRef = useRef<Set<string>>(new Set());
+  const isFirstLoadRef = useRef(true);
+
   // 1. Ventas / Comandas
   const [sales, setSales] = useState<SaleRecord[]>(() => {
     if (typeof window !== 'undefined') {
       const currentVersion = localStorage.getItem('kodelocal_data_version');
-      if (currentVersion !== '2026_zero_stock_v3') return [];
+      if (currentVersion && currentVersion !== DATA_VERSION && currentVersion !== '2026_zero_stock_v3') return [];
       const saved = localStorage.getItem('kodelocal_sales');
       if (saved) {
         try { return JSON.parse(saved); } catch (e) {}
@@ -84,7 +133,12 @@ export default function BodegaPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
 
-  // Cargar usuario activo y registrar listeners de sincronización
+  const showToast = useCallback((msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 4000);
+  }, []);
+
+  // Cargar usuario activo y registrar listeners de sincronización local
   useEffect(() => {
     const user = getActiveUser();
     setCurrentUser(user);
@@ -95,6 +149,12 @@ export default function BodegaPage() {
     };
     const handlePurchasesUpdate = () => {
       setPurchases(getStoredPurchases());
+    };
+    const handleSalesUpdate = () => {
+      const saved = localStorage.getItem('kodelocal_sales');
+      if (saved) {
+        try { setSales(JSON.parse(saved)); } catch (err) {}
+      }
     };
     const handleStorageUpdate = (e: StorageEvent) => {
       if (e.key === 'kodelocal_products') setProducts(getStoredProducts());
@@ -108,11 +168,13 @@ export default function BodegaPage() {
 
     window.addEventListener('kodelocal_products_updated', handleProductsUpdate);
     window.addEventListener('kodelocal_purchases_updated', handlePurchasesUpdate);
+    window.addEventListener('kodelocal_sales_updated', handleSalesUpdate);
     window.addEventListener('storage', handleStorageUpdate);
 
     return () => {
       window.removeEventListener('kodelocal_products_updated', handleProductsUpdate);
       window.removeEventListener('kodelocal_purchases_updated', handlePurchasesUpdate);
+      window.removeEventListener('kodelocal_sales_updated', handleSalesUpdate);
       window.removeEventListener('storage', handleStorageUpdate);
     };
   }, []);
@@ -124,6 +186,7 @@ export default function BodegaPage() {
     }
   }, [sales]);
 
+  // Sincronizar catálogo y compras de Supabase
   useEffect(() => {
     fetch('/api/products')
       .then(res => res.json())
@@ -143,78 +206,136 @@ export default function BodegaPage() {
         }
       })
       .catch(err => console.error('Error sincronizando compras con Supabase en Bodega:', err));
+  }, []);
 
-    // Cargar pedidos de la tienda online (Ecommerce) desde Supabase
-    const fetchEcommerceOrders = async () => {
+  // Función de consulta y sincronización de pedidos web (Ecommerce)
+  const fetchEcommerceOrders = useCallback(async () => {
+    try {
+      setIsSyncing(true);
       const staffToken = await getStaffToken();
-      fetch('/api/ecommerce/orders', {
+      const res = await fetch('/api/ecommerce/orders', {
         headers: {
           ...(staffToken ? { 'x-staff-token': staffToken } : {}),
         },
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && Array.isArray(data.orders)) {
-            // Solo enviar a preparación en bodega pedidos con pago confirmado (autorización de Wompi)
-            // o transferencias válidas. Descartar órdenes canceladas e intentos de tarjeta no pagados.
-            const validOrders = data.orders.filter((o: any) => {
-              if (o.orderStatus === 'CANCELADO') return false;
-              if (o.paymentMethod === 'CARD' && o.paymentStatus !== 'COMPLETED') return false;
-              return true;
-            });
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.orders)) {
+        // Solo enviar a preparación en bodega pedidos con pago confirmado (autorización de Wompi)
+        // o transferencias válidas. Descartar órdenes canceladas e intentos de tarjeta no pagados.
+        const validOrders = data.orders.filter((o: any) => {
+          if (o.orderStatus === 'CANCELADO') return false;
+          if (o.paymentMethod === 'CARD' && o.paymentStatus !== 'COMPLETED') return false;
+          return true;
+        });
 
-            const webSales: SaleRecord[] = validOrders.map((o: any) => ({
-              id: o.id,
-              saleNumber: o.orderNumber,
-              orderNumber: o.orderNumber,
-              createdAt: o.createdAt,
-              channel: 'ONLINE',
-              total: Number(o.total || 0),
-              subtotal: Number(o.subtotal || 0),
-              ivaTotal: 0,
-              shippingCost: Number(o.shippingCost || 0),
-              paymentMethod: o.paymentMethod || 'CARD',
-              paymentStatus: o.paymentStatus || 'COMPLETED',
-              notes: o.notes || undefined,
-              deliveryNotes: o.deliveryReference ? `Entrega: ${o.shippingAddress} (Ref: ${o.deliveryReference})` : `Entrega: ${o.shippingAddress}`,
-              status: o.orderStatus === 'NUEVO' || o.orderStatus === 'EN_PREPARACION'
-                ? 'PENDING_PREPARATION'
-                : o.orderStatus === 'EN_RUTA'
-                ? 'READY_AT_WINDOW'
-                : 'COMPLETED',
-              vendedor: 'Tienda Online (aromaniaksv.com)',
-              cliente: {
-                nombre: o.customerName,
-                telefono: o.customerPhone,
-                correo: o.customerEmail || undefined,
-                direccion: `${o.shippingAddress}, ${o.municipality}, ${o.department}`,
-              },
-              items: o.items.map((it: any) => ({
-                productId: it.productId,
-                name: `${it.productName} (${it.presentation})`,
-                quantity: it.quantity,
-                price: it.unitPrice,
-                total: it.total,
-                unit: it.presentation,
-                puesto: it.product?.puesto || 'A1',
-              }))
-            }));
+        const webSales: SaleRecord[] = validOrders.map((o: any) => ({
+          id: o.id,
+          saleNumber: o.orderNumber,
+          orderNumber: o.orderNumber,
+          createdAt: o.createdAt,
+          channel: 'ONLINE',
+          total: Number(o.total || 0),
+          subtotal: Number(o.subtotal || 0),
+          ivaTotal: 0,
+          shippingCost: Number(o.shippingCost || 0),
+          paymentMethod: o.paymentMethod || 'CARD',
+          paymentStatus: o.paymentStatus || 'COMPLETED',
+          notes: o.notes || undefined,
+          deliveryNotes: o.deliveryReference ? `Entrega: ${o.shippingAddress} (Ref: ${o.deliveryReference})` : `Entrega: ${o.shippingAddress}`,
+          status: o.orderStatus === 'NUEVO' || o.orderStatus === 'EN_PREPARACION'
+            ? 'PENDING_PREPARATION'
+            : o.orderStatus === 'EN_RUTA'
+            ? 'READY_AT_WINDOW'
+            : 'COMPLETED',
+          vendedor: 'Tienda Online (aromaniaksv.com)',
+          cliente: {
+            nombre: o.customerName,
+            telefono: o.customerPhone,
+            correo: o.customerEmail || undefined,
+            direccion: `${o.shippingAddress}, ${o.municipality}, ${o.department}`,
+          },
+          items: o.items.map((it: any) => ({
+            productId: it.productId,
+            name: `${it.productName} (${it.presentation})`,
+            quantity: it.quantity,
+            price: it.unitPrice,
+            total: it.total,
+            unit: it.presentation,
+            puesto: it.product?.puesto || 'A1',
+          }))
+        }));
 
-            setSales(prev => {
-              const localNonWeb = prev.filter(s => s.channel !== 'ONLINE' && !webSales.some(w => w.saleNumber === s.saleNumber));
-              const merged = [...webSales, ...localNonWeb];
-              if (typeof window !== 'undefined') {
-                localStorage.setItem('kodelocal_sales', JSON.stringify(merged));
-              }
-              return merged;
-            });
+        // Detección de nuevos pedidos para alerta sonora y visual inmediata
+        const pendingWeb = webSales.filter(s => s.status === 'PENDING_PREPARATION');
+        if (!isFirstLoadRef.current) {
+          const newOrders = pendingWeb.filter(s => !knownOrderIdsRef.current.has(s.id));
+          if (newOrders.length > 0) {
+            if (soundEnabled) playNewOrderChime();
+            const first = newOrders[0];
+            showToast(`🔔 ¡Nueva comanda web recibida! #${first.saleNumber} (${first.cliente?.nombre || 'Cliente'})`);
           }
-        })
-        .catch(err => console.error('Error sincronizando pedidos ecommerce en Bodega:', err));
-    };
+        }
+        isFirstLoadRef.current = false;
+        knownOrderIdsRef.current = new Set(webSales.map(s => s.id));
+        setLastSyncTime(new Date());
 
+        setSales(prev => {
+          const localNonWeb = prev.filter(s => s.channel !== 'ONLINE' && !webSales.some(w => w.saleNumber === s.saleNumber));
+          const merged = [...webSales, ...localNonWeb];
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('kodelocal_sales', JSON.stringify(merged));
+          }
+          return merged;
+        });
+      }
+    } catch (err) {
+      console.error('Error sincronizando pedidos ecommerce en Bodega:', err);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [soundEnabled, showToast]);
+
+  // SUSCRIPCIÓN EN TIEMPO REAL (Supabase WebSocket + Heartbeat cada 8 segundos)
+  useEffect(() => {
+    // 1. Carga inicial
     fetchEcommerceOrders();
-  }, []);
+
+    // 2. Canal Supabase Realtime vía WebSocket instantáneo (latencia < 200ms)
+    const channel = supabase
+      .channel('bodega-ecommerce-realtime-channel')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'EcommerceOrder' },
+        (payload) => {
+          console.log('⚡ [Bodega Realtime] Evento de pedido web recibido:', payload.eventType);
+          fetchEcommerceOrders();
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('🟢 [Bodega Realtime] Conectado en vivo al canal de pedidos');
+        }
+      });
+
+    // 3. Heartbeat de respaldo cada 8 segundos (por si la red pierde paquetes o reconecta)
+    const intervalId = setInterval(() => {
+      fetchEcommerceOrders();
+    }, 8000);
+
+    // 4. Reconexión y refresco al volver al navegador / pestaña activa
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchEcommerceOrders();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [fetchEcommerceOrders]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -524,8 +645,49 @@ export default function BodegaPage() {
           </div>
         </div>
 
-        {/* Resumen Rápido Superior */}
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+        {/* Resumen Rápido Superior y Controles en Tiempo Real */}
+        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+          {/* Badge Realtime Activo */}
+          <div className="px-2.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-300 text-[11px] font-black text-emerald-800 flex items-center gap-1.5 shadow-sm">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span>En Vivo</span>
+          </div>
+
+          {/* Toggle de Alerta Sonora */}
+          <button
+            type="button"
+            onClick={() => {
+              const next = !soundEnabled;
+              setSoundEnabled(next);
+              if (next) playNewOrderChime();
+              showToast(next ? '🔊 Sonido de nueva comanda activado' : '🔇 Sonido de comanda silenciado');
+            }}
+            title={soundEnabled ? 'Silenciar campanilla de nuevas comandas' : 'Activar campanilla sonora'}
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 ${
+              soundEnabled 
+                ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100' 
+                : 'bg-slate-100 border-slate-200 text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+            <span className="hidden sm:inline">{soundEnabled ? 'Alerta ON' : 'Mudo'}</span>
+          </button>
+
+          {/* Botón de Sincronización Forzada */}
+          <button
+            type="button"
+            onClick={() => fetchEcommerceOrders()}
+            disabled={isSyncing}
+            title="Sincronizar pedidos web con Supabase ahora"
+            className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-bold shadow-sm hover:shadow transition-all flex items-center gap-1.5 active:scale-95 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-slate-600 ${isSyncing ? 'animate-spin text-amber-600' : ''}`} />
+            <span className="hidden sm:inline">{isSyncing ? 'Sincronizando...' : 'Actualizar'}</span>
+          </button>
+
           <div className="px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-900 flex items-center gap-2">
             <span className={`w-2 h-2 rounded-full ${pendingCount > 0 ? 'bg-rose-500 animate-ping' : 'bg-slate-300'}`}></span>
             <span>Por Preparar: <strong className="font-mono text-sm">{pendingCount}</strong></span>
