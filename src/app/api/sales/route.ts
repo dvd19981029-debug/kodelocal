@@ -73,6 +73,7 @@ export async function POST(request: Request) {
       paymentReference,
       tipoComprobante,
       codigoGeneracion,
+      orderStatus,
     } = body;
 
     const result = await prisma.$transaction(async (tx) => {
@@ -82,6 +83,7 @@ export async function POST(request: Request) {
           saleNumber: saleNumber || `VEN-${Date.now().toString().slice(-6)}`,
           channel: channel || 'POS',
           tipoComprobante: tipoComprobante || (notes === '01' || notes === '03' ? notes : 'TICKET'),
+          orderStatus: orderStatus || 'COMPLETED',
           subtotal: Number(subtotal || 0),
           ivaTotal: Number(ivaTotal || 0),
           discountTotal: Number(discountTotal || 0),
@@ -225,3 +227,46 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: error.message }, { status });
   }
 }
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const { id, saleNumber, orderStatus, paymentStatus, notes } = body;
+
+    if (!id && !saleNumber) {
+      return NextResponse.json({ success: false, error: 'id o saleNumber es requerido' }, { status: 400 });
+    }
+
+    const sale = await prisma.sale.findFirst({
+      where: {
+        OR: [
+          ...(id ? [{ id }] : []),
+          ...(saleNumber ? [{ saleNumber }] : []),
+        ],
+      },
+    });
+
+    if (!sale) {
+      return NextResponse.json({ success: false, error: 'Venta no encontrada' }, { status: 404 });
+    }
+
+    const updated = await prisma.sale.update({
+      where: { id: sale.id },
+      data: {
+        ...(orderStatus ? { orderStatus } : {}),
+        ...(paymentStatus ? { paymentStatus } : {}),
+        ...(notes ? { notes: [sale.notes, notes].filter(Boolean).join(' ') } : {}),
+      },
+      include: {
+        customer: true,
+        items: true,
+        dteDocument: true,
+      },
+    });
+
+    return NextResponse.json({ success: true, sale: updated });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+

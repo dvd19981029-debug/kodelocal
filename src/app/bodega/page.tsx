@@ -279,9 +279,55 @@ export default function BodegaPage() {
         knownOrderIdsRef.current = new Set(webSales.map(s => s.id));
         setLastSyncTime(new Date());
 
+        // Cargar también ventas y comandas de mostrador registradas en Supabase
+        let posSales: SaleRecord[] = [];
+        try {
+          const salesRes = await fetch('/api/sales?limit=100');
+          const salesData = await salesRes.json();
+          if (salesData.success && Array.isArray(salesData.sales)) {
+            posSales = salesData.sales
+              .filter((s: any) => s.channel === 'POS' || s.orderStatus === 'PENDING_PREPARATION' || s.orderStatus === 'READY_AT_WINDOW')
+              .map((s: any) => ({
+                id: s.id,
+                saleNumber: s.saleNumber,
+                orderNumber: s.saleNumber,
+                createdAt: s.createdAt,
+                channel: 'POS',
+                total: Number(s.total || 0),
+                subtotal: Number(s.subtotal || 0),
+                ivaTotal: Number(s.ivaTotal || 0),
+                shippingCost: 0,
+                paymentMethod: s.paymentMethod || 'CASH',
+                paymentStatus: s.paymentStatus || 'COMPLETED',
+                notes: s.notes || undefined,
+                status: s.orderStatus || 'COMPLETED',
+                vendedor: s.sellerName || s.cashierName || 'Vendedora Mostrador',
+                cliente: {
+                  nombre: s.customer?.name || 'Consumidor Final',
+                  telefono: s.customer?.phone || undefined,
+                  correo: s.customer?.email || undefined,
+                  direccion: s.customer?.address || undefined,
+                },
+                items: (s.items || []).map((it: any) => ({
+                  productId: it.productId,
+                  name: it.productName,
+                  quantity: it.quantity,
+                  price: Number(it.unitPrice || 0),
+                  total: Number(it.total || 0),
+                  unit: 'Onza',
+                  puesto: it.product?.puesto || 'A1',
+                }))
+              }));
+          }
+        } catch (_) {}
+
         setSales(prev => {
           const localNonWeb = prev.filter(s => s.channel !== 'ONLINE' && !webSales.some(w => w.saleNumber === s.saleNumber));
-          const merged = [...webSales, ...localNonWeb];
+          const mergedMap = new Map<string, SaleRecord>();
+          localNonWeb.forEach(s => mergedMap.set(s.saleNumber || s.id, s));
+          posSales.forEach(s => mergedMap.set(s.saleNumber || s.id, s));
+          webSales.forEach(s => mergedMap.set(s.saleNumber || s.id, s));
+          const merged = Array.from(mergedMap.values());
           if (typeof window !== 'undefined') {
             localStorage.setItem('kodelocal_sales', JSON.stringify(merged));
           }
@@ -300,8 +346,8 @@ export default function BodegaPage() {
     // 1. Carga inicial
     fetchEcommerceOrders();
 
-    // 2. Canal Supabase Realtime vía WebSocket instantáneo (latencia < 200ms)
-    const channel = supabase
+    // 2. Canal Supabase Realtime vía WebSocket instantáneo (pedidos web EcommerceOrder)
+    const channelWeb = supabase
       .channel('bodega-ecommerce-realtime-channel')
       .on(
         'postgres_changes',
@@ -313,7 +359,24 @@ export default function BodegaPage() {
       )
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          console.log('🟢 [Bodega Realtime] Conectado en vivo al canal de pedidos');
+          console.log('🟢 [Bodega Realtime] Conectado en vivo al canal de pedidos web');
+        }
+      });
+
+    // 2.1 Canal Supabase Realtime para comandas y despachos desde mostrador/recepción (Sale)
+    const channelSales = supabase
+      .channel('bodega-pos-sales-channel')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'Sale' },
+        (payload) => {
+          console.log('⚡ [Bodega Realtime] Evento de comanda/despacho mostrador recibido:', payload.eventType);
+          fetchEcommerceOrders();
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('🟢 [Bodega Realtime] Conectado en vivo a despachos y comandas de recepción');
         }
       });
 
@@ -331,7 +394,8 @@ export default function BodegaPage() {
     document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(channelWeb);
+      supabase.removeChannel(channelSales);
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', handleVisibility);
     };

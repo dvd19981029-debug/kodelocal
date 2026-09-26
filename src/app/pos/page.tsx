@@ -638,10 +638,36 @@ export default function PosPage() {
     });
   }, [sales, bodegaOrdenesFilter, bodegaOrdenesSearch]);
 
-  const handleMarkOrderDeliveredFromPos = (orderId: string) => {
+  const handleMarkOrderDeliveredFromPos = async (orderId: string) => {
+    const targetSale = sales.find(s => s.id === orderId || s.saleNumber === orderId);
+
+    // 1. Sincronizar en la base de datos Supabase para que Bodega en cualquier dispositivo lo vea al instante
+    try {
+      const staffToken = await getStaffToken();
+      if (!targetSale || targetSale.channel === 'ONLINE') {
+        fetch('/api/ecommerce/orders', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
+          body: JSON.stringify({ orderId, orderStatus: 'ENTREGADO' }),
+        }).catch(err => console.error('Error sincronizando despacho web desde POS:', err));
+      }
+
+      if (!targetSale || targetSale.channel !== 'ONLINE') {
+        fetch('/api/sales', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: orderId, saleNumber: targetSale?.saleNumber, orderStatus: 'COMPLETED' }),
+        }).catch(() => {});
+      }
+    } catch (e) {}
+
+    // 2. Actualizar estado local inmediatamente
     setSales(prev => {
       const updated = prev.map(s => {
-        if (s.id === orderId) {
+        if (s.id === orderId || s.saleNumber === orderId) {
           return { ...s, status: 'COMPLETED' as const };
         }
         return s;
@@ -1121,6 +1147,26 @@ export default function PosPage() {
     window.dispatchEvent(new Event('kodelocal_sales_updated'));
     setSales(updatedSales);
 
+    // Persistir comanda en Supabase para que Bodega en cualquier dispositivo la reciba al instante
+    fetch('/api/sales', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        saleNumber: ordNum,
+        channel: 'POS',
+        subtotal: subtotalNeto,
+        ivaTotal: ivaCalculado,
+        total: totalNeto,
+        paymentMethod: 'CASH',
+        paymentStatus: 'PENDING',
+        orderStatus: 'PENDING_PREPARATION',
+        notes: 'Comanda mostrador para Bodega',
+        cashierName: 'Vendedora Mostrador',
+        customerId: clientObj?.id || null,
+        items: cart.map(formatCartItem),
+      }),
+    }).catch(err => console.error('Error sincronizando comanda con Supabase:', err));
+
     const totalQty = cart.reduce((acc, i) => acc + i.quantity, 0);
     clearCart();
     setOrderSentToast({ orderNumber: ordNum, itemCount: totalQty });
@@ -1365,6 +1411,40 @@ export default function PosPage() {
       localStorage.setItem('kodelocal_sales', JSON.stringify(updatedSales));
       window.dispatchEvent(new Event('kodelocal_sales_updated'));
       setSales(updatedSales);
+
+      // Sincronizar estado ENTREGADO / COMPLETED con Supabase para que Bodega en cualquier dispositivo lo vea al instante
+      if (orderToInvoice) {
+        getStaffToken().then(staffToken => {
+          if (orderToInvoice.channel === 'ONLINE') {
+            fetch('/api/ecommerce/orders', {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+              },
+              body: JSON.stringify({
+                orderId: orderToInvoice.id,
+                orderNumber: orderToInvoice.orderNumber || orderToInvoice.saleNumber,
+                orderStatus: 'ENTREGADO',
+                paymentStatus: 'COMPLETED',
+                notes: `[Cobrado en Caja POS - ${tipoComprobante}]`
+              }),
+            }).catch(e => console.error('Error sincronizando orden cobrada con Supabase:', e));
+          } else {
+            fetch('/api/sales', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                id: orderToInvoice.id,
+                saleNumber: orderToInvoice.saleNumber,
+                orderStatus: 'COMPLETED',
+                paymentStatus: 'COMPLETED',
+                notes: `[Cobrado en Caja POS - ${tipoComprobante}]`
+              })
+            }).catch(() => {});
+          }
+        }).catch(() => {});
+      }
     } else {
       // Venta directa desde el mostrador
       const saleNumber = `CMD-${Math.floor(1000 + Math.random() * 9000)}`;
