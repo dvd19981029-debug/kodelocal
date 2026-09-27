@@ -29,6 +29,24 @@ export default function MarketingScripts() {
   const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
   const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 
+  useEffect(() => {
+    try {
+      const sessionKey = 'aromaniak_session_tracked';
+      const hasSession = sessionStorage.getItem(sessionKey);
+      const isNewSession = !hasSession;
+      if (isNewSession) {
+        sessionStorage.setItem(sessionKey, '1');
+      }
+      fetch('/api/analytics/visit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isNewSession }),
+      }).catch(() => {});
+    } catch {
+      // Ignore if sessionStorage disabled
+    }
+  }, []);
+
   return (
     <>
       {/* ================= GOOGLE TAG MANAGER ================= */}

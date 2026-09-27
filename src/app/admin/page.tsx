@@ -51,6 +51,7 @@ import { INITIAL_PRODUCTS, ProductItem, PERFUME_CATEGORIES, SaleRecord, resetDat
 import ComprasModule from '@/components/admin/ComprasModule';
 import KardexModule from '@/components/admin/KardexModule';
 import ConfiguracionKodeModule from '@/components/admin/ConfiguracionKodeModule';
+import AromaniakDashboardModule from '@/components/admin/AromaniakDashboardModule';
 import {
   getStoredPurchases,
   saveStoredPurchases,
@@ -848,142 +849,15 @@ export default function AdminPage() {
       {/* ================= ÁREA DE CONTENIDO PRINCIPAL A LA DERECHA ================= */}
       <main className="flex-1 min-w-0 flex flex-col gap-6">
         
-        {/* ================= TAB 1: DASHBOARD EJECUTIVO ================= */}
+        {/* ================= TAB 1: DASHBOARD EJECUTIVO & BI AROMANIAK ================= */}
         {activeTab === 'dashboard' && (
-          <div className="space-y-6 animate-in fade-in duration-150">
-            
-            {/* Header */}
-            <div className="clay-card p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h2 className="text-xl font-black text-slate-800">Dashboard General de Operaciones</h2>
-                <p className="text-xs text-slate-500 font-medium">Métricas clave en vivo de perfumería, ventas y márgenes</p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setIsBulkPriceModalOpen(true)}
-                  className="clay-btn clay-btn-light px-3.5 py-2 text-xs flex items-center gap-1.5"
-                >
-                  <Sliders className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Ajustar Precios (${activeEssencePrice.toFixed(2)})</span>
-                </button>
-                <button
-                  onClick={() => setIsUserModalOpen(true)}
-                  className="clay-btn clay-btn-primary px-3.5 py-2 text-xs flex items-center gap-1.5"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Nuevo Cajero</span>
-                </button>
-              </div>
-            </div>
-
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="clay-card p-5">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ventas Acumuladas</p>
-                <h3 className="text-2xl font-black text-indigo-600 mt-1">${totalVentasMonto.toFixed(2)}</h3>
-                <span className="text-[11px] text-slate-500 font-medium">{sales.length} transacciones</span>
-              </div>
-
-              <div className="clay-card p-5">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Margen de Ganancia</p>
-                <h3 className="text-2xl font-black text-emerald-600 mt-1">+{margenPorcentual.toFixed(1)}%</h3>
-                <span className="text-[11px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                  +${(activeEssencePrice - activeEssenceCost).toFixed(2)} netos por Oz
-                </span>
-              </div>
-
-              <div className="clay-card p-5">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Valor Inventario (PVP)</p>
-                <h3 className="text-2xl font-black text-slate-800 mt-1">${valorVentaTotal.toFixed(2)}</h3>
-                <span className="text-[11px] text-slate-500 font-medium">{totalStockOnzas} Oz en bodega</span>
-              </div>
-
-              <div className="clay-card p-5">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">DTEs Transmitidos</p>
-                <h3 className="text-2xl font-black text-purple-600 mt-1">{totalDteCount}</h3>
-                <span className="text-[11px] text-slate-500 font-medium">Facturas a Hacienda</span>
-              </div>
-            </div>
-
-            {/* Gráfico y Ventas Recientes */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              
-              {/* Desglose de Rentabilidad */}
-              <div className="clay-card p-6 lg:col-span-2 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-extrabold text-sm text-slate-800">Estructura Financiera de Esencias</h3>
-                  <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">
-                    {totalEsencias} Contratipos
-                  </span>
-                </div>
-
-                <div className="space-y-3 pt-2">
-                  <div>
-                    <div className="flex justify-between text-xs font-bold mb-1">
-                      <span className="text-slate-600">Precio Venta al Público (PVP):</span>
-                      <span className="text-indigo-600 font-black text-sm">${activeEssencePrice.toFixed(2)} / Oz</span>
-                    </div>
-                    <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden">
-                      <div className="h-full bg-indigo-600 rounded-full w-full"></div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-xs font-bold mb-1">
-                      <span className="text-slate-600">Costo de Adquisición / Proveedor:</span>
-                      <span className="text-slate-800 font-black text-sm">${activeEssenceCost.toFixed(2)} / Oz ({activeEssencePrice > 0 ? ((activeEssenceCost / activeEssencePrice) * 100).toFixed(1) : 0}%)</span>
-                    </div>
-                    <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden">
-                      <div className="h-full bg-slate-400 rounded-full" style={{ width: `${Math.min(100, activeEssencePrice > 0 ? (activeEssenceCost / activeEssencePrice) * 100 : 0)}%` }}></div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-xs font-bold mb-1">
-                      <span className="text-slate-600">Ganancia Bruta Libre:</span>
-                      <span className="text-emerald-600 font-black text-sm">${(activeEssencePrice - activeEssenceCost).toFixed(2)} / Oz ({activeEssencePrice > 0 ? (((activeEssencePrice - activeEssenceCost) / activeEssencePrice) * 100).toFixed(1) : 0}%)</span>
-                    </div>
-                    <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden">
-                      <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(100, activeEssencePrice > 0 ? ((activeEssencePrice - activeEssenceCost) / activeEssencePrice) * 100 : 0)}%` }}></div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-100 text-xs text-indigo-900 mt-4 leading-relaxed">
-                  💡 <strong>Análisis Gerencial:</strong> Por cada 100 onzas de fragancia vendidas en el mostrador o por envíos, generas <strong>$325.00 en caja</strong> con una utilidad directa de <strong>$130.00 libres</strong>.
-                </div>
-              </div>
-
-              {/* Personal en Turno */}
-              <div className="clay-card p-6 flex flex-col justify-between">
-                <div>
-                  <h3 className="font-extrabold text-sm text-slate-800 mb-3">Cajeros & Turnos</h3>
-                  <div className="space-y-2.5">
-                    {users.slice(0, 3).map(u => (
-                      <div key={u.id} className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
-                        <div>
-                          <span className="font-bold text-slate-800 block">{u.name}</span>
-                          <span className="text-[11px] text-slate-400">{u.cashRegister}</span>
-                        </div>
-                        <span className="clay-badge bg-emerald-50 text-emerald-700 text-[10px] py-0.5 px-2 font-bold">
-                          PIN: {u.pin}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setActiveTab('usuarios')}
-                  className="clay-btn clay-btn-light w-full py-2.5 text-xs mt-4"
-                >
-                  Gestionar Todo el Personal
-                </button>
-              </div>
-
-            </div>
-
-          </div>
+          <AromaniakDashboardModule
+            onOpenBulkPriceModal={() => setIsBulkPriceModalOpen(true)}
+            onOpenNewProductModal={handleOpenNewProduct}
+            onNavigateTab={(tab) => setActiveTab(tab as AdminTab)}
+            activeEssencePrice={activeEssencePrice}
+            activeEssenceCost={activeEssenceCost}
+          />
         )}
 
         {/* ================= TAB 2: CATÁLOGO MAESTRO DE PRODUCTOS ================= */}

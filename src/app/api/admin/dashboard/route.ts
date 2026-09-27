@@ -1,0 +1,355 @@
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { getVisitMetricsForPeriod } from '@/lib/visits';
+
+export const dynamic = 'force-dynamic';
+
+function getPeriodFilter(period: string) {
+  const now = new Date();
+  const svDateStr = now.toLocaleDateString('en-CA', { timeZone: 'America/El_Salvador' });
+  const [year, month] = svDateStr.split('-');
+
+  if (period === 'hoy') {
+    const startOfToday = new Date(`${svDateStr}T00:00:00-06:00`);
+    return { gte: startOfToday };
+  }
+  if (period === '7d') {
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    return { gte: sevenDaysAgo };
+  }
+  if (period === 'mes') {
+    const startOfMonth = new Date(`${year}-${month}-01T00:00:00-06:00`);
+    return { gte: startOfMonth };
+  }
+  if (period === 'anio') {
+    const startOfYear = new Date(`${year}-01-01T00:00:00-06:00`);
+    return { gte: startOfYear };
+  }
+  return undefined; // 'todo'
+}
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const period = (searchParams.get('period') || 'mes') as 'hoy' | '7d' | 'mes' | 'anio' | 'todo';
+    const dateCondition = getPeriodFilter(period);
+
+    const whereDate = dateCondition ? { createdAt: dateCondition } : {};
+
+    // 1. Consultas simultáneas a Prisma
+    const [orders, sales, purchases, products, dteCount] = await Promise.all([
+      prisma.ecommerceOrder.findMany({
+        where: whereDate,
+        include: { items: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.sale.findMany({
+        where: whereDate,
+        include: { items: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.purchase.findMany({
+        where: whereDate,
+        include: { items: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.product.findMany({
+        select: {
+          id: true,
+          name: true,
+          officialName: true,
+          unit: true,
+          stock: true,
+          minStock: true,
+          price: true,
+          cost: true,
+        },
+      }),
+      prisma.dteDocument.count({
+        where: dateCondition ? { createdAt: dateCondition } : {},
+      }),
+    ]);
+
+    // Crear mapa de costos de productos para cálculo exacto de margen
+    const productCostMap = new Map<string, number>();
+    products.forEach((p) => {
+      productCostMap.set(p.id, Number(p.cost || 1.95));
+      productCostMap.set(p.name.toLowerCase().trim(), Number(p.cost || 1.95));
+    });
+
+    // 2. Agregaciones de Ventas
+    const validOrders = orders.filter((o) => o.orderStatus !== 'CANCELADO');
+    const ecommerceTotal = validOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
+    const posTotal = sales.reduce((sum, s) => sum + Number(s.total || 0), 0);
+    const totalVentas = ecommerceTotal + posTotal;
+
+    // 3. Gastos de Insumos y Costos
+    const purchasesTotal = purchases.reduce((sum, p) => sum + Number(p.total || 0), 0);
+    
+    // Cálculo de Costo de Mercancía Vendida (COGS)
+    let cogsTotal = 0;
+    let onzasVendidas = 0;
+    const productAgg: Record<string, { name: string; quantity: number; revenue: number; ounces: number }> = {};
+
+    const processItem = (it: { productName: string; presentation?: string | null; quantity: number; total: any; productId?: string | null }) => {
+      const qty = it.quantity || 1;
+      const rev = Number(it.total || 0);
+      const rawName = it.productName || 'Producto';
+      // Limpiar sufijos como "(1 Onza)"
+      const cleanName = rawName.replace(/\s*\([^)]*\)/g, '').trim();
+
+      let oz = 0;
+      const pres = (it.presentation || '').toLowerCase();
+      const nameLower = cleanName.toLowerCase();
+
+      if (pres.includes('½') || pres.includes('0.5') || pres.includes('media')) {
+        oz = 0.5 * qty;
+      } else if (pres.includes('1.5')) {
+        oz = 1.5 * qty;
+      } else if (pres.includes('onza') || pres.includes('1 oz') || nameLower.includes('onza')) {
+        oz = 1.0 * qty;
+      } else if (nameLower.includes('arma tu propio perfume')) {
+        oz = pres.includes('plus') ? 1.5 * qty : 1.0 * qty;
+      }
+
+      onzasVendidas += oz;
+
+      const itemCost = (it.productId && productCostMap.get(it.productId)) ||
+        productCostMap.get(cleanName.toLowerCase()) ||
+        (oz > 0 ? oz * 1.95 : rev * 0.45);
+      cogsTotal += itemCost * (oz > 0 ? 1 : qty);
+
+      if (!productAgg[cleanName]) {
+        productAgg[cleanName] = { name: cleanName, quantity: 0, revenue: 0, ounces: 0 };
+      }
+      productAgg[cleanName].quantity += qty;
+      productAgg[cleanName].revenue += rev;
+      productAgg[cleanName].ounces += oz;
+    };
+
+    validOrders.forEach((o) => o.items.forEach(processItem));
+    sales.forEach((s) => s.items.forEach(processItem));
+
+    // Si hay compras directas registradas se usan compras, sino se usa el costo directo de insumos vendidos
+    const totalGastosCompras = purchasesTotal > 0 ? purchasesTotal : Number(cogsTotal.toFixed(2));
+    const margenOperativoBruto = Number((totalVentas - totalGastosCompras).toFixed(2));
+    const margenPorcentual = totalVentas > 0 ? Number(((margenOperativoBruto / totalVentas) * 100).toFixed(1)) : 0;
+
+    const totalPedidos = validOrders.length + sales.length;
+    const ticketPromedio = totalPedidos > 0 ? Number((totalVentas / totalPedidos).toFixed(2)) : 0;
+
+    // 4. Pedidos por Estado (Logística Aromaniak)
+    const nuevosOrders = orders.filter((o) => o.orderStatus === 'NUEVO');
+    const prepOrders = orders.filter((o) => o.orderStatus === 'CONFIRMADO' || o.orderStatus === 'EN_PREPARACION');
+    const rutaOrders = orders.filter((o) => o.orderStatus === 'EN_RUTA');
+    const entregadosOrders = orders.filter((o) => o.orderStatus === 'ENTREGADO');
+    const canceladosOrders = orders.filter((o) => o.orderStatus === 'CANCELADO');
+
+    const pedidosEstado = {
+      nuevos: {
+        count: nuevosOrders.length,
+        total: Number(nuevosOrders.reduce((acc, o) => acc + Number(o.total || 0), 0).toFixed(2)),
+      },
+      enPreparacion: {
+        count: prepOrders.length,
+        total: Number(prepOrders.reduce((acc, o) => acc + Number(o.total || 0), 0).toFixed(2)),
+      },
+      enRuta: {
+        count: rutaOrders.length,
+        total: Number(rutaOrders.reduce((acc, o) => acc + Number(o.total || 0), 0).toFixed(2)),
+      },
+      entregados: {
+        count: entregadosOrders.length + sales.length, // Las ventas en mostrador se consideran entregadas de inmediato
+        total: Number((entregadosOrders.reduce((acc, o) => acc + Number(o.total || 0), 0) + posTotal).toFixed(2)),
+      },
+      cancelados: {
+        count: canceladosOrders.length,
+        total: Number(canceladosOrders.reduce((acc, o) => acc + Number(o.total || 0), 0).toFixed(2)),
+      },
+    };
+
+    // 5. Canales de Venta
+    const ecommerceOrdersCount = validOrders.length;
+    const posSalesCount = sales.length;
+    const totalTransactions = ecommerceOrdersCount + posSalesCount || 1;
+
+    const canales = {
+      ecommerce: {
+        count: ecommerceOrdersCount,
+        total: Number(ecommerceTotal.toFixed(2)),
+        percentage: Number(((ecommerceOrdersCount / totalTransactions) * 100).toFixed(1)),
+      },
+      pos: {
+        count: posSalesCount,
+        total: Number(posTotal.toFixed(2)),
+        percentage: Number(((posSalesCount / totalTransactions) * 100).toFixed(1)),
+      },
+    };
+
+    // 6. Métodos de Pago
+    let cardCount = 0, cardTotal = 0;
+    let transferCount = 0, transferTotal = 0;
+    let cashCount = 0, cashTotal = 0;
+
+    validOrders.forEach((o) => {
+      const tot = Number(o.total || 0);
+      if (o.paymentMethod === 'CARD') {
+        cardCount++;
+        cardTotal += tot;
+      } else if (o.paymentMethod === 'TRANSFER') {
+        transferCount++;
+        transferTotal += tot;
+      } else {
+        cashCount++;
+        cashTotal += tot;
+      }
+    });
+
+    sales.forEach((s) => {
+      const tot = Number(s.total || 0);
+      if (s.paymentMethod === 'CARD') {
+        cardCount++;
+        cardTotal += tot;
+      } else if (s.paymentMethod === 'TRANSFER') {
+        transferCount++;
+        transferTotal += tot;
+      } else {
+        cashCount++;
+        cashTotal += tot;
+      }
+    });
+
+    const metodosPago = {
+      wompiTarjeta: {
+        count: cardCount,
+        total: Number(cardTotal.toFixed(2)),
+        percentage: totalVentas > 0 ? Number(((cardTotal / totalVentas) * 100).toFixed(1)) : 0,
+      },
+      transferencia: {
+        count: transferCount,
+        total: Number(transferTotal.toFixed(2)),
+        percentage: totalVentas > 0 ? Number(((transferTotal / totalVentas) * 100).toFixed(1)) : 0,
+      },
+      efectivo: {
+        count: cashCount,
+        total: Number(cashTotal.toFixed(2)),
+        percentage: totalVentas > 0 ? Number(((cashTotal / totalVentas) * 100).toFixed(1)) : 0,
+      },
+    };
+
+    // 7. Top Fragancias y Contratipos
+    const topFragancias = Object.values(productAgg)
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 6)
+      .map((it) => ({
+        name: it.name,
+        quantity: it.quantity,
+        revenue: Number(it.revenue.toFixed(2)),
+        ounces: Number(it.ounces.toFixed(1)),
+      }));
+
+    // 8. Departamentos con más pedidos
+    const deptMap: Record<string, { count: number; total: number }> = {};
+    validOrders.forEach((o) => {
+      const d = o.department || 'San Salvador';
+      if (!deptMap[d]) deptMap[d] = { count: 0, total: 0 };
+      deptMap[d].count += 1;
+      deptMap[d].total += Number(o.total || 0);
+    });
+
+    const topDepartamentos = Object.entries(deptMap)
+      .map(([department, data]) => ({
+        department,
+        count: data.count,
+        total: Number(data.total.toFixed(2)),
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    // 9. Inventario & Bodega
+    const essenceProducts = products.filter((p) => (p.unit || '').toLowerCase() === 'onza');
+    const totalStockOnzas = essenceProducts.reduce((acc, p) => acc + (p.stock || 0), 0);
+    const valorInventarioPvp = Number(
+      products.reduce((acc, p) => acc + Number(p.price || 0) * (p.stock || 0), 0).toFixed(2)
+    );
+    const valorInventarioCosto = Number(
+      products.reduce((acc, p) => acc + Number(p.cost || 0) * (p.stock || 0), 0).toFixed(2)
+    );
+    const gananciaPotencial = Number((valorInventarioPvp - valorInventarioCosto).toFixed(2));
+
+    const stockCritico = products
+      .filter((p) => p.stock <= (p.minStock || 10))
+      .slice(0, 6)
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        stock: p.stock,
+        minStock: p.minStock,
+        price: Number(p.price || 0),
+        cost: Number(p.cost || 0),
+      }));
+
+    // 10. Tráfico y Visitas Web
+    const visitMetrics = getVisitMetricsForPeriod(period, validOrders.length);
+
+    // 11. Movimientos Recientes Mixtos (Ecommerce + POS)
+    const recentEcommerce = orders.slice(0, 5).map((o) => ({
+      id: o.id,
+      number: o.orderNumber,
+      customer: o.customerName || 'Cliente Online',
+      type: 'ECOMMERCE' as const,
+      status: o.orderStatus,
+      total: Number(o.total || 0),
+      paymentMethod: o.paymentMethod,
+      date: o.createdAt.toISOString(),
+    }));
+
+    const recentPos = sales.slice(0, 5).map((s) => ({
+      id: s.id,
+      number: s.saleNumber,
+      customer: s.cashierName ? `Mostrador (${s.cashierName})` : 'Mostrador Local',
+      type: 'POS' as const,
+      status: s.orderStatus || 'COMPLETED',
+      total: Number(s.total || 0),
+      paymentMethod: s.paymentMethod,
+      date: s.createdAt.toISOString(),
+    }));
+
+    const recientes = [...recentEcommerce, ...recentPos]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 7);
+
+    return NextResponse.json({
+      success: true,
+      period,
+      summary: {
+        totalVentas: Number(totalVentas.toFixed(2)),
+        totalGastosCompras: Number(totalGastosCompras.toFixed(2)),
+        margenOperativoBruto,
+        margenPorcentual,
+        totalPedidos,
+        ticketPromedio,
+        onzasVendidas: Number(onzasVendidas.toFixed(1)),
+        dteTransmitidos: dteCount,
+      },
+      visitas: visitMetrics,
+      pedidosEstado,
+      canales,
+      metodosPago,
+      topFragancias,
+      topDepartamentos,
+      inventario: {
+        totalProductos: products.length,
+        totalStockOnzas,
+        valorInventarioPvp,
+        valorInventarioCosto,
+        gananciaPotencial,
+        stockCritico,
+      },
+      recientes,
+    });
+  } catch (error: any) {
+    console.error('Error generando dashboard aromaniak:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
