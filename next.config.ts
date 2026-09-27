@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   env: {
-    GEMINI_API_KEY: process.env.GEMINI_API_KEY || "AIzaSyBEl05owf3HG7L9ChLaUDhUxlSLylQxBgA",
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY || "",
     TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || "8864096422:AAHiPQwWB6FAZJbHJ1wYvEQS-q5atwv5Vbw",
     TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID || "-1003726291110",
   },
