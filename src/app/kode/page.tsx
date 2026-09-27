@@ -823,6 +823,13 @@ export default function KodeSystemPage() {
               {/* HUB DE TARJETAS HORIZONTALES */}
               {ventasView === 'hub' && (
                 <VentasHub
+                  onNavigate={(v) => {
+                    if (v === 'nuevo_pedido') {
+                      setPedidoInitialCliente(null);
+                      setPedidoInitialPerfume(null);
+                    }
+                    setVentasView(v);
+                  }}
                   onSelectView={(v) => {
                     if (v === 'nuevo_pedido') {
                       setPedidoInitialCliente(null);
@@ -830,6 +837,10 @@ export default function KodeSystemPage() {
                     }
                     setVentasView(v);
                   }}
+                  onNuevoCliente={() => setVentasView('nuevo_cliente')}
+                  clientesCount={directorioClientes.length}
+                  pedidosCount={metricas.total}
+                  catalogoCount={catalogo.length}
                   totalClientes={directorioClientes.length}
                   totalPedidos={metricas.total}
                   totalFragancias={catalogo.length}
