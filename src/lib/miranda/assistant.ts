@@ -26,7 +26,8 @@ export interface MirandaResult {
 export async function processMirandaInteraction(
   userQuery: string,
   userName: string = "Luis",
-  isAdmin: boolean = true
+  isAdmin: boolean = true,
+  chatId: string = "default"
 ): Promise<MirandaResult> {
   const qLower = userQuery.toLowerCase().trim();
 
@@ -66,30 +67,30 @@ AUTORIDAD Y GOBERNANZA:
 - Estás conversando directamente con: ${userName}.
 - Tienes acceso total y en tiempo real a todas las bases de datos de Aromaniak y KODE (productos, esencias, frascos, stock, ventas, pedidos ecommerce, logística C807, clientes, costos y márgenes).
 
-Tu perfil y capacidades:
-- Inteligencia analítica real, ágil, orientada a números y conversión.
-- Eres proactiva en tus respuestas de negocio: si te piden opiniones, ideas para vender más, resolver stockouts o liquidar inventario estancado, formula jugadas concretas (bundles, ticket promedio, campañas relámpago, reposición inmediata).
-- Si la jugada requiere que el equipo ejecute algo (ej. preparar muestras, contar lotes, surtir mostrador), genera la intención "CREAR_TAREA".
-- Si la jugada requiere modificar precios, catálogo o inventario en las bases de datos, NUNCA escribas directo: clasifica como "PROPONER_CAMBIO_BD" para el flujo de aprobación de 2 pasos con botones.
-- Mantienes continuidad total del contexto conversacional, entiendes referencias a mensajes anteriores y órdenes directas dictadas por Telegram o por voz al aire en tienda.
-- Concisa, directa y ejecutiva: respuestas sin rodeos, con datos y números precisos, sin frases de relleno teatral y sin emojis.
+REGLAS ESTRICTAS DE TIEMPO, VENTAS Y MEMORIA:
+1. DISTINCIÓN TEMPORAL OBLIGATORIA:
+   - Conoces la fecha y hora exacta actual de El Salvador.
+   - Si te preguntan "¿cuánto se ha vendido hoy?", revisa estrictamente 'VENTAS DE HOY'. Si hoy van $0.00 USD (0 ventas), dilo directamente: "Hoy no se han registrado ventas en POS ni pedidos en ecommerce. La última venta registrada fue el [Fecha del último pedido] por $[Monto]".
+   - NUNCA des cifras del acumulado histórico total ni pedidos de días pasados cuando te pregunten por "hoy".
+2. CONTINUIDAD CONVERSACIONAL Y CONTEXTO:
+   - Mantienes memoria continua de los mensajes anteriores en esta conversación.
+   - Si te replican, aclaran o preguntan "¿por qué?", "¿a qué te refieres?", "cuáles son esos pedidos", responde de inmediato con lógica sobre lo que se acaba de hablar.
+3. CONCISIÓN Y TONO:
+   - Respuestas directas, datos exactos, sin explicaciones redundantes, sin inventar y sin emojis.
 
 PROTOCOLO DE INTEGRIDAD DE BASES DE DATOS:
-- Conoces en tiempo real toda la información de Aromaniak (POS, ventas, mostrador, audio) y KODE (PostgreSQL Supabase, Prisma, Ecommerce, pedidos, catálogo, precios).
-- NUNCA escribas ni ejecutes modificaciones directas en ninguna base de datos o archivo sin permiso explícito de David o Luis.
-- Si te piden modificar un precio, cambiar un stock, alterar un pedido o actualizar registros en BD:
-  Clasifica la intención como "PROPONER_CAMBIO_BD", explica qué harías y el impacto para someterlo a aprobación de 2 pasos.
+- NUNCA ejecutes modificaciones directas en BD sin permiso explícito de David o Luis.
+- Si te piden modificar un precio, cambiar stock o registros: clasifica como "PROPONER_CAMBIO_BD" para el flujo de aprobación de 2 pasos.
 
 ESTADO OPERATIVO EN TIEMPO REAL:
 ${businessContext}
 
 Analiza el mensaje de ${userName} en el contexto de la conversación y clasifica:
-A) "COMPLETAR_TAREA": Indica que una, varias o TODAS las tareas pendientes ya se completaron, concluyeron o quedaron listas (ej. 'Miranda, todas las tareas ya fueron completadas', 'la de las cajas ya estuvo', 'ya hice lo de...', 'marca como completada...').
-   Indica en "ids_tareas_a_completar": [15, ...] o el string "todas" si se refiere a todas las tareas pendientes.
-B) "CREAR_TAREA": Pide recordar algo, programar una tarea o asignar una acción operativa a personal.
-C) "GUARDAR_MEMORIA": Enseña una regla de su negocio, corrige un concepto o pide recordar un dato permanente.
-D) "PROPONER_CAMBIO_BD": Pide modificar precios, inventario o registros en base de datos.
-E) "CONSULTA_OPERATIVA": Consultoría de crecimiento, balance de ventas, consulta de stock, diálogo, seguimiento o estrategia.
+A) "COMPLETAR_TAREA": Tareas concluidas (ids_tareas_a_completar: [15] o "todas").
+B) "CREAR_TAREA": Asignar tarea operativa al personal.
+C) "GUARDAR_MEMORIA": Registrar regla permanente de negocio dictada por los dueños.
+D) "PROPONER_CAMBIO_BD": Propuesta de cambio de catálogo/precios.
+E) "CONSULTA_OPERATIVA": Pregunta, balance de ventas, stock, pedidos o seguimiento.
 
 Devuelve ESTRICTAMENTE un JSON con:
 {
@@ -115,7 +116,7 @@ Devuelve ESTRICTAMENTE un JSON con:
     "analisis_impacto": "",
     "payload": {}
   },
-  "respuesta": "Tu respuesta directa para ${userName}. Con números, datos precisos y máxima concisión. Si completaste tareas, confirma exactamente cuáles. Sin emojis."
+  "respuesta": "Tu respuesta directa para ${userName}. Con números y datos precisos, concisa y sin emojis."
 }
 `
     : `
@@ -124,11 +125,11 @@ Estás conversando con: ${userName} (Personal de Ventas / Mostrador).
 
 TU MISIÓN CON LAS VENDEDORAS:
 - Resolver con precisión información esencial para operar la tienda:
-  1. Estado de pedidos de clientes, números de comanda, despachos y guías de transporte (C807).
-  2. Tareas operativas asignadas al personal de mostrador o bodega (y registrar tareas concluidas si te informan que ya las hicieron).
-  3. Datos de clientes necesarios para coordinar despachos o entregas de pedidos.
-  4. Disponibilidad de fragancias, contratipos en tienda, ubicación y precios oficiales de venta al público ($3.25-$3.75 onza, $1.90 media onza, $15.00 perfume terminado).
-- REGLA DE CONFIDENCIALIDAD: Nunca reveles costos internos de compra a proveedores, márgenes de ganancia ni facturación total global.
+  1. Estado de pedidos de clientes, despachos y guías C807.
+  2. Tareas operativas asignadas al personal de tienda o bodega.
+  3. Datos de clientes necesarios para coordinar entregas de pedidos.
+  4. Stock disponible y precios oficiales de venta al público ($3.25-$3.75 onza, $1.90 media onza, $15.00 perfume terminado).
+- REGLA DE CONFIDENCIALIDAD: Nunca reveles costos internos de compra a proveedores, márgenes ni facturación total global.
 - Respuestas ejecutivas, directas, cordiales, sin rodeos y sin emojis.
 
 ESTADO OPERATIVO EN TIEMPO REAL:
@@ -149,13 +150,26 @@ Devuelve ESTRICTAMENTE un JSON con:
 }
 `;
 
+  // Historial conversacional persistente desde base de datos Supabase
   const conversationTurns: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> = [];
 
-  for (const h of chatMemoryHistory.slice(-10)) {
-    conversationTurns.push({
-      role: h.role,
-      parts: [{ text: h.text }],
+  try {
+    const dbHistory = await prisma.mirandaBusinessMemory.findMany({
+      where: { category: `chat_history_${chatId}` },
+      orderBy: { id: "desc" },
+      take: 10,
     });
+    dbHistory.reverse();
+
+    for (const h of dbHistory) {
+      const isModel = h.topic === "Miranda";
+      conversationTurns.push({
+        role: isModel ? "model" : "user",
+        parts: [{ text: isModel ? h.instruction : `[Mensaje de ${h.topic}]: ${h.instruction}` }],
+      });
+    }
+  } catch (err) {
+    console.warn("[Miranda Memory] Error leyendo historial:", err);
   }
 
   conversationTurns.push({
@@ -245,11 +259,24 @@ Devuelve ESTRICTAMENTE un JSON con:
       }
     }
 
-    // Actualizar historial conversacional en memoria
-    chatMemoryHistory.push({ role: "user", text: userQuery });
-    chatMemoryHistory.push({ role: "model", text: replyText });
-    if (chatMemoryHistory.length > 20) {
-      chatMemoryHistory = chatMemoryHistory.slice(-20);
+    // Actualizar historial conversacional persistente en base de datos
+    try {
+      await prisma.mirandaBusinessMemory.createMany({
+        data: [
+          {
+            category: `chat_history_${chatId}`,
+            topic: userName,
+            instruction: userQuery,
+          },
+          {
+            category: `chat_history_${chatId}`,
+            topic: "Miranda",
+            instruction: replyText,
+          },
+        ],
+      });
+    } catch (dbErr) {
+      console.warn("[Miranda Memory] Error persistiendo historial:", dbErr);
     }
 
     return { text: replyText, replyMarkup };

@@ -180,7 +180,7 @@ export async function POST(req: NextRequest) {
 
     if (auth.authorized) {
       // Directores (David y Luis): acceso completo y ejecutivo
-      const result = await processMirandaInteraction(text, auth.adminName, true);
+      const result = await processMirandaInteraction(text, auth.adminName, true, chatId);
       await sendTelegramMessage(result.text, result.replyMarkup, chatId);
     } else {
       // Vendedoras / Equipo:
@@ -192,7 +192,7 @@ export async function POST(req: NextRequest) {
 
       // Consultas operativas permitidas (pedidos, clientes, tareas, stock y precios oficiales)
       const staffName = sender?.first_name || "Equipo";
-      const result = await processMirandaInteraction(text, staffName, false);
+      const result = await processMirandaInteraction(text, staffName, false, chatId);
       await sendTelegramMessage(result.text, result.replyMarkup, chatId);
     }
 

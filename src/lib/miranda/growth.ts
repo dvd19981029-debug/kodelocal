@@ -12,8 +12,18 @@
 import { prisma } from "@/lib/prisma";
 
 export async function getBusinessContextSummary(): Promise<string> {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const now = new Date();
+  const svDateStr = now.toLocaleDateString("en-CA", { timeZone: "America/El_Salvador" }); // "YYYY-MM-DD"
+  const startOfToday = new Date(`${svDateStr}T00:00:00-06:00`);
+  const endOfToday = new Date(`${svDateStr}T23:59:59.999-06:00`);
+
+  const yesterdayDate = new Date(startOfToday.getTime() - 24 * 60 * 60 * 1000);
+  const svYesterdayStr = yesterdayDate.toLocaleDateString("en-CA", { timeZone: "America/El_Salvador" });
+  const startOfYesterday = new Date(`${svYesterdayStr}T00:00:00-06:00`);
+  const endOfYesterday = new Date(`${svYesterdayStr}T23:59:59.999-06:00`);
+
+  const [year, month] = svDateStr.split("-");
+  const startOfMonth = new Date(`${year}-${month}-01T00:00:00-06:00`);
 
   const [
     allProducts,
@@ -25,6 +35,14 @@ export async function getBusinessContextSummary(): Promise<string> {
     tasks,
     memories,
     recentInteractions,
+    salesTodayAgg,
+    ordersTodayAgg,
+    salesYesterdayAgg,
+    ordersYesterdayAgg,
+    salesMonthAgg,
+    ordersMonthAgg,
+    lastSale,
+    lastOrder,
   ] = await Promise.all([
     prisma.product.findMany({
       where: { isActive: true },
@@ -84,13 +102,75 @@ export async function getBusinessContextSummary(): Promise<string> {
       take: 20,
     }),
     prisma.mirandaBusinessMemory.findMany({
+      where: {
+        category: { not: { startsWith: "chat_history_" } },
+      },
       orderBy: { id: "asc" },
     }),
     prisma.mirandaInteraction.findMany({
       orderBy: { createdAt: "desc" },
       take: 5,
     }),
+    // Agregaciones temporales de ventas
+    prisma.sale.aggregate({
+      where: { createdAt: { gte: startOfToday, lte: endOfToday } },
+      _count: { id: true },
+      _sum: { total: true },
+    }),
+    prisma.ecommerceOrder.aggregate({
+      where: { createdAt: { gte: startOfToday, lte: endOfToday } },
+      _count: { id: true },
+      _sum: { total: true },
+    }),
+    prisma.sale.aggregate({
+      where: { createdAt: { gte: startOfYesterday, lte: endOfYesterday } },
+      _count: { id: true },
+      _sum: { total: true },
+    }),
+    prisma.ecommerceOrder.aggregate({
+      where: { createdAt: { gte: startOfYesterday, lte: endOfYesterday } },
+      _count: { id: true },
+      _sum: { total: true },
+    }),
+    prisma.sale.aggregate({
+      where: { createdAt: { gte: startOfMonth } },
+      _count: { id: true },
+      _sum: { total: true },
+    }),
+    prisma.ecommerceOrder.aggregate({
+      where: { createdAt: { gte: startOfMonth } },
+      _count: { id: true },
+      _sum: { total: true },
+    }),
+    prisma.sale.findFirst({
+      orderBy: { createdAt: "desc" },
+      select: { saleNumber: true, total: true, channel: true, createdAt: true },
+    }),
+    prisma.ecommerceOrder.findFirst({
+      orderBy: { createdAt: "desc" },
+      select: { orderNumber: true, total: true, orderStatus: true, createdAt: true },
+    }),
   ]);
+
+  // Cálculos temporales exactos
+  const salesTodayCount = salesTodayAgg._count.id;
+  const salesTodayTotal = Number(salesTodayAgg._sum.total || 0);
+  const ordersTodayCount = ordersTodayAgg._count.id;
+  const ordersTodayTotal = Number(ordersTodayAgg._sum.total || 0);
+  const grandTotalToday = salesTodayTotal + ordersTodayTotal;
+  const totalTxToday = salesTodayCount + ordersTodayCount;
+
+  const salesYestCount = salesYesterdayAgg._count.id;
+  const salesYestTotal = Number(salesYesterdayAgg._sum.total || 0);
+  const ordersYestCount = ordersYesterdayAgg._count.id;
+  const ordersYestTotal = Number(ordersYesterdayAgg._sum.total || 0);
+  const grandTotalYesterday = salesYestTotal + ordersYestTotal;
+  const totalTxYesterday = salesYestCount + ordersYestCount;
+
+  const salesMonthTotal = Number(salesMonthAgg._sum.total || 0);
+  const ordersMonthTotal = Number(ordersMonthAgg._sum.total || 0);
+  const grandTotalMonth = salesMonthTotal + ordersMonthTotal;
+  const totalTxMonth = salesMonthAgg._count.id + ordersMonthAgg._count.id;
 
   // Métricas de catálogo y stock
   const totalSkuCount = allProducts.length;
@@ -126,17 +206,28 @@ export async function getBusinessContextSummary(): Promise<string> {
 
   const lines: string[] = [
     `=== ESTADO GENERAL DEL NEGOCIO AROMANIAK & KODE ===`,
-    `FECHA Y HORA SISTEMA: ${new Date().toISOString()}`,
-    `\n1. MÉTRICAS COMERCIALES Y VENTAS (ECOMMERCE & POS):`,
-    `- Total clientes registrados: ${customerCount}`,
-    `- Pedidos Ecommerce registrados: ${orderStatsSummary.trim()}`,
-    `- Envíos activos en ruta (Logística C807): ${activeInRouteCount} pedidos ($${activeInRouteAmount.toFixed(2)} USD)`,
-    `- Pedidos nuevos pendientes de preparación/despacho: ${newPendingCount} pedidos ($${newPendingAmount.toFixed(2)} USD)`,
-    `- Volumen total gestionado en pedidos: $${totalOrderRevenue.toFixed(2)} USD`,
+    `FECHA Y HORA ACTUAL (EL SALVADOR, UTC-6): ${svDateStr} (${now.toLocaleTimeString("es-SV", { timeZone: "America/El_Salvador" })})`,
+    `\n1. MÉTRICAS COMERCIALES Y FACTURACIÓN POR PERÍODO DE TIEMPO:`,
+    `- VENTAS DE HOY (${svDateStr}):`,
+    `  * Total facturado hoy: $${grandTotalToday.toFixed(2)} USD en ${totalTxToday} transacciones.`,
+    `  * Desglose: POS/Caja Tienda: ${salesTodayCount} ventas ($${salesTodayTotal.toFixed(2)} USD) | Ecommerce: ${ordersTodayCount} pedidos ($${ordersTodayTotal.toFixed(2)} USD).`,
+    grandTotalToday === 0 ? `  * NOTA CRÍTICA: HOY no se ha registrado ninguna venta ($0.00 USD). Si preguntan por ventas de hoy, responde con total precisión que hoy van $0.00 USD.` : ``,
+    `- VENTAS DE AYER (${svYesterdayStr}):`,
+    `  * Total facturado ayer: $${grandTotalYesterday.toFixed(2)} USD en ${totalTxYesterday} transacciones.`,
+    `- ACUMULADO DEL MES EN CURSO:`,
+    `  * Total mes: $${grandTotalMonth.toFixed(2)} USD en ${totalTxMonth} transacciones.`,
+    `- ÚLTIMAS ACTIVIDADES REGISTRADAS EN BASE DE DATOS:`,
+    lastOrder ? `  * Último pedido Ecommerce: #${lastOrder.orderNumber} por $${Number(lastOrder.total).toFixed(2)} USD (Fecha: ${new Date(lastOrder.createdAt).toLocaleDateString("es-SV", { timeZone: "America/El_Salvador" })}, Estado: ${lastOrder.orderStatus})` : `  * Sin pedidos Ecommerce`,
+    lastSale ? `  * Última venta POS/Caja: #${lastSale.saleNumber} por $${Number(lastSale.total).toFixed(2)} USD (Fecha: ${new Date(lastSale.createdAt).toLocaleDateString("es-SV", { timeZone: "America/El_Salvador" })})` : `  * Sin ventas POS`,
+    `- HISTÓRICO GLOBAL ACUMULADO (TODOS LOS TIEMPOS):`,
+    `  * Total clientes registrados: ${customerCount}`,
+    `  * Volumen total de todos los pedidos históricos: $${totalOrderRevenue.toFixed(2)} USD (Atención: esto es el acumulado total histórico, NO es de hoy).`,
+    `  * Envíos activos en ruta (Logística C807): ${activeInRouteCount} pedidos ($${activeInRouteAmount.toFixed(2)} USD)`,
+    `  * Pedidos nuevos pendientes de preparación: ${newPendingCount} pedidos ($${newPendingAmount.toFixed(2)} USD)`,
   ];
 
   if (recentOrders.length > 0) {
-    lines.push(`\nÚLTIMOS PEDIDOS ECOMMERCE REGISTRADOS:`);
+    lines.push(`\nÚLTIMOS PEDIDOS ECOMMERCE REGISTRADOS EN SISTEMA:`);
     recentOrders.forEach((o) => {
       lines.push(`- Pedido #${o.orderNumber}: $${Number(o.total).toFixed(2)} | Estado: ${o.orderStatus} | Cliente: ${o.customerName || "Consumidor Final"} (${o.department || "San Salvador"}) | Pago: ${o.paymentStatus}`);
     });
