@@ -86,6 +86,7 @@ export function NuevoPedidoForm({
   // Finanzas y Pagos
   const [costoEnvio, setCostoEnvio] = useState<number>(0);
   const [descuento, setDescuento] = useState<number>(0);
+  const [descuentoManual, setDescuentoManual] = useState<boolean>(false);
   const [solicitudesEspeciales, setSolicitudesEspeciales] = useState('');
   const [pagosPedido, setPagosPedido] = useState<PagoRegistroItem[]>([]);
   const [pagoInputFormaId, setPagoInputFormaId] = useState<string>('1003');
@@ -265,6 +266,32 @@ export function NuevoPedidoForm({
     setItemsPedido(itemsPedido.filter((_, i) => i !== index));
   };
 
+  // Total de frascos de perfume en el pedido
+  const totalFrascos = useMemo(() => {
+    return itemsPedido.reduce((acc, it) => acc + (Number(it.cantidad) || 0), 0);
+  }, [itemsPedido]);
+
+  // Regla Promoción KÖDE:
+  // - 1er perfume a precio regular ($20 Normal o $25 Plus).
+  // - A partir del 2do perfume, $5.00 de descuento por cada perfume adicional.
+  const descuentoPromoCalculado = useMemo(() => {
+    return totalFrascos >= 2 ? (totalFrascos - 1) * 5 : 0;
+  }, [totalFrascos]);
+
+  // Sincronizar automáticamente el descuento de la promoción mientras no haya override manual
+  useEffect(() => {
+    if (!descuentoManual) {
+      setDescuento(descuentoPromoCalculado);
+    }
+  }, [descuentoPromoCalculado, descuentoManual]);
+
+  // Si se vacía la lista de items, resetear el flag manual
+  useEffect(() => {
+    if (itemsPedido.length === 0) {
+      setDescuentoManual(false);
+    }
+  }, [itemsPedido.length]);
+
   // Cálculos Financieros
   const subtotalPedido = useMemo(() => {
     return itemsPedido.reduce((acc, it) => acc + it.subtotal, 0);
@@ -402,10 +429,17 @@ export function NuevoPedidoForm({
       .filter((p) => p.forma_pago_id === '1003')
       .reduce((acc, p) => acc + p.monto, 0);
 
+    const esPromoOficial = totalFrascos >= 2 && descuento === descuentoPromoCalculado;
+    const notaDescuento = esPromoOficial
+      ? `Promo KÖDE (-$${descuento.toFixed(2)})`
+      : descuento > 0
+      ? `Descuento: $${descuento.toFixed(2)}`
+      : null;
+
     const notasConsolidadas = [
       solicitudesEspeciales.trim() ? `Solicitudes: ${solicitudesEspeciales.trim()}` : null,
       contactoAdicional.trim() ? `Contacto Adicional: ${contactoAdicional.trim()}` : null,
-      descuento > 0 ? `Descuento: $${descuento}` : null,
+      notaDescuento,
       totalCCE > 0 ? `Cobro CCE: $${totalCCE.toFixed(2)}` : null,
     ]
       .filter(Boolean)
@@ -726,12 +760,25 @@ export function NuevoPedidoForm({
           {/* Tarjeta Fragancias / Perfumes del Pedido */}
           <div className="clay-card p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-sm font-extrabold text-slate-800">
-                Fragancias del Pedido ({itemsPedido.length})
-              </h3>
-              <span className="text-xs text-slate-500 font-mono">
-                Subtotal: ${subtotalPedido.toFixed(2)}
-              </span>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-extrabold text-slate-800">
+                  Fragancias del Pedido
+                </h3>
+                {totalFrascos > 0 && (
+                  <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
+                    {totalFrascos} {totalFrascos === 1 ? 'frasco' : 'frascos'}
+                  </span>
+                )}
+              </div>
+              {totalFrascos >= 2 ? (
+                <span className="text-[10px] font-black uppercase text-emerald-700 bg-emerald-100/90 px-2.5 py-0.5 rounded-full border border-emerald-300 flex items-center gap-1 shadow-2xs">
+                  <span>🎁</span> Promo 2+: -${descuentoPromoCalculado.toFixed(2)}
+                </span>
+              ) : (
+                <span className="text-xs text-slate-500 font-mono">
+                  Subtotal: ${subtotalPedido.toFixed(2)}
+                </span>
+              )}
             </div>
 
             {/* Selector de Catálogo */}
@@ -898,6 +945,50 @@ export function NuevoPedidoForm({
               Resumen y Finanzas del Pedido
             </h3>
 
+            {/* Banner Informativo de Promoción KÖDE */}
+            {totalFrascos >= 2 ? (
+              <div className="p-3.5 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 rounded-2xl border border-emerald-200/90 shadow-2xs space-y-1.5 animate-in fade-in duration-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🎁</span>
+                    <span className="text-xs font-black text-emerald-950 uppercase tracking-wide">
+                      ¡Promoción KÖDE Aplicada!
+                    </span>
+                  </div>
+                  <span className="font-mono font-black text-xs text-white bg-emerald-600 px-2 py-0.5 rounded-full shadow-2xs">
+                    -${descuentoPromoCalculado.toFixed(2)} OFF
+                  </span>
+                </div>
+                <p className="text-[11px] text-emerald-800 font-medium leading-relaxed">
+                  1er perfume a precio regular, y <strong>$5.00 de descuento</strong> en los <strong>{totalFrascos - 1}</strong> {totalFrascos - 1 === 1 ? 'frasco adicional' : 'frascos adicionales'}.
+                </p>
+                {descuento !== descuentoPromoCalculado && (
+                  <div className="pt-1.5 border-t border-emerald-200/70 flex items-center justify-between flex-wrap gap-1">
+                    <span className="text-[10px] text-amber-800 font-bold">
+                      ⚠️ Descuento manual activo: ${descuento.toFixed(2)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDescuento(descuentoPromoCalculado);
+                        setDescuentoManual(false);
+                      }}
+                      className="text-[10px] font-bold text-emerald-700 bg-white hover:bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded cursor-pointer transition-colors shadow-2xs"
+                    >
+                      ✨ Reaplicar promo oficial (-${descuentoPromoCalculado.toFixed(2)})
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : totalFrascos === 1 ? (
+              <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-200/80 flex items-center gap-2 text-amber-900 shadow-2xs animate-in fade-in duration-200">
+                <span className="text-base">🏷️</span>
+                <span className="text-[11px] font-medium leading-snug">
+                  <strong>Promo KÖDE:</strong> ¡Agrega un 2° perfume y recibe <strong>$5.00 de descuento</strong> por cada frasco adicional!
+                </span>
+              </div>
+            ) : null}
+
             {/* Subtotal, Envío y Descuento */}
             <div className="grid grid-cols-3 gap-2">
               <div>
@@ -908,14 +999,26 @@ export function NuevoPedidoForm({
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">Descuento ($)</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[11px] font-bold text-slate-700">Descuento ($)</label>
+                  {descuentoPromoCalculado > 0 && descuento === descuentoPromoCalculado && (
+                    <span className="text-[9px] font-black uppercase text-emerald-700 bg-emerald-100/90 px-1 py-0.2 rounded border border-emerald-300">
+                      Promo Auto
+                    </span>
+                  )}
+                </div>
                 <input
                   type="number"
                   min="0"
                   step="0.5"
                   value={descuento}
-                  onChange={(e) => setDescuento(parseFloat(e.target.value) || 0)}
-                  className="clay-input w-full text-xs font-mono font-bold"
+                  onChange={(e) => {
+                    setDescuentoManual(true);
+                    setDescuento(parseFloat(e.target.value) || 0);
+                  }}
+                  className={`clay-input w-full text-xs font-mono font-bold ${
+                    descuento > 0 ? 'text-emerald-700 border-emerald-300 bg-emerald-50/30' : ''
+                  }`}
                 />
               </div>
 
@@ -1271,8 +1374,32 @@ export function NuevoPedidoForm({
               </div>
 
               {/* Resumen Financiero en vivo */}
-              <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1.5 text-xs shadow-xs">
-                <div className="flex justify-between font-bold text-slate-700">
+              <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-1.5 text-xs shadow-xs">
+                <div className="flex justify-between text-slate-600">
+                  <span>Subtotal ({totalFrascos} {totalFrascos === 1 ? 'frasco' : 'frascos'}):</span>
+                  <span className="font-mono font-bold text-slate-800">
+                    ${subtotalPedido.toFixed(2)}
+                  </span>
+                </div>
+                {descuento > 0 && (
+                  <div className="flex justify-between text-emerald-700 font-bold">
+                    <span className="flex items-center gap-1">
+                      <span>🎁 Descuento {descuento === descuentoPromoCalculado && totalFrascos >= 2 ? 'Promo KÖDE' : ''}:</span>
+                    </span>
+                    <span className="font-mono font-black text-emerald-700">
+                      -${descuento.toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                {costoEnvio > 0 && (
+                  <div className="flex justify-between text-slate-600">
+                    <span>Costo de Envío:</span>
+                    <span className="font-mono font-bold text-slate-800">
+                      +${costoEnvio.toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between font-bold text-slate-800 pt-1.5 border-t border-slate-100">
                   <span>Total del Pedido:</span>
                   <span className="font-mono text-indigo-700 text-sm font-black">
                     ${totalPedido.toFixed(2)}

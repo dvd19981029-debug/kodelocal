@@ -297,6 +297,12 @@ export const PedidosTabla: React.FC<PedidosTablaProps> = ({
                                     <span className="font-mono font-bold">${it.subtotal}</span>
                                   </div>
                                 ))}
+                                {parseFloat(p.descuento?.toString() || '0') > 0 && (
+                                  <div className="flex justify-between py-1 border-t border-slate-100 text-emerald-700 font-bold text-[11px] mt-1">
+                                    <span className="flex items-center gap-1">🎁 Descuento Promo:</span>
+                                    <span className="font-mono">-${parseFloat(p.descuento?.toString() || '0').toFixed(2)}</span>
+                                  </div>
+                                )}
                               </div>
 
                               {/* MÓDULO DE CONTROL FINANCIERO Y ABONOS BANCARIOS */}

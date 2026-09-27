@@ -110,6 +110,7 @@ export interface Pedido {
   tipo_pago: string;
   estado_pago: string;
   subtotal: string | number;
+  descuento?: string | number;
   costo_envio: string | number;
   total: string | number;
   monto_cobrar_cce?: number | string;

@@ -18,6 +18,7 @@ export async function GET(request: Request) {
         p.tipo_pago,
         p.estado_pago,
         p.subtotal,
+        COALESCE(p.descuento, 0)::float AS descuento,
         p.costo_envio,
         p.total,
         p.monto_cobrar_cce,
@@ -143,6 +144,7 @@ async function ensurePedidosSchema() {
       ALTER TABLE public.pedido_items ADD COLUMN IF NOT EXISTS version VARCHAR(20) DEFAULT 'Normal';
       ALTER TABLE public.pedido_items ADD COLUMN IF NOT EXISTS comprado_por VARCHAR(100);
       ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS monto_cobrar_cce NUMERIC;
+      ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS descuento NUMERIC DEFAULT 0;
       ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_estado VARCHAR(30) DEFAULT 'PENDIENTE';
       ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_codigo_generacion VARCHAR(100);
       ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_numero_control VARCHAR(100);
@@ -373,8 +375,8 @@ export async function POST(request: Request) {
     // 4. Crear el pedido (Estado inicial: Registrado / Rojo)
     const newOrderRes = await client.query(
       `INSERT INTO public.pedidos (
-        numero_pedido, cliente_id, vendedora_id, estado, tipo_pago, estado_pago, subtotal, costo_envio, total, monto_cobrar_cce, notas
-      ) VALUES ($1, $2, $3, 'Registrado', $4, $5, $6, $7, $8, $9, $10)
+        numero_pedido, cliente_id, vendedora_id, estado, tipo_pago, estado_pago, subtotal, descuento, costo_envio, total, monto_cobrar_cce, notas
+      ) VALUES ($1, $2, $3, 'Registrado', $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING id, numero_pedido, estado`,
       [
         numeroPedido,
@@ -383,6 +385,7 @@ export async function POST(request: Request) {
         finalTipoPago,
         finalEstadoPago,
         subtotal,
+        descuento,
         envio,
         total,
         montoCobrarCce,
