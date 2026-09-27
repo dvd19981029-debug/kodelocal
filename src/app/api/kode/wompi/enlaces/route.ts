@@ -237,3 +237,23 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+
+// DELETE: Eliminar enlace
+export async function DELETE(request: Request) {
+  try {
+    await ensureWompiTable();
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'ID requerido' }, { status: 400 });
+    }
+
+    await queryKode('DELETE FROM public.wompi_enlaces WHERE id = $1', [id]);
+    return NextResponse.json({ success: true, message: 'Enlace eliminado correctamente' });
+  } catch (error: any) {
+    console.error('Error eliminando enlace Wompi:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+

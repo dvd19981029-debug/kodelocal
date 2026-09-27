@@ -20,6 +20,7 @@ import {
   Sparkles,
   ArrowRight,
   ShieldCheck,
+  Trash2,
 } from 'lucide-react';
 import { WompiEnlaceItem, Vendedora } from '../../types';
 
@@ -189,6 +190,26 @@ export const WompiEnlacesView: React.FC<WompiEnlacesViewProps> = ({
       showToast('Error al verificar estado', 'error');
     } finally {
       setVerificandoId(null);
+    }
+  };
+
+  // Eliminar enlace
+  const handleEliminarEnlace = async (id: number) => {
+    if (!confirm('¿Estás segura de eliminar este enlace de cobro?')) return;
+    try {
+      const res = await fetch(`/api/kode/wompi/enlaces?id=${id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Enlace eliminado con éxito', 'info');
+        setEnlaces((prev) => prev.filter((item) => item.id !== id));
+        fetchEnlaces();
+      } else {
+        showToast(data.error || 'No se pudo eliminar el enlace', 'error');
+      }
+    } catch (e) {
+      showToast('Error al eliminar enlace', 'error');
     }
   };
 
@@ -729,6 +750,16 @@ export const WompiEnlacesView: React.FC<WompiEnlacesViewProps> = ({
                                 )}
                               </>
                             )}
+
+                            {/* Eliminar enlace */}
+                            <button
+                              type="button"
+                              onClick={() => handleEliminarEnlace(item.id)}
+                              title="Eliminar enlace"
+                              className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 cursor-pointer transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         </td>
                       </tr>
