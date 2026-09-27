@@ -125,7 +125,7 @@ export const PedidosTabla: React.FC<PedidosTablaProps> = ({
                     <React.Fragment key={p.id}>
                       <tr className="hover:bg-slate-50/80 transition-colors">
                         {/* 1. Numero de Pedido */}
-                        <td className="py-3 px-4 font-mono font-bold text-indigo-700 whitespace-nowrap">
+                        <td className={`py-3 px-4 font-mono font-black text-[1.2em] whitespace-nowrap tracking-tight ${getClienteColorPorEstado(p.estado)}`}>
                           {p.numero_pedido}
                         </td>
 

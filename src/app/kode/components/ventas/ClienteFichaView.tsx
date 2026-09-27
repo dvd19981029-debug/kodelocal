@@ -260,7 +260,7 @@ export const ClienteFichaView: React.FC<ClienteFichaViewProps> = ({
                         return (
                           <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
                             {/* 1. Numero de Pedido */}
-                            <td className="py-3 px-4 font-mono font-bold text-indigo-700 whitespace-nowrap">
+                            <td className={`py-3 px-4 font-mono font-black text-[1.2em] whitespace-nowrap tracking-tight ${getClienteColorPorEstado(p.estado)}`}>
                               {p.numero_pedido}
                             </td>
 
