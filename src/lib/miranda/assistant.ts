@@ -160,7 +160,7 @@ Devuelve ESTRICTAMENTE un JSON con:
 
   conversationTurns.push({
     role: "user",
-    parts: [{ text: `[Mensaje de ${adminName}]: ${userQuery}` }],
+    parts: [{ text: `[Mensaje de ${userName}]: ${userQuery}` }],
   });
 
   try {
