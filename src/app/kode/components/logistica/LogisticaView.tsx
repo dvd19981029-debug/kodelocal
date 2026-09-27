@@ -40,35 +40,26 @@ export function LogisticaView({
   emitiendoDteId,
   showToast,
 }: LogisticaViewProps) {
-  const [filtroLogisticaDias, setFiltroLogisticaDias] = useState<'20dias' | 'todos'>('20dias');
+  const [filtroLogisticaDias, setFiltroLogisticaDias] = useState<'7dias' | 'todos'>('7dias');
   const [copiedTrackingId, setCopiedTrackingId] = useState<string | null>(null);
 
-  // Módulo de Logística C807: Envíos filtrados y ordenados de más reciente a más antigua
-  const { pedidosLogistica, conteoLogistica20Dias, conteoLogisticaTodos } = useMemo(() => {
+  // Módulo de Logística C807: Envíos filtrados y ordenados del más reciente al más antiguo
+  const { pedidosLogistica, conteoLogistica7Dias, conteoLogisticaTodos } = useMemo(() => {
     const ahora = Date.now();
-    const limite20Dias = ahora - 20 * 24 * 60 * 60 * 1000;
+    const limite7Dias = ahora - 7 * 24 * 60 * 60 * 1000;
 
-    // Base de logística: pedidos con guía asignada o en estados de envío/despacho
-    const base = pedidos.filter(
-      (p) =>
-        p.c807_guia_numero ||
-        p.estado === 'GUIA_CREADA' ||
-        p.estado === 'PENDIENTE_PREPARAR' ||
-        p.estado === 'Enviado' ||
-        p.estado === 'Entregado'
-    );
-
-    const pedidosEn20Dias = base.filter((p) => {
-      const f = p.c807_fecha_guia || p.created_at;
+    // Pedidos de los últimos 7 días
+    const pedidosEn7Dias = pedidos.filter((p) => {
+      const f = p.created_at || p.c807_fecha_guia;
       if (!f) return true;
       const t = new Date(f).getTime();
-      return !isNaN(t) && t >= limite20Dias;
+      return !isNaN(t) && t >= limite7Dias;
     });
 
-    const conteoLogistica20Dias = pedidosEn20Dias.length;
-    const conteoLogisticaTodos = base.length;
+    const conteoLogistica7Dias = pedidosEn7Dias.length;
+    const conteoLogisticaTodos = pedidos.length;
 
-    let list = filtroLogisticaDias === '20dias' ? pedidosEn20Dias : base;
+    let list = filtroLogisticaDias === '7dias' ? pedidosEn7Dias : pedidos;
 
     // Filtro por buscador superior
     if (searchQuery.trim()) {
@@ -84,16 +75,16 @@ export function LogisticaView({
       );
     }
 
-    // Ordenar siempre de la más reciente a la más antigua
+    // Ordenar siempre del más reciente al más antiguo
     const sorted = [...list].sort((a, b) => {
-      const timeA = new Date(a.c807_fecha_guia || a.created_at || 0).getTime();
-      const timeB = new Date(b.c807_fecha_guia || b.created_at || 0).getTime();
+      const timeA = new Date(a.created_at || a.c807_fecha_guia || 0).getTime();
+      const timeB = new Date(b.created_at || b.c807_fecha_guia || 0).getTime();
       return timeB - timeA;
     });
 
     return {
       pedidosLogistica: sorted,
-      conteoLogistica20Dias,
+      conteoLogistica7Dias,
       conteoLogisticaTodos,
     };
   }, [pedidos, searchQuery, filtroLogisticaDias]);
@@ -126,21 +117,21 @@ export function LogisticaView({
           </span>
         </div>
 
-        {/* BOTONES DE FILTRO: ÚLTIMOS 20 DÍAS / TODOS */}
+        {/* BOTONES DE FILTRO: ÚLTIMOS 7 DÍAS / TODOS LOS PEDIDOS */}
         <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 self-start sm:self-auto shadow-2xs">
           <button
             type="button"
-            onClick={() => setFiltroLogisticaDias('20dias')}
+            onClick={() => setFiltroLogisticaDias('7dias')}
             className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-              filtroLogisticaDias === '20dias'
+              filtroLogisticaDias === '7dias'
                 ? 'bg-white text-indigo-700 shadow-xs border border-slate-200'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Clock className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Últimos 20 días</span>
+            <span>Últimos 7 días</span>
             <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
-              {conteoLogistica20Dias}
+              {conteoLogistica7Dias}
             </span>
           </button>
 
@@ -154,7 +145,7 @@ export function LogisticaView({
             }`}
           >
             <Layers className="w-3.5 h-3.5 text-slate-500" />
-            <span>Ver todos</span>
+            <span>Todos los pedidos</span>
             <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-700">
               {conteoLogisticaTodos}
             </span>
