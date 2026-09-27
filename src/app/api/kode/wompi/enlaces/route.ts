@@ -140,7 +140,7 @@ export async function POST(request: Request) {
     const orderNumber = `KOD-${dateStr}-${randomSuffix}`;
 
     const nombreCliente = clienteNombre?.trim() || 'Cliente KÖDE';
-    const conceptoProducto = concepto?.trim() || 'Perfumes KÖDE Terminados';
+    const conceptoProducto = concepto?.trim() || 'Perfumes Kode';
 
     // Generar enlace oficial en Wompi SV
     const link = await createWompiPaymentLink({
@@ -177,7 +177,7 @@ export async function POST(request: Request) {
         Number(parsedMonto.toFixed(2)),
         clienteNombre?.trim() || null,
         clienteTelefono ? clienteTelefono.toString().trim() : null,
-        concepto?.trim() || 'Perfumes KÖDE',
+        concepto?.trim() || 'Perfumes Kode',
         link.urlEnlace,
         link.urlQrCodeEnlace || null,
         vendedoraId || null,

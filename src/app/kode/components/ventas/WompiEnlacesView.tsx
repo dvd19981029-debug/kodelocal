@@ -63,7 +63,7 @@ export const WompiEnlacesView: React.FC<WompiEnlacesViewProps> = ({
   const [monto, setMonto] = useState<string>('20.00');
   const [clienteNombre, setClienteNombre] = useState<string>('');
   const [clienteTelefono, setClienteTelefono] = useState<string>('');
-  const [concepto, setConcepto] = useState<string>('Perfumes KÖDE Terminados');
+  const [concepto, setConcepto] = useState<string>('Perfumes Kode');
   const [vendedoraId, setVendedoraId] = useState<string>(vendedoraSeleccionada || '');
   const [generando, setGenerando] = useState(false);
 
@@ -676,9 +676,9 @@ export const WompiEnlacesView: React.FC<WompiEnlacesViewProps> = ({
                         <td className="py-3 px-3">
                           <span
                             className="text-slate-700 font-medium text-xs block truncate max-w-[170px]"
-                            title={item.concepto || 'Perfumes KÖDE'}
+                            title={item.concepto || 'Perfumes Kode'}
                           >
-                            {item.concepto || 'Perfumes KÖDE'}
+                            {item.concepto || 'Perfumes Kode'}
                           </span>
                         </td>
 
