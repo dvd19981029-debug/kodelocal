@@ -10,6 +10,7 @@
  */
 
 import { prisma } from "@/lib/prisma";
+import { queryKode } from "@/lib/kodeDb";
 
 export async function getBusinessContextSummary(): Promise<string> {
   const now = new Date();
@@ -43,6 +44,10 @@ export async function getBusinessContextSummary(): Promise<string> {
     ordersMonthAgg,
     lastSale,
     lastOrder,
+    topEcommerceItems,
+    topCustomers,
+    topDepts,
+    kodeTopRes,
   ] = await Promise.all([
     prisma.product.findMany({
       where: { isActive: true },
@@ -150,6 +155,39 @@ export async function getBusinessContextSummary(): Promise<string> {
       orderBy: { createdAt: "desc" },
       select: { orderNumber: true, total: true, orderStatus: true, createdAt: true },
     }),
+    // Cruces analíticos: Productos más vendidos en Ecommerce
+    prisma.ecommerceOrderItem.groupBy({
+      by: ["productName"],
+      _sum: { quantity: true },
+      _count: { id: true },
+      orderBy: { _sum: { quantity: "desc" } },
+      take: 10,
+    }),
+    // Clientes más recurrentes y con mayor gasto
+    prisma.ecommerceOrder.groupBy({
+      by: ["customerName", "customerPhone"],
+      _sum: { total: true },
+      _count: { id: true },
+      orderBy: { _sum: { total: "desc" } },
+      take: 5,
+    }),
+    // Territorios / departamentos con mayor volumen
+    prisma.ecommerceOrder.groupBy({
+      by: ["department"],
+      _count: { id: true },
+      _sum: { total: true },
+      orderBy: { _count: { id: "desc" } },
+      take: 5,
+    }),
+    // Cruce con Base de Datos KODE: Productos más vendidos
+    queryKode(`
+      SELECT c.codigo, c.contratipo, c.marca_inspirada, c.genero, SUM(pi.cantidad) as total_qty, COUNT(pi.id) as pedidos_count
+      FROM pedido_items pi
+      JOIN catalogo c ON c.id = pi.catalogo_id
+      GROUP BY c.codigo, c.contratipo, c.marca_inspirada, c.genero
+      ORDER BY total_qty DESC
+      LIMIT 10;
+    `).catch(() => ({ rows: [] })),
   ]);
 
   // Cálculos temporales exactos
@@ -226,14 +264,50 @@ export async function getBusinessContextSummary(): Promise<string> {
     `  * Pedidos nuevos pendientes de preparación: ${newPendingCount} pedidos ($${newPendingAmount.toFixed(2)} USD)`,
   ];
 
+  // 2. CRUCE MULTICANAL DE PERFUMES MÁS VENDIDOS Y STOCK
+  lines.push(`\n2. RANKING DE PERFUMES Y PRODUCTOS MÁS VENDIDOS (CRUCE MULTICANAL AROMANIAK + KODE):`);
+  lines.push(`- TOP VENTAS EN AROMANIAK ECOMMERCE:`);
+  topEcommerceItems.forEach((item, idx) => {
+    const qty = item._sum.quantity || 0;
+    const foundProduct = allProducts.find((p) =>
+      p.name?.toLowerCase().includes(item.productName.toLowerCase()) ||
+      p.officialName?.toLowerCase().includes(item.productName.toLowerCase())
+    );
+    const stockInfo = foundProduct
+      ? `Stock disponible: ${foundProduct.stock} uds (${foundProduct.stock <= 0 ? "AGOTADO" : foundProduct.stock <= (foundProduct.minStock || 10) ? "STOCK BAJO" : "ÓPTIMO"})`
+      : `Stock: No inventariado directo`;
+    lines.push(`  ${idx + 1}. ${item.productName}: ${qty} unidades vendidas (${item._count.id} pedidos) | ${stockInfo}`);
+  });
+
+  const kodeRows = (kodeTopRes as any)?.rows || [];
+  if (kodeRows.length > 0) {
+    lines.push(`- TOP VENTAS EN KODE (LÍNEA PERFUMERÍA INSPIRADA):`);
+    kodeRows.forEach((kr: any, idx: number) => {
+      lines.push(`  ${idx + 1}. [Código ${kr.codigo}] ${kr.contratipo} (${kr.marca_inspirada}, ${kr.genero}): ${kr.total_qty} unidades vendidas (${kr.pedidos_count} pedidos)`);
+    });
+  }
+
+  // 3. CARTERA DE CLIENTES TOP Y GEOGRAFÍA DE VENTAS
+  lines.push(`\n3. CLIENTES CON MAYOR FACTURACIÓN Y TERRITORIOS:`);
+  if (topCustomers.length > 0) {
+    lines.push(`- Clientes líderes por compras acumuladas:`);
+    topCustomers.forEach((c) => {
+      lines.push(`  * ${c.customerName || "Cliente"} (Tel: ${c.customerPhone || "N/A"}): $${Number(c._sum.total || 0).toFixed(2)} USD en ${c._count.id} pedidos`);
+    });
+  }
+  if (topDepts.length > 0) {
+    const deptsSummary = topDepts.map((d) => `${d.department}: ${d._count.id} pedidos ($${Number(d._sum.total || 0).toFixed(2)} USD)`).join(" | ");
+    lines.push(`- Cobertura geográfica de envíos: ${deptsSummary}`);
+  }
+
   if (recentOrders.length > 0) {
-    lines.push(`\nÚLTIMOS PEDIDOS ECOMMERCE REGISTRADOS EN SISTEMA:`);
+    lines.push(`\n4. ÚLTIMOS PEDIDOS ECOMMERCE REGISTRADOS EN SISTEMA:`);
     recentOrders.forEach((o) => {
       lines.push(`- Pedido #${o.orderNumber}: $${Number(o.total).toFixed(2)} | Estado: ${o.orderStatus} | Cliente: ${o.customerName || "Consumidor Final"} (${o.department || "San Salvador"}) | Pago: ${o.paymentStatus}`);
     });
   }
 
-  lines.push(`\n2. INVENTARIO Y STOCK DE AROMANIAK (${totalSkuCount} PRODUCTOS EN CATÁLOGO):`);
+  lines.push(`\n5. INVENTARIO Y STOCK DE AROMANIAK (${totalSkuCount} PRODUCTOS EN CATÁLOGO):`);
   lines.push(`- Referencias agotadas (Stock 0): ${outOfStock.length}`);
   lines.push(`- Referencias con stock bajo (menor o igual a mínimo): ${lowStock.length}`);
   lines.push(`- Referencias con stock óptimo: ${healthyStock.length}`);
@@ -266,24 +340,24 @@ export async function getBusinessContextSummary(): Promise<string> {
     const topDemands = Object.entries(demandCountMap)
       .slice(0, 5)
       .map(([frag, cnt]) => `${frag} (${cnt} solicitudes)`);
-    lines.push(`\n3. DEMANDAS NO SATISFECHAS EN TIENDA (VENTAS PERDIDAS):`);
+    lines.push(`\n6. DEMANDAS NO SATISFECHAS EN TIENDA (VENTAS PERDIDAS):`);
     lines.push(`- Fragancias solicitadas agotadas: ${topDemands.join(", ")}`);
     lines.push(`- Fuga estimada: ~$${Object.values(demandCountMap).reduce((a, b) => a + b, 0) * 25} USD`);
   }
 
   // Tareas operativas
   if (tasks.length > 0) {
-    lines.push(`\n4. TAREAS OPERATIVAS PENDIENTES (${tasks.length}):`);
+    lines.push(`\n7. TAREAS OPERATIVAS PENDIENTES (${tasks.length}):`);
     tasks.forEach((t) => {
       lines.push(`- [ID #${t.id}] '${t.task}' (Responsable: ${t.assignee}, Urgencia: ${t.urgency})`);
     });
   } else {
-    lines.push(`\n4. TAREAS OPERATIVAS PENDIENTES: 0 tareas.`);
+    lines.push(`\n7. TAREAS OPERATIVAS PENDIENTES: 0 tareas.`);
   }
 
   // Directrices de los dueños (David y Luis)
   if (memories.length > 0) {
-    lines.push(`\n5. DIRECTRICES Y REGLAS PERMANENTES DICTADAS POR DAVID Y LUIS:`);
+    lines.push(`\n8. DIRECTRICES Y REGLAS PERMANENTES DICTADAS POR DAVID Y LUIS:`);
     memories.forEach((m) => {
       lines.push(`- [${m.topic}]: ${m.instruction}`);
     });
@@ -330,6 +404,7 @@ export async function getOperationalStaffContextSummary(): Promise<string> {
     allProducts,
     recentOrders,
     tasks,
+    topStaffItems,
   ] = await Promise.all([
     prisma.product.findMany({
       where: { isActive: true },
@@ -369,6 +444,12 @@ export async function getOperationalStaffContextSummary(): Promise<string> {
       orderBy: { createdAt: "desc" },
       take: 20,
     }),
+    prisma.ecommerceOrderItem.groupBy({
+      by: ["productName"],
+      _sum: { quantity: true },
+      orderBy: { _sum: { quantity: "desc" } },
+      take: 6,
+    }),
   ]);
 
   const outOfStock = allProducts.filter((p) => p.stock <= 0);
@@ -396,6 +477,10 @@ export async function getOperationalStaffContextSummary(): Promise<string> {
 
   lines.push(`\n3. CATÁLOGO Y STOCK EN TIENDA / BODEGA:`);
   lines.push(`- Precios de venta al público oficiales: Onza $3.25-$3.75 | 1/2 Onza $1.90 | Perfume terminado $15.00`);
+  if (topStaffItems.length > 0) {
+    const topNames = topStaffItems.map((t) => t.productName).join(", ");
+    lines.push(`- TOP FRAGANCIAS MÁS VENDIDAS (RECOMENDAR A CLIENTES): ${topNames}`);
+  }
   if (outOfStock.length > 0) {
     const oos = outOfStock.map((p) => `${p.officialName ? p.officialName + " / " : ""}${p.name}`);
     lines.push(`- Fragancias agotadas en tienda (no ofrecer): ${oos.slice(0, 10).join(", ")}`);
