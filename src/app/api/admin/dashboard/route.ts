@@ -422,6 +422,7 @@ export async function GET(request: Request) {
       .slice(0, 8);
 
     // 14. Proyección de Agotamiento de Stock (Días de Inventario Restante)
+    const now = new Date();
     const earliestOrder = orders.reduce(
       (earliest, o) => (new Date(o.createdAt) < new Date(earliest) ? o.createdAt : earliest),
       now
@@ -585,6 +586,33 @@ export async function GET(request: Request) {
       pedidosEnRuta: rutaOrders.length,
       courierPrincipal: 'C807 Express El Salvador',
     };
+
+    // 19. Movimientos Recientes Mixtos (Ecommerce + POS)
+    const recentEcommerce = orders.slice(0, 5).map((o) => ({
+      id: o.id,
+      number: o.orderNumber,
+      customer: o.customerName || 'Cliente Online',
+      type: 'ECOMMERCE' as const,
+      status: o.orderStatus,
+      total: Number(o.total || 0),
+      paymentMethod: o.paymentMethod,
+      date: o.createdAt.toISOString(),
+    }));
+
+    const recentPos = sales.slice(0, 5).map((s) => ({
+      id: s.id,
+      number: s.saleNumber,
+      customer: s.cashierName ? `Mostrador (${s.cashierName})` : 'Mostrador Local',
+      type: 'POS' as const,
+      status: s.orderStatus || 'COMPLETED',
+      total: Number(s.total || 0),
+      paymentMethod: s.paymentMethod,
+      date: s.createdAt.toISOString(),
+    }));
+
+    const recientes = [...recentEcommerce, ...recentPos]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 7);
 
     return NextResponse.json({
       success: true,
