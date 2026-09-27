@@ -36,11 +36,28 @@ export async function sendTelegramMessage(
   }
 
   try {
-    const res = await fetch(url, {
+    let res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+
+    if (!res.ok) {
+      // Reintentar sin parse_mode en caso de caracteres especiales o entidades HTML mal formateadas
+      const plainPayload = { ...payload };
+      delete plainPayload.parse_mode;
+      res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(plainPayload),
+      });
+
+      if (!res.ok) {
+        const errBody = await res.text();
+        console.error("[Miranda Telegram] Error enviando mensaje:", res.status, errBody);
+      }
+    }
+
     return res.ok;
   } catch (error) {
     console.error("[Miranda Telegram] Error enviando mensaje:", error);

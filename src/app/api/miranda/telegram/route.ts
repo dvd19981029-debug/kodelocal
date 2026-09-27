@@ -156,7 +156,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    const text = (message.text || "").trim();
+    let text = (message.text || "").trim();
+    text = text.replace(/@MirandaAromaniak_bot/gi, "").trim();
     const chatId = String(message.chat?.id || process.env.TELEGRAM_CHAT_ID);
     const sender = message.from;
 
