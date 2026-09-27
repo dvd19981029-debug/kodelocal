@@ -207,8 +207,11 @@ export async function GET() {
   return NextResponse.json({
     status: "online",
     bot: "Miranda Priestly (Aromaniak & KODE)",
-    authorizedAdmins: ["Luis", "David"],
-    staffAccess: "Permitido para pedidos, tareas, clientes y stock",
+    hasGeminiKey: Boolean(process.env.GEMINI_API_KEY),
+    geminiKeyLength: (process.env.GEMINI_API_KEY || "").length,
+    hasTelegramToken: Boolean(process.env.TELEGRAM_BOT_TOKEN),
+    hasTelegramChatId: Boolean(process.env.TELEGRAM_CHAT_ID),
+    hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
     timestamp: new Date().toISOString(),
   });
 }
