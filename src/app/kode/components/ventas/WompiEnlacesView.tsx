@@ -101,6 +101,13 @@ export const WompiEnlacesView: React.FC<WompiEnlacesViewProps> = ({
     fetchEnlaces();
   }, [fetchEnlaces]);
 
+  // Mantener sincronizada la asesora si cambia en la barra lateral
+  useEffect(() => {
+    if (vendedoraSeleccionada) {
+      setVendedoraId(vendedoraSeleccionada);
+    }
+  }, [vendedoraSeleccionada]);
+
   // Generar nuevo enlace
   const handleGenerarEnlace = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,7 +119,8 @@ export const WompiEnlacesView: React.FC<WompiEnlacesViewProps> = ({
 
     try {
       setGenerando(true);
-      const vendedoraObj = vendedoras.find((v) => v.id === vendedoraId);
+      const activeVendedoraId = vendedoraId || vendedoraSeleccionada;
+      const vendedoraObj = vendedoras.find((v) => v.id === activeVendedoraId) || vendedoras[0];
 
       const res = await fetch('/api/kode/wompi/enlaces', {
         method: 'POST',
@@ -122,7 +130,7 @@ export const WompiEnlacesView: React.FC<WompiEnlacesViewProps> = ({
           clienteNombre: clienteNombre.trim() || undefined,
           clienteTelefono: clienteTelefono.trim() || undefined,
           concepto: concepto.trim() || undefined,
-          vendedoraId: vendedoraId || undefined,
+          vendedoraId: activeVendedoraId || undefined,
           vendedoraNombre: vendedoraObj?.nombre || undefined,
         }),
       });
@@ -560,7 +568,8 @@ export const WompiEnlacesView: React.FC<WompiEnlacesViewProps> = ({
                   <th className="py-3 px-3">Monto</th>
                   <th className="py-3 px-3">Referencia / ID</th>
                   <th className="py-3 px-3">Clienta & WhatsApp</th>
-                  <th className="py-3 px-3">Concepto & Asesora</th>
+                  <th className="py-3 px-3">Generado Por (Usuario)</th>
+                  <th className="py-3 px-3">Concepto</th>
                   <th className="py-3 px-3">Fecha</th>
                   <th className="py-3 px-3 text-right">Acciones</th>
                 </tr>
@@ -568,7 +577,7 @@ export const WompiEnlacesView: React.FC<WompiEnlacesViewProps> = ({
               <tbody className="divide-y divide-slate-100">
                 {enlaces.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-slate-400">
+                    <td colSpan={8} className="py-12 text-center text-slate-400">
                       <Link2 className="w-8 h-8 mx-auto text-slate-300 mb-2" />
                       <p className="font-bold text-sm">No hay enlaces de pago generados</p>
                       <p className="text-xs text-slate-400 mt-1">
@@ -646,19 +655,34 @@ export const WompiEnlacesView: React.FC<WompiEnlacesViewProps> = ({
                           )}
                         </td>
 
-                        {/* 5. Concepto & Asesora */}
-                        <td className="py-3 px-3">
-                          <div className="text-slate-800 font-medium truncate max-w-[180px]">
-                            {item.concepto || 'Perfumes KÖDE'}
+                        {/* 5. Generado Por (Usuario / Asesora) */}
+                        <td className="py-3 px-3 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                              {item.vendedora_nombre ? item.vendedora_nombre.charAt(0).toUpperCase() : 'U'}
+                            </div>
+                            <div>
+                              <span className="font-extrabold text-slate-900 block text-xs">
+                                {item.vendedora_nombre || 'Sistema / Sin asignar'}
+                              </span>
+                              <span className="text-[10px] text-indigo-600 font-bold uppercase tracking-wider block">
+                                Asesora
+                              </span>
+                            </div>
                           </div>
-                          {item.vendedora_nombre && (
-                            <span className="text-[10px] text-slate-400 block">
-                              Asesora: {item.vendedora_nombre}
-                            </span>
-                          )}
                         </td>
 
-                        {/* 6. Fecha */}
+                        {/* 6. Concepto */}
+                        <td className="py-3 px-3">
+                          <span
+                            className="text-slate-700 font-medium text-xs block truncate max-w-[170px]"
+                            title={item.concepto || 'Perfumes KÖDE'}
+                          >
+                            {item.concepto || 'Perfumes KÖDE'}
+                          </span>
+                        </td>
+
+                        {/* 7. Fecha */}
                         <td className="py-3 px-3 text-slate-500 font-mono text-[11px] whitespace-nowrap">
                           {fechaFmt}
                         </td>

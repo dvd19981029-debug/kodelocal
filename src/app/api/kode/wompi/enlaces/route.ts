@@ -74,6 +74,7 @@ export async function GET(request: Request) {
         OR cliente_telefono ILIKE $${params.length}
         OR concepto ILIKE $${params.length}
         OR codigo_autorizacion ILIKE $${params.length}
+        OR vendedora_nombre ILIKE $${params.length}
       )`;
     }
 
