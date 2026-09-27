@@ -153,23 +153,8 @@ export const PedidosTabla: React.FC<PedidosTablaProps> = ({
 
                         {/* 5. Total */}
                         <td className="py-3 px-4 whitespace-nowrap">
-                          <div className="font-mono font-black text-slate-900">
+                          <div className="font-mono font-black text-slate-900 text-sm">
                             ${totalNum.toFixed(2)}
-                          </div>
-                          <div className="mt-0.5">
-                            {p.estado_pago === 'PAGADO' ? (
-                              <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                ✓ Pagado
-                              </span>
-                            ) : p.estado_pago === 'PARCIAL' ? (
-                              <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full inline-block whitespace-nowrap" title={`Abonado: $${totalPagadoNum.toFixed(2)}`}>
-                                ⏳ Parcial (${totalPagadoNum.toFixed(2)})
-                              </span>
-                            ) : (
-                              <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
-                                ✕ Pendiente
-                              </span>
-                            )}
                           </div>
                         </td>
 
