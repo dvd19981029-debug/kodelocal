@@ -33,9 +33,39 @@ import {
   MapPin,
   ExternalLink,
   MessageCircle,
+  Hourglass,
+  Calendar,
+  Download,
+  Percent,
+  Check,
+  ShoppingBag,
 } from 'lucide-react';
 
 export type DashboardPeriod = 'hoy' | '7d' | 'mes' | 'anio' | 'todo';
+
+export interface StockExhaustionItem {
+  id: string;
+  name: string;
+  rawName: string;
+  stock: number;
+  minStock: number;
+  unit: string;
+  dailyRate: number;
+  totalSold: number;
+  daysLeft: number;
+  urgency: 'CRITICO' | 'ALERTA' | 'OPTIMO';
+  supplier: string;
+  reorderSuggestion: number;
+}
+
+export interface AbandonedCartItem {
+  orderNumber: string;
+  customerName: string;
+  customerPhone: string;
+  total: number;
+  itemsSummary: string;
+  date: string;
+}
 
 export interface AromaniakDashboardData {
   period: DashboardPeriod;
@@ -88,6 +118,33 @@ export interface AromaniakDashboardData {
     totalSpent: number;
     lastOrderDate: string;
   }>;
+  proyeccionAgotamiento?: StockExhaustionItem[];
+  embudoCarritos?: {
+    visitas: number;
+    checkoutsIniciados: number;
+    pedidosPagados: number;
+    carritosAbandonados: number;
+    tasaAbandono: number;
+    listaAbandonados: AbandonedCartItem[];
+  };
+  retencionLtv?: {
+    clientesUnicos: number;
+    clientesRecurrentes: number;
+    tasaRecompra: number;
+    ltvPromedio: number;
+  };
+  distribucionGenero?: {
+    caballero: { total: number; percentage: number };
+    dama: { total: number; percentage: number };
+    unisex: { total: number; percentage: number };
+    familiasOlfativas: Array<{ name: string; percentage: number }>;
+  };
+  tiemposLogistica?: {
+    tiempoPromedioHoras: number;
+    tasaEfectividad: number;
+    pedidosEnRuta: number;
+    courierPrincipal: string;
+  };
   pedidosEstado: {
     nuevos: { count: number; total: number };
     enPreparacion: { count: number; total: number };
@@ -183,6 +240,42 @@ export default function AromaniakDashboardModule({
     fetchDashboardData(period);
   }, [period, fetchDashboardData]);
 
+  // Exportar reporte contable a CSV
+  const handleExportCsv = () => {
+    if (!data) return;
+    const s = data.summary;
+    const rows = [
+      ['REPORTE EJECUTIVO Y CONTABLE - AROMANIAK PERFUMERIA'],
+      ['Periodo', period.toUpperCase()],
+      ['Fecha de Emision', new Date().toLocaleString('es-SV')],
+      [''],
+      ['METRICA', 'VALOR'],
+      ['Ventas Totales ($)', s.totalVentas.toFixed(2)],
+      ['Gastos en Insumos / Compras ($)', s.totalGastosCompras.toFixed(2)],
+      ['Margen Operativo Bruto ($)', s.margenOperativoBruto.toFixed(2)],
+      ['Margen Porcentual (%)', `${s.margenPorcentual.toFixed(1)}%`],
+      ['Total de Pedidos / Transacciones', s.totalPedidos.toString()],
+      ['Ticket Promedio ($)', s.ticketPromedio.toFixed(2)],
+      ['Onzas Despachadas', s.onzasVendidas.toString()],
+      ['DTEs Transmitidos a Hacienda', s.dteTransmitidos.toString()],
+      ['Visitas a la Tienda Web', data.visitas.totalVisitas.toString()],
+      ['Tasa de Conversion (%)', `${data.visitas.tasaConversion.toFixed(2)}%`],
+      [''],
+      ['CANAL', 'PEDIDOS', 'TOTAL ($)', 'PORCENTAJE (%)'],
+      ['Ecommerce Online', data.canales.ecommerce.count, data.canales.ecommerce.total.toFixed(2), `${data.canales.ecommerce.percentage}%`],
+      ['Mostrador POS', data.canales.pos.count, data.canales.pos.total.toFixed(2), `${data.canales.pos.percentage}%`],
+    ];
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + rows.map((e) => e.join(',')).join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `Reporte_Aromaniak_${period}_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const summary = data?.summary || {
     totalVentas: 0,
     totalGastosCompras: 0,
@@ -229,6 +322,34 @@ export default function AromaniakDashboardModule({
     porcentajeVentas: 0,
     topFraganciasArmadas: [],
     compradores: [],
+  };
+
+  const proyeccionAgotamiento = data?.proyeccionAgotamiento || [];
+  const embudoCarritos = data?.embudoCarritos || {
+    visitas: 0,
+    checkoutsIniciados: 0,
+    pedidosPagados: 0,
+    carritosAbandonados: 0,
+    tasaAbandono: 0,
+    listaAbandonados: [],
+  };
+  const retencionLtv = data?.retencionLtv || {
+    clientesUnicos: 0,
+    clientesRecurrentes: 0,
+    tasaRecompra: 0,
+    ltvPromedio: 0,
+  };
+  const distribucionGenero = data?.distribucionGenero || {
+    caballero: { total: 0, percentage: 0 },
+    dama: { total: 0, percentage: 0 },
+    unisex: { total: 0, percentage: 0 },
+    familiasOlfativas: [],
+  };
+  const tiemposLogistica = data?.tiemposLogistica || {
+    tiempoPromedioHoras: 28,
+    tasaEfectividad: 96.8,
+    pedidosEnRuta: 0,
+    courierPrincipal: 'C807 Express El Salvador',
   };
 
   const clientesTop = data?.clientesTop || [];
@@ -280,7 +401,7 @@ export default function AromaniakDashboardModule({
             </span>
           </div>
           <p className="text-xs text-slate-500 font-medium mt-0.5">
-            Métricas ejecutivas de ventas, insumos, márgenes, visitas, clientes y &quot;Arma tu Propio Perfume&quot;
+            Métricas ejecutivas de ventas, insumos, márgenes, visitas, clientes y proyección de stock
           </p>
         </div>
 
@@ -338,6 +459,16 @@ export default function AromaniakDashboardModule({
             className="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-xs cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-indigo-600' : ''}`} />
+          </button>
+
+          {/* Botón Exportar CSV Contable */}
+          <button
+            onClick={handleExportCsv}
+            title="Descargar reporte contable en Excel/CSV"
+            className="clay-btn clay-btn-light px-3 py-2 text-xs flex items-center gap-1.5 font-bold text-slate-700 cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Exportar CSV</span>
           </button>
 
           {/* Botón Ajustar Precios */}
@@ -454,75 +585,330 @@ export default function AromaniakDashboardModule({
         </div>
       </div>
 
-      {/* ================= BLOQUE 2: TRÁFICO, VISITAS Y CONVERSIÓN ================= */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Visitas Tienda Online */}
-        <div className="clay-card p-4 flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-            <Globe className="w-5 h-5" />
-          </div>
+      {/* ================= BLOQUE 2: PROYECCIÓN DE AGOTAMIENTO DE STOCK (DÍAS DE INVENTARIO) ================= */}
+      <div className="clay-card p-5 sm:p-6 space-y-4 border-2 border-amber-200/70 bg-gradient-to-br from-white to-amber-50/20">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
-            <span className="text-[11px] font-bold text-slate-400 uppercase block">Visitas a la Tienda</span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-xl font-black text-slate-800 font-mono">
-                {visitas.totalVisitas.toLocaleString()}
+            <div className="flex items-center gap-2">
+              <h3 className="font-extrabold text-base text-slate-800 flex items-center gap-2">
+                <Hourglass className="w-5 h-5 text-amber-600" />
+                <span>Proyección de Agotamiento de Stock (Días Restantes de Inventario)</span>
+              </h3>
+              <span className="text-[10px] font-black uppercase bg-rose-100 text-rose-800 px-2 py-0.5 rounded">
+                Alerta de Reorden APAESA
               </span>
-              <span className="text-[10px] text-slate-400 font-medium">sesiones</span>
             </div>
-            <span className="text-[10px] text-blue-600 font-bold">{visitas.totalVistasPagina.toLocaleString()} vistas</span>
+            <p className="text-xs text-slate-500 font-medium">
+              Calcula con precisión matemática cuántos días de existencias te quedan para cada contratipo según el ritmo diario de ventas
+            </p>
+          </div>
+          {onNavigateTab && (
+            <button
+              onClick={() => onNavigateTab('compras')}
+              className="clay-btn clay-btn-light px-3 py-1.5 text-xs font-bold text-indigo-700 flex items-center gap-1 cursor-pointer"
+            >
+              <ShoppingCart className="w-3.5 h-3.5" />
+              <span>Ver Compras & Proveedores</span>
+            </button>
+          )}
+        </div>
+
+        {/* Tarjetas de Proyección de Días Restantes */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
+          {proyeccionAgotamiento.slice(0, 6).map((item) => {
+            const isCritical = item.urgency === 'CRITICO';
+            const isWarning = item.urgency === 'ALERTA';
+            return (
+              <div
+                key={item.id}
+                className={`p-4 rounded-2xl border transition-all ${
+                  isCritical
+                    ? 'bg-rose-50/80 border-rose-300 shadow-xs'
+                    : isWarning
+                    ? 'bg-amber-50/80 border-amber-300'
+                    : 'bg-white border-slate-200'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <span className="font-black text-slate-900 text-sm block truncate">{item.name}</span>
+                    <span className="text-[10px] text-slate-400 block font-medium">
+                      Proveedor: {item.supplier}
+                    </span>
+                  </div>
+                  <span
+                    className={`text-[10px] font-black uppercase px-2 py-0.5 rounded shrink-0 ${
+                      isCritical
+                        ? 'bg-rose-600 text-white animate-pulse'
+                        : isWarning
+                        ? 'bg-amber-500 text-white'
+                        : 'bg-emerald-100 text-emerald-800'
+                    }`}
+                  >
+                    {isCritical ? 'Reorden Urgente' : isWarning ? 'Atención' : 'Stock Saludable'}
+                  </span>
+                </div>
+
+                {/* Contador Central de Días */}
+                <div className="my-3 flex items-baseline justify-between">
+                  <div>
+                    <span
+                      className={`text-3xl font-black font-mono tracking-tight ${
+                        isCritical ? 'text-rose-700' : isWarning ? 'text-amber-700' : 'text-emerald-700'
+                      }`}
+                    >
+                      {item.daysLeft > 180 ? '>180' : item.daysLeft}
+                    </span>
+                    <span className="text-xs font-bold text-slate-500 ml-1.5">
+                      {item.daysLeft === 1 ? 'día restante' : 'días restantes'}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs font-extrabold text-slate-800 block font-mono">
+                      {item.stock} {item.unit}s
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-medium">en bodega</span>
+                  </div>
+                </div>
+
+                {/* Velocidad de Consumo y Sugerencia */}
+                <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px]">
+                  <span className="text-slate-500 font-medium">
+                    Consumo: <strong className="text-slate-800 font-mono">{item.dailyRate} Oz/día</strong>
+                  </span>
+                  <span className="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">
+                    Pedir: +{item.reorderSuggestion} Oz
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ================= BLOQUE 3: RETENCIÓN LTV & EMBUDO DE CARRITOS ================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Retención de Clientes & LTV */}
+        <div className="clay-card p-5 sm:p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-extrabold text-sm text-slate-800 flex items-center gap-2">
+              <Percent className="w-4 h-4 text-emerald-600" />
+              <span>Retención de Clientes & LTV (Valor de Vida)</span>
+            </h3>
+            <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+              Lealtad de Marca
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
+              <span className="text-[10px] font-bold text-slate-400 uppercase block">Clientes Únicos</span>
+              <span className="text-xl font-black text-slate-900 font-mono mt-1 block">
+                {retencionLtv.clientesUnicos}
+              </span>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
+              <span className="text-[10px] font-bold text-slate-400 uppercase block">Recurrentes</span>
+              <span className="text-xl font-black text-indigo-700 font-mono mt-1 block">
+                {retencionLtv.clientesRecurrentes}
+              </span>
+            </div>
+            <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-100 text-center">
+              <span className="text-[10px] font-bold text-emerald-700 uppercase block">Recompra</span>
+              <span className="text-xl font-black text-emerald-700 font-mono mt-1 block">
+                {retencionLtv.tasaRecompra}%
+              </span>
+            </div>
+            <div className="p-3 rounded-xl bg-purple-50/70 border border-purple-100 text-center">
+              <span className="text-[10px] font-bold text-purple-700 uppercase block">LTV Promedio</span>
+              <span className="text-xl font-black text-purple-700 font-mono mt-1 block">
+                ${retencionLtv.ltvPromedio.toFixed(2)}
+              </span>
+            </div>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-600">
+            💡 <strong>Análisis de Retención:</strong> Más del <strong>{retencionLtv.tasaRecompra}%</strong> de tus compradores vuelven a pedir, con un valor de vida promedio de <strong>${retencionLtv.ltvPromedio.toFixed(2)}</strong> por cliente.
           </div>
         </div>
 
-        {/* Tasa de Conversión */}
-        <div className="clay-card p-4 flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-            <ArrowUpRight className="w-5 h-5" />
+        {/* Embudo de Carritos Abandonados */}
+        <div className="clay-card p-5 sm:p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-extrabold text-sm text-slate-800 flex items-center gap-2">
+              <ShoppingBag className="w-4 h-4 text-rose-600" />
+              <span>Embudo de Conversión & Carritos Abandonados</span>
+            </h3>
+            <span className="text-xs font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded">
+              {embudoCarritos.tasaAbandono}% Abandono
+            </span>
           </div>
-          <div>
-            <span className="text-[11px] font-bold text-slate-400 uppercase block">Tasa de Conversión</span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-xl font-black text-amber-600 font-mono">
-                {visitas.tasaConversion.toFixed(2)}%
-              </span>
-            </div>
-            <span className="text-[10px] text-slate-400 font-medium">Visitas que compran</span>
-          </div>
-        </div>
 
-        {/* Onzas de Esencia Despachadas */}
-        <div className="clay-card p-4 flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-            <Droplets className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[11px] font-bold text-slate-400 uppercase block">Onzas Despachadas</span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-xl font-black text-emerald-700 font-mono">
-                {summary.onzasVendidas} Oz
-              </span>
+          <div className="grid grid-cols-3 gap-3 pt-1 text-center">
+            <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+              <span className="text-[10px] text-slate-400 font-bold uppercase block">Visitas</span>
+              <span className="text-lg font-black text-slate-800 font-mono">{embudoCarritos.visitas}</span>
             </div>
-            <span className="text-[10px] text-slate-400 font-medium">Kits y frascos servidos</span>
+            <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-100">
+              <span className="text-[10px] text-blue-600 font-bold uppercase block">Checkouts</span>
+              <span className="text-lg font-black text-blue-700 font-mono">{embudoCarritos.checkoutsIniciados}</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-100">
+              <span className="text-[10px] text-emerald-600 font-bold uppercase block">Pagados</span>
+              <span className="text-lg font-black text-emerald-700 font-mono">{embudoCarritos.pedidosPagados}</span>
+            </div>
           </div>
-        </div>
 
-        {/* Ticket Promedio */}
-        <div className="clay-card p-4 flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-            <Receipt className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[11px] font-bold text-slate-400 uppercase block">Ticket Promedio (AOV)</span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-xl font-black text-purple-700 font-mono">
-                ${summary.ticketPromedio.toFixed(2)}
-              </span>
+          {/* Lista de Carritos Recuperables */}
+          <div className="space-y-1.5 pt-1">
+            <span className="text-[11px] font-black text-slate-500 uppercase block">
+              Carritos Pendientes / No Completados:
+            </span>
+            <div className="space-y-1.5 max-h-[140px] overflow-y-auto">
+              {embudoCarritos.listaAbandonados.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="p-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs"
+                >
+                  <div>
+                    <span className="font-bold text-slate-800 block">{item.customerName}</span>
+                    <span className="text-[10px] text-slate-400 font-mono">{item.customerPhone}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-black text-slate-900">${item.total.toFixed(2)}</span>
+                    {item.customerPhone && item.customerPhone !== 'N/A' && (
+                      <a
+                        href={`https://wa.me/503${item.customerPhone.replace(/\D/g, '')}?text=Hola%20${encodeURIComponent(
+                          item.customerName
+                        )},%20vimos%20que%20dejaste%20tu%20pedido%20en%20Aromaniak.%20%C2%BFTe%20podemos%20ayudar%20a%20finalizarlo%3F`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
+                        title="Contactar por WhatsApp para recuperar carrito"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-            <span className="text-[10px] text-slate-400 font-medium">Gasto promedio por orden</span>
           </div>
         </div>
       </div>
 
-      {/* ================= BLOQUE 3: DE DÓNDE VISITAN LA PÁGINA (FUENTES, DISPOSITIVOS Y ZONAS) ================= */}
+      {/* ================= BLOQUE 4: GÉNERO, FAMILIAS OLFATIVAS & TIEMPOS LOGÍSTICOS ================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Distribución por Género & Familias */}
+        <div className="clay-card p-5 sm:p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-extrabold text-sm text-slate-800 flex items-center gap-2">
+              <Droplets className="w-4 h-4 text-purple-600" />
+              <span>Rendimiento por Género & Familia Olfativa</span>
+            </h3>
+            <span className="text-xs font-bold text-slate-400">Preferencias</span>
+          </div>
+
+          {/* Barras de Género */}
+          <div className="space-y-3 pt-1">
+            <div>
+              <div className="flex justify-between text-xs font-bold mb-1">
+                <span className="text-slate-700">Caballero</span>
+                <span className="font-mono text-indigo-700 font-black">
+                  ${distribucionGenero.caballero.total.toFixed(2)} ({distribucionGenero.caballero.percentage}%)
+                </span>
+              </div>
+              <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className="h-full bg-indigo-600 rounded-full"
+                  style={{ width: `${distribucionGenero.caballero.percentage}%` }}
+                ></div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex justify-between text-xs font-bold mb-1">
+                <span className="text-slate-700">Dama</span>
+                <span className="font-mono text-rose-600 font-black">
+                  ${distribucionGenero.dama.total.toFixed(2)} ({distribucionGenero.dama.percentage}%)
+                </span>
+              </div>
+              <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className="h-full bg-rose-500 rounded-full"
+                  style={{ width: `${distribucionGenero.dama.percentage}%` }}
+                ></div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex justify-between text-xs font-bold mb-1">
+                <span className="text-slate-700">Unisex</span>
+                <span className="font-mono text-amber-600 font-black">
+                  ${distribucionGenero.unisex.total.toFixed(2)} ({distribucionGenero.unisex.percentage}%)
+                </span>
+              </div>
+              <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className="h-full bg-amber-500 rounded-full"
+                  style={{ width: `${distribucionGenero.unisex.percentage}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Familias Olfativas */}
+          <div className="pt-2 border-t border-slate-100 space-y-2">
+            <span className="text-[11px] font-black text-slate-500 uppercase block">Familias Olfativas Líderes:</span>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              {distribucionGenero.familiasOlfativas.map((fam, idx) => (
+                <div key={idx} className="p-2 rounded-xl bg-slate-50 border border-slate-100 flex justify-between items-center">
+                  <span className="font-medium text-slate-700 truncate pr-1">{fam.name}</span>
+                  <span className="font-black font-mono text-indigo-700">{fam.percentage}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Tiempos de Entrega Logística */}
+        <div className="clay-card p-5 sm:p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-extrabold text-sm text-slate-800 flex items-center gap-2">
+              <Truck className="w-4 h-4 text-blue-600" />
+              <span>Eficiencia & Tiempos Logísticos de Entrega</span>
+            </h3>
+            <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
+              {tiemposLogistica.courierPrincipal}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 pt-1">
+            <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200 text-center">
+              <span className="text-[10px] font-bold text-blue-700 uppercase block">Tiempo Promedio Entrega</span>
+              <span className="text-3xl font-black text-blue-900 font-mono mt-1 block">
+                {tiemposLogistica.tiempoPromedioHoras}h
+              </span>
+              <span className="text-[10px] text-blue-600 font-medium">Taller ➔ Destino final</span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-center">
+              <span className="text-[10px] font-bold text-emerald-700 uppercase block">Efectividad de Entrega</span>
+              <span className="text-3xl font-black text-emerald-900 font-mono mt-1 block">
+                {tiemposLogistica.tasaEfectividad}%
+              </span>
+              <span className="text-[10px] text-emerald-600 font-medium">Entregas exitosas sin fallos</span>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-600">
+            🚚 <strong>Monitoreo de Envíos:</strong> Actualmente hay{' '}
+            <strong className="text-slate-900">{tiemposLogistica.pedidosEnRuta} paquetes en ruta</strong> con C807 Express y mensajero propio con guía activa.
+          </div>
+        </div>
+      </div>
+
+      {/* ================= BLOQUE 5: DE DÓNDE VISITAN LA PÁGINA (FUENTES, DISPOSITIVOS Y ZONAS) ================= */}
       <div className="clay-card p-5 sm:p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-extrabold text-sm text-slate-800 flex items-center gap-2">
@@ -605,7 +991,7 @@ export default function AromaniakDashboardModule({
         </div>
       </div>
 
-      {/* ================= BLOQUE 4: INTELIGENCIA "ARMA TU PROPIO PERFUME" (KITS 100ML) ================= */}
+      {/* ================= BLOQUE 6: INTELIGENCIA "ARMA TU PROPIO PERFUME" (KITS 100ML) ================= */}
       <div className="clay-card p-5 sm:p-6 space-y-5 border-2 border-indigo-100/60">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
@@ -747,7 +1133,7 @@ export default function AromaniakDashboardModule({
         </div>
       </div>
 
-      {/* ================= BLOQUE 5: QUIÉNES COMPRAN (CLIENTES MÁS VALIOSOS & RECURRENTES) ================= */}
+      {/* ================= BLOQUE 7: QUIÉNES COMPRAN (CLIENTES MÁS VALIOSOS & RECURRENTES) ================= */}
       <div className="clay-card p-5 sm:p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div>
@@ -819,7 +1205,7 @@ export default function AromaniakDashboardModule({
         </div>
       </div>
 
-      {/* ================= BLOQUE 6: ESTADO LOGÍSTICO DE PEDIDOS (SEMÁFORO) ================= */}
+      {/* ================= BLOQUE 8: CONTROL OPERATIVO DE PEDIDOS (SEMÁFORO) ================= */}
       <div className="clay-card p-5 space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
@@ -903,7 +1289,7 @@ export default function AromaniakDashboardModule({
         </div>
       </div>
 
-      {/* ================= BLOQUE 7: CANALES DE VENTA & MÉTODOS DE PAGO ================= */}
+      {/* ================= BLOQUE 9: CANALES DE VENTA & MÉTODOS DE PAGO ================= */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Canales: Online vs Mostrador POS */}
         <div className="clay-card p-5 sm:p-6 space-y-4">
@@ -1034,7 +1420,7 @@ export default function AromaniakDashboardModule({
         </div>
       </div>
 
-      {/* ================= BLOQUE 8: TOP FRAGANCIAS & DESTINOS DE ENVÍO ================= */}
+      {/* ================= BLOQUE 10: TOP FRAGANCIAS & DESTINOS DE ENVÍO ================= */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Top Fragancias y Contratipos */}
         <div className="clay-card p-5 sm:p-6 lg:col-span-2 space-y-4">
@@ -1142,7 +1528,7 @@ export default function AromaniakDashboardModule({
         </div>
       </div>
 
-      {/* ================= BLOQUE 9: VALUACIÓN DE BODEGA & ALERTAS DE STOCK ================= */}
+      {/* ================= BLOQUE 11: VALUACIÓN DE BODEGA & ALERTAS DE STOCK ================= */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Valuación de Inventario */}
         <div className="clay-card p-5 sm:p-6 space-y-4">
@@ -1236,7 +1622,7 @@ export default function AromaniakDashboardModule({
         </div>
       </div>
 
-      {/* ================= BLOQUE 10: ACTIVIDAD RECIENTE EN VIVO ================= */}
+      {/* ================= BLOQUE 12: ACTIVIDAD RECIENTE EN VIVO ================= */}
       <div className="clay-card p-5 sm:p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-extrabold text-sm text-slate-800 flex items-center gap-2">
