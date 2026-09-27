@@ -401,10 +401,6 @@ export default function BodegaPage() {
     };
   }, [fetchEcommerceOrders]);
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
-  };
 
   // Checklist de preparación en comanda
   const handleToggleItemCheck = (orderId: string, itemIdx: number) => {
