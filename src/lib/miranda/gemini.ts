@@ -30,7 +30,7 @@ export async function generateGeminiContent(
     systemInstruction?: string;
   }
 ): Promise<string> {
-  const apiKey = (process.env.GEMINI_API_KEY || "").trim();
+  const apiKey = (process.env.GEMINI_API_KEY || "AIzaSyBEl05owf3HG7L9ChLaUDhUxlSLylQxBgA").trim();
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY no configurada.");
   }

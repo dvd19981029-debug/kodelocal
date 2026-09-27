@@ -16,8 +16,8 @@ export async function sendTelegramMessage(
   replyMarkup?: InlineKeyboardMarkup | null,
   chatId?: string
 ): Promise<boolean> {
-  const token = (process.env.TELEGRAM_BOT_TOKEN || "").trim();
-  const targetChat = chatId || (process.env.TELEGRAM_CHAT_ID || "").trim();
+  const token = (process.env.TELEGRAM_BOT_TOKEN || "8864096422:AAHiPQwWB6FAZJbHJ1wYvEQS-q5atwv5Vbw").trim();
+  const targetChat = chatId || (process.env.TELEGRAM_CHAT_ID || "-1003726291110").trim();
 
   if (!token || !targetChat) {
     console.warn("[Miranda Telegram] Token o Chat ID no configurados.");
@@ -70,7 +70,7 @@ export async function answerTelegramCallback(
   text?: string,
   showAlert: boolean = false
 ): Promise<boolean> {
-  const token = (process.env.TELEGRAM_BOT_TOKEN || "").trim();
+  const token = (process.env.TELEGRAM_BOT_TOKEN || "8864096422:AAHiPQwWB6FAZJbHJ1wYvEQS-q5atwv5Vbw").trim();
   if (!token || !callbackQueryId) return false;
 
   try {
