@@ -65,6 +65,8 @@ export async function getWompiToken(): Promise<string> {
 export interface CreatePaymentLinkParams {
   orderNumber: string;
   amount: number;
+  productName?: string;
+  productDescription?: string;
   customerName?: string;
   customerEmail?: string;
   customerPhone?: string;
@@ -90,7 +92,7 @@ export async function createWompiPaymentLink(params: CreatePaymentLinkParams): P
   const payload: any = {
     identificadorEnlaceComercio: params.orderNumber,
     monto: Number(params.amount.toFixed(2)),
-    nombreProducto: `Pedido Aromaniak #${params.orderNumber}`,
+    nombreProducto: params.productName || `Pedido Aromaniak #${params.orderNumber}`,
     formaPago: {
       permitirTarjetaCreditoDebido: true,
       permitirPagoConPuntoAgricola: true,
@@ -99,7 +101,7 @@ export async function createWompiPaymentLink(params: CreatePaymentLinkParams): P
       permitePagoQuickPay: true,
     },
     infoProducto: {
-      descripcionProducto: `Perfumes y fragancias finas Aromaniak SV - Pedido #${params.orderNumber}`,
+      descripcionProducto: params.productDescription || `Perfumes y fragancias finas Aromaniak SV - Pedido #${params.orderNumber}`,
     },
     configuracion: {
       urlRedirect: params.redirectUrl,
