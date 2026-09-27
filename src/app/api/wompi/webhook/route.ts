@@ -39,7 +39,34 @@ export async function POST(request: Request) {
     console.log(`💳 Webhook Wompi recibido: Orden=${orderNumber} Resultado=${ResultadoTransaccion} Tx=${IdTransaccion} Real=${EsProductiva}`);
 
     if (orderNumber && isApproved) {
-      // Buscar pedido
+      // 1. Sincronizar enlace en public.wompi_enlaces si corresponde al módulo KÖDE
+      try {
+        const { queryKode } = await import('@/lib/kodeDb');
+        const updateKodeRes = await queryKode(
+          `UPDATE public.wompi_enlaces
+           SET estado = 'PAGADO',
+               transaccion_id = $1,
+               codigo_autorizacion = $2,
+               fecha_pago = NOW(),
+               updated_at = NOW()
+           WHERE referencia = $3 OR (id_enlace IS NOT NULL AND id_enlace = $4)
+           RETURNING id, referencia, estado, codigo_autorizacion`,
+          [
+            IdTransaccion ? String(IdTransaccion) : null,
+            CodigoAutorizacion ? String(CodigoAutorizacion) : null,
+            orderNumber,
+            EnlacePago?.IdEnlace ? Number(EnlacePago.IdEnlace) : null,
+          ]
+        );
+
+        if (updateKodeRes.rowCount && updateKodeRes.rowCount > 0) {
+          console.log(`✅ Enlace KÖDE actualizado a PAGADO: ${orderNumber} (Auto: ${CodigoAutorizacion})`);
+        }
+      } catch (kodeErr) {
+        console.error('Error actualizando wompi_enlaces en webhook:', kodeErr);
+      }
+
+      // 2. Buscar si corresponde a un pedido de ecommerce
       const order = await prisma.ecommerceOrder.findFirst({
         where: { orderNumber },
       });

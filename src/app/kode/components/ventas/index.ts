@@ -8,4 +8,5 @@ export * from './ClienteFichaView';
 export * from './VentasHub';
 export * from './NuevoClienteForm';
 export * from './NuevoPedidoForm';
+export * from './WompiEnlacesView';
 

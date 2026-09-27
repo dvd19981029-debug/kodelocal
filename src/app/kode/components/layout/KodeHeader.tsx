@@ -72,6 +72,8 @@ export const KodeHeader: React.FC<KodeHeaderProps> = ({
                     ? 'Listado Pedidos'
                     : ventasView === 'ficha_cliente'
                     ? 'Ficha de Cliente'
+                    : ventasView === 'wompi_enlaces'
+                    ? 'Enlaces Wompi'
                     : 'Catálogo'}
                 </span>
               </>

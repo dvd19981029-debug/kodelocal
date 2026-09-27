@@ -97,9 +97,6 @@ export function NuevoPedidoForm({
   const [pagoInputDoc, setPagoInputDoc] = useState<string>('');
   const [pagoInputComprobante, setPagoInputComprobante] = useState<string>('');
   const [subiendoComprobante, setSubiendoComprobante] = useState(false);
-  const [generandoEnlaceWompi, setGenerandoEnlaceWompi] = useState(false);
-  const [wompiLinkGenerado, setWompiLinkGenerado] = useState<{ urlEnlace: string; orderNumber: string } | null>(null);
-  const [wompiCopiado, setWompiCopiado] = useState(false);
 
   // Aplicar initialCliente o initialPerfume si se recibieron
   useEffect(() => {
@@ -327,66 +324,6 @@ export function NuevoPedidoForm({
     return Math.max(0, totalPedido - totalPagadoPedido);
   }, [totalPedido, totalPagadoPedido]);
 
-  // Helpers para Pasarela Wompi
-  const handleGenerarEnlaceWompi = async () => {
-    const montoCalculado = parseFloat(pagoInputMonto) || balancePendiente || totalPedido;
-    if (montoCalculado <= 0) {
-      showToast('Ingresa un monto válido para generar el enlace de pago ($)', 'error');
-      return;
-    }
-
-    try {
-      setGenerandoEnlaceWompi(true);
-      const res = await fetch('/api/kode/wompi/create-link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          monto: montoCalculado,
-          clienteNombre: clienteNombre.trim() || undefined,
-          clienteTelefono: clienteTelefono.trim() || undefined,
-          clienteEmail: clienteEmail.trim() || undefined,
-        }),
-      });
-
-      const data = await res.json();
-      if (data.success && data.urlEnlace) {
-        setWompiLinkGenerado({
-          urlEnlace: data.urlEnlace,
-          orderNumber: data.orderNumber,
-        });
-        showToast('¡Enlace de pago Wompi generado con éxito!', 'success');
-        if (!pagoInputMonto) {
-          setPagoInputMonto(montoCalculado.toFixed(2));
-        }
-      } else {
-        showToast(data.error || 'No se pudo generar el enlace con Wompi', 'error');
-      }
-    } catch (err: any) {
-      showToast(err.message || 'Error al conectar con Wompi', 'error');
-    } finally {
-      setGenerandoEnlaceWompi(false);
-    }
-  };
-
-  const handleCopiarWompiLink = (url: string) => {
-    if (navigator?.clipboard) {
-      navigator.clipboard.writeText(url);
-    }
-    setWompiCopiado(true);
-    showToast('Enlace de Wompi copiado al portapapeles', 'success');
-    setTimeout(() => setWompiCopiado(false), 3000);
-  };
-
-  const handleCompartirWhatsAppWompi = () => {
-    if (!wompiLinkGenerado?.urlEnlace) return;
-    const phone = clienteTelefono.replace(/\D/g, '');
-    const cleanPhone = phone.startsWith('503') ? phone : `503${phone}`;
-    const montoCalculado = parseFloat(pagoInputMonto) || balancePendiente || totalPedido;
-    const nombreCliente = clienteNombre ? ` ${clienteNombre.trim()}` : '';
-    const mensaje = `Hola${nombreCliente}! Te compartimos el enlace seguro de pago de KÖDE por un monto de $${montoCalculado.toFixed(2)} (Tarjeta de Crédito / Débito / Banco Agrícola): ${wompiLinkGenerado.urlEnlace}`;
-    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(mensaje)}`, '_blank');
-  };
-
   // Agregar Pago
   const handleAgregarPago = () => {
     const monto = parseFloat(pagoInputMonto);
@@ -400,8 +337,6 @@ export function NuevoPedidoForm({
       return;
     }
 
-    const esWompiActual = forma.nombre.toLowerCase().includes('wompi') || forma.id === '1006';
-
     const nuevoPago: PagoRegistroItem = {
       id: `${Date.now()}`,
       forma_pago_id: forma.id,
@@ -410,14 +345,13 @@ export function NuevoPedidoForm({
       monto,
       num_documento_auto: pagoInputDoc.trim() || undefined,
       comprobante_url: pagoInputComprobante.trim() || null,
-      observaciones: esWompiActual && wompiLinkGenerado ? `Enlace Wompi: ${wompiLinkGenerado.urlEnlace}` : '',
+      observaciones: '',
     };
 
     setPagosPedido([...pagosPedido, nuevoPago]);
     setPagoInputMonto('');
     setPagoInputDoc('');
     setPagoInputComprobante('');
-    setWompiLinkGenerado(null);
     showToast(`Pago de $${monto.toFixed(2)} (${forma.nombre}) agregado`, 'success');
   };
 
@@ -1126,164 +1060,59 @@ export function NuevoPedidoForm({
                   const montoParaWompi = parseFloat(pagoInputMonto) || balancePendiente || totalPedido;
 
                   return (
-                    <>
-                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                        <div className="sm:col-span-5">
-                          <label className="block text-[10px] font-bold text-slate-600 mb-1 uppercase">
-                            Forma de Pago *
-                          </label>
-                          <select
-                            value={pagoInputFormaId}
-                            onChange={(e) => {
-                              setPagoInputFormaId(e.target.value);
-                              setWompiLinkGenerado(null);
-                            }}
-                            className="clay-input w-full text-xs font-bold bg-white cursor-pointer"
-                          >
-                            {formasPago.filter((fp) => fp.activo !== false).map((fp) => (
-                              <option key={fp.id} value={fp.id}>
-                                {fp.nombre} ({fp.tipo})
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div className="sm:col-span-3">
-                          <label className="block text-[10px] font-bold text-slate-600 mb-1 uppercase">
-                            Monto ($) *
-                          </label>
-                          <input
-                            type="number"
-                            min="0.01"
-                            step="0.01"
-                            placeholder={balancePendiente > 0 ? balancePendiente.toFixed(2) : '0.00'}
-                            value={pagoInputMonto}
-                            onChange={(e) => setPagoInputMonto(e.target.value)}
-                            className="clay-input w-full text-xs font-mono font-bold"
-                          />
-                        </div>
-
-                        <div className="sm:col-span-4">
-                          <label className="block text-[10px] font-bold text-slate-600 mb-1 uppercase flex items-center justify-between">
-                            <span>{esWompi ? 'No. Auto Wompi' : 'No. Voucher / Ref'}</span>
-                            {esWompi && (
-                              <span className="text-[9px] font-bold text-indigo-600 lowercase bg-indigo-50 px-1 rounded">
-                                opcional o manual
-                              </span>
-                            )}
-                          </label>
-                          <input
-                            type="text"
-                            placeholder={esWompi ? 'Ej. 984723 o Auto Wompi' : 'Ej. TRF-12345'}
-                            value={pagoInputDoc}
-                            onChange={(e) => setPagoInputDoc(e.target.value)}
-                            className={`clay-input w-full text-xs font-mono ${
-                              esWompi ? 'font-bold border-indigo-300 text-indigo-900 bg-indigo-50/20' : 'font-medium'
-                            }`}
-                          />
-                        </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                      <div className="sm:col-span-5">
+                        <label className="block text-[10px] font-bold text-slate-600 mb-1 uppercase">
+                          Forma de Pago *
+                        </label>
+                        <select
+                          value={pagoInputFormaId}
+                          onChange={(e) => setPagoInputFormaId(e.target.value)}
+                          className="clay-input w-full text-xs font-bold bg-white cursor-pointer"
+                        >
+                          {formasPago.filter((fp) => fp.activo !== false).map((fp) => (
+                            <option key={fp.id} value={fp.id}>
+                              {fp.nombre} ({fp.tipo})
+                            </option>
+                          ))}
+                        </select>
                       </div>
 
-                      {/* Asistente Especial de Pasarela Wompi */}
-                      {esWompi && (
-                        <div className="p-3 bg-gradient-to-r from-violet-50 via-indigo-50/80 to-purple-50 rounded-xl border border-indigo-200/90 space-y-2.5 shadow-2xs animate-in fade-in duration-150">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="text-base">💳</span>
-                              <div>
-                                <span className="text-xs font-extrabold text-indigo-950 block">
-                                  Pasarela Wompi (Tarjeta Crédito / Débito)
-                                </span>
-                                <span className="text-[11px] text-slate-600 block">
-                                  Genera un enlace de cobro si lo deseas, o si ya tienes la autorización solo ingrésala arriba.
-                                </span>
-                              </div>
-                            </div>
-                            <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-white border border-indigo-200 px-2 py-0.5 rounded-full shadow-2xs">
-                              Wompi SV
+                      <div className="sm:col-span-3">
+                        <label className="block text-[10px] font-bold text-slate-600 mb-1 uppercase">
+                          Monto ($) *
+                        </label>
+                        <input
+                          type="number"
+                          min="0.01"
+                          step="0.01"
+                          placeholder={balancePendiente > 0 ? balancePendiente.toFixed(2) : '0.00'}
+                          value={pagoInputMonto}
+                          onChange={(e) => setPagoInputMonto(e.target.value)}
+                          className="clay-input w-full text-xs font-mono font-bold"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-4">
+                        <label className="block text-[10px] font-bold text-slate-600 mb-1 uppercase flex items-center justify-between">
+                          <span>{esWompi ? 'No. Auto Wompi' : 'No. Voucher / Ref'}</span>
+                          {esWompi && (
+                            <span className="text-[9px] font-bold text-indigo-600 lowercase bg-indigo-50 px-1 rounded">
+                              código de aprobación
                             </span>
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-2 pt-0.5">
-                            <button
-                              type="button"
-                              disabled={generandoEnlaceWompi || montoParaWompi <= 0}
-                              onClick={handleGenerarEnlaceWompi}
-                              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer transition-all disabled:opacity-50"
-                            >
-                              {generandoEnlaceWompi ? (
-                                <>
-                                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                  <span>Generando enlace...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Link2 className="w-3.5 h-3.5" />
-                                  <span>⚡ Generar Enlace de Pago (${montoParaWompi.toFixed(2)})</span>
-                                </>
-                              )}
-                            </button>
-
-                            {wompiLinkGenerado && (
-                              <span className="text-[11px] text-emerald-700 font-bold flex items-center gap-1 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                Enlace generado
-                              </span>
-                            )}
-                          </div>
-
-                          {wompiLinkGenerado && (
-                            <div className="bg-white p-2.5 rounded-lg border border-indigo-200 space-y-2 shadow-2xs">
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="text"
-                                  readOnly
-                                  value={wompiLinkGenerado.urlEnlace}
-                                  className="w-full text-xs font-mono bg-slate-50 border border-slate-200 rounded px-2.5 py-1.5 text-slate-800 select-all font-medium"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => handleCopiarWompiLink(wompiLinkGenerado.urlEnlace)}
-                                  className="px-3 py-1.5 bg-slate-800 hover:bg-black text-white text-xs font-bold rounded-lg flex items-center gap-1 cursor-pointer shrink-0 shadow-2xs"
-                                >
-                                  <Copy className="w-3.5 h-3.5" />
-                                  <span>{wompiCopiado ? 'Copiado' : 'Copiar'}</span>
-                                </button>
-                                <a
-                                  href={wompiLinkGenerado.urlEnlace}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-lg flex items-center gap-1 cursor-pointer shrink-0"
-                                >
-                                  <ExternalLink className="w-3.5 h-3.5" />
-                                  <span>Abrir</span>
-                                </a>
-                              </div>
-
-                              {clienteTelefono && (
-                                <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
-                                  <span className="text-[11px] text-slate-600">
-                                    Enviar a WhatsApp ({clienteTelefono}):
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={handleCompartirWhatsAppWompi}
-                                    className="text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-md flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
-                                  >
-                                    <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
-                                    <span>Compartir por WhatsApp</span>
-                                  </button>
-                                </div>
-                              )}
-
-                              <p className="text-[10px] text-slate-500 leading-tight">
-                                💡 Al recibir la confirmación del pago del cliente, escribe el <strong>No. de Autorización</strong> en el campo de arriba y haz clic en <strong>"+ Agregar Abono / Pago"</strong>.
-                              </p>
-                            </div>
                           )}
-                        </div>
-                      )}
-                    </>
+                        </label>
+                        <input
+                          type="text"
+                          placeholder={esWompi ? 'Ej. 984723 o Auto Wompi' : 'Ej. TRF-12345'}
+                          value={pagoInputDoc}
+                          onChange={(e) => setPagoInputDoc(e.target.value)}
+                          className={`clay-input w-full text-xs font-mono ${
+                            esWompi ? 'font-bold border-indigo-300 text-indigo-900 bg-indigo-50/20' : 'font-medium'
+                          }`}
+                        />
+                      </div>
+                    </div>
                   );
                 })()}
 

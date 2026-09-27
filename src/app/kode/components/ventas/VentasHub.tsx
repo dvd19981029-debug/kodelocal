@@ -7,6 +7,7 @@ import {
   Users,
   ListOrdered,
   Sparkles,
+  CreditCard,
 } from 'lucide-react';
 import { VentasView } from '../../types';
 
@@ -131,6 +132,22 @@ export function VentasHub({
             <h3 className="text-sm font-black text-slate-900">CATALOGO</h3>
             <span className="text-[11px] text-slate-400 font-bold uppercase">
               {catCount} FRAGANCIAS
+            </span>
+          </div>
+        </div>
+
+        {/* Tarjeta ENLACES WOMPI */}
+        <div
+          onClick={() => navigateTo('wompi_enlaces')}
+          className="clay-card p-5 cursor-pointer flex items-center gap-4 transition-all hover:scale-[1.02] hover:border-violet-300"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-violet-50 border border-violet-200 flex items-center justify-center text-violet-600 shrink-0 shadow-inner">
+            <CreditCard className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-sm font-black text-slate-900">ENLACES WOMPI</h3>
+            <span className="text-[11px] text-violet-600 font-bold uppercase">
+              GENERAR COBROS
             </span>
           </div>
         </div>

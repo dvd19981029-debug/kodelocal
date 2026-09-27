@@ -26,6 +26,7 @@ import {
   PedidosTabla,
   ClientesTabla,
   ClienteFichaView,
+  WompiEnlacesView,
 } from './components/ventas';
 import {
   CatalogoGrid,
@@ -921,6 +922,34 @@ export default function KodeSystemPage() {
                   togglingActivoId={togglingActivoId}
                   onBack={() => setVentasView('hub')}
                   titulo="Catálogo de Fragancias KÖDE"
+                />
+              )}
+
+              {/* VISTA DE ENLACES DE COBRO WOMPI */}
+              {ventasView === 'wompi_enlaces' && (
+                <WompiEnlacesView
+                  vendedoras={vendedoras}
+                  vendedoraSeleccionada={vendedoraSeleccionada}
+                  onVolver={() => setVentasView('hub')}
+                  onCrearPedidoConPago={(pagoData) => {
+                    if (pagoData.clienteNombre || pagoData.clienteTelefono) {
+                      const telClean = (pagoData.clienteTelefono || '').replace(/\D/g, '').slice(-8);
+                      const match = directorioClientes.find(
+                        (c) =>
+                          (telClean && c.telefono.includes(telClean)) ||
+                          (pagoData.clienteNombre && c.nombre.toLowerCase().includes(pagoData.clienteNombre.toLowerCase()))
+                      );
+                      if (match) {
+                        setPedidoInitialCliente(match);
+                      }
+                    }
+                    setVentasView('nuevo_pedido');
+                    showToast(
+                      `Creando pedido con pago Wompi (${pagoData.codigoAutorizacion ? `Auto #${pagoData.codigoAutorizacion}` : `$${pagoData.monto.toFixed(2)}`})`,
+                      'info'
+                    );
+                  }}
+                  showToast={showToast}
                 />
               )}
             </div>

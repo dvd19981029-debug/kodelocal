@@ -168,9 +168,28 @@ export interface CompraGasto {
   estado_pago: string;
 }
 
+export interface WompiEnlaceItem {
+  id: number;
+  id_enlace?: number;
+  referencia: string;
+  monto: number;
+  cliente_nombre?: string;
+  cliente_telefono?: string;
+  concepto?: string;
+  url_enlace: string;
+  url_qr_enlace?: string;
+  vendedora_id?: string;
+  vendedora_nombre?: string;
+  estado: 'PENDIENTE' | 'PAGADO' | 'CANCELADO' | string;
+  transaccion_id?: string;
+  codigo_autorizacion?: string;
+  fecha_pago?: string;
+  created_at: string;
+}
+
 export type NavSection = 'VENTAS' | 'INVENTARIO' | 'FABRICACION' | 'LOGISTICA' | 'INTELIGENCIA_NEGOCIOS';
 
-export type VentasView = 'hub' | 'nuevo_pedido' | 'nuevo_cliente' | 'clientes' | 'pedidos' | 'catalogo' | 'ficha_cliente';
+export type VentasView = 'hub' | 'nuevo_pedido' | 'nuevo_cliente' | 'clientes' | 'pedidos' | 'catalogo' | 'ficha_cliente' | 'wompi_enlaces';
 
 export type FabView = 'hub' | 'compra_pendiente' | 'por_fabricar';
 
