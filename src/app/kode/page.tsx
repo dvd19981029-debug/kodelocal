@@ -11,6 +11,9 @@ import {
   KodeHeader,
 } from './components/layout';
 import {
+  KodeLoginScreen,
+} from './components/auth';
+import {
   AsignarGuiaModal,
   DteResultModal,
   ComprobanteLightboxModal,
@@ -112,6 +115,16 @@ export default function KodeSystemPage() {
   const [formasPago, setFormasPago] = useState<FormaPagoItem[]>([]);
   const [clientesDb, setClientesDb] = useState<ClienteItem[]>([]);
   const [vendedoraSeleccionada, setVendedoraSeleccionada] = useState<string>('');
+
+  // Autenticación de KÖDE
+  const [currentUser, setCurrentUser] = useState<{
+    id: string;
+    nombre: string;
+    email: string;
+    rol: string;
+    username?: string;
+  } | null>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   // Loading & Toasts
   const [loading, setLoading] = useState(false);
@@ -261,9 +274,59 @@ export default function KodeSystemPage() {
     }
   };
 
+  // Comprobar sesión de usuario KÖDE al montar
   useEffect(() => {
-    fetchCatalogo();
+    const checkSession = async () => {
+      try {
+        const stored = localStorage.getItem('kode_auth_user');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed && parsed.id && parsed.nombre) {
+            setCurrentUser(parsed);
+            if (parsed.rol !== 'ADMIN') {
+              setVendedoraSeleccionada(parsed.id);
+            }
+            setCheckingAuth(false);
+            return;
+          }
+        }
+
+        const res = await fetch('/api/kode/auth/me');
+        const data = await res.json();
+        if (data.success && data.authenticated && data.user) {
+          setCurrentUser(data.user);
+          localStorage.setItem('kode_auth_user', JSON.stringify(data.user));
+          if (data.user.rol !== 'ADMIN') {
+            setVendedoraSeleccionada(data.user.id);
+          }
+        } else {
+          setCurrentUser(null);
+        }
+      } catch (err) {
+        console.error('Error verificando sesión KÖDE:', err);
+      } finally {
+        setCheckingAuth(false);
+      }
+    };
+
+    checkSession();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/kode/auth/logout', { method: 'POST' });
+    } catch (e) {}
+    localStorage.removeItem('kode_auth_user');
+    setCurrentUser(null);
+    showToast('Sesión cerrada correctamente', 'info');
+  };
+
+  useEffect(() => {
     fetchVendedoras();
+
+    if (!currentUser) return;
+
+    fetchCatalogo();
     fetchPedidos();
     fetchInsumos();
     fetchFormasPago();
@@ -275,7 +338,7 @@ export default function KodeSystemPage() {
     }, 6000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [currentUser]);
 
   // Directorio consolidado de clientes (base de datos + pedidos históricos)
   const directorioClientes = useMemo(() => {
@@ -738,6 +801,36 @@ export default function KodeSystemPage() {
     return { rojos, amarillos, azules, total: pedidos.length, totalVentas, totalGastosCompras };
   }, [pedidos, compras]);
 
+  // Pantalla de carga mientras se verifica la sesión
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-[#f1f4f9] flex flex-col items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center font-black text-2xl shadow-md animate-pulse">
+            K
+          </div>
+          <span className="text-xs font-bold text-slate-500">Cargando KÖDE...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no está autenticado, mostrar pantalla de inicio de sesión
+  if (!currentUser) {
+    return (
+      <KodeLoginScreen
+        vendedoras={vendedoras}
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+          if (user.rol !== 'ADMIN') {
+            setVendedoraSeleccionada(user.id);
+          }
+        }}
+        showToast={showToast}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f1f4f9] text-slate-800 flex font-sans antialiased overflow-x-hidden">
       {/* Toast Notificación */}
@@ -787,6 +880,8 @@ export default function KodeSystemPage() {
         vendedoraSeleccionada={vendedoraSeleccionada}
         setVendedoraSeleccionada={setVendedoraSeleccionada}
         vendedoras={vendedoras}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
 
       {/* ============================================================== */}
@@ -805,6 +900,8 @@ export default function KodeSystemPage() {
           setBiView={setBiView}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
+          currentUser={currentUser}
+          onLogout={handleLogout}
           onRefreshAll={() => {
             fetchPedidos();
             fetchInsumos();

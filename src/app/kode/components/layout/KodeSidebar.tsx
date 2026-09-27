@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { DollarSign, Package, FlaskConical, Truck, TrendingUp, User, X, Menu } from 'lucide-react';
+import { DollarSign, Package, FlaskConical, Truck, TrendingUp, User, X, Menu, LogOut } from 'lucide-react';
 import { NavSection, VentasView, FabView, BiView, Vendedora } from '../../types';
 
 interface KodeSidebarProps {
@@ -20,6 +20,8 @@ interface KodeSidebarProps {
   vendedoraSeleccionada: string;
   setVendedoraSeleccionada: (id: string) => void;
   vendedoras: Vendedora[];
+  currentUser?: any;
+  onLogout?: () => void;
 }
 
 export const KodeSidebar: React.FC<KodeSidebarProps> = ({
@@ -38,6 +40,8 @@ export const KodeSidebar: React.FC<KodeSidebarProps> = ({
   vendedoraSeleccionada,
   setVendedoraSeleccionada,
   vendedoras,
+  currentUser,
+  onLogout,
 }) => {
   return (
     <aside
@@ -193,15 +197,29 @@ export const KodeSidebar: React.FC<KodeSidebarProps> = ({
       </div>
 
       {/* Vendedora / Perfil activo al pie */}
-      <div className={`p-3 border-t border-slate-100 bg-slate-50/50 m-2 rounded-2xl ${sidebarOpen ? 'block' : 'block lg:hidden'}`}>
-        <div className="flex items-center gap-2 mb-1.5">
-          <User className="w-3.5 h-3.5 text-indigo-600" />
-          <span className="text-[11px] font-bold text-slate-500">Vendedora en Turno:</span>
+      <div className={`p-3 border-t border-slate-100 bg-slate-50/70 m-2 rounded-2xl ${sidebarOpen ? 'block' : 'block lg:hidden'} border border-slate-200/60`}>
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <User className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <span className="text-[11px] font-bold text-slate-800 truncate">
+              {currentUser ? currentUser.nombre : 'Vendedora en Turno:'}
+            </span>
+          </div>
+          {onLogout && (
+            <button
+              type="button"
+              onClick={onLogout}
+              title="Cerrar Sesión"
+              className="text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 cursor-pointer transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
         <select
           value={vendedoraSeleccionada}
           onChange={(e) => setVendedoraSeleccionada(e.target.value)}
-          className="w-full bg-white border border-slate-200 rounded-xl px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer shadow-sm"
+          className="w-full bg-white border border-slate-200 rounded-xl px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer shadow-2xs"
         >
           {vendedoras.map((v) => (
             <option key={v.id} value={v.id}>

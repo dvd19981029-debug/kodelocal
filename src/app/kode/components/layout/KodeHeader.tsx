@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Menu, ChevronRight, RefreshCw, Search } from 'lucide-react';
+import { Menu, ChevronRight, RefreshCw, Search, LogOut } from 'lucide-react';
 import { NavSection, VentasView, FabView, BiView } from '../../types';
 
 interface KodeHeaderProps {
@@ -16,6 +16,8 @@ interface KodeHeaderProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   onRefreshAll: () => Promise<void> | void;
+  currentUser?: any;
+  onLogout?: () => void;
 }
 
 export const KodeHeader: React.FC<KodeHeaderProps> = ({
@@ -30,6 +32,8 @@ export const KodeHeader: React.FC<KodeHeaderProps> = ({
   searchQuery,
   setSearchQuery,
   onRefreshAll,
+  currentUser,
+  onLogout,
 }) => {
   return (
     <header className="sticky top-0 z-20 bg-[#f1f4f9]/95 backdrop-blur-md px-3.5 sm:px-6 py-2.5 sm:py-3 border-b border-slate-200/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-4">
@@ -112,16 +116,49 @@ export const KodeHeader: React.FC<KodeHeaderProps> = ({
         </div>
       </div>
 
-      {/* Buscador */}
-      <div className="relative max-w-md w-full">
-        <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
-        <input
-          type="text"
-          placeholder={`Buscar en ${activeNav.replace('_', ' ')}...`}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
-        />
+      {/* Buscador y Usuario Conectado */}
+      <div className="flex items-center gap-2 max-w-xl w-full justify-end">
+        <div className="relative max-w-xs sm:max-w-sm w-full">
+          <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder={`Buscar en ${activeNav.replace('_', ' ')}...`}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
+          />
+        </div>
+
+        {/* Usuario y Logout */}
+        {currentUser && (
+          <div className="flex items-center gap-1.5 shrink-0">
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
+              <div className="w-6 h-6 rounded-lg bg-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0">
+                {currentUser.nombre?.charAt(0).toUpperCase() || 'U'}
+              </div>
+              <div className="text-left">
+                <span className="text-xs font-black text-slate-800 block leading-tight truncate max-w-[120px]">
+                  {currentUser.nombre}
+                </span>
+                <span className="text-[9px] text-indigo-600 font-bold uppercase block leading-tight">
+                  {currentUser.rol || 'Asesora'}
+                </span>
+              </div>
+            </div>
+
+            {onLogout && (
+              <button
+                type="button"
+                onClick={onLogout}
+                title="Cerrar Sesión KÖDE"
+                className="p-1.5 sm:px-2.5 sm:py-2 rounded-xl bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200/80 hover:border-rose-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Salir</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );
