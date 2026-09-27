@@ -1,8 +1,10 @@
 /**
- * src/lib/miranda/auth.ts - Control de Seguridad y Confidencialidad para Miranda Priestly
+ * src/lib/miranda/auth.ts - Control de Seguridad y Permisos para Miranda Priestly
  * 
- * Regla: La información confidencial, financiera, estratégica y de base de datos
- * SOLAMENTE se comparte con David y Luis.
+ * Regla de Permisos y Gobernanza:
+ * 1. David y Luis (Directores): Acceso total (métricas financieras, ganancias, márgenes, costos, briefings ejecutivos y cambios en BD).
+ * 2. Vendedoras y Equipo: Acceso operativo esencial (estado de pedidos, guías C807, tareas de tienda/bodega, datos de clientes para entregas, stock y precios de venta al público).
+ * 3. Confidencialidad: Se protegen los márgenes de ganancia, costos de compra a proveedores, dinero total recaudado y cortes de caja.
  */
 
 import { prisma } from "@/lib/prisma";
@@ -18,7 +20,7 @@ export interface TelegramSender {
 const LUIS_KNOWN_ID = 8888491350;
 
 /**
- * Determina si el remitente es David o Luis (los dos únicos autorizados para datos confidenciales).
+ * Determina si el remitente es David o Luis (los dos únicos directores con acceso a finanzas globales).
  */
 export async function isAuthorizedAdmin(sender?: TelegramSender): Promise<{ authorized: boolean; adminName: string }> {
   if (!sender) {
@@ -93,69 +95,49 @@ export async function isAuthorizedAdmin(sender?: TelegramSender): Promise<{ auth
 }
 
 /**
- * Evalúa si una consulta involucra datos confidenciales o restringidos:
- * - Finanzas, ventas, facturación, márgenes, costos, dinero.
- * - Cambios o escrituras en bases de datos.
- * - Tareas operativas internas y memorias de negocio.
- * - Datos sensibles de clientes.
+ * Evalúa si una consulta involucra datos estrictamente confidenciales de los dueños (David y Luis):
+ * - Finanzas globales, facturación total, ingresos, margen neto, utilidades, balances de caja.
+ * - Costos de compra a proveedores (cuánto nos cuesta).
+ * - Briefings ejecutivos de apertura y cierre de jornada.
+ * - Alteraciones de base de datos estructurales o cambios de costos.
  */
 export function isConfidentialQuery(query: string): boolean {
   const q = query.toLowerCase();
 
-  const confidentialKeywords = [
-    "venta",
-    "ventas",
-    "factura",
-    "facturación",
-    "facturacion",
-    "ingreso",
-    "ingresos",
-    "dinero",
-    "cuanto",
-    "cuánto",
-    "margen",
-    "márgenes",
+  const strictlyConfidentialPatterns = [
+    "facturacion total",
+    "facturación total",
+    "cuanto vendimos",
+    "cuánto vendimos",
+    "cuanto se vendio",
+    "cuánto se vendió",
+    "total vendido",
+    "ingresos totales",
+    "margen neto",
     "margenes",
-    "costo",
-    "costos",
-    "ganancia",
+    "márgenes",
+    "ganancia neta",
     "ganancias",
+    "utilidad",
     "rentabilidad",
-    "corte",
-    "caja",
-    "cierre",
+    "costo de compra",
+    "costo proveedor",
+    "cuanto nos cuesta",
+    "cuánto nos cuesta",
+    "corte de caja",
+    "cierre del dia",
+    "cierre de jornada",
+    "balance del dia",
+    "briefing matutino",
+    "briefing de apertura",
     "briefing",
-    "balance",
-    "pedido",
-    "pedidos",
-    "cliente",
-    "clientes",
-    "tarea",
-    "tareas",
-    "memoria",
-    "regla",
-    "reglas",
-    "cambio",
-    "modificar",
-    "cambiar",
-    "actualizar",
-    "precio",
-    "cost",
-    "stock",
-    "inventario",
-    "agotado",
-    "dte",
-    "guia",
-    "guía",
-    "c807",
-    "wompi",
   ];
 
-  return confidentialKeywords.some((keyword) => q.includes(keyword));
+  return strictlyConfidentialPatterns.some((pattern) => q.includes(pattern));
 }
 
 /**
- * Mensaje estándar de restricción confidencial para personal o usuarios no autorizados.
+ * Mensaje de restricción para información puramente financiera o estratégica reservada a los dueños.
  */
 export const CONFIDENTIAL_DENIED_MESSAGE =
-  "Acceso confidencial restringido. Por protocolos de gobernanza y seguridad de Aromaniak, la información financiera, métricas de ventas, inventario estratégico y administración del sistema solo están disponibles para David y Luis.";
+  "Información financiera global, márgenes de ganancia y balances estratégicos reservados exclusivamente para la dirección (David y Luis). Si necesitas consultar el estado de un pedido, tareas del equipo, stock o clientes, con gusto te asisto.";

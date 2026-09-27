@@ -233,3 +233,86 @@ export async function generateEveningBriefing(): Promise<string> {
     `Jornada cerrada.`
   );
 }
+
+export async function getOperationalStaffContextSummary(): Promise<string> {
+  const [
+    allProducts,
+    recentOrders,
+    tasks,
+  ] = await Promise.all([
+    prisma.product.findMany({
+      where: { isActive: true },
+      select: {
+        name: true,
+        officialName: true,
+        brand: true,
+        stock: true,
+        price: true,
+        unit: true,
+        puesto: true,
+      },
+      orderBy: { stock: "asc" },
+    }),
+    prisma.ecommerceOrder.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      select: {
+        orderNumber: true,
+        orderStatus: true,
+        customerName: true,
+        customerPhone: true,
+        department: true,
+        municipality: true,
+        shippingAddress: true,
+        trackingNumber: true,
+        items: {
+          select: {
+            productName: true,
+            quantity: true,
+          },
+        },
+      },
+    }),
+    prisma.mirandaTask.findMany({
+      where: { status: "pending" },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    }),
+  ]);
+
+  const outOfStock = allProducts.filter((p) => p.stock <= 0);
+  const lowStock = allProducts.filter((p) => p.stock > 0 && p.stock <= 5);
+
+  const lines: string[] = [
+    `=== INFORMACIÓN OPERATIVA PARA EQUIPO Y VENDEDORAS ===`,
+    `FECHA Y HORA: ${new Date().toISOString()}`,
+    `\n1. ESTADO DE PEDIDOS RECIENTES Y LOGÍSTICA:`,
+  ];
+
+  recentOrders.forEach((o) => {
+    const itemsSummary = o.items.map((i) => `${i.quantity}x ${i.productName}`).join(", ");
+    lines.push(`- Pedido #${o.orderNumber} | Estado: ${o.orderStatus} | Cliente: ${o.customerName || "Consumidor"} (Tel: ${o.customerPhone || "N/A"}) | Destino: ${o.department || ""}, ${o.municipality || ""} | Guía: ${o.trackingNumber || "Pendiente"} | Artículos: [${itemsSummary}]`);
+  });
+
+  lines.push(`\n2. TAREAS OPERATIVAS ASIGNADAS AL PERSONAL (${tasks.length}):`);
+  if (tasks.length > 0) {
+    tasks.forEach((t) => {
+      lines.push(`- [ID #${t.id}] ${t.task} (Responsable: ${t.assignee}, Urgencia: ${t.urgency})`);
+    });
+  } else {
+    lines.push(`- No hay tareas pendientes en este momento.`);
+  }
+
+  lines.push(`\n3. CATÁLOGO Y STOCK EN TIENDA / BODEGA:`);
+  lines.push(`- Precios de venta al público oficiales: Onza $3.25-$3.75 | 1/2 Onza $1.90 | Perfume terminado $15.00`);
+  if (outOfStock.length > 0) {
+    const oos = outOfStock.map((p) => `${p.officialName ? p.officialName + " / " : ""}${p.name}`);
+    lines.push(`- Fragancias agotadas en tienda (no ofrecer): ${oos.slice(0, 10).join(", ")}`);
+  }
+  if (lowStock.length > 0) {
+    const ls = lowStock.map((p) => `${p.officialName ? p.officialName + " / " : ""}${p.name} (${p.stock} uds)`);
+    lines.push(`- Fragancias por agotarse (prioridad venta): ${ls.slice(0, 8).join(", ")}`);
+  }
+
+  return lines.join("\n");
+}

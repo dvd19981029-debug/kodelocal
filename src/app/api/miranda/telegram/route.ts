@@ -1,9 +1,10 @@
 /**
  * src/app/api/miranda/telegram/route.ts - Webhook Oficial de Telegram para Miranda Priestly
  * 
- * Regla de Confidencialidad:
- * Información financiera, ventas, inventario estratégico, métricas, cambios en BD
- * y tareas SOLO se comparten con David y Luis.
+ * Regla de Permisos y Gobernanza:
+ * 1. David y Luis (Directores): Acceso total a finanzas, utilidades, márgenes, costos y aprobación de cambios en BD.
+ * 2. Vendedoras y Equipo: Acceso operativo a estado de pedidos, guías C807, tareas de tienda, clientes y stock.
+ * 3. Confidencialidad: Se protege la facturación global, ganancias netas y costos de compra a proveedores.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -33,30 +34,24 @@ export async function POST(req: NextRequest) {
       const sender = cb.from;
 
       const auth = await isAuthorizedAdmin(sender);
-      if (!auth.authorized) {
-        await answerTelegramCallback(
-          cbId,
-          "Acceso denegado: Acción reservada exclusivamente para David y Luis.",
-          true
-        );
-        return NextResponse.json({ ok: true });
-      }
 
-      await answerTelegramCallback(cbId);
-
-      // Botones de Tareas
+      // Botones de Tareas: El personal y vendedoras SÍ pueden interactuar con sus tareas
       if (cbData.startsWith("task_done_")) {
+        await answerTelegramCallback(cbId);
         const taskId = parseInt(cbData.replace("task_done_", ""), 10);
         await prisma.mirandaTask.update({
           where: { id: taskId },
           data: { status: "completed", completedAt: new Date() },
         });
+        const completedBy = auth.authorized ? auth.adminName : (sender?.first_name || "Equipo");
         await sendTelegramMessage(
-          `<b>[TAREA #${taskId} COMPLETADA POR ${auth.adminName.toUpperCase()}]</b>`,
+          `<b>[TAREA #${taskId} COMPLETADA POR ${completedBy.toUpperCase()}]</b>`,
           null,
           chatId
         );
+        return NextResponse.json({ ok: true });
       } else if (cbData.startsWith("task_postpone_")) {
+        await answerTelegramCallback(cbId);
         const taskId = parseInt(cbData.replace("task_postpone_", ""), 10);
         await prisma.mirandaTask.update({
           where: { id: taskId },
@@ -67,7 +62,18 @@ export async function POST(req: NextRequest) {
           null,
           chatId
         );
+        return NextResponse.json({ ok: true });
       } else if (cbData.startsWith("task_cancel_")) {
+        // Cancelar tarea requiere rol directivo
+        if (!auth.authorized) {
+          await answerTelegramCallback(
+            cbId,
+            "Acceso denegado: Cancelación de tareas reservada para David y Luis.",
+            true
+          );
+          return NextResponse.json({ ok: true });
+        }
+        await answerTelegramCallback(cbId);
         const taskId = parseInt(cbData.replace("task_cancel_", ""), 10);
         await prisma.mirandaTask.update({
           where: { id: taskId },
@@ -78,51 +84,67 @@ export async function POST(req: NextRequest) {
           null,
           chatId
         );
+        return NextResponse.json({ ok: true });
       }
 
-      // Botones de Modificación de Base de Datos (2 Pasos)
-      else if (cbData.startsWith("change_approve_")) {
-        const changeId = parseInt(cbData.replace("change_approve_", ""), 10);
-        const change = await prisma.mirandaPendingChange.update({
-          where: { id: changeId },
-          data: { status: "pre_approved", approvedAt: new Date() },
-        });
+      // Botones de Modificación de Base de Datos: EXCLUSIVO para David y Luis
+      if (cbData.startsWith("change_")) {
+        if (!auth.authorized) {
+          await answerTelegramCallback(
+            cbId,
+            "Acceso denegado: Aprobación de cambios en base de datos reservada exclusivamente para David y Luis.",
+            true
+          );
+          return NextResponse.json({ ok: true });
+        }
 
-        const confirmKb = makeChangeConfirmationKeyboard(changeId);
-        const msg =
-          `<b>[CONFIRMACIÓN REQUERIDA - PASO 2/2]</b>\n` +
-          `Cambio <b>#${changeId}</b> pre-aprobado por ${auth.adminName}.\n` +
-          `<b>Destino:</b> ${change.targetDb}\n` +
-          `<b>Acción:</b> ${change.description}\n` +
-          `<b>Impacto:</b> ${change.impactAnalysis || "Sin impacto reportado"}\n\n` +
-          `¿Confirmar aplicación definitiva?`;
-        await sendTelegramMessage(msg, confirmKb, chatId);
-      } else if (cbData.startsWith("change_confirm_")) {
-        const changeId = parseInt(cbData.replace("change_confirm_", ""), 10);
-        await prisma.mirandaPendingChange.update({
-          where: { id: changeId },
-          data: {
-            status: "confirmed",
-            confirmedAt: new Date(),
-            executionResult: `Confirmado y autorizado por ${auth.adminName}.`,
-          },
-        });
-        await sendTelegramMessage(
-          `<b>[CAMBIO #${changeId} EJECUTADO EXITOSAMENTE]</b>`,
-          null,
-          chatId
-        );
-      } else if (cbData.startsWith("change_reject_")) {
-        const changeId = parseInt(cbData.replace("change_reject_", ""), 10);
-        await prisma.mirandaPendingChange.update({
-          where: { id: changeId },
-          data: { status: "rejected" },
-        });
-        await sendTelegramMessage(
-          `<b>[CAMBIO #${changeId} DESCARTADO POR ${auth.adminName.toUpperCase()}]</b>`,
-          null,
-          chatId
-        );
+        await answerTelegramCallback(cbId);
+
+        if (cbData.startsWith("change_approve_")) {
+          const changeId = parseInt(cbData.replace("change_approve_", ""), 10);
+          const change = await prisma.mirandaPendingChange.update({
+            where: { id: changeId },
+            data: { status: "pre_approved", approvedAt: new Date() },
+          });
+
+          const confirmKb = makeChangeConfirmationKeyboard(changeId);
+          const msg =
+            `<b>[CONFIRMACIÓN REQUERIDA - PASO 2/2]</b>\n` +
+            `Cambio <b>#${changeId}</b> pre-aprobado por ${auth.adminName}.\n` +
+            `<b>Destino:</b> ${change.targetDb}\n` +
+            `<b>Acción:</b> ${change.description}\n` +
+            `<b>Impacto:</b> ${change.impactAnalysis || "Sin impacto reportado"}\n\n` +
+            `¿Confirmar aplicación definitiva?`;
+          await sendTelegramMessage(msg, confirmKb, chatId);
+        } else if (cbData.startsWith("change_confirm_")) {
+          const changeId = parseInt(cbData.replace("change_confirm_", ""), 10);
+          await prisma.mirandaPendingChange.update({
+            where: { id: changeId },
+            data: {
+              status: "confirmed",
+              confirmedAt: new Date(),
+              executionResult: `Confirmado y autorizado por ${auth.adminName}.`,
+            },
+          });
+          await sendTelegramMessage(
+            `<b>[CAMBIO #${changeId} EJECUTADO EXITOSAMENTE]</b>`,
+            null,
+            chatId
+          );
+        } else if (cbData.startsWith("change_reject_")) {
+          const changeId = parseInt(cbData.replace("change_reject_", ""), 10);
+          await prisma.mirandaPendingChange.update({
+            where: { id: changeId },
+            data: { status: "rejected" },
+          });
+          await sendTelegramMessage(
+            `<b>[CAMBIO #${changeId} DESCARTADO POR ${auth.adminName.toUpperCase()}]</b>`,
+            null,
+            chatId
+          );
+        }
+
+        return NextResponse.json({ ok: true });
       }
 
       return NextResponse.json({ ok: true });
@@ -152,26 +174,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    // Verificación de autorización de seguridad (David y Luis)
+    // Verificación de perfil (Directores vs Equipo/Vendedoras)
     const auth = await isAuthorizedAdmin(sender);
 
-    if (!auth.authorized) {
-      // Si el usuario no es David ni Luis y solicita datos confidenciales o de negocio
+    if (auth.authorized) {
+      // Directores (David y Luis): acceso completo y ejecutivo
+      const result = await processMirandaInteraction(text, auth.adminName, true);
+      await sendTelegramMessage(result.text, result.replyMarkup, chatId);
+    } else {
+      // Vendedoras / Equipo:
+      // Si intentan consultar datos estrictamente financieros o balances de los dueños
       if (isConfidentialQuery(text)) {
         await sendTelegramMessage(CONFIDENTIAL_DENIED_MESSAGE, null, chatId);
         return NextResponse.json({ ok: true });
       }
 
-      // Consulta pública general
-      const publicResponse =
-        "Hola. Soy Miranda Priestly, asistente de Aromaniak. Para consultas sobre fragancias o atención al cliente, indícame qué perfume buscas. Información administrativa o financiera reservada a la dirección.";
-      await sendTelegramMessage(publicResponse, null, chatId);
-      return NextResponse.json({ ok: true });
+      // Consultas operativas permitidas (pedidos, clientes, tareas, stock y precios oficiales)
+      const staffName = sender?.first_name || "Equipo";
+      const result = await processMirandaInteraction(text, staffName, false);
+      await sendTelegramMessage(result.text, result.replyMarkup, chatId);
     }
-
-    // Usuario autorizado (David o Luis): acceso completo y ejecutivo
-    const result = await processMirandaInteraction(text, auth.adminName);
-    await sendTelegramMessage(result.text, result.replyMarkup, chatId);
 
     return NextResponse.json({ ok: true });
   } catch (error: any) {
@@ -185,6 +207,7 @@ export async function GET() {
     status: "online",
     bot: "Miranda Priestly (Aromaniak & KODE)",
     authorizedAdmins: ["Luis", "David"],
+    staffAccess: "Permitido para pedidos, tareas, clientes y stock",
     timestamp: new Date().toISOString(),
   });
 }
