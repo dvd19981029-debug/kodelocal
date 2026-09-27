@@ -222,7 +222,7 @@ export const WompiEnlacesView: React.FC<WompiEnlacesViewProps> = ({
   };
 
   // Montos rápidos sugeridos
-  const montosRapidos = [15, 20, 25, 35, 40, 50];
+  const montosRapidos = [20, 25, 35, 40, 45, 50];
 
   return (
     <div className="space-y-6 animate-in fade-in duration-150">
