@@ -648,6 +648,96 @@ model Municipio {
   @@map("municipios")
 }
 
+// ==========================================
+// MÓDULO MIRANDA PRIESTLY (IA CO-ADMINISTRACIÓN)
+// ==========================================
+
+model MirandaInteraction {
+  id                    String    @id @default(cuid())
+  location              String    @default("recepcion")
+  transcription         String    @db.Text
+  summary               String    @db.Text
+  serviceScore          Int       @default(85)
+  customerSentiment     String    @default("Neutral")
+  purchaseIntent        String    @default("Media")
+  crossSellingAttempted Boolean   @default(false)
+  crossSellingAccepted  Boolean   @default(false)
+  crossSellingProduct   String?   @default("")
+  interactionResult     String    @default("Consulta")
+  totalSaleAmount       Decimal?  @db.Decimal(10, 2)
+  speakerTag            String?   @default("")
+  rawJson               String?   @db.Text
+  createdAt             DateTime  @default(now())
+
+  @@index([createdAt])
+  @@index([location])
+  @@map("miranda_interactions")
+}
+
+model MirandaTask {
+  id             Int       @id @default(autoincrement())
+  task           String
+  assignee       String    @default("Personal")
+  urgency        String    @default("Media")
+  status         String    @default("pending") // pending, completed, postponed, cancelled
+  location       String    @default("recepcion")
+  origin         String    @default("audio") // audio, telegram, system
+  dueDate        String?
+  reminderCount  Int       @default(0)
+  lastRemindedAt DateTime?
+  createdAt      DateTime  @default(now())
+  completedAt    DateTime?
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("miranda_tasks")
+}
+
+model MirandaDemand {
+  id              String   @id @default(cuid())
+  fragrance       String
+  brand           String?
+  inspirationName String?
+  available       Boolean  @default(false)
+  details         String?
+  location        String   @default("recepcion")
+  createdAt       DateTime @default(now())
+
+  @@index([fragrance])
+  @@index([createdAt])
+  @@map("miranda_demands")
+}
+
+model MirandaBusinessMemory {
+  id          Int      @id @default(autoincrement())
+  category    String   @default("regla_negocio")
+  topic       String
+  instruction String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("miranda_business_memory")
+}
+
+model MirandaPendingChange {
+  id             Int       @id @default(autoincrement())
+  targetDb       String    // aromaniak_inventory, kode_supabase
+  actionType     String    // UPDATE, INSERT, DELETE
+  description    String
+  explanation    String?   @db.Text
+  impactAnalysis String?   @db.Text
+  payloadJson    String?   @db.Text
+  status         String    @default("pending_approval") // pending_approval, pre_approved, confirmed, rejected
+  createdAt      DateTime  @default(now())
+  approvedAt     DateTime?
+  confirmedAt    DateTime?
+  executionResult String?  @db.Text
+
+  @@index([status])
+  @@map("miranda_pending_changes")
+}
+
+
 
 
 
