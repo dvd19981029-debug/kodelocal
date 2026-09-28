@@ -51,10 +51,12 @@ import {
   PosSaleDetailModal,
   PosSidebar
 } from './components';
+import { ShoppingCart, X } from 'lucide-react';
 
 export default function PosPage() {
   const router = useRouter();
   const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
+  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   
   // Pestaña activa en el menú lateral de Punto de Venta:
   // 'nueva_orden' (o 'pos'): Terminal de venta / Cotizador
@@ -1690,7 +1692,7 @@ export default function PosPage() {
   }, [orderToInvoice, cartSubtotal]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 pb-16 max-w-[1650px] mx-auto items-start">
+    <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 pb-28 sm:pb-32 lg:pb-16 max-w-[1650px] mx-auto items-start">
       
       {/* ========================================================================= */}
       {/* MENÚ LATERAL IZQUIERDO DE PUNTO DE VENTA (DINÁMICO / EXPANDIBLE AL HOVER) */}
@@ -1724,58 +1726,194 @@ export default function PosPage() {
         {/* PESTAÑA 1: NUEVA ORDEN / COTIZADOR Y TERMINAL DE VENTA                   */}
         {/* ======================================================================= */}
         {(posTab === 'nueva_orden' || posTab === 'pos') && (
-          <div className="flex flex-col xl:flex-row gap-6">
-            <PosProductGrid
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              barcodeInput={barcodeInput}
-              setBarcodeInput={setBarcodeInput}
-              handleBarcodeSubmit={handleBarcodeSubmit}
-              categories={PERFUME_CATEGORIES}
-              selectedCategory={selectedCategory}
-              setSelectedCategory={setSelectedCategory}
-              selectedGender={selectedGender}
-              setSelectedGender={setSelectedGender}
-              displayedProducts={displayedProducts}
-              filteredProductsCount={filteredProducts.length}
-              activeEssencePrice={activeEssencePrice}
-              activeEssenceHalfPrice={activeEssenceHalfPrice}
-              cart={cart}
-              onAddToCart={addToCart}
-              onOpenEditProduct={handleOpenEditProduct}
-            />
+          <>
+            <div className="flex flex-col xl:flex-row gap-6">
+              <PosProductGrid
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                barcodeInput={barcodeInput}
+                setBarcodeInput={setBarcodeInput}
+                handleBarcodeSubmit={handleBarcodeSubmit}
+                categories={PERFUME_CATEGORIES}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                selectedGender={selectedGender}
+                setSelectedGender={setSelectedGender}
+                displayedProducts={displayedProducts}
+                filteredProductsCount={filteredProducts.length}
+                activeEssencePrice={activeEssencePrice}
+                activeEssenceHalfPrice={activeEssenceHalfPrice}
+                cart={cart}
+                onAddToCart={addToCart}
+                onOpenEditProduct={handleOpenEditProduct}
+              />
 
-            <PosCartPanel
-              cart={cart}
-              totalItemsCount={totalItemsCount}
-              clearCart={clearCart}
-              selectedCustomerObj={selectedCustomerObj}
-              tipoComprobante={tipoComprobante}
-              cartCustomerQuery={cartCustomerQuery}
-              setCartCustomerQuery={setCartCustomerQuery}
-              isCartCustomerDropdownOpen={isCartCustomerDropdownOpen}
-              setIsCartCustomerDropdownOpen={setIsCartCustomerDropdownOpen}
-              filteredCartCustomers={filteredCartCustomers}
-              handleSelectCustomer={handleSelectCustomer}
-              handleOpenNewCustomerModal={handleOpenNewCustomerModal}
-              setCustName={setCustName}
-              orderSentToast={orderSentToast}
-              setPosTab={setPosTab}
-              getItemUnitPrice={getItemUnitPrice}
-              removeFromCart={removeFromCart}
-              setItemPresentation={setItemPresentation}
-              updateQuantity={updateQuantity}
-              subtotalNeto={subtotalNeto}
-              ivaCalculado={ivaCalculado}
-              cartSubtotal={cartSubtotal}
-              handleSendOrderToBodega={handleSendOrderToBodega}
-              handleOpenQuoteModal={handleOpenQuoteModal}
-              onOpenCheckout={() => {
-                setOrderToInvoice(null);
-                setIsCheckoutOpen(true);
-              }}
-            />
-          </div>
+              {/* Panel de Carrito en Pantallas de Escritorio (xl+) */}
+              <div className="hidden xl:block">
+                <PosCartPanel
+                  cart={cart}
+                  totalItemsCount={totalItemsCount}
+                  clearCart={clearCart}
+                  selectedCustomerObj={selectedCustomerObj}
+                  tipoComprobante={tipoComprobante}
+                  cartCustomerQuery={cartCustomerQuery}
+                  setCartCustomerQuery={setCartCustomerQuery}
+                  isCartCustomerDropdownOpen={isCartCustomerDropdownOpen}
+                  setIsCartCustomerDropdownOpen={setIsCartCustomerDropdownOpen}
+                  filteredCartCustomers={filteredCartCustomers}
+                  handleSelectCustomer={handleSelectCustomer}
+                  handleOpenNewCustomerModal={handleOpenNewCustomerModal}
+                  setCustName={setCustName}
+                  orderSentToast={orderSentToast}
+                  setPosTab={setPosTab}
+                  getItemUnitPrice={getItemUnitPrice}
+                  removeFromCart={removeFromCart}
+                  setItemPresentation={setItemPresentation}
+                  updateQuantity={updateQuantity}
+                  subtotalNeto={subtotalNeto}
+                  ivaCalculado={ivaCalculado}
+                  cartSubtotal={cartSubtotal}
+                  handleSendOrderToBodega={handleSendOrderToBodega}
+                  handleOpenQuoteModal={handleOpenQuoteModal}
+                  onOpenCheckout={() => {
+                    setOrderToInvoice(null);
+                    setIsCheckoutOpen(true);
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Barra Flotante Inferior de Carrito en Dispositivos Móviles (< xl) */}
+            <div className="xl:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-3.5 py-2.5 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] pb-[calc(0.6rem+env(safe-area-inset-bottom,0px))]">
+              <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
+                <button
+                  type="button"
+                  onClick={() => setIsMobileCartOpen(true)}
+                  className="flex items-center gap-2.5 text-left min-w-0"
+                >
+                  <div className="relative w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center font-bold shadow-xs shrink-0">
+                    <ShoppingCart className="w-5 h-5" />
+                    {totalItemsCount > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 bg-indigo-600 text-white rounded-full text-[10px] font-black flex items-center justify-center shadow-xs">
+                        {totalItemsCount}
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-black text-slate-800 leading-tight">Orden Actual</span>
+                      {cart.length > 0 && (
+                        <span className="text-[10px] text-slate-400 font-medium font-mono">({totalItemsCount} uds)</span>
+                      )}
+                    </div>
+                    <span className="text-sm font-black font-mono text-indigo-600 leading-none">
+                      ${cartSubtotal.toFixed(2)}
+                    </span>
+                  </div>
+                </button>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  {cart.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOrderToInvoice(null);
+                        setIsCheckoutOpen(true);
+                      }}
+                      className="clay-btn clay-btn-success px-3 py-2 text-xs font-bold rounded-xl shadow-xs"
+                      title="Cobrar directamente"
+                    >
+                      <span>Cobrar</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setIsMobileCartOpen(true)}
+                    className="clay-btn clay-btn-primary px-3.5 py-2 text-xs font-bold rounded-xl shadow-md flex items-center gap-1.5"
+                  >
+                    <span>Ver Orden</span>
+                    {cart.length > 0 && (
+                      <span className="font-mono font-black">${cartSubtotal.toFixed(2)}</span>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal / Drawer Desplegable del Carrito en Móvil (< xl) */}
+            {isMobileCartOpen && (
+              <div className="xl:hidden fixed inset-0 z-50 flex flex-col justify-end bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+                <div 
+                  className="absolute inset-0" 
+                  onClick={() => setIsMobileCartOpen(false)} 
+                />
+                <div className="relative w-full max-h-[90vh] flex flex-col bg-[#f1f4f9] rounded-t-3xl shadow-2xl border-t border-white/80 overflow-hidden animate-in slide-in-from-bottom duration-300 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]">
+                  <div className="p-3 bg-white/90 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between shrink-0">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center font-bold">
+                        <ShoppingCart className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h3 className="font-black text-sm text-slate-800 leading-tight">Orden Actual</h3>
+                        <span className="text-[10px] text-slate-500 font-medium">{totalItemsCount} unidades</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsMobileCartOpen(false)}
+                      className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors font-bold"
+                      title="Cerrar orden"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto p-3">
+                    <PosCartPanel
+                      cart={cart}
+                      totalItemsCount={totalItemsCount}
+                      clearCart={clearCart}
+                      selectedCustomerObj={selectedCustomerObj}
+                      tipoComprobante={tipoComprobante}
+                      cartCustomerQuery={cartCustomerQuery}
+                      setCartCustomerQuery={setCartCustomerQuery}
+                      isCartCustomerDropdownOpen={isCartCustomerDropdownOpen}
+                      setIsCartCustomerDropdownOpen={setIsCartCustomerDropdownOpen}
+                      filteredCartCustomers={filteredCartCustomers}
+                      handleSelectCustomer={handleSelectCustomer}
+                      handleOpenNewCustomerModal={handleOpenNewCustomerModal}
+                      setCustName={setCustName}
+                      orderSentToast={orderSentToast}
+                      setPosTab={(tab) => {
+                        setIsMobileCartOpen(false);
+                        setPosTab(tab);
+                      }}
+                      getItemUnitPrice={getItemUnitPrice}
+                      removeFromCart={removeFromCart}
+                      setItemPresentation={setItemPresentation}
+                      updateQuantity={updateQuantity}
+                      subtotalNeto={subtotalNeto}
+                      ivaCalculado={ivaCalculado}
+                      cartSubtotal={cartSubtotal}
+                      handleSendOrderToBodega={() => {
+                        handleSendOrderToBodega();
+                        setIsMobileCartOpen(false);
+                      }}
+                      handleOpenQuoteModal={() => {
+                        setIsMobileCartOpen(false);
+                        handleOpenQuoteModal();
+                      }}
+                      onOpenCheckout={() => {
+                        setIsMobileCartOpen(false);
+                        setOrderToInvoice(null);
+                        setIsCheckoutOpen(true);
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* ======================================================================= */}

@@ -83,7 +83,7 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
 }) => {
   return (
     <div className="w-full xl:w-96 flex flex-col gap-4 shrink-0">
-      <div className="clay-card p-3.5 sm:p-4 flex flex-col h-[calc(100vh-130px)] sticky top-20">
+      <div className="clay-card p-3 sm:p-4 flex flex-col h-full xl:h-[calc(100vh-130px)] xl:sticky xl:top-20">
         
         {/* Header del Carrito */}
         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
@@ -384,7 +384,7 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
                   </div>
 
                   {/* Selector de Presentación para Esencias y Controles de Cantidad */}
-                  <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100/80">
+                  <div className="flex items-center justify-between gap-2 flex-wrap gap-y-1.5 pt-1 border-t border-slate-100/80">
                     {isEssence ? (
                       <div className="flex items-center gap-1">
                         <button

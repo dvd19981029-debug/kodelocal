@@ -53,11 +53,138 @@ export const PosSidebar: React.FC<PosSidebarProps> = ({
   onNavigateLogistica,
 }) => {
   return (
-    <aside 
-      onMouseEnter={() => setIsSidebarHovered(true)}
-      onMouseLeave={() => setIsSidebarHovered(false)}
-      className={`w-full ${isSidebarPinned ? 'lg:w-64' : 'lg:w-16'} shrink-0 relative transition-all duration-300 ease-in-out`}
-    >
+    <>
+      {/* VISTA MÓVIL (< lg): NAVEGACIÓN HORIZONTAL ERGONÓMICA */}
+      <div className="lg:hidden w-full sticky top-[48px] sm:top-[57px] z-30 bg-[#f1f4f9]/95 backdrop-blur-md py-1.5 px-0.5 border-b border-slate-200/60 mb-2">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none px-1">
+          {/* 1. Cotizador / Orden */}
+          <button
+            type="button"
+            onClick={() => setPosTab('nueva_orden')}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-all ${
+              posTab === 'nueva_orden' || posTab === 'pos'
+                ? 'clay-btn-primary !shadow-[2px_3px_8px_rgba(79,70,229,0.35)]'
+                : 'clay-card !p-2 px-3 text-slate-600 bg-white/80 hover:bg-white'
+            }`}
+          >
+            <Store className="w-4 h-4 shrink-0" />
+            <span>Orden</span>
+            {totalItemsCount > 0 && (
+              <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
+                posTab === 'nueva_orden' || posTab === 'pos' ? 'bg-white text-indigo-900' : 'bg-indigo-600 text-white'
+              }`}>
+                {totalItemsCount}
+              </span>
+            )}
+          </button>
+
+          {/* 2. Caja & Facturación */}
+          <button
+            type="button"
+            onClick={() => setPosTab('caja_facturacion')}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-all ${
+              posTab === 'caja_facturacion'
+                ? 'clay-btn-primary !shadow-[2px_3px_8px_rgba(79,70,229,0.35)]'
+                : 'clay-card !p-2 px-3 text-slate-600 bg-white/80 hover:bg-white'
+            }`}
+          >
+            <ReceiptText className={`w-4 h-4 shrink-0 ${posTab === 'caja_facturacion' ? 'text-white' : 'text-emerald-600'}`} />
+            <span>Caja</span>
+            {readyInWindowCount > 0 && (
+              <span className="px-1.5 py-0.2 text-[10px] font-black rounded-full bg-emerald-500 text-white animate-pulse">
+                {readyInWindowCount}
+              </span>
+            )}
+          </button>
+
+          {/* 3. Clientes */}
+          <button
+            type="button"
+            onClick={() => setPosTab('clientes')}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-all ${
+              posTab === 'clientes'
+                ? 'clay-btn-primary !shadow-[2px_3px_8px_rgba(79,70,229,0.35)]'
+                : 'clay-card !p-2 px-3 text-slate-600 bg-white/80 hover:bg-white'
+            }`}
+          >
+            <Users className="w-4 h-4 shrink-0" />
+            <span>Clientes</span>
+            {customersCount > 0 && (
+              <span className="text-[10px] text-slate-400 font-mono font-bold">
+                {customersCount}
+              </span>
+            )}
+          </button>
+
+          {/* 4. Pedidos en Bodega */}
+          <button
+            type="button"
+            onClick={() => setPosTab('bodega_ordenes')}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-all ${
+              posTab === 'bodega_ordenes'
+                ? 'clay-btn-primary !shadow-[2px_3px_8px_rgba(79,70,229,0.35)]'
+                : 'clay-card !p-2 px-3 text-slate-600 bg-white/80 hover:bg-white'
+            }`}
+          >
+            <Box className={`w-4 h-4 shrink-0 ${posTab === 'bodega_ordenes' ? 'text-white' : 'text-amber-500'}`} />
+            <span>Bodega</span>
+            {pendingPreparationCount > 0 && (
+              <span className="px-1.5 py-0.2 text-[10px] font-black rounded-full bg-amber-500 text-white">
+                {pendingPreparationCount}
+              </span>
+            )}
+          </button>
+
+          {/* 5. Ventas & Onzas */}
+          <button
+            type="button"
+            onClick={() => setPosTab('ventas')}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-all ${
+              posTab === 'ventas'
+                ? 'clay-btn-primary !shadow-[2px_3px_8px_rgba(79,70,229,0.35)]'
+                : 'clay-card !p-2 px-3 text-slate-600 bg-white/80 hover:bg-white'
+            }`}
+          >
+            <Droplets className={`w-4 h-4 shrink-0 ${posTab === 'ventas' ? 'text-white' : 'text-cyan-500'}`} />
+            <span>Ventas</span>
+            <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full ${
+              posTab === 'ventas' ? 'bg-white text-indigo-900' : 'bg-indigo-100 text-indigo-800'
+            }`}>
+              {totalOnzasVendidas} Oz
+            </span>
+          </button>
+
+          {/* 6. Envíos & Domicilio */}
+          <button
+            type="button"
+            onClick={onNavigateLogistica}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-all clay-card !p-2 px-3 text-slate-600 bg-white/80 hover:bg-white"
+          >
+            <Truck className="w-4 h-4 text-blue-500 shrink-0" />
+            <span>Envíos</span>
+            <ExternalLink className="w-3 h-3 text-slate-400 shrink-0" />
+          </button>
+
+          {/* Indicador Offline */}
+          {offlineQueueCount > 0 && (
+            <button
+              type="button"
+              onClick={onFlushOfflineQueue}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 bg-amber-50 border border-amber-200 text-amber-800"
+            >
+              <RotateCw className="w-3.5 h-3.5 text-amber-600 animate-spin shrink-0" />
+              <span>{offlineQueueCount} offline</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* VISTA ESCRITORIO (>= lg): MENÚ LATERAL IZQUIERDO ORIGINAL */}
+      <aside 
+        onMouseEnter={() => setIsSidebarHovered(true)}
+        onMouseLeave={() => setIsSidebarHovered(false)}
+        className={`hidden lg:block w-full ${isSidebarPinned ? 'lg:w-64' : 'lg:w-16'} shrink-0 relative transition-all duration-300 ease-in-out`}
+      >
       <div className={`${
         isSidebarExpanded && !isSidebarPinned
           ? 'lg:absolute lg:top-0 lg:left-0 lg:w-64 lg:z-40 lg:shadow-2xl rounded-2xl bg-white/95 lg:bg-slate-50/95 lg:backdrop-blur-md p-1 border border-slate-200/80'
@@ -344,5 +471,6 @@ export const PosSidebar: React.FC<PosSidebarProps> = ({
 
       </div>
     </aside>
-  );
+  </>
+);
 };

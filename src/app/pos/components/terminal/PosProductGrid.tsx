@@ -42,11 +42,11 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
   onOpenEditProduct,
 }) => {
   return (
-    <div className="flex-1 flex flex-col gap-5 min-w-0">
+    <div className="flex-1 flex flex-col gap-3.5 sm:gap-5 min-w-0">
       {/* Barra superior de Búsqueda y Cotizador Rápido */}
-      <div className="clay-card p-4 sm:p-5 flex flex-col sm:flex-row gap-3 items-center justify-between">
+      <div className="clay-card p-3 sm:p-5 flex flex-col sm:flex-row gap-2.5 sm:gap-3 items-center justify-between">
         <div className="relative flex-1 w-full">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none z-10" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-400 pointer-events-none z-10" />
           <input
             type="search"
             name="search-fragrance"
@@ -58,12 +58,12 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
             placeholder="Buscar por código (100), contratipo (Sauvage), marca..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="clay-input has-icon w-full pr-4 py-2.5 text-sm font-bold"
+            className="clay-input has-icon w-full pr-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold"
           />
         </div>
 
         <form onSubmit={handleBarcodeSubmit} className="relative w-full sm:w-60" autoComplete="off">
-          <Barcode className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-500 pointer-events-none z-10" />
+          <Barcode className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-indigo-500 pointer-events-none z-10" />
           <input
             type="text"
             name="quick-sku"
@@ -72,18 +72,18 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
             placeholder="Código o SKU..."
             value={barcodeInput}
             onChange={(e) => setBarcodeInput(e.target.value)}
-            className="clay-input has-icon w-full pr-4 py-2.5 text-sm font-mono font-bold border-indigo-200"
+            className="clay-input has-icon w-full pr-4 py-2 sm:py-2.5 text-xs sm:text-sm font-mono font-bold border-indigo-200"
           />
         </form>
       </div>
 
       {/* Filtro de Categorías */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none">
         {['Todos', ...categories].map((cat) => (
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
-            className={`clay-btn px-4 py-2 text-xs rounded-full whitespace-nowrap transition-all font-bold ${
+            className={`clay-btn px-3 sm:px-4 py-1.5 sm:py-2 text-xs rounded-full whitespace-nowrap transition-all font-bold ${
               selectedCategory === cat ? 'clay-btn-primary' : 'clay-btn-light'
             }`}
           >
@@ -94,16 +94,16 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
 
       {/* Filtro de Género (para esencias) */}
       {selectedCategory === 'Esencias para Perfume' && (
-        <div className="clay-card p-2 px-4 flex items-center justify-between gap-4 text-xs font-semibold text-slate-600">
-          <span className="flex items-center gap-1.5 font-bold text-slate-700">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Género:
+        <div className="clay-card p-1.5 sm:p-2 px-3 sm:px-4 flex items-center justify-between gap-2 sm:gap-4 text-xs font-semibold text-slate-600 overflow-x-auto scrollbar-none">
+          <span className="flex items-center gap-1.5 font-bold text-slate-700 whitespace-nowrap">
+            <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" /> Género:
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             {['Todos', 'Caballero', 'Dama', 'Unisex'].map((gender) => (
               <button
                 key={gender}
                 onClick={() => setSelectedGender(gender)}
-                className={`px-3 py-1 rounded-full text-xs transition-all font-bold ${
+                className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs transition-all font-bold whitespace-nowrap ${
                   selectedGender === gender
                     ? 'bg-indigo-600 text-white shadow-sm'
                     : 'hover:bg-slate-100 text-slate-600'
@@ -117,13 +117,13 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
       )}
 
       {/* Conteo de Resultados y Precio Base */}
-      <div className="flex items-center justify-between px-1 text-xs text-slate-500">
-        <span>Mostrando <strong>{displayedProducts.length}</strong> de {filteredProductsCount} productos</span>
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 px-1 text-xs text-slate-500">
+        <span className="text-[11px] sm:text-xs">Mostrando <strong>{displayedProducts.length}</strong> de {filteredProductsCount} productos</span>
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+          <span className="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100 text-[10px] sm:text-xs">
             Precio Esencia 1 Oz: ${activeEssencePrice.toFixed(2)}
           </span>
-          <span className="font-bold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-md border border-violet-100">
+          <span className="font-bold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-md border border-violet-100 text-[10px] sm:text-xs">
             ½ Oz: ${activeEssenceHalfPrice.toFixed(2)}
           </span>
         </div>
