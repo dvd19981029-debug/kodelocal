@@ -303,29 +303,64 @@ export async function GET(request: Request) {
         cost: Number(p.cost || 0),
       }));
 
-    // 10. Tráfico y Visitas Web
+    // 10. Tráfico y Visitas Web Reales (Sin estimaciones inventadas)
     const visitMetrics = getVisitMetricsForPeriod(period, validOrders.length);
 
-    // Fuentes estimadas y telemetría de tráfico
+    // Fuentes reales registradas a partir de referencias web
+    const totalSourcesCount = Object.values(visitMetrics.fuentes).reduce((a, b) => a + b, 0);
+    const fuentesList = Object.entries(visitMetrics.fuentes).map(([name, visits]) => ({
+      name,
+      visits,
+      percentage: totalSourcesCount > 0 ? Number(((visits / totalSourcesCount) * 100).toFixed(1)) : 0,
+    }));
+
+    // Si aún no hay referencias externas registradas, mostrar tráfico directo
+    const fuentesFinal =
+      fuentesList.length > 0
+        ? fuentesList
+        : [{ name: 'Tráfico Directo / Navegador', visits: visitMetrics.totalVisitas, percentage: 100 }];
+
+    // Dispositivos reales registrados
+    const totalDevicesCount =
+      visitMetrics.dispositivos.mobile + visitMetrics.dispositivos.desktop + visitMetrics.dispositivos.tablet;
+    const dispositivosList = [
+      {
+        device: 'Móviles (iOS & Android)',
+        percentage:
+          totalDevicesCount > 0
+            ? Number(((visitMetrics.dispositivos.mobile / totalDevicesCount) * 100).toFixed(1))
+            : 0,
+      },
+      {
+        device: 'Computadoras (Desktop)',
+        percentage:
+          totalDevicesCount > 0
+            ? Number(((visitMetrics.dispositivos.desktop / totalDevicesCount) * 100).toFixed(1))
+            : 0,
+      },
+      {
+        device: 'Tablets & iPads',
+        percentage:
+          totalDevicesCount > 0
+            ? Number(((visitMetrics.dispositivos.tablet / totalDevicesCount) * 100).toFixed(1))
+            : 0,
+      },
+    ];
+
+    // Zonas de clientes calculadas 100% de las direcciones reales de los pedidos
+    const totalOrdersDept = validOrders.length || 1;
+    const zonasPrincipales =
+      topDepartamentos.length > 0
+        ? topDepartamentos.slice(0, 5).map((d) => ({
+            zone: d.department,
+            share: Number(((d.count / totalOrdersDept) * 100).toFixed(1)),
+          }))
+        : [{ zone: 'San Salvador', share: 100 }];
+
     const traficoDetalle = {
-      fuentes: [
-        { name: 'Instagram & Facebook Ads', visits: Math.round(visitMetrics.totalVisitas * 0.48), percentage: 48 },
-        { name: 'WhatsApp & Asesoría Directa', visits: Math.round(visitMetrics.totalVisitas * 0.28), percentage: 28 },
-        { name: 'Búsqueda Orgánica Google', visits: Math.round(visitMetrics.totalVisitas * 0.16), percentage: 16 },
-        { name: 'Enlaces Compartidos & Otros', visits: Math.round(visitMetrics.totalVisitas * 0.08), percentage: 8 },
-      ],
-      dispositivos: [
-        { device: 'Móviles (iOS & Android)', percentage: 82 },
-        { device: 'Computadoras (Desktop)', percentage: 16 },
-        { device: 'Tablets', percentage: 2 },
-      ],
-      zonasPrincipales: [
-        { zone: 'San Salvador (Metropolitana)', share: 58 },
-        { zone: 'Santa Tecla & La Libertad', share: 22 },
-        { zone: 'Santa Ana & Occidente', share: 11 },
-        { zone: 'San Miguel & Oriente', share: 6 },
-        { zone: 'Diáspora USA / Envíos Familiares', share: 3 },
-      ],
+      fuentes: fuentesFinal,
+      dispositivos: dispositivosList,
+      zonasPrincipales,
     };
 
     // 11. Módulo BI: "Arma tu Propio Perfume" (Kits 100ml personalizables)
@@ -585,18 +620,99 @@ export async function GET(request: Request) {
         total: Number(unisexRev.toFixed(2)),
         percentage: Number(((unisexRev / totalGen) * 100).toFixed(1)),
       },
-      familiasOlfativas: [
-        { name: 'Amaderada / Cuero (Sauvage, Nicho)', percentage: 46 },
-        { name: 'Acuática / Cítrica (Bleu, Acqua Di Gio)', percentage: 32 },
-        { name: 'Ámbar / Especiada (Born in Roma, Spicebomb)', percentage: 14 },
-        { name: 'Floral / Frutal Femenina (Good Girl, Bombshell)', percentage: 8 },
-      ],
     };
 
-    // 18. Tiempos Logísticos
+    // Familias Olfativas calculadas dinámicamente de los productos reales vendidos
+    const familyCounts: Record<string, number> = {
+      'Amaderada / Cuero': 0,
+      'Acuática / Cítrica': 0,
+      'Ámbar / Especiada': 0,
+      'Floral / Frutal': 0,
+    };
+    let totalCategorizedOunces = 0;
+
+    validOrders.forEach((o) => {
+      o.items.forEach((it) => {
+        const name = (it.productName || '').toLowerCase();
+        const qty = it.quantity || 1;
+        let oz = qty;
+        const pres = (it.presentation || '').toLowerCase();
+        if (pres.includes('½') || pres.includes('0.5')) oz = 0.5 * qty;
+        else if (pres.includes('1.5')) oz = 1.5 * qty;
+
+        totalCategorizedOunces += oz;
+        if (
+          name.includes('sauvage') ||
+          name.includes('fiera') ||
+          name.includes('aventus') ||
+          name.includes('santal') ||
+          name.includes('million') ||
+          name.includes('cuero') ||
+          name.includes('wood')
+        ) {
+          familyCounts['Amaderada / Cuero'] += oz;
+        } else if (
+          name.includes('bleu') ||
+          name.includes('marino') ||
+          name.includes('acqua') ||
+          name.includes('aqua') ||
+          name.includes('nautica') ||
+          name.includes('citrus')
+        ) {
+          familyCounts['Acuática / Cítrica'] += oz;
+        } else if (
+          name.includes('roma') ||
+          name.includes('euroboy') ||
+          name.includes('spice') ||
+          name.includes('amber') ||
+          name.includes('vanille') ||
+          name.includes('khamrah')
+        ) {
+          familyCounts['Ámbar / Especiada'] += oz;
+        } else {
+          familyCounts['Floral / Frutal'] += oz;
+        }
+      });
+    });
+
+    const familiasOlfativas = Object.entries(familyCounts)
+      .map(([name, oz]) => ({
+        name,
+        percentage: totalCategorizedOunces > 0 ? Number(((oz / totalCategorizedOunces) * 100).toFixed(1)) : 0,
+      }))
+      .filter((f) => f.percentage > 0)
+      .sort((a, b) => b.percentage - a.percentage);
+
+    const distribucionGeneroFinal = {
+      ...distribucionGenero,
+      familiasOlfativas:
+        familiasOlfativas.length > 0
+          ? familiasOlfativas
+          : [{ name: 'Amaderada / Fresca', percentage: 100 }],
+    };
+
+    // 18. Tiempos Logísticos Reales
+    const deliveredOrders = orders.filter((o) => o.orderStatus === 'ENTREGADO');
+    let tiempoPromedioHoras = 0;
+    if (deliveredOrders.length > 0) {
+      const totalDeliveryMs = deliveredOrders.reduce(
+        (sum, o) => sum + (new Date(o.updatedAt).getTime() - new Date(o.createdAt).getTime()),
+        0
+      );
+      tiempoPromedioHoras = Math.max(1, Math.round(totalDeliveryMs / (deliveredOrders.length * 3600000)));
+    } else {
+      tiempoPromedioHoras = 24; // Referencia estándar hasta registrar primera entrega
+    }
+
+    const completedOrInTransit = orders.filter(
+      (o) => o.orderStatus === 'ENTREGADO' || o.orderStatus === 'EN_RUTA' || o.orderStatus === 'EN_PREPARACION'
+    ).length;
+    const tasaEfectividad =
+      orders.length > 0 ? Number(((completedOrInTransit / orders.length) * 100).toFixed(1)) : 100;
+
     const tiemposLogistica = {
-      tiempoPromedioHoras: 28,
-      tasaEfectividad: 96.8,
+      tiempoPromedioHoras,
+      tasaEfectividad,
       pedidosEnRuta: rutaOrders.length,
       courierPrincipal: 'C807 Express El Salvador',
     };
@@ -668,7 +784,7 @@ export async function GET(request: Request) {
       proyeccionAgotamiento,
       embudoCarritos,
       retencionLtv,
-      distribucionGenero,
+      distribucionGenero: distribucionGeneroFinal,
       tiemposLogistica,
       postsSeo,
       pedidosEstado,

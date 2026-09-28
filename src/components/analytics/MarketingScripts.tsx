@@ -37,10 +37,14 @@ export default function MarketingScripts() {
       if (isNewSession) {
         sessionStorage.setItem(sessionKey, '1');
       }
+      const isMobile = /iPhone|Android|Mobile/i.test(navigator.userAgent);
+      const isTablet = /iPad|Tablet/i.test(navigator.userAgent);
+      const device = isTablet ? 'tablet' : isMobile ? 'mobile' : 'desktop';
+      const referrer = document.referrer || '';
       fetch('/api/analytics/visit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isNewSession }),
+        body: JSON.stringify({ isNewSession, referrer, device }),
       }).catch(() => {});
     } catch {
       // Ignore if sessionStorage disabled
