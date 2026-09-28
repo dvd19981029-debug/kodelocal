@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { 
   Truck, 
   Package, 
@@ -82,7 +83,17 @@ export default function LogisticaPage() {
   );
 
   return (
-    <div className="flex flex-col gap-6 pb-12">
+    <div className="flex flex-col gap-5 pb-12 w-full max-w-full overflow-x-hidden">
+      
+      {/* Botón Volver a POS */}
+      <div>
+        <Link
+          href="/pos"
+          className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-indigo-700 bg-white hover:bg-indigo-50 border border-slate-200 rounded-xl shadow-2xs transition-all"
+        >
+          ← Volver a Punto de Venta (POS)
+        </Link>
+      </div>
       
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

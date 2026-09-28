@@ -180,30 +180,42 @@ export function Navbar() {
 
               {/* Selector Rápido de Usuarios para probar roles */}
               {isSwitchUserOpen && (
-                <div className="absolute right-0 mt-2 w-64 clay-card p-3 z-50 animate-in fade-in zoom-in-95 space-y-1">
-                  <p className="text-[10px] font-bold uppercase text-slate-400 px-2 py-1">
-                    Cambiar de Rol / Usuario:
-                  </p>
-                  {users.map(u => {
-                    const uRole = roles.find(r => r.code === u.role);
-                    const isSelected = u.id === currentUser.id;
-                    return (
-                      <button
-                        key={u.id}
-                        onClick={() => handleQuickSwitch(u)}
-                        className={`w-full text-left p-2 rounded-xl text-xs flex items-center justify-between transition-colors ${
-                          isSelected ? 'bg-indigo-50 font-black text-indigo-700' : 'hover:bg-slate-50 text-slate-700'
-                        }`}
-                      >
-                        <div>
-                          <p className="font-bold">{u.name}</p>
-                          <span className="text-[10px] text-slate-400">{uRole?.name || u.role}</span>
-                        </div>
-                        {isSelected && <span className="text-xs">✓</span>}
-                      </button>
-                    );
-                  })}
-                </div>
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setIsSwitchUserOpen(false)} />
+                  <div className="absolute right-0 mt-2 w-64 clay-card p-3 z-50 animate-in fade-in zoom-in-95 space-y-1">
+                    <Link
+                      href="/pos"
+                      onClick={() => setIsSwitchUserOpen(false)}
+                      className="w-full text-left p-2 rounded-xl text-xs flex items-center gap-2 bg-indigo-50 font-bold text-indigo-700 hover:bg-indigo-100 transition-colors mb-1"
+                    >
+                      <Store className="w-3.5 h-3.5" />
+                      <span>Ir a Punto de Venta (POS)</span>
+                    </Link>
+
+                    <p className="text-[10px] font-bold uppercase text-slate-400 px-2 py-1">
+                      Cambiar de Rol / Usuario:
+                    </p>
+                    {users.map(u => {
+                      const uRole = roles.find(r => r.code === u.role);
+                      const isSelected = u.id === currentUser.id;
+                      return (
+                        <button
+                          key={u.id}
+                          onClick={() => handleQuickSwitch(u)}
+                          className={`w-full text-left p-2 rounded-xl text-xs flex items-center justify-between transition-colors ${
+                            isSelected ? 'bg-indigo-50 font-black text-indigo-700' : 'hover:bg-slate-50 text-slate-700'
+                          }`}
+                        >
+                          <div>
+                            <p className="font-bold">{u.name}</p>
+                            <span className="text-[10px] text-slate-400">{uRole?.name || u.role}</span>
+                          </div>
+                          {isSelected && <span className="text-xs">✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
               )}
             </div>
           ) : (

@@ -141,7 +141,7 @@ export default function RootLayout({
         <link rel="https://api.w.org/" href="https://aromaniaksv.com/wp-json/" />
         <link rel="alternate" type="application/json" href="https://aromaniaksv.com/wp-json/" />
       </head>
-      <body className={`${quicksand.className} min-h-full flex flex-col bg-[#f1f4f9] text-slate-800 antialiased touch-manipulation font-sans`}>
+      <body className={`${quicksand.className} min-h-full flex flex-col bg-[#f1f4f9] text-slate-800 antialiased touch-manipulation font-sans w-full max-w-full overflow-x-hidden`}>
         <MarketingScripts />
         <StorageInitializer />
         <NavigationWrapper>

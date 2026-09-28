@@ -78,7 +78,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
       </div>
 
       {/* Filtro de Categorías */}
-      <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
         {['Todos', ...categories].map((cat) => (
           <button
             key={cat}
@@ -94,19 +94,19 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
 
       {/* Filtro de Género (para esencias) */}
       {selectedCategory === 'Esencias para Perfume' && (
-        <div className="clay-card p-1.5 sm:p-2 px-3 sm:px-4 flex items-center justify-between gap-2 sm:gap-4 text-xs font-semibold text-slate-600 overflow-x-auto scrollbar-none">
+        <div className="clay-card p-2 px-3 sm:px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 text-xs font-semibold text-slate-600">
           <span className="flex items-center gap-1.5 font-bold text-slate-700 whitespace-nowrap">
             <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" /> Género:
           </span>
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="grid grid-cols-4 gap-1 w-full sm:w-auto">
             {['Todos', 'Caballero', 'Dama', 'Unisex'].map((gender) => (
               <button
                 key={gender}
                 onClick={() => setSelectedGender(gender)}
-                className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs transition-all font-bold whitespace-nowrap ${
+                className={`py-1.5 px-1 rounded-lg text-[11px] sm:text-xs transition-all font-bold text-center truncate ${
                   selectedGender === gender
                     ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'hover:bg-slate-100 text-slate-600'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
                 }`}
               >
                 {gender === 'Caballero' ? '🧔 Caballero' : gender === 'Dama' ? '👩 Dama' : gender === 'Unisex' ? '⚧ Unisex' : 'Todos'}

@@ -51,7 +51,7 @@ import {
   PosSaleDetailModal,
   PosSidebar
 } from './components';
-import { ShoppingCart, X } from 'lucide-react';
+import { Store, ShoppingCart, X } from 'lucide-react';
 
 export default function PosPage() {
   const router = useRouter();
@@ -1692,7 +1692,7 @@ export default function PosPage() {
   }, [orderToInvoice, cartSubtotal]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 pb-28 sm:pb-32 lg:pb-16 max-w-[1650px] mx-auto items-start">
+    <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 pb-20 lg:pb-16 max-w-[1650px] mx-auto items-start w-full max-w-full overflow-x-hidden">
       
       {/* ========================================================================= */}
       {/* MENÚ LATERAL IZQUIERDO DE PUNTO DE VENTA (DINÁMICO / EXPANDIBLE AL HOVER) */}
@@ -1721,6 +1721,18 @@ export default function PosPage() {
       {/* ÁREA DE CONTENIDO A LA DERECHA                                            */}
       {/* ========================================================================= */}
       <div className="flex-1 w-full min-w-0">
+
+        {/* Botón Móvil para Volver al Terminal de Ventas si está en otro módulo */}
+        {posTab !== 'nueva_orden' && posTab !== 'pos' && (
+          <button
+            type="button"
+            onClick={() => setPosTab('nueva_orden')}
+            className="lg:hidden w-full mb-3 py-2 px-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs active:scale-[0.99] transition-all"
+          >
+            <Store className="w-3.5 h-3.5" />
+            <span>← Volver a Terminal de Venta / Catálogo</span>
+          </button>
+        )}
 
         {/* ======================================================================= */}
         {/* PESTAÑA 1: NUEVA ORDEN / COTIZADOR Y TERMINAL DE VENTA                   */}

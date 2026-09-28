@@ -54,23 +54,24 @@ export const PosSidebar: React.FC<PosSidebarProps> = ({
 }) => {
   return (
     <>
-      {/* VISTA MÓVIL (< lg): NAVEGACIÓN HORIZONTAL ERGONÓMICA */}
-      <div className="lg:hidden w-full sticky top-[48px] sm:top-[57px] z-30 bg-[#f1f4f9]/95 backdrop-blur-md py-1.5 px-0.5 border-b border-slate-200/60 mb-2">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none px-1">
-          {/* 1. Cotizador / Orden */}
+      {/* VISTA MÓVIL (< lg): NAVEGACIÓN EN CUADRÍCULA COMPLETA SIN DESPLAZAMIENTO HORIZONTAL */}
+      <div className="lg:hidden w-full sticky top-[48px] sm:top-[57px] z-30 bg-[#f1f4f9]/95 backdrop-blur-md py-1.5 px-0.5 border-b border-slate-200/60 mb-2.5">
+        <div className="grid grid-cols-3 gap-1.5 w-full">
+          {/* 1. Terminal / Venta */}
           <button
             type="button"
             onClick={() => setPosTab('nueva_orden')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-all ${
+            className={`flex items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-bold transition-all ${
               posTab === 'nueva_orden' || posTab === 'pos'
                 ? 'clay-btn-primary !shadow-[2px_3px_8px_rgba(79,70,229,0.35)]'
-                : 'clay-card !p-2 px-3 text-slate-600 bg-white/80 hover:bg-white'
+                : 'clay-card !p-1.5 text-slate-600 bg-white/80 hover:bg-white'
             }`}
+            title="Terminal de Venta / Catálogo"
           >
-            <Store className="w-4 h-4 shrink-0" />
-            <span>Orden</span>
+            <Store className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Venta</span>
             {totalItemsCount > 0 && (
-              <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
+              <span className={`text-[9.5px] font-black px-1.5 py-0.2 rounded-full ${
                 posTab === 'nueva_orden' || posTab === 'pos' ? 'bg-white text-indigo-900' : 'bg-indigo-600 text-white'
               }`}>
                 {totalItemsCount}
@@ -82,16 +83,17 @@ export const PosSidebar: React.FC<PosSidebarProps> = ({
           <button
             type="button"
             onClick={() => setPosTab('caja_facturacion')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-all ${
+            className={`flex items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-bold transition-all ${
               posTab === 'caja_facturacion'
                 ? 'clay-btn-primary !shadow-[2px_3px_8px_rgba(79,70,229,0.35)]'
-                : 'clay-card !p-2 px-3 text-slate-600 bg-white/80 hover:bg-white'
+                : 'clay-card !p-1.5 text-slate-600 bg-white/80 hover:bg-white'
             }`}
+            title="Caja & Facturación"
           >
-            <ReceiptText className={`w-4 h-4 shrink-0 ${posTab === 'caja_facturacion' ? 'text-white' : 'text-emerald-600'}`} />
-            <span>Caja</span>
+            <ReceiptText className={`w-3.5 h-3.5 shrink-0 ${posTab === 'caja_facturacion' ? 'text-white' : 'text-emerald-600'}`} />
+            <span className="truncate">Caja</span>
             {readyInWindowCount > 0 && (
-              <span className="px-1.5 py-0.2 text-[10px] font-black rounded-full bg-emerald-500 text-white animate-pulse">
+              <span className="px-1.5 py-0.2 text-[9.5px] font-black rounded-full bg-emerald-500 text-white animate-pulse">
                 {readyInWindowCount}
               </span>
             )}
@@ -101,16 +103,17 @@ export const PosSidebar: React.FC<PosSidebarProps> = ({
           <button
             type="button"
             onClick={() => setPosTab('clientes')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-all ${
+            className={`flex items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-bold transition-all ${
               posTab === 'clientes'
                 ? 'clay-btn-primary !shadow-[2px_3px_8px_rgba(79,70,229,0.35)]'
-                : 'clay-card !p-2 px-3 text-slate-600 bg-white/80 hover:bg-white'
+                : 'clay-card !p-1.5 text-slate-600 bg-white/80 hover:bg-white'
             }`}
+            title="Directorio de Clientes"
           >
-            <Users className="w-4 h-4 shrink-0" />
-            <span>Clientes</span>
+            <Users className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Clientes</span>
             {customersCount > 0 && (
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+              <span className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded-full ${
                 posTab === 'clientes' ? 'bg-white text-indigo-900' : 'bg-slate-100 text-slate-600'
               }`}>
                 {customersCount}
@@ -122,16 +125,17 @@ export const PosSidebar: React.FC<PosSidebarProps> = ({
           <button
             type="button"
             onClick={() => setPosTab('bodega_ordenes')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-all ${
+            className={`flex items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-bold transition-all ${
               posTab === 'bodega_ordenes'
                 ? 'clay-btn-primary !shadow-[2px_3px_8px_rgba(79,70,229,0.35)]'
-                : 'clay-card !p-2 px-3 text-slate-600 bg-white/80 hover:bg-white'
+                : 'clay-card !p-1.5 text-slate-600 bg-white/80 hover:bg-white'
             }`}
+            title="Monitoreo de Bodega"
           >
-            <Box className={`w-4 h-4 shrink-0 ${posTab === 'bodega_ordenes' ? 'text-white' : 'text-amber-500'}`} />
-            <span>Bodega</span>
+            <Box className={`w-3.5 h-3.5 shrink-0 ${posTab === 'bodega_ordenes' ? 'text-white' : 'text-amber-500'}`} />
+            <span className="truncate">Bodega</span>
             {pendingPreparationCount > 0 && (
-              <span className="px-1.5 py-0.5 text-[10px] font-black rounded-full bg-amber-500 text-white">
+              <span className="px-1.5 py-0.2 text-[9.5px] font-black rounded-full bg-amber-500 text-white">
                 {pendingPreparationCount}
               </span>
             )}
@@ -141,15 +145,16 @@ export const PosSidebar: React.FC<PosSidebarProps> = ({
           <button
             type="button"
             onClick={() => setPosTab('ventas')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-all ${
+            className={`flex items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-bold transition-all ${
               posTab === 'ventas'
                 ? 'clay-btn-primary !shadow-[2px_3px_8px_rgba(79,70,229,0.35)]'
-                : 'clay-card !p-2 px-3 text-slate-600 bg-white/80 hover:bg-white'
+                : 'clay-card !p-1.5 text-slate-600 bg-white/80 hover:bg-white'
             }`}
+            title="Resumen de Ventas"
           >
-            <Droplets className={`w-4 h-4 shrink-0 ${posTab === 'ventas' ? 'text-white' : 'text-cyan-500'}`} />
-            <span>Ventas</span>
-            <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full ${
+            <Droplets className={`w-3.5 h-3.5 shrink-0 ${posTab === 'ventas' ? 'text-white' : 'text-cyan-500'}`} />
+            <span className="truncate">Ventas</span>
+            <span className={`text-[9.5px] font-mono font-bold px-1.5 py-0.2 rounded-full ${
               posTab === 'ventas' ? 'bg-white text-indigo-900' : 'bg-indigo-100 text-indigo-800'
             }`}>
               {totalOnzasVendidas} Oz
@@ -160,25 +165,26 @@ export const PosSidebar: React.FC<PosSidebarProps> = ({
           <button
             type="button"
             onClick={onNavigateLogistica}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-all clay-card !p-2 px-3 text-slate-600 bg-white/80 hover:bg-white"
+            className="flex items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-bold transition-all clay-card !p-1.5 text-slate-600 bg-white/80 hover:bg-white"
+            title="Envíos a Domicilio C807"
           >
-            <Truck className="w-4 h-4 text-blue-500 shrink-0" />
-            <span>Envíos</span>
-            <ExternalLink className="w-3 h-3 text-slate-400 shrink-0" />
+            <Truck className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+            <span className="truncate">Envíos</span>
+            <ExternalLink className="w-2.5 h-2.5 text-slate-400 shrink-0" />
           </button>
-
-          {/* Indicador Offline */}
-          {offlineQueueCount > 0 && (
-            <button
-              type="button"
-              onClick={onFlushOfflineQueue}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 bg-amber-50 border border-amber-200 text-amber-800"
-            >
-              <RotateCw className="w-3.5 h-3.5 text-amber-600 animate-spin shrink-0" />
-              <span>{offlineQueueCount} offline</span>
-            </button>
-          )}
         </div>
+
+        {/* Indicador Offline si hay ventas en cola */}
+        {offlineQueueCount > 0 && (
+          <button
+            type="button"
+            onClick={onFlushOfflineQueue}
+            className="w-full mt-1.5 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-bold bg-amber-50 border border-amber-200 text-amber-800"
+          >
+            <RotateCw className="w-3.5 h-3.5 text-amber-600 animate-spin shrink-0" />
+            <span>Sincronizar {offlineQueueCount} venta{offlineQueueCount > 1 ? 's' : ''} offline</span>
+          </button>
+        )}
       </div>
 
       {/* VISTA ESCRITORIO (>= lg): MENÚ LATERAL IZQUIERDO ORIGINAL */}
