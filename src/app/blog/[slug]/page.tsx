@@ -182,6 +182,14 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
     notFound();
   }
 
+  // Registrar visita/lectura en tiempo real en la base de datos
+  prisma.blogPost
+    .update({
+      where: { id: post.id },
+      data: { viewsCount: { increment: 1 } },
+    })
+    .catch(() => {});
+
   // Cargar artículos relacionados para navegación continua
   const relatedPosts = await prisma.blogPost.findMany({
     where: {

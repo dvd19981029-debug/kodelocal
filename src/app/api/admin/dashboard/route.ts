@@ -37,7 +37,7 @@ export async function GET(request: Request) {
     const whereDate = dateCondition ? { createdAt: dateCondition } : {};
 
     // 1. Consultas simultáneas a Prisma
-    const [orders, sales, purchases, products, dteCount] = await Promise.all([
+    const [orders, sales, purchases, products, dteCount, blogPosts] = await Promise.all([
       prisma.ecommerceOrder.findMany({
         where: whereDate,
         include: { items: true },
@@ -67,6 +67,20 @@ export async function GET(request: Request) {
       }),
       prisma.dteDocument.count({
         where: dateCondition ? { createdAt: dateCondition } : {},
+      }),
+      prisma.blogPost.findMany({
+        where: { isPublished: true },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          category: true,
+          readingTimeMin: true,
+          viewsCount: true,
+          publishedAt: true,
+          createdAt: true,
+        },
+        orderBy: { viewsCount: 'desc' },
       }),
     ]);
 
@@ -614,6 +628,26 @@ export async function GET(request: Request) {
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 7);
 
+    // 20. Rendimiento de Artículos SEO & Blog
+    const totalBlogViews = blogPosts.reduce((acc, p) => acc + (p.viewsCount || 0), 0);
+    const postsSeo = {
+      totalPosts: blogPosts.length,
+      totalVistas: totalBlogViews,
+      promedioTiempoLecturaMin: blogPosts.length > 0
+        ? Math.round(blogPosts.reduce((acc, p) => acc + (p.readingTimeMin || 3), 0) / blogPosts.length)
+        : 3,
+      posts: blogPosts.map((p) => ({
+        id: p.id,
+        title: p.title,
+        slug: p.slug,
+        category: p.category || 'General',
+        views: p.viewsCount || 0,
+        readingTimeMin: p.readingTimeMin || 3,
+        publishedAt: p.publishedAt ? p.publishedAt.toISOString() : p.createdAt.toISOString(),
+        url: `/blog/${p.slug}`,
+      })),
+    };
+
     return NextResponse.json({
       success: true,
       period,
@@ -636,6 +670,7 @@ export async function GET(request: Request) {
       retencionLtv,
       distribucionGenero,
       tiemposLogistica,
+      postsSeo,
       pedidosEstado,
       canales,
       metodosPago,
