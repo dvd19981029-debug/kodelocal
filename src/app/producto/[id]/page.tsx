@@ -26,7 +26,7 @@ import { getProductImage } from '@/lib/perfumeImages';
 import { getFragranceProfile, getFragranceAccordBars } from '@/lib/fragranceProfiles';
 import ProductCard from '@/components/ecommerce/ProductCard';
 import FragranceNotesVisual from '@/components/ecommerce/FragranceNotesVisual';
-import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
+import { getInspiracionPerfumeName, formatPerfumeDisplayName } from '@/lib/perfumeNames';
 import { getFragranceDescription } from '@/lib/fragranceDescriptions';
 import { resolveTargetProductId } from '@/lib/productUrl';
 
@@ -240,7 +240,7 @@ export default function ProductDetailPage() {
   }
 
   const productImage = getProductImage(product);
-  const displayName = product.officialName?.trim() || product.name;
+  const displayName = formatPerfumeDisplayName(product);
 
   const handleAddToCart = () => {
     if (!product || isOutOfStock || maxSelectable <= 0 || isQuantityBlocked) return;

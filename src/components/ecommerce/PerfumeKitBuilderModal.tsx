@@ -17,7 +17,7 @@ import {
 import { ProductItem } from '@/lib/store';
 import { MOCK_100ML_BOTTLES } from '@/lib/bottles';
 import { useEcommerceCart, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
-import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
+import { getInspiracionPerfumeName, formatPerfumeDisplayName } from '@/lib/perfumeNames';
 import { getProductImage } from '@/lib/perfumeImages';
 
 interface PerfumeKitBuilderModalProps {
@@ -369,7 +369,7 @@ export default function PerfumeKitBuilderModal({
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
                     {filteredEssences.map((essence) => {
                       const isChosen = selectedEssence?.id === essence.id;
-                      const name = essence.officialName?.trim() || essence.name;
+                      const name = formatPerfumeDisplayName(essence);
 
                       // Regla de inventario: protección de stock basada en minStock y carrito
                       const totalStock = typeof essence.stock === 'number' ? essence.stock : 0;
@@ -463,14 +463,14 @@ export default function PerfumeKitBuilderModal({
                     <div className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-purple-200 shadow-2xs shrink-0 flex items-center justify-center p-0.5">
                       <img
                         src={getProductImage(selectedEssence)}
-                        alt={selectedEssence.officialName || selectedEssence.name}
+                        alt={formatPerfumeDisplayName(selectedEssence)}
                         className="w-full h-full object-cover rounded-lg"
                       />
                     </div>
                     <div className="min-w-0">
                       <span className="text-[9px] text-purple-700 font-bold uppercase tracking-wider block">Esencia elegida:</span>
                       <strong className="text-xs sm:text-sm font-black text-purple-950 truncate block">
-                        {selectedEssence.officialName || selectedEssence.name}
+                        {formatPerfumeDisplayName(selectedEssence)}
                       </strong>
                       <span className="text-[10px] text-purple-800 font-medium truncate block">
                         Inspirado en: {getInspiracionPerfumeName(selectedEssence)}
@@ -763,7 +763,7 @@ export default function PerfumeKitBuilderModal({
                   <div>
                     <span className="text-[9px] text-slate-400 block font-bold">Fragancia:</span>
                     <strong className="text-slate-900 font-black truncate block text-[11px] sm:text-xs">
-                      {selectedEssence ? (selectedEssence.officialName || selectedEssence.name) : 'No seleccionada'}
+                      {selectedEssence ? formatPerfumeDisplayName(selectedEssence) : 'No seleccionada'}
                     </strong>
                   </div>
                   <div>

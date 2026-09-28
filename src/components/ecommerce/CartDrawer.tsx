@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, ArrowLeft, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { useEcommerceCart, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
 import { getProductImage } from '@/lib/perfumeImages';
-import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
+import { getInspiracionPerfumeName, formatPerfumeDisplayName } from '@/lib/perfumeNames';
 
 export default function CartDrawer() {
   const { 
@@ -99,7 +99,7 @@ export default function CartDrawer() {
             ) : (
               cart.map((item) => {
                 const productImage = getProductImage(item.product);
-                const displayName = item.product.officialName?.trim() ? item.product.officialName : item.product.name;
+                const displayName = formatPerfumeDisplayName(item.product);
 
                 return (
                   <div 

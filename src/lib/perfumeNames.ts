@@ -5,54 +5,54 @@
  * SKU -> Nombre de la fragancia de inspiración
  */
 export const INSPIRACION_PERFUME_MAP: Record<string, string> = {
-  '1': 'Sauvage',
-  '2': 'Bleu',
-  '3': 'Acqua Di Gio',
-  '4': 'Club De Nuit Intense',
-  '5': 'Aventus',
-  '6': 'La Vie Est Belle',
-  '7': 'Odyssey Mandarin Sky',
-  '8': 'Eros',
-  '9': "L'Eau d'Issey",
+  '1': 'Sauvage H',
+  '2': 'Bleu H',
+  '3': 'Acqua Di Gio H',
+  '4': 'Club De Nuit Intense H',
+  '5': 'Aventus H',
+  '6': 'La Vie Est Belle F',
+  '7': 'Odyssey Mandarin Sky H',
+  '8': 'Eros H',
+  '9': "L'Eau d'Issey H",
   '10': 'Santal 33',
-  '11': 'Born in Roma Intense',
+  '11': 'Born in Roma Intense H',
   '12': 'Erba Pura',
-  '13': 'Coco Mademoiselle',
-  '14': 'Light Blue',
-  '15': 'Boss Bottled',
-  '16': 'Invictus',
-  '17': 'Burberry Her',
-  '18': '212 VIP Rosé',
-  '19': 'Polo Blue',
-  '20': 'One Million',
-  '21': 'Coco',
-  '22': 'Chance',
-  '23': '9PM',
-  '24': 'Le Male',
-  '25': "J'adore",
-  '26': 'Tommy',
-  '27': 'N° 5',
-  '28': 'Bad Boy',
-  '29': 'Be Delicious',
+  '13': 'Coco Mademoiselle F',
+  '14': 'Light Blue H',
+  '15': 'Boss Bottled H',
+  '16': 'Invictus H',
+  '17': 'Burberry Her F',
+  '18': '212 VIP Rosé F',
+  '19': 'Polo Blue H',
+  '20': 'One Million H',
+  '21': 'Coco F',
+  '22': 'Chance F',
+  '23': '9PM H',
+  '24': 'Le Male H',
+  '25': "J'adore F",
+  '26': 'Tommy H',
+  '27': 'N° 5 F',
+  '28': 'Bad Boy H',
+  '29': 'Be Delicious F',
   '30': 'Lost Cherry',
-  '31': 'Scandal',
-  '32': 'Donna',
-  '33': "L'Immensité",
-  '34': '212 VIP',
-  '35': 'Swiss Army',
-  '36': 'Blanc L.12.12',
-  '37': 'Acqua Di Gio',
-  '38': 'Polo Black',
-  '39': 'Ralph',
-  '40': 'Yara',
-  '41': 'Yara Tous',
-  '42': 'Flowerbomb',
-  '43': 'Black Opium',
-  '44': 'Homme Sport',
+  '31': 'Scandal H',
+  '32': 'Donna F',
+  '33': "L'Immensité H",
+  '34': '212 VIP F',
+  '35': 'Swiss Army H',
+  '36': 'Blanc L.12.12 H',
+  '37': 'Acqua Di Gio F',
+  '38': 'Polo Black H',
+  '39': 'Ralph F',
+  '40': 'Yara F',
+  '41': 'Yara Tous F',
+  '42': 'Flowerbomb F',
+  '43': 'Black Opium F',
+  '44': 'Homme Sport H',
   '45': 'CK One',
-  '46': '360 Red',
-  '47': 'Green Tea',
-  '48': 'Princess'
+  '46': '360 Red H',
+  '47': 'Green Tea F',
+  '48': 'Princess F'
 };
 
 // Alias de retrocompatibilidad
@@ -93,74 +93,116 @@ function toTitleCase(str: string): string {
 }
 
 /**
- * Devuelve el nombre de inspiración (contratipo) SIN la marca y en mayúsculas/minúsculas normales.
+ * Formatea un nombre agregando el sufijo ' H' para Caballero o ' F' para Dama.
+ * Las fragancias Unisex no llevan sufijo.
  */
-export function getInspiracionPerfumeName(product: { sku?: string | null; description?: string | null; name?: string | null; brand?: string | null; officialName?: string | null } | null | undefined): string {
+export function formatWithGenderSuffix(name: string | null | undefined, gender: string | null | undefined): string {
+  if (!name) return '';
+  const trimmed = name.trim();
+  if (!trimmed) return '';
+
+  // Si ya termina en ' H' o ' F' (con espacio antes), normalizar a mayúscula
+  if (/\s+[HhFf]$/.test(trimmed)) {
+    return trimmed.replace(/\s+([HhFf])$/, (_, letter) => ` ${letter.toUpperCase()}`);
+  }
+
+  const g = (gender || '').trim().toLowerCase();
+  if (g.includes('caballero') || g.includes('hombre')) {
+    return `${trimmed} H`;
+  }
+  if (g.includes('dama') || g.includes('mujer')) {
+    return `${trimmed} F`;
+  }
+  return trimmed;
+}
+
+/**
+ * Devuelve el nombre comercial / oficial del producto con el sufijo H o F correspondiente.
+ */
+export function formatPerfumeDisplayName(product: { officialName?: string | null; name?: string | null; gender?: string | null } | null | undefined): string {
   if (!product) return '';
+  const baseName = (product.officialName && product.officialName.trim()) 
+    ? product.officialName.trim() 
+    : (product.name ? product.name.trim() : '');
+  return formatWithGenderSuffix(baseName, product.gender);
+}
+
+/**
+ * Devuelve el nombre de inspiración (contratipo) SIN la marca y con el sufijo H o F correspondiente.
+ */
+export function getInspiracionPerfumeName(product: { sku?: string | null; description?: string | null; name?: string | null; brand?: string | null; officialName?: string | null; gender?: string | null } | null | undefined): string {
+  if (!product) return '';
+
+  let inspiracion = '';
 
   // 1. Si product.name tiene valor y es diferente a officialName, ese es el nombre de inspiración dinámico de la BD
   if (product.name && product.name.trim()) {
     const cleanName = product.name.trim();
     const offName = (product.officialName || '').trim();
     if (offName && cleanName.toLowerCase() !== offName.toLowerCase()) {
-      return cleanName;
+      inspiracion = cleanName;
     }
   }
 
   // 2. Mapeo directo por SKU si existe
-  const sku = String(product.sku || '').trim();
-  if (sku && INSPIRACION_PERFUME_MAP[sku]) {
-    return INSPIRACION_PERFUME_MAP[sku];
+  if (!inspiracion) {
+    const sku = String(product.sku || '').trim();
+    if (sku && INSPIRACION_PERFUME_MAP[sku]) {
+      inspiracion = INSPIRACION_PERFUME_MAP[sku];
+    }
   }
 
   // 3. Si product.name está definido (incluso si no hay officialName), usar product.name
-  if (product.name && product.name.trim()) {
-    return product.name.trim();
+  if (!inspiracion && product.name && product.name.trim()) {
+    inspiracion = product.name.trim();
   }
 
   // 4. Extracción dinámica limpiando "Inspirado en", marcas y sufijos de laboratorio
-  let text = (product.description || '').trim();
-  text = text.replace(/^Inspirado en\s+/i, '').replace(/&amp;/g, '&').trim();
+  if (!inspiracion) {
+    let text = (product.description || '').trim();
+    text = text.replace(/^Inspirado en\s+/i, '').replace(/&amp;/g, '&').trim();
 
-  // Remover sufijos de laboratorio
-  text = text.replace(/\bTYPE\s+FINE\s+INSPIRATION\b/gi, '')
-             .replace(/\bTYPE\s+AFNAN\b/gi, '')
-             .replace(/\bTYPE\s+B\b/gi, '')
-             .replace(/\bWOMAN\s+TYPE\b/gi, '')
-             .replace(/\bTYPE\b/gi, '')
-             .replace(/\bZ\s*1\b/gi, '')
-             .replace(/\s+Z$/gi, '')
-             .replace(/\bMEN\b/gi, '')
-             .replace(/\bFOR\s+MEN\b/gi, '')
-             .replace(/\bM$/gi, '')
-             .trim();
+    // Remover sufijos de laboratorio
+    text = text.replace(/\bTYPE\s+FINE\s+INSPIRATION\b/gi, '')
+               .replace(/\bTYPE\s+AFNAN\b/gi, '')
+               .replace(/\bTYPE\s+B\b/gi, '')
+               .replace(/\bWOMAN\s+TYPE\b/gi, '')
+               .replace(/\bTYPE\b/gi, '')
+               .replace(/\bZ\s*1\b/gi, '')
+               .replace(/\s+Z$/gi, '')
+               .replace(/\bMEN\b/gi, '')
+               .replace(/\bFOR\s+MEN\b/gi, '')
+               .replace(/\bM$/gi, '')
+               .trim();
 
-  const brandList = [
-    ...(product.brand ? [product.brand.replace(/&amp;/g, '&')] : []),
-    ...FAMOUS_BRANDS
-  ];
+    const brandList = [
+      ...(product.brand ? [product.brand.replace(/&amp;/g, '&')] : []),
+      ...FAMOUS_BRANDS
+    ];
 
-  for (const b of brandList) {
-    if (!b) continue;
-    const escaped = b.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    text = text.replace(new RegExp('^' + escaped + '\\s+', 'i'), '');
-    text = text.replace(new RegExp('\\s+' + escaped + '$', 'i'), '');
-    text = text.replace(new RegExp('\\s+BY\\s+' + escaped + '$', 'i'), '');
-    text = text.replace(new RegExp('\\s+BY\\s+' + escaped, 'i'), '');
-    text = text.replace(new RegExp('\\s+DE\\s+' + escaped + '$', 'i'), '');
-    text = text.replace(new RegExp('^' + escaped + '$', 'i'), '');
+    for (const b of brandList) {
+      if (!b) continue;
+      const escaped = b.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      text = text.replace(new RegExp('^' + escaped + '\\s+', 'i'), '');
+      text = text.replace(new RegExp('\\s+' + escaped + '$', 'i'), '');
+      text = text.replace(new RegExp('\\s+BY\\s+' + escaped + '$', 'i'), '');
+      text = text.replace(new RegExp('\\s+BY\\s+' + escaped, 'i'), '');
+      text = text.replace(new RegExp('\\s+DE\\s+' + escaped + '$', 'i'), '');
+      text = text.replace(new RegExp('^' + escaped + '$', 'i'), '');
+    }
+
+    text = text.replace(/\s+/g, ' ').trim();
+    if (text.toUpperCase() === 'HER' || text.toUpperCase() === 'BURBERRY HER') {
+      inspiracion = 'Burberry Her';
+    } else {
+      const result = text || product.name || '';
+      // Si viene todo en mayúsculas, convertir a Title Case
+      inspiracion = (result === result.toUpperCase() && result.length > 2) ? toTitleCase(result) : result;
+    }
   }
 
-  text = text.replace(/\s+/g, ' ').trim();
-  if (text.toUpperCase() === 'HER' || text.toUpperCase() === 'BURBERRY HER') {
-    return 'Burberry Her';
-  }
-  const result = text || product.name || '';
-  // Si viene todo en mayúsculas, convertir a Title Case
-  if (result === result.toUpperCase() && result.length > 2) {
-    return toTitleCase(result);
-  }
-  return result;
+  // Garantizar sufijo de género H / F
+  return formatWithGenderSuffix(inspiracion, product.gender);
 }
 
 // Alias de retrocompatibilidad

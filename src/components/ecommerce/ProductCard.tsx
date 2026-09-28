@@ -6,7 +6,7 @@ import { ShoppingBag, Check, Sparkles, Plus, Minus } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS } from '@/lib/store';
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
 import { getProductImage } from '@/lib/perfumeImages';
-import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
+import { getInspiracionPerfumeName, formatPerfumeDisplayName } from '@/lib/perfumeNames';
 import { getProductUrl } from '@/lib/productUrl';
 
 interface ProductCardProps {
@@ -138,8 +138,8 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
     );
   };
 
-  // Nombre oficial de contratipo (muestra contratipo comercial)
-  const displayName = product.officialName?.trim() || product.name;
+  // Nombre oficial de contratipo (muestra contratipo comercial) con sufijo de género H / F
+  const displayName = formatPerfumeDisplayName(product);
   const productImage = getProductImage(product);
 
   // Nombre de inspiración (contratipo) y cálculo dinámico de escala de texto
