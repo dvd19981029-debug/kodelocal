@@ -477,10 +477,105 @@ export default function VentasPage() {
         </div>
       </div>
 
-      {/* Tabla de Ventas */}
+      {/* Tabla y Tarjetas de Ventas */}
       <div className="clay-card overflow-hidden p-2 sm:p-4">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+        {/* Vista Móvil (Tarjetas) */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {filteredSales.length === 0 ? (
+            <div className="py-8 text-center text-slate-400">
+              <p className="font-semibold text-xs">No se encontraron ventas para este filtro.</p>
+              {filterTab === 'PENDING_DTE' && (
+                <p className="text-[11px] text-emerald-600 font-bold mt-1">
+                  ✨ ¡Excelente! No tienes comprobantes pendientes de transmitir a Hacienda.
+                </p>
+              )}
+            </div>
+          ) : (
+            filteredSales.map((sale) => {
+              const isFiscalDoc = sale.tipoComprobante === '01' || sale.tipoComprobante === '03';
+              const isDtePending = isFiscalDoc && !sale.dteInfo?.codigoGeneracion;
+
+              return (
+                <div
+                  key={sale.id}
+                  className={`p-3 space-y-2 rounded-xl transition-colors ${
+                    isDtePending ? 'bg-amber-50/50' : ''
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <span className="font-mono font-bold text-slate-800 text-xs block">#{sale.saleNumber}</span>
+                      <span className="text-[10px] text-slate-400">
+                        {new Date(sale.createdAt).toLocaleDateString('es-SV')} • {new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-mono font-black text-slate-900 text-sm block">
+                        ${sale.total.toFixed(2)}
+                      </span>
+                      <span className="text-[10px] font-semibold text-slate-500">
+                        {sale.paymentMethod === 'CASH' ? 'Efectivo' : sale.paymentMethod === 'CARD' ? 'Tarjeta' : sale.paymentMethod}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 text-xs">
+                    <div className="min-w-0">
+                      <div className="font-bold text-slate-800 text-xs truncate">{sale.cliente.nombre}</div>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className={`clay-badge text-[9.5px] font-bold py-0.2 px-1.5 ${
+                          sale.tipoComprobante === '03'
+                            ? 'bg-purple-100 text-purple-800 border border-purple-200'
+                            : sale.tipoComprobante === '01'
+                            ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                            : 'bg-slate-100 text-slate-700'
+                        }`}>
+                          {sale.tipoComprobante === '03' ? 'Crédito Fiscal' : sale.tipoComprobante === '01' ? 'Factura' : 'Ticket'}
+                        </span>
+                        {isDtePending && (
+                          <span className="text-[9.5px] font-black px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300">
+                            Pendiente MH
+                          </span>
+                        )}
+                        {sale.dteInfo?.codigoGeneracion && (
+                          <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">
+                            ✓ Certificado
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {isDtePending && (
+                        <button
+                          type="button"
+                          disabled={transmittingId === sale.id}
+                          onClick={() => handleTransmitDte(sale)}
+                          className="px-2 py-1 rounded text-[10px] font-bold bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-1 shadow-xs transition-all disabled:opacity-50"
+                        >
+                          <Send className="w-2.5 h-2.5" />
+                          <span>MH</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedSale(sale)}
+                        className="p-1.5 rounded-lg bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 transition-colors shadow-xs"
+                        title="Ver detalle"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Vista Desktop (Tabla) */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-left text-sm min-w-[700px]">
             <thead className="text-[11px] uppercase text-slate-400 font-bold border-b border-slate-200">
               <tr>
                 <th className="py-3 px-3.5">N° Venta / Hora</th>

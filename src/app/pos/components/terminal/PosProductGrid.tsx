@@ -44,7 +44,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
   return (
     <div className="flex-1 flex flex-col gap-3.5 sm:gap-5 min-w-0">
       {/* Barra superior de Búsqueda y Cotizador Rápido */}
-      <div className="clay-card p-3 sm:p-5 flex flex-col sm:flex-row gap-2.5 sm:gap-3 items-center justify-between">
+      <div className="clay-card p-3 sm:p-5 flex flex-col sm:flex-row gap-2 sm:gap-3 items-center justify-between">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-400 pointer-events-none z-10" />
           <input
@@ -55,14 +55,14 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
             autoCorrect="off"
             autoCapitalize="none"
             spellCheck={false}
-            placeholder="Buscar por código (100), contratipo (Sauvage), marca..."
+            placeholder="Buscar por código (100), contratipo, marca..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="clay-input has-icon w-full pr-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold"
           />
         </div>
 
-        <form onSubmit={handleBarcodeSubmit} className="relative w-full sm:w-60" autoComplete="off">
+        <form onSubmit={handleBarcodeSubmit} className="relative w-full sm:w-52" autoComplete="off">
           <Barcode className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-indigo-500 pointer-events-none z-10" />
           <input
             type="text"
@@ -78,12 +78,12 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
       </div>
 
       {/* Filtro de Categorías */}
-      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+      <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none sm:flex-wrap">
         {['Todos', ...categories].map((cat) => (
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
-            className={`clay-btn px-3 sm:px-4 py-1.5 sm:py-2 text-xs rounded-full whitespace-nowrap transition-all font-bold ${
+            className={`clay-btn px-3 sm:px-4 py-1.5 sm:py-2 text-xs rounded-full whitespace-nowrap transition-all font-bold shrink-0 ${
               selectedCategory === cat ? 'clay-btn-primary' : 'clay-btn-light'
             }`}
           >
@@ -117,11 +117,11 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
       )}
 
       {/* Conteo de Resultados y Precio Base */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 px-1.5 text-xs text-slate-500">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 px-1 text-xs text-slate-500">
         <span className="text-[11px] sm:text-xs">Mostrando <strong>{displayedProducts.length}</strong> de {filteredProductsCount} productos</span>
-        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <span className="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100 text-[10px] sm:text-xs">
-            Precio Esencia 1 Oz: ${activeEssencePrice.toFixed(2)}
+            1 Oz: ${activeEssencePrice.toFixed(2)}
           </span>
           <span className="font-bold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-md border border-violet-100 text-[10px] sm:text-xs">
             ½ Oz: ${activeEssenceHalfPrice.toFixed(2)}
