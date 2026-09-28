@@ -571,7 +571,7 @@ export default function CheckoutPage() {
           <div className="pt-2 pb-1 flex flex-col items-center justify-center gap-2">
             {isTransfer ? (
               <a
-                href={`https://wa.me/50378339470?text=${whatsappTransferMessage}`}
+                href={`https://wa.me/50360437496?text=${whatsappTransferMessage}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="clay-btn clay-btn-success px-7 py-3 rounded-2xl font-black text-xs sm:text-sm active:scale-95 transition-all flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg cursor-pointer"
@@ -581,13 +581,13 @@ export default function CheckoutPage() {
               </a>
             ) : (
               <a
-                href={`https://wa.me/50378339470?text=${whatsappCardMessage}`}
+                href={`https://wa.me/50360437496?text=${whatsappCardMessage}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="clay-btn clay-btn-success px-7 py-3 rounded-2xl font-black text-xs sm:text-sm active:scale-95 transition-all flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg cursor-pointer"
               >
                 <Send className="w-4 h-4" />
-                <span>Notificar por WhatsApp (7833-9470)</span>
+                <span>Notificar por WhatsApp (6043-7496)</span>
               </a>
             )}
             {/* Botón de Seguimiento Inmediato (Drawer de Pedidos en Modo Invitado o Usuario) */}
@@ -601,7 +601,7 @@ export default function CheckoutPage() {
             </button>
 
             <p className="text-[11px] text-slate-500 font-medium">
-              WhatsApp oficial de validación: <strong className="text-slate-700 font-bold">7833-9470</strong>
+              WhatsApp oficial de validación: <strong className="text-slate-700 font-bold">6043-7496</strong>
             </p>
           </div>
 
@@ -1223,7 +1223,7 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                   <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                    Envía tu comprobante por <strong className="text-slate-800 font-bold">WhatsApp al 7833-9470</strong> para procesar.
+                    Envía tu comprobante por <strong className="text-slate-800 font-bold">WhatsApp al 6043-7496</strong> para procesar.
                   </p>
                 </button>
               </div>

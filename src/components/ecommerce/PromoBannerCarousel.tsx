@@ -126,7 +126,7 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
   const handleSlideClick = (action: 'emprendedor' | 'aromas' | 'arma-tu-perfume' | 'botes') => {
     if (action === 'emprendedor') {
       window.open(
-        'https://wa.me/50370000000?text=' +
+        'https://wa.me/50360437496?text=' +
           encodeURIComponent('¡Hola Aromaniak! Soy emprendedor y me gustaría recibir información sobre las opciones y precios mayoristas para mi negocio.'),
         '_blank'
       );

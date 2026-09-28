@@ -864,7 +864,7 @@ export default function EcommerceHomePage() {
                   "logo": "https://aromaniaksv.com/apple-touch-icon.png",
                   "image": "https://aromaniaksv.com/images/logo.png",
                   "description": "Distribuidora de esencias de perfumería fina, aromas químicos, aromas de esencias, botes de vidrio y materias primas en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.",
-                  "telephone": "+50378339470",
+                  "telephone": "+50360437496",
                   "priceRange": "$",
                   "currenciesAccepted": "USD",
                   "paymentAccepted": "Cash, Credit Card, Debit Card, Wompi, Bank Transfer, Bitcoin",

@@ -893,12 +893,12 @@ export default function CustomerDrawer() {
 
             {/* Ayuda / WhatsApp Oficial */}
             <a
-              href="https://wa.me/50378339470?text=Hola%20Aromaniak,%20necesito%20ayuda%20con%20mi%20pedido"
+              href="https://wa.me/50360437496?text=Hola%20Aromaniak,%20necesito%20ayuda%20con%20mi%20pedido"
               target="_blank"
               rel="noopener noreferrer"
               className="text-[11px] font-bold text-slate-500 hover:text-indigo-600 flex items-center gap-1 transition-colors"
             >
-              <span>WhatsApp: 7833-9470</span>
+              <span>WhatsApp: 6043-7496</span>
               <ExternalLink className="w-3 h-3" />
             </a>
           </div>

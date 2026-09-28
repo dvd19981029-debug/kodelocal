@@ -230,7 +230,7 @@ export default function CustomerAuthModal() {
               </label>
               {authModalTab === 'login' && (
                 <a
-                  href="https://wa.me/50378339470?text=Hola%2C%20olvid%C3%A9%20la%20contrase%C3%B1a%20de%20mi%20cuenta%20de%20Aromaniak%20y%20necesito%20recuperarla"
+                  href="https://wa.me/50360437496?text=Hola%2C%20olvid%C3%A9%20la%20contrase%C3%B1a%20de%20mi%20cuenta%20de%20Aromaniak%20y%20necesito%20recuperarla"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs font-bold text-[#52b747] hover:text-[#439c39] transition-colors"

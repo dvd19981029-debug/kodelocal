@@ -176,7 +176,7 @@ function CheckoutResultadoContent() {
               </Link>
 
               <a
-                href="https://wa.me/50378339470?text=Hola%20Aromaniak,%20tuve%20un%20problema%20con%20el%20pago%20de%20mi%20pedido"
+                href="https://wa.me/50360437496?text=Hola%20Aromaniak,%20tuve%20un%20problema%20con%20el%20pago%20de%20mi%20pedido"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-2.5 px-4 rounded-xl text-slate-500 hover:text-indigo-600 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"

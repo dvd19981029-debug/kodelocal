@@ -107,7 +107,7 @@ export class C807Client {
             orden: input.numero_pedido,
             nombre: input.cliente_nombre.trim(),
             direccion: direccionCompleta.trim(),
-            telefono: cleanPhone || '78339470',
+            telefono: cleanPhone || '60437496',
             correo: input.cliente_correo?.trim() || 'luisundae@gmail.com',
             tipo_servicio: tipoServicio,
             monto_cce: montoCce,

@@ -44,7 +44,7 @@ export function buildOrderConfirmationHtml(data: OrderEmailData): string {
   const statusBadgeText = isPaid ? 'PAGO CONFIRMADO' : (isTransfer ? 'PENDIENTE DE TRANSFERENCIA' : 'PEDIDO EN PREPARACIÓN');
 
   const trackingUrl = `https://aromaniaksv.com/checkout/resultado?identificadorEnlaceComercio=${encodeURIComponent(data.orderNumber)}&esAprobada=true`;
-  const whatsappUrl = `https://wa.me/50378339470?text=${encodeURIComponent(`Hola Aromaniak, consulto por mi orden #${data.orderNumber}`)}`;
+  const whatsappUrl = `https://wa.me/50360437496?text=${encodeURIComponent(`Hola Aromaniak, consulto por mi orden #${data.orderNumber}`)}`;
 
   const isRetiro = (data.deliveryReference && data.deliveryReference.toLowerCase().includes('retiro')) ||
                    (data.shippingAddress && data.shippingAddress.toLowerCase().includes('retiro'));
@@ -224,7 +224,7 @@ export function buildOrderConfirmationHtml(data: OrderEmailData): string {
                       </div>
                       <div style="margin-top: 10px;">
                         <a href="${whatsappUrl}" target="_blank" style="display: inline-block; padding: 8px 16px; background-color: #16a34a; color: #ffffff; text-decoration: none; font-size: 11.5px; font-weight: 800; border-radius: 10px;">
-                          Enviar comprobante por WhatsApp (7833-9470) &rarr;
+                          Enviar comprobante por WhatsApp (6043-7496) &rarr;
                         </a>
                       </div>
                     </td>
@@ -249,7 +249,7 @@ export function buildOrderConfirmationHtml(data: OrderEmailData): string {
                 Aromaniak SV &bull; Distribuidora de esencias y más
               </div>
               <div style="font-size: 11px; color: #94a3b8; line-height: 1.4; margin-bottom: 8px;">
-                San Salvador, El Salvador &bull; WhatsApp: <a href="https://wa.me/50378339470" style="color: #6366f1; text-decoration: none; font-weight: 700;">+503 7833-9470</a>
+                San Salvador, El Salvador &bull; WhatsApp: <a href="https://wa.me/50360437496" style="color: #6366f1; text-decoration: none; font-weight: 700;">+503 6043-7496</a>
               </div>
               <div style="font-size: 10px; color: #cbd5e1; line-height: 1.3;">
                 Has recibido este correo porque realizaste una compra en <a href="https://aromaniaksv.com" style="color: #94a3b8; text-decoration: underline;">aromaniaksv.com</a>.<br>
