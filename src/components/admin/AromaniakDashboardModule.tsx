@@ -526,123 +526,123 @@ export default function AromaniakDashboardModule({
       )}
 
       {/* ================= BLOQUE 1: KPIs FINANCIEROS (ESTILO KODE BI) ================= */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         {/* KPI 1: Ventas Totales */}
-        <div className="clay-card p-5 relative overflow-hidden group">
+        <div className="clay-card p-3.5 sm:p-5 relative overflow-hidden group">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ventas Totales</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-              <DollarSign className="w-4 h-4" />
+            <span className="text-[10.5px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">Ventas Totales</span>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold shrink-0">
+              <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <h3 className="text-2xl sm:text-3xl font-black text-emerald-600 font-mono mt-2">
+          <h3 className="text-xl sm:text-3xl font-black text-emerald-600 font-mono mt-1 sm:mt-2">
             ${summary.totalVentas.toFixed(2)}
           </h3>
-          <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 text-[11px]">
-            <span className="text-slate-500 font-medium">{summary.totalPedidos} transacciones</span>
-            <span className="text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">
-              Ticket: ${summary.ticketPromedio.toFixed(2)}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-1.5 pt-1.5 sm:mt-2 sm:pt-2 border-t border-slate-100 text-[10px] sm:text-[11px] gap-1">
+            <span className="text-slate-500 font-medium truncate">{summary.totalPedidos} órdenes</span>
+            <span className="text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded truncate self-start sm:self-auto">
+              ${summary.ticketPromedio.toFixed(2)} avg
             </span>
           </div>
         </div>
 
         {/* KPI 2: Gastos en Insumos */}
-        <div className="clay-card p-5 relative overflow-hidden group">
+        <div className="clay-card p-3.5 sm:p-5 relative overflow-hidden group">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Gastos en Insumos</span>
-            <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
-              <ShoppingCart className="w-4 h-4" />
+            <span className="text-[10.5px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">Gastos Insumos</span>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold shrink-0">
+              <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <h3 className="text-2xl sm:text-3xl font-black text-rose-600 font-mono mt-2">
+          <h3 className="text-xl sm:text-3xl font-black text-rose-600 font-mono mt-1 sm:mt-2">
             ${summary.totalGastosCompras.toFixed(2)}
           </h3>
-          <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 text-[11px]">
-            <span className="text-slate-500 font-medium">Esencias, botes, alcohol</span>
-            <span className="text-rose-700 font-bold bg-rose-50 px-1.5 py-0.5 rounded">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-1.5 pt-1.5 sm:mt-2 sm:pt-2 border-t border-slate-100 text-[10px] sm:text-[11px] gap-1">
+            <span className="text-slate-500 font-medium truncate">Materia prima</span>
+            <span className="text-rose-700 font-bold bg-rose-50 px-1.5 py-0.5 rounded truncate self-start sm:self-auto">
               {summary.totalVentas > 0
-                ? `${((summary.totalGastosCompras / summary.totalVentas) * 100).toFixed(0)}% de ventas`
+                ? `${((summary.totalGastosCompras / summary.totalVentas) * 100).toFixed(0)}% ventas`
                 : 'Costo base'}
             </span>
           </div>
         </div>
 
         {/* KPI 3: Margen Operativo Bruto */}
-        <div className="clay-card p-5 relative overflow-hidden group">
+        <div className="clay-card p-3.5 sm:p-5 relative overflow-hidden group">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Margen Operativo Bruto</span>
-            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
-              <TrendingUp className="w-4 h-4" />
+            <span className="text-[10.5px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">Margen Bruto</span>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shrink-0">
+              <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <h3 className="text-2xl sm:text-3xl font-black text-indigo-700 font-mono mt-2">
+          <h3 className="text-xl sm:text-3xl font-black text-indigo-700 font-mono mt-1 sm:mt-2">
             ${summary.margenOperativoBruto.toFixed(2)}
           </h3>
-          <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 text-[11px]">
-            <span className="text-slate-500 font-medium">Ganancia libre</span>
-            <span className="text-indigo-700 font-black bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-1.5 pt-1.5 sm:mt-2 sm:pt-2 border-t border-slate-100 text-[10px] sm:text-[11px] gap-1">
+            <span className="text-slate-500 font-medium truncate">Ganancia libre</span>
+            <span className="text-indigo-700 font-black bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 truncate self-start sm:self-auto">
               +{summary.margenPorcentual.toFixed(1)}%
             </span>
           </div>
         </div>
 
         {/* KPI 4: Total Pedidos & Operaciones */}
-        <div className="clay-card p-5 relative overflow-hidden group">
+        <div className="clay-card p-3.5 sm:p-5 relative overflow-hidden group">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total de Pedidos</span>
-            <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
-              <Package className="w-4 h-4" />
+            <span className="text-[10.5px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">Total Pedidos</span>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold shrink-0">
+              <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <h3 className="text-2xl sm:text-3xl font-black text-slate-900 font-mono mt-2">
+          <h3 className="text-xl sm:text-3xl font-black text-slate-900 font-mono mt-1 sm:mt-2">
             {summary.totalPedidos}
           </h3>
-          <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 text-[11px]">
-            <span className="text-slate-500 font-medium">{summary.onzasVendidas} Oz servidas</span>
-            <span className="text-purple-700 font-bold bg-purple-50 px-1.5 py-0.5 rounded">
-              {summary.dteTransmitidos} DTEs MH
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-1.5 pt-1.5 sm:mt-2 sm:pt-2 border-t border-slate-100 text-[10px] sm:text-[11px] gap-1">
+            <span className="text-slate-500 font-medium truncate">{summary.onzasVendidas} Oz</span>
+            <span className="text-purple-700 font-bold bg-purple-50 px-1.5 py-0.5 rounded truncate self-start sm:self-auto">
+              {summary.dteTransmitidos} DTEs
             </span>
           </div>
         </div>
       </div>
 
       {/* ================= BLOQUE 2: PROYECCIÓN DE AGOTAMIENTO DE STOCK (DÍAS DE INVENTARIO) ================= */}
-      <div className="clay-card p-5 sm:p-6 space-y-4 border-2 border-amber-200/70 bg-gradient-to-br from-white to-amber-50/20">
+      <div className="clay-card p-3.5 sm:p-6 space-y-3 sm:space-y-4 border-2 border-amber-200/70 bg-gradient-to-br from-white to-amber-50/20">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-extrabold text-base text-slate-800 flex items-center gap-2">
-                <Hourglass className="w-5 h-5 text-amber-600" />
-                <span>Proyección de Agotamiento de Stock (Días Restantes de Inventario)</span>
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <h3 className="font-extrabold text-sm sm:text-base text-slate-800 flex items-center gap-1.5 sm:gap-2">
+                <Hourglass className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 shrink-0" />
+                <span>Proyección de Agotamiento de Stock (Días Restantes)</span>
               </h3>
-              <span className="text-[10px] font-black uppercase bg-rose-100 text-rose-800 px-2 py-0.5 rounded">
-                Alerta de Reorden APAESA
+              <span className="text-[9.5px] sm:text-[10px] font-black uppercase bg-rose-100 text-rose-800 px-2 py-0.5 rounded shrink-0">
+                Alerta APAESA
               </span>
             </div>
-            <p className="text-xs text-slate-500 font-medium">
-              Calcula con precisión matemática cuántos días de existencias te quedan para cada contratipo según el ritmo diario de ventas
+            <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5">
+              Días de existencias para cada contratipo según el ritmo diario de ventas
             </p>
           </div>
           {onNavigateTab && (
             <button
               onClick={() => onNavigateTab('compras')}
-              className="clay-btn clay-btn-light px-3 py-1.5 text-xs font-bold text-indigo-700 flex items-center gap-1 cursor-pointer"
+              className="clay-btn clay-btn-light px-2.5 sm:px-3 py-1.5 text-xs font-bold text-indigo-700 flex items-center gap-1 cursor-pointer shrink-0"
             >
               <ShoppingCart className="w-3.5 h-3.5" />
-              <span>Ver Compras & Proveedores</span>
+              <span>Compras & Proveedores</span>
             </button>
           )}
         </div>
 
         {/* Tarjetas de Proyección de Días Restantes */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4 pt-1">
           {proyeccionAgotamiento.slice(0, 6).map((item) => {
             const isCritical = item.urgency === 'CRITICO';
             const isWarning = item.urgency === 'ALERTA';
             return (
               <div
                 key={item.id}
-                className={`p-4 rounded-2xl border transition-all ${
+                className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl border transition-all ${
                   isCritical
                     ? 'bg-rose-50/80 border-rose-300 shadow-xs'
                     : isWarning
@@ -651,14 +651,16 @@ export default function AromaniakDashboardModule({
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <span className="font-black text-slate-900 text-sm block truncate">{item.name}</span>
-                    <span className="text-[10px] text-slate-400 block font-medium">
+                  <div className="min-w-0 flex-1">
+                    <span className="font-black text-slate-900 text-xs sm:text-sm block truncate" title={item.name}>
+                      {item.name}
+                    </span>
+                    <span className="text-[10px] text-slate-400 block font-medium truncate">
                       Proveedor: {item.supplier}
                     </span>
                   </div>
                   <span
-                    className={`text-[10px] font-black uppercase px-2 py-0.5 rounded shrink-0 ${
+                    className={`text-[9.5px] sm:text-[10px] font-black uppercase px-2 py-0.5 rounded shrink-0 ${
                       isCritical
                         ? 'bg-rose-600 text-white animate-pulse'
                         : isWarning
@@ -666,26 +668,26 @@ export default function AromaniakDashboardModule({
                         : 'bg-emerald-100 text-emerald-800'
                     }`}
                   >
-                    {isCritical ? 'Reorden Urgente' : isWarning ? 'Atención' : 'Stock Saludable'}
+                    {isCritical ? 'Reorden Urgente' : isWarning ? 'Atención' : 'Stock OK'}
                   </span>
                 </div>
 
                 {/* Contador Central de Días */}
-                <div className="my-3 flex items-baseline justify-between">
+                <div className="my-2 sm:my-3 flex items-baseline justify-between">
                   <div>
                     <span
-                      className={`text-3xl font-black font-mono tracking-tight ${
+                      className={`text-2xl sm:text-3xl font-black font-mono tracking-tight ${
                         isCritical ? 'text-rose-700' : isWarning ? 'text-amber-700' : 'text-emerald-700'
                       }`}
                     >
                       {item.daysLeft > 180 ? '>180' : item.daysLeft}
                     </span>
-                    <span className="text-xs font-bold text-slate-500 ml-1.5">
+                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 ml-1.5">
                       {item.daysLeft === 1 ? 'día restante' : 'días restantes'}
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs font-extrabold text-slate-800 block font-mono">
+                    <span className="text-xs sm:text-xs font-extrabold text-slate-800 block font-mono">
                       {item.stock} {item.unit}s
                     </span>
                     <span className="text-[10px] text-slate-400 font-medium">en bodega</span>
@@ -693,11 +695,11 @@ export default function AromaniakDashboardModule({
                 </div>
 
                 {/* Velocidad de Consumo y Sugerencia */}
-                <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px]">
-                  <span className="text-slate-500 font-medium">
-                    Consumo: <strong className="text-slate-800 font-mono">{item.dailyRate} Oz/día</strong>
+                <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px] sm:text-[11px]">
+                  <span className="text-slate-500 font-medium truncate pr-1">
+                    Consumo: <strong className="text-slate-800 font-mono">{item.dailyRate} Oz/d</strong>
                   </span>
-                  <span className="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">
+                  <span className="font-bold text-indigo-700 bg-indigo-50 px-1.5 sm:px-2 py-0.5 rounded shrink-0">
                     Pedir: +{item.reorderSuggestion} Oz
                   </span>
                 </div>
@@ -708,41 +710,41 @@ export default function AromaniakDashboardModule({
       </div>
 
       {/* ================= BLOQUE 3: RETENCIÓN LTV & EMBUDO DE CARRITOS ================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Retención de Clientes & LTV */}
-        <div className="clay-card p-5 sm:p-6 space-y-4">
+        <div className="clay-card p-3.5 sm:p-6 space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-extrabold text-sm text-slate-800 flex items-center gap-2">
-              <Percent className="w-4 h-4 text-emerald-600" />
-              <span>Retención de Clientes & LTV (Valor de Vida)</span>
+            <h3 className="font-extrabold text-xs sm:text-sm text-slate-800 flex items-center gap-1.5 sm:gap-2">
+              <Percent className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 shrink-0" />
+              <span>Retención de Clientes & LTV</span>
             </h3>
-            <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+            <span className="text-[10.5px] sm:text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
               Lealtad de Marca
             </span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
-              <span className="text-[10px] font-bold text-slate-400 uppercase block">Clientes Únicos</span>
-              <span className="text-xl font-black text-slate-900 font-mono mt-1 block">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-1">
+            <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
+              <span className="text-[9.5px] sm:text-[10px] font-bold text-slate-400 uppercase block truncate">Clientes Únicos</span>
+              <span className="text-lg sm:text-xl font-black text-slate-900 font-mono mt-0.5 block">
                 {retencionLtv.clientesUnicos}
               </span>
             </div>
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
-              <span className="text-[10px] font-bold text-slate-400 uppercase block">Recurrentes</span>
-              <span className="text-xl font-black text-indigo-700 font-mono mt-1 block">
+            <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
+              <span className="text-[9.5px] sm:text-[10px] font-bold text-slate-400 uppercase block truncate">Recurrentes</span>
+              <span className="text-lg sm:text-xl font-black text-indigo-700 font-mono mt-0.5 block">
                 {retencionLtv.clientesRecurrentes}
               </span>
             </div>
-            <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-100 text-center">
-              <span className="text-[10px] font-bold text-emerald-700 uppercase block">Recompra</span>
-              <span className="text-xl font-black text-emerald-700 font-mono mt-1 block">
+            <div className="p-2.5 sm:p-3 rounded-xl bg-emerald-50/70 border border-emerald-100 text-center">
+              <span className="text-[9.5px] sm:text-[10px] font-bold text-emerald-700 uppercase block truncate">Recompra</span>
+              <span className="text-lg sm:text-xl font-black text-emerald-700 font-mono mt-0.5 block">
                 {retencionLtv.tasaRecompra}%
               </span>
             </div>
-            <div className="p-3 rounded-xl bg-purple-50/70 border border-purple-100 text-center">
-              <span className="text-[10px] font-bold text-purple-700 uppercase block">LTV Promedio</span>
-              <span className="text-xl font-black text-purple-700 font-mono mt-1 block">
+            <div className="p-2.5 sm:p-3 rounded-xl bg-purple-50/70 border border-purple-100 text-center">
+              <span className="text-[9.5px] sm:text-[10px] font-bold text-purple-700 uppercase block truncate">LTV Promedio</span>
+              <span className="text-lg sm:text-xl font-black text-purple-700 font-mono mt-0.5 block">
                 ${retencionLtv.ltvPromedio.toFixed(2)}
               </span>
             </div>

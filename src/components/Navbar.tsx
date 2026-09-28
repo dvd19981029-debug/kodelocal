@@ -116,7 +116,7 @@ export function Navbar() {
           </div>
         </Link>
 
-        {/* Center Navigation: Módulos / Perfiles autorizados */}
+        {/* Center Navigation: Módulos / Perfiles autorizados (Desktop) */}
         <nav className="hidden md:flex items-center gap-2 p-1.5 rounded-2xl bg-white/60 shadow-[inset_2px_2px_5px_rgba(164,177,198,0.25),inset_-2px_-2px_5px_rgba(255,255,255,0.8)] border border-white/80">
           {visibleNavItems.map((item) => {
             const Icon = item.icon;
@@ -228,6 +228,29 @@ export function Navbar() {
           )}
 
         </div>
+      </div>
+
+      {/* Mobile Navigation Strip (Solo visible en pantallas móviles) */}
+      <div className="flex md:hidden items-center gap-1.5 pt-2 border-t border-slate-200/60 mt-1.5 max-w-7xl mx-auto">
+        {visibleNavItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = item.matchPaths.some(p => pathname.startsWith(p));
+          const shortLabel = item.id === 'admin' ? 'Admin' : item.id === 'pos' ? 'POS Venta' : 'Bodega';
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex-1 py-1.5 px-2 text-[11px] font-black rounded-xl text-center flex items-center justify-center gap-1.5 transition-all truncate ${
+                isActive
+                  ? 'clay-btn-primary !shadow-[2px_3px_8px_rgba(79,70,229,0.35)]'
+                  : 'bg-white/80 text-slate-600 border border-slate-200/60 shadow-xs'
+              }`}
+            >
+              <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-white' : 'text-slate-500'}`} />
+              <span className="truncate">{shortLabel}</span>
+            </Link>
+          );
+        })}
       </div>
     </header>
   );

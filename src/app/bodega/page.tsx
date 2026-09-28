@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import Link from 'next/link';
 import { 
   Box, 
+  Store,
   CheckCircle2, 
   Clock, 
   Droplets, 
@@ -763,13 +765,116 @@ export default function BodegaPage() {
         </div>
       </div>
 
+      {/* Selector de Pestañas Móvil de Bodega (Solo en Teléfonos y Tablets) */}
+      <div className="lg:hidden w-full flex flex-col gap-2">
+        <Link
+          href="/pos"
+          className="clay-card p-2.5 flex items-center justify-between text-xs font-bold text-indigo-700 bg-indigo-50/80 hover:bg-indigo-100 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Store className="w-4 h-4" />
+            <span>← Ir a Punto de Venta (POS)</span>
+          </div>
+          <span className="text-[10px] text-indigo-500 font-semibold">Catálogo</span>
+        </Link>
+
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 clay-card p-2">
+          <button
+            type="button"
+            onClick={() => { setBodegaTab('por_preparar'); setActiveConfrontationPurchase(null); }}
+            className={`py-2 px-1 rounded-xl text-[11px] font-black text-center flex flex-col items-center justify-center gap-1 transition-all ${
+              bodegaTab === 'por_preparar'
+                ? 'clay-btn-primary !shadow-md'
+                : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            <div className="flex items-center gap-1">
+              <span>Preparar</span>
+              {pendingCount > 0 && (
+                <span className={`text-[9px] px-1 py-0.2 rounded-full font-mono font-black ${
+                  bodegaTab === 'por_preparar' ? 'bg-white text-rose-700' : 'bg-rose-500 text-white animate-pulse'
+                }`}>
+                  {pendingCount}
+                </span>
+              )}
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { setBodegaTab('listos'); setActiveConfrontationPurchase(null); }}
+            className={`py-2 px-1 rounded-xl text-[11px] font-black text-center flex flex-col items-center justify-center gap-1 transition-all ${
+              bodegaTab === 'listos'
+                ? 'clay-btn-primary !shadow-md'
+                : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            <div className="flex items-center gap-1">
+              <span>Listos</span>
+              {readyCount > 0 && (
+                <span className={`text-[9px] px-1 py-0.2 rounded-full font-mono font-black ${
+                  bodegaTab === 'listos' ? 'bg-white text-emerald-800' : 'bg-emerald-100 text-emerald-800'
+                }`}>
+                  {readyCount}
+                </span>
+              )}
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { setBodegaTab('entregados'); setActiveConfrontationPurchase(null); }}
+            className={`py-2 px-1 rounded-xl text-[11px] font-black text-center flex flex-col items-center justify-center gap-1 transition-all ${
+              bodegaTab === 'entregados'
+                ? 'clay-btn-primary !shadow-md'
+                : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            <span>Entregados</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { setBodegaTab('inventario'); setActiveConfrontationPurchase(null); }}
+            className={`py-2 px-1 rounded-xl text-[11px] font-black text-center flex flex-col items-center justify-center gap-1 transition-all ${
+              bodegaTab === 'inventario'
+                ? 'clay-btn-primary !shadow-md'
+                : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            <span>Puestos A1</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { setBodegaTab('ingreso_compras'); setActiveConfrontationPurchase(null); }}
+            className={`py-2 px-1 rounded-xl text-[11px] font-black text-center flex flex-col items-center justify-center gap-1 transition-all ${
+              bodegaTab === 'ingreso_compras'
+                ? 'clay-btn-primary !shadow-md'
+                : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            <div className="flex items-center gap-1">
+              <span>Compras</span>
+              {pendingPurchasesCount > 0 && (
+                <span className={`text-[9px] px-1 py-0.2 rounded-full font-mono font-black ${
+                  bodegaTab === 'ingreso_compras' ? 'bg-white text-amber-900' : 'bg-amber-500 text-white animate-pulse'
+                }`}>
+                  {pendingPurchasesCount}
+                </span>
+              )}
+            </div>
+          </button>
+        </div>
+      </div>
+
       {/* Grid Principal: Menú Lateral a la Izquierda + Área de Trabajo a la Derecha */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* ========================================================================= */}
-        {/* MENÚ LATERAL IZQUIERDO DE BODEGA                                         */}
+        {/* MENÚ LATERAL IZQUIERDO DE BODEGA (DESKTOP)                                */}
         {/* ========================================================================= */}
-        <aside className="lg:col-span-3 space-y-4">
+        <aside className="hidden lg:block lg:col-span-3 space-y-4">
           <div className="clay-card p-3 space-y-1.5">
             <p className="px-3 py-1 text-[10.5px] font-black text-slate-400 uppercase tracking-wider">
               Menú de Bodega

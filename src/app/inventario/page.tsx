@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { 
+  Store,
   Package, 
   Plus, 
   Search, 
@@ -211,52 +213,66 @@ export default function InventarioPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 pb-12">
+    <div className="flex flex-col gap-4 sm:gap-6 pb-12">
       
+      {/* Botón Móvil: Regreso Rápido a POS */}
+      <div className="md:hidden">
+        <Link
+          href="/pos"
+          className="clay-card p-2.5 flex items-center justify-between text-xs font-bold text-indigo-700 bg-indigo-50/80 hover:bg-indigo-100 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Store className="w-4 h-4" />
+            <span>← Ir a Punto de Venta (POS)</span>
+          </div>
+          <span className="text-[10px] text-indigo-500 font-semibold">Terminal</span>
+        </Link>
+      </div>
+
       {/* Header & KPI Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         
-        <div className="clay-card p-5 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Productos Totales</p>
-            <h3 className="text-2xl font-black text-slate-800 mt-1">{products.length}</h3>
-            <span className="text-xs text-slate-500 font-medium">{totalStockItems} unidades en stock</span>
+        <div className="clay-card p-3.5 sm:p-5 flex items-center justify-between">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">Productos</p>
+            <h3 className="text-xl sm:text-2xl font-black text-slate-800 mt-0.5 truncate">{products.length}</h3>
+            <span className="text-[10px] sm:text-xs text-slate-500 font-medium truncate block">{totalStockItems} unidades</span>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-[2px_3px_8px_rgba(99,102,241,0.2)]">
-            <Package className="w-6 h-6" />
-          </div>
-        </div>
-
-        <div className="clay-card p-5 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Valor Inventario (PVP)</p>
-            <h3 className="text-2xl font-black text-emerald-600 mt-1">${totalInventoryValue.toFixed(2)}</h3>
-            <span className="text-xs text-slate-500 font-medium">Precios de venta al público</span>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-[2px_3px_8px_rgba(16,185,129,0.2)]">
-            <DollarSign className="w-6 h-6" />
+          <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-xs shrink-0 ml-1">
+            <Package className="w-4 h-4 sm:w-6 sm:h-6" />
           </div>
         </div>
 
-        <div className="clay-card p-5 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Stock Crítico / Bajo</p>
-            <h3 className="text-2xl font-black text-amber-600 mt-1">{lowStockCount}</h3>
-            <span className="text-xs text-slate-500 font-medium">Requieren reposición</span>
+        <div className="clay-card p-3.5 sm:p-5 flex items-center justify-between">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">Valor (PVP)</p>
+            <h3 className="text-xl sm:text-2xl font-black text-emerald-600 mt-0.5 truncate">${totalInventoryValue.toFixed(2)}</h3>
+            <span className="text-[10px] sm:text-xs text-slate-500 font-medium truncate block">Precios PVP</span>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-[2px_3px_8px_rgba(245,158,11,0.2)]">
-            <AlertTriangle className="w-6 h-6" />
+          <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-xs shrink-0 ml-1">
+            <DollarSign className="w-4 h-4 sm:w-6 sm:h-6" />
           </div>
         </div>
 
-        <div className="clay-card p-5 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sincronizados con Web</p>
-            <h3 className="text-2xl font-black text-purple-600 mt-1">{ecommerceCount}</h3>
-            <span className="text-xs text-slate-500 font-medium">Disponibles en E-commerce</span>
+        <div className="clay-card p-3.5 sm:p-5 flex items-center justify-between">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">Stock Bajo</p>
+            <h3 className="text-xl sm:text-2xl font-black text-amber-600 mt-0.5 truncate">{lowStockCount}</h3>
+            <span className="text-[10px] sm:text-xs text-slate-500 font-medium truncate block">Reposición</span>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-[2px_3px_8px_rgba(168,85,247,0.2)]">
-            <Globe className="w-6 h-6" />
+          <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-xs shrink-0 ml-1">
+            <AlertTriangle className="w-4 h-4 sm:w-6 sm:h-6" />
+          </div>
+        </div>
+
+        <div className="clay-card p-3.5 sm:p-5 flex items-center justify-between">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">En Web</p>
+            <h3 className="text-xl sm:text-2xl font-black text-purple-600 mt-0.5 truncate">{ecommerceCount}</h3>
+            <span className="text-[10px] sm:text-xs text-slate-500 font-medium truncate block">Ecommerce</span>
+          </div>
+          <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-xs shrink-0 ml-1">
+            <Globe className="w-4 h-4 sm:w-6 sm:h-6" />
           </div>
         </div>
 

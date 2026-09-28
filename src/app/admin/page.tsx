@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { 
   LayoutDashboard, 
   Package, 
@@ -35,7 +36,9 @@ import {
   ShoppingCart,
   History,
   RotateCcw,
-  Sparkles
+  Sparkles,
+  ChevronDown,
+  Store
 } from 'lucide-react';
 import { 
   getStoredUsers, 
@@ -111,6 +114,7 @@ export default function AdminPage() {
   const [isBulkPriceModalOpen, setIsBulkPriceModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isMobileAdminMenuOpen, setIsMobileAdminMenuOpen] = useState(false);
 
   // Estado Usuario
   const [editingUser, setEditingUser] = useState<UserAccount | null>(null);
@@ -591,9 +595,206 @@ export default function AdminPage() {
 
   return (
     <div className="flex flex-col md:flex-row gap-4 pb-20 items-start w-full">
-      
-      {/* ================= BARRA LATERAL IZQUIERDA (MENU FORMAL ERP) ================= */}
-      <aside className="w-full md:w-56 lg:w-60 shrink-0 flex flex-col gap-4 sticky top-20">
+
+      {/* ================= NAVEGACIÓN MÓVIL DE ADMINISTRACIÓN (SOLO EN TELÉFONOS) ================= */}
+      <div className="w-full md:hidden flex flex-col gap-2">
+        <div className="clay-card p-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-xs shrink-0">
+              👑
+            </div>
+            <div className="min-w-0">
+              <span className="text-[10px] text-slate-400 font-bold uppercase block leading-tight">Mando Gerencial</span>
+              <span className="text-xs font-black text-slate-800 truncate block">
+                {activeTab === 'dashboard' && 'Dashboard Ejecutivo'}
+                {activeTab === 'productos' && `Catálogo (${products.length})`}
+                {activeTab === 'categorias' && `Categorías (${categories.length})`}
+                {activeTab === 'kardex' && 'Kárdex General'}
+                {activeTab === 'compras' && 'Compras & Proveedores'}
+                {activeTab === 'ventas-dia' && 'Ventas del Día'}
+                {activeTab === 'reportes-periodo' && 'Reportes por Período'}
+                {activeTab === 'reportes-financieros' && 'Reportes Financieros'}
+                {activeTab === 'usuarios' && 'Personal & Permisos'}
+                {activeTab === 'roles' && 'Roles del Sistema'}
+                {activeTab === 'configuracion' && 'Factura Llama & Negocio'}
+                {activeTab === 'configuracion-kode' && 'Configuración Kode'}
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsMobileAdminMenuOpen(!isMobileAdminMenuOpen)}
+            className="clay-btn clay-btn-light px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 shrink-0"
+          >
+            <span>Secciones</span>
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isMobileAdminMenuOpen ? 'rotate-180' : ''}`} />
+          </button>
+        </div>
+
+        {/* Desplegable de Secciones para Móvil */}
+        {isMobileAdminMenuOpen && (
+          <div className="clay-card p-3.5 space-y-3 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Seleccionar Sección</span>
+              <button
+                type="button"
+                onClick={() => setIsMobileAdminMenuOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                type="button"
+                onClick={() => { setActiveTab('dashboard'); setIsMobileAdminMenuOpen(false); }}
+                className={`p-2.5 rounded-xl text-xs font-bold text-left flex items-center gap-2 transition-all ${
+                  activeTab === 'dashboard' ? 'clay-btn-primary' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <LayoutDashboard className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Dashboard</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setActiveTab('productos'); setIsMobileAdminMenuOpen(false); }}
+                className={`p-2.5 rounded-xl text-xs font-bold text-left flex items-center gap-2 transition-all ${
+                  activeTab === 'productos' ? 'clay-btn-primary' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <Package className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Productos</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setActiveTab('categorias'); setIsMobileAdminMenuOpen(false); }}
+                className={`p-2.5 rounded-xl text-xs font-bold text-left flex items-center gap-2 transition-all ${
+                  activeTab === 'categorias' ? 'clay-btn-primary' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Categorías</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setKardexFilterProduct(null); setActiveTab('kardex'); setIsMobileAdminMenuOpen(false); }}
+                className={`p-2.5 rounded-xl text-xs font-bold text-left flex items-center gap-2 transition-all ${
+                  activeTab === 'kardex' ? 'clay-btn-primary' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <History className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Kárdex</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setActiveTab('compras'); setIsMobileAdminMenuOpen(false); }}
+                className={`p-2.5 rounded-xl text-xs font-bold text-left flex items-center gap-2 transition-all ${
+                  activeTab === 'compras' ? 'clay-btn-primary' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <ShoppingCart className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Compras</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setActiveTab('ventas-dia'); setIsMobileAdminMenuOpen(false); }}
+                className={`p-2.5 rounded-xl text-xs font-bold text-left flex items-center gap-2 transition-all ${
+                  activeTab === 'ventas-dia' ? 'clay-btn-primary' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <CalendarDays className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Ventas Día</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setActiveTab('reportes-periodo'); setIsMobileAdminMenuOpen(false); }}
+                className={`p-2.5 rounded-xl text-xs font-bold text-left flex items-center gap-2 transition-all ${
+                  activeTab === 'reportes-periodo' ? 'clay-btn-primary' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Reportes Período</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setActiveTab('reportes-financieros'); setIsMobileAdminMenuOpen(false); }}
+                className={`p-2.5 rounded-xl text-xs font-bold text-left flex items-center gap-2 transition-all ${
+                  activeTab === 'reportes-financieros' ? 'clay-btn-primary' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <TrendingUp className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Finanzas & Margen</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setActiveTab('usuarios'); setIsMobileAdminMenuOpen(false); }}
+                className={`p-2.5 rounded-xl text-xs font-bold text-left flex items-center gap-2 transition-all ${
+                  activeTab === 'usuarios' ? 'clay-btn-primary' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <Users className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Personal</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setActiveTab('roles'); setIsMobileAdminMenuOpen(false); }}
+                className={`p-2.5 rounded-xl text-xs font-bold text-left flex items-center gap-2 transition-all ${
+                  activeTab === 'roles' ? 'clay-btn-primary' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Roles</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setActiveTab('configuracion'); setIsMobileAdminMenuOpen(false); }}
+                className={`p-2.5 rounded-xl text-xs font-bold text-left flex items-center gap-2 transition-all ${
+                  activeTab === 'configuracion' ? 'clay-btn-primary' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <Settings className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Factura Llama</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setActiveTab('configuracion-kode'); setIsMobileAdminMenuOpen(false); }}
+                className={`p-2.5 rounded-xl text-xs font-bold text-left flex items-center gap-2 transition-all ${
+                  activeTab === 'configuracion-kode' ? 'clay-btn-primary' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span className="truncate">Config Kode</span>
+              </button>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+              <Link
+                href="/pos"
+                className="text-xs font-bold text-indigo-700 flex items-center gap-1.5 py-1 px-2 rounded-lg hover:bg-indigo-50"
+              >
+                <Store className="w-3.5 h-3.5" />
+                <span>Ir a Punto de Venta (POS)</span>
+              </Link>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ================= BARRA LATERAL IZQUIERDA (MENU FORMAL ERP - DESKTOP) ================= */}
+      <aside className="hidden md:flex md:w-56 lg:w-60 shrink-0 flex-col gap-4 md:sticky md:top-20">
         
         {/* Encabezado del Menú Lateral */}
         <div className="clay-card p-3.5 flex items-center gap-2.5">

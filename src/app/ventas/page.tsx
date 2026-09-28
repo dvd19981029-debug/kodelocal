@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { 
+  Store,
   ReceiptText, 
   Search, 
   FileCheck, 
@@ -267,83 +269,97 @@ export default function VentasPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 pb-12">
+    <div className="flex flex-col gap-4 sm:gap-6 pb-12">
       
+      {/* Botón Móvil: Regreso Rápido a POS */}
+      <div className="md:hidden">
+        <Link
+          href="/pos"
+          className="clay-card p-2.5 flex items-center justify-between text-xs font-bold text-indigo-700 bg-indigo-50/80 hover:bg-indigo-100 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Store className="w-4 h-4" />
+            <span>← Ir a Punto de Venta (POS)</span>
+          </div>
+          <span className="text-[10px] text-indigo-500 font-semibold">Terminal</span>
+        </Link>
+      </div>
+
       {/* Resumen Superior con KPIs de Facturación */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         
         {/* 1. Total Ventas */}
-        <div className="clay-card p-5 flex items-center justify-between">
-          <div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Ventas Totales</p>
-            <h3 className="text-2xl font-black text-indigo-600 mt-0.5">${totalVentas.toFixed(2)}</h3>
-            <span className="text-xs text-slate-500 font-medium">{sales.length} transacciones</span>
+        <div className="clay-card p-3.5 sm:p-5 flex items-center justify-between">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider truncate">Ventas Totales</p>
+            <h3 className="text-xl sm:text-2xl font-black text-indigo-600 mt-0.5 truncate">${totalVentas.toFixed(2)}</h3>
+            <span className="text-[10px] sm:text-xs text-slate-500 font-medium truncate block">{sales.length} transacciones</span>
           </div>
-          <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-xs">
-            <DollarSign className="w-5 h-5" />
+          <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-xs shrink-0 ml-1">
+            <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
         </div>
 
         {/* 2. DTEs Certificados (MH) */}
         <div 
           onClick={() => setFilterTab('TRANSMITTED_DTE')}
-          className="clay-card p-5 flex items-center justify-between cursor-pointer hover:border-emerald-300 transition-all"
+          className="clay-card p-3.5 sm:p-5 flex items-center justify-between cursor-pointer hover:border-emerald-300 transition-all"
           title="Clic para ver solo comprobantes transmitidos"
         >
-          <div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">DTEs Certificados (MH)</p>
-            <h3 className="text-2xl font-black text-emerald-600 mt-0.5">{dteTransmitidosCount}</h3>
-            <span className="text-xs text-emerald-700 font-semibold">Con Sello de Hacienda</span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider truncate">DTEs Certificados</p>
+            <h3 className="text-xl sm:text-2xl font-black text-emerald-600 mt-0.5 truncate">{dteTransmitidosCount}</h3>
+            <span className="text-[10px] sm:text-xs text-emerald-700 font-semibold truncate block">Sello Hacienda</span>
           </div>
-          <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-xs">
-            <FileCheck className="w-5 h-5" />
+          <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-xs shrink-0 ml-1">
+            <FileCheck className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
         </div>
 
         {/* 3. DTEs Pendientes de Transmisión (Contingencia) */}
         <div 
           onClick={() => setFilterTab('PENDING_DTE')}
-          className={`clay-card p-5 flex items-center justify-between cursor-pointer transition-all ${
+          className={`clay-card p-3.5 sm:p-5 flex items-center justify-between cursor-pointer transition-all ${
             dtePendientesCount > 0 
               ? 'bg-amber-50/90 border-2 border-amber-400 shadow-md ring-2 ring-amber-300/40' 
               : 'hover:border-slate-300'
           }`}
           title="Clic para ver comprobantes pendientes de transmisión"
         >
-          <div>
-            <div className="flex items-center gap-1.5">
-              <p className={`text-[11px] font-bold uppercase tracking-wider ${dtePendientesCount > 0 ? 'text-amber-900 font-black' : 'text-slate-400'}`}>
-                Pendientes DTE (MH)
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1">
+              <p className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider truncate ${dtePendientesCount > 0 ? 'text-amber-900 font-black' : 'text-slate-400'}`}>
+                Pendientes DTE
               </p>
               {dtePendientesCount > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full text-[9.5px] font-black bg-amber-500 text-white animate-pulse">
-                  Alerta
+                <span className="px-1 py-0.2 rounded-full text-[9px] font-black bg-amber-500 text-white animate-pulse shrink-0">
+                  !
                 </span>
               )}
             </div>
-            <h3 className={`text-2xl font-black mt-0.5 ${dtePendientesCount > 0 ? 'text-amber-700 font-black' : 'text-slate-500'}`}>
+            <h3 className={`text-xl sm:text-2xl font-black mt-0.5 truncate ${dtePendientesCount > 0 ? 'text-amber-700 font-black' : 'text-slate-500'}`}>
               {dtePendientesCount}
             </h3>
-            <span className={`text-xs ${dtePendientesCount > 0 ? 'text-amber-800 font-bold' : 'text-slate-400 font-medium'}`}>
-              {dtePendientesCount > 0 ? 'En Contingencia Offline' : 'Al día con Hacienda'}
+            <span className={`text-[10px] sm:text-xs truncate block ${dtePendientesCount > 0 ? 'text-amber-800 font-bold' : 'text-slate-400 font-medium'}`}>
+              {dtePendientesCount > 0 ? 'Contingencia' : 'Al día MH'}
             </span>
           </div>
-          <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shadow-xs ${
+          <div className={`w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-xs shrink-0 ml-1 ${
             dtePendientesCount > 0 ? 'bg-amber-500 text-white shadow-amber-200' : 'bg-slate-100 text-slate-400'
           }`}>
-            <AlertTriangle className="w-5 h-5" />
+            <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
         </div>
 
         {/* 4. IVA Débito Fiscal */}
-        <div className="clay-card p-5 flex items-center justify-between">
-          <div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">IVA Débito (13%)</p>
-            <h3 className="text-2xl font-black text-purple-600 mt-0.5">${totalIvaRecaudado.toFixed(2)}</h3>
-            <span className="text-xs text-slate-500 font-medium">Impuesto desglosado</span>
+        <div className="clay-card p-3.5 sm:p-5 flex items-center justify-between">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider truncate">IVA Débito (13%)</p>
+            <h3 className="text-xl sm:text-2xl font-black text-purple-600 mt-0.5 truncate">${totalIvaRecaudado.toFixed(2)}</h3>
+            <span className="text-[10px] sm:text-xs text-slate-500 font-medium truncate block">Impuesto</span>
           </div>
-          <div className="w-11 h-11 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-xs">
-            <TrendingUp className="w-5 h-5" />
+          <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-xs shrink-0 ml-1">
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
         </div>
 
