@@ -828,6 +828,20 @@ export default function AdminPage() {
               <Sparkles className="w-4 h-4 text-amber-500" />
               <span>Configuración Kode</span>
             </button>
+            <button
+              onClick={() => {
+                const host = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'localhost' : '192.168.3.111';
+                window.open(`http://${host}:5050`, '_blank', 'noopener,noreferrer');
+              }}
+              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left mt-1 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/60"
+              title="Abrir Dashboard de Miranda"
+            >
+              <div className="flex items-center gap-2.5">
+                <Sparkles className="w-4 h-4 text-indigo-500" />
+                <span>Dashboard Miranda</span>
+              </div>
+              <ArrowUpRight className="w-3.5 h-3.5 text-slate-400" />
+            </button>
           </div>
 
           {/* HERRAMIENTA: LIMPIAR MOVIMIENTOS A CEROS */}
