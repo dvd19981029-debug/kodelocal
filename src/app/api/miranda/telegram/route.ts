@@ -39,29 +39,47 @@ export async function POST(req: NextRequest) {
       if (cbData.startsWith("task_done_")) {
         await answerTelegramCallback(cbId);
         const taskId = parseInt(cbData.replace("task_done_", ""), 10);
-        await prisma.mirandaTask.update({
-          where: { id: taskId },
-          data: { status: "completed", completedAt: new Date() },
-        });
-        const completedBy = auth.authorized ? auth.adminName : (sender?.first_name || "Equipo");
-        await sendTelegramMessage(
-          `<b>[TAREA #${taskId} COMPLETADA POR ${completedBy.toUpperCase()}]</b>`,
-          null,
-          chatId
-        );
+        try {
+          const res = await prisma.mirandaTask.updateMany({
+            where: { id: taskId },
+            data: { status: "completed", completedAt: new Date() },
+          });
+          const completedBy = auth.authorized ? auth.adminName : (sender?.first_name || "Equipo");
+          if (res.count > 0) {
+            await sendTelegramMessage(
+              `<b>[TAREA #${taskId} COMPLETADA POR ${completedBy.toUpperCase()}]</b>`,
+              null,
+              chatId
+            );
+          } else {
+            await sendTelegramMessage(
+              `<b>[TAREA #${taskId}]</b> Ya había sido completada o no se encontró en la lista activa.`,
+              null,
+              chatId
+            );
+          }
+        } catch (err) {
+          console.error("Error updating task_done:", err);
+        }
         return NextResponse.json({ ok: true });
       } else if (cbData.startsWith("task_postpone_")) {
         await answerTelegramCallback(cbId);
         const taskId = parseInt(cbData.replace("task_postpone_", ""), 10);
-        await prisma.mirandaTask.update({
-          where: { id: taskId },
-          data: { status: "postponed" },
-        });
-        await sendTelegramMessage(
-          `<b>[TAREA #${taskId} POSPUESTA 30 MIN]</b>`,
-          null,
-          chatId
-        );
+        try {
+          const res = await prisma.mirandaTask.updateMany({
+            where: { id: taskId },
+            data: { status: "postponed" },
+          });
+          if (res.count > 0) {
+            await sendTelegramMessage(
+              `<b>[TAREA #${taskId} POSPUESTA 30 MIN]</b>`,
+              null,
+              chatId
+            );
+          }
+        } catch (err) {
+          console.error("Error updating task_postpone:", err);
+        }
         return NextResponse.json({ ok: true });
       } else if (cbData.startsWith("task_cancel_")) {
         // Cancelar tarea requiere rol directivo
@@ -75,15 +93,21 @@ export async function POST(req: NextRequest) {
         }
         await answerTelegramCallback(cbId);
         const taskId = parseInt(cbData.replace("task_cancel_", ""), 10);
-        await prisma.mirandaTask.update({
-          where: { id: taskId },
-          data: { status: "cancelled" },
-        });
-        await sendTelegramMessage(
-          `<b>[TAREA #${taskId} CANCELADA POR ${auth.adminName.toUpperCase()}]</b>`,
-          null,
-          chatId
-        );
+        try {
+          const res = await prisma.mirandaTask.updateMany({
+            where: { id: taskId },
+            data: { status: "cancelled" },
+          });
+          if (res.count > 0) {
+            await sendTelegramMessage(
+              `<b>[TAREA #${taskId} CANCELADA POR ${auth.adminName.toUpperCase()}]</b>`,
+              null,
+              chatId
+            );
+          }
+        } catch (err) {
+          console.error("Error updating task_cancel:", err);
+        }
         return NextResponse.json({ ok: true });
       }
 
