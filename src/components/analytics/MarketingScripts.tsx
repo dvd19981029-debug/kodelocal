@@ -32,20 +32,35 @@ export default function MarketingScripts() {
   useEffect(() => {
     try {
       const sessionKey = 'aromaniak_session_tracked';
+      const lastPingKey = 'aromaniak_last_ping_ts';
       const hasSession = sessionStorage.getItem(sessionKey);
       const isNewSession = !hasSession;
-      if (isNewSession) {
+      const lastPing = Number(sessionStorage.getItem(lastPingKey) || 0);
+      const now = Date.now();
+
+      // Ahorro extremo de créditos en Vercel y Supabase:
+      // Envía de inmediato si es nueva sesión, o cada 5 minutos si sigue navegando
+      if (isNewSession || now - lastPing > 5 * 60 * 1000) {
         sessionStorage.setItem(sessionKey, '1');
+        sessionStorage.setItem(lastPingKey, String(now));
+
+        const isMobile = /iPhone|Android|Mobile/i.test(navigator.userAgent);
+        const isTablet = /iPad|Tablet/i.test(navigator.userAgent);
+        const device = isTablet ? 'tablet' : isMobile ? 'mobile' : 'desktop';
+        const referrer = document.referrer || '';
+        const payload = JSON.stringify({ isNewSession, referrer, device });
+
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon('/api/analytics/visit', new Blob([payload], { type: 'application/json' }));
+        } else {
+          fetch('/api/analytics/visit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: payload,
+            keepalive: true,
+          }).catch(() => {});
+        }
       }
-      const isMobile = /iPhone|Android|Mobile/i.test(navigator.userAgent);
-      const isTablet = /iPad|Tablet/i.test(navigator.userAgent);
-      const device = isTablet ? 'tablet' : isMobile ? 'mobile' : 'desktop';
-      const referrer = document.referrer || '';
-      fetch('/api/analytics/visit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isNewSession, referrer, device }),
-      }).catch(() => {});
     } catch {
       // Ignore if sessionStorage disabled
     }

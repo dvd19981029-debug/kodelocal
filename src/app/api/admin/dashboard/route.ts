@@ -304,7 +304,7 @@ export async function GET(request: Request) {
       }));
 
     // 10. Tráfico y Visitas Web Reales (Sin estimaciones inventadas)
-    const visitMetrics = getVisitMetricsForPeriod(period, validOrders.length);
+    const visitMetrics = await getVisitMetricsForPeriod(period, validOrders.length);
 
     // Fuentes reales registradas a partir de referencias web
     const totalSourcesCount = Object.values(visitMetrics.fuentes).reduce((a, b) => a + b, 0);

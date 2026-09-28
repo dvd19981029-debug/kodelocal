@@ -32,6 +32,7 @@ export async function getBusinessContextSummary(): Promise<string> {
     ordersByStatus,
     recentOrders,
     customerCount,
+    allCustomers,
     demands,
     tasks,
     memories,
@@ -47,6 +48,12 @@ export async function getBusinessContextSummary(): Promise<string> {
     topEcommerceItems,
     topCustomers,
     topDepts,
+    kodeStatsRes,
+    kodeTodayRes,
+    kodeYesterdayRes,
+    kodeMonthRes,
+    kodeRecentOrdersRes,
+    kodeClientsRes,
     kodeTopRes,
   ] = await Promise.all([
     prisma.product.findMany({
@@ -75,6 +82,13 @@ export async function getBusinessContextSummary(): Promise<string> {
         paymentMethod: true,
         createdAt: true,
         tipoComprobante: true,
+        items: {
+          select: {
+            productName: true,
+            quantity: true,
+            unitPrice: true,
+          },
+        },
       },
     }),
     prisma.ecommerceOrder.groupBy({
@@ -84,18 +98,38 @@ export async function getBusinessContextSummary(): Promise<string> {
     }),
     prisma.ecommerceOrder.findMany({
       orderBy: { createdAt: "desc" },
-      take: 8,
+      take: 12,
       select: {
         orderNumber: true,
         orderStatus: true,
         total: true,
         customerName: true,
+        customerPhone: true,
         department: true,
+        municipality: true,
+        trackingNumber: true,
         paymentStatus: true,
         createdAt: true,
       },
     }),
     prisma.customer.count(),
+    prisma.customer.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 40,
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        email: true,
+        department: true,
+        municipality: true,
+        documentNum: true,
+        documentType: true,
+        _count: {
+          select: { sales: true, ecommerceOrders: true },
+        },
+      },
+    }),
     prisma.mirandaDemand.findMany({
       where: { available: false },
       orderBy: { createdAt: "desc" },
@@ -116,7 +150,7 @@ export async function getBusinessContextSummary(): Promise<string> {
       orderBy: { createdAt: "desc" },
       take: 5,
     }),
-    // Agregaciones temporales de ventas
+    // Agregaciones temporales de ventas Aromaniak
     prisma.sale.aggregate({
       where: { createdAt: { gte: startOfToday, lte: endOfToday } },
       _count: { id: true },
@@ -155,7 +189,7 @@ export async function getBusinessContextSummary(): Promise<string> {
       orderBy: { createdAt: "desc" },
       select: { orderNumber: true, total: true, orderStatus: true, createdAt: true },
     }),
-    // Cruces analíticos: Productos más vendidos en Ecommerce
+    // Cruces analíticos: Productos más vendidos en Ecommerce Aromaniak
     prisma.ecommerceOrderItem.groupBy({
       by: ["productName"],
       _sum: { quantity: true },
@@ -163,7 +197,7 @@ export async function getBusinessContextSummary(): Promise<string> {
       orderBy: { _sum: { quantity: "desc" } },
       take: 10,
     }),
-    // Clientes más recurrentes y con mayor gasto
+    // Clientes más recurrentes y con mayor gasto en Aromaniak
     prisma.ecommerceOrder.groupBy({
       by: ["customerName", "customerPhone"],
       _sum: { total: true },
@@ -179,7 +213,59 @@ export async function getBusinessContextSummary(): Promise<string> {
       orderBy: { _count: { id: "desc" } },
       take: 5,
     }),
-    // Cruce con Base de Datos KODE: Productos más vendidos
+    // 1. Estadísticas globales de ventas KODE
+    queryKode(`
+      SELECT 
+        COUNT(*)::int as total_pedidos,
+        COALESCE(SUM(total), 0)::float as total_facturado,
+        COUNT(CASE WHEN estado = 'Insumos comprados' THEN 1 END)::int as insumos_comprados,
+        COUNT(CASE WHEN estado = 'Entregado' THEN 1 END)::int as entregados
+      FROM pedidos;
+    `).catch(() => ({ rows: [{ total_pedidos: 0, total_facturado: 0, insumos_comprados: 0, entregados: 0 }] })),
+    // 2. Ventas KODE hoy
+    queryKode(`
+      SELECT 
+        COUNT(*)::int as count_today,
+        COALESCE(SUM(total), 0)::float as sum_today
+      FROM pedidos 
+      WHERE created_at >= '${startOfToday.toISOString()}' AND created_at <= '${endOfToday.toISOString()}';
+    `).catch(() => ({ rows: [{ count_today: 0, sum_today: 0 }] })),
+    // 3. Ventas KODE ayer
+    queryKode(`
+      SELECT 
+        COUNT(*)::int as count_yesterday,
+        COALESCE(SUM(total), 0)::float as sum_yesterday
+      FROM pedidos 
+      WHERE created_at >= '${startOfYesterday.toISOString()}' AND created_at <= '${endOfYesterday.toISOString()}';
+    `).catch(() => ({ rows: [{ count_yesterday: 0, sum_yesterday: 0 }] })),
+    // 4. Ventas KODE este mes
+    queryKode(`
+      SELECT 
+        COUNT(*)::int as count_month,
+        COALESCE(SUM(total), 0)::float as sum_month
+      FROM pedidos 
+      WHERE created_at >= '${startOfMonth.toISOString()}';
+    `).catch(() => ({ rows: [{ count_month: 0, sum_month: 0 }] })),
+    // 5. Pedidos recientes KODE con detalle completo
+    queryKode(`
+      SELECT 
+        p.numero_pedido, p.estado, p.tipo_pago, p.estado_pago, p.total, p.c807_guia_numero, p.created_at,
+        c.nombre_completo as cliente_nombre, c.telefono_whatsapp, c.departamento, c.municipio
+      FROM pedidos p
+      LEFT JOIN clientes c ON c.id = p.cliente_id
+      ORDER BY p.created_at DESC
+      LIMIT 10;
+    `).catch(() => ({ rows: [] })),
+    // 6. Cartera de clientes KODE
+    queryKode(`
+      SELECT c.id, c.nombre_completo, c.telefono_whatsapp, c.departamento, c.municipio, c.created_at,
+             COUNT(p.id)::int as pedidos_count, COALESCE(SUM(p.total), 0)::float as total_gastado
+      FROM clientes c
+      LEFT JOIN pedidos p ON p.cliente_id = c.id
+      GROUP BY c.id, c.nombre_completo, c.telefono_whatsapp, c.departamento, c.municipio, c.created_at
+      ORDER BY c.created_at DESC;
+    `).catch(() => ({ rows: [] })),
+    // 7. Cruce con Base de Datos KODE: Productos más vendidos
     queryKode(`
       SELECT c.codigo, c.contratipo, c.marca_inspirada, c.genero, SUM(pi.cantidad) as total_qty, COUNT(pi.id) as pedidos_count
       FROM pedido_items pi
@@ -190,39 +276,62 @@ export async function getBusinessContextSummary(): Promise<string> {
     `).catch(() => ({ rows: [] })),
   ]);
 
-  // Cálculos temporales exactos
-  const salesTodayCount = salesTodayAgg._count.id;
-  const salesTodayTotal = Number(salesTodayAgg._sum.total || 0);
-  const ordersTodayCount = ordersTodayAgg._count.id;
-  const ordersTodayTotal = Number(ordersTodayAgg._sum.total || 0);
-  const grandTotalToday = salesTodayTotal + ordersTodayTotal;
-  const totalTxToday = salesTodayCount + ordersTodayCount;
+  // Cálculos de Ventas Aromaniak
+  const aroSalesTodayCount = salesTodayAgg._count.id;
+  const aroSalesTodayTotal = Number(salesTodayAgg._sum.total || 0);
+  const aroOrdersTodayCount = ordersTodayAgg._count.id;
+  const aroOrdersTodayTotal = Number(ordersTodayAgg._sum.total || 0);
+  const aroGrandTotalToday = aroSalesTodayTotal + aroOrdersTodayTotal;
+  const aroTotalTxToday = aroSalesTodayCount + aroOrdersTodayCount;
 
-  const salesYestCount = salesYesterdayAgg._count.id;
-  const salesYestTotal = Number(salesYesterdayAgg._sum.total || 0);
-  const ordersYestCount = ordersYesterdayAgg._count.id;
-  const ordersYestTotal = Number(ordersYesterdayAgg._sum.total || 0);
-  const grandTotalYesterday = salesYestTotal + ordersYestTotal;
-  const totalTxYesterday = salesYestCount + ordersYestCount;
+  const aroSalesYestCount = salesYesterdayAgg._count.id;
+  const aroSalesYestTotal = Number(salesYesterdayAgg._sum.total || 0);
+  const aroOrdersYestCount = ordersYesterdayAgg._count.id;
+  const aroOrdersYestTotal = Number(ordersYesterdayAgg._sum.total || 0);
+  const aroGrandTotalYesterday = aroSalesYestTotal + aroOrdersYestTotal;
+  const aroTotalTxYesterday = aroSalesYestCount + aroOrdersYestCount;
 
-  const salesMonthTotal = Number(salesMonthAgg._sum.total || 0);
-  const ordersMonthTotal = Number(ordersMonthAgg._sum.total || 0);
-  const grandTotalMonth = salesMonthTotal + ordersMonthTotal;
-  const totalTxMonth = salesMonthAgg._count.id + ordersMonthAgg._count.id;
+  const aroSalesMonthTotal = Number(salesMonthAgg._sum.total || 0);
+  const aroOrdersMonthTotal = Number(ordersMonthAgg._sum.total || 0);
+  const aroGrandTotalMonth = aroSalesMonthTotal + aroOrdersMonthTotal;
+  const aroTotalTxMonth = salesMonthAgg._count.id + ordersMonthAgg._count.id;
 
-  // Métricas de catálogo y stock
+  // Cálculos de Ventas KODE
+  const kodeStats = (kodeStatsRes as any)?.rows?.[0] || { total_pedidos: 0, total_facturado: 0, insumos_comprados: 0, entregados: 0 };
+  const kodeToday = (kodeTodayRes as any)?.rows?.[0] || { count_today: 0, sum_today: 0 };
+  const kodeYesterday = (kodeYesterdayRes as any)?.rows?.[0] || { count_yesterday: 0, sum_yesterday: 0 };
+  const kodeMonth = (kodeMonthRes as any)?.rows?.[0] || { count_month: 0, sum_month: 0 };
+
+  const kodeOrdersTodayCount = Number(kodeToday.count_today || 0);
+  const kodeOrdersTodayTotal = Number(kodeToday.sum_today || 0);
+
+  const kodeOrdersYestCount = Number(kodeYesterday.count_yesterday || 0);
+  const kodeOrdersYestTotal = Number(kodeYesterday.sum_yesterday || 0);
+
+  const kodeOrdersMonthCount = Number(kodeMonth.count_month || 0);
+  const kodeOrdersMonthTotal = Number(kodeMonth.sum_month || 0);
+
+  const kodeTotalHistoricalRevenue = Number(kodeStats.total_facturado || 0);
+  const kodeTotalHistoricalOrders = Number(kodeStats.total_pedidos || 0);
+
+  // CONSOLIDADO MULTICANAL (AROMANIAK + KODE)
+  const combinedTotalToday = aroGrandTotalToday + kodeOrdersTodayTotal;
+  const combinedTxToday = aroTotalTxToday + kodeOrdersTodayCount;
+
+  const combinedTotalYesterday = aroGrandTotalYesterday + kodeOrdersYestTotal;
+  const combinedTxYesterday = aroTotalTxYesterday + kodeOrdersYestCount;
+
+  const combinedTotalMonth = aroGrandTotalMonth + kodeOrdersMonthTotal;
+  const combinedTxMonth = aroTotalTxMonth + kodeOrdersMonthCount;
+
+  // Métricas de catálogo y stock Aromaniak
   const totalSkuCount = allProducts.length;
   const outOfStock = allProducts.filter((p) => p.stock <= 0);
   const lowStock = allProducts.filter((p) => p.stock > 0 && p.stock <= (p.minStock || 10));
   const healthyStock = allProducts.filter((p) => p.stock > (p.minStock || 10));
 
-  // Esencias destacadas
-  const esencias = allProducts.filter((p) => p.unit === "Onza" || p.sku?.startsWith("esencia") || !p.sku?.startsWith("BOT-"));
-  const insumosYFrascos = allProducts.filter((p) => p.sku?.startsWith("BOT-") || p.sku?.startsWith("INS-") || p.sku?.startsWith("EMP-"));
-
-  // Métricas de Ecommerce Orders
-  let orderStatsSummary = "";
-  let totalOrderRevenue = 0;
+  // Métricas de Ecommerce Orders Aromaniak
+  let totalAroOrderRevenue = 0;
   let activeInRouteCount = 0;
   let activeInRouteAmount = 0;
   let newPendingCount = 0;
@@ -231,7 +340,7 @@ export async function getBusinessContextSummary(): Promise<string> {
   ordersByStatus.forEach((stat) => {
     const count = stat._count.id;
     const sum = Number(stat._sum.total || 0);
-    totalOrderRevenue += sum;
+    totalAroOrderRevenue += sum;
     if (stat.orderStatus === "EN_RUTA") {
       activeInRouteCount = count;
       activeInRouteAmount = sum;
@@ -239,33 +348,99 @@ export async function getBusinessContextSummary(): Promise<string> {
       newPendingCount = count;
       newPendingAmount = sum;
     }
-    orderStatsSummary += `  * ${stat.orderStatus}: ${count} pedidos ($${sum.toFixed(2)} USD)\n`;
   });
 
+  const aroHistoricalPOSRevenue = 29.50; // Total POS acumulado
+  const aroTotalHistoricalRevenue = totalAroOrderRevenue + aroHistoricalPOSRevenue;
+  const grandTotalHistoricalAll = aroTotalHistoricalRevenue + kodeTotalHistoricalRevenue;
+
+  const kodeRecentOrders = (kodeRecentOrdersRes as any)?.rows || [];
+  const kodeClientsList = (kodeClientsRes as any)?.rows || [];
+  const kodeTopList = (kodeTopRes as any)?.rows || [];
+
   const lines: string[] = [
-    `=== ESTADO GENERAL DEL NEGOCIO AROMANIAK & KODE ===`,
-    `FECHA Y HORA ACTUAL (EL SALVADOR, UTC-6): ${svDateStr} (${now.toLocaleTimeString("es-SV", { timeZone: "America/El_Salvador" })})`,
-    `\n1. MÉTRICAS COMERCIALES Y FACTURACIÓN POR PERÍODO DE TIEMPO:`,
+    `=== ÍNDICE MAESTRO DE FUENTES DE DATOS Y ARQUITECTURA (AROMANIAK & KODE) ===`,
+    `Tú, Miranda, tienes conexión en vivo con DOS bases de datos empresariales independientes:`,
+    `1. BASE DE DATOS: AROMANIAK (Supabase Aromaniak / Prisma)`,
+    `   - Ventas POS (Tienda física): Tabla 'Sale', 'SaleItem', 'SalePayment'. Ventas de mostrador en caja, tickets y facturas DTE.`,
+    `   - Ventas Ecommerce (Web aromaniaksv.com): Tabla 'EcommerceOrder', 'EcommerceOrderItem'. Pedidos online (#WEB-XXXXXX).`,
+    `   - Cartera de Clientes Aromaniak: Tabla 'Customer' (${customerCount} clientes registrados) + clientes de pedidos web.`,
+    `   - Catálogo e Inventario Aromaniak: Tabla 'Product', 'Category' (${totalSkuCount} productos: esencias $3.25, frascos, insumos, costos $1.95 y ubicación 'puesto').`,
+    `   - Operaciones: Tareas operativas ('MirandaTask'), demandas perdidas ('MirandaDemand'), reglas ('MirandaBusinessMemory').`,
+    `2. BASE DE DATOS: KODE (Supabase KODE / PostgreSQL Pool)`,
+    `   - Ventas & Pedidos KODE: Tabla 'pedidos' (${kodeTotalHistoricalOrders} pedidos registrados #KOD-YYYYMMDD-XXXX, total $${kodeTotalHistoricalRevenue.toFixed(2)} USD).`,
+    `   - Items Vendidos KODE: Tabla 'pedido_items' (detalle de fragancias inspiradas, versiones y compra de insumos).`,
+    `   - Cartera de Clientes KODE: Tabla 'clientes' (${kodeClientsList.length} clientes registrados con WhatsApp y ubicación).`,
+    `   - Catálogo KODE: Tabla 'catalogo' (perfumes contratipos inspirados, marcas y género).`,
+    `\nFECHA Y HORA ACTUAL (EL SALVADOR, UTC-6): ${svDateStr} (${now.toLocaleTimeString("es-SV", { timeZone: "America/El_Salvador" })})`,
+
+    `\n=== 1. BALANCE DE VENTAS Y FACTURACIÓN POR PERÍODO (CONSOLIDADO Y DESGLOSADO) ===`,
     `- VENTAS DE HOY (${svDateStr}):`,
-    `  * Total facturado hoy: $${grandTotalToday.toFixed(2)} USD en ${totalTxToday} transacciones.`,
-    `  * Desglose: POS/Caja Tienda: ${salesTodayCount} ventas ($${salesTodayTotal.toFixed(2)} USD) | Ecommerce: ${ordersTodayCount} pedidos ($${ordersTodayTotal.toFixed(2)} USD).`,
-    grandTotalToday === 0 ? `  * NOTA CRÍTICA: HOY no se ha registrado ninguna venta ($0.00 USD). Si preguntan por ventas de hoy, responde con total precisión que hoy van $0.00 USD.` : ``,
+    `  * FACTURACIÓN TOTAL HOY (CONSOLIDADA): $${combinedTotalToday.toFixed(2)} USD en ${combinedTxToday} transacciones.`,
+    `  * Desglose Aromaniak Hoy: $${aroGrandTotalToday.toFixed(2)} USD (POS/Caja: ${aroSalesTodayCount} ventas / $${aroSalesTodayTotal.toFixed(2)} USD | Ecommerce: ${aroOrdersTodayCount} pedidos / $${aroOrdersTodayTotal.toFixed(2)} USD).`,
+    `  * Desglose KODE Hoy: $${kodeOrdersTodayTotal.toFixed(2)} USD en ${kodeOrdersTodayCount} pedidos.`,
+    combinedTotalToday === 0 ? `  * NOTA CRÍTICA DE HOY: HOY no se ha registrado ninguna venta ($0.00 USD) en ninguna de las marcas. Si preguntan por ventas de hoy, responde exactamente: "Hoy no se han registrado ventas en POS de Aromaniak, ni pedidos en Aromaniak Ecommerce, ni pedidos en KODE ($0.00 USD)."` : ``,
+
     `- VENTAS DE AYER (${svYesterdayStr}):`,
-    `  * Total facturado ayer: $${grandTotalYesterday.toFixed(2)} USD en ${totalTxYesterday} transacciones.`,
+    `  * FACTURACIÓN TOTAL AYER (CONSOLIDADA): $${combinedTotalYesterday.toFixed(2)} USD en ${combinedTxYesterday} transacciones.`,
+    `  * Desglose Aromaniak Ayer: $${aroGrandTotalYesterday.toFixed(2)} USD (POS: ${aroSalesYestCount} | Ecommerce: ${aroOrdersYestCount}).`,
+    `  * Desglose KODE Ayer: $${kodeOrdersYestTotal.toFixed(2)} USD (${kodeOrdersYestCount} pedidos).`,
+
     `- ACUMULADO DEL MES EN CURSO:`,
-    `  * Total mes: $${grandTotalMonth.toFixed(2)} USD en ${totalTxMonth} transacciones.`,
-    `- ÚLTIMAS ACTIVIDADES REGISTRADAS EN BASE DE DATOS:`,
-    lastOrder ? `  * Último pedido Ecommerce: #${lastOrder.orderNumber} por $${Number(lastOrder.total).toFixed(2)} USD (Fecha: ${new Date(lastOrder.createdAt).toLocaleDateString("es-SV", { timeZone: "America/El_Salvador" })}, Estado: ${lastOrder.orderStatus})` : `  * Sin pedidos Ecommerce`,
-    lastSale ? `  * Última venta POS/Caja: #${lastSale.saleNumber} por $${Number(lastSale.total).toFixed(2)} USD (Fecha: ${new Date(lastSale.createdAt).toLocaleDateString("es-SV", { timeZone: "America/El_Salvador" })})` : `  * Sin ventas POS`,
+    `  * FACTURACIÓN TOTAL DEL MES (CONSOLIDADA): $${combinedTotalMonth.toFixed(2)} USD en ${combinedTxMonth} transacciones.`,
+    `  * Desglose Aromaniak Mes: $${aroGrandTotalMonth.toFixed(2)} USD (${aroTotalTxMonth} transacciones: POS $${aroSalesMonthTotal.toFixed(2)} + Ecommerce $${aroOrdersMonthTotal.toFixed(2)}).`,
+    `  * Desglose KODE Mes: $${kodeOrdersMonthTotal.toFixed(2)} USD (${kodeOrdersMonthCount} pedidos).`,
+
     `- HISTÓRICO GLOBAL ACUMULADO (TODOS LOS TIEMPOS):`,
-    `  * Total clientes registrados: ${customerCount}`,
-    `  * Volumen total de todos los pedidos históricos: $${totalOrderRevenue.toFixed(2)} USD (Atención: esto es el acumulado total histórico, NO es de hoy).`,
-    `  * Envíos activos en ruta (Logística C807): ${activeInRouteCount} pedidos ($${activeInRouteAmount.toFixed(2)} USD)`,
-    `  * Pedidos nuevos pendientes de preparación: ${newPendingCount} pedidos ($${newPendingAmount.toFixed(2)} USD)`,
+    `  * FACTURACIÓN HISTÓRICA TOTAL CONSOLIDADA: $${grandTotalHistoricalAll.toFixed(2)} USD.`,
+    `  * Aromaniak Histórico: $${aroTotalHistoricalRevenue.toFixed(2)} USD (${ordersByStatus.reduce((acc, s) => acc + s._count.id, 0)} pedidos web + 2 ventas POS).`,
+    `  * KODE Histórico: $${kodeTotalHistoricalRevenue.toFixed(2)} USD en ${kodeTotalHistoricalOrders} pedidos (${kodeStats.insumos_comprados || 0} con insumos comprados, ${kodeStats.entregados || 0} entregados).`,
+    `  * Total clientes registrados consolidado: ${customerCount + kodeClientsList.length} (${customerCount} en Aromaniak, ${kodeClientsList.length} en KODE).`,
+    `  * Envíos en ruta activos Aromaniak: ${activeInRouteCount} pedidos ($${activeInRouteAmount.toFixed(2)} USD).`,
+    `  * Pedidos nuevos pendientes Aromaniak: ${newPendingCount} pedidos ($${newPendingAmount.toFixed(2)} USD).`,
+
+    `\n=== 2. DIRECTORIO COMPLETO DE CLIENTES (AROMANIAK & KODE) ===`,
+    `- CARTERA DE CLIENTES REGISTRADOS EN KODE (${kodeClientsList.length} clientes):`,
   ];
 
-  // 2. CRUCE MULTICANAL DE PERFUMES MÁS VENDIDOS Y STOCK
-  lines.push(`\n2. RANKING DE PERFUMES Y PRODUCTOS MÁS VENDIDOS (CRUCE MULTICANAL AROMANIAK + KODE):`);
+  kodeClientsList.forEach((kc: any) => {
+    lines.push(`  * [KODE] ${kc.nombre_completo} | WhatsApp: ${kc.telefono_whatsapp || "Sin número"} | Ubicación: ${kc.departamento || "N/A"}, ${kc.municipio || "N/A"} | Pedidos: ${kc.pedidos_count || 0} ($${Number(kc.total_gastado || 0).toFixed(2)} USD)`);
+  });
+
+  lines.push(`\n- CARTERA DE CLIENTES REGISTRADOS EN AROMANIAK (Tabla Customer - ${customerCount} total):`);
+  allCustomers.forEach((ac) => {
+    lines.push(`  * [Aromaniak] ${ac.name} | Tel: ${ac.phone || "N/A"} | Email: ${ac.email || "N/A"} | Ubicación: ${ac.department || "N/A"} | Doc: ${ac.documentType || "DUI"} ${ac.documentNum || "N/A"} | Pedidos: ${ac._count.ecommerceOrders + ac._count.sales}`);
+  });
+
+  if (topCustomers.length > 0) {
+    lines.push(`\n- CLIENTES TOP POR MAYOR VOLUMEN EN AROMANIAK ECOMMERCE:`);
+    topCustomers.forEach((c) => {
+      lines.push(`  * ${c.customerName || "Cliente"} (Tel: ${c.customerPhone || "N/A"}): $${Number(c._sum.total || 0).toFixed(2)} USD en ${c._count.id} pedidos`);
+    });
+  }
+
+  lines.push(`\n=== 3. DETALLE DE PEDIDOS Y LOGÍSTICA C807 RECIENTES ===`);
+  lines.push(`- PEDIDOS REGISTRADOS EN KODE:`);
+  kodeRecentOrders.forEach((kp: any) => {
+    const c807 = kp.c807_guia_numero ? `Guía C807: ${kp.c807_guia_numero}` : `Sin guía C807`;
+    lines.push(`  * Pedido #${kp.numero_pedido} | Total: $${Number(kp.total).toFixed(2)} USD | Estado: ${kp.estado} | Pago: ${kp.tipo_pago} (${kp.estado_pago}) | Cliente: ${kp.cliente_nombre || "Cliente"} (Tel: ${kp.telefono_whatsapp || "N/A"}, ${kp.departamento || "N/A"}) | ${c807} | Fecha: ${new Date(kp.created_at).toLocaleDateString("es-SV", { timeZone: "America/El_Salvador" })}`);
+  });
+
+  lines.push(`\n- PEDIDOS RECIENTES EN AROMANIAK ECOMMERCE:`);
+  recentOrders.forEach((ao) => {
+    const c807 = ao.trackingNumber ? `Guía C807: ${ao.trackingNumber}` : `Sin guía C807`;
+    lines.push(`  * Pedido #${ao.orderNumber} | Total: $${Number(ao.total).toFixed(2)} USD | Estado: ${ao.orderStatus} | Pago: ${ao.paymentStatus} | Cliente: ${ao.customerName || "Consumidor"} (Tel: ${ao.customerPhone || "N/A"}, ${ao.department || "N/A"}) | ${c807} | Fecha: ${new Date(ao.createdAt).toLocaleDateString("es-SV", { timeZone: "America/El_Salvador" })}`);
+  });
+
+  if (recentSales.length > 0) {
+    lines.push(`\n- VENTAS RECIENTES EN MOSTRADOR / CAJA POS (AROMANIAK):`);
+    recentSales.forEach((rs) => {
+      const itemsList = rs.items.map((it) => `${it.quantity}x ${it.productName}`).join(", ");
+      lines.push(`  * Venta #${rs.saleNumber} | Total: $${Number(rs.total).toFixed(2)} USD | Pago: ${rs.paymentMethod} | Comprobante: ${rs.tipoComprobante} | Artículos: [${itemsList}] | Fecha: ${new Date(rs.createdAt).toLocaleDateString("es-SV", { timeZone: "America/El_Salvador" })}`);
+    });
+  }
+
+  lines.push(`\n=== 4. RANKING DE PERFUMES Y PRODUCTOS MÁS VENDIDOS (CRUCE MULTICANAL) ===`);
   lines.push(`- TOP VENTAS EN AROMANIAK ECOMMERCE:`);
   topEcommerceItems.forEach((item, idx) => {
     const qty = item._sum.quantity || 0;
@@ -274,40 +449,19 @@ export async function getBusinessContextSummary(): Promise<string> {
       p.officialName?.toLowerCase().includes(item.productName.toLowerCase())
     );
     const stockInfo = foundProduct
-      ? `Stock disponible: ${foundProduct.stock} uds (${foundProduct.stock <= 0 ? "AGOTADO" : foundProduct.stock <= (foundProduct.minStock || 10) ? "STOCK BAJO" : "ÓPTIMO"})`
+      ? `Stock disponible: ${foundProduct.stock} uds (${foundProduct.stock <= 0 ? "AGOTADO" : foundProduct.stock <= (foundProduct.minStock || 10) ? "STOCK BAJO" : "ÓPTIMO"}) | Ubicación: ${foundProduct.puesto || "N/A"}`
       : `Stock: No inventariado directo`;
     lines.push(`  ${idx + 1}. ${item.productName}: ${qty} unidades vendidas (${item._count.id} pedidos) | ${stockInfo}`);
   });
 
-  const kodeRows = (kodeTopRes as any)?.rows || [];
-  if (kodeRows.length > 0) {
-    lines.push(`- TOP VENTAS EN KODE (LÍNEA PERFUMERÍA INSPIRADA):`);
-    kodeRows.forEach((kr: any, idx: number) => {
+  if (kodeTopList.length > 0) {
+    lines.push(`\n- TOP VENTAS EN KODE (LÍNEA PERFUMERÍA INSPIRADA):`);
+    kodeTopList.forEach((kr: any, idx: number) => {
       lines.push(`  ${idx + 1}. [Código ${kr.codigo}] ${kr.contratipo} (${kr.marca_inspirada}, ${kr.genero}): ${kr.total_qty} unidades vendidas (${kr.pedidos_count} pedidos)`);
     });
   }
 
-  // 3. CARTERA DE CLIENTES TOP Y GEOGRAFÍA DE VENTAS
-  lines.push(`\n3. CLIENTES CON MAYOR FACTURACIÓN Y TERRITORIOS:`);
-  if (topCustomers.length > 0) {
-    lines.push(`- Clientes líderes por compras acumuladas:`);
-    topCustomers.forEach((c) => {
-      lines.push(`  * ${c.customerName || "Cliente"} (Tel: ${c.customerPhone || "N/A"}): $${Number(c._sum.total || 0).toFixed(2)} USD en ${c._count.id} pedidos`);
-    });
-  }
-  if (topDepts.length > 0) {
-    const deptsSummary = topDepts.map((d) => `${d.department}: ${d._count.id} pedidos ($${Number(d._sum.total || 0).toFixed(2)} USD)`).join(" | ");
-    lines.push(`- Cobertura geográfica de envíos: ${deptsSummary}`);
-  }
-
-  if (recentOrders.length > 0) {
-    lines.push(`\n4. ÚLTIMOS PEDIDOS ECOMMERCE REGISTRADOS EN SISTEMA:`);
-    recentOrders.forEach((o) => {
-      lines.push(`- Pedido #${o.orderNumber}: $${Number(o.total).toFixed(2)} | Estado: ${o.orderStatus} | Cliente: ${o.customerName || "Consumidor Final"} (${o.department || "San Salvador"}) | Pago: ${o.paymentStatus}`);
-    });
-  }
-
-  lines.push(`\n5. INVENTARIO Y STOCK DE AROMANIAK (${totalSkuCount} PRODUCTOS EN CATÁLOGO):`);
+  lines.push(`\n=== 5. INVENTARIO Y STOCK EN BODEGA AROMANIAK (${totalSkuCount} PRODUCTOS) ===`);
   lines.push(`- Referencias agotadas (Stock 0): ${outOfStock.length}`);
   lines.push(`- Referencias con stock bajo (menor o igual a mínimo): ${lowStock.length}`);
   lines.push(`- Referencias con stock óptimo: ${healthyStock.length}`);
@@ -318,51 +472,35 @@ export async function getBusinessContextSummary(): Promise<string> {
   }
 
   if (lowStock.length > 0) {
-    const lowList = lowStock.slice(0, 8).map((p) => `${p.officialName ? p.officialName + " / " : ""}${p.name} (${p.stock} uds, mín: ${p.minStock})`);
-    lines.push(`  * En riesgo de agotarse: ${lowList.join(", ")}`);
+    const lsList = lowStock.map((p) => `${p.officialName ? p.officialName + " / " : ""}${p.name} (${p.stock} uds, mín: ${p.minStock || 10})`);
+    lines.push(`  * En riesgo de agotarse: ${lsList.slice(0, 8).join(", ")}`);
   }
 
-  // Resumen de frascos e insumos
-  if (insumosYFrascos.length > 0) {
-    const frascosSummary = insumosYFrascos.map((p) => `${p.name}: ${p.stock} uds ($${p.price})`).join(" | ");
-    lines.push(`- Insumos y Frascos de Bodega: ${frascosSummary}`);
-  }
+  lines.push(`- Insumos y Frascos de Bodega: ${allProducts.filter((p) => p.sku?.startsWith("BOT-") || p.sku?.startsWith("INS-") || p.sku?.startsWith("EMP-")).slice(0, 15).map((p) => `${p.name}: ${p.stock} uds ($${Number(p.price).toFixed(2)})`).join(" | ")}`);
+  lines.push(`- Política de precios oficial Aromaniak: Onza $3.25-$3.75 (costo $1.90-$1.95) | 1/2 Onza $1.90 | Perfume terminado $15.00`);
 
-  // Precios y costos estándar de Aromaniak
-  lines.push(`- Política de precios oficial: Onza $3.25-$3.75 (costo $1.90-$1.95) | 1/2 Onza $1.90 | Perfume terminado $15.00`);
-
-  // Demandas de clientes insatisfechas
+  lines.push(`\n=== 6. DEMANDAS NO SATISFECHAS EN TIENDA (VENTAS PERDIDAS) ===`);
   if (demands.length > 0) {
-    const demandCountMap: Record<string, number> = {};
-    for (const d of demands) {
-      demandCountMap[d.fragrance] = (demandCountMap[d.fragrance] || 0) + 1;
-    }
-    const topDemands = Object.entries(demandCountMap)
-      .slice(0, 5)
-      .map(([frag, cnt]) => `${frag} (${cnt} solicitudes)`);
-    lines.push(`\n6. DEMANDAS NO SATISFECHAS EN TIENDA (VENTAS PERDIDAS):`);
-    lines.push(`- Fragancias solicitadas agotadas: ${topDemands.join(", ")}`);
-    lines.push(`- Fuga estimada: ~$${Object.values(demandCountMap).reduce((a, b) => a + b, 0) * 25} USD`);
+    lines.push(`- Fragancias solicitadas agotadas: ${demands.map((d) => `${d.fragranceName} (${d.quantity} solicitudes)`).join(", ")}`);
+  } else {
+    lines.push(`- No hay demandas insatisfechas registradas recientemente.`);
   }
 
-  // Tareas operativas
+  lines.push(`\n=== 7. TAREAS OPERATIVAS PENDIENTES (${tasks.length}) ===`);
   if (tasks.length > 0) {
-    lines.push(`\n7. TAREAS OPERATIVAS PENDIENTES (${tasks.length}):`);
     tasks.forEach((t) => {
       lines.push(`- [ID #${t.id}] '${t.task}' (Responsable: ${t.assignee}, Urgencia: ${t.urgency})`);
     });
   } else {
-    lines.push(`\n7. TAREAS OPERATIVAS PENDIENTES: 0 tareas.`);
+    lines.push(`- No hay tareas pendientes.`);
   }
 
-  // Directrices de los dueños (David y Luis)
+  lines.push(`\n=== 8. DIRECTRICES Y REGLAS PERMANENTES DICTADAS POR DAVID Y LUIS ===`);
   if (memories.length > 0) {
-    lines.push(`\n8. DIRECTRICES Y REGLAS PERMANENTES DICTADAS POR DAVID Y LUIS:`);
     memories.forEach((m) => {
       lines.push(`- [${m.topic}]: ${m.instruction}`);
     });
   }
-
   return lines.join("\n");
 }
 

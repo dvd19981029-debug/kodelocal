@@ -737,6 +737,22 @@ model MirandaPendingChange {
   @@map("miranda_pending_changes")
 }
 
+model DailyVisit {
+  date        String   @id
+  visits      Int      @default(0)
+  pageViews   Int      @default(0)
+  mobile      Int      @default(0)
+  desktop     Int      @default(0)
+  tablet      Int      @default(0)
+  sources     String?  @db.Text
+  hours       String?  @db.Text
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@index([date])
+  @@map("daily_visits")
+}
+
 
 
 

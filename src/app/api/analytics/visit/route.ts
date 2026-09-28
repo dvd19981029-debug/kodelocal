@@ -19,7 +19,7 @@ export async function POST(request: Request) {
       // Si el body está vacío, asume nueva sesión
     }
 
-    recordVisit(isNewSession, referrer, device);
+    await recordVisit(isNewSession, referrer, device);
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

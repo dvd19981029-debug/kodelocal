@@ -85,6 +85,12 @@ export interface AromaniakDashboardData {
     totalVisitas: number;
     totalVistasPagina: number;
     tasaConversion: number;
+    graficaVisitas?: Array<{
+      label: string;
+      dateKey?: string;
+      visits: number;
+      pageViews: number;
+    }>;
   };
   traficoDetalle?: {
     fuentes: Array<{ name: string; visits: number; percentage: number }>;
@@ -308,27 +314,18 @@ export default function AromaniakDashboardModule({
     totalVisitas: 0,
     totalVistasPagina: 0,
     tasaConversion: 0,
+    graficaVisitas: [],
   };
+  const graficaVisitas = visitas.graficaVisitas || [];
 
   const traficoDetalle = data?.traficoDetalle || {
-    fuentes: [
-      { name: 'Instagram & Facebook Ads', visits: 1310, percentage: 48 },
-      { name: 'WhatsApp & Asesoría Directa', visits: 765, percentage: 28 },
-      { name: 'Búsqueda Orgánica Google', visits: 435, percentage: 16 },
-      { name: 'Enlaces Compartidos & Otros', visits: 225, percentage: 8 },
-    ],
+    fuentes: [{ name: 'Tráfico Directo', visits: 0, percentage: 100 }],
     dispositivos: [
-      { device: 'Móviles (iOS & Android)', percentage: 82 },
-      { device: 'Computadoras (Desktop)', percentage: 16 },
-      { device: 'Tablets', percentage: 2 },
+      { device: 'Móviles (iOS & Android)', percentage: 0 },
+      { device: 'Computadoras (Desktop)', percentage: 0 },
+      { device: 'Tablets', percentage: 0 },
     ],
-    zonasPrincipales: [
-      { zone: 'San Salvador (Metropolitana)', share: 58 },
-      { zone: 'Santa Tecla & La Libertad', share: 22 },
-      { zone: 'Santa Ana & Occidente', share: 11 },
-      { zone: 'San Miguel & Oriente', share: 6 },
-      { zone: 'Diáspora USA / Envíos Familiares', share: 3 },
-    ],
+    zonasPrincipales: [],
   };
 
   const armaTuPropioPerfume = data?.armaTuPropioPerfume || {
@@ -928,6 +925,153 @@ export default function AromaniakDashboardModule({
           <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-600">
             🚚 <strong>Monitoreo de Envíos:</strong> Actualmente hay{' '}
             <strong className="text-slate-900">{tiemposLogistica.pedidosEnRuta} paquetes en ruta</strong> con C807 Express y mensajero propio con guía activa.
+          </div>
+        </div>
+      </div>
+
+      {/* ================= BLOQUE 4.5: GRÁFICA DE VISITANTES (DÍA, SEMANA Y MES) ================= */}
+      <div className="clay-card p-5 sm:p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-extrabold text-sm text-slate-800 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-indigo-600" />
+                <span>
+                  Gráfica de Visitantes (
+                  {period === 'hoy'
+                    ? 'Por Horas Hoy'
+                    : period === '7d'
+                    ? 'Últimos 7 Días'
+                    : period === 'mes'
+                    ? 'Día a Día del Mes'
+                    : 'Mensual'}
+                  )
+                </span>
+              </h3>
+              <span className="text-[10px] font-black uppercase bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded">
+                Tiempo Real
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 font-medium">
+              Flujo de personas que han visitado la tienda en línea por{' '}
+              {period === 'hoy' ? 'hora' : period === '7d' ? 'día de la semana' : 'día del mes'}
+            </p>
+          </div>
+
+          {/* Selector de Vista (Día, Semana, Mes) */}
+          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+            <button
+              onClick={() => setPeriod('hoy')}
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                period === 'hoy'
+                  ? 'bg-white text-indigo-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Día (Horas)
+            </button>
+            <button
+              onClick={() => setPeriod('7d')}
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                period === '7d'
+                  ? 'bg-white text-indigo-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Semana (7d)
+            </button>
+            <button
+              onClick={() => setPeriod('mes')}
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                period === 'mes'
+                  ? 'bg-white text-indigo-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Mes
+            </button>
+          </div>
+        </div>
+
+        {/* Resumen de Métricas */}
+        <div className="flex items-center gap-4 sm:gap-6 pt-1 text-xs">
+          <div>
+            <span className="text-slate-400 block text-[10px] font-bold uppercase">Total Visitantes</span>
+            <span className="text-lg font-black font-mono text-slate-900">{visitas.totalVisitas}</span>
+          </div>
+          <div className="border-l border-slate-200 pl-4 sm:pl-6">
+            <span className="text-slate-400 block text-[10px] font-bold uppercase">Páginas Vistas</span>
+            <span className="text-lg font-black font-mono text-indigo-600">{visitas.totalVistasPagina}</span>
+          </div>
+          <div className="border-l border-slate-200 pl-4 sm:pl-6">
+            <span className="text-slate-400 block text-[10px] font-bold uppercase">Conversión</span>
+            <span className="text-lg font-black font-mono text-emerald-600">{visitas.tasaConversion}%</span>
+          </div>
+        </div>
+
+        {/* Gráfica Ultraligera de Barras Interactiva */}
+        <div className="pt-2">
+          <div className="h-44 sm:h-52 w-full flex items-end gap-1 sm:gap-2 pt-6 pb-2 px-1 border-b border-slate-200">
+            {graficaVisitas.length === 0 ? (
+              <div className="w-full h-full flex items-center justify-center text-xs text-slate-400 font-medium">
+                No hay registros de visitas en este período
+              </div>
+            ) : (
+              (() => {
+                const maxVal = Math.max(1, ...graficaVisitas.map((p) => p.visits));
+                return graficaVisitas.map((point, idx) => {
+                  const heightPct = Math.max(4, Math.round((point.visits / maxVal) * 100));
+                  const hasVisits = point.visits > 0;
+                  return (
+                    <div
+                      key={idx}
+                      className="flex-1 flex flex-col items-center h-full justify-end group relative cursor-pointer min-w-0"
+                    >
+                      {/* Tooltip flotante */}
+                      <div className="absolute -top-12 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-lg whitespace-nowrap">
+                        <span className="text-slate-300 block">{point.label}</span>
+                        <span className="text-indigo-300 font-mono">{point.visits} visitantes</span>
+                        {point.pageViews > 0 && (
+                          <span className="text-slate-400 font-mono block">({point.pageViews} páginas)</span>
+                        )}
+                      </div>
+
+                      {/* Contador arriba de la barra */}
+                      {hasVisits && (
+                        <span className="text-[9px] font-black text-indigo-700 font-mono mb-1 hidden sm:block">
+                          {point.visits}
+                        </span>
+                      )}
+
+                      {/* Barra animada */}
+                      <div
+                        className={`w-full max-w-[28px] rounded-t-md transition-all duration-300 ${
+                          hasVisits
+                            ? 'bg-gradient-to-t from-indigo-600 to-purple-500 group-hover:from-indigo-700 group-hover:to-purple-600 shadow-xs'
+                            : 'bg-slate-100 group-hover:bg-slate-200'
+                        }`}
+                        style={{ height: `${heightPct}%` }}
+                      />
+                    </div>
+                  );
+                });
+              })()
+            )}
+          </div>
+
+          {/* Eje X de Etiquetas */}
+          <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono pt-1.5 px-1 overflow-hidden">
+            {graficaVisitas.length > 0 && (
+              <>
+                <span className="truncate">{graficaVisitas[0].label}</span>
+                {graficaVisitas.length > 2 && (
+                  <span className="truncate hidden sm:inline">
+                    {graficaVisitas[Math.floor(graficaVisitas.length / 2)].label}
+                  </span>
+                )}
+                <span className="truncate">{graficaVisitas[graficaVisitas.length - 1].label}</span>
+              </>
+            )}
           </div>
         </div>
       </div>
