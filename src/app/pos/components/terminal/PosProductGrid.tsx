@@ -117,7 +117,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
       )}
 
       {/* Conteo de Resultados y Precio Base */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 px-1 text-xs text-slate-500">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 px-1.5 text-xs text-slate-500">
         <span className="text-[11px] sm:text-xs">Mostrando <strong>{displayedProducts.length}</strong> de {filteredProductsCount} productos</span>
         <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
           <span className="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100 text-[10px] sm:text-xs">
@@ -209,18 +209,41 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
                 )}
               </div>
 
-              <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-100 gap-1">
-                <div>
-                  {isEssence ? (
-                    <div className="flex flex-col">
-                      <span className="text-[11px] font-black font-mono text-indigo-600">
+              <div className="mt-2 pt-1.5 border-t border-slate-100 flex flex-col gap-1.5">
+                {isEssence ? (
+                  <>
+                    <div className="flex items-center justify-between font-mono">
+                      <span className="text-[11px] font-black text-indigo-600">
                         1 Oz: ${product.price.toFixed(2)}
                       </span>
-                      <span className="text-[10px] font-bold font-mono text-violet-600">
+                      <span className="text-[10.5px] font-bold text-violet-600">
                         ½ Oz: ${halfPrice.toFixed(2)}
                       </span>
                     </div>
-                  ) : (
+
+                    <div className="grid grid-cols-2 gap-1.5" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        disabled={isOutOfStock || availableRemaining <= 0}
+                        onClick={() => onAddToCart(product, 'ONZA_COMPLETA')}
+                        className="w-full py-1.5 px-1 text-[11px] font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-lg border border-indigo-200 transition-all shadow-2xs disabled:opacity-50 flex items-center justify-center whitespace-nowrap active:scale-95"
+                        title="Agregar 1 Onza al pedido"
+                      >
+                        +1 Oz
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isOutOfStock || availableRemaining <= 0}
+                        onClick={() => onAddToCart(product, 'MEDIA_ONZA')}
+                        className="w-full py-1.5 px-1 text-[11px] font-bold bg-violet-50 text-violet-700 hover:bg-violet-600 hover:text-white rounded-lg border border-violet-200 transition-all shadow-2xs disabled:opacity-50 flex items-center justify-center whitespace-nowrap active:scale-95"
+                        title="Agregar ½ Onza al pedido"
+                      >
+                        +½ Oz
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center justify-between">
                     <div>
                       <span className="text-[8.5px] text-slate-400 block font-semibold uppercase tracking-wider">
                         Por {product.unit}
@@ -229,37 +252,18 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
                         ${product.price.toFixed(2)}
                       </span>
                     </div>
-                  )}
-                </div>
-
-                {isEssence ? (
-                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
                       disabled={isOutOfStock || availableRemaining <= 0}
-                      onClick={() => onAddToCart(product, 'ONZA_COMPLETA')}
-                      className="px-1.5 py-1 text-[10px] font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white rounded border border-indigo-200 transition-all shadow-2xs disabled:opacity-50"
-                      title="Agregar 1 Onza al pedido"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAddToCart(product);
+                      }}
+                      className="px-2.5 py-1 text-[11px] font-bold bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-lg border border-indigo-200 shadow-2xs flex items-center gap-1 disabled:opacity-50 active:scale-95 transition-all"
                     >
-                      +1 Oz
+                      <Plus className="w-3 h-3" />
+                      <span>Agregar</span>
                     </button>
-                    <button
-                      type="button"
-                      disabled={isOutOfStock || availableRemaining <= 0}
-                      onClick={() => onAddToCart(product, 'MEDIA_ONZA')}
-                      className="px-1.5 py-1 text-[10px] font-bold bg-violet-50 text-violet-700 hover:bg-violet-600 hover:text-white rounded border border-violet-200 transition-all shadow-2xs disabled:opacity-50"
-                      title="Agregar ½ Onza al pedido"
-                    >
-                      +½ Oz
-                    </button>
-                  </div>
-                ) : (
-                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold transition-all ${
-                    isOutOfStock || availableRemaining <= 0
-                      ? 'bg-slate-100 text-slate-400'
-                      : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white shadow-sm'
-                  }`}>
-                    <Plus className="w-3 h-3" />
                   </div>
                 )}
               </div>

@@ -46,7 +46,7 @@ export default function NavigationWrapper({ children }: { children: React.ReactN
         // En rutas operativas se muestra la barra de navegación administrativa de empleados
         <>
           <Navbar />
-          <main className="flex-1 max-w-[1600px] w-full mx-auto p-2 sm:p-5 lg:p-6">
+          <main className="flex-1 max-w-[1600px] w-full mx-auto p-2 sm:p-5 lg:p-6 overflow-x-hidden">
             {children}
           </main>
         </>

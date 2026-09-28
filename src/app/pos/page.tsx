@@ -1783,62 +1783,55 @@ export default function PosPage() {
               </div>
             </div>
 
-            {/* Barra Flotante Inferior de Carrito en Dispositivos Móviles (< xl) */}
-            <div className="xl:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-3.5 py-2.5 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] pb-[calc(0.6rem+env(safe-area-inset-bottom,0px))]">
-              <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
-                <button
-                  type="button"
-                  onClick={() => setIsMobileCartOpen(true)}
-                  className="flex items-center gap-2.5 text-left min-w-0"
-                >
-                  <div className="relative w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center font-bold shadow-xs shrink-0">
-                    <ShoppingCart className="w-5 h-5" />
-                    {totalItemsCount > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 bg-indigo-600 text-white rounded-full text-[10px] font-black flex items-center justify-center shadow-xs">
+            {/* Barra Flotante Inferior de Carrito en Dispositivos Móviles (< xl) - Solo cuando hay productos */}
+            {totalItemsCount > 0 && (
+              <div className="xl:hidden fixed bottom-4 left-3 right-3 sm:left-auto sm:right-6 sm:w-96 z-40 bg-white/95 backdrop-blur-md border border-indigo-100 p-2.5 px-3 rounded-2xl shadow-[0_8px_30px_rgba(99,102,241,0.25)] animate-in slide-in-from-bottom duration-200">
+                <div className="flex items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsMobileCartOpen(true)}
+                    className="flex items-center gap-2.5 text-left min-w-0"
+                  >
+                    <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+                      <ShoppingCart className="w-4 h-4" />
+                      <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-4.5 px-1 bg-rose-500 text-white rounded-full text-[9.5px] font-black flex items-center justify-center shadow-xs">
                         {totalItemsCount}
                       </span>
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-black text-slate-800 leading-tight">Orden Actual</span>
-                      {cart.length > 0 && (
-                        <span className="text-[10px] text-slate-400 font-medium font-mono">({totalItemsCount} uds)</span>
-                      )}
                     </div>
-                    <span className="text-sm font-black font-mono text-indigo-600 leading-none">
-                      ${cartSubtotal.toFixed(2)}
-                    </span>
-                  </div>
-                </button>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1">
+                        <span className="text-[11px] font-black text-slate-800 leading-tight">Orden Actual</span>
+                        <span className="text-[10px] text-slate-400 font-medium">({totalItemsCount})</span>
+                      </div>
+                      <span className="text-sm font-black font-mono text-indigo-600 leading-tight">
+                        ${cartSubtotal.toFixed(2)}
+                      </span>
+                    </div>
+                  </button>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  {cart.length > 0 && (
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <button
                       type="button"
                       onClick={() => {
                         setOrderToInvoice(null);
                         setIsCheckoutOpen(true);
                       }}
-                      className="clay-btn clay-btn-success px-3 py-2 text-xs font-bold rounded-xl shadow-xs"
+                      className="clay-btn clay-btn-success py-1.5 px-2.5 text-xs font-bold rounded-xl shadow-xs"
                       title="Cobrar directamente"
                     >
                       <span>Cobrar</span>
                     </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setIsMobileCartOpen(true)}
-                    className="clay-btn clay-btn-primary px-3.5 py-2 text-xs font-bold rounded-xl shadow-md flex items-center gap-1.5"
-                  >
-                    <span>Ver Orden</span>
-                    {cart.length > 0 && (
-                      <span className="font-mono font-black">${cartSubtotal.toFixed(2)}</span>
-                    )}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsMobileCartOpen(true)}
+                      className="clay-btn clay-btn-primary py-1.5 px-3 text-xs font-bold rounded-xl shadow-md flex items-center gap-1"
+                    >
+                      <span>Ver Orden</span>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Modal / Drawer Desplegable del Carrito en Móvil (< xl) */}
             {isMobileCartOpen && (

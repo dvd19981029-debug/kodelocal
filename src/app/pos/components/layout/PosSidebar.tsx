@@ -110,7 +110,9 @@ export const PosSidebar: React.FC<PosSidebarProps> = ({
             <Users className="w-4 h-4 shrink-0" />
             <span>Clientes</span>
             {customersCount > 0 && (
-              <span className="text-[10px] text-slate-400 font-mono font-bold">
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                posTab === 'clientes' ? 'bg-white text-indigo-900' : 'bg-slate-100 text-slate-600'
+              }`}>
                 {customersCount}
               </span>
             )}
@@ -129,7 +131,7 @@ export const PosSidebar: React.FC<PosSidebarProps> = ({
             <Box className={`w-4 h-4 shrink-0 ${posTab === 'bodega_ordenes' ? 'text-white' : 'text-amber-500'}`} />
             <span>Bodega</span>
             {pendingPreparationCount > 0 && (
-              <span className="px-1.5 py-0.2 text-[10px] font-black rounded-full bg-amber-500 text-white">
+              <span className="px-1.5 py-0.5 text-[10px] font-black rounded-full bg-amber-500 text-white">
                 {pendingPreparationCount}
               </span>
             )}
@@ -147,7 +149,7 @@ export const PosSidebar: React.FC<PosSidebarProps> = ({
           >
             <Droplets className={`w-4 h-4 shrink-0 ${posTab === 'ventas' ? 'text-white' : 'text-cyan-500'}`} />
             <span>Ventas</span>
-            <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full ${
+            <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full ${
               posTab === 'ventas' ? 'bg-white text-indigo-900' : 'bg-indigo-100 text-indigo-800'
             }`}>
               {totalOnzasVendidas} Oz
