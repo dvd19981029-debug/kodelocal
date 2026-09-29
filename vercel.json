@@ -1,12 +1,1 @@
-{
-  "crons": [
-    {
-      "path": "/api/miranda/briefing?type=morning",
-      "schedule": "0 15 * * *"
-    },
-    {
-      "path": "/api/miranda/briefing?type=evening",
-      "schedule": "0 2 * * *"
-    }
-  ]
-}
+{}
