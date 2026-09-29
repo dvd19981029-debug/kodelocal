@@ -188,6 +188,26 @@ export default function PosPage() {
 
   // Monitoreo y auto-sincronización de cola offline
   const [offlineQueueCount, setOfflineQueueCount] = useState(0);
+  const [isSyncingOffline, setIsSyncingOffline] = useState(false);
+
+  const handleFlushOfflineQueue = async () => {
+    if (isSyncingOffline) return;
+    setIsSyncingOffline(true);
+    try {
+      const res = await flushOfflineQueue((freshProds) => {
+        setProducts(freshProds);
+      });
+      if (res.synced > 0) {
+        alert(`✅ Sincronización exitosa: ${res.synced} venta${res.synced > 1 ? 's' : ''} enviada${res.synced > 1 ? 's' : ''} a la base de datos.`);
+      } else if (res.failed > 0) {
+        alert(`⚠️ No se pudo sincronizar la venta offline: ${res.lastError || 'Fallo de conexión o validación'}. Se mantendrá en cola para reintentar.`);
+      }
+    } catch (err: any) {
+      alert(`Error al sincronizar: ${err?.message || 'Error desconocido'}`);
+    } finally {
+      setIsSyncingOffline(false);
+    }
+  };
 
   useEffect(() => {
     setOfflineQueueCount(getOfflineQueueCount());
@@ -1713,7 +1733,8 @@ export default function PosPage() {
         totalMontoVentas={totalMontoVentas}
         salesCount={sales.length}
         offlineQueueCount={offlineQueueCount}
-        onFlushOfflineQueue={() => flushOfflineQueue((p) => setProducts(p))}
+        isSyncingOffline={isSyncingOffline}
+        onFlushOfflineQueue={handleFlushOfflineQueue}
         onNavigateLogistica={() => router.push('/logistica')}
       />
 

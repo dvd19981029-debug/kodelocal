@@ -29,6 +29,7 @@ export interface PosSidebarProps {
   totalMontoVentas: number;
   salesCount: number;
   offlineQueueCount: number;
+  isSyncingOffline?: boolean;
   onFlushOfflineQueue: () => void;
   onNavigateLogistica: () => void;
 }
@@ -49,6 +50,7 @@ export const PosSidebar: React.FC<PosSidebarProps> = ({
   totalMontoVentas,
   salesCount,
   offlineQueueCount,
+  isSyncingOffline = false,
   onFlushOfflineQueue,
   onNavigateLogistica,
 }) => {
@@ -178,11 +180,16 @@ export const PosSidebar: React.FC<PosSidebarProps> = ({
         {offlineQueueCount > 0 && (
           <button
             type="button"
+            disabled={isSyncingOffline}
             onClick={onFlushOfflineQueue}
-            className="w-full mt-1.5 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-bold bg-amber-50 border border-amber-200 text-amber-800"
+            className="w-full mt-1.5 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-bold bg-amber-50 border border-amber-200 text-amber-800 disabled:opacity-60 active:scale-[0.99] transition-all cursor-pointer"
           >
-            <RotateCw className="w-3.5 h-3.5 text-amber-600 animate-spin shrink-0" />
-            <span>Sincronizar {offlineQueueCount} venta{offlineQueueCount > 1 ? 's' : ''} offline</span>
+            <RotateCw className={`w-3.5 h-3.5 text-amber-600 shrink-0 ${isSyncingOffline ? 'animate-spin' : ''}`} />
+            <span>
+              {isSyncingOffline
+                ? 'Sincronizando...'
+                : `Sincronizar ${offlineQueueCount} venta${offlineQueueCount > 1 ? 's' : ''} offline`}
+            </span>
           </button>
         )}
       </div>
@@ -413,19 +420,24 @@ export const PosSidebar: React.FC<PosSidebarProps> = ({
           {offlineQueueCount > 0 && (
             <button
               type="button"
+              disabled={isSyncingOffline}
               onClick={onFlushOfflineQueue}
-              className={`w-full flex items-center ${isSidebarExpanded ? 'justify-between px-3 py-2' : 'justify-center p-2'} rounded-xl text-[11px] font-bold bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 transition-all shadow-xs`}
+              className={`w-full flex items-center ${isSidebarExpanded ? 'justify-between px-3 py-2' : 'justify-center p-2'} rounded-xl text-[11px] font-bold bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 transition-all shadow-xs disabled:opacity-60 cursor-pointer`}
               title="Ventas guardadas localmente. Clic para forzar sincronización con Supabase"
             >
               <div className="flex items-center gap-2 min-w-0">
-                <RotateCw className="w-3.5 h-3.5 text-amber-600 animate-spin shrink-0" />
+                <RotateCw className={`w-3.5 h-3.5 text-amber-600 shrink-0 ${isSyncingOffline ? 'animate-spin' : ''}`} />
                 {isSidebarExpanded && (
-                  <span className="truncate">{offlineQueueCount} venta{offlineQueueCount > 1 ? 's' : ''} offline</span>
+                  <span className="truncate">
+                    {isSyncingOffline
+                      ? 'Sincronizando...'
+                      : `${offlineQueueCount} venta${offlineQueueCount > 1 ? 's' : ''} offline`}
+                  </span>
                 )}
               </div>
               {isSidebarExpanded && (
                 <span className="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded font-mono font-bold shrink-0">
-                  Sincronizar
+                  {isSyncingOffline ? 'En proceso' : 'Sincronizar'}
                 </span>
               )}
             </button>

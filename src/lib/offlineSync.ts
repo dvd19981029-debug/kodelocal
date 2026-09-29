@@ -138,7 +138,7 @@ export function clearOfflineQueue(): void {
  */
 export async function flushOfflineQueue(
   onProductsUpdated?: (products: any[]) => void
-): Promise<{ synced: number; failed: number }> {
+): Promise<{ synced: number; failed: number; lastError?: string }> {
   if (typeof window === 'undefined' || !navigator.onLine) {
     return { synced: 0, failed: 0 };
   }
@@ -150,6 +150,7 @@ export async function flushOfflineQueue(
 
   let synced = 0;
   let failed = 0;
+  let lastErrorMessage: string | undefined;
 
   console.log(`🚀 [OfflineSync] Procesando ${queue.length} ventas pendientes en segundo plano...`);
 
@@ -260,23 +261,40 @@ export async function flushOfflineQueue(
 
       // Si fue exitoso o si el servidor indica que la venta ya existía (idempotencia)
       const isAlreadyRecorded =
-        !data.success &&
+        data.alreadyExists ||
+        data.success ||
+        (!data.success &&
         (String(data.error || '').includes('Unique constraint') ||
-         String(data.error || '').includes('saleNumber'));
+         String(data.error || '').includes('P2002') ||
+         String(data.error || '').includes('saleNumber') ||
+         String(data.error || '').includes('ya existía')));
 
-      if (data.success || isAlreadyRecorded) {
+      if (isAlreadyRecorded) {
         removeOfflineSale(item.saleNumber);
         synced++;
         console.log(`✅ [OfflineSync] Venta #${item.saleNumber} sincronizada exitosamente.`);
       } else {
-        item.attempts += 1;
-        item.lastError = data.error || 'Error en servidor';
+        item.attempts = (item.attempts || 0) + 1;
+        item.lastError = data.error || 'Error en servidor al guardar venta';
+        lastErrorMessage = item.lastError;
         failed++;
+        // Persistir el error en la cola local
+        try {
+          const currentQueue = getOfflineSalesQueue();
+          const updatedQueue = currentQueue.map((q) => (q.saleNumber === item.saleNumber ? item : q));
+          localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(updatedQueue));
+        } catch (_) {}
       }
     } catch (networkErr: any) {
-      item.attempts += 1;
+      item.attempts = (item.attempts || 0) + 1;
       item.lastError = networkErr?.message || 'Fallo de conexión';
+      lastErrorMessage = item.lastError;
       failed++;
+      try {
+        const currentQueue = getOfflineSalesQueue();
+        const updatedQueue = currentQueue.map((q) => (q.saleNumber === item.saleNumber ? item : q));
+        localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(updatedQueue));
+      } catch (_) {}
       // Si la red se volvió a caer durante el bucle, detener reintentos
       break;
     }
@@ -295,7 +313,7 @@ export async function flushOfflineQueue(
     window.dispatchEvent(new Event('kodelocal_sales_updated'));
   }
 
-  return { synced, failed };
+  return { synced, failed, lastError: lastErrorMessage };
 }
 
 /**
@@ -373,7 +391,17 @@ export async function syncSaleOnlineOrQueue(
 
     const data = await res.json().catch(() => ({}));
 
-    if (data.success) {
+    const isAlreadyRecorded =
+      data.alreadyExists ||
+      data.success ||
+      (!data.success &&
+      (String(data.error || '').includes('Unique constraint') ||
+       String(data.error || '').includes('P2002') ||
+       String(data.error || '').includes('saleNumber') ||
+       String(data.error || '').includes('ya existía')));
+
+    if (isAlreadyRecorded) {
+      removeOfflineSale(sale.saleNumber);
       // Actualizar catálogo de productos tras descuento exitoso
       try {
         const pRes = await fetch('/api/products?fresh=true');
