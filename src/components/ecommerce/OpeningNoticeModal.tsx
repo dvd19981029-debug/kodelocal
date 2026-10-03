@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Clock, Calendar, AlertCircle } from 'lucide-react';
+import { Clock, Calendar, AlertCircle, MapPin, ExternalLink } from 'lucide-react';
 
 interface TimeLeft {
   days: number;
@@ -132,6 +132,30 @@ export default function OpeningNoticeModal() {
               Segundos
             </span>
           </div>
+        </div>
+
+        {/* Ubicación del Local */}
+        <div className="mb-6 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-left flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 shrink-0 mt-0.5">
+              <MapPin className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Estaremos ubicados en:</span>
+              <p className="text-xs sm:text-sm font-bold text-slate-800 leading-snug">
+                Centro Comercial El Rosal, Calle El Progreso, San Salvador
+              </p>
+            </div>
+          </div>
+          <a
+            href="https://maps.app.goo.gl/shtetXTGcPZQpBwY6"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-indigo-600 hover:text-indigo-800 text-xs font-extrabold shadow-2xs hover:shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <span>Ver en Google Maps</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
         </div>
 
         {/* Botón Aceptar y Continuar al Sitio */}

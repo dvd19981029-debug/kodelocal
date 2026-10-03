@@ -682,7 +682,7 @@ export default function EcommerceHomePage() {
             </div>
             <h4 className="font-extrabold text-xs sm:text-sm text-slate-900">Envío o Retiro en Local</h4>
             <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed">
-              Elige entre <strong className="text-slate-800">pasar a retirar a nuestro local en San Salvador</strong> o solicitar <strong className="text-slate-800">envío a domicilio</strong>. Envíos y cobertura de <strong className="text-indigo-700">24 a 48 horas para todo el país</strong> (normalmente en 24 horas).
+              Elige entre <strong className="text-slate-800">pasar a retirar a nuestro local en San Salvador (Centro Comercial El Rosal, Calle El Progreso)</strong> o solicitar <strong className="text-slate-800">envío a domicilio</strong>. Envíos y cobertura de <strong className="text-indigo-700">24 a 48 horas para todo el país</strong> (normalmente en 24 horas).
             </p>
           </div>
 
@@ -762,7 +762,7 @@ export default function EcommerceHomePage() {
               ¿Tienen entregas a domicilio a todo El Salvador o retiro en local?
             </h3>
             <p>
-              Sí, contamos con <strong>entregas a domicilio a todo El Salvador</strong> en un plazo de 24 a 48 horas hábiles, o puedes pasar retirando tu pedido directamente en nuestro local en San Salvador.
+              Sí, contamos con <strong>entregas a domicilio a todo El Salvador</strong> en un plazo de 24 a 48 horas hábiles, o puedes pasar retirando tu pedido directamente en nuestro local en San Salvador (Centro Comercial El Rosal, Calle El Progreso).
             </p>
           </div>
 
@@ -870,15 +870,17 @@ export default function EcommerceHomePage() {
                   "paymentAccepted": "Cash, Credit Card, Debit Card, Wompi, Bank Transfer, Bitcoin",
                   "address": {
                     "@type": "PostalAddress",
+                    "streetAddress": "Centro Comercial El Rosal, Calle El Progreso",
                     "addressLocality": "San Salvador",
                     "addressRegion": "San Salvador",
                     "addressCountry": "SV"
                   },
                   "geo": {
                     "@type": "GeoCoordinates",
-                    "latitude": 13.6929,
-                    "longitude": -89.2182
+                    "latitude": 13.6968,
+                    "longitude": -89.2208
                   },
+                  "hasMap": "https://maps.app.goo.gl/shtetXTGcPZQpBwY6",
                   "areaServed": [
                     { "@type": "AdministrativeArea", "name": "San Salvador" },
                     { "@type": "AdministrativeArea", "name": "La Libertad" },
@@ -889,9 +891,15 @@ export default function EcommerceHomePage() {
                   "openingHoursSpecification": [
                     {
                       "@type": "OpeningHoursSpecification",
-                      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-                      "opens": "08:00",
+                      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                      "opens": "09:00",
                       "closes": "18:00"
+                    },
+                    {
+                      "@type": "OpeningHoursSpecification",
+                      "dayOfWeek": ["Saturday"],
+                      "opens": "09:00",
+                      "closes": "13:00"
                     }
                   ],
                   "hasOfferCatalog": {

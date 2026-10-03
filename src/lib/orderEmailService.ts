@@ -167,7 +167,7 @@ export function buildOrderConfirmationHtml(data: OrderEmailData): string {
                   </tr>
                   <tr bgcolor="#ffffff">
                     <td style="padding: 4px 14px; font-size: 12px; color: #64748b;">
-                      ${isRetiro ? 'Retiro en Local San Salvador:' : 'Envío a Domicilio:'}
+                      ${isRetiro ? 'Retiro en Local (Centro Comercial El Rosal, Calle El Progreso, San Salvador):' : 'Envío a Domicilio:'}
                     </td>
                     <td align="right" style="padding: 4px 14px; font-family: 'Courier New', Courier, monospace; font-size: 12.5px; font-weight: 700; color: ${data.shippingCost === 0 ? '#059669' : '#334155'};">
                       ${data.shippingCost === 0 ? 'GRATIS' : `$${data.shippingCost.toFixed(2)}`}
@@ -192,7 +192,7 @@ export function buildOrderConfirmationHtml(data: OrderEmailData): string {
                       ${isRetiro ? '📍 Modalidad de Entrega' : '🚚 Dirección de Envío'}
                     </div>
                     <div style="font-size: 12.5px; font-weight: 700; color: #1e293b; margin-bottom: 2px;">
-                      ${data.shippingAddress || (isRetiro ? 'Retiro en Local San Salvador' : 'Envío a domicilio')}
+                      ${data.shippingAddress || (isRetiro ? 'Retiro en Local San Salvador - Centro Comercial El Rosal, Calle El Progreso' : 'Envío a domicilio')}
                     </div>
                     <div style="font-size: 11.5px; color: #64748b;">
                       ${data.municipality || 'San Salvador Centro'}, ${data.department || 'San Salvador'}
@@ -249,7 +249,7 @@ export function buildOrderConfirmationHtml(data: OrderEmailData): string {
                 Aromaniak SV &bull; Distribuidora de esencias y más
               </div>
               <div style="font-size: 11px; color: #94a3b8; line-height: 1.4; margin-bottom: 8px;">
-                San Salvador, El Salvador &bull; WhatsApp: <a href="https://wa.me/50360437496" style="color: #6366f1; text-decoration: none; font-weight: 700;">+503 6043-7496</a>
+                Centro Comercial El Rosal, Calle El Progreso, San Salvador &bull; WhatsApp: <a href="https://wa.me/50360437496" style="color: #6366f1; text-decoration: none; font-weight: 700;">+503 6043-7496</a>
               </div>
               <div style="font-size: 10px; color: #cbd5e1; line-height: 1.3;">
                 Has recibido este correo porque realizaste una compra en <a href="https://aromaniaksv.com" style="color: #94a3b8; text-decoration: underline;">aromaniaksv.com</a>.<br>

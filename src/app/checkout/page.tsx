@@ -24,7 +24,8 @@ import {
   Check,
   Clock,
   Loader2,
-  Package
+  Package,
+  ExternalLink
 } from 'lucide-react';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
@@ -248,7 +249,7 @@ export default function CheckoutPage() {
       const saleId = `sale-${Date.now()}`;
       const now = new Date().toISOString();
       const direccionFinal = metodoEntrega === 'RETIRO' 
-        ? 'Retiro en Local San Salvador - Aromaniak' 
+        ? 'Retiro en Local San Salvador (Centro Comercial El Rosal, Calle El Progreso) - Aromaniak' 
         : `${direccion}, ${municipio}, ${departamento}`;
 
       const newOrder: SaleRecord = {
@@ -264,7 +265,7 @@ export default function CheckoutPage() {
         channel: 'ONLINE',
         shippingCost,
         deliveryNotes: metodoEntrega === 'RETIRO'
-          ? 'Retiro en Sucursal / Local San Salvador'
+          ? 'Retiro en Sucursal / Centro Comercial El Rosal, Calle El Progreso, San Salvador'
           : `Envío a domicilio - Departamento: ${departamento}, Municipio: ${municipio}. Ref: ${referencia || 'Sin referencias específicas'}`,
         status: 'PENDING_PREPARATION', // Llega directo a Bodega para preparar
         vendedor: 'Tienda Online Aromaniak',
@@ -972,7 +973,7 @@ export default function CheckoutPage() {
                       </div>
                       <div>
                         <span className="font-black text-slate-900 text-xs block">Retiro en Sucursal</span>
-                        <span className="text-[10px] font-bold text-emerald-600">Local San Salvador • ¡Gratis!</span>
+                        <span className="text-[10px] font-bold text-emerald-600">Centro Comercial El Rosal, Calle El Progreso • ¡Gratis!</span>
                       </div>
                     </div>
 
@@ -988,7 +989,7 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                   <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                    Pasa a retirar gratis o envía tu delivery (<strong className="text-slate-800 font-bold">PedidosYa, Uber</strong>) a nuestro local en <strong className="text-slate-800 font-bold">San Salvador</strong>.
+                    Pasa a retirar gratis o envía tu delivery (<strong className="text-slate-800 font-bold">PedidosYa, Uber</strong>) a nuestro local en <strong className="text-slate-800 font-bold">Centro Comercial El Rosal, Calle El Progreso, San Salvador</strong>.
                   </p>
                 </button>
               </div>
@@ -1115,13 +1116,24 @@ export default function CheckoutPage() {
                     </div>
                   </>
                 ) : (
-                  <div className="sm:col-span-2 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 space-y-1">
-                    <p className="font-black flex items-center gap-1.5 text-emerald-800">
-                      <Store className="w-4 h-4" />
-                      <span>Retiro en Sucursal (San Salvador)</span>
-                    </p>
+                  <div className="sm:col-span-2 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 space-y-1.5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                      <p className="font-black flex items-center gap-1.5 text-emerald-800">
+                        <Store className="w-4 h-4" />
+                        <span>Retiro en Sucursal — Centro Comercial El Rosal, Calle El Progreso, San Salvador</span>
+                      </p>
+                      <a
+                        href="https://maps.app.goo.gl/shtetXTGcPZQpBwY6"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-900 underline shrink-0 cursor-pointer"
+                      >
+                        <span>Ver en Google Maps</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
                     <p className="text-[11px] text-emerald-900 leading-relaxed">
-                      Tu pedido será preparado en nuestro punto de San Salvador sin costo de envío. Puedes pasar a retirar personalmente o mandar tu propio delivery de <strong className="font-bold text-emerald-950">PedidosYa</strong> o de <strong className="font-bold text-emerald-950">Uber</strong> a recoger tu pedido; solo indícale al delivery el nombre de quien es la orden y ya. Te notificaremos vía WhatsApp al <strong>{telefono || 'número proporcionado'}</strong> en cuanto esté listo para retirar.
+                      Tu pedido será preparado en nuestro punto ubicado en <strong className="font-bold text-emerald-950">Centro Comercial El Rosal, Calle El Progreso, San Salvador</strong> sin costo de envío. Puedes pasar a retirar personalmente o mandar tu propio delivery de <strong className="font-bold text-emerald-950">PedidosYa</strong> o de <strong className="font-bold text-emerald-950">Uber</strong> a recoger tu pedido; solo indícale al delivery el nombre de quien es la orden y ya. Te notificaremos vía WhatsApp al <strong>{telefono || 'número proporcionado'}</strong> en cuanto esté listo para retirar.
                     </p>
                   </div>
                 )}

@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Sparkles, MapPin, Phone, Mail, Clock, ShieldCheck, Truck, CreditCard } from 'lucide-react';
+import { Sparkles, MapPin, Phone, Mail, Clock, ShieldCheck, Truck, CreditCard, ExternalLink } from 'lucide-react';
 
 export default function EcommerceFooter() {
   const pathname = usePathname();
@@ -102,6 +102,15 @@ export default function EcommerceFooter() {
               Atención al Cliente
             </h4>
             <div className="space-y-2 text-slate-500 font-medium">
+              <a 
+                href="https://maps.app.goo.gl/shtetXTGcPZQpBwY6" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-start gap-2 hover:text-indigo-600 transition-colors group cursor-pointer"
+              >
+                <MapPin className="w-4 h-4 text-rose-500 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                <span className="text-slate-600 group-hover:text-indigo-600">Centro Comercial El Rosal, Calle El Progreso, San Salvador</span>
+              </a>
               <p className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>WhatsApp: +503 6043-7496</span>
@@ -111,11 +120,44 @@ export default function EcommerceFooter() {
                 <span>ventas@aromaniaksv.com</span>
               </p>
               <p className="text-[11px] text-slate-400 pt-2">
-                Horario: Lunes a Sábado 8:00 AM – 6:00 PM
+                Horario: Lunes a Viernes 9:00 AM – 6:00 PM | Sábados 9:00 AM – 1:00 PM (Domingos cerrado)
               </p>
             </div>
           </div>
 
+        </div>
+
+        {/* Mapa de Google Maps con la Ubicación del Local */}
+        <div className="pt-8 border-t border-slate-200/80 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-rose-500 shrink-0" />
+              <h4 className="font-extrabold text-slate-900 uppercase tracking-wider text-xs">
+                Ubicación del Local: Centro Comercial El Rosal, Calle El Progreso, San Salvador
+              </h4>
+            </div>
+            <a
+              href="https://maps.app.goo.gl/shtetXTGcPZQpBwY6"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+            >
+              <span>Abrir en Google Maps</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
+          <div className="w-full h-52 sm:h-64 rounded-2xl overflow-hidden border border-slate-200 shadow-2xs bg-slate-100">
+            <iframe
+              src="https://maps.google.com/maps?q=13.6967763,-89.2208348&hl=es&z=17&output=embed"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Mapa de ubicación Aromaniak El Salvador - Centro Comercial El Rosal, Calle El Progreso"
+              className="w-full h-full"
+            />
+          </div>
         </div>
 
         {/* Enlaces de Navegación, Legal y Mapa del Sitio para Indexación de Googlebot */}
@@ -138,7 +180,7 @@ export default function EcommerceFooter() {
             <p>© 2026 Aromaniak SV®. Marca registrada. Todos los derechos reservados.</p>
             <p className="text-slate-400 font-medium">Propiedad de <strong>Grupo Kode SAS de C.V.</strong> — El Salvador</p>
           </div>
-          <p className="text-slate-400 text-center sm:text-right">San Salvador, El Salvador • Fragancias & Inspiraciones</p>
+          <p className="text-slate-400 text-center sm:text-right">Centro Comercial El Rosal, Calle El Progreso, San Salvador • Fragancias & Inspiraciones</p>
         </div>
 
       </div>
