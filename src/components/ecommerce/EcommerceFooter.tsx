@@ -127,36 +127,31 @@ export default function EcommerceFooter() {
 
         </div>
 
-        {/* Mapa de Google Maps con la Ubicación del Local */}
-        <div className="pt-8 border-t border-slate-200/80 space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-rose-500 shrink-0" />
-              <h4 className="font-extrabold text-slate-900 uppercase tracking-wider text-xs">
-                Ubicación del Local: Centro Comercial El Rosal, Calle El Progreso, San Salvador
-              </h4>
+        {/* Banner de Ubicación y Sucursal Física (Ligero y sin iframes lentos) */}
+        <div className="pt-6 border-t border-slate-200/80">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white/90 border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-start sm:items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                <MapPin className="w-4 h-4 text-rose-500" />
+              </div>
+              <div>
+                <p className="font-extrabold text-xs text-slate-900">
+                  Sucursal Oficial Aromaniak: Centro Comercial El Rosal, Calle El Progreso, San Salvador
+                </p>
+                <p className="text-[11px] text-slate-500 font-medium">
+                  Retiro gratuito de pedidos en línea o compra directa en mostrador. Lun-Vie 9:00 AM – 6:00 PM | Sáb 9:00 AM – 1:00 PM
+                </p>
+              </div>
             </div>
             <a
               href="https://maps.app.goo.gl/shtetXTGcPZQpBwY6"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-indigo-700 hover:text-indigo-900 font-bold text-xs transition-colors shrink-0"
             >
-              <span>Abrir en Google Maps</span>
+              <span>Ver en Google Maps</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
-          </div>
-          <div className="w-full h-52 sm:h-64 rounded-2xl overflow-hidden border border-slate-200 shadow-2xs bg-slate-100">
-            <iframe
-              src="https://maps.google.com/maps?q=13.6967763,-89.2208348&hl=es&z=17&output=embed"
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              title="Mapa de ubicación Aromaniak El Salvador - Centro Comercial El Rosal, Calle El Progreso"
-              className="w-full h-full"
-            />
           </div>
         </div>
 

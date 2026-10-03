@@ -18,7 +18,10 @@ import {
   ShieldAlert,
   Clock,
   MapPin,
-  Wand2
+  Wand2,
+  CheckCircle2,
+  PackageCheck,
+  ArrowRight
 } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS, getStoredProducts, saveStoredProducts } from '@/lib/store';
 import ProductCard from '@/components/ecommerce/ProductCard';
@@ -26,6 +29,7 @@ import PromoBannerCarousel from '@/components/ecommerce/PromoBannerCarousel';
 import ReactiveSearchBar from '@/components/ecommerce/ReactiveSearchBar';
 import PerfumeKitBuilderModal from '@/components/ecommerce/PerfumeKitBuilderModal';
 import HomeBlogSection from '@/components/ecommerce/HomeBlogSection';
+import StoreLocationMapSection from '@/components/ecommerce/StoreLocationMapSection';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 
@@ -648,70 +652,171 @@ export default function EcommerceHomePage() {
       </section>
 
       {/* ================= SECCIÓN EDUCATIVA: CÓMO PEDIR ================= */}
-      <section className="clay-card p-5 sm:p-8 md:p-10 border border-white/90 bg-white/70 space-y-6">
+      <section className="clay-card p-5 sm:p-8 md:p-10 border border-white/90 bg-white/80 space-y-8 rounded-3xl shadow-sm">
         <div className="text-center max-w-2xl mx-auto space-y-2">
-          <span className="clay-badge text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg">
-            Proceso de Compra
-          </span>
-          <h3 className="text-xl sm:text-2xl font-black text-slate-900">
-            ¿Cómo pedir tu fragancia en Aromaniak?
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 border border-purple-200/80 shadow-2xs">
+            <Sparkles className="w-3 h-3 text-purple-600 shrink-0" />
+            <span>Proceso de Compra Simple y Transparente</span>
+          </div>
+          <h3 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+            ¿Cómo comprar en Aromaniak? En 4 pasos fáciles
           </h3>
-          <p className="text-xs sm:text-sm text-slate-600 font-medium">
-            Entregamos a <strong className="text-indigo-700 font-bold">absolutamente todas partes de El Salvador</strong> o puedes retirar en nuestro local.
+          <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
+            Sin complicaciones ni intermediarios. Compra en línea en 2 minutos con <strong className="text-indigo-700">retiro gratis en sucursal</strong> o <strong className="text-indigo-700">envío express a los 14 departamentos de El Salvador</strong>.
           </p>
         </div>
 
-        {/* 4 Pasos del Flujo */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* 4 Pasos del Flujo con Diseño Interactivo e Intuitivo */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           
           {/* Paso 1 */}
-          <div className="clay-card p-4 space-y-2.5 bg-white/95">
-            <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 font-black text-sm flex items-center justify-center shadow-xs">
-              1
+          <div className="clay-card p-5 rounded-2xl bg-white/95 border border-slate-200/80 flex flex-col justify-between space-y-4 hover:shadow-md transition-all group">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-black text-sm flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                  01
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+                  Selección
+                </span>
+              </div>
+              <h4 className="font-extrabold text-sm sm:text-base text-slate-900 leading-snug">
+                Elige tus Productos o Fragancia
+              </h4>
+              <ul className="space-y-2 text-[11px] sm:text-xs text-slate-600 font-medium leading-relaxed">
+                <li className="flex items-start gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 shrink-0 mt-0.5" />
+                  <span><strong>Esencias puras 100%:</strong> Presentación de 1 Onza ($5.00) o Media Onza ($2.50).</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 shrink-0 mt-0.5" />
+                  <span><strong>Botes e insumos:</strong> Frascos de 100ml de vidrio pesado y atomizadores de micro-difusión.</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-purple-600 shrink-0 mt-0.5" />
+                  <span><strong>¿Listo para usar?:</strong> Usa nuestro configurador <em>'Arma tu Perfume'</em> ($15.00).</span>
+                </li>
+              </ul>
             </div>
-            <h4 className="font-extrabold text-xs sm:text-sm text-slate-900">Elige tu fragancia e insumos</h4>
-            <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed">
-              Selecciona tu fragancia favorita en 1 onza o media onza (½ oz), y agrega a tu pedido los frascos vacíos e insumos que necesites.
-            </p>
+            <div className="pt-2 border-t border-slate-100 text-[10px] text-slate-400 font-semibold">
+              Stock físico en tiempo real
+            </div>
           </div>
 
           {/* Paso 2 */}
-          <div className="clay-card p-4 space-y-2.5 bg-white/95">
-            <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 font-black text-sm flex items-center justify-center shadow-xs">
-              2
+          <div className="clay-card p-5 rounded-2xl bg-white/95 border border-slate-200/80 flex flex-col justify-between space-y-4 hover:shadow-md transition-all group">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-pink-600 text-white font-black text-sm flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                  02
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100">
+                  Entrega
+                </span>
+              </div>
+              <h4 className="font-extrabold text-sm sm:text-base text-slate-900 leading-snug">
+                Elige Retiro Gratis o Envío
+              </h4>
+              <ul className="space-y-2 text-[11px] sm:text-xs text-slate-600 font-medium leading-relaxed">
+                <li className="flex items-start gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-purple-600 shrink-0 mt-0.5" />
+                  <span><strong>Retiro en Local ($0.00):</strong> Pasa por tu pedido a Centro Comercial El Rosal, Calle El Progreso, San Salvador.</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <Truck className="w-3.5 h-3.5 text-purple-600 shrink-0 mt-0.5" />
+                  <span><strong>Envío a Domicilio:</strong> Cobertura nacional a los 14 departamentos de El Salvador en 24 a 48 horas.</span>
+                </li>
+              </ul>
             </div>
-            <h4 className="font-extrabold text-xs sm:text-sm text-slate-900">Envío o Retiro en Local</h4>
-            <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed">
-              Elige entre <strong className="text-slate-800">pasar a retirar a nuestro local en San Salvador (Centro Comercial El Rosal, Calle El Progreso)</strong> o solicitar <strong className="text-slate-800">envío a domicilio</strong>. Envíos y cobertura de <strong className="text-indigo-700">24 a 48 horas para todo el país</strong> (normalmente en 24 horas).
-            </p>
+            <div className="pt-2 border-t border-slate-100 text-[10px] text-slate-400 font-semibold">
+              Retiro inmediato sin filas
+            </div>
           </div>
 
           {/* Paso 3 */}
-          <div className="clay-card p-4 space-y-2.5 bg-white/95">
-            <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 font-black text-sm flex items-center justify-center shadow-xs">
-              3
+          <div className="clay-card p-5 rounded-2xl bg-white/95 border border-slate-200/80 flex flex-col justify-between space-y-4 hover:shadow-md transition-all group">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white font-black text-sm flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                  03
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                  Pago Seguro
+                </span>
+              </div>
+              <h4 className="font-extrabold text-sm sm:text-base text-slate-900 leading-snug">
+                Paga de Forma 100% Confiable
+              </h4>
+              <ul className="space-y-2 text-[11px] sm:text-xs text-slate-600 font-medium leading-relaxed">
+                <li className="flex items-start gap-1.5">
+                  <CreditCard className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                  <span><strong>Tarjetas de Crédito y Débito:</strong> Procesadas al instante vía pasarela bancaria oficial Wompi (Visa / Mastercard).</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                  <span><strong>Transferencia Bancaria:</strong> Cuentas oficiales en Banco Agrícola, BAC Credomatic y Banco Cuscatlán.</span>
+                </li>
+              </ul>
             </div>
-            <h4 className="font-extrabold text-xs sm:text-sm text-slate-900">Pago Seguro</h4>
-            <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed">
-              Aceptamos <strong className="text-slate-800">Tarjeta de Crédito / Débito</strong> o <strong className="text-slate-800">Transferencia Bancaria</strong> (Agrícola, BAC, Cuscatlán).
-            </p>
+            <div className="pt-2 border-t border-slate-100 text-[10px] text-slate-400 font-semibold">
+              Cifrado de grado bancario
+            </div>
           </div>
 
           {/* Paso 4 */}
-          <div className="clay-card p-4 space-y-2.5 bg-white/95">
-            <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 font-black text-sm flex items-center justify-center shadow-xs">
-              4
+          <div className="clay-card p-5 rounded-2xl bg-white/95 border border-slate-200/80 flex flex-col justify-between space-y-4 hover:shadow-md transition-all group">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-600 to-orange-600 text-white font-black text-sm flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                  04
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100">
+                  Despacho
+                </span>
+              </div>
+              <h4 className="font-extrabold text-sm sm:text-base text-slate-900 leading-snug">
+                Recibe o Pasa por tu Pedido
+              </h4>
+              <ul className="space-y-2 text-[11px] sm:text-xs text-slate-600 font-medium leading-relaxed">
+                <li className="flex items-start gap-1.5">
+                  <PackageCheck className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                  <span><strong>Confirmación instantánea:</strong> Comprobante automático y soporte directo por WhatsApp (+503 6043-7496).</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                  <span><strong>Rastreo transparente:</strong> Guía en línea si es a domicilio o entrega express en mostrador si es retiro.</span>
+                </li>
+              </ul>
             </div>
-            <h4 className="font-extrabold text-xs sm:text-sm text-slate-900">Entrega Rápida</h4>
-            <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed">
-              Despacho inmediato en días hábiles. Cobertura en los 14 departamentos de <strong className="text-slate-800">24 a 48 horas para todo el país</strong>.
-            </p>
+            <div className="pt-2 border-t border-slate-100 text-[10px] text-slate-400 font-semibold">
+              Entrega rápida de 24 a 48 horas
+            </div>
           </div>
 
         </div>
 
+        {/* Barra de Garantías Aromaniak */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-center text-xs font-bold text-slate-700">
+          <div className="bg-slate-50 border border-slate-200/70 p-3 rounded-2xl flex items-center justify-center gap-2">
+            <Sparkles className="w-4 h-4 text-purple-600 shrink-0" />
+            <span>Esencias 100% Puras</span>
+          </div>
+          <div className="bg-slate-50 border border-slate-200/70 p-3 rounded-2xl flex items-center justify-center gap-2">
+            <MapPin className="w-4 h-4 text-rose-500 shrink-0" />
+            <span>Retiro Gratis en Tienda</span>
+          </div>
+          <div className="bg-slate-50 border border-slate-200/70 p-3 rounded-2xl flex items-center justify-center gap-2">
+            <Truck className="w-4 h-4 text-indigo-600 shrink-0" />
+            <span>Envíos a 14 Departamentos</span>
+          </div>
+          <div className="bg-slate-50 border border-slate-200/70 p-3 rounded-2xl flex items-center justify-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>Garantía de Satisfacción</span>
+          </div>
+        </div>
+
         {/* Banner Oficial de Advertencias de Seguridad Médica y Uso Responsable */}
-        <div className="clay-card p-4 sm:p-5 bg-amber-50/90 border border-amber-300/80 text-amber-950 space-y-2 text-xs">
+        <div className="clay-card p-4 sm:p-5 bg-amber-50/90 border border-amber-300/80 text-amber-950 space-y-2 text-xs rounded-2xl">
           <div className="flex items-center gap-2 text-amber-900 font-black text-sm">
             <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
             <span>Aviso Importante de Salud y Seguridad: Uso Responsable</span>
@@ -729,6 +834,9 @@ export default function EcommerceHomePage() {
           </ul>
         </div>
       </section>
+
+      {/* ================= SUCURSAL FÍSICA Y MAPA INTERACTIVO (GOOGLE MAPS) ================= */}
+      <StoreLocationMapSection />
 
       {/* ================= SECCIÓN DE ARTÍCULOS Y GUÍAS DEL BLOG EN LA PÁGINA PRINCIPAL ================= */}
       <HomeBlogSection />
