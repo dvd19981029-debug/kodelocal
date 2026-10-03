@@ -115,9 +115,9 @@ export const metadata: Metadata = {
   },
   other: {
     "geo.region": "SV-SS",
-    "geo.placename": "San Salvador, El Salvador",
-    "geo.position": "13.6929;-89.2182",
-    "ICBM": "13.6929, -89.2182",
+    "geo.placename": "Centro Comercial El Rosal, Calle El Progreso, San Salvador, El Salvador",
+    "geo.position": "13.6967763;-89.2208348",
+    "ICBM": "13.6967763, -89.2208348",
   },
 };
 

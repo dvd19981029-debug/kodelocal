@@ -14,7 +14,9 @@ import {
   Truck, 
   ShieldCheck,
   ShoppingBag,
-  ArrowRight
+  ArrowRight,
+  MapPin,
+  ExternalLink
 } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { formatBlogDate } from '@/lib/blog';
@@ -114,8 +116,10 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
         },
       },
       other: {
-        'geo.region': 'SV',
-        'geo.placename': 'San Salvador, El Salvador',
+        'geo.region': 'SV-SS',
+        'geo.placename': 'Centro Comercial El Rosal, Calle El Progreso, San Salvador, El Salvador',
+        'geo.position': '13.6967763;-89.2208348',
+        'ICBM': '13.6967763, -89.2208348',
       },
     };
   } catch (error) {
@@ -228,13 +232,27 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
       url: 'https://aromaniaksv.com',
     },
     publisher: {
-      '@type': 'Organization',
+      '@type': 'LocalBusiness',
       name: 'Aromaniak SV',
       url: 'https://aromaniaksv.com',
       logo: {
         '@type': 'ImageObject',
         url: 'https://aromaniaksv.com/images/logo.png',
       },
+      telephone: '+50360437496',
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: 'Centro Comercial El Rosal, Calle El Progreso',
+        addressLocality: 'San Salvador',
+        addressRegion: 'San Salvador',
+        addressCountry: 'SV',
+      },
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: 13.6967763,
+        longitude: -89.2208348,
+      },
+      hasMap: 'https://maps.app.goo.gl/shtetXTGcPZQpBwY6',
       areaServed: {
         '@type': 'Country',
         name: 'El Salvador',
@@ -505,6 +523,67 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
               >
                 Arma tu propio perfume (100ml)
               </Link>
+            </div>
+          </section>
+
+          {/* ================= SUCURSAL FÍSICA Y PUNTO DE RETIRO EN SAN SALVADOR ================= */}
+          <section className="my-10 p-6 sm:p-7 rounded-3xl bg-slate-900 text-white shadow-xl border border-slate-800 relative overflow-hidden">
+            <div className="absolute -top-12 -right-12 w-48 h-48 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div className="space-y-2 max-w-xl">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                  <MapPin className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                  <span>Sucursal Oficial en San Salvador</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                  Visítanos en Centro Comercial El Rosal
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+                  ¿Prefieres adquirir tus esencias en persona o retirar tus pedidos online sin costo de envío? Te esperamos en nuestro local físico con todo el catálogo disponible en tiempo real: esencias 100% puras sin diluir, frascos de vidrio de 100ml con atomizador de lujo, alcohol especial de perfumería e insumos.
+                </p>
+                <div className="pt-1 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-300">
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <MapPin className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                    Centro Comercial El Rosal, Calle El Progreso, San Salvador
+                  </span>
+                  <a
+                    href="https://wa.me/50360437496"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 font-bold transition-colors"
+                  >
+                    <span>WhatsApp: +503 6043-7496</span>
+                  </a>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row md:flex-col gap-2.5 w-full md:w-auto shrink-0">
+                <a
+                  href="https://maps.app.goo.gl/shtetXTGcPZQpBwY6"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-[#7c3aed] to-indigo-600 hover:from-purple-600 hover:to-indigo-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-purple-900/30 transition-all active:scale-95 text-center cursor-pointer"
+                >
+                  <MapPin className="w-4 h-4 shrink-0" />
+                  <span>Ver en Google Maps</span>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-80 shrink-0" />
+                </a>
+              </div>
+            </div>
+
+            {/* Mapa interactivo integrado */}
+            <div className="mt-5 rounded-2xl overflow-hidden border border-slate-800/80 aspect-21/9 sm:aspect-3/1 w-full bg-slate-950">
+              <iframe
+                title="Ubicación Aromaniak Centro Comercial El Rosal"
+                src="https://maps.google.com/maps?q=13.6967763,-89.2208348&hl=es&z=17&output=embed"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
             </div>
           </section>
         </article>

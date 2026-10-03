@@ -3,7 +3,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Sparkles, ShoppingBag, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Sparkles, ShoppingBag, ShieldCheck, ArrowRight, MapPin } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import BlogLiveSearch from '@/components/blog/BlogLiveSearch';
 
@@ -34,8 +34,10 @@ export const metadata: Metadata = {
     type: 'website',
   },
   other: {
-    'geo.region': 'SV',
-    'geo.placename': 'San Salvador, El Salvador',
+    'geo.region': 'SV-SS',
+    'geo.placename': 'Centro Comercial El Rosal, Calle El Progreso, San Salvador, El Salvador',
+    'geo.position': '13.6967763;-89.2208348',
+    'ICBM': '13.6967763, -89.2208348',
   },
 };
 
@@ -83,13 +85,27 @@ export default async function BlogIndexPage() {
     description: 'Guías olfativas, contratipos premium y consejos de perfumería en El Salvador.',
     inLanguage: 'es-SV',
     publisher: {
-      '@type': 'Organization',
+      '@type': 'LocalBusiness',
       name: 'Aromaniak SV',
       url: 'https://aromaniaksv.com',
       logo: {
         '@type': 'ImageObject',
         url: 'https://aromaniaksv.com/images/logo.png',
       },
+      telephone: '+50360437496',
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: 'Centro Comercial El Rosal, Calle El Progreso',
+        addressLocality: 'San Salvador',
+        addressRegion: 'San Salvador',
+        addressCountry: 'SV',
+      },
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: 13.6967763,
+        longitude: -89.2208348,
+      },
+      hasMap: 'https://maps.app.goo.gl/shtetXTGcPZQpBwY6',
       areaServed: {
         '@type': 'Country',
         name: 'El Salvador',
@@ -119,14 +135,25 @@ export default async function BlogIndexPage() {
 
       {/* Cabecera del Blog con enfoque en SEO El Salvador y diseño Claymorphic */}
       <header className="mb-8 text-center sm:text-left border-b border-slate-200/80 pb-6">
-        <span className="clay-badge text-[10px] sm:text-xs font-black uppercase text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg mb-3">
-          Perfumería Fina en El Salvador
-        </span>
+        <div className="flex flex-wrap items-center gap-2 mb-3 justify-center sm:justify-start">
+          <span className="clay-badge text-[10px] sm:text-xs font-black uppercase text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg">
+            Perfumería Fina en El Salvador
+          </span>
+          <a
+            href="https://maps.app.goo.gl/shtetXTGcPZQpBwY6"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200/70 transition-colors"
+          >
+            <MapPin className="w-3 h-3 text-purple-600" />
+            <span>Sucursal: Centro Comercial El Rosal, San Salvador</span>
+          </a>
+        </div>
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight mt-2">
           Secretos Olfativos, Guías & Alta Fijación
         </h1>
         <p className="mt-3 text-sm sm:text-base text-slate-600 max-w-3xl leading-relaxed font-medium">
-          Aprende a elegir tu fragancia ideal, maximizar su duración y conocer nuestras inspiraciones olfativas en esencias 100% puras con entregas a domicilio a todo El Salvador o retiro en local.
+          Aprende a elegir tu fragancia ideal, maximizar su duración y conocer nuestras inspiraciones olfativas en esencias 100% puras con retiro en nuestra sucursal en Centro Comercial El Rosal o entregas a domicilio a todo El Salvador.
         </p>
       </header>
 
@@ -150,7 +177,7 @@ export default async function BlogIndexPage() {
             Fragancias con más de 8 a 12 horas de fijación
           </h3>
           <p className="text-slate-600 text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed font-medium">
-            Conoce nuestras esencias 100% puras importadas sin diluir para formular perfumes de alta gama. Entregas express a los 14 departamentos de El Salvador o retiro en nuestro local en San Salvador.
+            Conoce nuestras esencias 100% puras importadas sin diluir para formular perfumes de alta gama. Visítanos en nuestra sucursal en Centro Comercial El Rosal, Calle El Progreso, San Salvador (<a href="https://maps.app.goo.gl/shtetXTGcPZQpBwY6" target="_blank" rel="noopener noreferrer" className="text-purple-700 font-bold underline">ver en Google Maps</a>), o pide en línea con envíos a los 14 departamentos de El Salvador.
           </p>
         </div>
         <Link
