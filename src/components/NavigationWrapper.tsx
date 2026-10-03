@@ -10,6 +10,7 @@ import EcommerceFooter from '@/components/ecommerce/EcommerceFooter';
 import CartDrawer from '@/components/ecommerce/CartDrawer';
 import CustomerDrawer from '@/components/ecommerce/CustomerDrawer';
 import CustomerAuthModal from '@/components/ecommerce/CustomerAuthModal';
+import OpeningNoticeModal from '@/components/ecommerce/OpeningNoticeModal';
 import { EcommerceCartProvider } from '@/context/EcommerceCartContext';
 import { CustomerAuthProvider } from '@/context/CustomerAuthContext';
 
@@ -62,6 +63,7 @@ export default function NavigationWrapper({ children }: { children: React.ReactN
       ) : (
         // En la tienda pública (E-commerce) se muestra la barra de promociones en el tope superior, cabecera original y pie de Aromaniak
         <div className="flex flex-col min-h-screen">
+          <OpeningNoticeModal />
           <PromoTickerBar />
           <EcommerceHeader />
           <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 lg:p-8">
