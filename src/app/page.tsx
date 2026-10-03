@@ -686,7 +686,7 @@ export default function EcommerceHomePage() {
               <ul className="space-y-2 text-[11px] sm:text-xs text-slate-600 font-medium leading-relaxed">
                 <li className="flex items-start gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 shrink-0 mt-0.5" />
-                  <span><strong>Esencias puras 100%:</strong> Presentación de 1 Onza ($5.00) o Media Onza ($2.50).</span>
+                  <span><strong>Esencias puras 100%:</strong> Presentación en 1 Onza o Media Onza (½ oz).</span>
                 </li>
                 <li className="flex items-start gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 shrink-0 mt-0.5" />
@@ -694,7 +694,7 @@ export default function EcommerceHomePage() {
                 </li>
                 <li className="flex items-start gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-purple-600 shrink-0 mt-0.5" />
-                  <span><strong>¿Listo para usar?:</strong> Usa nuestro configurador <em>'Arma tu Perfume'</em> ($15.00).</span>
+                  <span><strong>¿Listo para usar?:</strong> Usa nuestro configurador <em>'Arma tu Perfume'</em>.</span>
                 </li>
               </ul>
             </div>
@@ -720,7 +720,7 @@ export default function EcommerceHomePage() {
               <ul className="space-y-2 text-[11px] sm:text-xs text-slate-600 font-medium leading-relaxed">
                 <li className="flex items-start gap-1.5">
                   <MapPin className="w-3.5 h-3.5 text-purple-600 shrink-0 mt-0.5" />
-                  <span><strong>Retiro en Local ($0.00):</strong> Pasa por tu pedido a Centro Comercial El Rosal, Calle El Progreso, San Salvador.</span>
+                  <span><strong>Retiro en Local:</strong> Pasa por tu pedido a Centro Comercial El Rosal, Calle El Progreso, San Salvador sin pagar envío.</span>
                 </li>
                 <li className="flex items-start gap-1.5">
                   <Truck className="w-3.5 h-3.5 text-purple-600 shrink-0 mt-0.5" />
