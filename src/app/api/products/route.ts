@@ -82,6 +82,7 @@ export async function GET(request: Request) {
       finishedPerfumePrice: p.finishedPerfumePrice != null ? Number(p.finishedPerfumePrice) : (p.category?.name === 'Esencias para Perfume' || !p.category?.name ? 15.00 : undefined),
       cost: Number(p.cost || 0),
       stock: p.stock,
+      stockHalf: (p as any).stockHalf ?? 0,
       minStock: p.minStock,
       imageUrl: (p.category?.name === 'Botes' || p.category?.name === 'Botes & Envases')
         ? (p.imageUrl && p.imageUrl.startsWith('/images/botes/') ? p.imageUrl : '/images/botes/bote_100ml_degrade_azul_noche.jpg')
@@ -188,7 +189,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: true, count: result.count });
     }
 
-    const { id, sku, stock, isAvailableOnline, price, cost, priceHalfOunce, finishedPerfumePrice, puesto, officialName, imageUrl, name, brand, description } = body;
+    const { id, sku, stock, stockHalf, isAvailableOnline, price, cost, priceHalfOunce, finishedPerfumePrice, puesto, officialName, imageUrl, name, brand, description } = body;
 
     if (!id && !sku) {
       return NextResponse.json({ success: false, error: 'Product ID or SKU required' }, { status: 400 });
@@ -220,6 +221,7 @@ export async function PATCH(request: Request) {
       where: { id: existing.id },
       data: {
         ...(typeof stock === 'number' ? { stock } : {}),
+        ...(typeof stockHalf === 'number' ? { stockHalf } : {}),
         ...(typeof isAvailableOnline === 'boolean' ? { isAvailableOnline } : {}),
         ...(typeof price === 'number' ? { price } : {}),
         ...(typeof cost === 'number' ? { cost } : {}),
@@ -252,6 +254,7 @@ export async function PATCH(request: Request) {
       finishedPerfumePrice: updated.finishedPerfumePrice != null ? Number(updated.finishedPerfumePrice) : undefined,
       cost: Number(updated.cost || 0),
       stock: updated.stock,
+      stockHalf: (updated as any).stockHalf ?? 0,
       minStock: updated.minStock,
       imageUrl: updated.imageUrl || '',
       description: updated.description || '',

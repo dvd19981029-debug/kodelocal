@@ -24,6 +24,7 @@ import {
   ShoppingCart
 } from 'lucide-react';
 import { KardexMovement, KardexMovementType } from '@/lib/kardex';
+import { getStaffToken } from '@/lib/auth';
 import { ProductItem, SaleRecord } from '@/lib/store';
 import { PurchaseRecord } from '@/lib/purchases';
 
@@ -62,6 +63,7 @@ export default function KardexModule({
   const [adjQuantity, setAdjQuantity] = useState<number>(1);
   const [adjReason, setAdjReason] = useState<string>('Conteo físico de inventario');
   const [adjNotes, setAdjNotes] = useState<string>('');
+  const [adjPresentation, setAdjPresentation] = useState<'ONZA' | 'MEDIA'>('ONZA');
   const [adjPickerOpen, setAdjPickerOpen] = useState(false);
   const [adjSearch, setAdjSearch] = useState('');
   const adjFilteredProducts = useMemo(() => {
@@ -88,13 +90,14 @@ export default function KardexModule({
 
   const projectedStock = useMemo(() => {
     if (!currentAdjProduct) return 0;
-    const current = currentAdjProduct.stock || 0;
+    const isHalfAdj = currentAdjProduct.unit === 'Onza' && adjPresentation === 'MEDIA';
+    const current = (isHalfAdj ? currentAdjProduct.stockHalf : currentAdjProduct.stock) || 0;
     if (adjType === 'ADJUSTMENT_ADD') {
       return current + adjQuantity;
     } else {
       return Math.max(0, current - adjQuantity);
     }
-  }, [currentAdjProduct, adjType, adjQuantity]);
+  }, [currentAdjProduct, adjType, adjQuantity, adjPresentation]);
 
   // =========================================================================
   // COMBINAR MOVIMIENTOS: COMPRAS DTE + VENTAS DTE + AJUSTES (Estilo Mecanic OS)
@@ -253,7 +256,8 @@ export default function KardexModule({
     e.preventDefault();
     if (!currentAdjProduct || adjQuantity <= 0) return;
 
-    const previousStock = currentAdjProduct.stock || 0;
+    const isHalfAdj = currentAdjProduct.unit === 'Onza' && adjPresentation === 'MEDIA';
+    const previousStock = (isHalfAdj ? currentAdjProduct.stockHalf : currentAdjProduct.stock) || 0;
     let newStock = previousStock;
     let movementType: KardexMovementType = 'ADJUSTMENT';
 
@@ -271,17 +275,32 @@ export default function KardexModule({
     // 1. Actualizar producto en el estado de inventario
     const updatedProducts = products.map(p => {
       if (p.id === currentAdjProduct.id) {
-        return { ...p, stock: newStock };
+        return isHalfAdj ? { ...p, stockHalf: newStock } : { ...p, stock: newStock };
       }
       return p;
     });
     onUpdateProducts(updatedProducts);
 
+    // 1.1 Persistir en la base de datos
+    getStaffToken().then(staffToken =>
+      fetch('/api/products', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({
+          id: currentAdjProduct.id,
+          ...(isHalfAdj ? { stockHalf: newStock } : { stock: newStock }),
+        }),
+      })
+    ).catch(err => console.error('Error guardando ajuste de stock:', err));
+
     // 2. Registrar movimiento manual en el Kárdex
     const newMovement: KardexMovement = {
       id: `kdx-${Date.now()}`,
       productId: currentAdjProduct.id,
-      productName: currentAdjProduct.name,
+      productName: isHalfAdj ? `${currentAdjProduct.name} (½ Onza)` : currentAdjProduct.name,
       productSku: currentAdjProduct.sku,
       puesto: currentAdjProduct.puesto,
       unit: currentAdjProduct.unit,
@@ -786,7 +805,7 @@ export default function KardexModule({
                       {currentAdjProduct ? `${currentAdjProduct.name} (#${currentAdjProduct.sku})` : 'Seleccionar esencia...'}
                     </span>
                     <span className="text-[10px] text-slate-400 shrink-0">
-                      {currentAdjProduct ? `Stock: ${currentAdjProduct.stock} ${currentAdjProduct.unit === 'Onza' ? 'Oz' : 'Un.'}` : ''} ▾
+                      {currentAdjProduct ? (currentAdjProduct.unit === 'Onza' ? `${currentAdjProduct.stock} × 1 Oz · ${currentAdjProduct.stockHalf || 0} × ½ Oz` : `Stock: ${currentAdjProduct.stock} Un.`) : ''} ▾
                     </span>
                   </button>
                   {adjPickerOpen && (
@@ -814,7 +833,7 @@ export default function KardexModule({
                               {p.name} <span className="text-slate-400">(#{p.sku})</span>
                               {(p as any).brand && <span className="block text-[10px] text-slate-400 font-medium">{(p as any).brand}</span>}
                             </span>
-                            <span className="text-[10px] font-mono text-slate-500 shrink-0">{p.stock} {p.unit === 'Onza' ? 'Oz' : 'Un.'}</span>
+                            <span className="text-[10px] font-mono text-slate-500 shrink-0">{p.unit === 'Onza' ? `${p.stock} × 1 Oz · ${p.stockHalf || 0} × ½ Oz` : `${p.stock} Un.`}</span>
                           </button>
                         ))}
                       </div>
@@ -822,6 +841,30 @@ export default function KardexModule({
                   )}
                 </div>
               </div>
+
+              {currentAdjProduct?.unit === 'Onza' && (
+                <div>
+                  <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                    Presentación envasada *
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAdjPresentation('ONZA')}
+                      className={`py-1.5 rounded-xl text-xs font-bold border transition-all ${adjPresentation === 'ONZA' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200'}`}
+                    >
+                      1 Onza <span className="font-mono opacity-80">({currentAdjProduct.stock || 0})</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAdjPresentation('MEDIA')}
+                      className={`py-1.5 rounded-xl text-xs font-bold border transition-all ${adjPresentation === 'MEDIA' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-200'}`}
+                    >
+                      ½ Onza <span className="font-mono opacity-80">({currentAdjProduct.stockHalf || 0})</span>
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="text-[11px] font-bold text-slate-700 block mb-1">
@@ -841,7 +884,7 @@ export default function KardexModule({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                    Cantidad a Ajustar ({currentAdjProduct?.unit === 'Onza' ? 'Oz' : 'Un.'}) *
+                    Cantidad a Ajustar ({currentAdjProduct?.unit === 'Onza' ? (adjPresentation === 'MEDIA' ? 'frascos ½ Oz' : 'frascos 1 Oz') : 'Un.'}) *
                   </label>
                   <input
                     type="number"

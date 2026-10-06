@@ -15,6 +15,7 @@ export interface ProductItem {
   finishedPerfumePrice?: number; // Precio Perfume Terminado 100ml ("Arma tu propio perfume")
   cost: number;
   stock: number;
+  stockHalf?: number; // Frascos de media onza envasados (stock = frascos de 1 onza)
   minStock: number;
   imageUrl: string;
   description?: string;

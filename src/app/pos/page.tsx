@@ -705,8 +705,10 @@ export default function PosPage() {
     product: ProductItem, 
     presentation: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD' = 'ONZA_COMPLETA'
   ) => {
-    if (product.stock <= 0) {
-      alert('¡Producto sin existencias!');
+    const isHalfPres = presentation === 'MEDIA_ONZA';
+    const availableForPres = isHalfPres ? (product.stockHalf || 0) : product.stock;
+    if (availableForPres <= 0) {
+      alert(isHalfPres ? '¡Sin frascos de ½ onza!' : '¡Producto sin existencias!');
       return;
     }
     setCart(prev => {
@@ -714,14 +716,13 @@ export default function PosPage() {
         item.product.id === product.id && 
         (item.presentation || 'ONZA_COMPLETA') === presentation
       );
-      // Calcular onzas consumidas en el carrito para este producto
-      const currentOz = prev
-        .filter(it => it.product.id === product.id)
-        .reduce((sum, it) => sum + (it.presentation === 'MEDIA_ONZA' ? it.quantity * 0.5 : it.quantity), 0);
-      const addOz = presentation === 'MEDIA_ONZA' ? 0.5 : 1;
+      // Frascos de esta misma presentación ya en el carrito
+      const currentBottles = prev
+        .filter(it => it.product.id === product.id && ((it.presentation === 'MEDIA_ONZA') === isHalfPres))
+        .reduce((sum, it) => sum + it.quantity, 0);
 
-      if (currentOz + addOz > product.stock) {
-        alert(`Stock máximo alcanzado (${product.stock} disponibles).`);
+      if (currentBottles + 1 > availableForPres) {
+        alert(`Stock máximo alcanzado (${availableForPres} frascos disponibles).`);
         return prev;
       }
 
@@ -749,12 +750,13 @@ export default function PosPage() {
       if (!targetItem) return prev;
 
       if (delta > 0) {
-        const currentOz = prev
-          .filter(it => it.product.id === productId)
-          .reduce((sum, it) => sum + (it.presentation === 'MEDIA_ONZA' ? it.quantity * 0.5 : it.quantity), 0);
-        const addOz = presentation === 'MEDIA_ONZA' ? 0.5 : 1;
-        if (currentOz + addOz > targetItem.product.stock) {
-          alert(`Stock máximo alcanzado (${targetItem.product.stock} disponibles).`);
+        const isHalfPres = presentation === 'MEDIA_ONZA';
+        const limit = isHalfPres ? (targetItem.product.stockHalf || 0) : targetItem.product.stock;
+        const currentBottles = prev
+          .filter(it => it.product.id === productId && ((it.presentation === 'MEDIA_ONZA') === isHalfPres))
+          .reduce((sum, it) => sum + it.quantity, 0);
+        if (currentBottles + delta > limit) {
+          alert(`Stock máximo alcanzado (${limit} frascos disponibles).`);
           return prev;
         }
       }
@@ -1331,11 +1333,17 @@ export default function PosPage() {
       const updated = prev.map(prod => {
         const matchingItems = itemsToBill.filter(ci => ci.productId === prod.id);
         if (matchingItems.length > 0) {
-          const totalStockDeduct = matchingItems.reduce((sum, ci) => {
+          let fullDeduct = 0;
+          let halfDeduct = 0;
+          matchingItems.forEach(ci => {
             const isHalf = (ci as any).presentation === 'MEDIA_ONZA' || ci.unit === '½ Onza' || String(ci.name).includes('½');
-            return sum + (isHalf ? Math.ceil(ci.quantity * 0.5) : ci.quantity);
-          }, 0);
-          return { ...prod, stock: Math.max(0, prod.stock - totalStockDeduct) };
+            if (isHalf) halfDeduct += ci.quantity; else fullDeduct += ci.quantity;
+          });
+          return {
+            ...prod,
+            stock: Math.max(0, prod.stock - fullDeduct),
+            stockHalf: Math.max(0, (prod.stockHalf || 0) - halfDeduct),
+          };
         }
         return prod;
       });

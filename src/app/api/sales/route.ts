@@ -199,6 +199,7 @@ export async function POST(request: Request) {
           const productMap = new Map(dbProducts.map((p) => [p.id, p]));
 
           const stockDeltas = new Map<string, number>();
+          const halfDeltas = new Map<string, number>();
           for (const it of resolvedItems) {
             if (!it.productId) continue;
             const prod = productMap.get(it.productId);
@@ -208,9 +209,12 @@ export async function POST(request: Request) {
               it.presentation === 'MEDIA_ONZA' ||
               it.unit === '½ Onza' ||
               String(it.productName || '').includes('½');
-            const soldQty = isHalfOz
-              ? Math.ceil(Number(it.quantity || 0) * 0.5)
-              : Number(it.quantity || 0);
+
+            if (isHalfOz) {
+              halfDeltas.set(prod.id, (halfDeltas.get(prod.id) || 0) + Number(it.quantity || 0));
+              continue;
+            }
+            const soldQty = Number(it.quantity || 0);
 
             const currentDeduct = stockDeltas.get(prod.id) || 0;
             stockDeltas.set(prod.id, currentDeduct + soldQty);
@@ -249,6 +253,26 @@ export async function POST(request: Request) {
               newStock,
               reference: `Venta #${createdSale.saleNumber}`,
               notes: `Venta cobrada por ${cashierName || 'Caja'} (${paymentMethod})`,
+            });
+          }
+
+          for (const [prodId, totalHalf] of halfDeltas.entries()) {
+            const updatedRows: Array<{ stockHalf: number }> = await tx.$queryRaw`
+              UPDATE "Product"
+              SET "stockHalf" = GREATEST(0, "stockHalf" - ${totalHalf}),
+                  "updatedAt" = NOW()
+              WHERE "id" = ${prodId}
+              RETURNING "stockHalf"
+            `;
+            const newHalf = updatedRows && updatedRows.length > 0 ? updatedRows[0].stockHalf : 0;
+            kardexData.push({
+              productId: prodId,
+              type: 'OUT_SALE',
+              quantity: totalHalf,
+              previousStock: newHalf + totalHalf,
+              newStock: newHalf,
+              reference: `Venta #${createdSale.saleNumber}`,
+              notes: `½ Onza • Venta cobrada por ${cashierName || 'Caja'} (${paymentMethod})`,
             });
           }
 

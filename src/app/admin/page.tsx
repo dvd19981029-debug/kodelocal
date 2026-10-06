@@ -495,6 +495,7 @@ export default function AdminPage() {
           finishedPerfumePrice: prodToSave.finishedPerfumePrice != null ? Number(prodToSave.finishedPerfumePrice) : undefined,
           cost: Number(prodToSave.cost || 0),
           stock: Number(prodToSave.stock || 0),
+          stockHalf: Number(prodToSave.stockHalf || 0),
           puesto: prodToSave.puesto || '',
           imageUrl: prodToSave.imageUrl || '',
           isAvailableOnline: prodToSave.isAvailableOnline,
@@ -2571,7 +2572,7 @@ export default function AdminPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Stock Disponible ({editingProduct.unit === 'Onza' ? 'Oz' : 'Unidades'})
+                    {editingProduct.unit === 'Onza' ? 'Frascos de 1 Oz envasados' : 'Stock Disponible (Unidades)'}
                   </label>
                   <input
                     type="number"
@@ -2582,6 +2583,21 @@ export default function AdminPage() {
                     className="clay-input w-full text-sm font-bold text-slate-800 font-mono"
                   />
                 </div>
+                {editingProduct.unit === 'Onza' && (
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">
+                      Frascos de ½ Oz envasados
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      required
+                      value={editingProduct.stockHalf ? editingProduct.stockHalf : '0'}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, stockHalf: parseInt(e.target.value) || 0 })}
+                      className="clay-input w-full text-sm font-bold text-violet-700 font-mono"
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">
                     Stock Mínimo de Alerta

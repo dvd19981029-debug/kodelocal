@@ -297,13 +297,13 @@ export async function PATCH(request: Request) {
         if (it.productId) {
           const qty = Math.max(1, it.quantity || 1);
           const presLower = String(it.presentation || '').toLowerCase();
-          const stockToRestore = (presLower.includes('media') || presLower.includes('½')) ? Math.ceil(qty * 0.5) : qty;
+          const isHalfRestore = presLower.includes('media') || presLower.includes('½');
           try {
             await prisma.product.update({
               where: { id: it.productId },
-              data: {
-                stock: { increment: stockToRestore },
-              },
+              data: isHalfRestore
+                ? { stockHalf: { increment: qty } }
+                : { stock: { increment: qty } },
             });
           } catch (stockErr) {
             console.warn(`No se pudo restaurar inventario para producto ${it.productId}:`, stockErr);
@@ -553,6 +553,7 @@ export async function POST(request: Request) {
 
       // Acumulador de deducción de stock por producto (unifica múltiples items que compartan la misma esencia)
       const stockDeltas = new Map<string, number>();
+      const halfDeltas = new Map<string, number>();
 
       for (const it of requestedItems) {
         const qty = Math.max(1, parseInt(it.quantity || 1, 10));
@@ -625,8 +626,12 @@ export async function POST(request: Request) {
         verifiedSubtotal += lineTotal;
 
         // Descontar existencias: acumular en stockDeltas para ejecución atómica
-        const stockToDeduct = (presLower.includes('media') || presLower.includes('½')) ? Math.ceil(qty * 0.5) : qty;
-        stockDeltas.set(prod.id, (stockDeltas.get(prod.id) || 0) + stockToDeduct);
+        const isHalfLine = presLower.includes('media') || presLower.includes('½');
+        if (isHalfLine) {
+          halfDeltas.set(prod.id, (halfDeltas.get(prod.id) || 0) + qty);
+        } else {
+          stockDeltas.set(prod.id, (stockDeltas.get(prod.id) || 0) + qty);
+        }
 
         verifiedItems.push({
           productId: prod.id,
@@ -653,6 +658,21 @@ export async function POST(request: Request) {
 
         if (!updatedRows || updatedRows.length === 0) {
           throw new Error(`INSUFFICIENT_STOCK: Inventario insuficiente para "${prodName}".`);
+        }
+      }
+
+      for (const [prodId, deductHalf] of halfDeltas.entries()) {
+        const prod = productMap.get(prodId);
+        const prodName = prod?.officialName?.trim() || prod?.name || 'Producto';
+        const rows: Array<{ stockHalf: number }> = await tx.$queryRaw`
+          UPDATE "Product"
+          SET "stockHalf" = "stockHalf" - ${deductHalf},
+              "updatedAt" = NOW()
+          WHERE "id" = ${prodId} AND "stockHalf" >= ${deductHalf}
+          RETURNING "stockHalf"
+        `;
+        if (!rows || rows.length === 0) {
+          throw new Error(`INSUFFICIENT_STOCK: Inventario de ½ onza insuficiente para "${prodName}".`);
         }
       }
 

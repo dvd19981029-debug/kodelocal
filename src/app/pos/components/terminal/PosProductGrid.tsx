@@ -133,13 +133,19 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
       {/* Rejilla de Productos */}
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3">
         {displayedProducts.map((product) => {
-          const cartOzForProduct = cart
-            .filter((i) => i.product.id === product.id)
-            .reduce((sum, i) => sum + (i.presentation === 'MEDIA_ONZA' ? i.quantity * 0.5 : i.quantity), 0);
-          const isOutOfStock = product.stock <= 0;
-          const isLowStock = product.stock > 0 && product.stock <= product.minStock;
-          const availableRemaining = Math.max(0, product.stock - cartOzForProduct);
           const isEssence = product.category === 'Esencias para Perfume' || product.unit === 'Onza';
+          const cartFullForProduct = cart
+            .filter((i) => i.product.id === product.id && i.presentation !== 'MEDIA_ONZA')
+            .reduce((sum, i) => sum + i.quantity, 0);
+          const cartHalfForProduct = cart
+            .filter((i) => i.product.id === product.id && i.presentation === 'MEDIA_ONZA')
+            .reduce((sum, i) => sum + i.quantity, 0);
+          const stockHalfBottles = product.stockHalf || 0;
+          const fullRemaining = Math.max(0, product.stock - cartFullForProduct);
+          const halfRemaining = Math.max(0, stockHalfBottles - cartHalfForProduct);
+          const isOutOfStock = isEssence ? (product.stock <= 0 && stockHalfBottles <= 0) : product.stock <= 0;
+          const isLowStock = product.stock > 0 && product.stock <= product.minStock;
+          const availableRemaining = isEssence ? fullRemaining + halfRemaining : Math.max(0, product.stock - cartFullForProduct);
           const halfPrice = product.priceHalfOunce != null 
             ? Number(product.priceHalfOunce) 
             : Number((product.price / 2).toFixed(2));
@@ -147,7 +153,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
           return (
             <div 
               key={product.id}
-              onClick={() => !isOutOfStock && availableRemaining > 0 && onAddToCart(product, 'ONZA_COMPLETA')}
+              onClick={() => !isOutOfStock && (isEssence ? fullRemaining > 0 : availableRemaining > 0) && onAddToCart(product, 'ONZA_COMPLETA')}
               className={`clay-card p-2.5 sm:p-3 flex flex-col justify-between cursor-pointer transition-all hover:scale-[1.015] ${
                 isOutOfStock 
                   ? 'opacity-55 cursor-not-allowed bg-slate-50/70' 
@@ -175,7 +181,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
                         ? 'bg-amber-50 text-amber-800 border border-amber-200' 
                         : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                     }`}>
-                      {isOutOfStock ? 'Agotado' : `${availableRemaining} ${product.unit === 'Onza' ? 'Oz' : 'Un.'}`}
+                      {isOutOfStock ? 'Agotado' : isEssence ? `${fullRemaining}×1Oz · ${halfRemaining}×½Oz` : `${availableRemaining} ${product.unit === 'Onza' ? 'Oz' : 'Un.'}`}
                     </span>
                     <button
                       type="button"
@@ -237,7 +243,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
                     <div className="grid grid-cols-2 gap-1.5" onClick={(e) => e.stopPropagation()}>
                       <button
                         type="button"
-                        disabled={isOutOfStock || availableRemaining <= 0}
+                        disabled={fullRemaining <= 0}
                         onClick={() => onAddToCart(product, 'ONZA_COMPLETA')}
                         className="w-full py-1.5 px-1 text-[11px] font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-lg border border-indigo-200 transition-all shadow-2xs disabled:opacity-50 flex items-center justify-center whitespace-nowrap active:scale-95"
                         title="Agregar 1 Onza al pedido"
@@ -246,7 +252,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
                       </button>
                       <button
                         type="button"
-                        disabled={isOutOfStock || availableRemaining <= 0}
+                        disabled={halfRemaining <= 0}
                         onClick={() => onAddToCart(product, 'MEDIA_ONZA')}
                         className="w-full py-1.5 px-1 text-[11px] font-bold bg-violet-50 text-violet-700 hover:bg-violet-600 hover:text-white rounded-lg border border-violet-200 transition-all shadow-2xs disabled:opacity-50 flex items-center justify-center whitespace-nowrap active:scale-95"
                         title="Agregar ½ Onza al pedido"
