@@ -62,6 +62,17 @@ export default function KardexModule({
   const [adjQuantity, setAdjQuantity] = useState<number>(1);
   const [adjReason, setAdjReason] = useState<string>('Conteo físico de inventario');
   const [adjNotes, setAdjNotes] = useState<string>('');
+  const [adjPickerOpen, setAdjPickerOpen] = useState(false);
+  const [adjSearch, setAdjSearch] = useState('');
+  const adjFilteredProducts = useMemo(() => {
+    const q = adjSearch.trim().toLowerCase();
+    if (!q) return products;
+    return products.filter(p =>
+      [p.name, p.sku, (p as any).brand, (p as any).officialName]
+        .filter(Boolean)
+        .some(v => String(v).toLowerCase().includes(q))
+    );
+  }, [products, adjSearch]);
 
   // Sincronizar initialSelectedProductId si cambia desde fuera
   React.useEffect(() => {
@@ -765,27 +776,51 @@ export default function KardexModule({
                 <label className="text-[11px] font-bold text-slate-700 block mb-1">
                   Producto / Insumo a Ajustar *
                 </label>
-                <input
-                  type="text"
-                  list="adj-products-list"
-                  key={adjProductId}
-                  defaultValue={currentAdjProduct ? `${currentAdjProduct.name} (#${currentAdjProduct.sku})` : ''}
-                  placeholder="Buscar esencia por nombre, código o marca..."
-                  onFocus={(e) => e.currentTarget.select()}
-                  onChange={(e) => {
-                    const v = e.target.value.trim().toLowerCase();
-                    const match = products.find(p => `${p.name} (#${p.sku})`.toLowerCase() === v);
-                    if (match) setAdjProductId(match.id);
-                  }}
-                  className="clay-input w-full text-xs font-bold py-1.5"
-                />
-                <datalist id="adj-products-list">
-                  {products.map(p => (
-                    <option key={p.id} value={`${p.name} (#${p.sku})`}>
-                      {[(p as any).brand, (p as any).officialName, `Stock: ${p.stock} ${p.unit === 'Onza' ? 'Oz' : 'Un.'}`].filter(Boolean).join(' • ')}
-                    </option>
-                  ))}
-                </datalist>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => { setAdjPickerOpen(o => !o); setAdjSearch(''); }}
+                    className="clay-input w-full text-xs font-bold py-2 flex items-center justify-between gap-2 text-left"
+                  >
+                    <span className="truncate">
+                      {currentAdjProduct ? `${currentAdjProduct.name} (#${currentAdjProduct.sku})` : 'Seleccionar esencia...'}
+                    </span>
+                    <span className="text-[10px] text-slate-400 shrink-0">
+                      {currentAdjProduct ? `Stock: ${currentAdjProduct.stock} ${currentAdjProduct.unit === 'Onza' ? 'Oz' : 'Un.'}` : ''} ▾
+                    </span>
+                  </button>
+                  {adjPickerOpen && (
+                    <div className="absolute z-50 left-0 right-0 mt-1 bg-white rounded-xl border border-slate-200 shadow-xl overflow-hidden">
+                      <input
+                        type="text"
+                        autoFocus
+                        value={adjSearch}
+                        onChange={(e) => setAdjSearch(e.target.value)}
+                        placeholder="Buscar por nombre, código o marca..."
+                        className="w-full px-3 py-2 text-xs font-bold border-b border-slate-200 outline-none"
+                      />
+                      <div className="max-h-56 overflow-y-auto">
+                        {adjFilteredProducts.length === 0 && (
+                          <div className="px-3 py-3 text-xs text-slate-400 text-center">Sin resultados</div>
+                        )}
+                        {adjFilteredProducts.map(p => (
+                          <button
+                            type="button"
+                            key={p.id}
+                            onClick={() => { setAdjProductId(p.id); setAdjPickerOpen(false); setAdjSearch(''); }}
+                            className={`w-full text-left px-3 py-2 text-xs hover:bg-indigo-50 flex items-center justify-between gap-2 ${p.id === adjProductId ? 'bg-indigo-50 font-black' : 'font-semibold'}`}
+                          >
+                            <span className="truncate">
+                              {p.name} <span className="text-slate-400">(#{p.sku})</span>
+                              {(p as any).brand && <span className="block text-[10px] text-slate-400 font-medium">{(p as any).brand}</span>}
+                            </span>
+                            <span className="text-[10px] font-mono text-slate-500 shrink-0">{p.stock} {p.unit === 'Onza' ? 'Oz' : 'Un.'}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>
