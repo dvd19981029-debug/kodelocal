@@ -489,5 +489,15 @@ export const CATALOG_PROFILES_48: Record<string, StaticProfile> = {
     season: 'Todo el año',
     occasion: 'Momentos románticos, juventud y diario alegre',
     intensity: 'Moderada'
+  },
+  '49': {
+    family: 'Aromática Especiada',
+    accords: ['cálido especiado', 'amaderado', 'fresco especiado', 'lavanda', 'aromático'],
+    topNotes: ['Canela', 'Nuez moscada', 'Cardamomo', 'Pomelo'],
+    heartNotes: ['Lavanda'],
+    baseNotes: ['Regaliz', 'Sándalo', 'Ámbar', 'Pachulí', 'Vetiver'],
+    season: 'Otoño / Invierno / Noche',
+    occasion: 'Citas nocturnas, eventos formales y ocasiones especiales',
+    intensity: 'Intensa'
   }
 };

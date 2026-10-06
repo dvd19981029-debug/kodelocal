@@ -7879,33 +7879,31 @@
     "contratipo": "Sauvage Elixir H",
     "marca": "Dior",
     "genero": "Caballero",
-    "officialName": "Sauvage",
+    "officialName": "Fiera Elixir",
     "brand": "Christian Dior",
-    "family": "FRESCO ESPECIADO ámbar",
+    "family": "Aromática Especiada",
     "accords": [
+      "cálido especiado",
+      "amaderado",
       "fresco especiado",
-      "ámbar",
-      "aromático",
-      "cítrico",
-      "cálido especiado"
+      "lavanda",
+      "aromático"
     ],
     "topNotes": [
-      "Pimienta",
-      "Bergamota de Calabria"
+      "Canela",
+      "Nuez moscada",
+      "Cardamomo",
+      "Pomelo"
     ],
     "heartNotes": [
-      "Geranio",
-      "Lavanda",
-      "Pimienta de Sichuan",
-      "Elemí",
-      "Pimienta rosa",
-      "Vetiver",
-      "Pachulí"
+      "Lavanda"
     ],
     "baseNotes": [
-      "Cedro",
-      "Ládano",
-      "Ambroxan"
+      "Regaliz",
+      "Sándalo",
+      "Ámbar",
+      "Pachulí",
+      "Vetiver"
     ],
     "source": "fragrantica"
   },

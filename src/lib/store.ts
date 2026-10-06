@@ -998,6 +998,27 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "puesto": "A1"
   },
   {
+    "id": "esencia-apae-049",
+    "sku": "49",
+    "barcode": "741001000049",
+    "name": "Sauvage Elixir H",
+    "officialName": "Fiera Elixir H",
+    "brand": "Dior",
+    "gender": "Caballero",
+    "category": "Esencias para Perfume",
+    "unit": "Onza",
+    "price": 3.75,
+    "priceHalfOunce": 1.9,
+    "finishedPerfumePrice": 15,
+    "cost": 1.9,
+    "stock": 50,
+    "minStock": 15,
+    "imageUrl": "/images/esencias/esencia_49.webp?v=aroma_official_v3",
+    "description": "Inspirado en SAUVAGE ELIXIR DIOR",
+    "isAvailableOnline": true,
+    "puesto": "A1"
+  },
+  {
     "id": "esencia-apae-005",
     "sku": "5",
     "barcode": "741001000005",
@@ -1522,7 +1543,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   }
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v16";
+export const DATA_VERSION = "2026_oficial_real_v17";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;
@@ -1570,19 +1591,28 @@ export function getStoredProducts(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;
   
   const currentVersion = localStorage.getItem('kodelocal_data_version');
-  if (currentVersion !== DATA_VERSION) {
-    return resetDatabaseToInitialStock();
-  }
-
   const saved = localStorage.getItem('kodelocal_products');
+
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length >= 20 && parsed[0]?.category !== 'Audio') {
+        if (currentVersion !== DATA_VERSION) {
+          const existingIds = new Set(parsed.map((p: any) => p.id));
+          const missing = INITIAL_PRODUCTS.filter(p => !existingIds.has(p.id));
+          if (missing.length > 0) {
+            const updated = [...parsed, ...missing];
+            localStorage.setItem('kodelocal_products', JSON.stringify(updated));
+            localStorage.setItem('kodelocal_data_version', DATA_VERSION);
+            return updated;
+          }
+          localStorage.setItem('kodelocal_data_version', DATA_VERSION);
+        }
         return parsed;
       }
     } catch (e) {}
   }
+
   return resetDatabaseToInitialStock();
 }
 

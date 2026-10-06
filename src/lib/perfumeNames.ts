@@ -52,7 +52,8 @@ export const INSPIRACION_PERFUME_MAP: Record<string, string> = {
   '45': 'CK One',
   '46': '360 Red H',
   '47': 'Green Tea F',
-  '48': 'Princess F'
+  '48': 'Princess F',
+  '49': 'Sauvage Elixir H'
 };
 
 // Alias de retrocompatibilidad

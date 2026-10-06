@@ -54,7 +54,8 @@ export const CATALOG_DESCRIPTIONS_48: Record<string, string> = {
   '45': 'El icono universal y revolucionario de la frescura compartida. Té verde, piña, papaya, bergamota y cardamomo dan paso a nuez moscada, violeta, rosa y un fondo limpio de almizcle y ámbar.',
   '46': 'Una fragancia vibrante, picante y altamente cumplidora. Naranja dulce, canela, lima y bergamota combinadas con clavos de olor, lavanda y una base rica de pachulí, sándalo y almizcle.',
   '47': 'La serenidad reparadora del té verde matutino. Notas efervescentes de ruibarbo, menta, cáscara de naranja y bergamota combinadas con corazón de té verde puro, jazmín y semillas de apio.',
-  '48': 'La magia audaz y juvenil para mujeres auténticas. Manzana glaseada, nenúfar y chabacano se funden con chocolate oscuro, guayaba, flor de tiaré y una base dulce de vainilla y ámbar.'
+  '48': 'La magia audaz y juvenil para mujeres auténticas. Manzana glaseada, nenúfar y chabacano se funden con chocolate oscuro, guayaba, flor de tiaré y una base dulce de vainilla y ámbar.',
+  '49': 'Una concentración nocturna desbordante y adictiva. Canela cálida y cardamomo salvaje colisionan con un corazón noble de lavanda de Nyons, envueltos en un fondo suntuoso de maderas ricas, regaliz y ámbar licoroso.'
 };
 
 /**
