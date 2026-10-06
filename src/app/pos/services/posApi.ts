@@ -3,7 +3,8 @@
  */
 
 import { getStaffToken } from '@/lib/auth';
-import { CustomerRecord, ProductItem, SaleRecord } from '@/lib/store';
+import { ProductItem, SaleRecord } from '@/lib/store';
+import { CustomerRecord } from '@/lib/customers';
 import { DteEmissionPayload, DteEmissionResponse } from '../types';
 
 export const posApi = {

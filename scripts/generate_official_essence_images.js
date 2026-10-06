@@ -121,7 +121,8 @@ async function run() {
   console.log(`Regenerating ${items.length} official essence bottle images with the real white-cap bottle photo...`);
   
   for (const p of items) {
-    const contratipo = p.name || p.officialName || 'Esencia Pura';
+    const raw = p.officialName || p.name || 'Esencia Pura';
+    const contratipo = raw.replace(/\s+[HFU]$/i, '').trim();
     const overlayBuffer = createTextOverlay(contratipo);
 
     const finalBuffer = await sharp(blankBuffer)

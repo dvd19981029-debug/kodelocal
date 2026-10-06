@@ -282,7 +282,7 @@ export default function PosPage() {
   }, [posTab]);
 
   useEffect(() => {
-    fetch('/api/products')
+    fetch('/api/products?fresh=true', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         if (data.success && Array.isArray(data.products) && data.products.length > 0) {
@@ -1178,7 +1178,7 @@ export default function PosPage() {
         channel: 'POS',
         subtotal: subtotalNeto,
         ivaTotal: ivaCalculado,
-        total: totalNeto,
+        total: cartSubtotal,
         paymentMethod: 'CASH',
         paymentStatus: 'PENDING',
         orderStatus: 'PENDING_PREPARATION',
@@ -1787,7 +1787,7 @@ export default function PosPage() {
                   cart={cart}
                   totalItemsCount={totalItemsCount}
                   clearCart={clearCart}
-                  selectedCustomerObj={selectedCustomerObj}
+                  selectedCustomerObj={selectedCustomerObj || null}
                   tipoComprobante={tipoComprobante}
                   cartCustomerQuery={cartCustomerQuery}
                   setCartCustomerQuery={setCartCustomerQuery}
@@ -1899,7 +1899,7 @@ export default function PosPage() {
                       cart={cart}
                       totalItemsCount={totalItemsCount}
                       clearCart={clearCart}
-                      selectedCustomerObj={selectedCustomerObj}
+                      selectedCustomerObj={selectedCustomerObj || null}
                       tipoComprobante={tipoComprobante}
                       cartCustomerQuery={cartCustomerQuery}
                       setCartCustomerQuery={setCartCustomerQuery}

@@ -389,9 +389,9 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     const totalEssenceStock = typeof essence.stock === 'number' ? essence.stock : 0;
 
     const essenceImageUrl = essence.sku 
-      ? `/images/esencias/esencia_${String(essence.sku).trim()}.webp?v=aroma_official_v3`
+      ? `/images/esencias/esencia_${String(essence.sku).trim()}.webp?v=aroma_official_v4`
       : essence.id 
-      ? `/images/esencias/${essence.id}.webp?v=aroma_official_v3`
+      ? `/images/esencias/${essence.id}.webp?v=aroma_official_v4`
       : '/images/essence_bottle_blank.webp';
 
     const kitProduct: ProductItem = {

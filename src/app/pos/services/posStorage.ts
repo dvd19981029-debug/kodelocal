@@ -9,7 +9,7 @@ const STORAGE_KEYS = {
   PRODUCTS: 'kodelocal_products',
   SALES: 'kodelocal_sales',
   DATA_VERSION: 'kodelocal_data_version',
-  CURRENT_VERSION: '2026_zero_stock_v3',
+  CURRENT_VERSION: '2026_oficial_real_v17',
 } as const;
 
 export const posStorage = {

@@ -113,7 +113,7 @@ export default function CartDrawer() {
                           <div className="relative w-full h-full flex items-center justify-center p-1 bg-gradient-to-br from-amber-50/60 to-purple-50/60">
                             {/* Bote Contratipo (Bote de Onza) */}
                             <img
-                              src={item.kitDetails.essenceImageUrl || (item.kitDetails.essenceSku ? `/images/esencias/esencia_${String(item.kitDetails.essenceSku).trim()}.webp?v=aroma_official_v3` : `/images/esencias/${item.kitDetails.essenceId}.webp?v=aroma_official_v3`)}
+                              src={item.kitDetails.essenceImageUrl || (item.kitDetails.essenceSku ? `/images/esencias/esencia_${String(item.kitDetails.essenceSku).trim()}.webp?v=aroma_official_v4` : `/images/esencias/${item.kitDetails.essenceId}.webp?v=aroma_official_v4`)}
                               alt={displayName}
                               loading="lazy"
                               decoding="async"

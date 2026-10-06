@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, Barcode, Sparkles, Edit3, Plus } from 'lucide-react';
 import { ProductItem, CartItem } from '@/lib/store';
+import { getProductImage } from '@/lib/perfumeImages';
 
 export interface PosProductGridProps {
   searchQuery: string;
@@ -187,26 +188,38 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
                   </div>
                 </div>
 
-                {product.brand && (
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-indigo-500/90 block truncate">
-                    {product.brand}
-                  </span>
-                )}
-
-                {product.officialName ? (
-                  <div className="min-h-[30px] mt-0.5">
-                    <h3 className="font-black text-[12px] text-slate-900 line-clamp-1 leading-snug">
-                      {product.officialName}
-                    </h3>
-                    <span className="text-[10px] text-slate-500 font-medium block truncate">
-                      Inspirado en {product.name}
-                    </span>
+                <div className="flex items-start gap-2 mt-1">
+                  <div className="w-11 h-14 rounded-lg bg-slate-50 border border-slate-100/90 flex items-center justify-center p-0.5 shrink-0 overflow-hidden shadow-2xs">
+                    <img
+                      src={product.imageUrl || getProductImage(product)}
+                      alt={product.officialName || product.name}
+                      className="w-full h-full object-contain"
+                      loading="lazy"
+                    />
                   </div>
-                ) : (
-                  <h3 className="font-bold text-[11.5px] text-slate-800 line-clamp-2 leading-snug min-h-[28px] mt-0.5">
-                    {product.name}
-                  </h3>
-                )}
+                  <div className="min-w-0 flex-1">
+                    {product.brand && (
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-indigo-500/90 block truncate">
+                        {product.brand}
+                      </span>
+                    )}
+
+                    {product.officialName ? (
+                      <div className="min-h-[30px] mt-0.5">
+                        <h3 className="font-black text-[12px] text-slate-900 line-clamp-1 leading-snug">
+                          {product.officialName}
+                        </h3>
+                        <span className="text-[10px] text-slate-500 font-medium block truncate">
+                          Inspirado en {product.name}
+                        </span>
+                      </div>
+                    ) : (
+                      <h3 className="font-bold text-[11.5px] text-slate-800 line-clamp-2 leading-snug min-h-[28px] mt-0.5">
+                        {product.name}
+                      </h3>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="mt-2 pt-1.5 border-t border-slate-100 flex flex-col gap-1.5">

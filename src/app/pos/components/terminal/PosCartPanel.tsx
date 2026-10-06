@@ -14,6 +14,7 @@ import {
   Banknote 
 } from 'lucide-react';
 import { CartItem } from '@/lib/store';
+import { getProductImage } from '@/lib/perfumeImages';
 import { CustomerRecord } from '@/lib/customers';
 import { TipoComprobante, PosTab } from '../../types';
 
@@ -346,6 +347,14 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
                   className="p-2 rounded-xl bg-white/90 border border-slate-200/80 shadow-2xs hover:border-indigo-200 transition-all flex flex-col gap-1.5"
                 >
                   <div className="flex items-start justify-between gap-2">
+                    <div className="w-8 h-10 rounded-md bg-slate-50 border border-slate-100 flex items-center justify-center p-0.5 shrink-0 overflow-hidden shadow-2xs">
+                      <img
+                        src={item.product.imageUrl || getProductImage(item.product)}
+                        alt={item.product.officialName || item.product.name}
+                        className="w-full h-full object-contain"
+                        loading="lazy"
+                      />
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1">
                         <span className="text-[9px] font-mono font-bold text-indigo-600 bg-indigo-50 px-1 py-0.2 rounded shrink-0">
@@ -373,14 +382,19 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
                     </div>
 
                     {/* Botón eliminar item */}
-                    <button
-                      type="button"
-                      onClick={() => removeFromCart(item.product.id, itemPres)}
-                      className="text-slate-300 hover:text-rose-500 transition-colors p-0.5"
-                      title="Quitar producto"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
+                    {(() => {
+                      const presArg = itemPres === 'MEDIA_ONZA' || itemPres === 'ONZA_COMPLETA' ? itemPres : undefined;
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => removeFromCart(item.product.id, presArg)}
+                          className="text-slate-300 hover:text-rose-500 transition-colors p-0.5"
+                          title="Quitar producto"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      );
+                    })()}
                   </div>
 
                   {/* Selector de Presentación para Esencias y Controles de Cantidad */}
@@ -421,25 +435,32 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
                     <div className="flex items-center gap-2">
                       {/* Controles de cantidad */}
                       <div className="flex items-center gap-1 bg-slate-50 px-1.5 py-0.5 rounded-lg border border-slate-200/80 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => updateQuantity(item.product.id, -1, itemPres)}
-                          className="w-4 h-4 rounded bg-white text-slate-600 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center active:scale-90 shadow-2xs"
-                          title="Reducir cantidad"
-                        >
-                          <Minus className="w-2.5 h-2.5" />
-                        </button>
-                        <span className="text-[11px] font-black w-4 text-center text-slate-800">
-                          {item.quantity}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => updateQuantity(item.product.id, 1, itemPres)}
-                          className="w-4 h-4 rounded bg-white text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-center active:scale-90 shadow-2xs"
-                          title="Aumentar cantidad"
-                        >
-                          <Plus className="w-2.5 h-2.5" />
-                        </button>
+                        {(() => {
+                          const presArg = itemPres === 'MEDIA_ONZA' || itemPres === 'ONZA_COMPLETA' ? itemPres : undefined;
+                          return (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => updateQuantity(item.product.id, -1, presArg)}
+                                className="w-4 h-4 rounded bg-white text-slate-600 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center active:scale-90 shadow-2xs"
+                                title="Reducir cantidad"
+                              >
+                                <Minus className="w-2.5 h-2.5" />
+                              </button>
+                              <span className="text-[11px] font-black w-4 text-center text-slate-800">
+                                {item.quantity}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => updateQuantity(item.product.id, 1, presArg)}
+                                className="w-4 h-4 rounded bg-white text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-center active:scale-90 shadow-2xs"
+                                title="Aumentar cantidad"
+                              >
+                                <Plus className="w-2.5 h-2.5" />
+                              </button>
+                            </>
+                          );
+                        })()}
                       </div>
 
                       {/* Subtotal del item */}

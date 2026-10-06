@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Edit3 } from 'lucide-react';
 import { ProductItem } from '@/lib/store';
+import { getProductImage } from '@/lib/perfumeImages';
 
 export interface PosQuickEditProductModalProps {
   isOpen: boolean;
@@ -32,9 +33,13 @@ export const PosQuickEditProductModal: React.FC<PosQuickEditProductModalProps> =
           <X className="w-5 h-5" />
         </button>
 
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
-            <Edit3 className="w-4 h-4" />
+        <div className="flex items-center gap-3 mb-1">
+          <div className="w-12 h-14 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-center p-1 shrink-0 overflow-hidden shadow-2xs">
+            <img
+              src={editingProduct.imageUrl || getProductImage(editingProduct)}
+              alt={editingProduct.name}
+              className="w-full h-full object-contain"
+            />
           </div>
           <div>
             <h3 className="text-base font-black text-slate-900">Editar Producto / Fragancia</h3>

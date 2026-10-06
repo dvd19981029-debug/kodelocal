@@ -765,17 +765,27 @@ export default function KardexModule({
                 <label className="text-[11px] font-bold text-slate-700 block mb-1">
                   Producto / Insumo a Ajustar *
                 </label>
-                <select
-                  value={adjProductId}
-                  onChange={(e) => setAdjProductId(e.target.value)}
+                <input
+                  type="text"
+                  list="adj-products-list"
+                  key={adjProductId}
+                  defaultValue={currentAdjProduct ? `${currentAdjProduct.name} (#${currentAdjProduct.sku})` : ''}
+                  placeholder="Buscar esencia por nombre, código o marca..."
+                  onFocus={(e) => e.currentTarget.select()}
+                  onChange={(e) => {
+                    const v = e.target.value.trim().toLowerCase();
+                    const match = products.find(p => `${p.name} (#${p.sku})`.toLowerCase() === v);
+                    if (match) setAdjProductId(match.id);
+                  }}
                   className="clay-input w-full text-xs font-bold py-1.5"
-                >
+                />
+                <datalist id="adj-products-list">
                   {products.map(p => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} (#{p.sku}) • Stock actual: {p.stock} {p.unit === 'Onza' ? 'Oz' : 'Un.'}
+                    <option key={p.id} value={`${p.name} (#${p.sku})`}>
+                      {[(p as any).brand, (p as any).officialName, `Stock: ${p.stock} ${p.unit === 'Onza' ? 'Oz' : 'Un.'}`].filter(Boolean).join(' • ')}
                     </option>
                   ))}
-                </select>
+                </datalist>
               </div>
 
               <div>

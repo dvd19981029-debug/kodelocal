@@ -121,7 +121,8 @@ const imageCache = new Map<string, Buffer>();
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const name = (searchParams.get('name') || 'ESENCIA').trim();
+    const rawName = (searchParams.get('name') || 'ESENCIA').trim();
+    const name = rawName.replace(/\s+[HFU]$/i, '').trim();
     const cacheKey = name;
 
     if (imageCache.has(cacheKey)) {

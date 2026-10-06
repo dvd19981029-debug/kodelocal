@@ -36,7 +36,10 @@ export const posHelpers = {
    * Calcula subtotal, IVA y total de un carrito o comanda
    */
   calculateCartFinancials(items: CartItem[], shippingCost = 0, tipoDoc: '01' | '03' | 'TICKET' = '01') {
-    const subtotal = items.reduce((acc, it) => acc + (it.total || it.price * it.quantity), 0);
+    const subtotal = items.reduce((acc, it: any) => {
+      const p = it.total != null ? it.total : (it.price ?? it.product?.price ?? 0) * it.quantity;
+      return acc + p;
+    }, 0);
     const totalWithoutTax = subtotal + shippingCost;
     
     // Para Crédito Fiscal (03) en El Salvador el IVA se desglosa (13%)

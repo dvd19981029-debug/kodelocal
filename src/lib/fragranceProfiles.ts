@@ -3,6 +3,7 @@ import { ProductItem } from './store';
 import { getAccordColor } from './fragranceNotesData';
 import { getInspiracionPerfumeName } from './perfumeNames';
 import { CATALOG_PROFILES_48 } from './catalogProfilesData';
+import fragranceDatabaseRaw from './fragranceDatabase.json';
 
 export interface AccordBarItem {
   name: string;
@@ -96,6 +97,78 @@ function normalize(str: string): string {
     .trim();
 }
 
+const fragranceDatabase = fragranceDatabaseRaw as unknown as Record<string, FragranceDbEntry>;
+const fragranceDbValues = Object.values(fragranceDatabase);
+
+/**
+ * Busca en la base de datos real de 646 perfumes (Fragrantica/Parfumo) por SKU, nombre, contratipo o inspiración.
+ */
+export function findInFragranceDatabase(query: {
+  sku?: string;
+  name?: string;
+  officialName?: string;
+  inspiracion?: string;
+}): FragranceDbEntry | null {
+  const normSku = (query.sku || '').trim();
+  const normName = normalize(query.name || '');
+  const normOfficial = normalize(query.officialName || '');
+  const normInspiracion = normalize(query.inspiracion || '');
+
+  // 1. Coincidencia directa por clave/código en el mapa
+  if (normSku && fragranceDatabase[normSku]) {
+    const entry = fragranceDatabase[normSku];
+    if (entry.topNotes?.length || entry.heartNotes?.length || entry.baseNotes?.length) {
+      return entry;
+    }
+  }
+
+  // 2. Coincidencia por campo kodigo
+  if (normSku) {
+    const byKodigo = fragranceDbValues.find(p => String(p.kodigo || '').trim() === normSku);
+    if (byKodigo && (byKodigo.topNotes?.length || byKodigo.heartNotes?.length || byKodigo.baseNotes?.length)) {
+      return byKodigo;
+    }
+  }
+
+  // 3. Coincidencia exacta de nombre o inspiración en contratipo u officialName
+  const exact = fragranceDbValues.find(p => {
+    const dbOfficial = normalize(p.officialName);
+    const dbContratipo = normalize(p.contratipo);
+    return (normInspiracion && (dbOfficial === normInspiracion || dbContratipo === normInspiracion)) ||
+           (normOfficial && (dbOfficial === normOfficial || dbContratipo === normOfficial)) ||
+           (normName && (dbOfficial === normName || dbContratipo === normName));
+  });
+  if (exact && (exact.topNotes?.length || exact.heartNotes?.length || exact.baseNotes?.length)) {
+    return exact;
+  }
+
+  // 4. Búsqueda por inclusión / contiene (ej. Sauvage Elixir, Fiera Elixir, etc.)
+  const partial = fragranceDbValues.find(p => {
+    const dbOfficial = normalize(p.officialName);
+    const dbContratipo = normalize(p.contratipo);
+    if (!dbOfficial && !dbContratipo) return false;
+
+    if (normInspiracion) {
+      if (dbOfficial && (dbOfficial.includes(normInspiracion) || normInspiracion.includes(dbOfficial))) return true;
+      if (dbContratipo && (dbContratipo.includes(normInspiracion) || normInspiracion.includes(dbContratipo))) return true;
+    }
+    if (normName) {
+      if (dbOfficial && (dbOfficial.includes(normName) || normName.includes(dbOfficial))) return true;
+      if (dbContratipo && (dbContratipo.includes(normName) || normName.includes(dbContratipo))) return true;
+    }
+    if (normOfficial) {
+      if (dbOfficial && (dbOfficial.includes(normOfficial) || normOfficial.includes(dbOfficial))) return true;
+      if (dbContratipo && (dbContratipo.includes(normOfficial) || normOfficial.includes(dbContratipo))) return true;
+    }
+    return false;
+  });
+  if (partial && (partial.topNotes?.length || partial.heartNotes?.length || partial.baseNotes?.length)) {
+    return partial;
+  }
+
+  return null;
+}
+
 /**
  * Obtiene el perfil olfativo oficial garantizado con notas de salida, corazón y fondo.
  */
@@ -104,7 +177,7 @@ export function getFragranceProfile(product: ProductItem): FragranceProfile {
   const inspiracionName = getInspiracionPerfumeName(product);
   const displayName = product.officialName || product.name;
 
-  // 1. Coincidencia prioritaria directa en los 48 perfumes del catálogo de Aromaniak
+  // 1. Coincidencia prioritaria directa en el catálogo curado de Aromaniak
   if (sku && CATALOG_PROFILES_48[sku]) {
     const p = CATALOG_PROFILES_48[sku];
     return {
@@ -115,20 +188,28 @@ export function getFragranceProfile(product: ProductItem): FragranceProfile {
     };
   }
 
-  // 2. Búsqueda secundaria en los 48 perfiles por nombre o inspiración
-  const normInspiracion = normalize(inspiracionName);
-  const normName = normalize(displayName);
+  // 2. Consulta directa en la base de datos real de fragancias (646 perfumes con notas de Fragrantica)
+  const dbMatch = findInFragranceDatabase({
+    sku,
+    name: product.name,
+    officialName: product.officialName,
+    inspiracion: inspiracionName,
+  });
 
-  for (const [profSku, p] of Object.entries(CATALOG_PROFILES_48)) {
-    const profName = normalize(p.family);
-    if ((normInspiracion && normInspiracion.includes(profSku)) || (normName && normName.includes(profSku))) {
-      return {
-        ...p,
-        officialName: displayName,
-        brand: product.brand || 'Aromaniak',
-        description: `Perfil olfativo oficial de alta fijación inspirado en ${inspiracionName || displayName}. Concentrado de perfumería fina con acordes equilibrados y notas de máxima calidad.`
-      };
-    }
+  if (dbMatch && (dbMatch.topNotes?.length || dbMatch.heartNotes?.length || dbMatch.baseNotes?.length)) {
+    return {
+      officialName: displayName,
+      brand: dbMatch.brand || product.brand || 'Aromaniak',
+      family: dbMatch.family || 'Aromática Especiada',
+      accords: dbMatch.accords?.length ? dbMatch.accords : ['cálido especiado', 'amaderado', 'aromático'],
+      topNotes: dbMatch.topNotes?.length ? dbMatch.topNotes : ['Bergamota', 'Pimienta'],
+      heartNotes: dbMatch.heartNotes?.length ? dbMatch.heartNotes : ['Lavanda'],
+      baseNotes: dbMatch.baseNotes?.length ? dbMatch.baseNotes : ['Cedro', 'Ámbar'],
+      season: 'Todo el año',
+      occasion: 'Uso diario y ocasiones especiales',
+      intensity: 'Intensa',
+      description: `Perfil olfativo oficial de alta fijación inspirado en ${inspiracionName || displayName}. Concentrado de perfumería fina con acordes equilibrados y notas de máxima calidad.`
+    };
   }
 
   // 3. Respaldo inteligente completo para productos nuevos o personalizados según género
