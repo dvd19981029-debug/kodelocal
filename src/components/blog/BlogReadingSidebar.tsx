@@ -87,11 +87,11 @@ export default function BlogReadingSidebar({
   const currentBottle = finalBottles.find((b) => b.id === selectedBottleId) || (liveBottleProduct && (liveBottleProduct.stock || 0) > 0 ? liveBottleProduct : finalBottles[0]) || currentEssence;
   const currentSupply = finalSupplies.find((s) => s.id === selectedSupplyId) || finalSupplies[0] || currentEssence;
 
-  const displayedProduct = activeTab === 'esencia'
-    ? currentEssence
-    : activeTab === 'bote'
+  const displayedProduct = (activeTab === 'bote' && finalBottles.length > 0)
     ? currentBottle
-    : currentSupply;
+    : (activeTab === 'insumo' && finalSupplies.length > 0)
+    ? currentSupply
+    : currentEssence;
 
   return (
     <aside className="space-y-6">
@@ -102,14 +102,14 @@ export default function BlogReadingSidebar({
           <div className="border-b border-slate-100 pb-2.5">
             <div className="flex items-center justify-between gap-2 mb-1.5">
               <span className="clay-badge text-[9px] font-black uppercase text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">
-                {activeTab === 'esencia'
-                  ? 'Esencia Destacada'
-                  : activeTab === 'bote'
+                {activeTab === 'bote' && finalBottles.length > 0
                   ? 'Bote de Vidrio 100ml'
-                  : 'Insumo de Perfumería'}
+                  : activeTab === 'insumo' && finalSupplies.length > 0
+                  ? 'Insumo de Perfumería'
+                  : 'Esencia Destacada'}
               </span>
               <span className="text-[10px] text-slate-400 font-bold">
-                {activeTab === 'esencia' ? '1 oz / ½ oz' : activeTab === 'bote' ? '100 ML' : 'Grado Cosmético'}
+                {activeTab === 'bote' && finalBottles.length > 0 ? '100 ML' : activeTab === 'insumo' && finalSupplies.length > 0 ? 'Grado Cosmético' : '1 oz / ½ oz'}
               </span>
             </div>
 
@@ -126,18 +126,20 @@ export default function BlogReadingSidebar({
               >
                 Esencia
               </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('bote')}
-                className={`flex-1 py-1 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === 'bote'
-                    ? 'bg-[#7c3aed] text-white shadow-2xs font-black'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Bote 100ml
-              </button>
-              {suppliesList.length > 0 && (
+              {finalBottles.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('bote')}
+                  className={`flex-1 py-1 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === 'bote'
+                      ? 'bg-[#7c3aed] text-white shadow-2xs font-black'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Bote 100ml
+                </button>
+              )}
+              {finalSupplies.length > 0 && (
                 <button
                   type="button"
                   onClick={() => setActiveTab('insumo')}
@@ -153,18 +155,18 @@ export default function BlogReadingSidebar({
             </div>
 
             <h3 className="text-sm font-black text-slate-900 line-clamp-1">
-              {activeTab === 'esencia'
-                ? currentEssence.officialName || currentEssence.name
-                : activeTab === 'bote'
+              {activeTab === 'bote' && finalBottles.length > 0
                 ? currentBottle.name.replace(/^Bote de Vidrio 100ml\s*/i, 'Frasco ')
-                : currentSupply.name}
+                : activeTab === 'insumo' && finalSupplies.length > 0
+                ? currentSupply.name
+                : currentEssence.officialName || currentEssence.name}
             </h3>
             <p className="text-[11px] text-slate-500 font-medium">
-              {activeTab === 'esencia'
-                ? 'Esencia 100% pura • Alta fijación'
-                : activeTab === 'bote'
+              {activeTab === 'bote' && finalBottles.length > 0
                 ? 'Cierre hermético • Atomizador de alta dispersión'
-                : 'Materia prima especial de formulación'}
+                : activeTab === 'insumo' && finalSupplies.length > 0
+                ? 'Materia prima especial de formulación'
+                : 'Esencia 100% pura • Alta fijación'}
             </p>
           </div>
 

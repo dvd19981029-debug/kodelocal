@@ -302,8 +302,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
     || liveCatalog.find(p => p.stock > 0)
     || liveCatalog[0];
   const featuredBottle = recommendations.recommendedBottles.find(b => b.stock > 0) ||
-                         liveCatalog.find(p => p.category === 'Botes' && p.stock > 0) || 
-                         liveCatalog[1];
+                         liveCatalog.find(p => p.category === 'Botes' && p.stock > 0);
   const availableBottles = recommendations.recommendedBottles.filter(b => b.stock > 0).length > 0
     ? recommendations.recommendedBottles.filter(b => b.stock > 0)
     : liveCatalog.filter(p => 

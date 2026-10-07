@@ -61,11 +61,11 @@ export default function BlogCatalogShowcase({ genderFilter, limit = 3, recommend
     ...baseSupplies.filter(s => !matchedSupplyIds.has(s.id) && (s.stock || 0) > 0),
   ];
 
-  const currentProducts = activeTab === 'Esencias'
-    ? essenceCandidates.slice(0, limit)
-    : activeTab === 'Botes'
+  const currentProducts = (activeTab === 'Botes' && bottleCandidates.length > 0)
     ? bottleCandidates.slice(0, limit)
-    : supplyCandidates.slice(0, limit);
+    : (activeTab === 'Insumos' && supplyCandidates.length > 0)
+    ? supplyCandidates.slice(0, limit)
+    : essenceCandidates.slice(0, limit);
 
   return (
     <div className="my-8 sm:my-10 p-3.5 sm:p-7 rounded-3xl clay-card bg-white/95 border border-white/80 shadow-md w-full max-w-full min-w-0 overflow-hidden">
@@ -104,17 +104,19 @@ export default function BlogCatalogShowcase({ genderFilter, limit = 3, recommend
           Esencias 100% Puras
         </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('Botes')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer select-none ${
-            activeTab === 'Botes'
-              ? 'clay-btn-primary text-white shadow-xs font-black'
-              : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 shadow-2xs'
-          }`}
-        >
-          Botes y Frascos de Vidrio
-        </button>
+        {bottleCandidates.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('Botes')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer select-none ${
+              activeTab === 'Botes'
+                ? 'clay-btn-primary text-white shadow-xs font-black'
+                : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 shadow-2xs'
+            }`}
+          >
+            Botes y Frascos de Vidrio
+          </button>
+        )}
 
         {supplyCandidates.length > 0 && (
           <button
