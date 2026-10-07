@@ -277,6 +277,10 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
       : `${product.id}-${presentation}`;
 
     const totalStock = typeof product.stock === 'number' ? product.stock : 0;
+    if (totalStock <= 0) {
+      return;
+    }
+
     const isEssence = product.category === 'Esencias para Perfume';
 
     setCart(prev => {
@@ -284,13 +288,13 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
       const currentQty = existingPerfume ? existingPerfume.quantity : 0;
       const desiredQty = currentQty + quantity;
 
-      // Validación de inventario discreto
+      // Validación estricta de inventario discreto
       if (isEssence) {
         const discrete = getEssenceDiscreteStock(totalStock, prev, product.id, itemId, product.stockHalf || 0);
-        if (presentation === 'ONZA_COMPLETA' && desiredQty > discrete.available1oz) {
+        if (presentation === 'ONZA_COMPLETA' && (discrete.available1oz <= 0 || desiredQty > discrete.available1oz)) {
           return prev;
         }
-        if (presentation === 'MEDIA_ONZA' && desiredQty > discrete.availableHalfOz) {
+        if (presentation === 'MEDIA_ONZA' && (discrete.availableHalfOz <= 0 || desiredQty > discrete.availableHalfOz)) {
           return prev;
         }
       } else {
@@ -388,6 +392,9 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     const itemId = `kit-${essence.id}-${bottle.id}-${hasLabel ? 'label' : 'nolabel'}-${isPlus ? 'plus' : 'std'}`;
 
     const totalEssenceStock = typeof essence.stock === 'number' ? essence.stock : 0;
+    if (totalEssenceStock <= 0) {
+      return;
+    }
 
     const essenceImageUrl = essence.sku 
       ? `/images/esencias/esencia_${String(essence.sku).trim()}.webp?v=aroma_official_v4`

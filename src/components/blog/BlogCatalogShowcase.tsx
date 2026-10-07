@@ -26,42 +26,39 @@ export default function BlogCatalogShowcase({ genderFilter, limit = 3, recommend
   const recommendedBottles = (recommendations?.recommendedBottles || []).map(b => liveProductMap.get(b.id) || b);
   const recommendedSupplies = (recommendations?.recommendedSupplies || []).map(s => liveProductMap.get(s.id) || s);
 
-  // 1. Esencias: Priorizar esencias detectadas por palabras clave en este artículo
-  let baseEssences = liveProducts.filter(p => p.isAvailableOnline && p.category === 'Esencias para Perfume' && p.stock > 0);
-  if (baseEssences.length === 0) {
-    baseEssences = liveProducts.filter(p => p.isAvailableOnline && p.category === 'Esencias para Perfume');
-  }
+  // 1. Esencias: Priorizar esencias detectadas por palabras clave en este artículo (solo con stock > 0)
+  let baseEssences = liveProducts.filter(p => p.isAvailableOnline && p.category === 'Esencias para Perfume' && (p.stock || 0) > 0);
   if (genderFilter && genderFilter !== 'Todos') {
     const filtered = baseEssences.filter(p => p.gender?.toLowerCase() === genderFilter.toLowerCase());
-    if (filtered.length >= limit) {
+    if (filtered.length > 0) {
       baseEssences = filtered;
     }
   }
 
   const matchedEssenceIds = new Set(matchedEssences.map(e => e.id));
   const essenceCandidates = [
-    ...matchedEssences.filter(e => e.stock > 0),
-    ...baseEssences.filter(e => !matchedEssenceIds.has(e.id) && e.stock > 0),
+    ...matchedEssences.filter(e => (e.stock || 0) > 0),
+    ...baseEssences.filter(e => !matchedEssenceIds.has(e.id) && (e.stock || 0) > 0),
   ];
 
   // 2. Botes y Frascos de Vidrio: Priorizar botes recomendados con stock
-  let baseBottles = liveProducts.filter(p => p.isAvailableOnline && p.category === 'Botes' && p.stock > 0);
+  let baseBottles = liveProducts.filter(p => p.isAvailableOnline && p.category === 'Botes' && (p.stock || 0) > 0);
   const matchedBottleIds = new Set(recommendedBottles.map(b => b.id));
   const bottleCandidates = [
-    ...recommendedBottles.filter(b => b.stock > 0),
-    ...baseBottles.filter(b => !matchedBottleIds.has(b.id) && b.stock > 0),
+    ...recommendedBottles.filter(b => (b.stock || 0) > 0),
+    ...baseBottles.filter(b => !matchedBottleIds.has(b.id) && (b.stock || 0) > 0),
   ];
 
   // 3. Insumos y Materias Primas / Empaque (solo con inventario activo)
   const baseSupplies = liveProducts.filter(p => 
     p.isAvailableOnline && 
     (p.category === 'Insumos y Materia Prima' || p.category === 'Empaque' || p.category === 'Insumos') &&
-    p.stock > 0
+    (p.stock || 0) > 0
   );
   const matchedSupplyIds = new Set(recommendedSupplies.map(s => s.id));
   const supplyCandidates = [
-    ...recommendedSupplies,
-    ...baseSupplies.filter(s => !matchedSupplyIds.has(s.id)),
+    ...recommendedSupplies.filter(s => (s.stock || 0) > 0),
+    ...baseSupplies.filter(s => !matchedSupplyIds.has(s.id) && (s.stock || 0) > 0),
   ];
 
   const currentProducts = activeTab === 'Esencias'

@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ShoppingBag, Check, X } from 'lucide-react';
 import { ProductItem } from '@/lib/store';
-import { useEcommerceCart } from '@/context/EcommerceCartContext';
+import { useEcommerceCart, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { getProductUrl } from '@/lib/productUrl';
@@ -19,10 +19,21 @@ interface BlogMobileStickyBarProps {
 export default function BlogMobileStickyBar({ product, catalog }: BlogMobileStickyBarProps) {
   const liveProducts = useLiveProducts(catalog);
   const liveProduct = liveProducts.find(p => p.id === product.id) || product;
-  const { addToCart } = useEcommerceCart();
+  const { addToCart, cart } = useEcommerceCart();
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
+
+  const isEssence = liveProduct.category === 'Esencias para Perfume';
+  const discreteStock = React.useMemo(() => {
+    return isEssence ? getEssenceDiscreteStock(liveProduct.stock || 0, cart, liveProduct.id, undefined, liveProduct.stockHalf || 0) : null;
+  }, [isEssence, liveProduct.stock, cart, liveProduct.id, liveProduct.stockHalf]);
+
+  const availableUnits = isEssence
+    ? (discreteStock?.available1oz ?? 0)
+    : Math.max(0, (liveProduct.stock || 0) - (cart.find(it => it.product?.id === liveProduct.id && !it.kitDetails)?.quantity || 0));
+
+  const canAdd = availableUnits >= 1 && (liveProduct.stock || 0) > 0;
 
   useEffect(() => {
     if (isDismissed) return;
@@ -46,6 +57,7 @@ export default function BlogMobileStickyBar({ product, catalog }: BlogMobileStic
   const price = liveProduct.price || 3.75;
 
   const handleAdd = () => {
+    if (!canAdd) return;
     addToCart(liveProduct, 'ONZA_COMPLETA', 1);
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1500);
@@ -86,8 +98,13 @@ export default function BlogMobileStickyBar({ product, catalog }: BlogMobileStic
         <div className="flex items-center gap-1.5 shrink-0">
           <button
             onClick={handleAdd}
-            className={`clay-btn clay-btn-primary px-3 py-1.5 rounded-xl text-white font-bold text-xs flex items-center gap-1 shadow-xs active:scale-95 cursor-pointer ${
-              justAdded ? 'scale-105' : ''
+            disabled={!canAdd}
+            className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1 transition-all ${
+              justAdded
+                ? 'bg-emerald-600 text-white scale-105 shadow-xs'
+                : !canAdd
+                ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
+                : 'clay-btn clay-btn-primary text-white shadow-xs active:scale-95 cursor-pointer'
             }`}
           >
             {justAdded ? (
@@ -95,6 +112,8 @@ export default function BlogMobileStickyBar({ product, catalog }: BlogMobileStic
                 <Check className="w-3.5 h-3.5 stroke-[3]" />
                 <span>¡Listo!</span>
               </>
+            ) : !canAdd ? (
+              <span>Agotado</span>
             ) : (
               <>
                 <ShoppingBag className="w-3.5 h-3.5" />

@@ -30,11 +30,9 @@ export function getRecommendationsForPost(
   const isBusiness = /vender|negocio|emprender|revendedor|desde casa|ganancia|mayoreo|revender|ingreso extra|clientes|inversi[oó]n/i.test(fullText);
   const isPerformance = /fijaci[oó]n|duraci[oó]n|rendimiento|concentraci[oó]n|estela|proyecci[oó]n|horas/i.test(fullText);
 
-  // 2. Búsqueda de esencias explícitamente mencionadas en el texto
+  // 2. Búsqueda de esencias explícitamente mencionadas en el texto (ÚNICAMENTE con existencias reales)
   const inStockEssences = catalog.filter(p => p.category === 'Esencias para Perfume' && p.isAvailableOnline && p.stock > 0);
-  const allEssences = inStockEssences.length > 0
-    ? inStockEssences
-    : catalog.filter(p => p.category === 'Esencias para Perfume' && p.isAvailableOnline);
+  const allEssences = inStockEssences;
   const mentionedEssences: ProductItem[] = [];
   const seenIds = new Set<string>();
 
@@ -79,16 +77,11 @@ export function getRecommendationsForPost(
     mentionedEssences.push(...allEssences.slice(0, 4));
   }
 
-  const primaryProduct = mentionedEssences[0] || allEssences[0] || catalog[0];
+  const primaryProduct = mentionedEssences[0] || allEssences[0] || catalog.find(p => p.stock > 0) || catalog[0];
 
-  // 4. Botes de vidrio recomendados (100ml con atomizador de lujo)
+  // 4. Botes de vidrio recomendados (100ml con atomizador de lujo, solo con inventario real)
   const inStockBottles = catalog.filter(p => p.category === 'Botes' && p.isAvailableOnline && p.stock > 0);
-  const allBottles = inStockBottles.length > 0
-    ? inStockBottles
-    : catalog.filter(p => p.category === 'Botes' && p.isAvailableOnline);
-  const recommendedBottles = allBottles.length > 0
-    ? allBottles
-    : catalog.filter(p => p.category === 'Botes');
+  const recommendedBottles = inStockBottles;
 
   // 5. Insumos recomendados según el tipo de artículo (solo aquellos con existencias activas en el POS)
   const allSupplies = catalog.filter(p => 

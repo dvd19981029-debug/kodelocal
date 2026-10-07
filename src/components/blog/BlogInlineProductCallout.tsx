@@ -5,7 +5,7 @@ import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { ShoppingBag, Check, ShieldCheck, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS } from '@/lib/store';
-import { useEcommerceCart, getPresentationsForProduct, ProductPresentation } from '@/context/EcommerceCartContext';
+import { useEcommerceCart, getPresentationsForProduct, ProductPresentation, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { getProductUrl } from '@/lib/productUrl';
@@ -27,7 +27,7 @@ export default function BlogInlineProductCallout({
   recommendations,
   catalog,
 }: InlineCalloutProps) {
-  const { addToCart } = useEcommerceCart();
+  const { cart, addToCart } = useEcommerceCart();
   const liveProducts = useLiveProducts(catalog);
   const liveProductMap = React.useMemo(() => new Map(liveProducts.map(p => [p.id, p])), [liveProducts]);
 
@@ -43,19 +43,34 @@ export default function BlogInlineProductCallout({
   const [addedBottleId, setAddedBottleId] = useState<string | null>(null);
   const [addedEssenceId, setAddedEssenceId] = useState<string | null>(null);
 
-  // Esencias adicionales detectadas por palabras clave en el artículo sincronizadas en tiempo real
+  // Cálculo de existencias reales disponibles para el producto principal
+  const isEssence = mainProduct.category === 'Esencias para Perfume';
+  const totalStock = typeof mainProduct.stock === 'number' ? mainProduct.stock : 0;
+  const isOutOfStock = totalStock <= 0;
+
+  const discreteStock = React.useMemo(() => {
+    return isEssence ? getEssenceDiscreteStock(totalStock, cart, mainProduct.id, undefined, mainProduct.stockHalf || 0) : null;
+  }, [isEssence, totalStock, cart, mainProduct.id, mainProduct.stockHalf]);
+
+  const availableUnits = isEssence
+    ? (selectedPresentation === 'MEDIA_ONZA' ? (discreteStock?.availableHalfOz ?? 0) : (discreteStock?.available1oz ?? 0))
+    : Math.max(0, totalStock - (cart.find(it => it.product?.id === mainProduct.id && !it.kitDetails)?.quantity || 0));
+
+  const canAddMain = availableUnits >= 1 && !isOutOfStock;
+
+  // Esencias adicionales detectadas por palabras clave en el artículo sincronizadas en tiempo real (solo con stock > 0)
   const additionalEssences = (recommendations?.matchedEssences || [])
     .filter((e) => e.id !== mainProduct.id)
     .map((e) => liveProductMap.get(e.id) || e)
-    .filter((e) => e.stock > 0);
+    .filter((e) => (e.stock || 0) > 0);
 
-  // Lista de botes de vidrio para scroll horizontal sincronizados en tiempo real
+  // Lista de botes de vidrio para scroll horizontal sincronizados en tiempo real (solo con stock > 0)
   const rawBottles = (recommendations?.recommendedBottles && recommendations.recommendedBottles.length > 0)
-    ? recommendations.recommendedBottles.filter((b) => b.stock > 0)
+    ? recommendations.recommendedBottles.filter((b) => (b.stock || 0) > 0)
     : (availableBottles && availableBottles.length > 0)
-    ? availableBottles.filter((b) => b.stock > 0)
+    ? availableBottles.filter((b) => (b.stock || 0) > 0)
     : liveProducts.filter((p) => p.category === 'Botes' && p.stock > 0 && p.imageUrl?.startsWith('/images/botes/'));
-  const bottlesList = rawBottles.map((b) => liveProductMap.get(b.id) || b).filter((b) => b.stock > 0);
+  const bottlesList = rawBottles.map((b) => liveProductMap.get(b.id) || b).filter((b) => (b.stock || 0) > 0);
 
   const scrollBottlesRef = useRef<HTMLDivElement>(null);
   const scrollEssencesRef = useRef<HTMLDivElement>(null);
@@ -71,6 +86,7 @@ export default function BlogInlineProductCallout({
   };
 
   const handleAddMain = () => {
+    if (!canAddMain) return;
     const liveTarget = liveProductMap.get(mainProduct.id) || mainProduct;
     addToCart(liveTarget, selectedPresentation, 1);
     setJustAddedMain(true);
@@ -78,6 +94,7 @@ export default function BlogInlineProductCallout({
   };
 
   const handleAddEssence = (ess: ProductItem) => {
+    if ((ess.stock || 0) <= 0) return;
     const liveTarget = liveProductMap.get(ess.id) || ess;
     addToCart(liveTarget, 'ONZA_COMPLETA', 1);
     setAddedEssenceId(liveTarget.id);
@@ -85,6 +102,7 @@ export default function BlogInlineProductCallout({
   };
 
   const handleAddBottle = (bottle: ProductItem) => {
+    if ((bottle.stock || 0) <= 0) return;
     const liveTarget = liveProductMap.get(bottle.id) || bottle;
     addToCart(liveTarget, 'UNIDAD', 1);
     setAddedBottleId(liveTarget.id);
@@ -157,20 +175,30 @@ export default function BlogInlineProductCallout({
                 {/* Selector de Onza vs Media Onza */}
                 {presentations.length > 1 && (
                   <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200/80 text-[11px] font-bold">
-                    {presentations.map((opt) => (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        onClick={() => setSelectedPresentation(opt.id)}
-                        className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
-                          selectedPresentation === opt.id
-                            ? 'bg-[#7c3aed] text-white shadow-2xs font-black'
-                            : 'text-slate-600 hover:text-slate-900'
-                        }`}
-                      >
-                        {opt.id === 'MEDIA_ONZA' ? `½ oz ($${opt.price.toFixed(2)})` : `1 oz ($${opt.price.toFixed(2)})`}
-                      </button>
-                    ))}
+                    {presentations.map((opt) => {
+                      const isOptOutOfStock = isEssence
+                        ? (opt.id === 'MEDIA_ONZA' ? (discreteStock?.availableHalfOz ?? 0) <= 0 : (discreteStock?.available1oz ?? 0) <= 0)
+                        : totalStock <= 0;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setSelectedPresentation(opt.id)}
+                          disabled={isOptOutOfStock}
+                          className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                            selectedPresentation === opt.id
+                              ? 'bg-[#7c3aed] text-white shadow-2xs font-black'
+                              : isOptOutOfStock
+                              ? 'text-slate-400 opacity-60 cursor-not-allowed'
+                              : 'text-slate-600 hover:text-slate-900'
+                          }`}
+                        >
+                          {opt.id === 'MEDIA_ONZA' 
+                            ? `½ oz ($${opt.price.toFixed(2)})${isOptOutOfStock ? ' - Agotado' : ''}` 
+                            : `1 oz ($${opt.price.toFixed(2)})${isOptOutOfStock ? ' - Agotado' : ''}`}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -181,8 +209,13 @@ export default function BlogInlineProductCallout({
           <div className="w-full sm:w-auto shrink-0 flex flex-col sm:items-end gap-2 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-slate-100">
             <button
               onClick={handleAddMain}
-              className={`w-full sm:w-auto clay-btn clay-btn-primary px-5 py-3 rounded-xl text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95 cursor-pointer ${
-                justAddedMain ? 'scale-[1.02]' : ''
+              disabled={!canAddMain}
+              className={`w-full sm:w-auto clay-btn px-5 py-3 rounded-xl text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all select-none ${
+                !canAddMain
+                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300 shadow-none'
+                  : justAddedMain
+                  ? 'bg-emerald-600 text-white scale-[1.02]'
+                  : 'clay-btn-primary active:scale-95 cursor-pointer'
               }`}
             >
               {justAddedMain ? (
@@ -190,6 +223,8 @@ export default function BlogInlineProductCallout({
                   <Check className="w-4 h-4 stroke-[3]" />
                   <span>¡Agregado al Carrito!</span>
                 </>
+              ) : !canAddMain ? (
+                <span>Sin existencias</span>
               ) : (
                 <>
                   <ShoppingBag className="w-4 h-4" />
@@ -297,9 +332,12 @@ export default function BlogInlineProductCallout({
                   <button
                     type="button"
                     onClick={() => handleAddEssence(ess)}
+                    disabled={(ess.stock || 0) <= 0}
                     className={`w-full py-1.5 px-2 rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1 active:scale-95 cursor-pointer ${
                       isAdded
                         ? 'bg-emerald-600 text-white shadow-2xs'
+                        : (ess.stock || 0) <= 0
+                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
                         : 'bg-[#7c3aed] hover:bg-[#6d28d9] text-white shadow-2xs'
                     }`}
                   >
@@ -308,6 +346,8 @@ export default function BlogInlineProductCallout({
                         <Check className="w-3 h-3 stroke-[3]" />
                         <span className="font-black">¡Agregado!</span>
                       </>
+                    ) : (ess.stock || 0) <= 0 ? (
+                      <span>Agotado</span>
                     ) : (
                       <>
                         <ShoppingBag className="w-3 h-3" />
@@ -404,9 +444,12 @@ export default function BlogInlineProductCallout({
                   <button
                     type="button"
                     onClick={() => handleAddBottle(bottle)}
+                    disabled={(bottle.stock || 0) <= 0}
                     className={`w-full py-1.5 px-2 rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1 active:scale-95 cursor-pointer ${
                       isAdded
                         ? 'bg-emerald-600 text-white shadow-2xs'
+                        : (bottle.stock || 0) <= 0
+                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
                         : 'bg-[#7c3aed] hover:bg-[#6d28d9] text-white shadow-2xs'
                     }`}
                   >
@@ -415,6 +458,8 @@ export default function BlogInlineProductCallout({
                         <Check className="w-3 h-3 stroke-[3]" />
                         <span className="font-black">¡Agregado!</span>
                       </>
+                    ) : (bottle.stock || 0) <= 0 ? (
+                      <span>Agotado</span>
                     ) : (
                       <>
                         <ShoppingBag className="w-3 h-3" />

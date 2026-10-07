@@ -282,6 +282,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
         finishedPerfumePrice: p.finishedPerfumePrice != null ? Number(p.finishedPerfumePrice) : (p.category?.name === 'Esencias para Perfume' || !p.category?.name ? 15.00 : undefined),
         cost: Number(p.cost || 0),
         stock: p.stock,
+        stockHalf: (p as any).stockHalf ?? 0,
         minStock: p.minStock,
         imageUrl: (p.category?.name === 'Botes' || p.category?.name === 'Botes & Envases')
           ? (p.imageUrl && p.imageUrl.startsWith('/images/botes/') ? p.imageUrl : '/images/botes/bote_100ml_degrade_azul_noche.jpg')
@@ -295,7 +296,11 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
     : INITIAL_PRODUCTS;
 
   const recommendations = getRecommendationsForPost(post.title, post.content, post.category, liveCatalog);
-  const featuredProduct = recommendations.primaryProduct || liveCatalog.find(p => p.category === 'Esencias para Perfume' && p.stock > 0) || liveCatalog[0];
+  const featuredProduct = (recommendations.primaryProduct && recommendations.primaryProduct.stock > 0)
+    ? recommendations.primaryProduct
+    : liveCatalog.find(p => p.category === 'Esencias para Perfume' && p.stock > 0)
+    || liveCatalog.find(p => p.stock > 0)
+    || liveCatalog[0];
   const featuredBottle = recommendations.recommendedBottles.find(b => b.stock > 0) ||
                          liveCatalog.find(p => p.category === 'Botes' && p.stock > 0) || 
                          liveCatalog[1];

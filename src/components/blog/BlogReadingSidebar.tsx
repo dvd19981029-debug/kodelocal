@@ -32,41 +32,60 @@ export default function BlogReadingSidebar({
   const liveProducts = useLiveProducts(catalog);
   const liveProductMap = React.useMemo(() => new Map(liveProducts.map(p => [p.id, p])), [liveProducts]);
 
-  // Esencias recomendadas sincronizadas en vivo
+  // Esencias recomendadas sincronizadas en vivo (únicamente con stock > 0)
+  const inStockLiveEssences = liveProducts.filter(p => p.category === 'Esencias para Perfume' && (p.stock || 0) > 0);
   const rawMatchedEssences = (recommendations?.matchedEssences && recommendations.matchedEssences.length > 0)
-    ? recommendations.matchedEssences
-    : product
+    ? recommendations.matchedEssences.filter(e => (e.stock || 0) > 0)
+    : (product && (product.stock || 0) > 0)
     ? [product]
-    : [liveProducts[0] || INITIAL_PRODUCTS[0]];
-  const matchedEssences = rawMatchedEssences.map(e => liveProductMap.get(e.id) || e);
+    : inStockLiveEssences.slice(0, 4);
+
+  const matchedEssences = rawMatchedEssences
+    .map(e => liveProductMap.get(e.id) || e)
+    .filter(e => (e.stock || 0) > 0);
+
+  const finalEssences = matchedEssences.length > 0 ? matchedEssences : inStockLiveEssences.slice(0, 4);
 
   const [selectedEssenceId, setSelectedEssenceId] = React.useState<string>(
-    recommendations?.primaryProduct?.id || product?.id || matchedEssences[0]?.id || ''
+    recommendations?.primaryProduct && (recommendations.primaryProduct.stock || 0) > 0
+      ? recommendations.primaryProduct.id
+      : (product && (product.stock || 0) > 0 ? product.id : (finalEssences[0]?.id || ''))
   );
 
-  // Botes recomendados sincronizados en vivo
+  // Botes recomendados sincronizados en vivo (únicamente con stock > 0)
+  const inStockLiveBottles = liveProducts.filter((p) => p.category === 'Botes' && (p.stock || 0) > 0 && p.imageUrl?.startsWith('/images/botes/'));
   const rawBottlesList = (recommendations?.recommendedBottles && recommendations.recommendedBottles.length > 0)
-    ? recommendations.recommendedBottles
+    ? recommendations.recommendedBottles.filter(b => (b.stock || 0) > 0)
     : (availableBottles && availableBottles.length > 0)
-    ? availableBottles
-    : liveProducts.filter((p) => p.category === 'Botes' && p.imageUrl?.startsWith('/images/botes/'));
-  const bottlesList = rawBottlesList.map(b => liveProductMap.get(b.id) || b);
+    ? availableBottles.filter(b => (b.stock || 0) > 0)
+    : inStockLiveBottles;
+  const bottlesList = rawBottlesList
+    .map(b => liveProductMap.get(b.id) || b)
+    .filter(b => (b.stock || 0) > 0);
+  const finalBottles = bottlesList.length > 0 ? bottlesList : inStockLiveBottles;
 
   const [selectedBottleId, setSelectedBottleId] = React.useState<string>(
-    bottleProduct?.id || (bottlesList[0]?.id || '')
+    (bottleProduct && (bottleProduct.stock || 0) > 0 ? bottleProduct.id : '') || (finalBottles[0]?.id || '')
   );
 
-  // Insumos recomendados sincronizados en vivo
-  const rawSuppliesList = recommendations?.recommendedSupplies || [];
-  const suppliesList = rawSuppliesList.map(s => liveProductMap.get(s.id) || s);
+  // Insumos recomendados sincronizados en vivo (únicamente con stock > 0)
+  const inStockLiveSupplies = liveProducts.filter(p => 
+    (p.category === 'Insumos y Materia Prima' || p.category === 'Empaque' || p.category === 'Insumos') &&
+    (p.stock || 0) > 0
+  );
+  const rawSuppliesList = (recommendations?.recommendedSupplies || []).filter(s => (s.stock || 0) > 0);
+  const suppliesList = rawSuppliesList
+    .map(s => liveProductMap.get(s.id) || s)
+    .filter(s => (s.stock || 0) > 0);
+  const finalSupplies = suppliesList.length > 0 ? suppliesList : inStockLiveSupplies;
   const [selectedSupplyId, setSelectedSupplyId] = React.useState<string>(
-    suppliesList[0]?.id || ''
+    finalSupplies[0]?.id || ''
   );
 
-  const currentEssence = matchedEssences.find((e) => e.id === selectedEssenceId) || matchedEssences[0];
+  const currentEssence = finalEssences.find((e) => e.id === selectedEssenceId) || finalEssences[0] || product || liveProducts[0];
   const liveBottleProduct = bottleProduct ? liveProductMap.get(bottleProduct.id) || bottleProduct : undefined;
-  const currentBottle = bottlesList.find((b) => b.id === selectedBottleId) || liveBottleProduct || bottlesList[0] || currentEssence;
-  const currentSupply = suppliesList.find((s) => s.id === selectedSupplyId) || suppliesList[0] || currentEssence;
+  const currentBottle = finalBottles.find((b) => b.id === selectedBottleId) || (liveBottleProduct && (liveBottleProduct.stock || 0) > 0 ? liveBottleProduct : finalBottles[0]) || currentEssence;
+  const currentSupply = finalSupplies.find((s) => s.id === selectedSupplyId) || finalSupplies[0] || currentEssence;
 
   const displayedProduct = activeTab === 'esencia'
     ? currentEssence
@@ -150,14 +169,14 @@ export default function BlogReadingSidebar({
           </div>
 
           {/* Selector Horizontal de Esencias Mencionadas si hay más de 1 */}
-          {activeTab === 'esencia' && matchedEssences.length > 1 && (
+          {activeTab === 'esencia' && finalEssences.length > 1 && (
             <div className="space-y-1.5 pb-1">
               <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold">
                 <span>Fragancias del artículo:</span>
                 <span className="text-indigo-700">${currentEssence.price.toFixed(2)}</span>
               </div>
               <div className="flex gap-2 overflow-x-auto scrollbar-none py-1 snap-x">
-                {matchedEssences.map((e) => {
+                {finalEssences.map((e) => {
                   const isSelected = e.id === currentEssence.id;
                   return (
                     <button
@@ -187,14 +206,14 @@ export default function BlogReadingSidebar({
           )}
 
           {/* Selector Horizontal de Botes al ver la pestaña de botes */}
-          {activeTab === 'bote' && bottlesList.length > 0 && (
+          {activeTab === 'bote' && finalBottles.length > 0 && (
             <div className="space-y-1.5 pb-1">
               <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold">
                 <span>Modelos 100ml (Desliza):</span>
                 <span className="text-indigo-700">${currentBottle.price.toFixed(2)}</span>
               </div>
               <div className="flex gap-2 overflow-x-auto scrollbar-none py-1 snap-x">
-                {bottlesList.map((b) => {
+                {finalBottles.map((b) => {
                   const isSelected = b.id === currentBottle.id;
                   return (
                     <button
@@ -221,14 +240,14 @@ export default function BlogReadingSidebar({
           )}
 
           {/* Selector Horizontal de Insumos al ver la pestaña de insumos */}
-          {activeTab === 'insumo' && suppliesList.length > 1 && (
+          {activeTab === 'insumo' && finalSupplies.length > 1 && (
             <div className="space-y-1.5 pb-1">
               <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold">
                 <span>Insumos recomendados:</span>
                 <span className="text-indigo-700">${currentSupply.price.toFixed(2)}</span>
               </div>
               <div className="flex gap-2 overflow-x-auto scrollbar-none py-1 snap-x">
-                {suppliesList.map((s) => {
+                {finalSupplies.map((s) => {
                   const isSelected = s.id === currentSupply.id;
                   return (
                     <button
