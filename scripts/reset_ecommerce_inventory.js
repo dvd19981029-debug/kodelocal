@@ -97,8 +97,7 @@ async function main() {
         stock: oz,
         minStock: 15,
         imageUrl: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
-        puesto: (s2Row && s2Row.H) ? s2Row.H : "A1",
-        supplier: "APAESA GUATEMALA",
+        supplier: "",
         isActive: true,
         isAvailableOnline: true
       });

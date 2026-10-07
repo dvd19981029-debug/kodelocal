@@ -43,7 +43,7 @@ export default function InventarioPage() {
     cost: 1.95,
     stock: 50,
     minStock: 10,
-    supplier: 'APAESA GUATEMALA',
+    supplier: '',
     imageUrl: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80',
     isAvailableOnline: true
   });
@@ -302,7 +302,7 @@ export default function InventarioPage() {
               officialName: '',
               sku: '',
               barcode: '',
-              supplier: 'APAESA GUATEMALA',
+              supplier: '',
               category: 'General',
               price: 0,
               cost: 0,
@@ -388,7 +388,7 @@ export default function InventarioPage() {
                     {/* Proveedor */}
                     <td className="py-3 px-4">
                       <span className="clay-badge bg-indigo-50/80 text-indigo-700 border border-indigo-200/60 text-[11px] font-bold py-0.5 px-2.5 rounded-lg inline-block truncate max-w-[150px]">
-                        {p.supplier || 'APAESA GUATEMALA'}
+                        {p.supplier || 'N/A'}
                       </span>
                     </td>
 
@@ -584,7 +584,7 @@ export default function InventarioPage() {
                     type="text"
                     value={formData.supplier || ''}
                     onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-                    placeholder="APAESA GUATEMALA"
+                    placeholder="Proveedor / Distribuidor"
                     className="clay-input w-full text-xs font-semibold text-indigo-950 bg-indigo-50/20"
                   />
                 </div>

@@ -529,7 +529,7 @@ export async function GET(request: Request) {
           totalSold: Number(usage.ounces.toFixed(1)),
           daysLeft: daysLeft > 365 ? 999 : daysLeft,
           urgency,
-          supplier: p.supplier || 'APAESA GUATEMALA',
+          supplier: p.supplier || '',
           reorderSuggestion,
         };
       })

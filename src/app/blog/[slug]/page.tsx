@@ -129,24 +129,6 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   }
 }
 
-function getFeaturedProductForPost(postTitle: string, postContent: string, category?: string | null): ProductItem {
-  const text = `${postTitle} ${postContent}`.toLowerCase();
-  
-  for (const prod of INITIAL_PRODUCTS) {
-    if (prod.category !== 'Esencias para Perfume') continue;
-    const official = (prod.officialName || '').toLowerCase();
-    const name = prod.name.toLowerCase();
-    if (official && text.includes(official)) return prod;
-    if (name && text.includes(name)) return prod;
-  }
-
-  if (text.includes('dama') || text.includes('mujer') || (category && category.toLowerCase().includes('dama'))) {
-    const damaProd = INITIAL_PRODUCTS.find(p => p.id === 'esencia-apae-013');
-    if (damaProd) return damaProd;
-  }
-
-  return INITIAL_PRODUCTS[0];
-}
 
 function splitArticleContent(htmlContent: string): { before: string; after: string } {
   if (!htmlContent) return { before: '', after: '' };
@@ -291,7 +273,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
         barcode: p.barcode || '',
         name: p.name,
         officialName: (p as any).officialName || '',
-        brand: (p.category?.name === 'Botes' || p.brand === 'Yahua Industrial' || p.brand === 'APAESA') ? '' : (p.brand || ''),
+        brand: p.category?.name === 'Botes' ? '' : (p.brand || ''),
         gender: p.gender || 'Unisex',
         category: p.category?.name || 'Esencias para Perfume',
         unit: p.unit || 'Onza',
@@ -313,15 +295,14 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
     : INITIAL_PRODUCTS;
 
   const recommendations = getRecommendationsForPost(post.title, post.content, post.category, liveCatalog);
-  const featuredProduct = recommendations.primaryProduct || liveCatalog.find(p => p.category === 'Esencias para Perfume') || liveCatalog[0];
-  const featuredBottle = recommendations.recommendedBottles[0] ||
-                         liveCatalog.find(p => p.id === 'bote-100ml-acanalado-blanco') || 
-                         liveCatalog.find(p => p.category === 'Botes') || 
+  const featuredProduct = recommendations.primaryProduct || liveCatalog.find(p => p.category === 'Esencias para Perfume' && p.stock > 0) || liveCatalog[0];
+  const featuredBottle = recommendations.recommendedBottles.find(b => b.stock > 0) ||
+                         liveCatalog.find(p => p.category === 'Botes' && p.stock > 0) || 
                          liveCatalog[1];
-  const availableBottles = recommendations.recommendedBottles.length > 0
-    ? recommendations.recommendedBottles
+  const availableBottles = recommendations.recommendedBottles.filter(b => b.stock > 0).length > 0
+    ? recommendations.recommendedBottles.filter(b => b.stock > 0)
     : liveCatalog.filter(p => 
-        p.category === 'Botes' && p.imageUrl && p.imageUrl.startsWith('/images/botes/')
+        p.category === 'Botes' && p.stock > 0 && p.imageUrl && p.imageUrl.startsWith('/images/botes/')
       );
   const contentParts = splitArticleContent(post.content);
 

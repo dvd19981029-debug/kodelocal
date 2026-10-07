@@ -20,8 +20,8 @@ export function useLiveProducts(initialProducts?: ProductItem[]) {
   useEffect(() => {
     let isMounted = true;
 
-    // 1. Cargar datos locales del POS si están disponibles para actualización inmediata
-    if (typeof window !== 'undefined') {
+    // 1. Cargar datos locales del POS solo si no se pasaron initialProducts desde el servidor
+    if (typeof window !== 'undefined' && (!initialProducts || initialProducts.length === 0)) {
       const stored = getStoredProducts();
       if (stored && stored.length > 0) {
         setProducts(stored);

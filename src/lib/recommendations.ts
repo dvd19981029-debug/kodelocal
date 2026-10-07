@@ -63,10 +63,8 @@ export function getRecommendationsForPost(
   } else if (fullText.includes('caballero') || fullText.includes('hombre') || (category && category.toLowerCase().includes('caballero'))) {
     fallbackEssences = allEssences.filter(p => p.gender === 'Caballero');
   } else {
-    // Esencias populares estrella
-    fallbackEssences = allEssences.filter(p => 
-      ['esencia-apae-001', 'esencia-apae-016', 'esencia-apae-013', 'esencia-apae-004', 'esencia-apae-018'].includes(p.id)
-    );
+    // Esencias populares con mayor inventario disponible en tiempo real
+    fallbackEssences = [...allEssences].sort((a, b) => b.stock - a.stock);
   }
 
   for (const fb of fallbackEssences) {

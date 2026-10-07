@@ -46,15 +46,16 @@ export default function BlogInlineProductCallout({
   // Esencias adicionales detectadas por palabras clave en el artículo sincronizadas en tiempo real
   const additionalEssences = (recommendations?.matchedEssences || [])
     .filter((e) => e.id !== mainProduct.id)
-    .map((e) => liveProductMap.get(e.id) || e);
+    .map((e) => liveProductMap.get(e.id) || e)
+    .filter((e) => e.stock > 0);
 
   // Lista de botes de vidrio para scroll horizontal sincronizados en tiempo real
   const rawBottles = (recommendations?.recommendedBottles && recommendations.recommendedBottles.length > 0)
-    ? recommendations.recommendedBottles
+    ? recommendations.recommendedBottles.filter((b) => b.stock > 0)
     : (availableBottles && availableBottles.length > 0)
-    ? availableBottles
-    : liveProducts.filter((p) => p.category === 'Botes' && p.imageUrl?.startsWith('/images/botes/'));
-  const bottlesList = rawBottles.map((b) => liveProductMap.get(b.id) || b);
+    ? availableBottles.filter((b) => b.stock > 0)
+    : liveProducts.filter((p) => p.category === 'Botes' && p.stock > 0 && p.imageUrl?.startsWith('/images/botes/'));
+  const bottlesList = rawBottles.map((b) => liveProductMap.get(b.id) || b).filter((b) => b.stock > 0);
 
   const scrollBottlesRef = useRef<HTMLDivElement>(null);
   const scrollEssencesRef = useRef<HTMLDivElement>(null);

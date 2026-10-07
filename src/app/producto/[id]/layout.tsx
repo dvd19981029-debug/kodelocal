@@ -34,7 +34,6 @@ async function getProductForSEO(id: string): Promise<ProductItem | null> {
           gender: dbProd.gender || undefined,
           description: dbProd.description || undefined,
           puesto: (dbProd as any).puesto || undefined,
-          supplier: (dbProd as any).supplier || undefined,
           imageUrl: dbProd.imageUrl || '/images/logo.png',
           minStock: Number(dbProd.minStock || 0),
           isAvailableOnline: Boolean(dbProd.isAvailableOnline),

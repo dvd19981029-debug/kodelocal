@@ -40,19 +40,16 @@ export default function BlogCatalogShowcase({ genderFilter, limit = 3, recommend
 
   const matchedEssenceIds = new Set(matchedEssences.map(e => e.id));
   const essenceCandidates = [
-    ...matchedEssences,
-    ...baseEssences.filter(e => !matchedEssenceIds.has(e.id)),
+    ...matchedEssences.filter(e => e.stock > 0),
+    ...baseEssences.filter(e => !matchedEssenceIds.has(e.id) && e.stock > 0),
   ];
 
-  // 2. Botes y Frascos de Vidrio: Priorizar botes recomendados
+  // 2. Botes y Frascos de Vidrio: Priorizar botes recomendados con stock
   let baseBottles = liveProducts.filter(p => p.isAvailableOnline && p.category === 'Botes' && p.stock > 0);
-  if (baseBottles.length === 0) {
-    baseBottles = liveProducts.filter(p => p.isAvailableOnline && p.category === 'Botes');
-  }
   const matchedBottleIds = new Set(recommendedBottles.map(b => b.id));
   const bottleCandidates = [
-    ...recommendedBottles,
-    ...baseBottles.filter(b => !matchedBottleIds.has(b.id)),
+    ...recommendedBottles.filter(b => b.stock > 0),
+    ...baseBottles.filter(b => !matchedBottleIds.has(b.id) && b.stock > 0),
   ];
 
   // 3. Insumos y Materias Primas / Empaque (solo con inventario activo)
@@ -122,17 +119,19 @@ export default function BlogCatalogShowcase({ genderFilter, limit = 3, recommend
           Botes y Frascos de Vidrio
         </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('Insumos')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer select-none ${
-            activeTab === 'Insumos'
-              ? 'clay-btn-primary text-white shadow-xs font-black'
-              : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 shadow-2xs'
-          }`}
-        >
-          Insumos y Empaque
-        </button>
+        {supplyCandidates.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('Insumos')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer select-none ${
+              activeTab === 'Insumos'
+                ? 'clay-btn-primary text-white shadow-xs font-black'
+                : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 shadow-2xs'
+            }`}
+          >
+            Insumos y Empaque
+          </button>
+        )}
       </div>
 
       {/* Grid con las TARJETAS EXACTAS del E-commerce alineadas simétricamente */}

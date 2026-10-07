@@ -618,7 +618,7 @@ export default function AromaniakDashboardModule({
                 <span>Proyección de Agotamiento de Stock (Días)</span>
               </h3>
               <span className="text-[9px] sm:text-[10px] font-black uppercase bg-rose-100 text-rose-800 px-1.5 sm:px-2 py-0.5 rounded shrink-0">
-                Alerta APAESA
+                Alerta Reabastecimiento
               </span>
             </div>
             <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5">
