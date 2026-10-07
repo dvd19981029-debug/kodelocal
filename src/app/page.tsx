@@ -48,7 +48,7 @@ export default function EcommerceHomePage() {
     }
 
     // 2. Sincronizar con la API (aprovechando caché Stale-While-Revalidate)
-    fetch('/api/products')
+    fetch('/api/products?fresh=true', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         if (isMounted && data.success && Array.isArray(data.products) && data.products.length > 0) {
