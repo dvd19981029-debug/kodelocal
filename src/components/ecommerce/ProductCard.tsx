@@ -44,7 +44,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
   const isOutOfStock = totalStock <= 0;
 
   const discreteStock = React.useMemo(() => {
-    return isEssence ? getEssenceDiscreteStock(totalStock, relevantCartItems, product.id) : null;
+    return isEssence ? getEssenceDiscreteStock(totalStock, relevantCartItems, product.id, undefined, product.stockHalf || 0) : null;
   }, [isEssence, totalStock, relevantCartItems, product.id]);
 
   // Unidades disponibles según la presentación actualmente seleccionada

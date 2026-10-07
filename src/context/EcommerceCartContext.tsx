@@ -73,14 +73,15 @@ export function getEssenceDiscreteStock(
   totalStock: number,
   cart: EcommerceCartItem[],
   productId: string,
-  excludeItemId?: string
+  excludeItemId?: string,
+  realStockHalf: number = 0
 ): EssenceDiscreteStock {
   const stock = typeof totalStock === 'number' && !isNaN(totalStock) ? Math.max(0, totalStock) : 0;
   
-  // 80% del stock equivale a botes de 1 oz
-  const total1oz = Math.floor(stock * 0.8);
+  // Inventario real envasado: stock = frascos de 1 oz, stockHalf = frascos de ½ oz
+  const total1oz = Math.floor(stock);
   // 20% del stock equivale a botes de ½ oz (cada ½ oz = 0.5 oz, por tanto stock * 0.20 / 0.5 = stock * 0.40 botes)
-  const totalHalfOz = Math.floor(stock * 0.4);
+  const totalHalfOz = Math.max(0, Math.floor(typeof realStockHalf === 'number' && !isNaN(realStockHalf) ? realStockHalf : 0));
 
   let used1oz = 0;
   let usedHalfOz = 0;
@@ -285,7 +286,7 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
 
       // Validación de inventario discreto
       if (isEssence) {
-        const discrete = getEssenceDiscreteStock(totalStock, prev, product.id, itemId);
+        const discrete = getEssenceDiscreteStock(totalStock, prev, product.id, itemId, product.stockHalf || 0);
         if (presentation === 'ONZA_COMPLETA' && desiredQty > discrete.available1oz) {
           return prev;
         }
@@ -408,7 +409,7 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
       const desiredQty = (existing ? existing.quantity : 0) + quantity;
 
       // Cada kit requiere 1 bote de 1 oz; y si es PLUS, requiere además 1 bote de ½ oz
-      const discrete = getEssenceDiscreteStock(totalEssenceStock, prev, essence.id, itemId);
+      const discrete = getEssenceDiscreteStock(totalEssenceStock, prev, essence.id, itemId, essence.stockHalf || 0);
 
       if (desiredQty > discrete.available1oz) {
         return prev;
@@ -490,7 +491,7 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
         const isEssence = prod.category === 'Esencias para Perfume';
 
         if (current.kitDetails) {
-          const discrete = getEssenceDiscreteStock(totalStock, prev, current.kitDetails.essenceId, id);
+          const discrete = getEssenceDiscreteStock(totalStock, prev, current.kitDetails.essenceId, id, prod.stockHalf || 0);
           if (quantity > discrete.available1oz) {
             return prev;
           }
@@ -498,7 +499,7 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
             return prev;
           }
         } else if (isEssence) {
-          const discrete = getEssenceDiscreteStock(totalStock, prev, prod.id, id);
+          const discrete = getEssenceDiscreteStock(totalStock, prev, prod.id, id, prod.stockHalf || 0);
           if (current.presentation === 'ONZA_COMPLETA' && quantity > discrete.available1oz) {
             return prev;
           }

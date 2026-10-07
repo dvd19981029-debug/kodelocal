@@ -170,7 +170,7 @@ export default function ProductDetailPage() {
 
   const discreteStock = useMemo(() => {
     if (!product || !isEssence) return null;
-    return getEssenceDiscreteStock(totalStock, cart, product.id);
+    return getEssenceDiscreteStock(totalStock, cart, product.id, undefined, product.stockHalf || 0);
   }, [product, isEssence, totalStock, cart]);
 
   // Unidades disponibles restantes en bodega para esta presentación específica (descontando lo que ya está en el carrito)

@@ -576,8 +576,10 @@ export async function POST(request: Request) {
               if (essenceProd.finishedPerfumePrice != null) {
                 baseKitPrice = Number(essenceProd.finishedPerfumePrice);
               }
-              const stockNeeded = isPlus ? Math.ceil(qty * 1.5) : qty;
-              stockDeltas.set(essenceProd.id, (stockDeltas.get(essenceProd.id) || 0) + stockNeeded);
+              stockDeltas.set(essenceProd.id, (stockDeltas.get(essenceProd.id) || 0) + qty);
+              if (isPlus) {
+                halfDeltas.set(essenceProd.id, (halfDeltas.get(essenceProd.id) || 0) + qty);
+              }
             }
           }
 

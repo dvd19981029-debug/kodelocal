@@ -52,7 +52,7 @@ export default function PerfumeKitBuilderModal({
         (e) => String(e.id) === String(initialEssenceId) || String(e.sku) === String(initialEssenceId)
       );
       if (found) {
-        const stockInfo = getEssenceDiscreteStock(found.stock || 0, cart, found.id);
+        const stockInfo = getEssenceDiscreteStock(found.stock || 0, cart, found.id, undefined, found.stockHalf || 0);
         if (stockInfo.available1oz > 0) {
           setSelectedEssence(found);
           setCurrentStep(2);
@@ -154,7 +154,7 @@ export default function PerfumeKitBuilderModal({
   // Cálculo de disponibilidad de medias onzas para la versión PLUS (+½ oz extra)
   const selectedEssenceStock = useMemo(() => {
     if (!selectedEssence) return null;
-    return getEssenceDiscreteStock(selectedEssence.stock || 0, cart, selectedEssence.id);
+    return getEssenceDiscreteStock(selectedEssence.stock || 0, cart, selectedEssence.id, undefined, selectedEssence.stockHalf || 0);
   }, [selectedEssence, cart]);
 
   const hasHalfOzAvailable = selectedEssenceStock ? selectedEssenceStock.availableHalfOz >= 1 : false;
@@ -373,7 +373,7 @@ export default function PerfumeKitBuilderModal({
 
                       // Regla de inventario: protección de stock basada en minStock y carrito
                       const totalStock = typeof essence.stock === 'number' ? essence.stock : 0;
-                      const discrete = getEssenceDiscreteStock(totalStock, cart, essence.id);
+                      const discrete = getEssenceDiscreteStock(totalStock, cart, essence.id, undefined, essence.stockHalf || 0);
                       const available1oz = discrete.available1oz;
                       const minStockThreshold = typeof essence.minStock === 'number' && essence.minStock > 0
                         ? essence.minStock

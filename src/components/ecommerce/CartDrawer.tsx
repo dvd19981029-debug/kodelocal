@@ -228,14 +228,14 @@ export default function CartDrawer() {
                           let canAddMoreInDrawer = true;
 
                           if (item.kitDetails) {
-                            const discrete = getEssenceDiscreteStock(totalStock, cart, item.kitDetails.essenceId, item.id);
+                            const discrete = getEssenceDiscreteStock(totalStock, cart, item.kitDetails.essenceId, item.id, prod.stockHalf || 0);
                             const nextQty = item.quantity + 1;
                             canAddMoreInDrawer = nextQty <= discrete.available1oz;
                             if (item.kitDetails.isPlus && nextQty > discrete.availableHalfOz) {
                               canAddMoreInDrawer = false;
                             }
                           } else if (isEssence) {
-                            const discrete = getEssenceDiscreteStock(totalStock, cart, prod.id, item.id);
+                            const discrete = getEssenceDiscreteStock(totalStock, cart, prod.id, item.id, prod.stockHalf || 0);
                             const nextQty = item.quantity + 1;
                             if (item.presentation === 'ONZA_COMPLETA') {
                               canAddMoreInDrawer = nextQty <= discrete.available1oz;
