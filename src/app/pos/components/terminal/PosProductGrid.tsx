@@ -59,7 +59,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
             placeholder="Buscar por código (100), contratipo, marca..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 w-full pr-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold"
+            className="bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 w-full pl-10 pr-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold"
           />
         </div>
 
@@ -73,7 +73,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
             placeholder="Código o SKU..."
             value={barcodeInput}
             onChange={(e) => setBarcodeInput(e.target.value)}
-            className="bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 w-full pr-4 py-2 sm:py-2.5 text-xs sm:text-sm font-mono font-bold border-indigo-200"
+            className="bg-indigo-50 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 w-full pl-10 pr-4 py-2 sm:py-2.5 text-xs sm:text-sm font-mono font-bold text-indigo-900"
           />
         </form>
       </div>
@@ -84,7 +84,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
-            className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs rounded-full whitespace-nowrap transition-all font-bold shrink-0 ${
+            className={`px-4 py-2 text-[11px] sm:text-xs rounded-full whitespace-nowrap transition-all font-bold shrink-0 ${
               selectedCategory === cat ? 'bg-slate-800 text-white shadow-sm border border-slate-900' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
             }`}
           >
@@ -95,9 +95,8 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
 
       {/* Filtro de Género (para esencias) */}
       {selectedCategory === 'Esencias para Perfume' && (
-        <div className="bg-white border border-slate-200 rounded-xl p-2 px-3 sm:px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 text-xs font-semibold text-slate-600">
-          
-          <div className="grid grid-cols-4 gap-1 w-full sm:w-auto">
+        <div className="flex gap-2 text-xs font-semibold text-slate-600">
+          <div className="grid grid-cols-4 gap-1.5 w-full sm:w-[400px]">
             {['Todos', 'Caballero', 'Dama', 'Unisex'].map((gender) => (
               <button
                 key={gender}
@@ -243,7 +242,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
                         type="button"
                         disabled={fullRemaining <= 0}
                         onClick={() => onAddToCart(product, 'ONZA_COMPLETA')}
-                        className="w-full py-1.5 px-1 text-[11px] font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-lg border border-indigo-200 transition-all shadow-2xs disabled:opacity-50 flex items-center justify-center whitespace-nowrap active:scale-95"
+                        className="w-full py-1.5 px-1 text-[11px] font-bold bg-white text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg border border-slate-200 shadow-sm transition-all shadow-2xs disabled:opacity-50 flex items-center justify-center whitespace-nowrap active:scale-95"
                         title="Agregar 1 Onza al pedido"
                       >
                         +1 Oz
@@ -252,7 +251,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
                         type="button"
                         disabled={halfRemaining <= 0}
                         onClick={() => onAddToCart(product, 'MEDIA_ONZA')}
-                        className="w-full py-1.5 px-1 text-[11px] font-bold bg-violet-50 text-violet-700 hover:bg-violet-600 hover:text-white rounded-lg border border-violet-200 transition-all shadow-2xs disabled:opacity-50 flex items-center justify-center whitespace-nowrap active:scale-95"
+                        className="w-full py-1.5 px-1 text-[11px] font-bold bg-white text-violet-600 hover:bg-violet-50 hover:text-violet-700 rounded-lg border border-slate-200 shadow-sm transition-all shadow-2xs disabled:opacity-50 flex items-center justify-center whitespace-nowrap active:scale-95"
                         title="Agregar ½ Onza al pedido"
                       >
                         +½ Oz
