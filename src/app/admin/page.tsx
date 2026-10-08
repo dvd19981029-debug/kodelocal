@@ -87,20 +87,10 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   
   // Datos
-  const [users, setUsers] = useState<UserAccount[]>(() => getStoredUsers());
-  const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
+  const [users, setUsers] = useState<UserAccount[]>([]);
+  const [products, setProducts] = useState<ProductItem[]>([]);
 
-  const [sales, setSales] = useState<SaleRecord[]>(() => {
-    if (typeof window !== 'undefined') {
-      const currentVersion = localStorage.getItem('kodelocal_data_version');
-      if (currentVersion !== DATA_VERSION) return [];
-      const saved = localStorage.getItem('kodelocal_sales');
-      if (saved) {
-        try { return JSON.parse(saved); } catch (e) {}
-      }
-    }
-    return [];
-  });
+  const [sales, setSales] = useState<SaleRecord[]>([])
 
   const [categories, setCategories] = useState<string[]>(PERFUME_CATEGORIES);
   const [newCatName, setNewCatName] = useState('');
@@ -180,28 +170,19 @@ export default function AdminPage() {
   const [editingRole, setEditingRole] = useState<CustomRole | null>(null);
 
   // Compras y Proveedores (Inspirado en Mecanic OS)
-  const [purchases, setPurchases] = useState<PurchaseRecord[]>(() => getStoredPurchases());
+  const [purchases, setPurchases] = useState<PurchaseRecord[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>(() => getStoredSuppliers());
 
-  useEffect(() => {
-    localStorage.setItem('kodelocal_users', JSON.stringify(users));
-  }, [users]);
+  
 
   useEffect(() => {
-    localStorage.setItem('kodelocal_products', JSON.stringify(products));
   }, [products]);
 
-  useEffect(() => {
-    saveStoredRoles(roles);
-  }, [roles]);
+  
 
-  useEffect(() => {
-    saveStoredPurchases(purchases);
-  }, [purchases]);
+  
 
-  useEffect(() => {
-    saveStoredSuppliers(suppliers);
-  }, [suppliers]);
+  
 
   useEffect(() => {
     fetch('/api/products')
@@ -209,7 +190,6 @@ export default function AdminPage() {
       .then(data => {
         if (data.success && Array.isArray(data.products) && data.products.length > 0) {
           setProducts(data.products);
-          localStorage.setItem('kodelocal_products', JSON.stringify(data.products));
         }
       })
       .catch(err => console.error('Error sincronizando productos con Supabase:', err));
@@ -225,14 +205,23 @@ export default function AdminPage() {
   }, []);
 
   // Kárdex de Inventario
-  const [kardexMovements, setKardexMovements] = useState<KardexMovement[]>(() => getStoredKardex());
+  const [kardexMovements, setKardexMovements] = useState<KardexMovement[]>([]);
   const [kardexFilterProduct, setKardexFilterProduct] = useState<string | null>(null);
 
   useEffect(() => {
-    saveStoredKardex(kardexMovements);
-  }, [kardexMovements]);
+    fetch('/api/kardex')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.movements)) {
+          setKardexMovements(data.movements);
+        }
+      })
+      .catch(err => console.error('Error fetching kardex from Supabase:', err));
+  }, []);
 
   const handleAddKardexMovement = (movement: KardexMovement) => {
+    // Si queremos actualizar locamente para reflejar rápido, lo hacemos,
+    // y luego se podría volver a fetchear si fuera necesario.
     setKardexMovements(prev => [movement, ...prev]);
   };
 
@@ -462,15 +451,7 @@ export default function AdminPage() {
     if (!editingProduct || !editingProduct.name.trim()) return;
 
     const prodToSave = { ...editingProduct };
-
-    setProducts(prev => {
-      const exists = prev.some(p => p.id === prodToSave.id);
-      if (exists) {
-        return prev.map(p => p.id === prodToSave.id ? prodToSave : p);
-      } else {
-        return [prodToSave, ...prev];
-      }
-    });
+    const isNewLocal = prodToSave.id.startsWith('prod_');
 
     setIsEditModalOpen(false);
     setEditingProduct(null);
@@ -479,16 +460,19 @@ export default function AdminPage() {
     try {
       const staffToken = await getStaffToken();
       const res = await fetch('/api/products', {
-        method: 'PATCH',
+        method: isNewLocal ? 'POST' : 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           ...(staffToken ? { 'x-staff-token': staffToken } : {}),
         },
         body: JSON.stringify({
-          id: prodToSave.id,
+          ...(isNewLocal ? {} : { id: prodToSave.id }),
           sku: prodToSave.sku,
           brand: prodToSave.brand,
           name: prodToSave.name,
+          category: prodToSave.category,
+          unit: prodToSave.unit,
+          gender: prodToSave.gender,
           officialName: prodToSave.officialName,
           price: Number(prodToSave.price),
           priceHalfOunce: prodToSave.priceHalfOunce != null ? Number(prodToSave.priceHalfOunce) : undefined,
@@ -506,8 +490,12 @@ export default function AdminPage() {
         const data = await res.json();
         if (data.success && data.product) {
           setProducts(prev => {
-            const updated = prev.map(p => (p.id === prodToSave.id || (p.sku && p.sku === data.product.sku)) ? { ...p, ...data.product } : p);
-            localStorage.setItem('kodelocal_products', JSON.stringify(updated));
+            let updated;
+            if (isNewLocal) {
+              updated = [data.product, ...prev];
+            } else {
+              updated = prev.map(p => p.id === data.product.id ? data.product : p);
+            }
             window.dispatchEvent(new Event('kodelocal_products_updated'));
             return updated;
           });

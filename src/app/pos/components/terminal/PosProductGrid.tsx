@@ -45,7 +45,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
   return (
     <div className="flex-1 flex flex-col gap-3.5 sm:gap-5 min-w-0">
       {/* Barra superior de Búsqueda y Cotizador Rápido */}
-      <div className="clay-card p-3 sm:p-5 flex flex-col sm:flex-row gap-2 sm:gap-3 items-center justify-between">
+      <div className="bg-white border border-slate-200 rounded-xl p-3 sm:p-5 flex flex-col sm:flex-row gap-2 sm:gap-3 items-center justify-between">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-400 pointer-events-none z-10" />
           <input
@@ -59,7 +59,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
             placeholder="Buscar por código (100), contratipo, marca..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="clay-input has-icon w-full pr-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold"
+            className="bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 w-full pr-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold"
           />
         </div>
 
@@ -73,7 +73,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
             placeholder="Código o SKU..."
             value={barcodeInput}
             onChange={(e) => setBarcodeInput(e.target.value)}
-            className="clay-input has-icon w-full pr-4 py-2 sm:py-2.5 text-xs sm:text-sm font-mono font-bold border-indigo-200"
+            className="bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 w-full pr-4 py-2 sm:py-2.5 text-xs sm:text-sm font-mono font-bold border-indigo-200"
           />
         </form>
       </div>
@@ -84,8 +84,8 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
-            className={`clay-btn px-3 sm:px-4 py-1.5 sm:py-2 text-xs rounded-full whitespace-nowrap transition-all font-bold shrink-0 ${
-              selectedCategory === cat ? 'clay-btn-primary' : 'clay-btn-light'
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs rounded-full whitespace-nowrap transition-all font-bold shrink-0 ${
+              selectedCategory === cat ? 'bg-slate-800 text-white shadow-sm border border-slate-900' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
             }`}
           >
             {cat}
@@ -95,10 +95,8 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
 
       {/* Filtro de Género (para esencias) */}
       {selectedCategory === 'Esencias para Perfume' && (
-        <div className="clay-card p-2 px-3 sm:px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 text-xs font-semibold text-slate-600">
-          <span className="flex items-center gap-1.5 font-bold text-slate-700 whitespace-nowrap">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" /> Género:
-          </span>
+        <div className="bg-white border border-slate-200 rounded-xl p-2 px-3 sm:px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 text-xs font-semibold text-slate-600">
+          
           <div className="grid grid-cols-4 gap-1 w-full sm:w-auto">
             {['Todos', 'Caballero', 'Dama', 'Unisex'].map((gender) => (
               <button
@@ -110,7 +108,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
                     : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
                 }`}
               >
-                {gender === 'Caballero' ? '🧔 Caballero' : gender === 'Dama' ? '👩 Dama' : gender === 'Unisex' ? '⚧ Unisex' : 'Todos'}
+                {gender}
               </button>
             ))}
           </div>
@@ -154,7 +152,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
             <div 
               key={product.id}
               onClick={() => !isOutOfStock && (isEssence ? fullRemaining > 0 : availableRemaining > 0) && onAddToCart(product, 'ONZA_COMPLETA')}
-              className={`clay-card p-2.5 sm:p-3 flex flex-col justify-between cursor-pointer transition-all hover:scale-[1.015] ${
+              className={`bg-white border border-slate-200 rounded-xl p-2.5 sm:p-3 flex flex-col justify-between hover:border-slate-300 transition-colors shadow-sm cursor-pointer transition-all hover:scale-[1.015] ${
                 isOutOfStock 
                   ? 'opacity-55 cursor-not-allowed bg-slate-50/70' 
                   : 'hover:shadow-[3px_5px_12px_rgba(99,102,241,0.18)]'
@@ -163,18 +161,18 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
               <div>
                 <div className="flex items-center justify-between gap-1 mb-1">
                   <div className="flex items-center gap-1">
-                    <span className="clay-badge text-[9px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-100/80 px-1.5 py-0.5 rounded-md">
+                    <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
                       #{product.sku}
                     </span>
                     {product.puesto && (
-                      <span className="clay-badge text-[8.5px] font-mono font-bold bg-amber-100 text-amber-900 px-1 py-0.5 border border-amber-200" title={`Puesto: ${product.puesto}`}>
-                        📍{product.puesto}
+                      <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded" title={`Puesto: ${product.puesto}`}>
+                        Estante: {product.puesto}
                       </span>
                     )}
                   </div>
                   
                   <div className="flex items-center gap-1">
-                    <span className={`clay-badge text-[9px] font-bold py-0.5 px-1.5 rounded-md ${
+                    <span className={`text-[10px] font-bold py-0.5 px-1.5 rounded ${
                       isOutOfStock 
                         ? 'bg-rose-50 text-rose-700 border border-rose-200' 
                         : isLowStock 

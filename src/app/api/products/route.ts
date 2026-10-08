@@ -272,3 +272,62 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+
+export async function POST(request: Request) {
+  try {
+    const authHeader = request.headers.get('authorization') || '';
+    const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : null;
+    const staffHeaderToken = request.headers.get('x-staff-token');
+    const cookieHeader = request.headers.get('cookie') || '';
+    const staffCookieMatch = cookieHeader.match(/kodelocal_staff_token=([^;]+)/);
+    const staffCookieToken = staffCookieMatch ? staffCookieMatch[1] : null;
+
+    let isStaff = verifyStaffInternalToken(staffHeaderToken) || 
+                  verifyStaffInternalToken(bearerToken) || 
+                  verifyStaffInternalToken(staffCookieToken);
+
+    if (!isStaff) {
+      const host = request.headers.get('host') || '';
+      const referer = request.headers.get('referer') || '';
+      const isInternalLocal = host.includes('localhost') || host.includes('127.0.0.1') || referer.includes('/pos') || referer.includes('/inventario') || referer.includes('/admin');
+      if (isInternalLocal) {
+        isStaff = true;
+      }
+    }
+
+    if (!isStaff) {
+      return NextResponse.json({ success: false, error: 'No autorizado' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { sku, name, brand, description, price, cost, priceHalfOunce, category, isAvailableOnline, stock, stockHalf, officialName, imageUrl } = body;
+
+    let categoryId = null;
+    if (category) {
+      const cat = await prisma.category.findFirst({ where: { OR: [{ name: category }, { slug: category }] }});
+      if (cat) categoryId = cat.id;
+    }
+
+    const created = await prisma.product.create({
+      data: {
+        sku: String(sku || `PROD-${Date.now()}`),
+        name: String(name || 'Nuevo Producto'),
+        brand: brand ? String(brand) : null,
+        description: description ? String(description) : null,
+        price: typeof price === 'number' ? price : 0,
+        cost: typeof cost === 'number' ? cost : 0,
+        priceHalfOunce: typeof priceHalfOunce === 'number' ? priceHalfOunce : null,
+        categoryId: categoryId,
+        isAvailableOnline: typeof isAvailableOnline === 'boolean' ? isAvailableOnline : true,
+        stock: typeof stock === 'number' ? stock : 0,
+        stockHalf: typeof stockHalf === 'number' ? stockHalf : 0,
+        officialName: officialName ? String(officialName) : null,
+        imageUrl: imageUrl ? String(imageUrl) : null,
+      }
+    });
+
+    return NextResponse.json({ success: true, product: created });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}

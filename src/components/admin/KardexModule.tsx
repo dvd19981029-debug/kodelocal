@@ -252,7 +252,7 @@ export default function KardexModule({
   }, [filteredMovements]);
 
   // Guardar ajuste manual
-  const handleSaveAdjustment = (e: React.FormEvent) => {
+  const handleSaveAdjustment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentAdjProduct || adjQuantity <= 0) return;
 
@@ -272,53 +272,75 @@ export default function KardexModule({
       movementType = 'OUT_DAMAGE';
     }
 
-    // 1. Actualizar producto en el estado de inventario
-    const updatedProducts = products.map(p => {
-      if (p.id === currentAdjProduct.id) {
-        return isHalfAdj ? { ...p, stockHalf: newStock } : { ...p, stock: newStock };
-      }
-      return p;
-    });
-    onUpdateProducts(updatedProducts);
+    try {
+      const staffToken = await getStaffToken();
+      const isSub = adjType === 'ADJUSTMENT_SUB';
+      const adjNotesFinal = (isSub ? `➖ Diferencia de Conteo Físico • ` : '') + adjNotes.trim();
 
-    // 1.1 Persistir en la base de datos
-    getStaffToken().then(staffToken =>
-      fetch('/api/products', {
-        method: 'PATCH',
+      const res = await fetch('/api/kardex', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(staffToken ? { 'x-staff-token': staffToken } : {}),
         },
         body: JSON.stringify({
-          id: currentAdjProduct.id,
-          ...(isHalfAdj ? { stockHalf: newStock } : { stock: newStock }),
+          productId: currentAdjProduct.id,
+          type: movementType,
+          quantity: adjQuantity,
+          previousStock,
+          newStock,
+          costPrice: currentAdjProduct.cost,
+          unitPrice: currentAdjProduct.price,
+          reference: adjReason,
+          notes: isHalfAdj ? `½ Onza • ${adjNotesFinal}` : adjNotesFinal,
+          userName: 'Gerente General'
         }),
-      })
-    ).catch(err => console.error('Error guardando ajuste de stock:', err));
+      });
 
-    // 2. Registrar movimiento manual en el Kárdex
-    const newMovement: KardexMovement = {
-      id: `kdx-${Date.now()}`,
-      productId: currentAdjProduct.id,
-      productName: isHalfAdj ? `${currentAdjProduct.name} (½ Onza)` : currentAdjProduct.name,
-      productSku: currentAdjProduct.sku,
-      puesto: currentAdjProduct.puesto,
-      unit: currentAdjProduct.unit,
-      type: movementType,
-      quantity: adjQuantity,
-      previousStock,
-      newStock,
-      costPrice: currentAdjProduct.cost,
-      unitPrice: currentAdjProduct.price,
-      reference: adjReason,
-      notes: adjNotes.trim() || undefined,
-      user: 'Gerente General',
-      createdAt: new Date().toISOString()
-    };
+      const data = await res.json();
+      if (data.success) {
+        // Agregar movimiento localmente
+        const mov = data.movement;
+        
+        // Actualizar producto en el estado de inventario usando el valor REAL de la BD
+        const updatedProducts = products.map(p => {
+          if (p.id === currentAdjProduct.id) {
+            return isHalfAdj ? { ...p, stockHalf: mov.newStock } : { ...p, stock: mov.newStock };
+          }
+          return p;
+        });
+        onUpdateProducts(updatedProducts);
+        
+        onAddManualMovement({
+          id: mov.id,
+          productId: mov.productId,
+          productName: mov.product ? mov.product.name : currentAdjProduct.name,
+          productSku: mov.product ? mov.product.sku : currentAdjProduct.sku,
+          puesto: mov.product ? mov.product.puesto : currentAdjProduct.puesto,
+          unit: mov.product ? mov.product.unit : currentAdjProduct.unit,
+          type: mov.type as KardexMovementType,
+          quantity: mov.quantity,
+          previousStock: mov.previousStock,
+          newStock: mov.newStock,
+          costPrice: mov.costPrice,
+          unitPrice: mov.unitPrice,
+          reference: mov.reference,
+          notes: mov.notes,
+          user: mov.userName,
+          createdAt: mov.createdAt
+        });
 
-    onAddManualMovement(newMovement);
-    setIsAdjustmentModalOpen(false);
-    setAdjNotes('');
+        setIsAdjustmentModalOpen(false);
+        setAdjNotes('');
+        setAdjReason('');
+        setAdjQuantity(0);
+      } else {
+        alert('Error al guardar en Kardex: ' + data.error);
+      }
+    } catch (err) {
+      console.error('Error guardando ajuste:', err);
+      alert('Error de red al guardar ajuste de stock');
+    }
   };
 
   // Exportar a CSV (Compatible con Excel, como en Mecanic OS)
@@ -530,26 +552,7 @@ export default function KardexModule({
 
       {/* Barra de Filtros Compacta */}
       <div className="clay-card p-2.5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-          {/* Selector de Producto */}
-          <div>
-            <label className="text-[9.5px] font-bold text-slate-500 block mb-0.5">
-              Producto / Contratipo
-            </label>
-            <select
-              value={selectedProductId}
-              onChange={(e) => setSelectedProductId(e.target.value)}
-              className="clay-input w-full text-[10.5px] font-bold py-1 px-2"
-            >
-              <option value="ALL">📦 Todos los Productos e Insumos</option>
-              {products.map(p => (
-                <option key={p.id} value={p.id}>
-                  {p.name} (#{p.sku}) {p.puesto ? `[Puesto: ${p.puesto}]` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {/* Tipo de Movimiento */}
           <div>
             <label className="text-[9.5px] font-bold text-slate-500 block mb-0.5">
@@ -586,16 +589,16 @@ export default function KardexModule({
             </select>
           </div>
 
-          {/* Buscador de Texto */}
+          {/* Buscador de Texto General */}
           <div>
             <label className="text-[9.5px] font-bold text-slate-500 block mb-0.5">
-              Buscar DTE / Referencia / SKU
+              Buscar Producto, DTE, SKU...
             </label>
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
               <input
                 type="text"
-                placeholder="DTE-01..., SKU, Proveedor..."
+                placeholder="Nombre de esencia, DTE, SKU..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="clay-input has-icon w-full pr-2 py-1 text-[10.5px]"
@@ -793,52 +796,36 @@ export default function KardexModule({
             <form onSubmit={handleSaveAdjustment} className="space-y-3">
               <div>
                 <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                  Producto / Insumo a Ajustar *
+                  Buscar Producto / Insumo a Ajustar *
                 </label>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => { setAdjPickerOpen(o => !o); setAdjSearch(''); }}
-                    className="clay-input w-full text-xs font-bold py-2 flex items-center justify-between gap-2 text-left"
-                  >
-                    <span className="truncate">
-                      {currentAdjProduct ? `${currentAdjProduct.name} (#${currentAdjProduct.sku})` : 'Seleccionar esencia...'}
-                    </span>
-                    <span className="text-[10px] text-slate-400 shrink-0">
-                      {currentAdjProduct ? (currentAdjProduct.unit === 'Onza' ? `${currentAdjProduct.stock} × 1 Oz · ${currentAdjProduct.stockHalf || 0} × ½ Oz` : `Stock: ${currentAdjProduct.stock} Un.`) : ''} ▾
-                    </span>
-                  </button>
-                  {adjPickerOpen && (
-                    <div className="absolute z-50 left-0 right-0 mt-1 bg-white rounded-xl border border-slate-200 shadow-xl overflow-hidden">
-                      <input
-                        type="text"
-                        autoFocus
-                        value={adjSearch}
-                        onChange={(e) => setAdjSearch(e.target.value)}
-                        placeholder="Buscar por nombre, código o marca..."
-                        className="w-full px-3 py-2 text-xs font-bold border-b border-slate-200 outline-none"
-                      />
-                      <div className="max-h-56 overflow-y-auto">
-                        {adjFilteredProducts.length === 0 && (
-                          <div className="px-3 py-3 text-xs text-slate-400 text-center">Sin resultados</div>
-                        )}
-                        {adjFilteredProducts.map(p => (
-                          <button
-                            type="button"
-                            key={p.id}
-                            onClick={() => { setAdjProductId(p.id); setAdjPickerOpen(false); setAdjSearch(''); }}
-                            className={`w-full text-left px-3 py-2 text-xs hover:bg-indigo-50 flex items-center justify-between gap-2 ${p.id === adjProductId ? 'bg-indigo-50 font-black' : 'font-semibold'}`}
-                          >
-                            <span className="truncate">
-                              {p.name} <span className="text-slate-400">(#{p.sku})</span>
-                              {(p as any).brand && <span className="block text-[10px] text-slate-400 font-medium">{(p as any).brand}</span>}
-                            </span>
-                            <span className="text-[10px] font-mono text-slate-500 shrink-0">{p.unit === 'Onza' ? `${p.stock} × 1 Oz · ${p.stockHalf || 0} × ½ Oz` : `${p.stock} Un.`}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                <div className="flex flex-col gap-1.5">
+                  <input
+                    type="text"
+                    value={adjSearch}
+                    onChange={(e) => setAdjSearch(e.target.value)}
+                    placeholder="Buscar por nombre, código o marca..."
+                    className="clay-input w-full text-xs font-bold py-1.5"
+                  />
+                  <div className="max-h-36 overflow-y-auto rounded-xl border border-slate-200 bg-white">
+                    {adjFilteredProducts.length === 0 && (
+                      <div className="px-3 py-3 text-xs text-slate-400 text-center">Sin resultados</div>
+                    )}
+                    {adjFilteredProducts.map(p => (
+                      <button
+                        type="button"
+                        key={p.id}
+                        onClick={() => setAdjProductId(p.id)}
+                        className={`w-full text-left px-3 py-2 text-xs hover:bg-indigo-50 flex items-center justify-between gap-2 border-b border-slate-50 last:border-0 ${p.id === adjProductId ? 'bg-indigo-100 font-black text-indigo-900' : 'font-semibold text-slate-700'}`}
+                      >
+                        <span className="truncate">
+                          {p.name} <span className="text-slate-400 font-mono">(#{p.sku})</span>
+                        </span>
+                        <span className="text-[10px] font-mono shrink-0">
+                          {p.unit === 'Onza' ? `${p.stock}×1Oz · ${p.stockHalf || 0}×½Oz` : `${p.stock} Un.`}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 

@@ -299,11 +299,24 @@ export async function PATCH(request: Request) {
           const presLower = String(it.presentation || '').toLowerCase();
           const isHalfRestore = presLower.includes('media') || presLower.includes('½');
           try {
-            await prisma.product.update({
+            const updatedProd = await prisma.product.update({
               where: { id: it.productId },
               data: isHalfRestore
                 ? { stockHalf: { increment: qty } }
                 : { stock: { increment: qty } },
+            });
+            
+            await prisma.stockMovement.create({
+              data: {
+                productId: it.productId,
+                type: 'RETURN',
+                quantity: qty,
+                previousStock: isHalfRestore ? (updatedProd as any).stockHalf - qty : updatedProd.stock - qty,
+                newStock: isHalfRestore ? (updatedProd as any).stockHalf : updatedProd.stock,
+                reference: `Devolución Web #${order.orderNumber}`,
+                notes: isHalfRestore ? '½ Onza • Reversión de pedido cancelado/rechazado' : 'Reversión de pedido cancelado/rechazado',
+                userName: 'Sistema',
+              }
             });
           } catch (stockErr) {
             console.warn(`No se pudo restaurar inventario para producto ${it.productId}:`, stockErr);
@@ -661,6 +674,20 @@ export async function POST(request: Request) {
         if (!updatedRows || updatedRows.length === 0) {
           throw new Error(`INSUFFICIENT_STOCK: Inventario insuficiente para "${prodName}".`);
         }
+
+        const newStock = updatedRows[0].stock;
+        await tx.stockMovement.create({
+          data: {
+            productId: prodId,
+            type: 'OUT_SALE',
+            quantity: deductQty,
+            previousStock: newStock + deductQty,
+            newStock,
+            reference: `Pedido Web #${orderNumber || 'Pendiente'}`,
+            notes: `Venta Ecommerce (${paymentMethod})`,
+            userName: cleanCustomerName,
+          }
+        });
       }
 
       for (const [prodId, deductHalf] of halfDeltas.entries()) {
@@ -676,6 +703,20 @@ export async function POST(request: Request) {
         if (!rows || rows.length === 0) {
           throw new Error(`INSUFFICIENT_STOCK: Inventario de ½ onza insuficiente para "${prodName}".`);
         }
+
+        const newStockHalf = rows[0].stockHalf;
+        await tx.stockMovement.create({
+          data: {
+            productId: prodId,
+            type: 'OUT_SALE',
+            quantity: deductHalf,
+            previousStock: newStockHalf + deductHalf,
+            newStock: newStockHalf,
+            reference: `Pedido Web #${orderNumber || 'Pendiente'}`,
+            notes: `½ Onza • Venta Ecommerce (${paymentMethod})`,
+            userName: cleanCustomerName,
+          }
+        });
       }
 
       verifiedSubtotal = Number(verifiedSubtotal.toFixed(2));

@@ -55,7 +55,8 @@ import { Store, ShoppingCart, X } from 'lucide-react';
 
 export default function PosPage() {
   const router = useRouter();
-  const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
+  const [products, setProducts] = useState<ProductItem[]>([]);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   
   // Pestaña activa en el menú lateral de Punto de Venta:
@@ -106,7 +107,7 @@ export default function PosPage() {
   const [bodegaOrdenesSearch, setBodegaOrdenesSearch] = useState('');
 
   // Clientes
-  const [customers, setCustomers] = useState<CustomerRecord[]>(() => getStoredCustomers());
+  const [customers, setCustomers] = useState<CustomerRecord[]>([]);
   const [customerSearch, setCustomerSearch] = useState('');
   const [customerFilterType, setCustomerFilterType] = useState<CustomerFilterType>('TODOS');
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
@@ -209,6 +210,70 @@ export default function PosPage() {
     }
   };
 
+  
+  // NUEVO: Sincronización obligatoria al abrir el POS si hay internet
+    useEffect(() => {
+    if (typeof navigator !== 'undefined') {
+      if (navigator.onLine) {
+        fetch('/api/products')
+          .then(res => res.json())
+          .then(data => {
+            if (data.success && Array.isArray(data.products)) {
+              setProducts(data.products);
+              localStorage.setItem('kodelocal_products', JSON.stringify(data.products));
+            } else {
+              setProducts(getStoredProducts());
+            }
+            return fetch('/api/customers');
+          })
+          .then(res => res?.json())
+          .then(data => {
+            if (data && data.success && Array.isArray(data.customers)) {
+              setCustomers(data.customers);
+              localStorage.setItem('kodelocal_customers', JSON.stringify(data.customers));
+            } else {
+              const savedCust = localStorage.getItem('kodelocal_customers');
+              if (savedCust) setCustomers(JSON.parse(savedCust));
+            }
+          })
+          .catch(err => {
+            console.error('Error sincronizando iniciales:', err);
+            setProducts(getStoredProducts());
+            const savedCust = localStorage.getItem('kodelocal_customers');
+            if (savedCust) setCustomers(JSON.parse(savedCust));
+          })
+          .finally(() => setIsInitializing(false));
+      } else {
+        setProducts(getStoredProducts());
+        const savedCust = localStorage.getItem('kodelocal_customers');
+        if (savedCust) {
+          try { setCustomers(JSON.parse(savedCust)); } catch(e) {}
+        }
+        setIsInitializing(false);
+      }
+    }
+  }, []);
+
+
+  // Auto-Sincronización Silenciosa cada 3 minutos (Evita ceguera ante Ecommerce)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (typeof navigator !== 'undefined' && navigator.onLine) {
+        fetch('/api/products')
+          .then(res => res.json())
+          .then(data => {
+            if (data.success && Array.isArray(data.products)) {
+              setProducts(data.products);
+              localStorage.setItem('kodelocal_products', JSON.stringify(data.products));
+            }
+          })
+          .catch(() => {});
+      }
+    }, 3 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+
   useEffect(() => {
     setOfflineQueueCount(getOfflineQueueCount());
     const handleQueueChange = (e: any) => {
@@ -230,9 +295,7 @@ export default function PosPage() {
   }, [products]);
 
   // Guardar clientes en localStorage
-  useEffect(() => {
-    saveStoredCustomers(customers);
-  }, [customers]);
+  
 
   // Sincronizar en tiempo real los cambios de pedidos realizados en bodega o caja
   useEffect(() => {

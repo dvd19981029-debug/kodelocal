@@ -129,6 +129,19 @@ export async function POST(request: Request) {
 
     const result = await prisma.$transaction(async (tx) => {
       // 1. Crear Venta principal
+      
+      // Auto-asignar al turno abierto si no se especifica y viene del POS
+      let actualShiftId = shiftId;
+      if (!actualShiftId && (channel === 'POS' || !channel)) {
+        const activeShift = await tx.cashShift.findFirst({
+          where: { status: 'OPEN' },
+          orderBy: { openedAt: 'desc' }
+        });
+        if (activeShift) {
+          actualShiftId = activeShift.id;
+        }
+      }
+
       const createdSale = await tx.sale.create({
         data: {
           saleNumber: saleNumber || `VEN-${Date.now().toString().slice(-6)}`,
@@ -146,7 +159,7 @@ export async function POST(request: Request) {
           notes: notes || null,
           cashierName: cashierName || 'Caja 1',
           customerId: customerId || null,
-          shiftId: shiftId || null,
+          shiftId: actualShiftId || null,
           items: {
             create: resolvedItems.map((it) => ({
               productId: it.productId,
@@ -182,7 +195,7 @@ export async function POST(request: Request) {
           reference: paymentReference || null,
           notes: cashReceived ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}` : null,
           cashierName: cashierName || 'Caja 1',
-          shiftId: shiftId || null,
+          shiftId: actualShiftId || null,
         },
       });
 

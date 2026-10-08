@@ -19,10 +19,11 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { SaleRecord } from '@/lib/store';
+import { PosCorteZ } from './PosCorteZ';
 
 export interface PosCajaModuleProps {
-  cajaSubTab: 'listas_facturar' | 'dtes_emitidos';
-  setCajaSubTab: (tab: 'listas_facturar' | 'dtes_emitidos') => void;
+  cajaSubTab: 'listas_facturar' | 'dtes_emitidos' | 'corte_z';
+  setCajaSubTab: (tab: 'listas_facturar' | 'dtes_emitidos' | 'corte_z') => void;
   readyInWindowOrders: SaleRecord[];
   completedDteSales: SaleRecord[];
   pendingPreparationCount: number;
@@ -106,7 +107,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
               )}
             </button>
 
-            <button
+                        <button
               type="button"
               onClick={() => setCajaSubTab('dtes_emitidos')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
@@ -117,6 +118,19 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
             >
               <FileCheck className="w-4 h-4" />
               <span>DTEs Emitidos ({completedDteSales.length})</span>
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => setCajaSubTab('corte_z')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                cajaSubTab === 'corte_z'
+                  ? 'bg-amber-600 text-white shadow-lg shadow-amber-950/50 ring-1 ring-amber-300'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
+              }`}
+            >
+              <Calculator className="w-4 h-4" />
+              <span>Corte Z / Turno</span>
             </button>
           </div>
         </div>
@@ -558,6 +572,10 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
           </div>
 
         </div>
+      )}
+      {/* SUBPESTAÑA 3: CORTE Z */}
+      {cajaSubTab === 'corte_z' && (
+        <PosCorteZ />
       )}
     </div>
   );

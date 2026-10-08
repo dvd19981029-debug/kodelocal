@@ -22,7 +22,7 @@ import { INITIAL_PRODUCTS, ProductItem, getStoredProducts } from '@/lib/store';
 import { getStaffToken } from '@/lib/auth';
 
 export default function InventarioPage() {
-  const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
+  const [products, setProducts] = useState<ProductItem[]>([]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
@@ -48,20 +48,31 @@ export default function InventarioPage() {
     isAvailableOnline: true
   });
 
+  
+  useEffect(() => {
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.products)) {
+          setProducts(data.products);
+        }
+      });
+  }, []);
+
   useEffect(() => {
     fetch('/api/products')
       .then(res => res.json())
       .then(data => {
         if (data.success && Array.isArray(data.products) && data.products.length > 0) {
           setProducts(data.products);
-          localStorage.setItem('kodelocal_products', JSON.stringify(data.products));
+          
         }
       })
       .catch(err => console.error('Error sincronizando productos con Supabase:', err));
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('kodelocal_products', JSON.stringify(products));
+    
   }, [products]);
 
   // Categorías
@@ -160,7 +171,7 @@ export default function InventarioPage() {
         if (data.success && data.product) {
           setProducts(prev => {
             const updated = prev.map(p => (p.id === targetId || (p.sku && p.sku === data.product.sku)) ? { ...p, ...data.product } : p);
-            localStorage.setItem('kodelocal_products', JSON.stringify(updated));
+            
             window.dispatchEvent(new Event('kodelocal_products_updated'));
             return updated;
           });
