@@ -181,7 +181,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
                         ? 'bg-amber-50 text-amber-800 border border-amber-200' 
                         : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                     }`}>
-                      {isOutOfStock ? 'Agotado' : isEssence ? `${fullRemaining}×1Oz · ${halfRemaining}×½Oz` : `${availableRemaining} ${product.unit === 'Onza' ? 'Oz' : 'Un.'}`}
+                      {isOutOfStock ? 'Agotado' : isEssence ? `${fullRemaining} de 1 Oz · ${halfRemaining} de ½ Oz` : `${availableRemaining} ${product.unit === 'Onza' ? 'Oz' : 'Un.'}`}
                     </span>
                     <button
                       type="button"
