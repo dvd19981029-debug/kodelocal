@@ -79,9 +79,12 @@ export function verifyCustomerToken(token?: string | null): CustomerTokenPayload
 /**
  * Firma interna para peticiones de Bodega y POS desde el servidor u operaciones internas.
  */
-export function createStaffInternalToken(role: string = 'STAFF'): string {
+export function createStaffInternalToken(role: string = 'STAFF', email: string = 'admin@kodelocal.com', name: string = 'Administrador', id: string = 'system'): string {
   const secret = ensureAuthSecret();
   const payload = {
+    id,
+    name,
+    email,
     role,
     scope: 'internal_operations',
     exp: Date.now() + 24 * 60 * 60 * 1000,
@@ -125,5 +128,22 @@ export function verifyStaffInternalToken(token?: string | null): boolean {
     return payload.scope === 'internal_operations';
   } catch {
     return false;
+  }
+}
+
+export function decodeStaffToken(token?: string | null): any | null {
+  if (!token || typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+  const [payloadB64, receivedSig] = parts;
+  try {
+    const secret = ensureAuthSecret();
+    const expectedSig = crypto.createHmac('sha256', secret).update(payloadB64).digest('base64url');
+    if (expectedSig !== receivedSig) return null;
+    const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8'));
+    if (Date.now() > payload.exp) return null;
+    return payload;
+  } catch {
+    return null;
   }
 }

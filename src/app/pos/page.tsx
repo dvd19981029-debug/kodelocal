@@ -23,7 +23,7 @@ import {
   DEPARTAMENTOS_CATALOG, 
   getMunicipiosByDepartamento 
 } from '@/lib/svTerritory';
-import { getStaffToken } from '@/lib/auth';
+import { getStaffToken, getActiveSessionUI } from '@/lib/auth';
 import { 
   syncSaleOnlineOrQueue, 
   initOfflineSync, 
@@ -507,7 +507,7 @@ export default function PosPage() {
             paymentStatus: s.paymentStatus || 'COMPLETED',
             status: s.orderStatus || 'COMPLETED',
             tipoComprobante: s.tipoComprobante || '01',
-            cajero: s.cashierName || 'Caja 1',
+            cajero: s.cashierName || getActiveSessionUI().name,
             vendedor: s.sellerName || 'Mostrador',
             cliente: {
               nombre: s.customer?.name || 'Consumidor Final',
@@ -1428,7 +1428,7 @@ export default function PosPage() {
             ...s,
             status: 'COMPLETED',
             invoicedAt: new Date().toISOString(),
-            cajero: 'Caja 1',
+            cajero: getActiveSessionUI().name,
             paymentMethod,
             cashReceived: parsedCash,
             cashChange: changeAmount,
@@ -1468,7 +1468,7 @@ export default function PosPage() {
           ...orderToInvoice,
           status: 'COMPLETED',
           invoicedAt: new Date().toISOString(),
-          cajero: 'Caja 1',
+          cajero: getActiveSessionUI().name,
           paymentMethod,
           cashReceived: parsedCash,
           cashChange: changeAmount,
@@ -1576,7 +1576,7 @@ export default function PosPage() {
           fhProcesamiento: dteResponseData.fhProcesamiento,
         } : undefined,
         status: 'COMPLETED',
-        cajero: 'Caja 1',
+        cajero: getActiveSessionUI().name,
         items: itemsToBill
       };
 
@@ -1608,7 +1608,7 @@ export default function PosPage() {
         notes: completedRecord.tipoComprobante,
         tipoComprobante: completedRecord.tipoComprobante,
         codigoGeneracion: completedRecord.dteInfo?.codigoGeneracion,
-        cashierName: completedRecord.cajero || 'Caja 1',
+        cashierName: completedRecord.cajero || getActiveSessionUI().name,
         cliente: {
           nombre: clienteNombre || completedRecord.cliente?.nombre || 'Consumidor Final',
           numDocumento: clienteDoc || completedRecord.cliente?.numDocumento,

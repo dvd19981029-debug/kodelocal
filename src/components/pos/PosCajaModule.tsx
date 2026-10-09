@@ -130,7 +130,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
               }`}
             >
               <Calculator className="w-4 h-4" />
-              <span>Corte Z / Turno</span>
+              <span>Cierre de Caja / Turno</span>
             </button>
           </div>
         </div>
@@ -573,7 +573,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
 
         </div>
       )}
-      {/* SUBPESTAÑA 3: CORTE Z */}
+      {/* SUBPESTAÑA 3: CIERRE DE CAJA */}
       {cajaSubTab === 'corte_z' && (
         <PosCorteZ />
       )}

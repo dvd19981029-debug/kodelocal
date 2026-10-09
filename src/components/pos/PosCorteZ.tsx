@@ -1,3 +1,4 @@
+import { getActiveSessionUI } from '@/lib/auth';
 import React, { useState, useEffect } from 'react';
 import { Calculator, DollarSign, Lock, Unlock, TrendingDown, RefreshCw } from 'lucide-react';
 
@@ -6,7 +7,7 @@ export const PosCorteZ: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   
   // Forms
-  const [cashierName, setCashierName] = useState('Caja 1');
+  const [cashierName, setCashierName] = useState(getActiveSessionUI().name);
   const [initialAmount, setInitialAmount] = useState<number>(0);
   const [finalAmount, setFinalAmount] = useState<number>(0);
   const [movementAmount, setMovementAmount] = useState<number>(0);
@@ -215,7 +216,7 @@ export const PosCorteZ: React.FC = () => {
 
         {/* Formulario Corte Z */}
         <div className="bg-rose-50 border border-rose-200 rounded-xl shadow-sm p-5">
-          <h3 className="font-black text-rose-800 mb-3 flex items-center gap-2"><Calculator className="w-4 h-4"/> Corte Z (Cierre de Caja)</h3>
+          <h3 className="font-black text-rose-800 mb-3 flex items-center gap-2"><Calculator className="w-4 h-4"/> Cierre Final de Caja</h3>
           <form onSubmit={handleCloseShift} className="space-y-3">
             <div>
               <label className="text-[10px] font-bold text-rose-700 block mb-1">Efectivo Real Contado Físicamente en Cajón ($)</label>

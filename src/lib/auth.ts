@@ -179,18 +179,37 @@ export function getStoredUsers(): UserAccount[] {
   return INITIAL_USERS;
 }
 
+
 export function getActiveUser(): UserAccount | null {
   if (typeof window === 'undefined') return INITIAL_USERS[0];
+  
+  // 1. Try to read from real session cookie
+  const match = document.cookie.match(new RegExp('(^| )kode_session_ui=([^;]+)'));
+  if (match) {
+    try {
+      const session = JSON.parse(decodeURIComponent(match[2]));
+      return {
+        id: session.id,
+        name: session.name,
+        email: session.email,
+        role: session.role,
+        isActive: true,
+        createdAt: new Date().toISOString()
+      };
+    } catch(e) {}
+  }
+  
+  // 2. Fallback to old localStorage
   const saved = localStorage.getItem('kodelocal_active_user');
   if (saved) {
     try {
       return JSON.parse(saved);
     } catch (e) {}
   }
-  // Por defecto iniciamos con el Gerente para que el usuario pueda explorar de inmediato
-  localStorage.setItem('kodelocal_active_user', JSON.stringify(INITIAL_USERS[0]));
+  
   return INITIAL_USERS[0];
 }
+
 
 export function setActiveUser(user: UserAccount | null) {
   if (typeof window === 'undefined') return;
@@ -223,4 +242,20 @@ export async function getStaffToken(): Promise<string | null> {
     console.error('Error al obtener token de staff:', err);
   }
   return null;
+}
+
+export function getActiveSessionUI() {
+  if (typeof document === 'undefined') return { name: 'Caja 1', role: 'CASHIER' };
+  const match = document.cookie.match(new RegExp('(^| )kode_session_ui=([^;]+)'));
+  if (match) {
+    try {
+      return JSON.parse(decodeURIComponent(match[2]));
+    } catch(e) {}
+  }
+  // Fallback to old local storage if cookie is missing (shouldn't happen with new APIs)
+  const saved = localStorage.getItem('kodelocal_active_user');
+  if (saved) {
+    try { return JSON.parse(saved); } catch(e) {}
+  }
+  return { name: 'Caja 1', role: 'CASHIER' };
 }

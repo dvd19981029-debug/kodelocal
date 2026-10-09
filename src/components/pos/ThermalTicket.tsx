@@ -1,4 +1,5 @@
 'use client';
+import { getActiveSessionUI } from '@/lib/auth';
 
 import React from 'react';
 import { SaleRecord } from '@/lib/store';
@@ -61,7 +62,7 @@ export default function ThermalTicket({ ticket }: ThermalTicketProps) {
                 <span>Rec.: {currentTicket.saleNumber}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Cajero: {currentTicket.cajero || 'Caja 1'}</span>
+                <span>Cajero: {currentTicket.cajero || getActiveSessionUI().name}</span>
                 <span>Trans.: {currentTicket.id ? currentTicket.id.slice(-6).toUpperCase() : '1001'}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
