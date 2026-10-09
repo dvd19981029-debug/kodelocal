@@ -96,6 +96,7 @@ export default function BodegaPage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Estados de Sincronización en Tiempo Real
+  const [hasInteracted, setHasInteracted] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date());
