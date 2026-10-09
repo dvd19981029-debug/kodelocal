@@ -17,7 +17,6 @@ import { getStaffToken } from '@/lib/auth';
 
 export function AbastecimientoModule() {
   const [budget, setBudget] = useState<string>('3000');
-  const [historyDays, setHistoryDays] = useState<string>('30');
   const [targetDos, setTargetDos] = useState<string>('60');
   const [leadTime, setLeadTime] = useState<string>('14');
   const [file, setFile] = useState<File | null>(null);
@@ -78,7 +77,7 @@ export function AbastecimientoModule() {
         },
         body: JSON.stringify({
           budget: Number(budget),
-          historyDays: Number(historyDays),
+          
           targetDos: Number(targetDos),
           leadTime: Number(leadTime),
           catalog: catalogData
