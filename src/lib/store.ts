@@ -166,7 +166,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "sku": "12",
     "barcode": "741001000012",
     "name": "Erba Pura",
-    "officialName": "Hiedra Natural",
+    "officialName": "HiedraFrais",
     "brand": "Xerjoff",
     "gender": "Unisex",
     "category": "Esencias para Perfume",
