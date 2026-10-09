@@ -172,7 +172,7 @@ export function AbastecimientoModule() {
             </div>
 
             <button 
-              disabled={!file || catalogData.length === 0}
+              // Eliminado: disabled para que puedan avanzar sin archivo
               onClick={() => setStep(2)}
               className="clay-btn clay-btn-primary w-full py-3 disabled:opacity-50"
             >
