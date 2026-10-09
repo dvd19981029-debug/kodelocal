@@ -16,20 +16,18 @@ export default function LandingMarquee() {
         const res = await fetch('/api/products');
         const data = await res.json();
         if (data.success && Array.isArray(data.products)) {
-          // Extraer esencias
           const esencias = data.products
             .filter((p: ProductItem) => p.category === 'Esencias para Perfume')
             .map((p: ProductItem) => getProductImage(p))
             .filter(Boolean);
             
-          // Extraer botes
           const botes = data.products
             .filter((p: ProductItem) => p.category === 'Botes' || p.category === 'Botes & Envases')
             .map((p: ProductItem) => getProductImage(p))
             .filter(Boolean);
 
-          setProductImages([...new Set(esencias)].slice(0, 8)); // 8 imagenes únicas
-          setBottleImages([...new Set(botes)].slice(0, 8));     // 8 imagenes únicas
+          setProductImages([...new Set(esencias)].slice(0, 10)); // 10 imagenes
+          setBottleImages([...new Set(botes)].slice(0, 10));     // 10 imagenes
         }
       } catch (err) {
         console.error(err);
@@ -54,83 +52,84 @@ export default function LandingMarquee() {
     { text: "Asesoría Personalizada", icon: <Star className="w-5 h-5 text-orange-500" /> },
   ];
 
-  const renderTextMarquee = (items: typeof itemsTop) => {
-    return [...items, ...items, ...items].map((item, idx) => (
-      <div key={idx} className="flex items-center gap-3 bg-white/80 backdrop-blur-sm border border-slate-200 shadow-xs px-6 py-3 rounded-2xl whitespace-nowrap shrink-0">
+  // Duplicamos 4 veces para asegurar que nunca se corte en pantallas ultrawide
+  const textItemsGroup1 = [...itemsTop, ...itemsTop, ...itemsTop, ...itemsTop];
+  const textItemsGroup2 = [...itemsBottom, ...itemsBottom, ...itemsBottom, ...itemsBottom];
+
+  const renderTextItems = (items: typeof itemsTop) => {
+    return items.map((item, idx) => (
+      <div key={idx} className="flex items-center gap-3 bg-white/80 backdrop-blur-sm border border-slate-200 shadow-xs px-5 py-2.5 rounded-2xl whitespace-nowrap shrink-0">
         {item.icon}
-        <span className="font-bold text-slate-700">{item.text}</span>
+        <span className="font-bold text-slate-700 text-sm sm:text-base">{item.text}</span>
       </div>
     ));
   };
 
-  const renderImageMarquee = (images: string[]) => {
-    // Si no hay imágenes todavía, mostramos unos placeholders
-    const items = images.length > 0 ? images : Array(8).fill('/images/essence_bottle_blank.webp');
-    return [...items, ...items, ...items].map((src, idx) => (
-      <div key={idx} className="w-32 h-32 sm:w-40 sm:h-40 shrink-0 bg-white rounded-3xl border border-slate-100 shadow-sm flex items-center justify-center overflow-hidden p-2">
-        <img src={src} alt="Producto Aromaniak" className="w-full h-full object-contain hover:scale-110 transition-transform duration-500" />
+  const renderImageItems = (images: string[]) => {
+    const safeImages = images.length > 0 ? images : Array(10).fill('/images/essence_bottle_blank.webp');
+    // Duplicamos 4 veces
+    const repeated = [...safeImages, ...safeImages, ...safeImages, ...safeImages];
+    return repeated.map((src, idx) => (
+      <div key={idx} className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 bg-white rounded-2xl border border-slate-100 shadow-xs flex items-center justify-center overflow-hidden p-2">
+        <img src={src} alt="Producto Aromaniak" className="w-full h-full object-contain" />
       </div>
     ));
   };
 
   return (
     <div className="w-full mt-10">
-      {/* CSS Animaciones */}
+      {/* CSS Animaciones Robustas */}
       <style dangerouslySetInnerHTML={{__html: `
-        @keyframes marquee-left {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+        @keyframes scrollX {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
         }
-        @keyframes marquee-right {
-          0% { transform: translateX(-50%); }
-          100% { transform: translateX(0); }
-        }
-        .animate-marquee-left {
+        .scroller {
           display: flex;
           width: max-content;
-          animation: marquee-left 40s linear infinite;
         }
-        .animate-marquee-right {
-          display: flex;
-          width: max-content;
-          animation: marquee-right 45s linear infinite;
-        }
+        .scroll-fast { animation: scrollX 20s linear infinite; }
+        .scroll-medium { animation: scrollX 25s linear infinite; }
         
+        /* Dirección inversa */
+        .scroll-reverse {
+          animation-direction: reverse;
+        }
       `}} />
 
       {/* Botón principal */}
       <Link 
         href="/"
-        className="inline-flex items-center justify-center gap-2 bg-indigo-600 text-white px-10 py-5 rounded-2xl font-black shadow-[0_8px_30px_rgb(79,70,229,0.3)] hover:scale-105 hover:bg-indigo-700 transition-all active:scale-95 text-lg mb-16"
+        className="inline-flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-4 sm:px-10 sm:py-5 rounded-2xl font-black shadow-[0_8px_30px_rgb(79,70,229,0.3)] hover:scale-105 hover:bg-indigo-700 transition-all active:scale-95 text-base sm:text-lg mb-12"
       >
         Ver Catálogo de Productos
-        <ArrowRight className="w-6 h-6" />
+        <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
       </Link>
 
       {/* Contenedor Global de Carruseles */}
-      <div className="relative w-full overflow-hidden flex flex-col gap-6 py-4">
-        {/* Degradados laterales */}
-        <div className="absolute top-0 left-0 w-16 md:w-40 h-full bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none"></div>
-        <div className="absolute top-0 right-0 w-16 md:w-40 h-full bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none"></div>
+      <div className="relative w-full overflow-hidden flex flex-col gap-4 py-4">
+        {/* Degradados laterales anchos */}
+        <div className="absolute top-0 left-0 w-24 sm:w-40 h-full bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-24 sm:w-40 h-full bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none"></div>
 
         {/* 1. Carrusel de Texto Izquierda */}
-        <div className="animate-marquee-left gap-4">
-          {renderTextMarquee(itemsTop)}
+        <div className="scroller scroll-medium gap-4">
+          {renderTextItems(textItemsGroup1)}
         </div>
 
-        {/* 2. Carrusel de Botellas (Fotos) Derecha */}
-        <div className="animate-marquee-right gap-4 mt-4">
-          {renderImageMarquee(bottleImages.length > 0 ? bottleImages : ['/images/essence_bottle_blank.webp'])}
+        {/* 2. Carrusel de Botellas Derecha (Fotos más pequeñas y rápidas) */}
+        <div className="scroller scroll-fast scroll-reverse gap-4">
+          {renderImageItems(bottleImages)}
         </div>
 
-        {/* 3. Carrusel de Esencias (Fotos) Izquierda */}
-        <div className="animate-marquee-left gap-4" style={{ animationDirection: 'reverse' }}>
-          {renderImageMarquee(productImages.length > 0 ? productImages : ['/images/essence_bottle_blank.webp'])}
+        {/* 3. Carrusel de Esencias Izquierda (Fotos más pequeñas y rápidas) */}
+        <div className="scroller scroll-fast gap-4">
+          {renderImageItems(productImages)}
         </div>
 
         {/* 4. Carrusel de Texto Derecha */}
-        <div className="animate-marquee-right gap-4 mt-4">
-          {renderTextMarquee(itemsBottom)}
+        <div className="scroller scroll-medium scroll-reverse gap-4">
+          {renderTextItems(textItemsGroup2)}
         </div>
       </div>
     </div>
