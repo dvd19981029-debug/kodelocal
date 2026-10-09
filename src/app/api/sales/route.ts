@@ -130,6 +130,10 @@ export async function POST(request: Request) {
     }
 
     // Pre-validar productos existentes en DB para evitar violaciones de clave foránea en SaleItem
+    
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return NextResponse.json({ success: false, error: 'Venta Fantasma Detectada: La orden no puede ser procesada sin artículos.' }, { status: 400 });
+    }
     const rawItems = Array.isArray(items) ? items : [];
     const rawProductIds = rawItems.map((it: any) => it.productId).filter(Boolean);
     const existingDbProducts = await prisma.product.findMany({
@@ -278,16 +282,12 @@ export async function POST(request: Request) {
             const prod = productMap.get(prodId);
             if (!prod) continue;
 
-            const updatedRows: Array<{ stock: number }> = await tx.$queryRaw`
-              UPDATE "Product"
-              SET "stock" = GREATEST(0, "stock" - ${totalDeduct}),
-                  "updatedAt" = NOW()
-              WHERE "id" = ${prodId}
-              RETURNING "stock"
-            `;
-
-            const newStock = updatedRows && updatedRows.length > 0 ? updatedRows[0].stock : 0;
-            const previousStock = newStock + totalDeduct;
+            const updated = await tx.product.update({
+              where: { id: prodId },
+              data: { stock: { decrement: totalDeduct } }
+            });
+            const previousStock = updated.stock + totalDeduct;
+            const newStock = updated.stock;
 
             kardexData.push({
               productId: prodId,

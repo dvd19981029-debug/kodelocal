@@ -1,0 +1,360 @@
+{
+  "timestamp": "2026-10-09T04:49:04.472Z",
+  "products": [
+    {
+      "id": "esencia-apae-041",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-009",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-008",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-049",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "bote-100ml-santal-oro",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-019",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-020",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-037",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "bote-100ml-diamante-plata",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "bote-100ml-rockstud-tapa-negra",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "bote-100ml-rockstud-tapa-cobre",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "bote-100ml-chanel-cristal",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "bote-100ml-hombro-curvo-negro",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "bote-100ml-cilindrico-alto-negro",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "bote-100ml-rectangular-frosted-plata",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "bote-100ml-frosted-esfera-madera-clara",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "bote-100ml-sauvage-degrade",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "bote-100ml-cuadrado-bleu",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "bote-100ml-acanalado-blanco",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-001",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-010",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-006",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-014",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-018",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-004",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-011",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-016",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-038",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-040",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-017",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-003",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-002",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-048",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-007",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-005",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-013",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-044",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-046",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-045",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-047",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-021",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-043",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-012",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-015",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-039",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "bote-100ml-cilindrico-tapa-negra",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "bote-100ml-acanalado-negro",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "bote-100ml-frosted-cilindro-madera-clara",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "bote-100ml-frosted-cilindro-madera-media",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "bote-100ml-frosted-cilindro-madera-oscura",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "bote-100ml-frosted-esfera-madera-oscura",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "bote-100ml-hombro-curvo-blanco",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-022",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-023",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-024",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-025",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-026",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-027",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-028",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-029",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-030",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-035",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-036",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-042",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-031",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-032",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-033",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "esencia-apae-034",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "bolsa-lujo",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "caja-regalo",
+      "stock": 0,
+      "stockHalf": 0
+    },
+    {
+      "id": "alcohol-perfumeria",
+      "stock": 0,
+      "stockHalf": 0
+    }
+  ]
+}

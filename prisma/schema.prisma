@@ -1,5 +1,3 @@
-// prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -17,42 +15,42 @@ model Category {
   description String?
   icon        String?   @default("folder")
   color       String?   @default("#6366f1")
-  products    Product[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  products    Product[]
 }
 
 model Product {
-  id                 String          @id @default(cuid())
-  sku                String?         @unique // Código de esencia (ej. 100, 101)
-  barcode            String?         @unique
-  name               String          // Nombre del contratipo (ej. 1 Million Elixir H)
-  officialName       String?         // Nombre comercial oficial de la fragancia (ej. Hombre Salvaje)
-  brand              String?         // Marca inspirada (ej. Paco Rabanne, Carolina Herrera)
-  gender             String?         // Caballero, Dama, Unisex, Niños
-  unit               String?         @default("Onza") // Onza, Unidad, Paquete, Litro
-  description        String?
-  price              Decimal         @db.Decimal(10, 2) @default(3.25) // Precio venta ($3.25 para esencias)
-  priceHalfOunce     Decimal?        @db.Decimal(10, 2) // Precio venta ½ onza (mostrado en ecommerce)
-  finishedPerfumePrice Decimal?      @db.Decimal(10, 2) // Precio de perfume terminado "Arma tu propio perfume" (ej. $15.00)
-  cost               Decimal?        @db.Decimal(10, 2) @default(1.95) // Costo compra ($1.95 para esencias)
-  stock              Int             @default(50)
-  stockHalf          Int             @default(0) // Frascos de media onza envasados (stock = frascos de 1 onza)
-  minStock           Int             @default(10)
-  imageUrl           String?
-  puesto             String?         // Ubicación física en estante de bodega (ej. A1, B3)
-  supplier           String?         // Proveedor
-  isActive           Boolean         @default(true)
-  isAvailableOnline  Boolean         @default(true)
-  categoryId         String?
-  category           Category?       @relation(fields: [categoryId], references: [id])
-  saleItems          SaleItem[]
-  purchaseItems      PurchaseItem[]
-  stockMovements     StockMovement[]
-  ecommerceItems     EcommerceOrderItem[]
-  reviews            ProductReview[]
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
+  id                   String               @id @default(cuid())
+  sku                  String?              @unique
+  barcode              String?              @unique
+  name                 String
+  brand                String?
+  gender               String?
+  unit                 String?              @default("Onza")
+  description          String?
+  price                Decimal              @default(3.25) @db.Decimal(10, 2)
+  cost                 Decimal?             @default(1.95) @db.Decimal(10, 2)
+  stock                Int                  @default(50)
+  minStock             Int                  @default(10)
+  imageUrl             String?
+  isActive             Boolean              @default(true)
+  isAvailableOnline    Boolean              @default(true)
+  categoryId           String?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  puesto               String?
+  officialName         String?
+  supplier             String?              @default("APAESA GUATEMALA")
+  finishedPerfumePrice Decimal?             @db.Decimal(10, 2)
+  priceHalfOunce       Decimal?             @db.Decimal(10, 2)
+  stockHalf            Int                  @default(0)
+  ecommerceItems       EcommerceOrderItem[]
+  category             Category?            @relation(fields: [categoryId], references: [id])
+  reviews              ProductReview[]
+  purchaseItems        PurchaseItem[]
+  saleItems            SaleItem[]
+  stockMovements       StockMovement[]
 
   @@index([barcode])
   @@index([sku])
@@ -62,33 +60,33 @@ model Product {
 }
 
 model Customer {
-  id           String    @id @default(cuid())
-  name         String
-  documentType String?   @default("DUI")
-  documentNum  String?
-  nrc          String?
-  businessName String?
-  tradeName    String?   // Nombre comercial
-  activityCode String?
-  activityDesc String?
-  taxCategory  String?   @default("OTRO") // OTRO, MEDIANO, GRANDE
-  preferredDoc String?   @default("01") // 01, 03, TICKET
-  email        String?   @unique
-  phone        String?
-  address      String?
-  department   String?
-  municipality String?
-  passwordHash String?
-  googleId     String?
-  avatarUrl    String?
-  notes        String?
-  sales           Sale[]
-  credits         CustomerCredit[]
+  id              String            @id @default(cuid())
+  name            String
+  documentType    String?           @default("DUI")
+  documentNum     String?
+  nrc             String?
+  businessName    String?
+  activityCode    String?
+  activityDesc    String?
+  email           String?           @unique
+  phone           String?
+  address         String?
+  department      String?
+  municipality    String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  avatarUrl       String?
+  googleId        String?
+  passwordHash    String?
+  notes           String?
+  preferredDoc    String?           @default("01")
+  taxCategory     String?           @default("OTRO")
+  tradeName       String?
   addresses       CustomerAddress[]
+  credits         CustomerCredit[]
   ecommerceOrders EcommerceOrder[]
   reviews         ProductReview[]
-  createdAt       DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  sales           Sale[]
 
   @@index([documentNum])
   @@index([name])
@@ -96,54 +94,35 @@ model Customer {
   @@index([googleId])
 }
 
-enum PaymentMethod {
-  CASH
-  CARD
-  TRANSFER
-  BITCOIN
-  OTHER
-}
-
-enum SaleChannel {
-  POS
-  ONLINE
-}
-
-enum SaleStatus {
-  COMPLETED
-  CANCELLED
-  PENDING
-}
-
 model Sale {
-  id            String        @id @default(cuid())
-  saleNumber    String        @unique
-  channel       SaleChannel   @default(POS)
-  subtotal      Decimal       @db.Decimal(10, 2)
-  ivaTotal      Decimal       @db.Decimal(10, 2) @default(0.00)
-  discountTotal Decimal       @db.Decimal(10, 2) @default(0.00)
-  total         Decimal       @db.Decimal(10, 2)
-  paymentMethod PaymentMethod @default(CASH)
-  paymentStatus SaleStatus    @default(COMPLETED)
-  cashReceived  Decimal?      @db.Decimal(10, 2)
-  cashChange      Decimal?      @db.Decimal(10, 2)
-  shippingCost    Decimal?      @db.Decimal(10, 2) @default(0.00)
-  sellerName      String?
-  cashierName     String?       @default("Caja 1")
-  tipoComprobante String?       @default("TICKET") // TICKET, 01 (Factura), 03 (CCF)
-  orderStatus     String?       @default("COMPLETED") // PREFACTURA, PENDING_PREPARATION, READY_AT_WINDOW, COMPLETED, CANCELLED
+  id              String           @id @default(cuid())
+  saleNumber      String           @unique
+  channel         SaleChannel      @default(POS)
+  subtotal        Decimal          @db.Decimal(10, 2)
+  ivaTotal        Decimal          @default(0.00) @db.Decimal(10, 2)
+  discountTotal   Decimal          @default(0.00) @db.Decimal(10, 2)
+  total           Decimal          @db.Decimal(10, 2)
+  paymentMethod   PaymentMethod    @default(CASH)
+  paymentStatus   SaleStatus       @default(COMPLETED)
+  cashReceived    Decimal?         @db.Decimal(10, 2)
+  cashChange      Decimal?         @db.Decimal(10, 2)
   notes           String?
+  cashierName     String?          @default("Caja 1")
   customerId      String?
-  customer        Customer?     @relation(fields: [customerId], references: [id])
+  shiftId         String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  orderStatus     String?          @default("COMPLETED")
+  sellerName      String?
+  shippingCost    Decimal?         @default(0.00) @db.Decimal(10, 2)
+  tipoComprobante String?          @default("TICKET")
+  dteDocument     DteDocument?
+  ecommerceOrders EcommerceOrder[]
+  customer        Customer?        @relation(fields: [customerId], references: [id])
+  shift           CashShift?       @relation(fields: [shiftId], references: [id])
   items           SaleItem[]
   payments        SalePayment[]
   shipments       Shipment[]
-  ecommerceOrders EcommerceOrder[]
-  dteDocument     DteDocument?
-  shiftId         String?
-  shift           CashShift?    @relation(fields: [shiftId], references: [id])
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
 
   @@index([saleNumber])
   @@index([createdAt])
@@ -154,17 +133,17 @@ model Sale {
 model SaleItem {
   id          String   @id @default(cuid())
   saleId      String
-  sale        Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
   productId   String
-  product     Product  @relation(fields: [productId], references: [id])
   productName String
-  unit        String?  @default("Onza")
-  puesto      String?
   quantity    Int      @default(1)
   unitPrice   Decimal  @db.Decimal(10, 2)
-  ivaRate     Decimal  @db.Decimal(4, 2) @default(0.13)
+  ivaRate     Decimal  @default(0.13) @db.Decimal(4, 2)
   total       Decimal  @db.Decimal(10, 2)
   createdAt   DateTime @default(now())
+  puesto      String?
+  unit        String?  @default("Onza")
+  product     Product  @relation(fields: [productId], references: [id])
+  sale        Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
 
   @@index([saleId])
   @@index([productId])
@@ -173,7 +152,6 @@ model SaleItem {
 model SalePayment {
   id            String        @id @default(cuid())
   saleId        String
-  sale          Sale          @relation(fields: [saleId], references: [id], onDelete: Cascade)
   amount        Decimal       @db.Decimal(10, 2)
   paymentMethod PaymentMethod @default(CASH)
   reference     String?
@@ -181,30 +159,15 @@ model SalePayment {
   cashierName   String?
   shiftId       String?
   createdAt     DateTime      @default(now())
+  sale          Sale          @relation(fields: [saleId], references: [id], onDelete: Cascade)
 
   @@index([saleId])
   @@index([createdAt])
 }
 
-enum DteType {
-  FACTURA_01
-  CREDITO_FISCAL_03
-  NOTA_CREDITO_05
-  SUJETO_EXCLUIDO_14
-}
-
-enum DteStatus {
-  SIMULADO
-  PROCESADO
-  RECHAZADO
-  CONTINGENCIA
-  ANULADO
-}
-
 model DteDocument {
   id               String    @id @default(cuid())
   saleId           String?   @unique
-  sale             Sale?     @relation(fields: [saleId], references: [id])
   tipoDte          DteType   @default(FACTURA_01)
   version          Int       @default(1)
   codigoGeneracion String    @unique
@@ -214,43 +177,31 @@ model DteDocument {
   fhProcesamiento  DateTime?
   mensajeRespuesta String?
   observaciones    String?
-  requestJson      String?   @db.Text
-  responseJson     String?   @db.Text
+  requestJson      String?
+  responseJson     String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
-}
-
-enum MovementType {
-  IN_PURCHASE
-  OUT_SALE
-  OUT_DAMAGE
-  ADJUSTMENT
-  RETURN
+  sale             Sale?     @relation(fields: [saleId], references: [id])
 }
 
 model StockMovement {
   id            String       @id @default(cuid())
   productId     String
-  product       Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
   type          MovementType
   quantity      Int
   previousStock Int
   newStock      Int
-  costPrice     Decimal?     @db.Decimal(10, 2)
-  unitPrice     Decimal?     @db.Decimal(10, 2)
   reference     String?
   notes         String?
-  userName      String?
   createdAt     DateTime     @default(now())
+  costPrice     Decimal?     @db.Decimal(10, 2)
+  unitPrice     Decimal?     @db.Decimal(10, 2)
+  userName      String?
+  product       Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
   @@index([type])
   @@index([createdAt])
-}
-
-enum ShiftStatus {
-  OPEN
-  CLOSED
 }
 
 model CashShift {
@@ -258,32 +209,32 @@ model CashShift {
   cashierName    String
   openedAt       DateTime       @default(now())
   closedAt       DateTime?
-  initialAmount  Decimal        @db.Decimal(10, 2) // Fondo inicial de caja
-  finalAmount    Decimal?       @db.Decimal(10, 2) // Monto físico contado al cerrar
-  expectedAmount Decimal?       @db.Decimal(10, 2) // Monto esperado según sistema
-  difference     Decimal?       @db.Decimal(10, 2) // Faltante (-) o Sobrante (+)
-  totalSales     Decimal?       @db.Decimal(10, 2) @default(0.00)
-  totalCash      Decimal?       @db.Decimal(10, 2) @default(0.00) // Ventas en efectivo
-  totalCard      Decimal?       @db.Decimal(10, 2) @default(0.00) // Ventas con tarjeta
-  totalTransfer  Decimal?       @db.Decimal(10, 2) @default(0.00) // Ventas con transferencia
-  totalBitcoin   Decimal?       @db.Decimal(10, 2) @default(0.00) // Ventas con Bitcoin
+  initialAmount  Decimal        @db.Decimal(10, 2)
+  finalAmount    Decimal?       @db.Decimal(10, 2)
+  totalSales     Decimal?       @default(0.00) @db.Decimal(10, 2)
   status         ShiftStatus    @default(OPEN)
-  notes          String?
-  sales          Sale[]
-  movements      CashMovement[]
   createdAt      DateTime       @default(now())
+  difference     Decimal?       @db.Decimal(10, 2)
+  expectedAmount Decimal?       @db.Decimal(10, 2)
+  notes          String?
+  totalBitcoin   Decimal?       @default(0.00) @db.Decimal(10, 2)
+  totalCard      Decimal?       @default(0.00) @db.Decimal(10, 2)
+  totalCash      Decimal?       @default(0.00) @db.Decimal(10, 2)
+  totalTransfer  Decimal?       @default(0.00) @db.Decimal(10, 2)
   updatedAt      DateTime       @updatedAt
+  movements      CashMovement[]
+  sales          Sale[]
 }
 
 model CashMovement {
   id          String    @id @default(cuid())
   shiftId     String
-  shift       CashShift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
-  type        String    @default("EGRESO") // INGRESO, EGRESO
+  type        String    @default("EGRESO")
   amount      Decimal   @db.Decimal(10, 2)
   reason      String
   performedBy String?
   createdAt   DateTime  @default(now())
+  shift       CashShift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
 
   @@index([shiftId])
 }
@@ -300,9 +251,9 @@ model Supplier {
   category      String?    @default("Esencias & Fragancias")
   creditDays    Int        @default(0)
   notes         String?
-  purchases     Purchase[]
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
+  purchases     Purchase[]
 }
 
 model Purchase {
@@ -310,7 +261,6 @@ model Purchase {
   purchaseNumber  String            @unique
   tipoDte         String            @default("CCF")
   supplierId      String
-  supplier        Supplier          @relation(fields: [supplierId], references: [id])
   supplierName    String
   purchaseDate    DateTime          @default(now())
   dueDate         DateTime?
@@ -321,25 +271,24 @@ model Purchase {
   paymentMethod   String?           @default("EFECTIVO")
   paymentStatus   String            @default("PAGADO")
   subtotalNeto    Decimal           @db.Decimal(10, 2)
-  iva             Decimal           @db.Decimal(10, 2) @default(0.00)
+  iva             Decimal           @default(0.00) @db.Decimal(10, 2)
   total           Decimal           @db.Decimal(10, 2)
-  saldoPendiente  Decimal           @db.Decimal(10, 2) @default(0.00)
+  saldoPendiente  Decimal           @default(0.00) @db.Decimal(10, 2)
   notes           String?
   receptionStatus String?           @default("PENDIENTE")
   receivedAt      DateTime?
   receivedBy      String?
-  items           PurchaseItem[]
-  payments        PurchasePayment[]
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
+  supplier        Supplier          @relation(fields: [supplierId], references: [id])
+  items           PurchaseItem[]
+  payments        PurchasePayment[]
 }
 
 model PurchaseItem {
   id          String   @id @default(cuid())
   purchaseId  String
-  purchase    Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
   productId   String?
-  product     Product? @relation(fields: [productId], references: [id])
   productName String
   productSku  String?
   unit        String   @default("Onza")
@@ -347,6 +296,8 @@ model PurchaseItem {
   costPrice   Decimal  @db.Decimal(10, 2)
   subtotal    Decimal  @db.Decimal(10, 2)
   createdAt   DateTime @default(now())
+  product     Product? @relation(fields: [productId], references: [id])
+  purchase    Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
 
   @@index([purchaseId])
   @@index([productId])
@@ -355,72 +306,62 @@ model PurchaseItem {
 model PurchasePayment {
   id            String   @id @default(cuid())
   purchaseId    String
-  purchase      Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
   date          DateTime @default(now())
   amount        Decimal  @db.Decimal(10, 2)
   paymentMethod String   @default("EFECTIVO")
   reference     String?
   notes         String?
   createdAt     DateTime @default(now())
+  purchase      Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
 }
 
 model CustomerCredit {
   id          String          @id @default(cuid())
   customerId  String
-  customer    Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  creditLimit Decimal         @db.Decimal(10, 2) @default(0.00)
-  balance     Decimal         @db.Decimal(10, 2) @default(0.00)
+  creditLimit Decimal         @default(0.00) @db.Decimal(10, 2)
+  balance     Decimal         @default(0.00) @db.Decimal(10, 2)
   creditDays  Int             @default(30)
   status      String          @default("ACTIVO")
   notes       String?
-  payments    CreditPayment[]
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
+  payments    CreditPayment[]
+  customer    Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
 }
 
 model CreditPayment {
   id            String         @id @default(cuid())
   creditId      String
-  credit        CustomerCredit @relation(fields: [creditId], references: [id], onDelete: Cascade)
   amount        Decimal        @db.Decimal(10, 2)
   paymentMethod String         @default("EFECTIVO")
   receiptNumber String?
   notes         String?
   createdAt     DateTime       @default(now())
+  credit        CustomerCredit @relation(fields: [creditId], references: [id], onDelete: Cascade)
 }
 
 model CustomerAddress {
-  id            String    @id @default(cuid())
+  id            String   @id @default(cuid())
   customerId    String
-  customer      Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  title         String    @default("Principal")
+  title         String   @default("Principal")
   recipientName String
   phone         String
   department    String
   municipality  String
   address       String
   reference     String?
-  isDefault     Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  customer      Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   @@index([customerId])
-}
-
-enum EcommerceOrderStatus {
-  NUEVO
-  CONFIRMADO
-  EN_PREPARACION
-  EN_RUTA
-  ENTREGADO
-  CANCELADO
 }
 
 model EcommerceOrder {
   id                String               @id @default(cuid())
   orderNumber       String               @unique
   customerId        String?
-  customer          Customer?            @relation(fields: [customerId], references: [id])
   customerName      String
   customerEmail     String?
   customerPhone     String
@@ -429,7 +370,7 @@ model EcommerceOrder {
   shippingAddress   String
   deliveryReference String?
   subtotal          Decimal              @db.Decimal(10, 2)
-  shippingCost      Decimal              @db.Decimal(10, 2) @default(3.50)
+  shippingCost      Decimal              @default(3.50) @db.Decimal(10, 2)
   total             Decimal              @db.Decimal(10, 2)
   paymentMethod     PaymentMethod        @default(CASH)
   paymentStatus     SaleStatus           @default(PENDING)
@@ -438,12 +379,13 @@ model EcommerceOrder {
   courierName       String?
   whatsappNotified  Boolean              @default(false)
   notes             String?
-  items             EcommerceOrderItem[]
-  shipments         Shipment[]
   saleId            String?
-  sale              Sale?                @relation(fields: [saleId], references: [id])
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
+  customer          Customer?            @relation(fields: [customerId], references: [id])
+  sale              Sale?                @relation(fields: [saleId], references: [id])
+  items             EcommerceOrderItem[]
+  shipments         Shipment[]
 
   @@index([orderNumber])
   @@index([customerId])
@@ -455,49 +397,41 @@ model EcommerceOrder {
 model EcommerceOrderItem {
   id           String         @id @default(cuid())
   orderId      String
-  order        EcommerceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId    String
-  product      Product        @relation(fields: [productId], references: [id])
   productName  String
   presentation String         @default("50ml")
   unitPrice    Decimal        @db.Decimal(10, 2)
   quantity     Int            @default(1)
   total        Decimal        @db.Decimal(10, 2)
   createdAt    DateTime       @default(now())
+  order        EcommerceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product      Product        @relation(fields: [productId], references: [id])
 
   @@index([orderId])
   @@index([productId])
 }
 
-enum ShipmentStatus {
-  PREPARING
-  IN_TRANSIT
-  DELIVERED
-  FAILED
-  RETURNED
-}
-
 model Shipment {
-  id             String         @id @default(cuid())
-  trackingNumber String         @unique
+  id             String          @id @default(cuid())
+  trackingNumber String          @unique
   orderId        String?
-  order          EcommerceOrder? @relation(fields: [orderId], references: [id])
   saleId         String?
-  sale           Sale?          @relation(fields: [saleId], references: [id])
   customerName   String
   phone          String
   address        String
   department     String
   municipality   String?
-  carrier        String         @default("Mensajero Propio") // Mensajero Propio, Cargo Expreso, etc.
-  status         ShipmentStatus @default(PREPARING)
-  orderTotal     Decimal        @db.Decimal(10, 2)
-  deliveryCost   Decimal        @db.Decimal(10, 2) @default(3.50)
+  carrier        String          @default("Mensajero Propio")
+  status         ShipmentStatus  @default(PREPARING)
+  orderTotal     Decimal         @db.Decimal(10, 2)
+  deliveryCost   Decimal         @default(3.50) @db.Decimal(10, 2)
   deliveryNotes  String?
   deliveredAt    DateTime?
   receivedBy     String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  order          EcommerceOrder? @relation(fields: [orderId], references: [id])
+  sale           Sale?           @relation(fields: [saleId], references: [id])
 
   @@index([trackingNumber])
   @@index([status])
@@ -507,14 +441,14 @@ model Shipment {
 model ProductReview {
   id           String    @id @default(cuid())
   productId    String
-  product      Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   customerId   String?
-  customer     Customer? @relation(fields: [customerId], references: [id])
   customerName String
   rating       Int       @default(5)
   comment      String
   isApproved   Boolean   @default(true)
   createdAt    DateTime  @default(now())
+  customer     Customer? @relation(fields: [customerId], references: [id])
+  product      Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
   @@index([customerId])
@@ -522,20 +456,14 @@ model ProductReview {
 
 model ProductFormula {
   id                String   @id @default(cuid())
-  name              String   // Ej: "Fórmula de Lujo 33% Fijación"
-  essencePercentage Decimal  @db.Decimal(5, 2) @default(33.00)
-  alcoholPercentage Decimal  @db.Decimal(5, 2) @default(67.00)
-  fixativeMl        Decimal  @db.Decimal(5, 2) @default(1.00)
+  name              String
+  essencePercentage Decimal  @default(33.00) @db.Decimal(5, 2)
+  alcoholPercentage Decimal  @default(67.00) @db.Decimal(5, 2)
+  fixativeMl        Decimal  @default(1.00) @db.Decimal(5, 2)
   description       String?
   isDefault         Boolean  @default(true)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-}
-
-enum DiscountType {
-  PERCENTAGE
-  FIXED_AMOUNT
-  FREE_SHIPPING
 }
 
 model Promotion {
@@ -561,8 +489,8 @@ model StaffUser {
   name         String
   email        String    @unique
   passwordHash String
-  pin          String?   // PIN de 4 dígitos para caja
-  role         String    @default("CASHIER") // ADMIN, CASHIER, BODEGA, DESPACHO
+  pin          String?
+  role         String    @default("CASHIER")
   cashRegister String?   @default("Caja 1")
   isActive     Boolean   @default(true)
   lastLogin    DateTime?
@@ -573,13 +501,13 @@ model StaffUser {
 }
 
 model AuditLog {
-  id          String   @id @default(cuid())
-  action      String   // AJUSTE_STOCK, ANULACION_VENTA, CAMBIO_PRECIO, CORTE_CAJA
-  userName    String
-  userRole    String?
-  details     String?  @db.Text
-  ipAddress   String?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  action    String
+  userName  String
+  userRole  String?
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
 
   @@index([action])
   @@index([createdAt])
@@ -589,8 +517,8 @@ model BlogPost {
   id              String    @id @default(cuid())
   slug            String    @unique
   title           String
-  excerpt         String?   @db.Text
-  content         String    @db.Text
+  excerpt         String?
+  content         String
   coverImage      String?
   author          String?   @default("Equipo Aromaniak")
   category        String?   @default("General")
@@ -626,22 +554,22 @@ model WpMedia {
 model Department {
   id          Int         @id
   nombreDepto String      @unique @map("nombre_depto")
-  codDepto    String      @unique @map("cod_depto") // Para C807 Express (ej. AHU, SLV)
-  deptoMh     String      @unique @map("depto_mh")   // Para Factura MH / DTE (ej. 01, 06)
-  municipios  Municipio[]
+  codDepto    String      @unique @map("cod_depto")
+  deptoMh     String      @unique @map("depto_mh")
   createdAt   DateTime    @default(now()) @map("created_at")
+  municipios  Municipio[]
 
   @@map("departamentos")
 }
 
 model Municipio {
-  idMunicipio     Int        @id @map("id_municipio") // Código para C807 Express
-  nombreMunicipio String     @map("nombre_municipio") // Lo que ven los asesores
-  idDepto         Int        @map("id_depto")         // Relación con departamentos(id)
-  municipioMh     String     @map("municipio_mh")     // Código para Factura Llama / MH
-  nombreMh        String     @map("nombre_mh")        // Nombre según nueva reestructuración
-  department      Department @relation(fields: [idDepto], references: [id])
+  idMunicipio     Int        @id @map("id_municipio")
+  nombreMunicipio String     @map("nombre_municipio")
+  idDepto         Int        @map("id_depto")
+  municipioMh     String     @map("municipio_mh")
+  nombreMh        String     @map("nombre_mh")
   createdAt       DateTime   @default(now()) @map("created_at")
+  department      Department @relation(fields: [idDepto], references: [id])
 
   @@index([idDepto])
   @@index([nombreMunicipio])
@@ -649,26 +577,22 @@ model Municipio {
   @@map("municipios")
 }
 
-// ==========================================
-// MÓDULO MIRANDA PRIESTLY (IA CO-ADMINISTRACIÓN)
-// ==========================================
-
 model MirandaInteraction {
-  id                    String    @id @default(cuid())
-  location              String    @default("recepcion")
-  transcription         String    @db.Text
-  summary               String    @db.Text
-  serviceScore          Int       @default(85)
-  customerSentiment     String    @default("Neutral")
-  purchaseIntent        String    @default("Media")
-  crossSellingAttempted Boolean   @default(false)
-  crossSellingAccepted  Boolean   @default(false)
-  crossSellingProduct   String?   @default("")
-  interactionResult     String    @default("Consulta")
-  totalSaleAmount       Decimal?  @db.Decimal(10, 2)
-  speakerTag            String?   @default("")
-  rawJson               String?   @db.Text
-  createdAt             DateTime  @default(now())
+  id                    String   @id @default(cuid())
+  location              String   @default("recepcion")
+  transcription         String
+  summary               String
+  serviceScore          Int      @default(85)
+  customerSentiment     String   @default("Neutral")
+  purchaseIntent        String   @default("Media")
+  crossSellingAttempted Boolean  @default(false)
+  crossSellingAccepted  Boolean  @default(false)
+  crossSellingProduct   String?  @default("")
+  interactionResult     String   @default("Consulta")
+  totalSaleAmount       Decimal? @db.Decimal(10, 2)
+  speakerTag            String?  @default("")
+  rawJson               String?
+  createdAt             DateTime @default(now())
 
   @@index([createdAt])
   @@index([location])
@@ -680,9 +604,9 @@ model MirandaTask {
   task           String
   assignee       String    @default("Personal")
   urgency        String    @default("Media")
-  status         String    @default("pending") // pending, completed, postponed, cancelled
+  status         String    @default("pending")
   location       String    @default("recepcion")
-  origin         String    @default("audio") // audio, telegram, system
+  origin         String    @default("audio")
   dueDate        String?
   reminderCount  Int       @default(0)
   lastRemindedAt DateTime?
@@ -713,7 +637,7 @@ model MirandaBusinessMemory {
   id          Int      @id @default(autoincrement())
   category    String   @default("regla_negocio")
   topic       String
-  instruction String   @db.Text
+  instruction String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -721,40 +645,105 @@ model MirandaBusinessMemory {
 }
 
 model MirandaPendingChange {
-  id             Int       @id @default(autoincrement())
-  targetDb       String    // aromaniak_inventory, kode_supabase
-  actionType     String    // UPDATE, INSERT, DELETE
-  description    String
-  explanation    String?   @db.Text
-  impactAnalysis String?   @db.Text
-  payloadJson    String?   @db.Text
-  status         String    @default("pending_approval") // pending_approval, pre_approved, confirmed, rejected
-  createdAt      DateTime  @default(now())
-  approvedAt     DateTime?
-  confirmedAt    DateTime?
-  executionResult String?  @db.Text
+  id              Int       @id @default(autoincrement())
+  targetDb        String
+  actionType      String
+  description     String
+  explanation     String?
+  impactAnalysis  String?
+  payloadJson     String?
+  status          String    @default("pending_approval")
+  createdAt       DateTime  @default(now())
+  approvedAt      DateTime?
+  confirmedAt     DateTime?
+  executionResult String?
 
   @@index([status])
   @@map("miranda_pending_changes")
 }
 
 model DailyVisit {
-  date        String   @id
-  visits      Int      @default(0)
-  pageViews   Int      @default(0)
-  mobile      Int      @default(0)
-  desktop     Int      @default(0)
-  tablet      Int      @default(0)
-  sources     String?  @db.Text
-  hours       String?  @db.Text
-  updatedAt   DateTime @updatedAt
-  createdAt   DateTime @default(now())
+  date      String   @id
+  visits    Int      @default(0)
+  pageViews Int      @default(0)
+  mobile    Int      @default(0)
+  desktop   Int      @default(0)
+  tablet    Int      @default(0)
+  sources   String?
+  hours     String?
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
 
   @@index([date])
   @@map("daily_visits")
 }
 
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  BITCOIN
+  OTHER
+}
 
+enum SaleChannel {
+  POS
+  ONLINE
+}
 
+enum SaleStatus {
+  COMPLETED
+  CANCELLED
+  PENDING
+}
 
+enum DteType {
+  FACTURA_01
+  CREDITO_FISCAL_03
+  NOTA_CREDITO_05
+  SUJETO_EXCLUIDO_14
+}
 
+enum DteStatus {
+  SIMULADO
+  PROCESADO
+  RECHAZADO
+  CONTINGENCIA
+  ANULADO
+}
+
+enum MovementType {
+  IN_PURCHASE
+  OUT_SALE
+  OUT_DAMAGE
+  ADJUSTMENT
+  RETURN
+}
+
+enum ShiftStatus {
+  OPEN
+  CLOSED
+}
+
+enum EcommerceOrderStatus {
+  NUEVO
+  CONFIRMADO
+  EN_PREPARACION
+  EN_RUTA
+  ENTREGADO
+  CANCELADO
+}
+
+enum ShipmentStatus {
+  PREPARING
+  IN_TRANSIT
+  DELIVERED
+  FAILED
+  RETURNED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+}
