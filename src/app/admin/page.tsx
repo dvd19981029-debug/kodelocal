@@ -88,6 +88,16 @@ export default function AdminPage() {
   
   // Datos
   const [users, setUsers] = useState<UserAccount[]>([]);
+  useEffect(() => {
+    fetch('/api/staff')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.staff)) {
+          setUsers(data.staff);
+        }
+      })
+      .catch(err => console.error('Error loading staff', err));
+  }, []);
   const [products, setProducts] = useState<ProductItem[]>([]);
 
   const [sales, setSales] = useState<SaleRecord[]>([])
@@ -292,22 +302,35 @@ export default function AdminPage() {
     setIsUserModalOpen(true);
   };
 
-  const handleSaveUser = (e: React.FormEvent) => {
+  
+  const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingUser || !editingUser.name.trim() || !editingUser.email.trim()) return;
-
-    setUsers(prev => {
-      const exists = prev.some(u => u.id === editingUser.id);
-      if (exists) {
-        return prev.map(u => u.id === editingUser.id ? editingUser : u);
-      } else {
-        return [...prev, editingUser];
+    if (!editingUser) return;
+    
+    try {
+      const res = await fetch('/api/staff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editingUser)
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUsers(prev => {
+          const exists = prev.find(u => u.id === data.user.id || u.email === data.user.email);
+          if (exists) {
+            return prev.map(u => (u.id === exists.id ? { ...data.user, pin: data.user.pin || '0000' } : u));
+          }
+          return [{ ...data.user, pin: data.user.pin || '0000' }, ...prev];
+        });
       }
-    });
-
+    } catch(err) {
+      console.error(err);
+    }
+    
     setIsUserModalOpen(false);
     setEditingUser(null);
   };
+
 
   const handleToggleUserStatus = (userId: string) => {
     const target = users.find(u => u.id === userId);
