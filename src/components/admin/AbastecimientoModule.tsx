@@ -101,20 +101,45 @@ export function AbastecimientoModule() {
   const handleDownloadCsv = () => {
     if (!draftResult) return;
     
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Código Proveedor,Fragancia,Cantidad Sugerida (Kg),Precio Unit. ($/Kg),Subtotal ($)\n";
+    const wsData = [
+      ["ORDEN PRELIMINAR DE COMPRA - ESENCIAS FINAS A GRANEL"],
+      ["Proveedor: APAESA", "Fecha: " + new Date().toLocaleDateString()],
+      [],
+      ["No.", "Código Proveedor", "Fragancia (Contratipo)", "Cantidad Sugerida (Kg)", "Precio Unit. ($/Kg)", "Subtotal ($)"]
+    ];
+
+    let totalGlobal = 0;
     
-    draftResult.draft.forEach((item: any) => {
-      csvContent += `${item.supplierCode},${item.productName},${item.suggestedKg},${item.pricePerKg},${item.totalCost}\n`;
+    draftResult.draft.forEach((item, index) => {
+      wsData.push([
+        index + 1,
+        item.supplierCode,
+        item.productName,
+        item.suggestedKg,
+        item.pricePerKg,
+        item.totalCost
+      ]);
+      totalGlobal += item.totalCost;
     });
+
+    wsData.push([]);
+    wsData.push(["", "", "", "", "TOTAL ESTIMADO:", totalGlobal]);
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
     
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "Orden_Sugerida_Apaesa.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    ws['!cols'] = [
+      { wch: 5 },
+      { wch: 15 },
+      { wch: 45 },
+      { wch: 20 },
+      { wch: 20 },
+      { wch: 20 }
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Orden de Compra");
+    
+    XLSX.writeFile(wb, "Orden_Sugerida_APAESA.xlsx");
   };
 
   return (
