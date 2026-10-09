@@ -209,3 +209,77 @@ export function getInspiracionPerfumeName(product: { sku?: string | null; descri
 // Alias de retrocompatibilidad
 export const getOriginalPerfumeName = getInspiracionPerfumeName;
 
+export interface BottleLabelConfig {
+  lines: string[];
+  fontSize: string;
+}
+
+/**
+ * Calcula la distribución óptima en 1 o 2 líneas y el tamaño de fuente para la etiqueta del frasco.
+ * - Permite doble línea balanceada para fragancias compuestas (ej. EUROBOY INTENSE, NICHO Y PAPIRO)
+ * - Escala dinámicamente la tipografía según la longitud y líneas
+ */
+export function getBottleLabelConfig(name: string): BottleLabelConfig {
+  const clean = (name || '').toUpperCase().replace(/\s+[HFU]$/i, '').trim();
+  if (!clean) return { lines: [''], fontSize: '3.4cqw' };
+
+  const words = clean.split(/\s+/).filter(Boolean);
+
+  // 1 sola palabra (ej. "FIERA", "MARINO", "HIEDRAFRAIS")
+  if (words.length === 1) {
+    const len = clean.length;
+    const fontSize = len <= 6 ? '3.5cqw' : len <= 9 ? '3.0cqw' : len <= 12 ? '2.5cqw' : '2.1cqw';
+    return { lines: [clean], fontSize };
+  }
+
+  // 2 palabras (ej. "EUROBOY INTENSE", "DAVID OCEAN", "FIERA ELIXIR")
+  if (words.length === 2) {
+    const maxLen = Math.max(words[0].length, words[1].length);
+    const fontSize = maxLen <= 6 ? '2.8cqw' : maxLen <= 8 ? '2.5cqw' : maxLen <= 11 ? '2.2cqw' : '1.9cqw';
+    return { lines: [words[0], words[1]], fontSize };
+  }
+
+  // 3 palabras (ej. "NICHO Y PAPIRO", "GOOD GIRL VELVET")
+  if (words.length === 3) {
+    let line1 = '';
+    let line2 = '';
+    if (words[1].length <= 2) {
+      // Conectores cortos como "Y", "DE", "EN", "EL" se agrupan en línea 1: "NICHO Y" / "PAPIRO"
+      line1 = `${words[0]} ${words[1]}`;
+      line2 = words[2];
+    } else {
+      const opt1 = [`${words[0]}`, `${words[1]} ${words[2]}`];
+      const opt2 = [`${words[0]} ${words[1]}`, `${words[2]}`];
+      if (Math.abs(opt1[0].length - opt1[1].length) <= Math.abs(opt2[0].length - opt2[1].length)) {
+        line1 = opt1[0];
+        line2 = opt1[1];
+      } else {
+        line1 = opt2[0];
+        line2 = opt2[1];
+      }
+    }
+    const maxLen = Math.max(line1.length, line2.length);
+    const fontSize = maxLen <= 7 ? '2.5cqw' : maxLen <= 9 ? '2.2cqw' : '1.9cqw';
+    return { lines: [line1, line2], fontSize };
+  }
+
+  // 4 o más palabras: partir en 2 líneas balanceadas por longitud
+  let bestSplit = 1;
+  let minDiff = 999;
+  for (let i = 1; i < words.length; i++) {
+    const l1 = words.slice(0, i).join(' ').length;
+    const l2 = words.slice(i).join(' ').length;
+    const diff = Math.abs(l1 - l2);
+    if (diff < minDiff) {
+      minDiff = diff;
+      bestSplit = i;
+    }
+  }
+  const line1 = words.slice(0, bestSplit).join(' ');
+  const line2 = words.slice(bestSplit).join(' ');
+  const maxLen = Math.max(line1.length, line2.length);
+  const fontSize = maxLen <= 8 ? '2.3cqw' : maxLen <= 11 ? '2.0cqw' : '1.7cqw';
+  return { lines: [line1, line2], fontSize };
+}
+
+

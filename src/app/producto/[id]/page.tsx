@@ -26,7 +26,7 @@ import { getProductImage } from '@/lib/perfumeImages';
 import { getFragranceProfile, getFragranceAccordBars } from '@/lib/fragranceProfiles';
 import ProductCard from '@/components/ecommerce/ProductCard';
 import FragranceNotesVisual from '@/components/ecommerce/FragranceNotesVisual';
-import { getInspiracionPerfumeName, formatPerfumeDisplayName } from '@/lib/perfumeNames';
+import { getInspiracionPerfumeName, formatPerfumeDisplayName, getBottleLabelConfig } from '@/lib/perfumeNames';
 import { getFragranceDescription } from '@/lib/fragranceDescriptions';
 import { resolveTargetProductId } from '@/lib/productUrl';
 
@@ -315,20 +315,28 @@ export default function ProductDetailPage() {
               />
               
               {/* Overlay CSS para el nombre dinámico del bote de esencia */}
-              {productImage === '/images/essence_bottle_blank.webp' && (
-                <div className="absolute inset-0 pointer-events-none transition-transform duration-500 group-hover:scale-[1.05] origin-center">
-                  <div className="absolute flex flex-col items-center justify-center w-full -translate-y-1/2" style={{ top: '65.5%', left: '0%' }}>
-                    <div className="flex flex-col items-center justify-center w-[31%] text-center">
-                      <span className="text-[#111111] font-[800] tracking-wide leading-none" style={{
-                        fontSize: displayName.length > 25 ? '2.5cqw' : displayName.length > 15 ? '2.9cqw' : '3.4cqw'
-                      }}>
-                        {displayName.toUpperCase().replace(/\s+[HFU]$/i, '')}
-                      </span>
-                      <div className="mt-[1.5cqw] w-[30%] h-[2px] bg-[#111111]"></div>
+              {productImage === '/images/essence_bottle_blank.webp' && (() => {
+                const { lines, fontSize } = getBottleLabelConfig(displayName);
+                return (
+                  <div className="absolute inset-0 pointer-events-none transition-transform duration-500 group-hover:scale-[1.05] origin-center">
+                    <div className="absolute flex flex-col items-center justify-center w-full -translate-y-1/2" style={{ top: '65%', left: '0%' }}>
+                      <div className="flex flex-col items-center justify-center w-[29%] max-w-[29%] text-center px-0.5">
+                        <div
+                          className="flex flex-col items-center justify-center text-[#111111] font-[800] tracking-wide leading-[1.12]"
+                          style={{ fontSize }}
+                        >
+                          {lines.map((line, idx) => (
+                            <span key={idx} className="block whitespace-nowrap">
+                              {line}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="mt-[1.2cqw] w-[24%] h-[1px] bg-[#111111]/80"></div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
 
               {/* Badge de categoría / género sobre la imagen */}
