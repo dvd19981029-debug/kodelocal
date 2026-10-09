@@ -37,6 +37,7 @@ import {
   History,
   RotateCcw,
   Sparkles,
+  BrainCircuit,
   ChevronDown,
   Store
 } from 'lucide-react';
@@ -78,6 +79,7 @@ type AdminTab =
   | 'reportes-periodo' 
   | 'reportes-financieros' 
   | 'compras'
+  | 'abastecimiento'
   | 'usuarios' 
   | 'roles' 
   | 'configuracion'
@@ -944,10 +946,24 @@ export default function AdminPage() {
                     {purchases.filter(p => p.paymentStatus === 'PENDIENTE').length} CxP
                   </span>
                 ) : (
-                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-100/50 text-indigo-700">
-                    {purchases.length}
+                  <span className="text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
                   </span>
                 )}
+              </button>
+              <button
+                onClick={() => setActiveTab('abastecimiento')}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+                  activeTab === 'abastecimiento'
+                    ? 'clay-btn-primary !shadow-[3px_4px_10px_rgba(79,70,229,0.35)]'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <BrainCircuit className="w-4 h-4 text-emerald-500" />
+                  <span>Abastecimiento Inteligente</span>
+                </div>
+                <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 font-black uppercase tracking-wider">Nuevo</span>
               </button>
             </div>
           </div>
@@ -1909,6 +1925,13 @@ export default function AdminPage() {
         {activeTab === 'configuracion-kode' && (
           <div className="animate-in fade-in duration-150">
             <ConfiguracionKodeModule />
+          </div>
+        )}
+
+        {/* ================= TAB 13: ABASTECIMIENTO INTELIGENTE ================= */}
+        {activeTab === 'abastecimiento' && (
+          <div className="animate-in fade-in duration-150">
+            <AbastecimientoInteligentePage />
           </div>
         )}
 
