@@ -43,9 +43,11 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { productId, type, quantity, previousStock, newStock, costPrice, unitPrice, reference, notes, userName } = body;
+    let { productId, type, quantity, previousStock, newStock, costPrice, unitPrice, reference, notes, userName } = body;
 
-    if (!productId || !type || quantity === undefined || previousStock === undefined || newStock === undefined) {
+    
+    quantity = Math.round(Number(quantity));
+    if (!productId || !type || quantity === undefined || isNaN(quantity) || previousStock === undefined || newStock === undefined) {
       return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -53,12 +55,11 @@ export async function POST(request: Request) {
       const isHalf = notes?.includes('½') || notes?.includes('MEDIA_ONZA');
       
       // Bloquear la fila de producto para lectura y cálculo preciso
-      const prodRows = await tx.$queryRaw<any[]>`SELECT "stock", "stockHalf" FROM "Product" WHERE "id" = ${productId} FOR UPDATE`;
-      if (!prodRows || prodRows.length === 0) {
+      const currentProd = await tx.product.findUnique({ where: { id: productId } });
+      if (!currentProd) {
         throw new Error('Producto no encontrado');
       }
-      
-      const currentDbStock = isHalf ? (prodRows[0].stockHalf || 0) : (prodRows[0].stock || 0);
+      const currentDbStock = isHalf ? (currentProd.stockHalf || 0) : (currentProd.stock || 0);
       let calculatedNewStock = currentDbStock;
       
       if (type === 'ADJUSTMENT') {
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
 
       await tx.product.update({
         where: { id: productId },
-        data: isHalf ? { stockHalf: calculatedNewStock } : { stock: calculatedNewStock }
+        data: isHalf ? { stockHalf: Math.round(calculatedNewStock) } : { stock: Math.round(calculatedNewStock) }
       });
 
       return await tx.stockMovement.create({
@@ -84,8 +85,8 @@ export async function POST(request: Request) {
           productId,
           type,
           quantity: Math.abs(quantity),
-          previousStock: currentDbStock,
-          newStock: calculatedNewStock,
+          previousStock: Math.round(currentDbStock),
+          newStock: Math.round(calculatedNewStock),
           costPrice,
           unitPrice,
           reference,
