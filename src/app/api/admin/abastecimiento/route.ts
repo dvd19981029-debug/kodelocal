@@ -387,6 +387,12 @@ export async function POST(request: Request) {
       if (projectedStock < TARGET_DOS * p.adr) {
         neededOz = (TARGET_DOS * p.adr) - projectedStock;
         if (neededOz < 0) neededOz = 0;
+
+        // Filtro de Baja Rotación: Si la necesidad es muy pequeña (< 5 onzas), 
+        // no justificamos comprar 1 Kg entero porque el inventario se quedaría estancado por años.
+        if (neededOz < 5) {
+          neededOz = 0;
+        }
       }
       
       const neededKg = Math.ceil(neededOz / OZ_PER_KG); // Compra en Kilos cerrados
