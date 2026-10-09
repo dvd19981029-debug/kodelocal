@@ -228,14 +228,14 @@ export function getBottleLabelConfig(name: string): BottleLabelConfig {
   // 1 sola palabra (ej. "FIERA", "MARINO", "HIEDRAFRAIS")
   if (words.length === 1) {
     const len = clean.length;
-    const fontSize = len <= 6 ? '3.5cqw' : len <= 9 ? '3.0cqw' : len <= 12 ? '2.5cqw' : '2.1cqw';
+    const fontSize = len <= 6 ? '5.5cqw' : len <= 9 ? '4.8cqw' : len <= 12 ? '4.2cqw' : '3.6cqw';
     return { lines: [clean], fontSize };
   }
 
   // 2 palabras (ej. "EUROBOY INTENSE", "DAVID OCEAN", "FIERA ELIXIR")
   if (words.length === 2) {
     const maxLen = Math.max(words[0].length, words[1].length);
-    const fontSize = maxLen <= 6 ? '2.8cqw' : maxLen <= 8 ? '2.5cqw' : maxLen <= 11 ? '2.2cqw' : '1.9cqw';
+    const fontSize = maxLen <= 6 ? '4.5cqw' : maxLen <= 8 ? '4.0cqw' : maxLen <= 11 ? '3.5cqw' : '3.0cqw';
     return { lines: [words[0], words[1]], fontSize };
   }
 
@@ -259,7 +259,7 @@ export function getBottleLabelConfig(name: string): BottleLabelConfig {
       }
     }
     const maxLen = Math.max(line1.length, line2.length);
-    const fontSize = maxLen <= 7 ? '2.5cqw' : maxLen <= 9 ? '2.2cqw' : '1.9cqw';
+    const fontSize = maxLen <= 7 ? '4.2cqw' : maxLen <= 9 ? '3.6cqw' : '3.0cqw';
     return { lines: [line1, line2], fontSize };
   }
 
@@ -278,7 +278,7 @@ export function getBottleLabelConfig(name: string): BottleLabelConfig {
   const line1 = words.slice(0, bestSplit).join(' ');
   const line2 = words.slice(bestSplit).join(' ');
   const maxLen = Math.max(line1.length, line2.length);
-  const fontSize = maxLen <= 8 ? '2.3cqw' : maxLen <= 11 ? '2.0cqw' : '1.7cqw';
+  const fontSize = maxLen <= 8 ? '4.0cqw' : maxLen <= 11 ? '3.3cqw' : '2.8cqw';
   return { lines: [line1, line2], fontSize };
 }
 

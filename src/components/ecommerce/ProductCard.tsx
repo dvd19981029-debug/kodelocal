@@ -198,7 +198,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
               return (
                 <div className="absolute inset-0 pointer-events-none transition-transform duration-500 group-hover:scale-[1.08] origin-center">
                   <div className="absolute flex flex-col items-center justify-center w-full -translate-y-1/2" style={{ top: '65%', left: '0%' }}>
-                    <div className="flex flex-col items-center justify-center w-[29%] max-w-[29%] text-center px-0.5">
+                    <div className="flex flex-col items-center justify-center w-[35%] max-w-[35%] text-center px-0.5">
                       <div
                         className="flex flex-col items-center justify-center text-[#111111] font-[800] tracking-wide leading-[1.12]"
                         style={{ fontSize }}
@@ -209,7 +209,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                           </span>
                         ))}
                       </div>
-                      <div className="mt-[1.2cqw] w-[24%] h-[1px] bg-[#111111]/80"></div>
+                      <div className="mt-[1.2cqw] w-[30%] h-[2px] bg-[#111111]/80"></div>
                     </div>
                   </div>
                 </div>
