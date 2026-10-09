@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { INITIAL_PRODUCTS, ProductItem, CartItem, SaleRecord, PERFUME_CATEGORIES, getStoredProducts } from '@/lib/store';
 import CotizacionModal from '@/components/pos/CotizacionModal';
 import ThermalTicket from '@/components/pos/ThermalTicket';
+import { StockWarningBanner } from '@/components/pos/StockWarningBanner';
 import { PosCustomerModule } from '@/components/pos/PosCustomerModule';
 import { PosSalesModule } from '@/components/pos/PosSalesModule';
 import { PosCajaModule } from '@/components/pos/PosCajaModule';

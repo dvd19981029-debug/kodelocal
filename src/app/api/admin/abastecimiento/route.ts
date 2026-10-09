@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { budget, catalog } = body;
+    const { budget, catalog, historyDays = 30, targetDos = 60, leadTime = 14 } = body;
     
     // Si no se proporcionó catálogo (o es un arreglo vacío), usar el catálogo por defecto
     const DEFAULT_CATALOG = [
@@ -276,7 +276,7 @@ export async function POST(request: Request) {
 
     // 1. Calcular ADR (Average Daily Rate) basado en los últimos 30 días
     const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - Number(historyDays));
 
     const recentSales = await prisma.saleItem.groupBy({
       by: ['productId'],
@@ -294,7 +294,7 @@ export async function POST(request: Request) {
     const velocityMap: Record<string, number> = {};
     for (const sale of recentSales) {
       // quantity total in 30 days / 30 = sales per day
-      velocityMap[sale.productId] = (sale._sum.quantity || 0) / 30;
+      velocityMap[sale.productId] = (sale._sum.quantity || 0) / Number(historyDays);
     }
 
     // 2. Traer productos de la base de datos
@@ -334,13 +334,19 @@ export async function POST(request: Request) {
 
     // 4. Algoritmo de la Mochila Fraccional (Greedy approach por Prioridad)
     // Objetivo: Cubrir hasta 60 días de supervivencia.
-    const TARGET_DOS = 60;
+    const TARGET_DOS = Number(targetDos);
+    const LEAD_TIME = Number(leadTime);
     
     // Calcular requerimientos
     const requirements = analysis.map(p => {
       let neededOz = 0;
-      if (p.dos < TARGET_DOS) {
-        neededOz = (TARGET_DOS - p.dos) * p.adr;
+      // Consideramos el Lead Time: el stock real cuando llegue el pedido será:
+      // stock_proyectado = stock_actual - (ADR * LEAD_TIME)
+      const projectedStock = p.stock - (p.adr * LEAD_TIME);
+      
+      if (projectedStock < TARGET_DOS * p.adr) {
+        neededOz = (TARGET_DOS * p.adr) - projectedStock;
+        if (neededOz < 0) neededOz = 0;
       }
       
       const neededKg = Math.ceil(neededOz / OZ_PER_KG); // Compra en Kilos cerrados

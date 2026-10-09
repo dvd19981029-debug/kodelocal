@@ -16,7 +16,10 @@ import {
 import { getStaffToken } from '@/lib/auth';
 
 export function AbastecimientoModule() {
-  const [budget, setBudget] = useState<number>(3000);
+  const [budget, setBudget] = useState<string>('3000');
+  const [historyDays, setHistoryDays] = useState<string>('30');
+  const [targetDos, setTargetDos] = useState<string>('60');
+  const [leadTime, setLeadTime] = useState<string>('14');
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -74,7 +77,10 @@ export function AbastecimientoModule() {
           ...(token ? { 'x-staff-token': token } : {})
         },
         body: JSON.stringify({
-          budget,
+          budget: Number(budget),
+          historyDays: Number(historyDays),
+          targetDos: Number(targetDos),
+          leadTime: Number(leadTime),
           catalog: catalogData
         })
       });
