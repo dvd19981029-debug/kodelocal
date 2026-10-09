@@ -9,5 +9,21 @@
       "tablet": 0
     },
     "sources": {}
+  },
+  "2026-10-08": {
+    "date": "2026-10-08",
+    "visits": 2,
+    "pageViews": 2,
+    "devices": {
+      "mobile": 0,
+      "desktop": 2,
+      "tablet": 0
+    },
+    "sources": {
+      "Tráfico Directo": 2
+    },
+    "hours": {
+      "23": 2
+    }
   }
 }

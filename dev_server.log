@@ -1144,3 +1144,4 @@ prisma:query
 prisma:query INSERT INTO "public"."StockMovement" ("id","productId","type","quantity","previousStock","newStock","reference","notes","createdAt") VALUES ($1,$2,CAST($3::text AS "public"."MovementType"),$4,$5,$6,$7,$8,$9), ($10,$11,CAST($12::text AS "public"."MovementType"),$13,$14,$15,$16,$17,$18)
  POST /api/sales 200 in 3.9s (next.js: 3ms, proxy.ts: 7ms, application-code: 3.8s)
 prisma:query COMMIT
+[?25h

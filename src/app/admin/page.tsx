@@ -55,6 +55,8 @@ import { INITIAL_PRODUCTS, ProductItem, PERFUME_CATEGORIES, SaleRecord, resetDat
 import ComprasModule from '@/components/admin/ComprasModule';
 import KardexModule from '@/components/admin/KardexModule';
 import ConfiguracionKodeModule from '@/components/admin/ConfiguracionKodeModule';
+import { AbastecimientoModule } from "@/components/admin/AbastecimientoModule";
+
 import AromaniakDashboardModule from '@/components/admin/AromaniakDashboardModule';
 import {
   getStoredPurchases,
