@@ -330,10 +330,10 @@ export default function EcommerceHomePage() {
 
     return (
       <div
-        className={`flex flex-col sm:flex-row items-center justify-between gap-3 ${
+        className={`flex flex-col sm:flex-row items-center justify-between gap-6 ${
           position === 'top'
-            ? 'pb-4 pt-1 border-b border-slate-200/80'
-            : 'pt-6 border-t border-slate-200/80'
+            ? 'pb-6 pt-2 mb-6 border-b border-slate-200/80'
+            : 'mt-8 pt-8 pb-14 border-t-2 border-slate-200/80'
         }`}
       >
         <span className="text-xs text-slate-500 font-semibold">
