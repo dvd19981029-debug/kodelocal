@@ -316,7 +316,7 @@ export default function ProductDetailPage() {
               
               {/* Overlay CSS para el nombre dinámico del bote de esencia */}
               {productImage === '/images/essence_bottle_blank.webp' && (
-                <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center transition-transform duration-500 group-hover:scale-105" style={{ top: '8%', left: '0%' }}>
+                <div className="absolute pointer-events-none flex flex-col items-center justify-center transition-transform duration-500 group-hover:scale-105" style={{ top: '65.5%', left: '50%', transform: 'translate(-50%, -50%)', width: '80%' }}>
                   <div className="flex flex-col items-center justify-center w-[45%] text-center">
                     <span className="text-[#111111] font-[800] tracking-wide leading-none" style={{
                       fontSize: displayName.length > 25 ? '0.75rem' : displayName.length > 15 ? '0.9rem' : '1.1rem'

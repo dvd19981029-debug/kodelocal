@@ -194,7 +194,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
             />
             {/* Texto superpuesto dinámico mediante HTML/CSS para esencias */}
             {productImage === '/images/essence_bottle_blank.webp' && (
-              <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center transition-transform duration-500 group-hover:scale-108" style={{ top: '8%', left: '0%' }}>
+              <div className="absolute pointer-events-none flex flex-col items-center justify-center transition-transform duration-500 group-hover:scale-108" style={{ top: '65.5%', left: '50%', transform: 'translate(-50%, -50%)', width: '80%' }}>
                 <div className="flex flex-col items-center justify-center w-[45%] text-center">
                   <span className="text-[#111111] font-[800] tracking-wide leading-none" style={{
                     fontSize: displayName.length > 25 ? '0.45rem' : displayName.length > 15 ? '0.55rem' : '0.65rem'
