@@ -170,7 +170,7 @@ export async function POST(request: Request) {
             const product = await tx.product.findUnique({ where: { id: it.productId } });
             if (product) {
               const prevStock = product.stock;
-              const addedQty = Number(it.quantity || 0);
+              const addedQty = Math.round(Number(it.quantity || 0));
               const newStock = prevStock + addedQty;
               const newCost = Number(it.costPrice) > 0 ? Number(it.costPrice) : Number(product.cost);
 

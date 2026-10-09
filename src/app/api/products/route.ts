@@ -183,8 +183,11 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: true, count: result.count });
     }
 
-    const { id, sku, stock, stockHalf, isAvailableOnline, price, cost, priceHalfOunce, finishedPerfumePrice, puesto, officialName, imageUrl, name, brand, description } = body;
+    let { id, sku, stock, stockHalf, isAvailableOnline, price, cost, priceHalfOunce, finishedPerfumePrice, puesto, officialName, imageUrl, name, brand, description } = body;
 
+    
+    if (typeof stock === 'number') stock = Math.round(stock);
+    if (typeof stockHalf === 'number') stockHalf = Math.round(stockHalf);
     if (!id && !sku) {
       return NextResponse.json({ success: false, error: 'Product ID or SKU required' }, { status: 400 });
     }
