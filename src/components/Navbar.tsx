@@ -21,13 +21,10 @@ export function Navbar() {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
   const [roles, setRoles] = useState<CustomRole[]>([]);
-  const [users, setUsers] = useState<UserAccount[]>([]);
-  const [isSwitchUserOpen, setIsSwitchUserOpen] = useState(false);
 
   useEffect(() => {
     setCurrentUser(getActiveUser());
     setRoles(getStoredRoles());
-    setUsers(getStoredUsers());
   }, [pathname]);
 
   // Si estamos en la página de login, ocultamos la barra de navegación para una vista limpia
@@ -74,26 +71,15 @@ export function Navbar() {
     return item.checkAccess();
   });
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/kode/auth/logout', { method: 'POST' });
+    } catch(e) {}
+    if (typeof document !== 'undefined') {
+      document.cookie = 'kode_session_ui=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    }
     setActiveUser(null);
     router.push('/login');
-  };
-
-  const handleQuickSwitch = (u: UserAccount) => {
-    setActiveUser(u);
-    setCurrentUser(u);
-    setIsSwitchUserOpen(false);
-    // Redirigir a una vista que tenga permitida
-    const targetRole = roles.find(r => r.code === u.role);
-    if (u.role === 'ADMIN') {
-      router.push('/admin');
-    } else if (targetRole?.allowedViews.includes('bodega')) {
-      router.push('/bodega');
-    } else if (targetRole?.allowedViews.includes('pos')) {
-      router.push('/pos');
-    } else {
-      router.push('/pos');
-    }
   };
 
   return (

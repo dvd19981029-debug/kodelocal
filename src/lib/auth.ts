@@ -90,63 +90,7 @@ export interface UserAccount {
   createdAt: string;
 }
 
-export const INITIAL_USERS: UserAccount[] = [
-  {
-    id: 'user-admin',
-    name: 'Luis (Gerente General)',
-    email: 'gerente@kodelocal.com',
-    password: 'admin123',
-    pin: '9999',
-    role: 'ADMIN',
-    cashRegister: 'Todas',
-    isActive: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'user-cajero-1',
-    name: 'Ana Martínez (Cajera)',
-    email: 'caja1@kodelocal.com',
-    password: 'caja123',
-    pin: '1234',
-    role: 'CASHIER',
-    cashRegister: 'Caja 1 - Mostrador Principal',
-    isActive: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'user-bodega-1',
-    name: 'Kevin Ramos (Bodega / Preparador)',
-    email: 'bodega@kodelocal.com',
-    password: 'bodega123',
-    pin: '5555',
-    role: 'BODEGA',
-    cashRegister: 'Estantería Central - Ventanilla',
-    isActive: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'user-cajero-2',
-    name: 'Carlos Rivas (Ventas y Cotizaciones)',
-    email: 'caja2@kodelocal.com',
-    password: 'caja123',
-    pin: '4321',
-    role: 'CASHIER',
-    cashRegister: 'Caja 2 - WhatsApp / Envíos',
-    isActive: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'user-logistica',
-    name: 'Marcos Soto (Despachador)',
-    email: 'despacho@kodelocal.com',
-    password: 'despacho123',
-    pin: '7777',
-    role: 'DESPACHO',
-    cashRegister: 'Ventanilla y Mensajería',
-    isActive: true,
-    createdAt: new Date().toISOString(),
-  },
-];
+export const INITIAL_USERS: UserAccount[] = [];
 
 export function getStoredRoles(): CustomRole[] {
   if (typeof window === 'undefined') return INITIAL_ROLES;
@@ -181,7 +125,7 @@ export function getStoredUsers(): UserAccount[] {
 
 
 export function getActiveUser(): UserAccount | null {
-  if (typeof window === 'undefined') return INITIAL_USERS[0];
+  if (typeof window === 'undefined') return null;
   
   // 1. Try to read from real session cookie
   const match = document.cookie.match(new RegExp('(^| )kode_session_ui=([^;]+)'));
@@ -207,7 +151,7 @@ export function getActiveUser(): UserAccount | null {
     } catch (e) {}
   }
   
-  return INITIAL_USERS[0];
+  return null;
 }
 
 
