@@ -176,6 +176,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                 : 'hover:scale-[1.015] hover:shadow-[4px_8px_16px_rgba(88,28,135,0.15)]'
             }`}
           >
+            
             <img
               src={productImage}
               alt={displayName}
@@ -191,6 +192,20 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                 isOutOfStock ? 'grayscale-[35%]' : ''
               }`}
             />
+            {/* Texto superpuesto dinámico mediante HTML/CSS para esencias */}
+            {productImage === '/images/essence_bottle_blank.webp' && (
+              <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center transition-transform duration-500 group-hover:scale-108" style={{ top: '8%', left: '0%' }}>
+                <div className="flex flex-col items-center justify-center w-[45%] text-center">
+                  <span className="text-[#111111] font-[800] tracking-wide leading-none" style={{
+                    fontSize: inspiracion.length > 25 ? '0.45rem' : inspiracion.length > 15 ? '0.55rem' : '0.65rem'
+                  }}>
+                    {inspiracion.toUpperCase().replace(/\s+[HFU]$/i, '')}
+                  </span>
+                  <div className="mt-[2px] w-[30%] h-[1px] bg-[#111111]"></div>
+                </div>
+              </div>
+            )}
+
 
             {/* Badge de género limpio sobre la foto (sin número ni emojis) */}
             <div className="absolute top-2 left-2 z-10">
