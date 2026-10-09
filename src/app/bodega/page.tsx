@@ -52,39 +52,73 @@ import {
 import { getActiveUser, UserAccount, getStaffToken } from '@/lib/auth';
 import { supabase } from '@/lib/supabaseClient';
 
-// Sonido sintético de campanilla doble para alertar nuevas comandas web en tiempo real
-function playNewOrderChime() {
-  try {
-    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-    const now = ctx.currentTime;
-    
-    // Tono 1 (D5 - 587Hz)
-    const osc1 = ctx.createOscillator();
-    const gain1 = ctx.createGain();
-    osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(587.33, now);
-    gain1.gain.setValueAtTime(0.28, now);
-    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-    osc1.connect(gain1);
-    gain1.connect(ctx.destination);
-    osc1.start(now);
-    osc1.stop(now + 0.36);
+// Singleton para el AudioContext
+let globalAudioCtx: AudioContext | null = null;
 
-    // Tono 2 (A5 - 880Hz)
-    const osc2 = ctx.createOscillator();
-    const gain2 = ctx.createGain();
-    osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(880, now + 0.14);
-    gain2.gain.setValueAtTime(0.28, now + 0.14);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
-    osc2.connect(gain2);
-    gain2.connect(ctx.destination);
-    osc2.start(now + 0.14);
-    osc2.stop(now + 0.66);
-  } catch (e) {
-    // AudioContext puede estar en estado suspendido hasta interacción inicial del usuario
+export function initGlobalAudio() {
+  if (typeof window === 'undefined') return;
+  try {
+    if (!globalAudioCtx) {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioCtx) globalAudioCtx = new AudioCtx();
+    }
+    if (globalAudioCtx && globalAudioCtx.state === 'suspended') {
+      globalAudioCtx.resume();
+    }
+    // Despertar TTS silenciosamente para cargar las voces
+    if (window.speechSynthesis) {
+      const u = new SpeechSynthesisUtterance('');
+      u.volume = 0;
+      window.speechSynthesis.speak(u);
+      window.speechSynthesis.getVoices();
+    }
+  } catch (err) {
+    console.warn('No se pudo inicializar el audio', err);
+  }
+}
+
+// Sonido sintético y Voz TTS (Text-to-Speech) para notificar comandas detalladas
+function playNewOrderChime(orderDetails?: string) {
+  try {
+    if (globalAudioCtx) {
+      if (globalAudioCtx.state === 'suspended') globalAudioCtx.resume();
+      const now = globalAudioCtx.currentTime;
+      const osc = globalAudioCtx.createOscillator();
+      const gainNode = globalAudioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880.00, now);
+      gainNode.gain.setValueAtTime(0, now);
+      gainNode.gain.linearRampToValueAtTime(0.3, now + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+      osc.frequency.setValueAtTime(1108.73, now + 0.15);
+      gainNode.gain.setValueAtTime(0, now + 0.15);
+      gainNode.gain.linearRampToValueAtTime(0.3, now + 0.17);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+      osc.connect(gainNode);
+      gainNode.connect(globalAudioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 1.5);
+    }
+
+    if (orderDetails && typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(orderDetails);
+      utterance.lang = 'es-US';
+      utterance.rate = 0.85;
+      utterance.pitch = 0.95;
+      
+      const voices = window.speechSynthesis.getVoices();
+      const spanishVoices = voices.filter(v => v.lang.startsWith('es'));
+      const maleVoice = spanishVoices.find(v => v.name.toLowerCase().includes('google') || v.name.toLowerCase().includes('pablo') || v.name.toLowerCase().includes('diego') || v.name.toLowerCase().includes('male'));
+      if (maleVoice) utterance.voice = maleVoice;
+      else if (spanishVoices.length > 0) utterance.voice = spanishVoices[0];
+      
+      setTimeout(() => {
+        window.speechSynthesis.speak(utterance);
+      }, 500);
+    }
+  } catch (err) {
+    console.error('Error reproduciendo sonido/voz de campanilla:', err);
   }
 }
 
