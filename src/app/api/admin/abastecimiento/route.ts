@@ -337,9 +337,9 @@ export async function POST(request: Request) {
       const v30 = (recentMap[p.id] || 0) / 30; // oz por día reciente
       const v90 = (historyMap[p.id] || 0) / 60; // oz por día histórico previo
 
-      let adr = 0.1;
+      let adr = 0;
       if (v30 === 0 && v90 === 0) {
-        adr = 0.05; // Casi muerto
+        adr = 0; // Totalmente muerto
       } else if (v30 > v90) {
         adr = v30; // Tendencia al alza: Ser agresivos, usar flujo reciente
       } else if (v30 < v90) {
@@ -356,8 +356,8 @@ export async function POST(request: Request) {
         }
       } else {
         adr = v30;
-      } // mínimo 0.1 onzas/día para evitar división por 0
-      const dos = p.stock / adr; // Days of supply
+      }
+      const dos = adr > 0 ? p.stock / adr : 9999; // Days of supply
 
       return {
         id: p.id,

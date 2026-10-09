@@ -99,47 +99,34 @@ export function AbastecimientoModule() {
   };
 
   const handleDownloadCsv = () => {
-    if (!draftResult) return;
+    if (!draftResult || !draftResult.draft) return;
     
-    const wsData = [
-      ["ORDEN PRELIMINAR DE COMPRA - ESENCIAS FINAS A GRANEL"],
-      ["Proveedor: APAESA", "Fecha: " + new Date().toLocaleDateString()],
-      [],
-      ["No.", "Código Proveedor", "Fragancia (Contratipo)", "Cantidad Sugerida (Kg)", "Precio Unit. ($/Kg)", "Subtotal ($)"]
-    ];
-
-    let totalGlobal = 0;
+    // El separador debe ser punto y coma para que Excel (Latinoamérica) lo reconozca
+    const separator = ';';
+    // Agregar BOM al inicio del archivo para que Excel reconozca correctamente los acentos y UTF-8
+    let csvContent = '\uFEFF'; 
     
-    draftResult.draft.forEach((item, index) => {
-      wsData.push([
-        index + 1,
-        item.supplierCode,
-        item.productName,
-        item.suggestedKg,
-        item.pricePerKg,
-        item.totalCost
-      ]);
-      totalGlobal += item.totalCost;
+    // Encabezados
+    csvContent += `Código Proveedor${separator}Fragancia (Contratipo)${separator}Cantidad Sugerida (Kg)${separator}Precio Unit. ($/Kg)${separator}Subtotal ($)\n`;
+    
+    let total = 0;
+    draftResult.draft.forEach((item) => {
+      csvContent += `"${item.supplierCode}"${separator}"${item.productName}"${separator}${item.suggestedKg}${separator}${item.pricePerKg}${separator}${item.totalCost}\n`;
+      total += item.totalCost;
     });
-
-    wsData.push([]);
-    wsData.push(["", "", "", "", "TOTAL ESTIMADO:", totalGlobal]);
-
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
     
-    ws['!cols'] = [
-      { wch: 5 },
-      { wch: 15 },
-      { wch: 45 },
-      { wch: 20 },
-      { wch: 20 },
-      { wch: 20 }
-    ];
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Orden de Compra");
+    csvContent += `${separator}${separator}${separator}TOTAL ESTIMADO:${separator}${total.toFixed(2)}\n`;
     
-    XLSX.writeFile(wb, "Orden_Sugerida_APAESA.xlsx");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", "Orden_Sugerida_APAESA.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
