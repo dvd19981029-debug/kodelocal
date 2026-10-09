@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server';
-import { queryKode } from '@/lib/kodeDb';
+import { prisma } from '@/lib/prisma';
+import { createStaffInternalToken } from '@/lib/customerAuthToken';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { identifier, password } = body;
+    const { identifier, password, isPin } = body;
 
     if (!identifier || !password) {
       return NextResponse.json(
-        { success: false, error: 'Ingresa tu usuario y contraseña' },
+        { success: false, error: 'Ingresa credenciales o PIN' },
         { status: 400 }
       );
     }
@@ -18,134 +19,68 @@ export async function POST(request: Request) {
     const cleanId = String(identifier).trim();
     const cleanPwd = String(password).trim();
 
-    // 1. Validar si es el Gerente General / Admin de kodelocal
-    const isAdminUser =
-      cleanId.toLowerCase() === 'gerente@kodelocal.com' ||
-      cleanId.toLowerCase() === 'user-admin' ||
-      cleanId.toLowerCase() === 'admin' ||
-      cleanId.toLowerCase() === 'luis';
+    let staffUser = null;
 
-    const isAdminPwd =
-      cleanPwd === 'admin123' ||
-      cleanPwd === '9999' ||
-      cleanPwd === 'Kode2026*';
-
-    if (isAdminUser && isAdminPwd) {
-      const adminData = {
-        id: 'user-admin',
-        nombre: 'Luis (Gerente General)',
-        email: 'gerente@kodelocal.com',
-        username: 'admin',
-        rol: 'ADMIN',
-        telefono: '7788-9900',
-      };
-
-      const response = NextResponse.json({
-        success: true,
-        message: 'Bienvenido, Gerente General',
-        user: adminData,
+    if (isPin) {
+      staffUser = await prisma.staffUser.findFirst({
+        where: { email: cleanId, pin: cleanPwd, isActive: true }
       });
-
-      // Guardar cookie de sesión
-      response.cookies.set('kode_session', JSON.stringify({
-        id: adminData.id,
-        nombre: adminData.nombre,
-        email: adminData.email,
-        rol: adminData.rol,
-      }), {
-        path: '/',
-        maxAge: 60 * 60 * 24 * 30, // 30 días
-        sameSite: 'lax',
+    } else {
+      // For standard password logic (if they want non-Google passwords in future)
+      staffUser = await prisma.staffUser.findFirst({
+        where: { email: cleanId, passwordHash: cleanPwd, isActive: true }
       });
-
-      return response;
     }
 
-    // 2. Buscar en public.usuarios (Asesoras y personal de KÖDE)
-    const sql = `
-      SELECT 
-        id, 
-        nombre, 
-        email, 
-        COALESCE(username, '') AS username, 
-        COALESCE(password, '') AS password, 
-        COALESCE(telefono, '') AS telefono, 
-        COALESCE(doc_numero, '') AS doc_numero,
-        COALESCE(rol, 'VENDEDORA') AS rol, 
-        activo
-      FROM public.usuarios
-      WHERE (
-        id::text = $1 
-        OR LOWER(email) = LOWER($1) 
-        OR LOWER(COALESCE(username, '')) = LOWER($1)
-        OR LOWER(nombre) = LOWER($1)
-      )
-      AND activo = TRUE
-      LIMIT 1
-    `;
-
-    const result = await queryKode(sql, [cleanId]);
-
-    if (result.rowCount === 0) {
+    if (!staffUser) {
       return NextResponse.json(
-        { success: false, error: 'Usuario no encontrado o inactivo' },
+        { success: false, error: 'Credenciales o PIN inválidos.' },
         { status: 401 }
       );
     }
 
-    const usuario = result.rows[0];
+    await prisma.staffUser.update({
+      where: { id: staffUser.id },
+      data: { lastLogin: new Date() }
+    });
 
-    // 3. Comprobar contraseña o PIN
-    const last4Phone = usuario.telefono ? usuario.telefono.replace(/\D/g, '').slice(-4) : '';
-    const last4Doc = usuario.doc_numero ? usuario.doc_numero.replace(/\D/g, '').slice(-4) : '';
-
-    const pwdMatches =
-      cleanPwd === usuario.password ||
-      cleanPwd === 'Kode2026*' ||
-      cleanPwd === '9999' ||
-      cleanPwd === 'admin123' ||
-      (last4Phone && cleanPwd === last4Phone) ||
-      (last4Doc && cleanPwd === last4Doc) ||
-      !usuario.password;
-
-    if (!pwdMatches) {
-      return NextResponse.json(
-        { success: false, error: 'Contraseña o PIN incorrecto. Intenta nuevamente.' },
-        { status: 401 }
-      );
-    }
-
-    const userData = {
-      id: usuario.id,
-      nombre: usuario.nombre,
-      email: usuario.email,
-      username: usuario.username,
-      rol: usuario.rol,
-      telefono: usuario.telefono,
-    };
+    const safeToken = createStaffInternalToken(staffUser.role);
 
     const response = NextResponse.json({
       success: true,
-      message: `¡Bienvenida, ${usuario.nombre}!`,
-      user: userData,
+      user: {
+        id: staffUser.id,
+        nombre: staffUser.name,
+        email: staffUser.email,
+        rol: staffUser.role
+      }
     });
 
-    response.cookies.set('kode_session', JSON.stringify({
-      id: userData.id,
-      nombre: userData.nombre,
-      email: userData.email,
-      rol: userData.rol,
+    response.cookies.set('kodelocal_staff_token', safeToken, {
+      path: '/',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7 // 7 days
+    });
+
+    response.cookies.set('kode_session_ui', JSON.stringify({
+      id: staffUser.id,
+      name: staffUser.name,
+      email: staffUser.email,
+      role: staffUser.role
     }), {
       path: '/',
-      maxAge: 60 * 60 * 24 * 30, // 30 días
       sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7
     });
 
     return response;
+
   } catch (error: any) {
-    console.error('Error en autenticación KÖDE:', error);
+    console.error('Login Auth Error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Error del servidor en login' },
+      { success: false, error: 'Error interno del servidor al autenticar.' },
       { status: 500 }
     );
   }

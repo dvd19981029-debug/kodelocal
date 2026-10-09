@@ -139,14 +139,7 @@ export async function PATCH(request: Request) {
                   verifyStaffInternalToken(staffCookieToken);
 
     // Si viene de operaciones internas del POS local o localhost
-    if (!isStaff) {
-      const host = request.headers.get('host') || '';
-      const referer = request.headers.get('referer') || '';
-      const isInternalLocal = host.includes('localhost') || host.includes('127.0.0.1') || referer.includes('/pos') || referer.includes('/inventario') || referer.includes('/admin');
-      if (isInternalLocal) {
-        isStaff = true;
-      }
-    }
+    
 
     if (!isStaff) {
       return NextResponse.json(
@@ -286,14 +279,7 @@ export async function POST(request: Request) {
                   verifyStaffInternalToken(bearerToken) || 
                   verifyStaffInternalToken(staffCookieToken);
 
-    if (!isStaff) {
-      const host = request.headers.get('host') || '';
-      const referer = request.headers.get('referer') || '';
-      const isInternalLocal = host.includes('localhost') || host.includes('127.0.0.1') || referer.includes('/pos') || referer.includes('/inventario') || referer.includes('/admin');
-      if (isInternalLocal) {
-        isStaff = true;
-      }
-    }
+    
 
     if (!isStaff) {
       return NextResponse.json({ success: false, error: 'No autorizado' }, { status: 401 });

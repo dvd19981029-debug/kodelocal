@@ -36,13 +36,7 @@ export async function POST(request: Request) {
                   verifyStaffInternalToken(bearerToken) || 
                   verifyStaffInternalToken(staffCookieToken);
 
-    if (!isStaff) {
-      const host = request.headers.get('host') || '';
-      const referer = request.headers.get('referer') || '';
-      if (host.includes('localhost') || host.includes('127.0.0.1') || referer.includes('/admin')) {
-        isStaff = true;
-      }
-    }
+    
 
     if (!isStaff) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });

@@ -29,53 +29,69 @@ export default function LoginPage() {
   
   const [error, setError] = useState('');
 
-  const handleLoginWithCredentials = (e: React.FormEvent) => {
+  
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const handleLoginWithPin = async (pinValue: string) => {
+    setError('');
+    setIsLoggingIn(true);
+    try {
+      const res = await fetch('/api/kode/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: 'cajero1@kodelocal.com', password: pinValue, isPin: true })
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        if (data.user.rol === 'ADMIN') {
+          router.push('/admin');
+        } else {
+          router.push('/pos');
+        }
+      } else {
+        setError(data.error || 'PIN incorrecto.');
+      }
+    } catch (e) {
+      setError('Error de red.');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  
+  const handleLoginWithCredentialsForm = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    const users = getStoredUsers();
-    const found = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password && u.isActive);
-
-    if (found) {
-      setActiveUser(found);
-      if (found.role === 'ADMIN') {
-        router.push('/admin');
+    setIsLoggingIn(true);
+    try {
+      const res = await fetch('/api/kode/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: email, password: password, isPin: false })
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        if (data.user.rol === 'ADMIN') {
+          router.push('/admin');
+        } else {
+          router.push('/pos');
+        }
       } else {
-        router.push('/pos');
+        setError(data.error || 'Credenciales inválidas.');
       }
-    } else {
-      setError('Credenciales inválidas. Verifica tu correo y contraseña.');
+    } catch (e) {
+      setError('Error de red.');
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
-  const handleLoginWithPin = (pinValue: string) => {
-    setError('');
-    const users = getStoredUsers();
-    const found = users.find(u => u.pin === pinValue && u.isActive);
-
-    if (found) {
-      setActiveUser(found);
-      if (found.role === 'ADMIN') {
-        router.push('/admin');
-      } else {
-        router.push('/pos');
-      }
-    } else {
-      setError('PIN incorrecto. Ingresa un PIN registrado.');
-    }
+  const handleGoogleLogin = () => {
+    window.location.href = '/api/auth/google';
   };
 
-  const handleQuickLogin = (targetEmail: string) => {
-    const users = getStoredUsers();
-    const found = users.find(u => u.email === targetEmail);
-    if (found) {
-      setActiveUser(found);
-      if (found.role === 'ADMIN') {
-        router.push('/admin');
-      } else {
-        router.push('/pos');
-      }
-    }
-  };
 
   const handleNumpadClick = (num: string) => {
     if (pin.length < 4) {
@@ -136,7 +152,7 @@ export default function LoginPage() {
 
         {/* Modo 1: Correo y Contraseña */}
         {mode === 'CREDENTIALS' ? (
-          <form onSubmit={handleLoginWithCredentials} className="space-y-4">
+          <form onSubmit={handleLoginWithCredentialsForm} className="space-y-4">
             <div>
               <label className="text-xs font-bold text-slate-700 block mb-1">Correo Electrónico</label>
               <div className="relative">
