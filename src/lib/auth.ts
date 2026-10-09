@@ -49,7 +49,7 @@ export const INITIAL_ROLES: CustomRole[] = [
     name: 'Cajero / Vendedor',
     description: 'Ventas en mostrador, emisión de prefacturas y cobro. Información de costos estrictamente oculta.',
     color: 'indigo',
-    allowedViews: ['pos', 'ventas'],
+    allowedViews: ['pos', 'ventas', 'bodega', 'inventario'],
     canSeeCosts: false,
     canEditPrices: false,
     isSystem: true,

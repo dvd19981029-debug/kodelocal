@@ -61,7 +61,7 @@ export function Navbar() {
       icon: Box, 
       isAdmin: false,
       matchPaths: ['/bodega', '/inventario'],
-      checkAccess: () => currentUser?.role === 'ADMIN' || allowedViews.includes('bodega') || allowedViews.includes('inventario')
+      checkAccess: () => currentUser?.role === 'ADMIN' || currentUser?.role === 'CASHIER' || allowedViews.includes('bodega') || allowedViews.includes('inventario')
     },
   ];
 
