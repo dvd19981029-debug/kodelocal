@@ -46,6 +46,8 @@ export default function LoginPage() {
       if (data.success) {
         if (data.user.rol === 'ADMIN') {
           router.push('/admin');
+        } else if (data.user.rol === 'BODEGA') {
+          router.push('/bodega');
         } else {
           router.push('/pos');
         }
@@ -75,6 +77,8 @@ export default function LoginPage() {
       if (data.success) {
         if (data.user.rol === 'ADMIN') {
           router.push('/admin');
+        } else if (data.user.rol === 'BODEGA') {
+          router.push('/bodega');
         } else {
           router.push('/pos');
         }

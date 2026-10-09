@@ -272,9 +272,28 @@ export default function BodegaPage() {
         if (!isFirstLoadRef.current) {
           const newOrders = pendingWeb.filter(s => !knownOrderIdsRef.current.has(s.id));
           if (newOrders.length > 0) {
-            if (soundEnabled) playNewOrderChime();
             const first = newOrders[0];
-            showToast(`🔔 ¡Nueva comanda web recibida! #${first.saleNumber} (${first.cliente?.nombre || 'Cliente'})`);
+            const clientName = first.cliente?.nombre || first.customerName || 'Cliente';
+            
+            // Construir el texto detallado con pausas usando comas
+            let speechText = `Nuevo pedido, cliente ${clientName}. Lléva: `;
+            if (first.items && first.items.length > 0) {
+              const itemTexts = first.items.map((it: any) => `${it.quantity} ${it.unit === 'Onza' ? (it.quantity === 1 ? 'onza' : 'onzas') : 'unidades'} de ${it.name}, en el estante ${it.puesto || 'A1'}`);
+              speechText += itemTexts.join(', y ');
+            } else {
+              speechText += 'varios productos, revisar pantalla.';
+            }
+
+            if (soundEnabled) playNewOrderChime(speechText);
+            
+            const notificationTitle = `Nueva comanda #${first.saleNumber}`;
+            const notificationBody = `Cliente: ${clientName} - ${first.items?.length || 0} productos`;
+            
+            showToast(`🔔 ${notificationTitle}`);
+            
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification(notificationTitle, { body: notificationBody, icon: '/icon.png' });
+            }
           }
         }
         isFirstLoadRef.current = false;
@@ -718,6 +737,25 @@ export default function BodegaPage() {
             <span>En Vivo</span>
           </div>
 
+          {/* Permiso de Notificaciones */}
+          {typeof window !== 'undefined' && 'Notification' in window && typeof Notification.permission === 'string' && Notification.permission !== 'granted' && (
+            <button
+              type="button"
+              onClick={() => {
+                Notification.requestPermission();
+                if (window.speechSynthesis) {
+                  const u = new SpeechSynthesisUtterance('');
+                  u.volume = 0;
+                  window.speechSynthesis.speak(u);
+                }
+              }}
+              className="px-2.5 py-1.5 rounded-xl text-xs font-bold border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all flex items-center gap-1.5"
+              title="Activar notificaciones de escritorio"
+            >
+              <Radio className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Permitir Alertas</span>
+            </button>
+          )}
           {/* Toggle de Alerta Sonora */}
           <button
             type="button"
