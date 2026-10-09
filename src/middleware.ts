@@ -24,8 +24,14 @@ const OPERATIONAL_API_ROUTES = [
 ];
 
 export function middleware(request: NextRequest) {
+  
   const host = request.headers.get('host') || '';
   const { pathname } = request.nextUrl;
+  
+  if (pathname === '/login') {
+    return NextResponse.next();
+  }
+
 
   const isKodeSubdomain = host.startsWith('kode.') || host.includes('kode.aromaniaksv.com');
   if (isKodeSubdomain) {
