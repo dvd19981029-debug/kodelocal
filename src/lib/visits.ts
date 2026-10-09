@@ -287,7 +287,10 @@ export async function getVisitMetricsForPeriod(
     // Gráfica de todos los días transcurridos del mes en curso
     const [yStr, mStr] = today.split('-');
     const currentDay = parseInt(today.split('-')[2], 10);
-    for (let d = 1; d <= currentDay; d++) {
+    const yearNum = parseInt(yStr, 10);
+    const monthNum = parseInt(mStr, 10);
+    const daysInMonth = new Date(yearNum, monthNum, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
       const dStr = String(d).padStart(2, '0');
       const dateKey = `${yStr}-${mStr}-${dStr}`;
       const rec = records[dateKey];
@@ -302,7 +305,7 @@ export async function getVisitMetricsForPeriod(
     // Gráfica mensual para 'anio' o 'todo' (Ene a Dic)
     const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
     const currentMonthIdx = now.getMonth();
-    for (let m = 0; m <= currentMonthIdx; m++) {
+    for (let m = 0; m < 12; m++) {
       const monthStr = String(m + 1).padStart(2, '0');
       const prefix = `2026-${monthStr}`;
       const monthVisits = Object.values(records)
