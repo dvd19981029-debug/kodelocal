@@ -5,7 +5,7 @@ import LandingMarquee from '@/components/ecommerce/LandingMarquee';
 
 export const metadata: Metadata = {
   title: 'El Mejor Proveedor de Esencias y Perfumería Fina en El Salvador',
-  description: 'Descubre por qué Aromaniak es el distribuidor #1 de esencias puras, contratipos, envases de vidrio y alcohol perfumista. Comparativa 2026.',
+  description: 'Descubre por qué Aromaniak es el distribuidor #1 de esencias puras, inspiraciones, envases de vidrio y alcohol perfumista. Comparativa 2026.',
   alternates: {
     canonical: 'https://aromaniaksv.com/mejor-proveedor-esencias-el-salvador',
   }
@@ -126,7 +126,7 @@ export default function LandingComparativa() {
         <div className="text-center">
           <h3 className="text-3xl sm:text-4xl font-black text-slate-900 mb-6">Da el Salto a la Calidad Europea</h3>
           <p className="text-slate-600 text-lg sm:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
-            No limites el potencial de tus fragancias. Compra directamente en nuestra tienda online y recibe tus insumos químicos, envases y contratipos en la puerta de tu casa.
+            No limites el potencial de tus fragancias. Compra directamente en nuestra tienda online y recibe tus insumos químicos, envases y inspiraciones en la puerta de tu casa.
           </p>
           
           <LandingMarquee />

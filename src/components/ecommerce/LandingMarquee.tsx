@@ -45,7 +45,7 @@ export default function LandingMarquee() {
   const itemsTop = [
     { text: "Esencias Puras AAA+", icon: <Droplet className="w-5 h-5 text-indigo-500" /> },
     { text: "Frascos de Lujo", icon: <Box className="w-5 h-5 text-emerald-500" /> },
-    { text: "Contratipos de Diseñador", icon: <Star className="w-5 h-5 text-amber-500" /> },
+    { text: "Inspiraciones de Diseñador", icon: <Star className="w-5 h-5 text-amber-500" /> },
     { text: "Alcohol Perfumista", icon: <Beaker className="w-5 h-5 text-blue-500" /> },
     { text: "Calidad Europea", icon: <Sparkles className="w-5 h-5 text-purple-500" /> },
   ];

@@ -1017,7 +1017,7 @@ export default function EcommerceHomePage() {
                       {
                         "@type": "OfferCatalog",
                         "name": "Esencias Concentradas de Perfumería Fina",
-                        "description": "Esencias 100% puras para contratipos de alta fijación por onza y media onza en El Salvador"
+                        "description": "Esencias 100% puras para inspiraciones de alta fijación por onza y media onza en El Salvador"
                       },
                       {
                         "@type": "OfferCatalog",
