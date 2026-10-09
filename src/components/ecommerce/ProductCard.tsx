@@ -196,9 +196,9 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
             {productImage === '/images/essence_bottle_blank.webp' && (
               <div className="absolute inset-0 pointer-events-none transition-transform duration-500 group-hover:scale-[1.08] origin-center">
                 <div className="absolute flex flex-col items-center justify-center w-full -translate-y-1/2" style={{ top: '65.5%', left: '0%' }}>
-                  <div className="flex flex-col items-center justify-center w-[45%] text-center">
+                  <div className="flex flex-col items-center justify-center w-[31%] text-center">
                     <span className="text-[#111111] font-[800] tracking-wide leading-none" style={{
-                      fontSize: displayName.length > 25 ? '3.5cqw' : displayName.length > 15 ? '4.2cqw' : '5cqw'
+                      fontSize: displayName.length > 25 ? '2.5cqw' : displayName.length > 15 ? '2.9cqw' : '3.4cqw'
                     }}>
                       {displayName.toUpperCase().replace(/\s+[HFU]$/i, '')}
                     </span>

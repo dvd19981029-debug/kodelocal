@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
+import fs from 'fs';
 import { prisma } from '@/lib/prisma';
 import { INITIAL_PRODUCTS } from '@/lib/store';
 import { verifyStaffInternalToken } from '@/lib/customerAuthToken';
@@ -234,6 +235,48 @@ export async function PATCH(request: Request) {
         category: true,
       },
     });
+
+    // Sincronización inmediata con el sistema de etiquetas si es una esencia
+    if (updated.category?.name === 'Esencias para Perfume' || existing.category?.name === 'Esencias para Perfume') {
+      try {
+        const labelsCatalogPath = '/Users/luis/.gemini/antigravity/scratch/sistema-etiquetas-esencias/apaesa_catalog.json';
+        if (fs.existsSync(labelsCatalogPath)) {
+          const raw = fs.readFileSync(labelsCatalogPath, 'utf8');
+          const cat = JSON.parse(raw);
+          const cleanName = updated.name.replace(/\s+[FHU]$/i, '').trim().toUpperCase();
+          const cleanOfficial = (updated.officialName || updated.name).replace(/\s+[FHU]$/i, '').trim().toUpperCase();
+          const normGen = updated.gender === 'Dama' ? 'M' : updated.gender === 'Caballero' ? 'H' : 'U';
+
+          let found = false;
+          for (let i = 0; i < cat.length; i++) {
+            if ((cat[i].sku && String(cat[i].sku) === String(updated.sku)) ||
+                (cat[i].inspirado && cat[i].inspirado.toUpperCase() === cleanName) ||
+                (cat[i].contratipo && cat[i].contratipo.toUpperCase() === cleanOfficial)) {
+              cat[i].contratipo = cleanOfficial;
+              cat[i].inspirado = cleanName;
+              cat[i].genero = normGen;
+              if (updated.brand) cat[i].marca = updated.brand;
+              if (updated.sku) cat[i].sku = String(updated.sku);
+              found = true;
+              break;
+            }
+          }
+          if (!found) {
+            cat.push({
+              contratipo: cleanOfficial,
+              inspirado: cleanName,
+              genero: normGen,
+              original: cleanName,
+              marca: updated.brand || '',
+              sku: String(updated.sku || ''),
+            });
+          }
+          fs.writeFileSync(labelsCatalogPath, JSON.stringify(cat, null, 2), 'utf8');
+        }
+      } catch (syncErr) {
+        console.error('Error sincronizando con catálogo de etiquetas:', syncErr);
+      }
+    }
 
     // Si hubo cambio de inventario manual, registrar en Kardex
     if (typeof stock === 'number' && stock !== oldStock) {
