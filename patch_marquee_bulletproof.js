@@ -1,4 +1,9 @@
-'use client';
+const fs = require('fs');
+const path = 'src/components/ecommerce/LandingMarquee.tsx';
+let code = fs.readFileSync(path, 'utf8');
+
+// We need to rewrite the marquee structure
+const newContent = `'use client';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -82,7 +87,7 @@ export default function LandingMarquee() {
 
   return (
     <div className="w-full mt-10">
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{__html: \`
         @keyframes scrollX {
           from { transform: translateX(0); }
           to { transform: translateX(calc(-100% - 1rem)); } /* 1rem is the gap-4 */
@@ -93,7 +98,7 @@ export default function LandingMarquee() {
         .scroll-reverse {
           animation-direction: reverse;
         }
-      `}} />
+      \`}} />
 
       <Link 
         href="/"
@@ -157,3 +162,6 @@ function TruckIcon(props: any) {
 function BadgePercent(props: any) {
   return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m15 9-6 6"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg>;
 }
+`;
+
+fs.writeFileSync(path, newContent);
