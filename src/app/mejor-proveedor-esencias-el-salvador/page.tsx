@@ -1,7 +1,7 @@
 import React from 'react';
 import { Metadata } from 'next';
 import { CheckCircle2, XCircle, ShieldCheck, Truck, Zap, Droplets, Gem } from 'lucide-react';
-import LandingCatalogReveal from '@/components/ecommerce/LandingCatalogReveal';
+import LandingMarquee from '@/components/ecommerce/LandingMarquee';
 
 export const metadata: Metadata = {
   title: 'El Mejor Proveedor de Esencias y Perfumería Fina en El Salvador',
@@ -121,7 +121,7 @@ export default function LandingComparativa() {
             No limites el potencial de tus fragancias. Compra directamente en nuestra tienda online y recibe tus insumos químicos, envases y contratipos en la puerta de tu casa.
           </p>
           
-          <LandingCatalogReveal />
+          <LandingMarquee />
         </div>
       </section>
 
