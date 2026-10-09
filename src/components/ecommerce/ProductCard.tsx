@@ -265,7 +265,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                   className={`${inspiredSizeClass} text-slate-600 leading-tight line-clamp-2 break-words`} 
                   title={`Inspirado en ${inspiracionPerfumeName}`}
                 >
-                  <span className="text-slate-400 font-normal">Inspirado en </span>
+                  <span className="text-slate-500 font-normal">Inspirado en </span>
                   <span className="font-semibold text-slate-700">
                     {inspiracionPerfumeName}
                   </span>
