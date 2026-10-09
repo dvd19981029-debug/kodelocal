@@ -1,0 +1,32 @@
+const fs = require('fs');
+const path = 'src/app/producto/[id]/page.tsx';
+let code = fs.readFileSync(path, 'utf8');
+
+// Add @container to the image wrapper
+code = code.replace(
+  /<div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center">/g,
+  '<div className="relative aspect-square w-full @container rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center">'
+);
+
+// Replace the overlay
+const overlayRegex = /\{\/\* Overlay CSS para el nombre dinámico del bote de esencia \*\/\}[\s\S]*?\)\}/;
+const newOverlay = `
+              {/* Overlay CSS para el nombre dinámico del bote de esencia */}
+              {productImage === '/images/essence_bottle_blank.webp' && (
+                <div className="absolute inset-0 pointer-events-none transition-transform duration-500 group-hover:scale-[1.05] origin-center">
+                  <div className="absolute flex flex-col items-center justify-center w-full -translate-y-1/2" style={{ top: '65.5%', left: '0%' }}>
+                    <div className="flex flex-col items-center justify-center w-[45%] text-center">
+                      <span className="text-[#111111] font-[800] tracking-wide leading-none" style={{
+                        fontSize: displayName.length > 25 ? '3.5cqw' : displayName.length > 15 ? '4.2cqw' : '5cqw'
+                      }}>
+                        {displayName.toUpperCase().replace(/\\s+[HFU]$/i, '')}
+                      </span>
+                      <div className="mt-[1.5cqw] w-[30%] h-[2px] bg-[#111111]"></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+`;
+
+code = code.replace(overlayRegex, newOverlay.trim());
+fs.writeFileSync(path, code);

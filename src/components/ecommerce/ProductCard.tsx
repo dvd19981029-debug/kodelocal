@@ -166,7 +166,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
           {/* Contenedor de Imagen de Frasco con estilo Tarjeta Burbuja Claymórfica */}
           <Link 
             href={getProductUrl(product)}
-            className={`block relative w-full aspect-square clay-card overflow-hidden mb-2 sm:mb-2.5 flex items-center justify-center cursor-pointer transition-all duration-300 shrink-0 ${
+            className={`block relative w-full aspect-square @container clay-card overflow-hidden mb-2 sm:mb-2.5 flex items-center justify-center cursor-pointer transition-all duration-300 shrink-0 ${
               isOutOfStock 
                 ? 'opacity-85 border-slate-200/90 bg-[#f8fafc]' 
                 : isCardPulsing
@@ -194,14 +194,16 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
             />
             {/* Texto superpuesto dinámico mediante HTML/CSS para esencias */}
             {productImage === '/images/essence_bottle_blank.webp' && (
-              <div className="absolute pointer-events-none flex flex-col items-center justify-center transition-transform duration-500 group-hover:scale-108" style={{ top: '65.5%', left: '50%', transform: 'translate(-50%, -50%)', width: '80%' }}>
-                <div className="flex flex-col items-center justify-center w-[45%] text-center">
-                  <span className="text-[#111111] font-[800] tracking-wide leading-none" style={{
-                    fontSize: displayName.length > 25 ? '0.45rem' : displayName.length > 15 ? '0.55rem' : '0.65rem'
-                  }}>
-                    {displayName.toUpperCase().replace(/\s+[HFU]$/i, '')}
-                  </span>
-                  <div className="mt-[2px] w-[30%] h-[1px] bg-[#111111]"></div>
+              <div className="absolute inset-0 pointer-events-none transition-transform duration-500 group-hover:scale-[1.08] origin-center">
+                <div className="absolute flex flex-col items-center justify-center w-full -translate-y-1/2" style={{ top: '65.5%', left: '0%' }}>
+                  <div className="flex flex-col items-center justify-center w-[45%] text-center">
+                    <span className="text-[#111111] font-[800] tracking-wide leading-none" style={{
+                      fontSize: displayName.length > 25 ? '3.5cqw' : displayName.length > 15 ? '4.2cqw' : '5cqw'
+                    }}>
+                      {displayName.toUpperCase().replace(/\s+[HFU]$/i, '')}
+                    </span>
+                    <div className="mt-[1.5cqw] w-[30%] h-[2px] bg-[#111111]"></div>
+                  </div>
                 </div>
               </div>
             )}

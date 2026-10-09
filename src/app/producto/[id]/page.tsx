@@ -296,7 +296,7 @@ export default function ProductDetailPage() {
             <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-indigo-200/25 blur-3xl pointer-events-none" />
             <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-amber-100/30 blur-2xl pointer-events-none" />
 
-            <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center">
+            <div className="relative aspect-square w-full @container rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center">
               
               <img
                 src={productImage}
@@ -316,14 +316,16 @@ export default function ProductDetailPage() {
               
               {/* Overlay CSS para el nombre dinámico del bote de esencia */}
               {productImage === '/images/essence_bottle_blank.webp' && (
-                <div className="absolute pointer-events-none flex flex-col items-center justify-center transition-transform duration-500 group-hover:scale-105" style={{ top: '65.5%', left: '50%', transform: 'translate(-50%, -50%)', width: '80%' }}>
-                  <div className="flex flex-col items-center justify-center w-[45%] text-center">
-                    <span className="text-[#111111] font-[800] tracking-wide leading-none" style={{
-                      fontSize: displayName.length > 25 ? '0.75rem' : displayName.length > 15 ? '0.9rem' : '1.1rem'
-                    }}>
-                      {displayName.toUpperCase().replace(/\s+[HFU]$/i, '')}
-                    </span>
-                    <div className="mt-[3px] w-[30%] h-[2px] bg-[#111111]"></div>
+                <div className="absolute inset-0 pointer-events-none transition-transform duration-500 group-hover:scale-[1.05] origin-center">
+                  <div className="absolute flex flex-col items-center justify-center w-full -translate-y-1/2" style={{ top: '65.5%', left: '0%' }}>
+                    <div className="flex flex-col items-center justify-center w-[45%] text-center">
+                      <span className="text-[#111111] font-[800] tracking-wide leading-none" style={{
+                        fontSize: displayName.length > 25 ? '3.5cqw' : displayName.length > 15 ? '4.2cqw' : '5cqw'
+                      }}>
+                        {displayName.toUpperCase().replace(/\s+[HFU]$/i, '')}
+                      </span>
+                      <div className="mt-[1.5cqw] w-[30%] h-[2px] bg-[#111111]"></div>
+                    </div>
                   </div>
                 </div>
               )}
