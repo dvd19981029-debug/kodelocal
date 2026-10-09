@@ -1,5 +1,6 @@
 // src/lib/perfumeImages.ts
 import { ProductItem } from './store';
+import { getInspiracionPerfumeName } from './perfumeNames';
 
 export const MEN_PERFUME_IMAGES = [
   'https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=500&q=80', // Vidrio ámbar pesado
@@ -111,17 +112,11 @@ export function getProductImage(product: ProductItem): string {
     return '/images/botes/bote_100ml_degrade_azul_noche.jpg';
   }
 
-  // 2. Para todas las esencias de perfume (onzas y medias onzas) y kits con esencia base: usar imagen estática pre-renderizada
+  // 2. Para esencias: usar el generador dinámico de imágenes del servidor
   if (!product.category || product.category === 'Esencias para Perfume' || product.category === 'Arma tu propio perfume') {
-    const sku = String(product.sku || '').trim();
-    if (sku) {
-      return `/images/esencias/esencia_${sku}.webp?v=aroma_official_v4`;
-    }
-    if (product.id && !product.id.startsWith('kit-')) {
-      return `/images/esencias/${product.id}.webp?v=aroma_official_v4`;
-    }
-    if (product.imageUrl && product.imageUrl.trim() !== '') {
-      return product.imageUrl;
+    const inspiracion = getInspiracionPerfumeName(product);
+    if (inspiracion) {
+      return `/api/bottle-image?name=${encodeURIComponent(inspiracion)}`;
     }
     return '/images/essence_bottle_blank.webp';
   }
