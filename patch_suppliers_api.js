@@ -1,20 +1,8 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+const fs = require('fs');
+const file = 'src/app/api/suppliers/route.ts';
+let code = fs.readFileSync(file, 'utf8');
 
-export const dynamic = 'force-dynamic';
-
-export async function GET() {
-  try {
-    const suppliers = await prisma.supplier.findMany({
-      orderBy: { name: 'asc' },
-    });
-    return NextResponse.json({ success: true, suppliers });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-  }
-}
-
-
+const newPost = `
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -41,3 +29,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+`;
+
+code = code.replace(/export async function POST\(request: Request\) \{[\s\S]*$/, newPost);
+fs.writeFileSync(file, code);
+console.log('Patched Suppliers API');

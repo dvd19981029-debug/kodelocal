@@ -485,22 +485,34 @@ export default function ComprasModule({
   };
 
   // Guardar o Crear Proveedor
-  const handleSaveSupplier = (e: React.FormEvent) => {
+    const handleSaveSupplier = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingSupplier || !editingSupplier.name.trim()) return;
 
-    const exists = suppliers.some(s => s.id === editingSupplier.id);
-    let updated: Supplier[];
-    if (exists) {
-      updated = suppliers.map(s => s.id === editingSupplier.id ? editingSupplier : s);
-    } else {
-      updated = [...suppliers, editingSupplier];
+    try {
+      const res = await fetch('/api/suppliers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editingSupplier)
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Refresh local state with DB record
+        const exists = suppliers.some(s => s.id === editingSupplier.id);
+        if (exists) {
+           onUpdateSuppliers(suppliers.map(s => s.id === editingSupplier.id ? data.supplier : s));
+        } else {
+           onUpdateSuppliers([...suppliers, data.supplier]);
+        }
+        setIsSupplierModalOpen(false);
+        setEditingSupplier(null);
+        showToast(`✅ Proveedor "${editingSupplier.name}" guardado.`);
+      } else {
+        alert(data.error);
+      }
+    } catch (err) {
+      alert('Error guardando proveedor.');
     }
-
-    onUpdateSuppliers(updated);
-    setIsSupplierModalOpen(false);
-    setEditingSupplier(null);
-    showToast(`✅ Proveedor "${editingSupplier.name}" guardado.`);
   };
 
   // Eliminar Proveedor

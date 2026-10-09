@@ -194,6 +194,25 @@ export default function AdminPage() {
       })
       .catch(err => console.error('Error sincronizando productos con Supabase:', err));
 
+    
+    fetch('/api/sales?limit=500')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.sales)) {
+          setSales(data.sales);
+        }
+      })
+      .catch(err => console.error('Error fetching sales:', err));
+
+    fetch('/api/suppliers')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.suppliers)) {
+          setSuppliers(data.suppliers);
+        }
+      })
+      .catch(err => console.error('Error fetching suppliers:', err));
+
     fetch('/api/purchases')
       .then(res => res.json())
       .then(data => {
