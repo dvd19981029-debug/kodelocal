@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyStaffInternalToken } from '@/lib/auth-server';
+import { verifyStaffInternalToken } from '@/lib/customerAuthToken';
 
 // 1 Kg = 35.274 Onzas
 const OZ_PER_KG = 35.274;
