@@ -1,4 +1,9 @@
-'use client';
+const fs = require('fs');
+const path = 'src/app/admin/abastecimiento/page.tsx';
+let code = fs.readFileSync(path, 'utf8');
+
+// I will rewrite the entire file to include the parsing and fetching logic
+const newCode = `'use client';
 
 import React, { useState } from 'react';
 import { 
@@ -29,7 +34,7 @@ export default function AbastecimientoInteligentePage() {
       setFile(selectedFile);
       
       const text = await selectedFile.text();
-      const lines = text.split('\n');
+      const lines = text.split('\\n');
       
       const parsedCatalog = [];
       let startParsing = false;
@@ -97,10 +102,10 @@ export default function AbastecimientoInteligentePage() {
     if (!draftResult) return;
     
     let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Código Proveedor,Fragancia,Cantidad Sugerida (Kg),Precio Unit. ($/Kg),Subtotal ($)\n";
+    csvContent += "Código Proveedor,Fragancia,Cantidad Sugerida (Kg),Precio Unit. ($/Kg),Subtotal ($)\\n";
     
     draftResult.draft.forEach((item: any) => {
-      csvContent += `${item.supplierCode},${item.productName},${item.suggestedKg},${item.pricePerKg},${item.totalCost}\n`;
+      csvContent += \`\${item.supplierCode},\${item.productName},\${item.suggestedKg},\${item.pricePerKg},\${item.totalCost}\\n\`;
     });
     
     const encodedUri = encodeURI(csvContent);
@@ -127,7 +132,7 @@ export default function AbastecimientoInteligentePage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Paso 1: Configuración de Liquidez y Archivo */}
-        <div className={`clay-card p-5 space-y-5 transition-opacity ${step > 1 ? 'opacity-50' : 'opacity-100'}`}>
+        <div className={\`clay-card p-5 space-y-5 transition-opacity \${step > 1 ? 'opacity-50' : 'opacity-100'}\`}>
           <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
             <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 font-black flex items-center justify-center text-xs">1</div>
             <h3 className="font-bold text-slate-800">Parámetros del Algoritmo</h3>
@@ -160,7 +165,7 @@ export default function AbastecimientoInteligentePage() {
                 />
                 <label 
                   htmlFor="file-upload" 
-                  className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed cursor-pointer transition-colors ${file ? 'border-indigo-300 bg-indigo-50 text-indigo-700' : 'border-slate-300 hover:border-indigo-400 text-slate-500 hover:bg-slate-50'}`}
+                  className={\`w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed cursor-pointer transition-colors \${file ? 'border-indigo-300 bg-indigo-50 text-indigo-700' : 'border-slate-300 hover:border-indigo-400 text-slate-500 hover:bg-slate-50'}\`}
                 >
                   <FileSpreadsheet className="w-5 h-5" />
                   <span className="text-sm font-semibold">{file ? file.name : 'Subir catálogo .csv'}</span>
@@ -182,7 +187,7 @@ export default function AbastecimientoInteligentePage() {
         </div>
 
         {/* Paso 2: Análisis Algorítmico */}
-        <div className={`clay-card p-5 space-y-5 transition-opacity ${step === 2 ? 'opacity-100 ring-2 ring-indigo-500' : 'opacity-50 pointer-events-none'}`}>
+        <div className={\`clay-card p-5 space-y-5 transition-opacity \${step === 2 ? 'opacity-100 ring-2 ring-indigo-500' : 'opacity-50 pointer-events-none'}\`}>
           <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
             <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-700 font-black flex items-center justify-center text-xs">2</div>
             <h3 className="font-bold text-slate-800">Motor Predictivo (Knapsack)</h3>
@@ -198,7 +203,7 @@ export default function AbastecimientoInteligentePage() {
               <>
                 <Calculator className="w-12 h-12 text-slate-300" />
                 <p className="text-xs text-slate-400 text-center px-4">
-                  El sistema está listo para cruzar el presupuesto de ${budget} contra el catálogo subido para calcular la distribución óptima.
+                  El sistema está listo para cruzar el presupuesto de \${budget} contra el catálogo subido para calcular la distribución óptima.
                 </p>
                 <button 
                   onClick={handleRunAlgorithm}
@@ -213,7 +218,7 @@ export default function AbastecimientoInteligentePage() {
         </div>
 
         {/* Paso 3: Exportación de Borrador */}
-        <div className={`clay-card p-5 space-y-5 transition-opacity ${step === 3 ? 'opacity-100 ring-2 ring-emerald-500' : 'opacity-40 pointer-events-none'}`}>
+        <div className={\`clay-card p-5 space-y-5 transition-opacity \${step === 3 ? 'opacity-100 ring-2 ring-emerald-500' : 'opacity-40 pointer-events-none'}\`}>
           <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
             <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 font-black flex items-center justify-center text-xs">3</div>
             <h3 className="font-bold text-slate-800">Borrador Optimizado</h3>
@@ -223,7 +228,7 @@ export default function AbastecimientoInteligentePage() {
             <div className="space-y-4 pt-2">
               <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex flex-col items-center justify-center text-center">
                 <span className="text-[10px] font-black text-emerald-800 uppercase tracking-wide">Inversión Calculada</span>
-                <span className="text-2xl font-black text-emerald-600">${(draftResult.budgetUsed || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                <span className="text-2xl font-black text-emerald-600">$\{(draftResult.budgetUsed || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                 <span className="text-[10px] font-medium text-emerald-700 mt-1">Margen protegido y stock salvado (Objetivo 60 días)</span>
               </div>
 
@@ -236,7 +241,7 @@ export default function AbastecimientoInteligentePage() {
                     </div>
                     <div className="flex justify-between mt-1 text-[9px] font-medium text-slate-400">
                       <span>Riesgo Actual: {item.currentDos} días</span>
-                      <span>${(item.totalCost).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                      <span>$\{(item.totalCost).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                     </div>
                   </div>
                 ))}
@@ -261,3 +266,6 @@ export default function AbastecimientoInteligentePage() {
     </div>
   );
 }
+`;
+fs.writeFileSync(path, newCode);
+console.log("Rewrote page.tsx for Abastecimiento UI");
