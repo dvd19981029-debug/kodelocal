@@ -174,14 +174,14 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
                   </div>
                   
                   <div className="flex items-center gap-1">
-                    <span className={`clay-badge text-[9px] font-bold py-0.5 px-1.5 rounded-md ${
+                    <span className={`clay-badge text-[9px] font-bold py-0.5 px-1.5 rounded-md whitespace-nowrap ${
                       isOutOfStock 
                         ? 'bg-rose-50 text-rose-700 border border-rose-200' 
                         : isLowStock 
                         ? 'bg-amber-50 text-amber-800 border border-amber-200' 
                         : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                     }`}>
-                      {isOutOfStock ? 'Agotado' : isEssence ? `${fullRemaining} de 1 Oz · ${halfRemaining} de ½ Oz` : `${availableRemaining} ${product.unit === 'Onza' ? 'Oz' : 'Un.'}`}
+                      {isOutOfStock ? 'Agotado' : isEssence ? `${fullRemaining} Onzas · ${halfRemaining} Medias` : `${availableRemaining} ${product.unit === 'Onza' ? 'Oz' : 'Un.'}`}
                     </span>
                     <button
                       type="button"

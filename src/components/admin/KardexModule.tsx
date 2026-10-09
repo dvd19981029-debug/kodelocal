@@ -820,8 +820,8 @@ export default function KardexModule({
                         <span className="truncate">
                           {p.name} <span className="text-slate-400 font-mono">(#{p.sku})</span>
                         </span>
-                        <span className="text-[10px] font-mono shrink-0">
-                          {p.unit === 'Onza' ? `${p.stock} de 1 Oz · ${p.stockHalf || 0} de ½ Oz` : `${p.stock} Un.`}
+                        <span className="text-[10px] font-mono shrink-0 whitespace-nowrap">
+                          {p.unit === 'Onza' ? `${p.stock} Onzas · ${p.stockHalf || 0} Medias` : `${p.stock} Un.`}
                         </span>
                       </button>
                     ))}
