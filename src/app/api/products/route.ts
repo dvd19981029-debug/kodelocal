@@ -210,6 +210,9 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: false, error: 'Producto no encontrado en la base de datos' }, { status: 404 });
     }
 
+    const oldStock = existing.stock;
+    const oldStockHalf = (existing as any).stockHalf ?? 0;
+    
     const updated = await prisma.product.update({
       where: { id: existing.id },
       data: {
@@ -231,6 +234,37 @@ export async function PATCH(request: Request) {
         category: true,
       },
     });
+
+    // Si hubo cambio de inventario manual, registrar en Kardex
+    if (typeof stock === 'number' && stock !== oldStock) {
+      await prisma.stockMovement.create({
+        data: {
+          productId: existing.id,
+          type: 'ADJUSTMENT',
+          quantity: Math.abs(stock - oldStock),
+          previousStock: oldStock,
+          newStock: stock,
+          reference: 'Ajuste Manual',
+          notes: `Ajuste manual de inventario (1 Onza). Diferencia: ${stock - oldStock}`,
+          userName: 'Personal/Admin',
+        }
+      });
+    }
+    
+    if (typeof stockHalf === 'number' && stockHalf !== oldStockHalf) {
+      await prisma.stockMovement.create({
+        data: {
+          productId: existing.id,
+          type: 'ADJUSTMENT',
+          quantity: Math.abs(stockHalf - oldStockHalf),
+          previousStock: oldStockHalf,
+          newStock: stockHalf,
+          reference: 'Ajuste Manual',
+          notes: `Ajuste manual de inventario (½ Onza). Diferencia: ${stockHalf - oldStockHalf}`,
+          userName: 'Personal/Admin',
+        }
+      });
+    }
 
     const formattedUpdated = {
       id: updated.id,
