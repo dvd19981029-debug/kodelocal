@@ -197,9 +197,9 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
               <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center transition-transform duration-500 group-hover:scale-108" style={{ top: '8%', left: '0%' }}>
                 <div className="flex flex-col items-center justify-center w-[45%] text-center">
                   <span className="text-[#111111] font-[800] tracking-wide leading-none" style={{
-                    fontSize: inspiracion.length > 25 ? '0.45rem' : inspiracion.length > 15 ? '0.55rem' : '0.65rem'
+                    fontSize: inspiracionPerfumeName.length > 25 ? '0.45rem' : inspiracionPerfumeName.length > 15 ? '0.55rem' : '0.65rem'
                   }}>
-                    {inspiracion.toUpperCase().replace(/\s+[HFU]$/i, '')}
+                    {inspiracionPerfumeName.toUpperCase().replace(/\s+[HFU]$/i, '')}
                   </span>
                   <div className="mt-[2px] w-[30%] h-[1px] bg-[#111111]"></div>
                 </div>
