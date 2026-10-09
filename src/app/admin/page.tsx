@@ -1931,7 +1931,7 @@ export default function AdminPage() {
         {/* ================= TAB 13: ABASTECIMIENTO INTELIGENTE ================= */}
         {activeTab === 'abastecimiento' && (
           <div className="animate-in fade-in duration-150">
-            <AbastecimientoInteligentePage />
+            <AbastecimientoModule />
           </div>
         )}
 

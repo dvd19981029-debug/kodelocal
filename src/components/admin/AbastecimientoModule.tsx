@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { getStaffToken } from '@/lib/auth';
 
-export default function AbastecimientoInteligentePage() {
+export function AbastecimientoModule() {
   const [budget, setBudget] = useState<number>(3000);
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
