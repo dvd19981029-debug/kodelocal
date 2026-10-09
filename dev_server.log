@@ -20,3 +20,85 @@
  GET / 200 in 1166ms (next.js: 934ms, proxy.ts: 3ms, application-code: 229ms)
  GET /login 200 in 110ms (next.js: 23ms, proxy.ts: 21ms, application-code: 66ms)
  GET /login 200 in 55ms (next.js: 4ms, proxy.ts: 8ms, application-code: 43ms)
+⨯ ./src/components/Navbar.tsx
+Error:   x Unexpected token. Did you mean `{'>'}` or `&gt;`?
+     ,-[/Users/luis/.gemini/antigravity/scratch/kodelocal/src/components/Navbar.tsx:167:1]
+ 164 |               </div>
+ 165 | 
+ 166 |               {/* Selector Rápido de Usuarios para probar roles */}
+ 167 |                />
+     :                 ^
+ 168 |                   <div className="absolute right-0 mt-2 w-64 clay-card p-3 z-50 animate-in fade-in zoom-in-95 space-y-1">
+ 169 |                     <Link
+ 170 |                       href="/pos"
+     `----
+  x Expression expected
+     ,-[/Users/luis/.gemini/antigravity/scratch/kodelocal/src/components/Navbar.tsx:201:1]
+ 198 |                       );
+ 199 |                     })}
+ 200 |                   </div>
+ 201 |                 </>
+     :                   ^
+ 202 |               )}
+ 203 |             </div>
+ 204 |           ) : (
+     `----
+  x Expected '</', got ')'
+     ,-[/Users/luis/.gemini/antigravity/scratch/kodelocal/src/components/Navbar.tsx:202:1]
+ 199 |                     })}
+ 200 |                   </div>
+ 201 |                 </>
+ 202 |               )}
+     :               ^
+ 203 |             </div>
+ 204 |           ) : (
+ 205 |             <Link
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/Navbar.tsx
+./src/components/NavigationWrapper.tsx
+⨯ ./src/components/Navbar.tsx
+Error:   x Unexpected token. Did you mean `{'>'}` or `&gt;`?
+     ,-[/Users/luis/.gemini/antigravity/scratch/kodelocal/src/components/Navbar.tsx:168:1]
+ 165 |               </div>
+ 166 | 
+ 167 |               {/* Selector Rápido de Usuarios para probar roles */}
+ 168 |                />
+     :                 ^
+ 169 |                   <div className="absolute right-0 mt-2 w-64 clay-card p-3 z-50 animate-in fade-in zoom-in-95 space-y-1">
+ 170 |                     <Link
+ 171 |                       href="/pos"
+     `----
+  x Expression expected
+     ,-[/Users/luis/.gemini/antigravity/scratch/kodelocal/src/components/Navbar.tsx:202:1]
+ 199 |                       );
+ 200 |                     })}
+ 201 |                   </div>
+ 202 |                 </>
+     :                   ^
+ 203 |               )}
+ 204 |             </div>
+ 205 |           ) : (
+     `----
+  x Expected '</', got ')'
+     ,-[/Users/luis/.gemini/antigravity/scratch/kodelocal/src/components/Navbar.tsx:203:1]
+ 200 |                     })}
+ 201 |                   </div>
+ 202 |                 </>
+ 203 |               )}
+     :               ^
+ 204 |             </div>
+ 205 |           ) : (
+ 206 |             <Link
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/Navbar.tsx
+./src/components/NavigationWrapper.tsx
