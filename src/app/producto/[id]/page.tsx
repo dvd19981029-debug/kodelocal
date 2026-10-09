@@ -297,6 +297,7 @@ export default function ProductDetailPage() {
             <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-amber-100/30 blur-2xl pointer-events-none" />
 
             <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center">
+              
               <img
                 src={productImage}
                 alt={displayName}
@@ -309,9 +310,24 @@ export default function ProductDetailPage() {
                     : '/images/essence_bottle_blank.webp';
                 }}
                 className={`w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105 ${
-                  isOutOfStock ? 'grayscale-[25%]' : ''
+                  isOutOfStock ? 'grayscale-[35%]' : ''
                 }`}
               />
+              
+              {/* Overlay CSS para el nombre dinámico del bote de esencia */}
+              {productImage === '/images/essence_bottle_blank.webp' && (
+                <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center transition-transform duration-500 group-hover:scale-105" style={{ top: '8%', left: '0%' }}>
+                  <div className="flex flex-col items-center justify-center w-[45%] text-center">
+                    <span className="text-[#111111] font-[800] tracking-wide leading-none" style={{
+                      fontSize: displayName.length > 25 ? '0.75rem' : displayName.length > 15 ? '0.9rem' : '1.1rem'
+                    }}>
+                      {displayName.toUpperCase().replace(/\s+[HFU]$/i, '')}
+                    </span>
+                    <div className="mt-[3px] w-[30%] h-[2px] bg-[#111111]"></div>
+                  </div>
+                </div>
+              )}
+
 
               {/* Badge de categoría / género sobre la imagen */}
               <div className="absolute top-3 left-3 z-10">

@@ -1358,7 +1358,7 @@ export default function CheckoutPage() {
                       {it.kitDetails ? (
                         <div className="relative w-full h-full p-0.5 bg-gradient-to-br from-amber-50/60 to-purple-50/60">
                           <img
-                            src={it.kitDetails.essenceImageUrl || (it.kitDetails.essenceSku ? `/images/esencias/esencia_${String(it.kitDetails.essenceSku).trim()}.webp?v=aroma_official_v4` : `/images/esencias/${it.kitDetails.essenceId}.webp?v=aroma_official_v4`)}
+                            src={"/images/essence_bottle_blank.webp"}
                             alt={it.kitDetails.essenceName || it.product.name}
                             loading="lazy"
                             decoding="async"

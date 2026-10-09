@@ -144,7 +144,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
 
   // Nombre de inspiración (contratipo) y cálculo dinámico de escala de texto
   const inspiracionPerfumeName = getInspiracionPerfumeName(product);
-  const inspiracionNameLength = inspiracionPerfumeName.length;
+  const inspiracionNameLength = displayName.length;
 
   // Si el nombre es largo, reducimos el tamaño progresivamente para que quepa sin salirse de la tarjeta
   const inspiredSizeClass = inspiracionNameLength > 30
@@ -197,9 +197,9 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
               <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center transition-transform duration-500 group-hover:scale-108" style={{ top: '8%', left: '0%' }}>
                 <div className="flex flex-col items-center justify-center w-[45%] text-center">
                   <span className="text-[#111111] font-[800] tracking-wide leading-none" style={{
-                    fontSize: inspiracionPerfumeName.length > 25 ? '0.45rem' : inspiracionPerfumeName.length > 15 ? '0.55rem' : '0.65rem'
+                    fontSize: displayName.length > 25 ? '0.45rem' : displayName.length > 15 ? '0.55rem' : '0.65rem'
                   }}>
-                    {inspiracionPerfumeName.toUpperCase().replace(/\s+[HFU]$/i, '')}
+                    {displayName.toUpperCase().replace(/\s+[HFU]$/i, '')}
                   </span>
                   <div className="mt-[2px] w-[30%] h-[1px] bg-[#111111]"></div>
                 </div>

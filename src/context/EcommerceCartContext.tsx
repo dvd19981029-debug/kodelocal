@@ -397,7 +397,7 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     }
 
     const essenceImageUrl = essence.sku 
-      ? `/images/esencias/esencia_${String(essence.sku).trim()}.webp?v=aroma_official_v4`
+      ? '/images/essence_bottle_blank.webp'
       : essence.id 
       ? `/images/esencias/${essence.id}.webp?v=aroma_official_v4`
       : '/images/essence_bottle_blank.webp';
