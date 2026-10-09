@@ -47,7 +47,7 @@ export default function LandingMarquee() {
   ];
 
   const itemsBottom = [
-    { text: "Más de 500 Aromas", icon: <Droplet className="w-5 h-5 text-pink-500" /> },
+    { text: "Extenso Catálogo de Aromas", icon: <Droplet className="w-5 h-5 text-pink-500" /> },
     { text: "Envíos a todo El Salvador", icon: <TruckIcon className="w-5 h-5 text-sky-500" /> },
     { text: "Precios Mayoristas", icon: <BadgePercent className="w-5 h-5 text-green-500" /> },
     { text: "Atomizadores Premium", icon: <Box className="w-5 h-5 text-rose-500" /> },
@@ -95,9 +95,7 @@ export default function LandingMarquee() {
           width: max-content;
           animation: marquee-right 45s linear infinite;
         }
-        .animate-marquee-left:hover, .animate-marquee-right:hover {
-          animation-play-state: paused;
-        }
+        
       `}} />
 
       {/* Botón principal */}
