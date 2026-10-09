@@ -1063,19 +1063,33 @@ export default function AromaniakDashboardModule({
             )}
           </div>
 
-          {/* Eje X de Etiquetas */}
-          <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono pt-1.5 px-1 overflow-hidden">
-            {graficaVisitas.length > 0 && (
-              <>
-                <span className="truncate">{graficaVisitas[0].label}</span>
-                {graficaVisitas.length > 2 && (
-                  <span className="truncate hidden sm:inline">
-                    {graficaVisitas[Math.floor(graficaVisitas.length / 2)].label}
-                  </span>
-                )}
-                <span className="truncate">{graficaVisitas[graficaVisitas.length - 1].label}</span>
-              </>
-            )}
+          {/* Eje X de Etiquetas Inteligente */}
+          <div className="w-full flex items-start gap-1 sm:gap-2 pt-1.5 px-1 overflow-hidden">
+            {graficaVisitas.length > 0 &&
+              graficaVisitas.map((point, idx) => {
+                let showLabel = false;
+                if (period === 'hoy') {
+                  showLabel = idx % 3 === 0 || idx === graficaVisitas.length - 1; 
+                } else if (period === '7d') {
+                  showLabel = true;
+                } else if (period === 'mes') {
+                  showLabel = idx % 5 === 0 || idx === graficaVisitas.length - 1;
+                } else {
+                  showLabel = true;
+                }
+
+                return (
+                  <div key={idx} className="flex-1 flex justify-center min-w-0">
+                    {showLabel ? (
+                      <span className="text-[9px] text-slate-400 font-mono truncate text-center block">
+                        {period === '7d' ? point.label.split(' ')[0] : period === 'hoy' ? point.label.replace(':00', 'h') : point.label.split(' ')[0]}
+                      </span>
+                    ) : (
+                      <span className="text-[9px] text-transparent hidden sm:block">-</span>
+                    )}
+                  </div>
+                );
+              })}
           </div>
         </div>
       </div>
