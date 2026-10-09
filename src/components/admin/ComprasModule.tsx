@@ -2044,7 +2044,7 @@ export default function ComprasModule({
                       <div>
                         <span className="text-[9px] text-slate-400 uppercase font-bold block">Costo sugerido</span>
                         <span className="text-xs font-mono font-black text-slate-800">
-                          ${prod.cost.toFixed(2)}
+                          ${Number(prod.cost || 0).toFixed(2)}
                         </span>
                       </div>
                       <button

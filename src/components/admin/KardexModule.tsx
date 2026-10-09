@@ -363,7 +363,7 @@ export default function KardexModule({
     ];
 
     const rows = filteredMovements.map(m => {
-      const val = m.costPrice || m.unitPrice || 0;
+      const val = Number(m.costPrice || m.unitPrice || 0);
       const sub = m.quantity * val;
       return [
         new Date(m.createdAt).toLocaleString('es-SV'),
@@ -460,7 +460,7 @@ export default function KardexModule({
                 <h3 className="text-xs font-black text-slate-800">{selectedProductObj.name}</h3>
               </div>
               <p className="text-[10px] text-slate-500 mt-0.5">
-                {selectedProductObj.category} • Costo: <strong>${selectedProductObj.cost.toFixed(2)}</strong> • PVP: <strong>${selectedProductObj.price.toFixed(2)}</strong>
+                {selectedProductObj.category} • Costo: <strong>${Number(selectedProductObj.cost || 0).toFixed(2)}</strong> • PVP: <strong>${Number(selectedProductObj.price || 0).toFixed(2)}</strong>
               </p>
             </div>
           </div>
@@ -640,7 +640,7 @@ export default function KardexModule({
                   const isSale = mov.type === 'OUT_SALE';
                   const isDamage = mov.type === 'OUT_DAMAGE';
                   
-                  const val = mov.costPrice || mov.unitPrice || 0;
+                  const val = Number(mov.costPrice || mov.unitPrice || 0);
                   const total = mov.quantity * val;
 
                   // Badge según tipo Mecanic OS
