@@ -59,113 +59,120 @@ export default function OpeningNoticeModal() {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-in fade-in duration-300">
-      <div 
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="opening-modal-title"
-        className="relative w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-100 text-center animate-in zoom-in-95 duration-200"
-      >
-        {/* Ícono de Alerta / Apertura */}
-        <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-600 shadow-xs">
-          <Calendar className="w-7 h-7" />
-        </div>
-
-        {/* Título */}
-        <h2 
-          id="opening-modal-title"
-          className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight"
+    <div className="fixed inset-0 z-[120] overflow-y-auto bg-slate-950/60 backdrop-blur-md animate-in fade-in duration-300">
+      <div className="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
+        <div 
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="opening-modal-title"
+          className="relative w-full max-w-lg bg-white rounded-3xl p-5 sm:p-8 shadow-2xl border border-slate-100 text-center animate-in zoom-in-95 duration-200 my-auto flex flex-col max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-2rem)]"
         >
-          ¡Gran Apertura el 15 de Octubre!
-        </h2>
-
-        {/* Mensaje Informativo */}
-        <div className="mt-3.5 mb-6 space-y-2.5 text-xs sm:text-sm text-slate-600 leading-relaxed text-balance">
-          <p>
-            Te informamos que abriremos oficialmente nuestra tienda en línea el <strong className="text-slate-900 font-bold">15 de octubre</strong>.
-          </p>
-          <div className="p-3 bg-amber-50/70 border border-amber-200/70 rounded-2xl text-amber-900 text-left flex items-start gap-2.5">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-            <p className="text-xs leading-relaxed font-medium">
-              Las transacciones realizadas actualmente no se procesarán y Wompi aún no realiza cobros en esta etapa.
-            </p>
-          </div>
-          <p className="text-slate-500 font-medium pt-1">
-            Te invitamos a esperar con nosotros la apertura oficial:
-          </p>
-        </div>
-
-        {/* Temporizador / Countdown */}
-        <div className="mb-6 grid grid-cols-4 gap-2 sm:gap-3">
-          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-2.5 sm:p-3 shadow-2xs">
-            <span className="block text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">
-              {String(timeLeft.days).padStart(2, '0')}
-            </span>
-            <span className="block text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
-              Días
-            </span>
-          </div>
-
-          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-2.5 sm:p-3 shadow-2xs">
-            <span className="block text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">
-              {String(timeLeft.hours).padStart(2, '0')}
-            </span>
-            <span className="block text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
-              Horas
-            </span>
-          </div>
-
-          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-2.5 sm:p-3 shadow-2xs">
-            <span className="block text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">
-              {String(timeLeft.minutes).padStart(2, '0')}
-            </span>
-            <span className="block text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
-              Minutos
-            </span>
-          </div>
-
-          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-2.5 sm:p-3 shadow-2xs">
-            <span className="block text-2xl sm:text-3xl font-black text-indigo-600 font-mono tracking-tight">
-              {String(timeLeft.seconds).padStart(2, '0')}
-            </span>
-            <span className="block text-[9px] sm:text-[10px] font-bold text-indigo-400 uppercase tracking-wider mt-0.5">
-              Segundos
-            </span>
-          </div>
-        </div>
-
-        {/* Ubicación del Local */}
-        <div className="mb-6 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-left flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-start gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 shrink-0 mt-0.5">
-              <MapPin className="w-4 h-4" />
+          {/* Contenido scrolleable para pantallas con poca altura o formato horizontal */}
+          <div className="overflow-y-auto overscroll-contain pr-1 -mr-1 text-center">
+            {/* Ícono de Alerta / Apertura */}
+            <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-3 sm:mb-4 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-600 shadow-xs shrink-0">
+              <Calendar className="w-6 h-6 sm:w-7 sm:h-7" />
             </div>
-            <div className="min-w-0">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Estaremos ubicados en:</span>
-              <p className="text-xs sm:text-sm font-bold text-slate-800 leading-snug">
-                Centro Comercial El Rosal, Calle El Progreso, San Salvador
+
+            {/* Título */}
+            <h2 
+              id="opening-modal-title"
+              className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight"
+            >
+              ¡Gran Apertura el 15 de Octubre!
+            </h2>
+
+            {/* Mensaje Informativo */}
+            <div className="mt-3 sm:mt-3.5 mb-4 sm:mb-6 space-y-2.5 text-xs sm:text-sm text-slate-600 leading-relaxed text-balance">
+              <p>
+                Te informamos que abriremos oficialmente nuestra tienda en línea el <strong className="text-slate-900 font-bold">15 de octubre</strong>.
+              </p>
+              <div className="p-3 bg-amber-50/70 border border-amber-200/70 rounded-2xl text-amber-900 text-left flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <p className="text-xs leading-relaxed font-medium">
+                  Las transacciones realizadas actualmente no se procesarán y Wompi aún no realiza cobros en esta etapa.
+                </p>
+              </div>
+              <p className="text-slate-500 font-medium pt-1">
+                Te invitamos a esperar con nosotros la apertura oficial:
               </p>
             </div>
-          </div>
-          <a
-            href="https://maps.app.goo.gl/shtetXTGcPZQpBwY6"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="shrink-0 px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-indigo-600 hover:text-indigo-800 text-xs font-extrabold shadow-2xs hover:shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-          >
-            <span>Ver en Google Maps</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
-        </div>
 
-        {/* Botón Aceptar y Continuar al Sitio */}
-        <button
-          type="button"
-          onClick={handleAccept}
-          className="w-full py-3.5 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white font-extrabold text-sm sm:text-base shadow-lg shadow-indigo-200 transition-all cursor-pointer flex items-center justify-center gap-2"
-        >
-          <span>Aceptar y continuar al sitio</span>
-        </button>
+            {/* Temporizador / Countdown */}
+            <div className="mb-4 sm:mb-6 grid grid-cols-4 gap-2 sm:gap-3">
+              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-2.5 sm:p-3 shadow-2xs">
+                <span className="block text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">
+                  {String(timeLeft.days).padStart(2, '0')}
+                </span>
+                <span className="block text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+                  Días
+                </span>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-2.5 sm:p-3 shadow-2xs">
+                <span className="block text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">
+                  {String(timeLeft.hours).padStart(2, '0')}
+                </span>
+                <span className="block text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+                  Horas
+                </span>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-2.5 sm:p-3 shadow-2xs">
+                <span className="block text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">
+                  {String(timeLeft.minutes).padStart(2, '0')}
+                </span>
+                <span className="block text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+                  Minutos
+                </span>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-2.5 sm:p-3 shadow-2xs">
+                <span className="block text-2xl sm:text-3xl font-black text-indigo-600 font-mono tracking-tight">
+                  {String(timeLeft.seconds).padStart(2, '0')}
+                </span>
+                <span className="block text-[9px] sm:text-[10px] font-bold text-indigo-400 uppercase tracking-wider mt-0.5">
+                  Segundos
+                </span>
+              </div>
+            </div>
+
+            {/* Ubicación del Local */}
+            <div className="mb-2 sm:mb-4 p-3 sm:p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-left flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-start gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 shrink-0 mt-0.5">
+                  <MapPin className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Estaremos ubicados en:</span>
+                  <p className="text-xs sm:text-sm font-bold text-slate-800 leading-snug">
+                    Centro Comercial El Rosal, Calle El Progreso, San Salvador
+                  </p>
+                </div>
+              </div>
+              <a
+                href="https://maps.app.goo.gl/shtetXTGcPZQpBwY6"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-indigo-600 hover:text-indigo-800 text-xs font-extrabold shadow-2xs hover:shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>Ver en Google Maps</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+
+          {/* Botón Aceptar y Continuar al Sitio (fijo abajo del modal, siempre a la vista) */}
+          <div className="pt-3 sm:pt-4 mt-2 shrink-0 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={handleAccept}
+              className="w-full py-3 sm:py-3.5 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white font-extrabold text-sm sm:text-base shadow-lg shadow-indigo-200 transition-all cursor-pointer flex items-center justify-center gap-2"
+            >
+              <span>Aceptar y continuar al sitio</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
