@@ -18,6 +18,7 @@ export interface PosProductGridProps {
   filteredProductsCount: number;
   activeEssencePrice: number;
   activeEssenceHalfPrice: number;
+  activeBottlePrice?: number | null;
   cart: CartItem[];
   onAddToCart: (product: ProductItem, presentation?: 'ONZA_COMPLETA' | 'MEDIA_ONZA') => void;
   onOpenEditProduct: (e: React.MouseEvent, product: ProductItem) => void;
@@ -38,6 +39,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
   filteredProductsCount,
   activeEssencePrice,
   activeEssenceHalfPrice,
+  activeBottlePrice,
   cart,
   onAddToCart,
   onOpenEditProduct,
@@ -268,7 +270,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
                         Por {product.unit}
                       </span>
                       <span className="text-xs sm:text-[13px] font-black font-mono text-indigo-600">
-                        ${product.price.toFixed(2)}
+                        ${((product.category === 'Botes' || product.category === 'Botes & Envases') && activeBottlePrice ? activeBottlePrice : product.price).toFixed(2)}
                       </span>
                     </div>
                     <button

@@ -80,6 +80,8 @@ model Customer {
   passwordHash    String?
   notes           String?
   preferredDoc    String?           @default("01")
+  specialEssencePrice Decimal?      @db.Decimal(10, 2)
+  specialBottlePrice  Decimal?      @db.Decimal(10, 2)
   taxCategory     String?           @default("OTRO")
   tradeName       String?
   addresses       CustomerAddress[]

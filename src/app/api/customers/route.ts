@@ -26,6 +26,8 @@ export async function GET() {
       municipio: c.municipality || 'San Salvador Centro',
       direccion: c.address || '',
       notas: c.notes || '',
+      specialEssencePrice: c.specialEssencePrice ? Number(c.specialEssencePrice) : null,
+      specialBottlePrice: c.specialBottlePrice ? Number(c.specialBottlePrice) : null,
       createdAt: c.createdAt.toISOString(),
     }));
 
@@ -56,6 +58,8 @@ export async function POST(request: Request) {
       municipio,
       direccion,
       notas,
+      specialEssencePrice,
+      specialBottlePrice,
     } = body;
 
     if (!name?.trim()) {
@@ -77,6 +81,8 @@ export async function POST(request: Request) {
       municipality: municipio?.trim() || 'San Salvador Centro',
       address: direccion?.trim() || null,
       notes: notas?.trim() || null,
+      specialEssencePrice: specialEssencePrice ? Number(specialEssencePrice) : null,
+      specialBottlePrice: specialBottlePrice ? Number(specialBottlePrice) : null,
     };
 
     let customer;

@@ -21,6 +21,8 @@ export interface CustomerRecord {
   municipio?: string;
   direccion?: string;
   notas?: string;
+  specialEssencePrice?: number | null;
+  specialBottlePrice?: number | null;
   createdAt: string;
 }
 

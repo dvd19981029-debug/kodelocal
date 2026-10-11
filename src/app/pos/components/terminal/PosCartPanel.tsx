@@ -198,7 +198,7 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
                 <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
                 <input
                   type="text"
-                  placeholder="Buscar cliente (Nombre, DUI o NRC)..."
+                  placeholder="Buscar cliente (Nombre, Correo, DUI o NRC)..."
                   value={cartCustomerQuery}
                   onChange={(e) => {
                     setCartCustomerQuery(e.target.value);
@@ -337,9 +337,8 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
               const itemPres = item.presentation || 'ONZA_COMPLETA';
               const isEssence = item.product.category === 'Esencias para Perfume' || item.product.unit === 'Onza';
               const unitPrice = getItemUnitPrice(item);
-              const halfPrice = item.product.priceHalfOunce != null 
-                ? Number(item.product.priceHalfOunce) 
-                : Number((item.product.price / 2).toFixed(2));
+              const fullPriceVal = (isEssence && selectedCustomerObj?.specialEssencePrice) ? Number(selectedCustomerObj.specialEssencePrice) : item.product.price;
+              const halfPriceVal = (isEssence && selectedCustomerObj?.specialEssencePrice) ? Number((Number(selectedCustomerObj.specialEssencePrice) / 2).toFixed(2)) : (item.product.priceHalfOunce != null ? Number(item.product.priceHalfOunce) : Number((item.product.price / 2).toFixed(2)));
 
               return (
                 <div 
@@ -409,9 +408,9 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
                               ? 'bg-indigo-600 text-white shadow-2xs'
                               : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                           }`}
-                          title={`1 Onza: $${item.product.price.toFixed(2)}`}
+                          title={`1 Onza: ${fullPriceVal.toFixed(2)}`}
                         >
-                          1 Oz (${item.product.price.toFixed(2)})
+                          1 Oz (${fullPriceVal.toFixed(2)})
                         </button>
                         <button
                           type="button"
@@ -421,9 +420,9 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
                               ? 'bg-violet-600 text-white shadow-2xs'
                               : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                           }`}
-                          title={`½ Onza: $${halfPrice.toFixed(2)}`}
+                          title={`½ Onza: ${halfPriceVal.toFixed(2)}`}
                         >
-                          ½ Oz (${halfPrice.toFixed(2)})
+                          ½ Oz (${halfPriceVal.toFixed(2)})
                         </button>
                       </div>
                     ) : (

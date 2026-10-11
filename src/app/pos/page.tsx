@@ -131,6 +131,8 @@ export default function PosPage() {
   const [custMunicipio, setCustMunicipio] = useState('San Salvador Centro');
   const [custDireccion, setCustDireccion] = useState('');
   const [custNotas, setCustNotas] = useState('');
+  const [custSpecialEssencePrice, setCustSpecialEssencePrice] = useState('');
+  const [custSpecialBottlePrice, setCustSpecialBottlePrice] = useState('');
 
   // Carrito de ventas
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -175,7 +177,8 @@ export default function PosPage() {
       (c.nombreComercial && c.nombreComercial.toLowerCase().includes(q)) ||
       (c.numDocumento && c.numDocumento.toLowerCase().includes(q)) ||
       (c.nrc && c.nrc.toLowerCase().includes(q)) ||
-      (c.phone && c.phone.toLowerCase().includes(q))
+      (c.phone && c.phone.toLowerCase().includes(q)) ||
+      (c.email && c.email.toLowerCase().includes(q))
     );
   }, [customers, cartCustomerQuery]);
 
@@ -595,13 +598,35 @@ export default function PosPage() {
     return products.find(p => p.category === 'Esencias para Perfume');
   }, [products]);
 
-  const activeEssencePrice = sampleEssence?.price ?? 3.25;
-  const activeEssenceHalfPrice = sampleEssence?.priceHalfOunce != null 
-    ? Number(sampleEssence.priceHalfOunce) 
-    : Number((activeEssencePrice / 2).toFixed(2));
+  // Extraer el cliente activo (si existe y tiene precios especiales)
+  const activeCustomer = customers.find(c => c.id === selectedCustomerId);
+
+  const activeEssencePrice = activeCustomer?.specialEssencePrice 
+    ? Number(activeCustomer.specialEssencePrice) 
+    : (sampleEssence?.price ?? 3.25);
+    
+  const activeEssenceHalfPrice = activeCustomer?.specialEssencePrice
+    ? Number((Number(activeCustomer.specialEssencePrice) / 2).toFixed(2))
+    : (sampleEssence?.priceHalfOunce != null 
+      ? Number(sampleEssence.priceHalfOunce) 
+      : Number((activeEssencePrice / 2).toFixed(2))); 
+  const activeBottlePrice = activeCustomer?.specialBottlePrice ? Number(activeCustomer.specialBottlePrice) : null;
 
   // Helper para obtener el precio unitario del item según su presentación
   const getItemUnitPrice = (item: CartItem): number => {
+    const isEssence = item.product.category === 'Esencias para Perfume' || !item.product.category;
+    if (isEssence && activeCustomer?.specialEssencePrice) {
+      if (item.presentation === 'MEDIA_ONZA') {
+         return Number((activeCustomer.specialEssencePrice / 2).toFixed(2));
+      }
+      return Number(activeCustomer.specialEssencePrice);
+    }
+
+    const isBottle = item.product.category === 'Botes' || item.product.category === 'Botes & Envases';
+    if (isBottle && activeCustomer?.specialBottlePrice) {
+      return Number(activeCustomer.specialBottlePrice);
+    }
+
     if (item.presentation === 'MEDIA_ONZA') {
       return item.product.priceHalfOunce != null 
         ? Number(item.product.priceHalfOunce) 
@@ -632,7 +657,7 @@ export default function PosPage() {
   // Totales del carrito
   const cartSubtotal = useMemo(() => {
     return cart.reduce((acc, item) => acc + (getItemUnitPrice(item) * item.quantity), 0);
-  }, [cart]);
+  }, [cart, selectedCustomerId, customers]);
 
   const totalItemsCount = useMemo(() => {
     return cart.reduce((acc, item) => acc + item.quantity, 0);
@@ -1052,6 +1077,8 @@ export default function PosPage() {
     setCustMunicipio(munis[0]?.nombre || 'San Salvador Centro');
     setCustDireccion('');
     setCustNotas('');
+    setCustSpecialEssencePrice('');
+    setCustSpecialBottlePrice('');
     setIsCustomerModalOpen(true);
   };
 
@@ -1108,6 +1135,8 @@ export default function PosPage() {
       municipio: custMunicipio.trim() || undefined,
       direccion: custDireccion.trim() || undefined,
       notas: custNotas.trim() || undefined,
+      specialEssencePrice: custSpecialEssencePrice ? parseFloat(custSpecialEssencePrice) : undefined,
+      specialBottlePrice: custSpecialBottlePrice ? parseFloat(custSpecialBottlePrice) : undefined,
     };
 
     // Guardar en Supabase PostgreSQL
@@ -1846,6 +1875,7 @@ export default function PosPage() {
                 filteredProductsCount={filteredProducts.length}
                 activeEssencePrice={activeEssencePrice}
                 activeEssenceHalfPrice={activeEssenceHalfPrice}
+                activeBottlePrice={activeBottlePrice}
                 cart={cart}
                 onAddToCart={addToCart}
                 onOpenEditProduct={handleOpenEditProduct}
