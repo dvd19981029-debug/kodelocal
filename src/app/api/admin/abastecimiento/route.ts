@@ -365,10 +365,10 @@ export async function POST(request: Request) {
         stock: p.stock,
         adr: Number(adr.toFixed(2)),
         dos: Number(dos.toFixed(0)),
-        supplierPriceKg: supplierItem ? supplierItem.price_per_kg : 45.0, // Default $45 si no match
+        supplierPriceKg: supplierItem ? supplierItem.price_per_kg : (p.cost ? Number(p.cost) * OZ_PER_KG : 45.0), // Uso del costo de la BD de la nueva esencia
         supplierCode: supplierItem ? supplierItem.id_proveedor : 'N/A',
         isMatched: !!supplierItem,
-        roiScore: (p.price || 0) / (supplierItem ? supplierItem.price_per_kg / OZ_PER_KG : 45.0 / OZ_PER_KG)
+        roiScore: Number(p.price || 0) / (supplierItem ? supplierItem.price_per_kg / OZ_PER_KG : (p.cost ? Number(p.cost) : 45.0 / OZ_PER_KG))
       };
     });
 

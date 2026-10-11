@@ -194,10 +194,10 @@ export async function PATCH(request: Request) {
 
     let existing = null;
     if (id) {
-      existing = await prisma.product.findUnique({ where: { id } });
+      existing = await prisma.product.findUnique({ where: { id }, include: { category: true } });
     }
     if (!existing && sku) {
-      existing = await prisma.product.findUnique({ where: { sku: String(sku).trim() } });
+      existing = await prisma.product.findUnique({ where: { sku: String(sku).trim() }, include: { category: true } });
     }
     if (!existing && id) {
       existing = await prisma.product.findFirst({
@@ -207,6 +207,7 @@ export async function PATCH(request: Request) {
             { barcode: String(id).trim() },
           ],
         },
+        include: { category: true }
       });
     }
 

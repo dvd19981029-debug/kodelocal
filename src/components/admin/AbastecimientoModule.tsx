@@ -34,7 +34,7 @@ export function AbastecimientoModule() {
   useEffect(() => {
     async function loadProyeccion() {
       try {
-        const token = getStaffToken();
+        const token = await getStaffToken();
         const res = await fetch('/api/admin/dashboard?period=30d', {
           headers: {
             ...(token ? { 'x-staff-token': token } : {})

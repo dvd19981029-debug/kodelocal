@@ -453,7 +453,7 @@ export async function PATCH(request: Request) {
         for (const it of sale.items) {
           if (it.productId) {
             const qty = Math.max(1, it.quantity || 1);
-            const presLower = String(it.presentation || '').toLowerCase();
+            const presLower = String(it.unit || '').toLowerCase();
             const isHalfRestore = presLower.includes('media') || presLower.includes('½');
 
             if (isHalfRestore) {
