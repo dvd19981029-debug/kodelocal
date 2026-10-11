@@ -2,6 +2,7 @@
 
 import React from 'react';
 import {
+  Calculator,
   ReceiptText,
   CheckCheck,
   FileCheck,

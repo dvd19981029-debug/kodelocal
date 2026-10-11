@@ -267,16 +267,37 @@ export default function AdminPage() {
   const margenPorcentual = valorVentaTotal > 0 ? ((gananciaPotencial / valorVentaTotal) * 100) : 0;
 
 
-  // Cálculos de Ventas del Día
+  // Cálculos de Ventas (Tab: Ventas del Día)
   const salesToday = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return sales.filter(s => new Date(s.createdAt) >= today);
   }, [sales]);
 
-  const totalVentasMonto = useMemo(() => salesToday.reduce((acc, s) => acc + Number(s.total || 0), 0), [salesToday]);
-  const totalIvaFiscal = useMemo(() => salesToday.reduce((acc, s) => acc + Number(s.ivaTotal || 0), 0), [salesToday]);
-  const totalDteCount = useMemo(() => salesToday.filter(s => s.tipoComprobante === '01' || s.tipoComprobante === '03').length, [salesToday]);
+  const totalVentasMontoHoy = useMemo(() => salesToday.reduce((acc, s) => acc + Number(s.total || 0), 0), [salesToday]);
+  const totalIvaFiscalHoy = useMemo(() => salesToday.reduce((acc, s) => acc + Number(s.ivaTotal || 0), 0), [salesToday]);
+  const totalDteCountPeriodHoy = useMemo(() => salesToday.filter(s => s.tipoComprobante === '01' || s.tipoComprobante === '03').length, [salesToday]);
+
+  // Cálculos de Ventas (Tab: Reportes por Período)
+  const salesByPeriod = useMemo(() => {
+    if (periodFilter === 'HOY') return salesToday;
+    
+    const now = new Date();
+    return sales.filter(s => {
+      const d = new Date(s.createdAt);
+      if (periodFilter === 'MES') {
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      }
+      if (periodFilter === 'ANIO') {
+        return d.getFullYear() === now.getFullYear();
+      }
+      return true;
+    });
+  }, [sales, salesToday, periodFilter]);
+
+  const totalVentasMontoPeriod = useMemo(() => salesByPeriod.reduce((acc, s) => acc + Number(s.total || 0), 0), [salesByPeriod]);
+  const totalIvaFiscalPeriod = useMemo(() => salesByPeriod.reduce((acc, s) => acc + Number(s.ivaTotal || 0), 0), [salesByPeriod]);
+  const totalDteCountPeriodPeriod = useMemo(() => salesByPeriod.filter(s => s.tipoComprobante === '01' || s.tipoComprobante === '03').length, [salesByPeriod]);
 
 
   // Filtrado de Productos para la tabla
@@ -1482,7 +1503,7 @@ export default function AdminPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="clay-card p-5">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Cobrado Hoy</p>
-                <h3 className="text-2xl font-black text-emerald-600 mt-1">${totalVentasMonto.toFixed(2)}</h3>
+                <h3 className="text-2xl font-black text-emerald-600 mt-1">${totalVentasMontoHoy.toFixed(2)}</h3>
               </div>
               <div className="clay-card p-5">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tickets / DTEs</p>
@@ -1490,7 +1511,7 @@ export default function AdminPage() {
               </div>
               <div className="clay-card p-5">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">IVA Recaudado (13%)</p>
-                <h3 className="text-2xl font-black text-indigo-600 mt-1">${totalIvaFiscal.toFixed(2)}</h3>
+                <h3 className="text-2xl font-black text-indigo-600 mt-1">${totalIvaFiscalHoy.toFixed(2)}</h3>
               </div>
             </div>
 
@@ -1555,17 +1576,17 @@ export default function AdminPage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
                   <span className="text-xs text-slate-500 font-bold block">Ventas Gravadas (Neto)</span>
-                  <span className="text-xl font-black text-slate-800">${(totalVentasMonto / 1.13).toFixed(2)}</span>
+                  <span className="text-xl font-black text-slate-800">${(totalVentasMontoPeriod / 1.13).toFixed(2)}</span>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-purple-50 border border-purple-200">
                   <span className="text-xs text-purple-700 font-bold block">Débito Fiscal IVA (13%)</span>
-                  <span className="text-xl font-black text-purple-700">${totalIvaFiscal.toFixed(2)}</span>
+                  <span className="text-xl font-black text-purple-700">${totalIvaFiscalPeriod.toFixed(2)}</span>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
                   <span className="text-xs text-emerald-700 font-bold block">Total Recaudado</span>
-                  <span className="text-xl font-black text-emerald-700">${totalVentasMonto.toFixed(2)}</span>
+                  <span className="text-xl font-black text-emerald-700">${totalVentasMontoPeriod.toFixed(2)}</span>
                 </div>
               </div>
 

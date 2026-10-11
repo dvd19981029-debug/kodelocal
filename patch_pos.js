@@ -1,13 +1,25 @@
 const fs = require('fs');
-const path = 'src/app/pos/page.tsx';
-let code = fs.readFileSync(path, 'utf8');
 
-const importRegex = /import ThermalTicket from '@\/components\/pos\/ThermalTicket';/;
-const importReplacement = `import ThermalTicket from '@/components/pos/ThermalTicket';\nimport { StockWarningBanner } from '@/components/pos/StockWarningBanner';`;
-code = code.replace(importRegex, importReplacement);
+// Fix CajaSubTab
+const typesPath = 'src/app/pos/types/index.ts';
+if (fs.existsSync(typesPath)) {
+  let typesCode = fs.readFileSync(typesPath, 'utf8');
+  typesCode = typesCode.replace(
+    /export type CajaSubTab = 'listas_facturar' \| 'dtes_emitidos';/,
+    "export type CajaSubTab = 'listas_facturar' | 'dtes_emitidos' | 'corte_z';"
+  );
+  fs.writeFileSync(typesPath, typesCode);
+  console.log('Fixed CajaSubTab type in index.ts');
+}
 
-const renderRegex = /<div className="min-h-screen bg-slate-50 flex flex-col font-sans relative overflow-x-hidden">/;
-const renderReplacement = `<div className="min-h-screen bg-slate-50 flex flex-col font-sans relative overflow-x-hidden">\n      <StockWarningBanner />`;
-code = code.replace(renderRegex, renderReplacement);
-
-fs.writeFileSync(path, code);
+// Fix Calculator import
+const cajaPath = 'src/components/pos/PosCajaModule.tsx';
+if (fs.existsSync(cajaPath)) {
+  let cajaCode = fs.readFileSync(cajaPath, 'utf8');
+  cajaCode = cajaCode.replace(
+    /import \{\s*ReceiptText,/,
+    "import {\n  Calculator,\n  ReceiptText,"
+  );
+  fs.writeFileSync(cajaPath, cajaCode);
+  console.log('Added Calculator to PosCajaModule.tsx');
+}
