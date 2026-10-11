@@ -499,5 +499,115 @@ export const CATALOG_PROFILES_48: Record<string, StaticProfile> = {
     season: 'Otoño / Invierno / Noche',
     occasion: 'Citas nocturnas, eventos formales y ocasiones especiales',
     intensity: 'Intensa'
+  },
+  '50': {
+    family: 'Ámbar Amaderada',
+    accords: ['amaderado', 'mineral', 'aromático', 'cálido especiado', 'salado'],
+    topNotes: ['Notas minerales', 'Hojas de violeta', 'Sal'],
+    heartNotes: ['Jengibre', 'Salvia'],
+    baseNotes: ['Notas amaderadas', 'Vetiver'],
+    season: 'Todo el año / Versátil',
+    occasion: 'Uso diario, salidas con amigos, estilo urbano',
+    intensity: 'Moderada'
+  },
+  '51': {
+    family: 'Aromática Acuática',
+    accords: ['marino', 'aromático', 'cítrico', 'mineral', 'fresco especiado'],
+    topNotes: ['Notas marinas', 'Aquozone', 'Bergamota', 'Mandarina verde'],
+    heartNotes: ['Romero', 'Lavanda', 'Ciprés', 'Lentisco'],
+    baseNotes: ['Notas minerales', 'Almizcle', 'Pachulí', 'Ámbar'],
+    season: 'Primavera / Verano / Calor',
+    occasion: 'Días calurosos, playa, oficina, firma fresca',
+    intensity: 'Moderada'
+  },
+  '52': {
+    family: 'Ámbar Fougère',
+    accords: ['avainillado', 'dulce', 'miel', 'ámbar', 'cálido especiado', 'lavanda'],
+    topNotes: ['Lavanda', 'Menta'],
+    heartNotes: ['Vainilla', 'Benjuí'],
+    baseNotes: ['Miel', 'Haba tonka', 'Tabaco'],
+    season: 'Otoño / Invierno / Noches frescas',
+    occasion: 'Citas nocturnas, fiestas, seducción',
+    intensity: 'Intensa'
+  },
+  '53': {
+    family: 'Aromática Fougère',
+    accords: ['avainillado', 'aromático', 'dulce', 'cálido especiado', 'afrutados'],
+    topNotes: ['Cardamomo', 'Pimienta rosa', 'Hojas de violeta', 'Menta'],
+    heartNotes: ['Piña', 'Canela', 'Melón', 'Salvia', 'Lavanda'],
+    baseNotes: ['Vainilla', 'Castaña caramelizada', 'Cedro', 'Madera de gaiac', 'Amberwood'],
+    season: 'Otoño / Invierno / Climas frescos',
+    occasion: 'Citas románticas, salidas informales elegantes, noche',
+    intensity: 'Intensa'
+  },
+  '54': {
+    family: 'Almizcle Amaderado Floral',
+    accords: ['cítrico', 'verde', 'amaderado', 'fresco especiado', 'aromático'],
+    topNotes: ['Notas verdes', 'Pomelo', 'Especias', 'Bergamota', 'Lavanda', 'Petit grain'],
+    heartNotes: ['Jengibre', 'Gardenia', 'Violeta', 'Salvia'],
+    baseNotes: ['Almizcle', 'Sándalo', 'Incienso', 'Vetiver', 'Madera de gaiac'],
+    season: 'Primavera / Verano / Todo el año',
+    occasion: 'Oficina, uso diario urbano, salidas casuales',
+    intensity: 'Moderada'
+  },
+  '55': {
+    family: 'Ámbar Especiada',
+    accords: ['cálido especiado', 'cuero', 'amaderado', 'ron', 'tabaco', 'avainillado'],
+    topNotes: ['Especias', 'Ron', 'Tabaco'],
+    heartNotes: ['Cuero', 'Iris', 'Tuberosa'],
+    baseNotes: ['Haba tonka', 'Benjuí', 'Madera de gaiac'],
+    season: 'Otoño / Invierno / Noche',
+    occasion: 'Eventos de gala, citas formales, noche fría',
+    intensity: 'Intensa'
+  },
+  '56': {
+    family: 'Aromática Acuática',
+    accords: ['marino', 'aromático', 'humo', 'balsámico', 'fresco especiado'],
+    topNotes: ['Notas marinas', 'Bergamota'],
+    heartNotes: ['Romero', 'Salvia', 'Geranio'],
+    baseNotes: ['Incienso', 'Pachulí'],
+    season: 'Primavera / Verano / Noches templadas',
+    occasion: 'Eventos elegantes, cenas de noche, presencia magnética',
+    intensity: 'Intensa'
+  },
+  '57': {
+    family: 'Floral Frutal',
+    accords: ['cereza', 'dulce', 'almendrado', 'avainillado', 'rosas'],
+    topNotes: ['Cereza ácida', 'Almendra amarga'],
+    heartNotes: ['Rosa', 'Azucena'],
+    baseNotes: ['Vainilla Bourbon', 'Vetiver'],
+    season: 'Todo el año / Noche / Fiestas',
+    occasion: 'Fiestas, salidas nocturnas, eventos especiales',
+    intensity: 'Intensa'
+  },
+  '58': {
+    family: 'Ámbar Floral',
+    accords: ['floral blanco', 'dulce', 'cálido especiado', 'avainillado', 'cacao'],
+    topNotes: ['Almendra', 'Café', 'Bergamota', 'Limón'],
+    heartNotes: ['Tuberosa', 'Jazmín Sambac', 'Flor de azahar', 'Rosa'],
+    baseNotes: ['Haba tonka', 'Cacao', 'Vainilla', 'Sándalo', 'Ámbar'],
+    season: 'Otoño / Invierno / Noche',
+    occasion: 'Noches de fiesta, citas, empoderamiento',
+    intensity: 'Intensa'
+  },
+  '59': {
+    family: 'Amaderada Especiada',
+    accords: ['rosas', 'cálido especiado', 'floral', 'amaderado', 'afrutado', 'aromático'],
+    topNotes: ['Pimienta rosa', 'Pera', 'Nuez moscada', 'Elemí', 'Bergamota'],
+    heartNotes: ['Rosa', 'Clavo de olor', 'Magnolia', 'Flor de lino'],
+    baseNotes: ['Cashmeran', 'Vetiver de Haití', 'Sándalo', 'Ámbar'],
+    season: 'Primavera / Otoño / Todo el año',
+    occasion: 'Estilo vanguardista, citas originales, noche y día con personalidad',
+    intensity: 'Intensa'
+  },
+  '60': {
+    family: 'Ámbar Floral',
+    accords: ['ámbar', 'amaderado', 'cálido especiado', 'fresco especiado', 'metálico'],
+    topNotes: ['Azafrán', 'Jazmín'],
+    heartNotes: ['Amberwood', 'Ámbar gris'],
+    baseNotes: ['Resina de abeto', 'Cedro'],
+    season: 'Todo el año / Firma de lujo',
+    occasion: 'Eventos exclusivos, cenas de gala, distinción máxima',
+    intensity: 'Intensa'
   }
 };

@@ -422,35 +422,41 @@
   },
   "109": {
     "kodigo": "109",
-    "contratipo": "212 H",
+    "contratipo": "212 Men H",
     "marca": "Carolina Herrera",
     "genero": "Caballero",
-    "officialName": "Eau de Lacoste L.12.12 Blanc",
-    "brand": "Lacoste",
-    "family": "Amaderada Aromática",
+    "officialName": "Manhattan",
+    "brand": "Carolina Herrera",
+    "family": "Almizcle Amaderado Floral",
     "accords": [
-      "floral blanco",
       "cítrico",
+      "verde",
       "amaderado",
-      "aromático",
-      "cuero"
+      "fresco especiado",
+      "aromático"
     ],
     "topNotes": [
+      "Notas verdes",
       "Pomelo",
-      "Romero",
-      "Cardamomo"
+      "Especias",
+      "Bergamota",
+      "Lavanda",
+      "Petit grain"
     ],
     "heartNotes": [
-      "Ylang-Ylang",
-      "Tuberosa"
+      "Jengibre",
+      "Gardenia",
+      "Violeta",
+      "Salvia"
     ],
     "baseNotes": [
-      "Gamuza",
-      "Cedro de Virginia",
-      "Cuero",
-      "Vetiver"
+      "Almizcle",
+      "Sándalo",
+      "Incienso",
+      "Vetiver",
+      "Madera de gaiac"
     ],
-    "source": "canonical_fragrantica"
+    "source": "fragrantica"
   },
   "110": {
     "kodigo": "110",
@@ -1520,83 +1526,68 @@
   },
   "141": {
     "kodigo": "141",
-    "contratipo": "Aqua Di Gio Profondo H",
+    "contratipo": "Acqua Di Gio Profondo H",
     "marca": "Giorgio Armani",
     "genero": "Caballero",
-    "officialName": "Acqua di Giò",
+    "officialName": "Deep Ocean",
     "brand": "Giorgio Armani",
-    "family": "Cítrica Acuática",
+    "family": "Aromática Acuática",
     "accords": [
-      "cítrico",
-      "aromático",
       "marino",
+      "aromático",
+      "cítrico",
+      "mineral",
       "fresco especiado"
     ],
     "topNotes": [
-      "Lima",
-      "Limón",
+      "Notas marinas",
+      "Aquozone",
       "Bergamota",
-      "Jazmín",
-      "Naranja",
-      "Mandarina"
+      "Mandarina verde"
     ],
     "heartNotes": [
-      "Notas marinas",
-      "Jazmín",
-      "Calone",
-      "Melocotón",
-      "Fresia",
-      "Ciclamen",
-      "Romero"
+      "Romero",
+      "Lavanda",
+      "Ciprés",
+      "Lentisco"
     ],
     "baseNotes": [
-      "Almizcle blanco",
-      "Cedro",
-      "Musgo de roble",
+      "Notas minerales",
+      "Almizcle",
       "Pachulí",
       "Ámbar"
     ],
-    "source": "canonical_fragrantica"
+    "source": "fragrantica"
   },
   "142": {
     "kodigo": "142",
-    "contratipo": "Aqua Di Gio Profumo H",
+    "contratipo": "Acqua Di Gio Profumo H",
     "marca": "Giorgio Armani",
     "genero": "Caballero",
-    "officialName": "Acqua di Giò",
+    "officialName": "Black Ocean",
     "brand": "Giorgio Armani",
-    "family": "Cítrica Acuática",
+    "family": "Aromática Acuática",
     "accords": [
-      "cítrico",
-      "aromático",
       "marino",
+      "aromático",
+      "humo",
+      "balsámico",
       "fresco especiado"
     ],
     "topNotes": [
-      "Lima",
-      "Limón",
-      "Bergamota",
-      "Jazmín",
-      "Naranja",
-      "Mandarina"
+      "Notas marinas",
+      "Bergamota"
     ],
     "heartNotes": [
-      "Notas marinas",
-      "Jazmín",
-      "Calone",
-      "Melocotón",
-      "Fresia",
-      "Ciclamen",
-      "Romero"
+      "Romero",
+      "Salvia",
+      "Geranio"
     ],
     "baseNotes": [
-      "Almizcle blanco",
-      "Cedro",
-      "Musgo de roble",
-      "Pachulí",
-      "Ámbar"
+      "Incienso",
+      "Pachulí"
     ],
-    "source": "canonical_fragrantica"
+    "source": "fragrantica"
   },
   "143": {
     "kodigo": "143",
@@ -2287,17 +2278,18 @@
   },
   "165": {
     "kodigo": "165",
-    "contratipo": "Born in Roma H",
+    "contratipo": "Born In Roma Uomo H",
     "marca": "Valentino",
     "genero": "Caballero",
-    "officialName": "Born in Roma",
+    "officialName": "Euroboy",
     "brand": "Valentino",
     "family": "Ámbar Amaderada",
     "accords": [
       "amaderado",
-      "aromático",
       "mineral",
-      "cálido especiado"
+      "aromático",
+      "cálido especiado",
+      "salado"
     ],
     "topNotes": [
       "Notas minerales",
@@ -2312,7 +2304,7 @@
       "Notas amaderadas",
       "Vetiver"
     ],
-    "source": "canonical_fragrantica"
+    "source": "fragrantica"
   },
   "166": {
     "kodigo": "166",
@@ -2720,45 +2712,36 @@
   },
   "179": {
     "kodigo": "179",
-    "contratipo": "Bulgari Man In Black H",
+    "contratipo": "Man In Black H",
     "marca": "Bvlgari",
     "genero": "Caballero",
-    "officialName": "Bvlgari Pour Homme",
+    "officialName": "Black Volcano",
     "brand": "Bvlgari",
-    "family": "Amaderada Floral",
+    "family": "Ámbar Especiada",
     "accords": [
+      "cálido especiado",
+      "cuero",
       "amaderado",
-      "fresco especiado",
-      "aromático",
-      "cítrico",
-      "verde"
+      "ron",
+      "tabaco",
+      "avainillado"
     ],
     "topNotes": [
-      "Té",
-      "Aldehídos",
-      "Bergamota",
-      "Lavanda",
-      "Flor de azahar",
-      "Mandarina"
+      "Especias",
+      "Ron",
+      "Tabaco"
     ],
     "heartNotes": [
-      "Pimienta",
+      "Cuero",
       "Iris",
-      "Madera de gaiac",
-      "Palo de rosa",
-      "Coriandro",
-      "Geranio",
-      "Cardamomo"
+      "Tuberosa"
     ],
     "baseNotes": [
-      "Almizcle",
-      "Cedro",
-      "Musgo de roble",
-      "Vetiver",
-      "Ámbar",
-      "Haba tonka"
+      "Haba tonka",
+      "Benjuí",
+      "Madera de gaiac"
     ],
-    "source": "canonical_fragrantica"
+    "source": "fragrantica"
   },
   "180": {
     "kodigo": "180",
@@ -6136,22 +6119,31 @@
     "contratipo": "Le Male Elixir H",
     "marca": "Jean Paul Gaultier",
     "genero": "Caballero",
-    "officialName": "Le Mâle Elixir",
+    "officialName": "The Man Elixir",
     "brand": "Jean Paul Gaultier",
-    "family": "DULCE",
+    "family": "Ámbar Fougère",
     "accords": [
-      "dulce"
+      "avainillado",
+      "dulce",
+      "miel",
+      "ámbar",
+      "cálido especiado",
+      "lavanda"
     ],
     "topNotes": [
-      "Gourmand"
+      "Lavanda",
+      "Menta"
     ],
     "heartNotes": [
-      "Creamy"
+      "Vainilla",
+      "Benjuí"
     ],
     "baseNotes": [
-      "Spicy"
+      "Miel",
+      "Haba tonka",
+      "Tabaco"
     ],
-    "source": "parfumo"
+    "source": "fragrantica"
   },
   "287": {
     "kodigo": "287",
@@ -8101,22 +8093,37 @@
     "contratipo": "Stronger With You H",
     "marca": "Giorgio Armani",
     "genero": "Caballero",
-    "officialName": "Emporio Armani - Stronger With You Absolutely",
+    "officialName": "Always With You",
     "brand": "Giorgio Armani",
-    "family": "DULCE",
+    "family": "Aromática Fougère",
     "accords": [
-      "dulce"
+      "avainillado",
+      "aromático",
+      "dulce",
+      "cálido especiado",
+      "afrutados"
     ],
     "topNotes": [
-      "Gourmand"
+      "Cardamomo",
+      "Pimienta rosa",
+      "Hojas de violeta",
+      "Menta"
     ],
     "heartNotes": [
-      "Spicy"
+      "Piña",
+      "Canela",
+      "Melón",
+      "Salvia",
+      "Lavanda"
     ],
     "baseNotes": [
-      "Woody"
+      "Vainilla",
+      "Castaña caramelizada",
+      "Cedro",
+      "Madera de gaiac",
+      "Amberwood"
     ],
-    "source": "parfumo"
+    "source": "fragrantica"
   },
   "351": {
     "kodigo": "351",
@@ -8429,22 +8436,37 @@
     "contratipo": "Toy Boy H",
     "marca": "Moschino",
     "genero": "Caballero",
-    "officialName": "Toy Boy",
+    "officialName": "Black Bear",
     "brand": "Moschino",
-    "family": "FLORAL",
+    "family": "Amaderada Especiada",
     "accords": [
-      "floral"
+      "rosas",
+      "cálido especiado",
+      "floral",
+      "amaderado",
+      "afrutado",
+      "aromático"
     ],
     "topNotes": [
-      "Spicy"
+      "Pimienta rosa",
+      "Pera",
+      "Nuez moscada",
+      "Elemí",
+      "Bergamota"
     ],
     "heartNotes": [
-      "Sweet"
+      "Rosa",
+      "Clavo de olor",
+      "Magnolia",
+      "Flor de lino"
     ],
     "baseNotes": [
-      "Synthetic"
+      "Cashmeran",
+      "Vetiver de Haití",
+      "Sándalo",
+      "Ámbar"
     ],
-    "source": "parfumo"
+    "source": "fragrantica"
   },
   "363": {
     "kodigo": "363",
@@ -12622,30 +12644,37 @@
   },
   "495": {
     "kodigo": "495",
-    "contratipo": "Good Girl F",
+    "contratipo": "Good Girl M",
     "marca": "Carolina Herrera",
     "genero": "Dama",
-    "officialName": "Good Girl",
+    "officialName": "Femme Fatale",
     "brand": "Carolina Herrera",
-    "family": "FLORAL BLANCO cálido especiado",
+    "family": "Ámbar Floral",
     "accords": [
       "floral blanco",
-      "cálido especiado",
-      "rosas",
       "dulce",
+      "cálido especiado",
+      "avainillado",
       "cacao"
     ],
     "topNotes": [
       "Almendra",
-      "Café"
+      "Café",
+      "Bergamota",
+      "Limón"
     ],
     "heartNotes": [
+      "Tuberosa",
       "Jazmín Sambac",
-      "Tuberosa"
+      "Flor de azahar",
+      "Rosa"
     ],
     "baseNotes": [
       "Haba tonka",
-      "Cacao"
+      "Cacao",
+      "Vainilla",
+      "Sándalo",
+      "Ámbar"
     ],
     "source": "fragrantica"
   },
@@ -17706,28 +17735,29 @@
   },
   "658": {
     "kodigo": "658",
-    "contratipo": "Baccarat Rouge",
+    "contratipo": "Baccarat Rouge 540 U",
     "marca": "Maison Francis Kurkdjian",
     "genero": "Unisex",
-    "officialName": "Baccarat Rouge 540",
+    "officialName": "Cristal Rouge",
     "brand": "Maison Francis Kurkdjian",
-    "family": "AMADERADO fresco especiado",
+    "family": "Ámbar Floral",
     "accords": [
+      "ámbar",
       "amaderado",
-      "fresco especiado",
       "cálido especiado",
-      "aromático",
-      "floral blanco"
+      "fresco especiado",
+      "metálico"
     ],
     "topNotes": [
-      "Jazmín",
-      "Azafrán"
+      "Azafrán",
+      "Jazmín"
     ],
     "heartNotes": [
-      "Amberwood"
+      "Amberwood",
+      "Ámbar gris"
     ],
     "baseNotes": [
-      "Fir Resin",
+      "Resina de abeto",
       "Cedro"
     ],
     "source": "fragrantica"
@@ -18639,10 +18669,10 @@
   },
   "695": {
     "kodigo": "695",
-    "contratipo": "La Bomba",
+    "contratipo": "La Bomba M",
     "marca": "Carolina Herrera",
     "genero": "Dama",
-    "officialName": "Very Good Girl Glam",
+    "officialName": "Sweet Bomb",
     "brand": "Carolina Herrera",
     "family": "Floral Frutal",
     "accords": [
@@ -18664,7 +18694,7 @@
       "Vainilla Bourbon",
       "Vetiver"
     ],
-    "source": "canonical_fragrantica"
+    "source": "fragrantica"
   },
   "696": {
     "kodigo": "696",
