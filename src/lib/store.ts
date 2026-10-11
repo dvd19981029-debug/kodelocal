@@ -1857,7 +1857,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   }
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v19_botes_zero";
+export const DATA_VERSION = "2026_oficial_real_v20_zero_all_movements";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;

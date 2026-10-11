@@ -1,4 +1,4 @@
-// src/lib/kardex.ts
+import { DATA_VERSION } from './store';
 
 export type KardexMovementType = 
   | 'IN_PURCHASE'   // Entrada por Compra a Proveedor
@@ -34,7 +34,8 @@ export const INITIAL_KARDEX: KardexMovement[] = [];
 export function getStoredKardex(): KardexMovement[] {
   if (typeof window === 'undefined') return INITIAL_KARDEX;
   const currentVersion = localStorage.getItem('kodelocal_data_version');
-  if (currentVersion !== '2026_zero_stock_v3') {
+  if (currentVersion !== DATA_VERSION) {
+    localStorage.setItem('kodelocal_kardex', JSON.stringify([]));
     return [];
   }
   const saved = localStorage.getItem('kodelocal_kardex');

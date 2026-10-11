@@ -1,5 +1,4 @@
-// src/lib/purchases.ts
-import { ProductItem } from './store';
+import { ProductItem, DATA_VERSION } from './store';
 
 export type TipoDteCompra = 'CCF' | 'FAC' | 'FSE' | 'NC';
 
@@ -156,7 +155,8 @@ export function saveStoredSuppliers(suppliers: Supplier[]): void {
 export function getStoredPurchases(): PurchaseRecord[] {
   if (typeof window === 'undefined') return INITIAL_PURCHASES;
   const currentVersion = localStorage.getItem('kodelocal_data_version');
-  if (currentVersion !== '2026_zero_stock_v3') {
+  if (currentVersion !== DATA_VERSION) {
+    localStorage.setItem('kodelocal_purchases', JSON.stringify([]));
     return [];
   }
   const saved = localStorage.getItem('kodelocal_purchases');
