@@ -266,10 +266,18 @@ export default function AdminPage() {
   const gananciaPotencial = valorVentaTotal - valorCostoTotal;
   const margenPorcentual = valorVentaTotal > 0 ? ((gananciaPotencial / valorVentaTotal) * 100) : 0;
 
-  // Cálculos de Ventas
-  const totalVentasMonto = useMemo(() => sales.reduce((acc, s) => acc + Number(s.total || 0), 0), [sales]);
-  const totalIvaFiscal = useMemo(() => sales.reduce((acc, s) => acc + Number(s.ivaTotal || 0), 0), [sales]);
-  const totalDteCount = useMemo(() => sales.filter(s => s.tipoComprobante === '01' || s.tipoComprobante === '03').length, [sales]);
+
+  // Cálculos de Ventas del Día
+  const salesToday = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return sales.filter(s => new Date(s.createdAt) >= today);
+  }, [sales]);
+
+  const totalVentasMonto = useMemo(() => salesToday.reduce((acc, s) => acc + Number(s.total || 0), 0), [salesToday]);
+  const totalIvaFiscal = useMemo(() => salesToday.reduce((acc, s) => acc + Number(s.ivaTotal || 0), 0), [salesToday]);
+  const totalDteCount = useMemo(() => salesToday.filter(s => s.tipoComprobante === '01' || s.tipoComprobante === '03').length, [salesToday]);
+
 
   // Filtrado de Productos para la tabla
   const filteredProducts = useMemo(() => {
@@ -1478,7 +1486,7 @@ export default function AdminPage() {
               </div>
               <div className="clay-card p-5">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tickets / DTEs</p>
-                <h3 className="text-2xl font-black text-slate-800 mt-1">{sales.length}</h3>
+                <h3 className="text-2xl font-black text-slate-800 mt-1">{salesToday.length}</h3>
               </div>
               <div className="clay-card p-5">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">IVA Recaudado (13%)</p>
@@ -1488,13 +1496,13 @@ export default function AdminPage() {
 
             <div className="clay-card p-5">
               <h3 className="font-extrabold text-sm text-slate-800 mb-3">Transacciones Realizadas</h3>
-              {sales.length === 0 ? (
+              {salesToday.length === 0 ? (
                 <div className="p-8 text-center text-slate-400 text-xs">
                   Aún no se registran ventas el día de hoy.
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {sales.map(s => (
+                  {salesToday.map(s => (
                     <div key={s.id} className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
                       <div>
                         <span className="font-bold text-slate-800 block font-mono">{s.saleNumber}</span>
