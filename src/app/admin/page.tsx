@@ -2583,7 +2583,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-bold text-slate-700 block mb-1">
-                      Precio 1 Onza ($ PVP) <span className="text-rose-500">*</span>
+                      {editingProduct.category === 'Esencias para Perfume' || !editingProduct.category ? 'Precio 1 Onza' : 'Precio Unitario'} ($ PVP) <span className="text-rose-500">*</span>
                     </label>
                     <div className="clay-input flex items-center gap-2 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20">
                       <span className="font-bold text-slate-400 select-none text-base">$</span>
@@ -2598,12 +2598,13 @@ export default function AdminPage() {
                         className="bg-transparent border-none outline-none w-full text-base font-black text-slate-800 p-0"
                       />
                     </div>
-                    <span className="text-[10px] text-slate-400 mt-1 block">Precio por onza completa en mostrador</span>
+                    <span className="text-[10px] text-slate-400 mt-1 block">{(editingProduct.category === 'Esencias para Perfume' || !editingProduct.category) ? 'Precio por onza completa en mostrador' : 'Precio de venta al público'}</span>
                   </div>
 
+                  {(editingProduct.category === 'Esencias para Perfume' || !editingProduct.category) && (
                   <div>
                     <label className="text-xs font-bold text-purple-700 block mb-1">
-                      Precio ½ Onza ($) <span className="text-[10px] font-black text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded">Ecommerce</span>
+                      Precio ½ Onza ($)
                     </label>
                     <div className="clay-input flex items-center gap-2 focus-within:border-purple-400 focus-within:ring-2 focus-within:ring-purple-500/20">
                       <span className="font-bold text-purple-400 select-none text-base">$</span>
@@ -2617,8 +2618,8 @@ export default function AdminPage() {
                         className="bg-transparent border-none outline-none w-full text-base font-black text-purple-700 p-0"
                       />
                     </div>
-                    
                   </div>
+                )}
 
                   <div>
                     <label className="text-xs font-bold text-slate-700 block mb-1">
