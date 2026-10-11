@@ -1278,7 +1278,7 @@ export default function AdminPage() {
                       <th className="py-3 px-3">Precio 1 Oz ($)</th>
                       <th className="py-3 px-3">
                         <span>Precio ½ Oz ($)</span>
-                        <span className="text-[9px] lowercase text-purple-600 font-extrabold block">(tienda online)</span>
+                        
                       </th>
                       <th className="py-3 px-3">Margen Neto</th>
                       <th className="py-3 px-3">Stock</th>
@@ -1368,8 +1368,17 @@ export default function AdminPage() {
                             )}
                           </td>
 
-                          <td className="py-2.5 px-3 font-bold text-emerald-600 font-mono">
-                            +${margen.toFixed(2)} ({((margen/p.price)*100).toFixed(0)}%)
+                          <td className="py-2.5 px-3">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="font-bold text-emerald-600 font-mono text-xs">
+                                +${margen.toFixed(2)} ({((margen/p.price)*100).toFixed(0)}%)
+                              </span>
+                              {isEssence && (
+                                <span className="font-bold text-emerald-500/80 font-mono text-[10px]" title="Margen para frasco de media onza">
+                                  ½ Oz: +${(halfPriceVal - (p.cost / 2)).toFixed(2)} ({(((halfPriceVal - (p.cost / 2)) / halfPriceVal)*100).toFixed(0)}%)
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="py-2.5 px-3 font-mono font-bold text-slate-700">
                             {p.stock} {p.unit === 'Onza' ? 'Oz' : 'Un.'}
@@ -2197,7 +2206,7 @@ export default function AdminPage() {
                         className="bg-transparent border-none outline-none w-full text-sm font-black text-purple-700 p-0"
                       />
                     </div>
-                    <span className="text-[9.5px] text-purple-600 mt-0.5 block font-bold">Ecommerce</span>
+                    
                   </div>
 
                   <div>
@@ -2608,7 +2617,7 @@ export default function AdminPage() {
                         className="bg-transparent border-none outline-none w-full text-base font-black text-purple-700 p-0"
                       />
                     </div>
-                    <span className="text-[10px] text-purple-600 mt-1 block font-bold">Precio mostrado por defecto en tienda online</span>
+                    
                   </div>
 
                   <div>
