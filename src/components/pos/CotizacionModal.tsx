@@ -89,8 +89,8 @@ export default function CotizacionModal({ isOpen, onClose, sale, notices }: Coti
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[92vh] flex flex-col overflow-hidden border border-slate-200">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in print:absolute print:inset-0 print:bg-white print:p-0 print:block print:w-full print:h-auto">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[92vh] flex flex-col overflow-hidden border border-slate-200 print:shadow-none print:border-none print:rounded-none print:max-h-none print:h-auto print:overflow-visible print:w-full print:max-w-none print:block">
 
         {/* Barra Superior de Controles */}
         <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between print:hidden">
@@ -147,7 +147,7 @@ export default function CotizacionModal({ isOpen, onClose, sale, notices }: Coti
         </div>
 
         {/* Hoja de Cotización (Optimizada para pantalla e impresión) */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 text-slate-800 text-xs font-sans print:p-0 print:m-0">
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 text-slate-800 text-xs font-sans print:p-0 print:m-0 print:overflow-visible print:h-auto print:block">
 
           {/* Encabezado con logo */}
           <div className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-5 border-b-2 border-amber-600/70">
