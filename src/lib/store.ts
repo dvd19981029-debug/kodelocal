@@ -1857,7 +1857,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   }
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v20_zero_all_movements";
+export const DATA_VERSION = "2026_oficial_real_v21_zero_all_including_customers";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;
@@ -1871,6 +1871,7 @@ export function resetDatabaseToInitialStock(): ProductItem[] {
     localStorage.setItem('kodelocal_sales', JSON.stringify([]));
     localStorage.setItem('kodelocal_purchases', JSON.stringify([]));
     localStorage.setItem('kodelocal_kardex', JSON.stringify([]));
+    localStorage.setItem('kodelocal_customers', JSON.stringify([]));
     localStorage.setItem('kodelocal_data_version', DATA_VERSION);
   } catch (e) {
     console.error('Error in resetDatabaseToInitialStock:', e);
@@ -1893,6 +1894,7 @@ export function resetDatabaseToZeroStock(): ProductItem[] {
     localStorage.setItem('kodelocal_sales', JSON.stringify([]));
     localStorage.setItem('kodelocal_purchases', JSON.stringify([]));
     localStorage.setItem('kodelocal_kardex', JSON.stringify([]));
+    localStorage.setItem('kodelocal_customers', JSON.stringify([]));
     localStorage.setItem('kodelocal_data_version', DATA_VERSION);
   } catch (e) {
     console.error('Error in resetDatabaseToZeroStock:', e);
