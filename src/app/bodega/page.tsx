@@ -51,6 +51,7 @@ import {
 } from '@/lib/purchases';
 import { getActiveUser, UserAccount, getStaffToken } from '@/lib/auth';
 import { supabase } from '@/lib/supabaseClient';
+import { getOfflineSalesQueue } from '@/lib/offlineSync';
 
 // Singleton para el AudioContext
 let globalAudioCtx: AudioContext | null = null;
@@ -338,10 +339,12 @@ export default function BodegaPage() {
 
         // Cargar también ventas y comandas de mostrador registradas en Supabase
         let posSales: SaleRecord[] = [];
+        let posLoaded = false;
         try {
           const salesRes = await fetch('/api/sales?limit=100');
           const salesData = await salesRes.json();
           if (salesData.success && Array.isArray(salesData.sales)) {
+            posLoaded = true;
             posSales = salesData.sales
               .filter((s: any) => s.channel === 'POS' || s.orderStatus === 'PENDING_PREPARATION' || s.orderStatus === 'READY_AT_WINDOW')
               .map((s: any) => ({
@@ -379,7 +382,16 @@ export default function BodegaPage() {
         } catch (_) {}
 
         setSales(prev => {
-          const localNonWeb = prev.filter(s => s.channel !== 'ONLINE' && !webSales.some(w => w.saleNumber === s.saleNumber));
+          const queuedNumbers = new Set(getOfflineSalesQueue().map(q => q.saleNumber));
+          const localNonWeb = prev.filter(s => {
+            if (s.channel === 'ONLINE' || webSales.some(w => w.saleNumber === s.saleNumber)) return false;
+            if (!posLoaded) return true;
+            if (posSales.some(p => p.saleNumber === s.saleNumber)) return true;
+            // Comanda local ausente en BD: solo se conserva si es reciente o sigue en la cola offline
+            const isComanda = s.status === 'PENDING_PREPARATION' || s.status === 'READY_AT_WINDOW';
+            const isFresh = Date.now() - new Date(s.createdAt).getTime() < 2 * 60 * 1000;
+            return !isComanda || isFresh || queuedNumbers.has(s.saleNumber);
+          });
           const mergedMap = new Map<string, SaleRecord>();
           localNonWeb.forEach(s => mergedMap.set(s.saleNumber || s.id, s));
           posSales.forEach(s => mergedMap.set(s.saleNumber || s.id, s));
@@ -482,14 +494,26 @@ export default function BodegaPage() {
         body: JSON.stringify({ orderId, orderStatus: 'CANCELADO', restock: true })
       }).catch(() => {});
     } else {
-      fetch('/api/sales', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
-        },
-        body: JSON.stringify({ id: orderId, saleNumber: sales.find(s => s.id === orderId)?.saleNumber, orderStatus: 'CANCELADO' })
-      }).catch(() => {});
+      try {
+        const res = await fetch('/api/sales', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
+          body: JSON.stringify({
+            id: orderId,
+            saleNumber: sales.find(s => s.id === orderId)?.saleNumber,
+            orderStatus: 'CANCELADO',
+            expectedStatus: ['PENDING_PREPARATION', 'READY_AT_WINDOW'],
+          })
+        });
+        if (res.status === 409) {
+          showToast('⚠️ Esta comanda ya cambió de estado en otro dispositivo (¿ya fue cobrada?). Actualizando...');
+          fetchEcommerceOrders();
+          return;
+        }
+      } catch (_) {}
     }
 
     setSales(prev => {
@@ -522,14 +546,26 @@ export default function BodegaPage() {
 
     const targetSale = sales.find(s => s.id === orderId);
     if (!targetSale || targetSale.channel !== 'ONLINE') {
-      fetch('/api/sales', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
-        },
-        body: JSON.stringify({ id: orderId, saleNumber: targetSale?.saleNumber, orderStatus: 'READY_AT_WINDOW' })
-      }).catch(() => {});
+      try {
+        const res = await fetch('/api/sales', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
+          body: JSON.stringify({
+            id: orderId,
+            saleNumber: targetSale?.saleNumber,
+            orderStatus: 'READY_AT_WINDOW',
+            expectedStatus: ['PENDING_PREPARATION'],
+          })
+        });
+        if (res.status === 409) {
+          showToast('⚠️ Esta comanda ya cambió de estado en otro dispositivo. Actualizando...');
+          fetchEcommerceOrders();
+          return;
+        }
+      } catch (_) {}
     }
 
     setSales(prev => {

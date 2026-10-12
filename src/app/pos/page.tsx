@@ -25,10 +25,12 @@ import {
   getMunicipiosByDepartamento 
 } from '@/lib/svTerritory';
 import { getStaffToken, getActiveSessionUI } from '@/lib/auth';
+import { supabase } from '@/lib/supabaseClient';
 import { 
   syncSaleOnlineOrQueue, 
   initOfflineSync, 
   getOfflineQueueCount, 
+  getOfflineSalesQueue, 
   flushOfflineQueue 
 } from '@/lib/offlineSync';
 import {
@@ -377,7 +379,7 @@ export default function PosPage() {
     };
   }, []);
 
-  useEffect(() => {
+  const syncSalesFromServer = React.useCallback(() => {
     getStaffToken().then(staffToken => {
       fetch('/api/ecommerce/orders', {
         headers: {
@@ -547,9 +549,16 @@ export default function PosPage() {
           setSales(prev => {
             const mergedMap = new Map<string, SaleRecord>();
             dbSales.forEach(s => mergedMap.set(s.saleNumber, s));
+            const queuedNumbers = new Set(getOfflineSalesQueue().map(q => q.saleNumber));
             prev.forEach(p => {
               if (!mergedMap.has(p.saleNumber)) {
-                mergedMap.set(p.saleNumber, p);
+                // La BD es la fuente de verdad: una comanda local ausente en BD solo se conserva
+                // si es reciente (POST en vuelo) o sigue en la cola offline.
+                const isComanda = p.status === 'PENDING_PREPARATION' || p.status === 'READY_AT_WINDOW';
+                const isFresh = Date.now() - new Date(p.createdAt).getTime() < 2 * 60 * 1000;
+                if (p.channel === 'ONLINE' || !isComanda || isFresh || queuedNumbers.has(p.saleNumber)) {
+                  mergedMap.set(p.saleNumber, p);
+                }
               } else {
                 const existing = mergedMap.get(p.saleNumber)!;
                 if (!existing.dteInfo && p.dteInfo) {
@@ -567,6 +576,69 @@ export default function PosPage() {
       })
       .catch(err => console.error('Error cargando ventas desde DB:', err));
   }, []);
+
+  // Carga inicial de ventas/pedidos desde el servidor
+  useEffect(() => {
+    syncSalesFromServer();
+  }, [syncSalesFromServer]);
+
+  // Sincronización entre dispositivos: Supabase Realtime + polling de respaldo
+  useEffect(() => {
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    let productsTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const refreshProductsFromServer = () => {
+      fetch('/api/products?fresh=true', { cache: 'no-store' })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.products) && data.products.length > 0) {
+            setProducts(data.products);
+            localStorage.setItem('kodelocal_products', JSON.stringify(data.products));
+          }
+        })
+        .catch(() => {});
+    };
+
+    // Agrupa ráfagas de eventos (una venta toca varias filas) en una sola recarga
+    const scheduleSalesSync = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => syncSalesFromServer(), 600);
+    };
+    const scheduleProductsSync = () => {
+      if (productsTimer) clearTimeout(productsTimer);
+      productsTimer = setTimeout(() => refreshProductsFromServer(), 600);
+    };
+
+    const channel = supabase
+      .channel('pos-realtime-channel')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'Sale' }, scheduleSalesSync)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'EcommerceOrder' }, scheduleSalesSync)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'Product' }, scheduleProductsSync)
+      .subscribe();
+
+    // Respaldo cada 30 s por si Realtime se desconecta o la tabla no está publicada
+    const intervalId = setInterval(() => {
+      if (typeof navigator !== 'undefined' && navigator.onLine && document.visibilityState === 'visible') {
+        syncSalesFromServer();
+      }
+    }, 30 * 1000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        syncSalesFromServer();
+        refreshProductsFromServer();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      if (productsTimer) clearTimeout(productsTimer);
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      supabase.removeChannel(channel);
+    };
+  }, [syncSalesFromServer]);
 
   // Filtrado de productos
   const filteredProducts = useMemo(() => {

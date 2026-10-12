@@ -364,14 +364,56 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: false, error: 'Venta no encontrada' }, { status: 404 });
     }
 
+    // Control de conflictos entre dispositivos: si el cliente indica el estado que esperaba
+    // y la venta ya cambió (p. ej. Caja la cobró mientras Bodega la cancelaba), se rechaza.
+    const { expectedStatus } = body as { expectedStatus?: string | string[] };
+    if (expectedStatus) {
+      const allowed = Array.isArray(expectedStatus) ? expectedStatus : [expectedStatus];
+      const current = sale.orderStatus || 'COMPLETED';
+      if (!allowed.includes(current)) {
+        return NextResponse.json(
+          { success: false, error: 'La comanda cambió de estado en otro dispositivo', code: 'STATE_CONFLICT', currentStatus: current },
+          { status: 409 }
+        );
+      }
+    }
+
     const isAlreadyCancelled = sale.orderStatus === 'CANCELLED' || sale.orderStatus === 'CANCELADO' || sale.orderStatus === 'ANULADA';
     const isCancelling = (orderStatus === 'CANCELLED' || orderStatus === 'CANCELADO' || orderStatus === 'ANULADA') && !isAlreadyCancelled;
     
     const isAlreadyCompleted = sale.paymentStatus === 'COMPLETED' || sale.orderStatus === 'COMPLETED';
+
+    // Una venta ya cancelada no puede completarse (evitaría descontar stock de una comanda anulada)
+    if (isAlreadyCancelled && (paymentStatus === 'COMPLETED' || orderStatus === 'COMPLETED')) {
+      return NextResponse.json(
+        { success: false, error: 'La comanda ya fue cancelada', code: 'STATE_CONFLICT', currentStatus: sale.orderStatus },
+        { status: 409 }
+      );
+    }
+
     const isCompletingNow = !isAlreadyCompleted && (paymentStatus === 'COMPLETED' || orderStatus === 'COMPLETED') && !isCancelling;
 
+    // Reclamo atómico de la transición a COMPLETED: si dos peticiones llegan a la vez,
+    // solo una obtiene count > 0 y descuenta el inventario.
+    let shouldDeduct = isCompletingNow;
+    if (isCompletingNow) {
+      const claim = await prisma.sale.updateMany({
+        where: {
+          id: sale.id,
+          paymentStatus: { not: 'COMPLETED' },
+          OR: [{ orderStatus: null }, { orderStatus: { not: 'COMPLETED' } }],
+        },
+        data: {
+          ...(orderStatus ? { orderStatus } : {}),
+          ...(paymentStatus ? { paymentStatus } : {}),
+        },
+      });
+      shouldDeduct = claim.count > 0;
+    }
+
     // Si está transicionando a completado (ej. cobrando una comanda que estaba pendiente)
-    if (isCompletingNow && sale.items && sale.items.length > 0) {
+    if (shouldDeduct && sale.items && sale.items.length > 0) {
+      try {
       await prisma.$transaction(async (tx) => {
         // Descontar inventario aquí
         const productIds = Array.from(new Set(sale.items.map((it) => it.productId).filter(Boolean))) as string[];
@@ -444,11 +486,34 @@ export async function PATCH(request: Request) {
           }
         }
       });
+      } catch (deductErr) {
+        // Revertir el reclamo para que la comanda pueda reintentarse sin quedar completada sin descuento
+        await prisma.sale.updateMany({
+          where: { id: sale.id },
+          data: {
+            orderStatus: sale.orderStatus,
+            paymentStatus: sale.paymentStatus,
+          },
+        });
+        throw deductErr;
+      }
     }
     
     // Si se está CANCELANDO, y YA estaba COMPLETADO, devolver el stock.
     // Si NO estaba completado, NO descontamos nada, por lo que NO hay que devolver nada.
-    if (isCancelling && isAlreadyCompleted && sale.items && sale.items.length > 0) {
+    // Reclamo atómico: solo una petición concurrente obtiene count > 0 y devuelve el stock.
+    let shouldRestock = isCancelling && isAlreadyCompleted;
+    if (shouldRestock) {
+      const cancelClaim = await prisma.sale.updateMany({
+        where: {
+          id: sale.id,
+          OR: [{ orderStatus: null }, { orderStatus: { notIn: ['CANCELLED', 'CANCELADO', 'ANULADA'] } }],
+        },
+        data: { orderStatus },
+      });
+      shouldRestock = cancelClaim.count > 0;
+    }
+    if (shouldRestock && sale.items && sale.items.length > 0) {
       await prisma.$transaction(async (tx) => {
         for (const it of sale.items) {
           if (it.productId) {
