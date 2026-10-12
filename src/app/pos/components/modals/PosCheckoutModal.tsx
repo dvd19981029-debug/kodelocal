@@ -1,3 +1,5 @@
+import { useState, useMemo } from "react";
+
 import React from 'react';
 import { 
   X, 
@@ -86,6 +88,18 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
   isProcessing,
   handleCompleteSale,
 }) => {
+  const [customerSearchQuery, setCustomerSearchQuery] = useState("");
+  const filteredCustomers = useMemo(() => {
+    if (!customerSearchQuery.trim()) return customers.slice(0, 50);
+    const q = customerSearchQuery.toLowerCase().trim();
+    return customers.filter(c => 
+      (c.name?.toLowerCase().includes(q)) || 
+      (c.email?.toLowerCase().includes(q)) || 
+      (c.numDocumento?.includes(q)) || 
+      (c.nrc?.includes(q))
+    ).slice(0, 50);
+  }, [customers, customerSearchQuery]);
+
   if (!isOpen) return null;
 
   return (
@@ -147,13 +161,21 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
             </button>
           </div>
 
+          <input
+            type="text"
+            placeholder="Buscar por nombre, correo, DUI o NRC..."
+            value={customerSearchQuery}
+            onChange={(e) => setCustomerSearchQuery(e.target.value)}
+            className="text-xs border border-slate-200 rounded-lg px-3 py-1.5 w-full mb-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-50"
+          />
+
           <select
             value={selectedCustomerId}
             onChange={(e) => handleSelectCustomer(e.target.value)}
             className="clay-input w-full text-xs py-2 font-bold bg-white"
           >
             <option value="">Consumidor Final (Venta Genérica)</option>
-            {customers.map((c) => (
+            {filteredCustomers.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name} {c.nrc ? `(CCF: ${c.nrc})` : `(DUI: ${c.numDocumento})`}
               </option>
@@ -222,7 +244,7 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
                     title="Autocompletar con cliente registrado"
                   >
                     <option value="" disabled>🔍 Cargar cliente registrado...</option>
-                    {customers.map((c) => (
+                    {filteredCustomers.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name} {c.numDocumento && c.numDocumento !== '00000000-0' ? `(${c.numDocumento})` : ''}
                       </option>

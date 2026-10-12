@@ -865,6 +865,32 @@ export default function PosPage() {
     });
   }, [sales, bodegaOrdenesFilter, bodegaOrdenesSearch]);
 
+  const handleMarkOrderReadyFromPos = async (orderId: string) => {
+    const targetSale = sales.find(s => s.id === orderId || s.saleNumber === orderId);
+    try {
+      const staffToken = await getStaffToken();
+      if (!targetSale || targetSale.channel === "ONLINE") {
+        fetch("/api/ecommerce/orders", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(staffToken ? { "x-staff-token": staffToken } : {}),
+          },
+          body: JSON.stringify({ orderId, orderStatus: "READY_AT_WINDOW" }),
+        }).catch(err => console.error(err));
+      }
+      if (!targetSale || targetSale.channel !== "ONLINE") {
+        fetch("/api/sales", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: orderId, saleNumber: targetSale?.saleNumber, orderStatus: "READY_AT_WINDOW" }),
+        }).catch(() => {});
+      }
+    } catch (e) {}
+    setSales(prev => prev.map(s => (s.id === orderId || s.saleNumber === orderId) ? { ...s, status: "READY_AT_WINDOW" } : s));
+    triggerSalesSync();
+  };
+
   const handleMarkOrderDeliveredFromPos = async (orderId: string) => {
     const targetSale = sales.find(s => s.id === orderId || s.saleNumber === orderId);
 
@@ -1471,6 +1497,8 @@ export default function PosPage() {
     const municipio = order.cliente?.municipio || matchedCust?.municipio || 'San Salvador Centro';
 
     const tipo: '01' | '03' = (order.tipoComprobante === '03' || matchedCust?.documentoPreferido === '03' || nrc) ? '03' : '01';
+
+    setSelectedCustomerId(matchedCust?.id || "");
 
     setClienteNombre(nombre);
     setClienteDoc(doc);
@@ -2279,6 +2307,8 @@ export default function PosPage() {
             setBodegaOrdenesSearch={setBodegaOrdenesSearch}
             filteredBodegaOrders={filteredBodegaOrders}
             setSelectedSaleDetail={setSelectedSaleDetail}
+            handleMarkOrderReadyFromPos={handleMarkOrderReadyFromPos}
+
             handleMarkOrderDeliveredFromPos={handleMarkOrderDeliveredFromPos}
           />
         )}
