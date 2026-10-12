@@ -1554,6 +1554,26 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "stockHalf": 0
   },
   {
+    "id": "bote-100ml-rey-luis",
+    "sku": "BOT-100-REY-L",
+    "barcode": "741002000020",
+    "name": "Bote Rey Luis 100ml Rosca",
+    "officialName": "Rey Luis",
+    "brand": "",
+    "gender": "Unisex",
+    "category": "Botes",
+    "unit": "Unidad",
+    "price": 1.5,
+    "cost": 0.55,
+    "stock": 1000,
+    "minStock": 25,
+    "imageUrl": "/images/botes/bote_100ml_rey_luis.jpg",
+    "description": "Frasco cilíndrico de vidrio transparente 100ml estilo Louis Vuitton con cuello translúcido y tapa escalonada negra.",
+    "isAvailableOnline": true,
+    "puesto": "B6",
+    "stockHalf": 0
+  },
+  {
     "id": "bolsa-lujo",
     "sku": "EMP-BOL",
     "barcode": "741999000EMP-BOL",
@@ -1857,7 +1877,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   }
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v21_zero_all_including_customers";
+export const DATA_VERSION = "2026_oficial_real_v22_bote_rey_luis";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;
