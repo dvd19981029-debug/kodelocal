@@ -23,7 +23,6 @@ export async function POST(request: Request) {
         descripcion: it.name || it.nombre || it.descripcion || 'Producto',
         cantidad: Number(it.quantity || it.cantidad || 1),
         precioUnitario: Number(it.price || it.precioUnitario || 0),
-        montoDescuento: Number(it.discountAmt || it.montoDescuento || 0),
 
         tipoItem: it.tipoItem,
       })),
