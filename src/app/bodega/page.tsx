@@ -520,6 +520,18 @@ export default function BodegaPage() {
       body: JSON.stringify({ orderId, orderStatus: 'EN_RUTA' })
     }).catch(() => {});
 
+    const targetSale = sales.find(s => s.id === orderId);
+    if (!targetSale || targetSale.channel !== 'ONLINE') {
+      fetch('/api/sales', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({ id: orderId, saleNumber: targetSale?.saleNumber, orderStatus: 'READY_AT_WINDOW' })
+      }).catch(() => {});
+    }
+
     setSales(prev => {
       const updated = prev.map(s => {
         if (s.id === orderId) {
