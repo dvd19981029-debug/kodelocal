@@ -159,7 +159,7 @@ export default function CotizacionesHistoryModal({ isOpen, onClose, onOpenQuote 
 
         <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-xl bg-amber-100 text-amber-700">
+            <span className="p-1.5 rounded-xl bg-indigo-100 text-indigo-700">
               <FileText className="w-4 h-4" />
             </span>
             <div>
@@ -194,7 +194,7 @@ export default function CotizacionesHistoryModal({ isOpen, onClose, onOpenQuote 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por número, cliente o documento..."
-              className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-amber-300"
+              className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300"
             />
           </div>
         </div>
@@ -215,11 +215,11 @@ export default function CotizacionesHistoryModal({ isOpen, onClose, onOpenQuote 
           )}
 
           {quotes.map((q) => (
-            <div key={q.id} className="p-3 rounded-2xl border border-slate-200 bg-white hover:border-amber-300 transition-colors">
+            <div key={q.id} className="p-3 rounded-2xl border border-slate-200 bg-white hover:border-indigo-300 transition-colors">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="min-w-0">
                   <p className="text-xs font-black text-slate-800 truncate">
-                    <span className="font-mono text-amber-700">{q.quoteNumber}</span> • {q.customerName}
+                    <span className="font-mono text-indigo-700">{q.quoteNumber}</span> • {q.customerName}
                   </p>
                   <p className="text-[10px] text-slate-400">
                     {fmtDate(q.createdAt)} • válida hasta {fmtDate(q.validUntil)} • {q.items.length} producto(s)
@@ -253,7 +253,7 @@ export default function CotizacionesHistoryModal({ isOpen, onClose, onOpenQuote 
                     </span>
                   )}
                   {q.priceChanges.length > 0 && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-800 bg-indigo-100 border border-indigo-300 px-2 py-0.5 rounded-full">
                       <AlertTriangle className="w-3 h-3" /> Precios cambiaron ({q.priceChanges.length})
                     </span>
                   )}

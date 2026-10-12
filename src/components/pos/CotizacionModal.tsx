@@ -95,7 +95,7 @@ export default function CotizacionModal({ isOpen, onClose, sale, notices }: Coti
         {/* Barra Superior de Controles */}
         <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between print:hidden">
           <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-xl bg-amber-100 text-amber-700">
+            <span className="p-1.5 rounded-xl bg-indigo-100 text-indigo-700">
               <FileText className="w-4 h-4" />
             </span>
             <div>
@@ -150,7 +150,7 @@ export default function CotizacionModal({ isOpen, onClose, sale, notices }: Coti
         <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 text-slate-800 text-xs font-sans print:p-0 print:m-0 print:overflow-visible print:h-auto print:block">
 
           {/* Encabezado con logo */}
-          <div className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-5 border-b-2 border-amber-600/70">
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-5 border-b-2 border-indigo-600/70">
             <div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -169,7 +169,7 @@ export default function CotizacionModal({ isOpen, onClose, sale, notices }: Coti
               <span className="text-2xl font-black tracking-tight text-slate-900 block leading-none">
                 COTIZACIÓN
               </span>
-              <span className="text-sm font-mono font-black text-amber-700 block mt-1">
+              <span className="text-sm font-mono font-black text-indigo-700 block mt-1">
                 N° {sale.orderNumber || sale.saleNumber}
               </span>
               <span className="text-[10px] text-slate-500 block mt-1">
@@ -183,7 +183,7 @@ export default function CotizacionModal({ isOpen, onClose, sale, notices }: Coti
 
           {/* Avisos de actualización */}
           {(notices?.isExpired || hasChanges || hasPromos) && (
-            <div className="rounded-2xl border border-amber-300 bg-amber-50 p-3.5 space-y-2.5 print:break-inside-avoid">
+            <div className="rounded-2xl border border-indigo-300 bg-indigo-50 p-3.5 space-y-2.5 print:break-inside-avoid">
               {notices?.isExpired && (
                 <p className="flex items-start gap-2 text-[11px] font-bold text-red-700">
                   <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
@@ -193,7 +193,7 @@ export default function CotizacionModal({ isOpen, onClose, sale, notices }: Coti
 
               {hasChanges && (
                 <div>
-                  <p className="flex items-start gap-2 text-[11px] font-black text-amber-900">
+                  <p className="flex items-start gap-2 text-[11px] font-black text-indigo-900">
                     <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                     Los precios de lista de estos productos cambiaron desde que se emitió esta cotización:
                   </p>
@@ -218,7 +218,7 @@ export default function CotizacionModal({ isOpen, onClose, sale, notices }: Coti
 
               {hasPromos && (
                 <div>
-                  <p className="flex items-start gap-2 text-[11px] font-black text-amber-900">
+                  <p className="flex items-start gap-2 text-[11px] font-black text-indigo-900">
                     <Tag className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                     Promociones vigentes actualmente:
                   </p>
@@ -243,7 +243,7 @@ export default function CotizacionModal({ isOpen, onClose, sale, notices }: Coti
           {/* Datos del Cliente */}
           <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <div>
-              <span className="text-[10px] font-black text-amber-700 uppercase tracking-wider block mb-0.5">
+              <span className="text-[10px] font-black text-indigo-700 uppercase tracking-wider block mb-0.5">
                 Cotizado a
               </span>
               <p className="font-black text-slate-800 text-sm">
@@ -262,7 +262,7 @@ export default function CotizacionModal({ isOpen, onClose, sale, notices }: Coti
             </div>
 
             <div>
-              <span className="text-[10px] font-black text-amber-700 uppercase tracking-wider block mb-0.5">
+              <span className="text-[10px] font-black text-indigo-700 uppercase tracking-wider block mb-0.5">
                 Contacto y ubicación
               </span>
               {sale.cliente.correo && (
@@ -349,9 +349,9 @@ export default function CotizacionModal({ isOpen, onClose, sale, notices }: Coti
                 <span>IVA (13%)</span>
                 <span className="font-mono">${sale.ivaTotal.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-amber-600/60">
+              <div className="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-indigo-600/60">
                 <span>TOTAL</span>
-                <span className="font-mono text-amber-700 font-black">
+                <span className="font-mono text-indigo-700 font-black">
                   ${sale.total.toFixed(2)}
                 </span>
               </div>

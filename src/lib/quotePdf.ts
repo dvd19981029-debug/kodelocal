@@ -48,10 +48,10 @@ export interface QuotePdfData {
 }
 
 const INK: [number, number, number] = [24, 24, 32];
-const GOLD: [number, number, number] = [176, 138, 70];
+const BRAND: [number, number, number] = [79, 70, 229]; // Indigo 600
 const MUTED: [number, number, number] = [110, 114, 125];
-const SOFT: [number, number, number] = [246, 244, 239];
-const LINE: [number, number, number] = [225, 222, 214];
+const SOFT: [number, number, number] = [245, 243, 255]; // Violet 50
+const LINE: [number, number, number] = [221, 214, 254]; // Violet 200
 
 const money = (n: number) => `$${Number(n || 0).toFixed(2)}`;
 const fmtDate = (d: string | Date) =>
@@ -115,7 +115,7 @@ export async function downloadQuotePdf(data: QuotePdfData): Promise<void> {
   doc.setTextColor(...INK);
   doc.text('COTIZACIÓN', pageW - M, 19, { align: 'right' });
   doc.setFontSize(11);
-  doc.setTextColor(...GOLD);
+  doc.setTextColor(...BRAND);
   doc.text(`N° ${data.quoteNumber}`, pageW - M, 25, { align: 'right' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
@@ -125,7 +125,7 @@ export async function downloadQuotePdf(data: QuotePdfData): Promise<void> {
     doc.text(`Válida hasta: ${fmtDate(data.validUntil)}`, pageW - M, 34, { align: 'right' });
   }
 
-  doc.setDrawColor(...GOLD);
+  doc.setDrawColor(...BRAND);
   doc.setLineWidth(0.6);
   doc.line(M, 38, pageW - M, 38);
 
@@ -142,7 +142,7 @@ export async function downloadQuotePdf(data: QuotePdfData): Promise<void> {
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
-  doc.setTextColor(...GOLD);
+  doc.setTextColor(...BRAND);
   doc.text('EMITIDA POR', M + 4, boxY + 6);
   doc.text('COTIZADO A', M + colW + 10, boxY + 6);
 
@@ -221,8 +221,8 @@ export async function downloadQuotePdf(data: QuotePdfData): Promise<void> {
       head: [[{ content: 'AVISO DE ACTUALIZACIÓN', colSpan: 3, styles: { halign: 'left' } }]],
       body: rows,
       theme: 'plain',
-      headStyles: { fillColor: GOLD, textColor: 255, fontStyle: 'bold', fontSize: 8, cellPadding: 2 },
-      bodyStyles: { fillColor: [253, 247, 233], textColor: INK, fontSize: 8, cellPadding: 1.8 },
+      headStyles: { fillColor: BRAND, textColor: 255, fontStyle: 'bold', fontSize: 8, cellPadding: 2 },
+      bodyStyles: { fillColor: SOFT, textColor: INK, fontSize: 8, cellPadding: 1.8 },
       didParseCell: (hook: any) => {
         if (hook.section === 'body' && hook.row.raw[1] === '' && hook.row.raw[2] === '') {
           hook.cell.colSpan = 3;
@@ -278,13 +278,13 @@ export async function downloadQuotePdf(data: QuotePdfData): Promise<void> {
   doc.text(money(data.subtotal), totX + totW - 4, y + 7, { align: 'right' });
   doc.text('IVA (13%)', totX + 4, y + 13);
   doc.text(money(data.ivaTotal), totX + totW - 4, y + 13, { align: 'right' });
-  doc.setDrawColor(...GOLD);
+  doc.setDrawColor(...BRAND);
   doc.line(totX + 4, y + 17, totX + totW - 4, y + 17);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.setTextColor(...INK);
   doc.text('TOTAL', totX + 4, y + 25);
-  doc.setTextColor(...GOLD);
+  doc.setTextColor(...BRAND);
   doc.text(money(data.total), totX + totW - 4, y + 25, { align: 'right' });
 
   doc.setFont('helvetica', 'bold');
