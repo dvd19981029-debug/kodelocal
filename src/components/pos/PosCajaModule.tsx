@@ -254,6 +254,13 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                             <User className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
                             <span>{resolveCustomerName(order)}</span>
                           </span>
+                          <span className={`px-2 py-0.5 text-xs font-black rounded-lg border ${
+                            order.tipoComprobante === '03' || order.cliente?.nrc
+                              ? 'bg-purple-100 text-purple-800 border-purple-300'
+                              : 'bg-blue-100 text-blue-800 border-blue-300'
+                          }`}>
+                            {order.tipoComprobante === '03' || order.cliente?.nrc ? 'Crédito Fiscal (CCF)' : 'Factura (FC)'}
+                          </span>
                           <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500 text-white flex items-center gap-1 shadow-sm">
                             <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
                             <span>Listo en Ventanilla</span>

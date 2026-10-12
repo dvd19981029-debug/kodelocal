@@ -344,7 +344,7 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
-    const { id, saleNumber, orderStatus, paymentStatus, notes } = body;
+    const { id, saleNumber, orderStatus, paymentStatus, notes, tipoComprobante } = body;
 
     if (!id && !saleNumber) {
       return NextResponse.json({ success: false, error: 'id o saleNumber es requerido' }, { status: 400 });
@@ -582,6 +582,7 @@ export async function PATCH(request: Request) {
       data: {
         ...(orderStatus ? { orderStatus } : {}),
         ...(paymentStatus ? { paymentStatus } : {}),
+        ...(tipoComprobante ? { tipoComprobante } : {}),
         ...(notes ? { notes: [sale.notes, notes].filter(Boolean).join(' ') } : {}),
       },
       include: {

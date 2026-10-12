@@ -527,12 +527,15 @@ export default function PosPage() {
           if (data.success && Array.isArray(data.sales)) {
             const dbSales: SaleRecord[] = data.sales.map((s: any) => {
               let parsedClient: any = null;
+              let parsedTipo: any = s.tipoComprobante;
               if (s.notes && s.notes.startsWith('{')) {
                 try {
                   const pNotes = JSON.parse(s.notes);
                   if (pNotes?.cliente) parsedClient = pNotes.cliente;
+                  if (pNotes?.tipoComprobante) parsedTipo = pNotes.tipoComprobante;
                 } catch (_) {}
               }
+              const resolvedTipo: '01' | '03' = (parsedTipo === '03' || s.customer?.nrc || parsedClient?.nrc) ? '03' : (parsedTipo === '01' ? '01' : (s.tipoComprobante === '03' ? '03' : '01'));
 
               return {
                 id: s.id,
@@ -548,7 +551,7 @@ export default function PosPage() {
                 paymentMethod: s.paymentMethod || 'CASH',
                 paymentStatus: s.paymentStatus || 'COMPLETED',
                 status: s.orderStatus || 'COMPLETED',
-                tipoComprobante: s.tipoComprobante || '01',
+                tipoComprobante: resolvedTipo,
                 cajero: s.cashierName || getActiveSessionUI().name,
                 vendedor: s.sellerName || 'Mostrador',
                 cliente: {
@@ -1544,12 +1547,14 @@ export default function PosPage() {
           subtotal: subtotalNeto,
           ivaTotal: ivaCalculado,
           total: cartSubtotal,
+          tipoComprobante,
           paymentMethod: 'CASH',
           paymentStatus: 'PENDING',
           orderStatus: 'PENDING_PREPARATION',
           notes: JSON.stringify({
             desc: 'Comanda mostrador para Bodega',
             cliente: newOrder.cliente,
+            tipoComprobante,
           }),
           cashierName: 'Vendedora Mostrador',
           customerId: clientObj?.id || (selectedCustomerId || null),
@@ -1604,9 +1609,10 @@ export default function PosPage() {
       setClienteDireccion(order.cliente?.direccion || '');
       setClienteDepartamento(order.cliente?.departamento || 'San Salvador');
       setClienteMunicipio(order.cliente?.municipio || 'San Salvador Centro');
-      const tipo: '01' | '03' = (order.tipoComprobante === '03' || order.cliente?.nrc) ? '03' : '01';
-      setTipoComprobante(tipo);
     }
+
+    const tipo: '01' | '03' = (order.tipoComprobante === '03' || order.cliente?.nrc) ? '03' : '01';
+    setTipoComprobante(tipo);
 
     const ordMethod = order.paymentMethod || 'CASH';
     setPaymentMethod(ordMethod as any);

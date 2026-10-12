@@ -127,10 +127,19 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
               {orderToInvoice ? `Facturar Orden #${orderToInvoice.orderNumber || orderToInvoice.saleNumber}` : 'Finalizar Venta de Perfumería'}
             </h3>
             {orderToInvoice && (
-              <span className="font-bold text-sm text-slate-800 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-lg flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                <span>{clienteNombre || orderToInvoice.cliente?.nombre || 'Consumidor Final'}</span>
-              </span>
+              <>
+                <span className="font-bold text-sm text-slate-800 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-lg flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                  <span>{clienteNombre || orderToInvoice.cliente?.nombre || 'Consumidor Final'}</span>
+                </span>
+                <span className={`text-xs font-black px-2.5 py-0.5 rounded-lg border ${
+                  orderToInvoice.tipoComprobante === '03' || orderToInvoice.cliente?.nrc || tipoComprobante === '03'
+                    ? 'bg-purple-100 text-purple-800 border-purple-300'
+                    : 'bg-blue-100 text-blue-800 border-blue-300'
+                }`}>
+                  {orderToInvoice.tipoComprobante === '03' || orderToInvoice.cliente?.nrc || tipoComprobante === '03' ? 'Crédito Fiscal (CCF-03)' : 'Factura (FC-01)'}
+                </span>
+              </>
             )}
           </div>
           <p className="text-xs text-slate-500">
@@ -326,9 +335,20 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
 
         {/* Selector de Comprobante */}
         <div className="mb-4">
-          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block mb-1.5">
-            Tipo de Comprobante
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block">
+              Tipo de Comprobante
+            </label>
+            {orderToInvoice && (
+              <span className={`text-[11px] font-black px-2 py-0.5 rounded-md border ${
+                orderToInvoice.tipoComprobante === '03' || orderToInvoice.cliente?.nrc
+                  ? 'bg-purple-100 text-purple-800 border-purple-200'
+                  : 'bg-blue-100 text-blue-800 border-blue-200'
+              }`}>
+                Pedido en comanda: {orderToInvoice.tipoComprobante === '03' || orderToInvoice.cliente?.nrc ? 'Crédito Fiscal (03)' : 'Factura (01)'}
+              </span>
+            )}
+          </div>
           <div className="grid grid-cols-3 gap-2">
             <button
               type="button"

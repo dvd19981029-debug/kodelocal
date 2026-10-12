@@ -310,7 +310,7 @@ export default function BodegaPage() {
           const newOrders = pendingWeb.filter(s => !knownOrderIdsRef.current.has(s.id));
           if (newOrders.length > 0) {
             const first = newOrders[0];
-            const clientName = first.cliente?.nombre || first.customerName || 'Cliente';
+            const clientName = first.cliente?.nombre || (first as any).customerName || 'Cliente';
             
             // Construir el texto detallado con pausas usando comas
             let speechText = `Nuevo pedido, cliente ${clientName}. Lléva: `;
@@ -347,37 +347,51 @@ export default function BodegaPage() {
             posLoaded = true;
             posSales = salesData.sales
               .filter((s: any) => s.channel === 'POS' || s.orderStatus === 'PENDING_PREPARATION' || s.orderStatus === 'READY_AT_WINDOW')
-              .map((s: any) => ({
-                id: s.id,
-                saleNumber: s.saleNumber,
-                orderNumber: s.saleNumber,
-                createdAt: s.createdAt,
-                channel: 'POS',
-                total: Number(s.total || 0),
-                subtotal: Number(s.subtotal || 0),
-                ivaTotal: Number(s.ivaTotal || 0),
-                shippingCost: 0,
-                paymentMethod: s.paymentMethod || 'CASH',
-                paymentStatus: s.paymentStatus || 'COMPLETED',
-                notes: s.notes || undefined,
-                status: s.orderStatus || 'COMPLETED',
-                vendedor: s.sellerName || s.cashierName || 'Vendedora Mostrador',
-                cliente: {
-                  nombre: s.customer?.name || 'Consumidor Final',
-                  telefono: s.customer?.phone || undefined,
-                  correo: s.customer?.email || undefined,
-                  direccion: s.customer?.address || undefined,
-                },
-                items: (s.items || []).map((it: any) => ({
-                  productId: it.productId,
-                  name: it.productName,
-                  quantity: it.quantity,
-                  price: Number(it.unitPrice || 0),
-                  total: Number(it.total || 0),
-                  unit: 'Onza',
-                  puesto: it.product?.puesto || 'A1',
-                }))
-              }));
+              .map((s: any) => {
+                let pNotes: any = null;
+                if (s.notes && s.notes.startsWith('{')) {
+                  try { pNotes = JSON.parse(s.notes); } catch (_) {}
+                }
+                const resolvedTipo = s.tipoComprobante && s.tipoComprobante !== 'TICKET'
+                  ? s.tipoComprobante
+                  : (pNotes?.tipoComprobante || (s.customer?.nrc || pNotes?.cliente?.nrc ? '03' : '01'));
+
+                return {
+                  id: s.id,
+                  saleNumber: s.saleNumber,
+                  orderNumber: s.saleNumber,
+                  createdAt: s.createdAt,
+                  channel: 'POS',
+                  total: Number(s.total || 0),
+                  subtotal: Number(s.subtotal || 0),
+                  ivaTotal: Number(s.ivaTotal || 0),
+                  shippingCost: 0,
+                  tipoComprobante: resolvedTipo,
+                  paymentMethod: s.paymentMethod || 'CASH',
+                  paymentStatus: s.paymentStatus || 'COMPLETED',
+                  notes: s.notes || undefined,
+                  status: s.orderStatus || 'COMPLETED',
+                  vendedor: s.sellerName || s.cashierName || 'Vendedora Mostrador',
+                  cliente: {
+                    id: s.customerId || s.customer?.id || pNotes?.cliente?.id,
+                    nombre: s.customer?.name || pNotes?.cliente?.nombre || 'Consumidor Final',
+                    numDocumento: s.customer?.documentNum || pNotes?.cliente?.numDocumento || undefined,
+                    nrc: s.customer?.nrc || pNotes?.cliente?.nrc || undefined,
+                    telefono: s.customer?.phone || pNotes?.cliente?.telefono || undefined,
+                    correo: s.customer?.email || pNotes?.cliente?.correo || undefined,
+                    direccion: s.customer?.address || pNotes?.cliente?.direccion || undefined,
+                  },
+                  items: (s.items || []).map((it: any) => ({
+                    productId: it.productId,
+                    name: it.productName,
+                    quantity: it.quantity,
+                    price: Number(it.unitPrice || 0),
+                    total: Number(it.total || 0),
+                    unit: 'Onza',
+                    puesto: it.product?.puesto || 'A1',
+                  }))
+                };
+              });
           }
         } catch (_) {}
 
@@ -1242,9 +1256,16 @@ export default function BodegaPage() {
                           {/* Encabezado del Pedido */}
                           <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 mb-3">
                             <div>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-mono font-black text-sm text-indigo-700">
                                   #{order.saleNumber}
+                                </span>
+                                <span className={`clay-badge text-[10px] font-black py-0.5 px-2 ${
+                                  order.tipoComprobante === '03' || order.cliente?.nrc
+                                    ? 'bg-purple-100 text-purple-900 border border-purple-200'
+                                    : 'bg-blue-100 text-blue-900 border border-blue-200'
+                                }`}>
+                                  {order.tipoComprobante === '03' || order.cliente?.nrc ? 'Crédito Fiscal (CCF)' : 'Factura (FC)'}
                                 </span>
                                 <span className="clay-badge text-[10px] font-black py-0.5 px-2 bg-rose-100 text-rose-900 border border-rose-200">
                                   ⏳ Por Preparar
@@ -1402,9 +1423,16 @@ export default function BodegaPage() {
                       <div>
                         <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 mb-3">
                           <div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-mono font-black text-sm text-emerald-700">
                                 #{order.saleNumber}
+                              </span>
+                              <span className={`clay-badge text-[10px] font-black py-0.5 px-2 ${
+                                order.tipoComprobante === '03' || order.cliente?.nrc
+                                  ? 'bg-purple-100 text-purple-900 border border-purple-200'
+                                  : 'bg-blue-100 text-blue-900 border border-blue-200'
+                              }`}>
+                                {order.tipoComprobante === '03' || order.cliente?.nrc ? 'Crédito Fiscal (CCF)' : 'Factura (FC)'}
                               </span>
                               <span className="clay-badge text-[10px] font-black py-0.5 px-2 bg-emerald-100 text-emerald-900 border border-emerald-200">
                                 ✅ Listo en Ventanilla

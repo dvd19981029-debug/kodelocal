@@ -228,9 +228,16 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                   {/* Fila Superior: Comanda & Estado */}
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-mono font-black text-sm text-indigo-700">
                           #{order.saleNumber}
+                        </span>
+                        <span className={`clay-badge text-[10px] font-black py-0.5 px-2 ${
+                          order.tipoComprobante === '03' || order.cliente?.nrc
+                            ? 'bg-purple-100 text-purple-900 border border-purple-200'
+                            : 'bg-blue-100 text-blue-900 border border-blue-200'
+                        }`}>
+                          {order.tipoComprobante === '03' || order.cliente?.nrc ? 'Crédito Fiscal (CCF)' : 'Factura (FC)'}
                         </span>
                         <span className={`clay-badge text-[10px] font-black py-0.5 px-2.5 ${
                           isReady 
