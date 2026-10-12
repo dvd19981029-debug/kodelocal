@@ -516,87 +516,107 @@ export default function PosPage() {
     });
 
     // Cargar historial de ventas y DTEs oficiales registrados en la base de datos Supabase
-    fetch('/api/sales?limit=100')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.sales)) {
-          const dbSales: SaleRecord[] = data.sales.map((s: any) => ({
-            id: s.id,
-            saleNumber: s.saleNumber,
-            orderNumber: s.saleNumber,
-            createdAt: s.createdAt,
-            invoicedAt: (s.orderStatus === 'COMPLETED' || s.paymentStatus === 'COMPLETED') && !['CANCELLED', 'CANCELADO', 'ANULADA'].includes(String(s.orderStatus || '').toUpperCase()) ? s.createdAt : undefined,
-            channel: s.channel || 'POS',
-            total: Number(s.total || 0),
-            subtotal: Number(s.subtotal || 0),
-            ivaTotal: Number(s.ivaTotal || 0),
-            shippingCost: Number(s.shippingCost || 0),
-            paymentMethod: s.paymentMethod || 'CASH',
-            paymentStatus: s.paymentStatus || 'COMPLETED',
-            status: s.orderStatus || 'COMPLETED',
-            tipoComprobante: s.tipoComprobante || '01',
-            cajero: s.cashierName || getActiveSessionUI().name,
-            vendedor: s.sellerName || 'Mostrador',
-            cliente: {
-              nombre: s.customer?.name || 'Consumidor Final',
-              numDocumento: s.customer?.documentNum || undefined,
-              nrc: s.customer?.nrc || undefined,
-              correo: s.customer?.email || undefined,
-              telefono: s.customer?.phone || undefined,
-              direccion: s.customer?.address || undefined,
-              actividadEconomica: s.customer?.activityDesc || undefined,
-            },
-            items: (s.items || []).map((it: any) => ({
-              productId: it.productId,
-              name: it.productName,
-              quantity: it.quantity,
-              price: Number(it.unitPrice || 0),
-              total: Number(it.total || 0),
-              unit: it.unit || 'Unidad',
-            })),
-            dteInfo: s.dteDocument ? {
-              codigoGeneracion: s.dteDocument.codigoGeneracion,
-              numeroControl: s.dteDocument.numeroControl,
-              selloRecepcion: s.dteDocument.selloRecepcion,
-              estado: s.dteDocument.estado,
-              simulated: s.dteDocument.estado === 'SIMULADO',
-              mensaje: s.dteDocument.mensajeRespuesta,
-              mhDteUrl: s.dteDocument.mhDteUrl,
-              pdfUrl: `/api/dte/${s.dteDocument.codigoGeneracion}/pdf`,
-              jsonUrl: `/api/dte/${s.dteDocument.codigoGeneracion}/json`,
-              fhProcesamiento: s.dteDocument.fhProcesamiento,
-            } : undefined,
-          }));
-
-          setSales(prev => {
-            const mergedMap = new Map<string, SaleRecord>();
-            dbSales.forEach(s => mergedMap.set(s.saleNumber, s));
-            const queuedNumbers = new Set(getOfflineSalesQueue().map(q => q.saleNumber));
-            prev.forEach(p => {
-              if (!mergedMap.has(p.saleNumber)) {
-                // La BD es la fuente de verdad: una comanda local ausente en BD solo se conserva
-                // si es reciente (POST en vuelo) o sigue en la cola offline.
-                const isComanda = p.status === 'PENDING_PREPARATION' || p.status === 'READY_AT_WINDOW';
-                const isFresh = Date.now() - new Date(p.createdAt).getTime() < 2 * 60 * 1000;
-                if (p.channel === 'ONLINE' || !isComanda || isFresh || queuedNumbers.has(p.saleNumber)) {
-                  mergedMap.set(p.saleNumber, p);
-                }
-              } else {
-                const existing = mergedMap.get(p.saleNumber)!;
-                if (!existing.dteInfo && p.dteInfo) {
-                  existing.dteInfo = p.dteInfo;
-                }
-              }
-            });
-            const merged = Array.from(mergedMap.values());
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('kodelocal_sales', JSON.stringify(merged));
-            }
-            return merged;
-          });
+    getStaffToken().then(staffToken => {
+      fetch('/api/sales?limit=100', {
+        headers: {
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
         }
       })
-      .catch(err => console.error('Error cargando ventas desde DB:', err));
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.sales)) {
+            const dbSales: SaleRecord[] = data.sales.map((s: any) => {
+              let parsedClient: any = null;
+              if (s.notes && s.notes.startsWith('{')) {
+                try {
+                  const pNotes = JSON.parse(s.notes);
+                  if (pNotes?.cliente) parsedClient = pNotes.cliente;
+                } catch (_) {}
+              }
+
+              return {
+                id: s.id,
+                saleNumber: s.saleNumber,
+                orderNumber: s.saleNumber,
+                createdAt: s.createdAt,
+                invoicedAt: (s.orderStatus === 'COMPLETED' || s.paymentStatus === 'COMPLETED') && !['CANCELLED', 'CANCELADO', 'ANULADA'].includes(String(s.orderStatus || '').toUpperCase()) ? s.createdAt : undefined,
+                channel: s.channel || 'POS',
+                total: Number(s.total || 0),
+                subtotal: Number(s.subtotal || 0),
+                ivaTotal: Number(s.ivaTotal || 0),
+                shippingCost: Number(s.shippingCost || 0),
+                paymentMethod: s.paymentMethod || 'CASH',
+                paymentStatus: s.paymentStatus || 'COMPLETED',
+                status: s.orderStatus || 'COMPLETED',
+                tipoComprobante: s.tipoComprobante || '01',
+                cajero: s.cashierName || getActiveSessionUI().name,
+                vendedor: s.sellerName || 'Mostrador',
+                cliente: {
+                  id: s.customerId || s.customer?.id || parsedClient?.id,
+                  nombre: s.customer?.name || parsedClient?.nombre || 'Consumidor Final',
+                  numDocumento: s.customer?.documentNum || parsedClient?.numDocumento || undefined,
+                  nrc: s.customer?.nrc || parsedClient?.nrc || undefined,
+                  correo: s.customer?.email || parsedClient?.correo || undefined,
+                  telefono: s.customer?.phone || parsedClient?.telefono || undefined,
+                  direccion: s.customer?.address || parsedClient?.direccion || undefined,
+                  actividadEconomica: s.customer?.activityDesc || parsedClient?.actividadEconomica || undefined,
+                },
+                items: (s.items || []).map((it: any) => ({
+                  productId: it.productId,
+                  name: it.productName,
+                  quantity: it.quantity,
+                  price: Number(it.unitPrice || 0),
+                  total: Number(it.total || 0),
+                  unit: it.unit || 'Unidad',
+                })),
+                dteInfo: s.dteDocument ? {
+                  codigoGeneracion: s.dteDocument.codigoGeneracion,
+                  numeroControl: s.dteDocument.numeroControl,
+                  selloRecepcion: s.dteDocument.selloRecepcion,
+                  estado: s.dteDocument.estado,
+                  simulated: s.dteDocument.estado === 'SIMULADO',
+                  mensaje: s.dteDocument.mensajeRespuesta,
+                  mhDteUrl: s.dteDocument.mhDteUrl,
+                  pdfUrl: `/api/dte/${s.dteDocument.codigoGeneracion}/pdf`,
+                  jsonUrl: `/api/dte/${s.dteDocument.codigoGeneracion}/json`,
+                  fhProcesamiento: s.dteDocument.fhProcesamiento,
+                } : undefined,
+              };
+            });
+
+            setSales(prev => {
+              const mergedMap = new Map<string, SaleRecord>();
+              dbSales.forEach(s => mergedMap.set(s.saleNumber, s));
+              const queuedNumbers = new Set(getOfflineSalesQueue().map(q => q.saleNumber));
+              prev.forEach(p => {
+                if (!mergedMap.has(p.saleNumber)) {
+                  const isComanda = p.status === 'PENDING_PREPARATION' || p.status === 'READY_AT_WINDOW';
+                  const isFresh = Date.now() - new Date(p.createdAt).getTime() < 2 * 60 * 1000;
+                  if (p.channel === 'ONLINE' || !isComanda || isFresh || queuedNumbers.has(p.saleNumber)) {
+                    mergedMap.set(p.saleNumber, p);
+                  }
+                } else {
+                  const existing = mergedMap.get(p.saleNumber)!;
+                  if (!existing.dteInfo && p.dteInfo) {
+                    existing.dteInfo = p.dteInfo;
+                  }
+                  if (p.cliente?.nombre && p.cliente.nombre !== 'Consumidor Final') {
+                    if (!existing.cliente || existing.cliente.nombre === 'Consumidor Final') {
+                      existing.cliente = p.cliente;
+                    }
+                  }
+                }
+              });
+              const merged = Array.from(mergedMap.values());
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('kodelocal_sales', JSON.stringify(merged));
+              }
+              return merged;
+            });
+          }
+        })
+        .catch(err => console.error('Error cargando ventas desde DB:', err));
+    });
   }, []);
 
   // Carga inicial de ventas/pedidos desde el servidor
@@ -1413,6 +1433,14 @@ export default function PosPage() {
     const cmdNum = `CMD-${Math.floor(1000 + Math.random() * 9000)}`;
     const clientObj = customers.find(c => c.id === selectedCustomerId);
 
+    const resolvedClientName = clientObj?.name || (clienteNombre && clienteNombre !== 'Consumidor Final' ? clienteNombre : (cartCustomerQuery.trim() || 'Consumidor Final'));
+    const resolvedClientDoc = clientObj?.numDocumento || clienteDoc || undefined;
+    const resolvedClientNrc = clientObj?.nrc || clienteNrc || undefined;
+    const resolvedClientEmail = clientObj?.email || clienteEmail || undefined;
+    const resolvedClientPhone = clientObj?.phone || undefined;
+    const resolvedClientAddress = clientObj?.direccion || clienteDireccion || undefined;
+    const resolvedClientGiro = clientObj?.actividadEconomica || clienteGiro || undefined;
+
     const newOrder: SaleRecord = {
       id: `ord-${Date.now()}`,
       orderNumber: ordNum,
@@ -1423,15 +1451,16 @@ export default function PosPage() {
       ivaTotal: ivaCalculado,
       tipoComprobante,
       cliente: {
-        nombre: clienteNombre || 'Consumidor Final',
-        numDocumento: clienteDoc || undefined,
-        nrc: clienteNrc || undefined,
-        correo: clienteEmail || undefined,
-        telefono: clientObj?.phone || undefined,
-        direccion: clientObj?.direccion || undefined,
-        actividadEconomica: clienteGiro || undefined,
+        id: clientObj?.id || selectedCustomerId || undefined,
+        nombre: resolvedClientName,
+        numDocumento: resolvedClientDoc,
+        nrc: resolvedClientNrc,
+        correo: resolvedClientEmail,
+        telefono: resolvedClientPhone,
+        direccion: resolvedClientAddress,
+        actividadEconomica: resolvedClientGiro,
         categoriaContribuyente: clientObj?.categoriaContribuyente || undefined
-      },
+      } as any,
       status: 'PENDING_PREPARATION',
       vendedor: 'Vendedora Mostrador',
       items: cart.map(formatCartItem)
@@ -1444,24 +1473,32 @@ export default function PosPage() {
     setSales(updatedSales);
 
     // Persistir comanda en Supabase para que Bodega en cualquier dispositivo la reciba al instante
-    fetch('/api/sales', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        saleNumber: cmdNum,
-        channel: 'POS',
-        subtotal: subtotalNeto,
-        ivaTotal: ivaCalculado,
-        total: cartSubtotal,
-        paymentMethod: 'CASH',
-        paymentStatus: 'PENDING',
-        orderStatus: 'PENDING_PREPARATION',
-        notes: 'Comanda mostrador para Bodega',
-        cashierName: 'Vendedora Mostrador',
-        customerId: clientObj?.id || null,
-        items: cart.map(formatCartItem),
-      }),
-    }).catch(err => console.error('Error sincronizando comanda con Supabase:', err));
+    getStaffToken().then(staffToken => {
+      fetch('/api/sales', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({
+          saleNumber: cmdNum,
+          channel: 'POS',
+          subtotal: subtotalNeto,
+          ivaTotal: ivaCalculado,
+          total: cartSubtotal,
+          paymentMethod: 'CASH',
+          paymentStatus: 'PENDING',
+          orderStatus: 'PENDING_PREPARATION',
+          notes: JSON.stringify({
+            desc: 'Comanda mostrador para Bodega',
+            cliente: newOrder.cliente,
+          }),
+          cashierName: 'Vendedora Mostrador',
+          customerId: clientObj?.id || (selectedCustomerId || null),
+          items: cart.map(formatCartItem),
+        }),
+      }).catch(err => console.error('Error sincronizando comanda con Supabase:', err));
+    });
 
     const totalQty = cart.reduce((acc, i) => acc + i.quantity, 0);
     clearCart();
@@ -1475,43 +1512,46 @@ export default function PosPage() {
   const handleStartInvoiceOrder = (order: SaleRecord) => {
     setOrderToInvoice(order);
 
-    // Buscar si el cliente ya está registrado en la base de datos de clientes
-    const normName = order.cliente?.nombre?.toLowerCase().trim();
-    const normEmail = order.cliente?.correo?.toLowerCase().trim();
-    const cleanPhone = order.cliente?.telefono?.replace(/\D/g, '');
+    // 1. Buscar por ID directo si viene en el cliente o la orden
+    const directId = (order.cliente as any)?.id || (order as any).customerId;
+    let matchedCust = directId ? customers.find(c => c.id === directId) : undefined;
 
-    const matchedCust = customers.find(c => {
-      if (normEmail && c.email && c.email.toLowerCase().trim() === normEmail) return true;
-      if (cleanPhone && c.phone && c.phone.replace(/\D/g, '') === cleanPhone) return true;
-      if (normName && c.name && c.name.toLowerCase().trim() === normName) return true;
-      return false;
-    });
+    // 2. Si no, buscar por Documento (DUI/NIT/NRC), Correo, Teléfono o Nombre exacto
+    if (!matchedCust) {
+      const orderDoc = order.cliente?.numDocumento?.replace(/\D/g, '');
+      const orderNrc = order.cliente?.nrc?.replace(/\D/g, '');
+      const normEmail = order.cliente?.correo?.toLowerCase().trim();
+      const cleanPhone = order.cliente?.telefono?.replace(/\D/g, '');
+      const normName = order.cliente?.nombre?.toLowerCase().trim();
 
-    const nombre = order.cliente?.nombre || matchedCust?.name || 'Consumidor Final';
-    const doc = order.cliente?.numDocumento || matchedCust?.numDocumento || '';
-    const nrc = order.cliente?.nrc || matchedCust?.nrc || '';
-    const email = order.cliente?.correo || matchedCust?.email || '';
-    const giro = order.cliente?.actividadEconomica || matchedCust?.actividadEconomica || '';
-    const direccion = order.cliente?.direccion || matchedCust?.direccion || '';
-    const departamento = order.cliente?.departamento || matchedCust?.departamento || 'San Salvador';
-    const municipio = order.cliente?.municipio || matchedCust?.municipio || 'San Salvador Centro';
+      matchedCust = customers.find(c => {
+        if (orderNrc && c.nrc && c.nrc.replace(/\D/g, '') === orderNrc) return true;
+        if (orderDoc && c.numDocumento && c.numDocumento.replace(/\D/g, '') === orderDoc) return true;
+        if (normEmail && c.email && c.email.toLowerCase().trim() === normEmail) return true;
+        if (cleanPhone && c.phone && c.phone.replace(/\D/g, '') === cleanPhone) return true;
+        if (normName && normName !== 'consumidor final' && c.name && c.name.toLowerCase().trim() === normName) return true;
+        return false;
+      });
+    }
 
-    const tipo: '01' | '03' = (order.tipoComprobante === '03' || matchedCust?.documentoPreferido === '03' || nrc) ? '03' : '01';
+    if (matchedCust) {
+      handleSelectCustomer(matchedCust.id);
+    } else {
+      setSelectedCustomerId('');
+      setClienteNombre(order.cliente?.nombre || 'Consumidor Final');
+      setClienteDoc(order.cliente?.numDocumento || '');
+      setClienteNrc(order.cliente?.nrc || '');
+      setClienteEmail(order.cliente?.correo || '');
+      setClienteGiro(order.cliente?.actividadEconomica || '');
+      setClienteDireccion(order.cliente?.direccion || '');
+      setClienteDepartamento(order.cliente?.departamento || 'San Salvador');
+      setClienteMunicipio(order.cliente?.municipio || 'San Salvador Centro');
+      const tipo: '01' | '03' = (order.tipoComprobante === '03' || order.cliente?.nrc) ? '03' : '01';
+      setTipoComprobante(tipo);
+    }
 
-    setSelectedCustomerId(matchedCust?.id || "");
-
-    setClienteNombre(nombre);
-    setClienteDoc(doc);
-    setClienteNrc(nrc);
-    setClienteEmail(email);
-    setClienteGiro(giro);
-    setClienteDireccion(direccion);
-    setClienteDepartamento(departamento);
-    setClienteMunicipio(municipio);
-    setTipoComprobante(tipo);
-    // Sincronizar método de pago de la orden web
-    const ordMethod = order.paymentMethod || 'CARD';
-    setPaymentMethod(ordMethod);
+    const ordMethod = order.paymentMethod || 'CASH';
+    setPaymentMethod(ordMethod as any);
 
     const isAlreadyPaid = order.paymentStatus === 'COMPLETED' && ordMethod !== 'CASH';
     if (isAlreadyPaid) {
