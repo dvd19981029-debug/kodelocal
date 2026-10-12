@@ -690,13 +690,6 @@ export default function PosPage() {
       : Number((activeEssencePrice / 2).toFixed(2))); 
   const activeBottlePrice = activeCustomer?.specialBottlePrice ? Number(activeCustomer.specialBottlePrice) : null;
 
-  // Helper para obtener el precio unitario del item según su presentación
-  const getItemPriceDetails = (item: CartItem) => {
-    let listPrice = item.product.price;
-    const isEssence = item.product.category === "Esencias para Perfume" || !item.product.category;
-    const isBottle = item.product.category === "Botes" || item.product.category === "Botes & Envases";
-
-  };
 
   // Helper para formatear items de venta/comanda con presentación
   const getItemPriceDetails = (item: CartItem) => {

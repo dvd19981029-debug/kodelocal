@@ -333,15 +333,6 @@ export default function CustomerDrawer() {
                     <img
                       src={customer.avatarUrl}
                       alt={customer.name}
-                          {customer.tier && (
-                            <span 
-                              className="text-[10px] px-2 py-0.5 rounded-full font-black text-white shadow-sm"
-                              style={{ backgroundColor: customer.tier.badgeColor || "#6366f1" }}
-                            >
-                              VIP {customer.tier.name}
-                            </span>
-                          )}
-
                       className="w-12 h-12 rounded-2xl object-cover border-2 border-indigo-200 shadow-xs shrink-0"
                     />
                   ) : (
