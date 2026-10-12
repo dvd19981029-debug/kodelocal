@@ -2352,6 +2352,7 @@ export default function PosPage() {
             setCompletedSale={setCompletedSale}
             handleTransmitDte={handleTransmitDte}
             isTransmittingDteId={isTransmittingDteId}
+            customers={customers}
           />
         )}
 

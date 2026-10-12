@@ -19,7 +19,9 @@ import {
   Send,
   AlertTriangle,
   XCircle,
+  User,
 } from 'lucide-react';
+import { CustomerRecord } from '@/lib/customers';
 import { SaleRecord } from '@/lib/store';
 import { PosCorteZ } from './PosCorteZ';
 
@@ -43,6 +45,7 @@ export interface PosCajaModuleProps {
   setCompletedSale: (sale: SaleRecord) => void;
   handleTransmitDte?: (sale: SaleRecord) => Promise<void>;
   isTransmittingDteId?: string | null;
+  customers?: CustomerRecord[];
 }
 
 export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
@@ -65,7 +68,20 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
   setCompletedSale,
   handleTransmitDte,
   isTransmittingDteId,
+  customers,
 }) => {
+  const resolveCustomerName = (order: SaleRecord) => {
+    if (order.cliente?.nombre && order.cliente.nombre.trim() !== '' && order.cliente.nombre.toLowerCase().trim() !== 'consumidor final') {
+      return order.cliente.nombre;
+    }
+    const custId = (order.cliente as any)?.id || (order as any).customerId;
+    if (custId && customers) {
+      const found = customers.find(c => c.id === custId);
+      if (found?.name) return found.name;
+    }
+    return order.cliente?.nombre || 'Consumidor Final';
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in">
       {/* Encabezado y Selector de Subpestañas (Estilo Mecanic OS) */}
@@ -230,9 +246,13 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                     {/* Encabezado de la Tarjeta */}
                     <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-mono font-black text-sm text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-lg">
                             #{order.orderNumber || order.saleNumber}
+                          </span>
+                          <span className="font-black text-sm text-slate-800 flex items-center gap-1.5 bg-slate-100/90 border border-slate-200 px-2.5 py-0.5 rounded-lg">
+                            <User className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                            <span>{resolveCustomerName(order)}</span>
                           </span>
                           <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500 text-white flex items-center gap-1 shadow-sm">
                             <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
@@ -256,8 +276,8 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                     <div className="my-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
                       <div>
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Cliente</span>
-                        <strong className="text-slate-800 text-sm">{order.cliente.nombre}</strong>
-                        {order.cliente.numDocumento && (
+                        <strong className="text-slate-800 text-sm">{resolveCustomerName(order)}</strong>
+                        {order.cliente?.numDocumento && (
                           <span className="text-[11px] text-slate-500 font-mono block">Doc: {order.cliente.numDocumento}</span>
                         )}
                       </div>

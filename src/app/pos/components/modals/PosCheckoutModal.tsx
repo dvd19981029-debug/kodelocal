@@ -10,7 +10,8 @@ import {
   Banknote, 
   CreditCard, 
   Building, 
-  QrCode 
+  QrCode,
+  User
 } from 'lucide-react';
 import { CustomerRecord } from '@/lib/customers';
 import { 
@@ -121,9 +122,17 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
         </button>
 
         <div className="mb-4">
-          <h3 className="text-xl font-black text-slate-800 mb-0.5">
-            {orderToInvoice ? `Facturar Orden #${orderToInvoice.orderNumber || orderToInvoice.saleNumber}` : 'Finalizar Venta de Perfumería'}
-          </h3>
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            <h3 className="text-xl font-black text-slate-800">
+              {orderToInvoice ? `Facturar Orden #${orderToInvoice.orderNumber || orderToInvoice.saleNumber}` : 'Finalizar Venta de Perfumería'}
+            </h3>
+            {orderToInvoice && (
+              <span className="font-bold text-sm text-slate-800 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-lg flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                <span>{clienteNombre || orderToInvoice.cliente?.nombre || 'Consumidor Final'}</span>
+              </span>
+            )}
+          </div>
           <p className="text-xs text-slate-500">
             {orderToInvoice ? 'Orden preparada en ventanilla lista para emisión oficial de DTE' : 'Selecciona el cliente y comprobante legal a emitir.'}
           </p>
