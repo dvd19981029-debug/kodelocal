@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { INITIAL_PRODUCTS, ProductItem, CartItem, SaleRecord, PERFUME_CATEGORIES, getStoredProducts } from '@/lib/store';
-import CotizacionModal from '@/components/pos/CotizacionModal';
+import CotizacionModal, { type CotizacionNotices } from '@/components/pos/CotizacionModal';
+import CotizacionesHistoryModal from '@/components/pos/CotizacionesHistoryModal';
 import ThermalTicket from '@/components/pos/ThermalTicket';
 import { StockWarningBanner } from '@/components/pos/StockWarningBanner';
 import { PosCustomerModule } from '@/components/pos/PosCustomerModule';
@@ -83,6 +84,8 @@ export default function PosPage() {
   // Cotización / Prefactura Modal
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
   const [activeQuoteSale, setActiveQuoteSale] = useState<SaleRecord | null>(null);
+  const [activeQuoteNotices, setActiveQuoteNotices] = useState<CotizacionNotices | null>(null);
+  const [isQuoteHistoryOpen, setIsQuoteHistoryOpen] = useState(false);
 
   // Orden activa que se está cobrando/facturando en Caja
   const [orderToInvoice, setOrderToInvoice] = useState<SaleRecord | null>(null);
@@ -1257,7 +1260,7 @@ export default function PosPage() {
   };
 
   // Iniciar cotización en PDF / Prefactura
-  const handleOpenQuoteModal = () => {
+  const handleOpenQuoteModal = async () => {
     if (cart.length === 0) {
       alert('Agrega al menos una fragancia o producto al pedido para generar la cotización.');
       return;
@@ -1290,6 +1293,41 @@ export default function PosPage() {
       items: cart.map(formatCartItem)
     };
 
+    // Guardar la cotización en la base de datos (historial descargable)
+    try {
+      const staffToken = await getStaffToken();
+      const res = await fetch('/api/quotes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({
+          customerName: quoteSale.cliente.nombre,
+          customerDoc: quoteSale.cliente.numDocumento,
+          customerNrc: quoteSale.cliente.nrc,
+          customerEmail: quoteSale.cliente.correo,
+          customerPhone: quoteSale.cliente.telefono,
+          customerAddress: quoteSale.cliente.direccion,
+          tipoComprobante: quoteSale.tipoComprobante,
+          subtotal: quoteSale.subtotal,
+          ivaTotal: quoteSale.ivaTotal,
+          total: quoteSale.total,
+          sellerName: quoteSale.vendedor,
+          items: quoteSale.items,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.quote) {
+        quoteSale.orderNumber = data.quote.quoteNumber;
+        quoteSale.saleNumber = data.quote.quoteNumber;
+        quoteSale.createdAt = data.quote.createdAt;
+      }
+    } catch (err) {
+      console.error('No se pudo guardar la cotización en el historial:', err);
+    }
+
+    setActiveQuoteNotices(null);
     setActiveQuoteSale(quoteSale);
     setIsQuoteModalOpen(true);
   };
@@ -1980,6 +2018,7 @@ export default function PosPage() {
                   cartSubtotal={cartSubtotal}
                   handleSendOrderToBodega={handleSendOrderToBodega}
                   handleOpenQuoteModal={handleOpenQuoteModal}
+                  onOpenQuoteHistory={() => setIsQuoteHistoryOpen(true)}
                   onOpenCheckout={() => {
                     setOrderToInvoice(null);
                     setIsCheckoutOpen(true);
@@ -2100,6 +2139,10 @@ export default function PosPage() {
                       handleOpenQuoteModal={() => {
                         setIsMobileCartOpen(false);
                         handleOpenQuoteModal();
+                      }}
+                      onOpenQuoteHistory={() => {
+                        setIsMobileCartOpen(false);
+                        setIsQuoteHistoryOpen(true);
                       }}
                       onOpenCheckout={() => {
                         setIsMobileCartOpen(false);
@@ -2299,8 +2342,22 @@ export default function PosPage() {
       {/* ========================================================================= */}
       <CotizacionModal
         isOpen={isQuoteModalOpen}
-        onClose={() => setIsQuoteModalOpen(false)}
+        onClose={() => {
+          setIsQuoteModalOpen(false);
+          setActiveQuoteNotices(null);
+        }}
         sale={activeQuoteSale}
+        notices={activeQuoteNotices}
+      />
+
+      <CotizacionesHistoryModal
+        isOpen={isQuoteHistoryOpen}
+        onClose={() => setIsQuoteHistoryOpen(false)}
+        onOpenQuote={(sale, notices) => {
+          setActiveQuoteSale(sale);
+          setActiveQuoteNotices(notices);
+          setIsQuoteModalOpen(true);
+        }}
       />
 
       {/* ========================================================================= */}

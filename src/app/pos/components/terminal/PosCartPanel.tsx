@@ -52,6 +52,7 @@ export interface PosCartPanelProps {
   // Actions
   handleSendOrderToBodega: () => void;
   handleOpenQuoteModal: () => void;
+  onOpenQuoteHistory?: () => void;
   onOpenCheckout: () => void;
 }
 
@@ -80,6 +81,7 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
   cartSubtotal,
   handleSendOrderToBodega,
   handleOpenQuoteModal,
+  onOpenQuoteHistory,
   onOpenCheckout,
 }) => {
   return (
@@ -527,6 +529,18 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
               </button>
             </div>
           </div>
+        )}
+
+        {onOpenQuoteHistory && (
+          <button
+            type="button"
+            onClick={onOpenQuoteHistory}
+            className="clay-btn clay-btn-light w-full py-1.5 px-2 text-[11px] rounded-lg flex items-center justify-center gap-1 font-bold text-slate-700 hover:text-amber-700 hover:bg-amber-50 border border-slate-200 transition-all shrink-0"
+            title="Ver y descargar cotizaciones realizadas"
+          >
+            <FileText className="w-3 h-3 text-amber-600" />
+            <span>Historial de cotizaciones</span>
+          </button>
         )}
       </div>
     </div>
