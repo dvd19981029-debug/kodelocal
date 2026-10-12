@@ -488,7 +488,7 @@ export default function BodegaPage() {
           'Content-Type': 'application/json',
           ...(staffToken ? { 'x-staff-token': staffToken } : {}),
         },
-        body: JSON.stringify({ id: orderId, orderStatus: 'CANCELADO' })
+        body: JSON.stringify({ id: orderId, saleNumber: sales.find(s => s.id === orderId)?.saleNumber, orderStatus: 'CANCELADO' })
       }).catch(() => {});
     }
 

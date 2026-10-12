@@ -1267,7 +1267,7 @@ export default function PosPage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        saleNumber: ordNum,
+        saleNumber: cmdNum,
         channel: 'POS',
         subtotal: subtotalNeto,
         ivaTotal: ivaCalculado,

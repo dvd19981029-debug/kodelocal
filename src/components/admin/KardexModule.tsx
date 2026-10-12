@@ -137,7 +137,12 @@ export default function KardexModule({
     });
 
     // 2. Salidas desde el Punto de Venta (DTEs de Venta POS)
-    const saleMovs: KardexMovement[] = sales.flatMap(sale => {
+    const saleMovs: KardexMovement[] = sales.filter(sale => {
+      const st = String((sale as any).orderStatus || '').toUpperCase();
+      const pay = String((sale as any).paymentStatus || '').toUpperCase();
+      if (['CANCELLED', 'CANCELADO', 'ANULADA'].includes(st) || pay === 'CANCELLED') return false;
+      return st === 'COMPLETED' || pay === 'COMPLETED';
+    }).flatMap(sale => {
       const dteDisplay = sale.dteInfo?.numeroControl || sale.dteInfo?.codigoGeneracion || sale.saleNumber;
       const dteTypeLabel = sale.tipoComprobante === '03' ? 'CCF-03' : sale.tipoComprobante === '01' ? 'FE-01' : 'TICKET';
       return sale.items.map((it, idx) => {
