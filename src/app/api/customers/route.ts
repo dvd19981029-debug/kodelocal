@@ -98,8 +98,23 @@ export async function POST(request: Request) {
 
     let customer;
     if (id && !id.startsWith('cli-')) {
+      if (data.email) {
+        const conflict = await prisma.customer.findFirst({
+          where: { email: data.email, NOT: { id } },
+        });
+        if (conflict) {
+          customer = await prisma.customer.update({
+            where: { id: conflict.id },
+            include: { tier: true },
+            data,
+          });
+          return NextResponse.json({ success: true, customer });
+        }
+      }
+
       customer = await prisma.customer.update({
         where: { id },
+        include: { tier: true },
         data,
       });
     } else {
@@ -110,16 +125,19 @@ export async function POST(request: Request) {
             ...(data.phone ? [{ phone: data.phone }] : []),
           ],
         },
+        include: { tier: true },
       });
 
       if (existing) {
         customer = await prisma.customer.update({
           where: { id: existing.id },
+          include: { tier: true },
           data,
         });
       } else {
         customer = await prisma.customer.create({
           data,
+          include: { tier: true },
         });
       }
     }

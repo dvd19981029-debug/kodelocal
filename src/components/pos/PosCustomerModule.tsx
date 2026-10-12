@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { RotateCw, UserPlus, Search, Users, Edit3 } from 'lucide-react';
+import { RotateCw, UserPlus, Search, Users, Edit3, Eye } from 'lucide-react';
 import { CustomerRecord } from '@/lib/customers';
 
 export interface PosCustomerModuleProps {
@@ -15,6 +15,7 @@ export interface PosCustomerModuleProps {
   isSyncingCustomers: boolean;
   handleOpenNewCustomerModal: () => void;
   handleOpenEditCustomerModal: (cust: CustomerRecord) => void;
+  handleOpenCustomerDetailModal: (cust: CustomerRecord) => void;
   handleStartSaleForCustomer: (cust: CustomerRecord) => void;
 }
 
@@ -29,6 +30,7 @@ export const PosCustomerModule: React.FC<PosCustomerModuleProps> = React.memo(({
   isSyncingCustomers,
   handleOpenNewCustomerModal,
   handleOpenEditCustomerModal,
+  handleOpenCustomerDetailModal,
   handleStartSaleForCustomer,
 }) => {
   return (
@@ -163,6 +165,20 @@ export const PosCustomerModule: React.FC<PosCustomerModuleProps> = React.memo(({
                             {cust.nombreComercial}
                           </span>
                         )}
+                        {(cust.specialEssencePrice != null || cust.specialBottlePrice != null) && (
+                          <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                            {cust.specialEssencePrice != null && (
+                              <span className="text-[9px] font-bold text-indigo-700 bg-indigo-50 px-1 py-0.2 rounded border border-indigo-100">
+                                Esencia: ${Number(cust.specialEssencePrice).toFixed(2)}/oz
+                              </span>
+                            )}
+                            {cust.specialBottlePrice != null && (
+                              <span className="text-[9px] font-bold text-purple-700 bg-purple-50 px-1 py-0.2 rounded border border-purple-100">
+                                Bote: ${Number(cust.specialBottlePrice).toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </td>
                       <td className="py-1.5 px-2.5 whitespace-nowrap">
                         <span className={`px-2 py-0.5 rounded text-[9.5px] font-black uppercase tracking-wider ${
@@ -194,6 +210,14 @@ export const PosCustomerModule: React.FC<PosCustomerModuleProps> = React.memo(({
                       </td>
                       <td className="py-1.5 px-2.5 text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenCustomerDetailModal(cust)}
+                            className="p-1 rounded text-slate-400 hover:text-indigo-600 hover:bg-slate-100 transition-colors"
+                            title="Ver ficha completa e historial de compras"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
                           <button
                             type="button"
                             onClick={() => handleOpenEditCustomerModal(cust)}

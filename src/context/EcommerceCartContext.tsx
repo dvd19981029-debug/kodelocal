@@ -270,6 +270,49 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     }
   }, [cart, isMounted]);
 
+  // Recalcular precios del carrito automáticamente si el cliente tiene precios especiales
+  useEffect(() => {
+    if (!isMounted) return;
+    setCart((prev) => {
+      let changed = false;
+      const updated = prev.map((item) => {
+        const isEssence = item.product.category === 'Esencias para Perfume';
+        const isBottle = item.product.category === 'Botes' || item.product.name.toLowerCase().includes('bote');
+        let newUnitPrice = item.unitPrice;
+
+        if (isEssence && !item.kitDetails) {
+          if (customer?.specialEssencePrice) {
+            const baseSpecial = Number(customer.specialEssencePrice);
+            newUnitPrice = item.presentation === 'MEDIA_ONZA'
+              ? Number((baseSpecial / 2).toFixed(2))
+              : baseSpecial;
+          } else {
+            const presentations = getPresentationsForProduct(item.product);
+            const opt = presentations.find((p) => p.id === item.presentation) || presentations[0];
+            newUnitPrice = opt.price;
+          }
+        } else if (isBottle) {
+          if (customer?.specialBottlePrice) {
+            newUnitPrice = Number(customer.specialBottlePrice);
+          } else {
+            newUnitPrice = item.product.price;
+          }
+        }
+
+        if (newUnitPrice !== item.unitPrice) {
+          changed = true;
+          return {
+            ...item,
+            unitPrice: newUnitPrice,
+            totalPrice: Number((newUnitPrice * item.quantity).toFixed(2)),
+          };
+        }
+        return item;
+      });
+      return changed ? updated : prev;
+    });
+  }, [customer?.specialEssencePrice, customer?.specialBottlePrice, isMounted]);
+
   const addToCart = useCallback((
     product: ProductItem, 
     presentation: ProductPresentation = product.category === 'Esencias para Perfume' ? 'ONZA_COMPLETA' : 'UNIDAD',
@@ -278,7 +321,23 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
   ) => {
     const presentations = getPresentationsForProduct(product);
     const selectedOption = presentations.find(p => p.id === presentation) || presentations[0];
-    const unitPrice = selectedOption.price;
+    const isEssence = product.category === 'Esencias para Perfume';
+    const isBottle = product.category === 'Botes' || product.name.toLowerCase().includes('bote');
+    
+    let unitPrice = selectedOption.price;
+    if (isEssence) {
+      if (customer?.specialEssencePrice) {
+        const baseSpecial = Number(customer.specialEssencePrice);
+        unitPrice = presentation === 'MEDIA_ONZA' 
+          ? Number((baseSpecial / 2).toFixed(2)) 
+          : baseSpecial;
+      }
+    } else if (isBottle) {
+      if (customer?.specialBottlePrice) {
+        unitPrice = Number(customer.specialBottlePrice);
+      }
+    }
+
     const itemId = selectedBottle 
       ? `${product.id}-${presentation}-${selectedBottle.id}` 
       : `${product.id}-${presentation}`;
@@ -287,8 +346,6 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     if (totalStock <= 0) {
       return;
     }
-
-    const isEssence = product.category === 'Esencias para Perfume';
 
     setCart(prev => {
       const existingPerfume = prev.find(item => item.id === itemId);
@@ -322,7 +379,8 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
             ? { 
                 ...item, 
                 quantity: desiredQty,
-                totalPrice: Number((desiredQty * item.unitPrice).toFixed(2))
+                unitPrice,
+                totalPrice: Number((desiredQty * unitPrice).toFixed(2))
               }
             : item
         );
@@ -338,7 +396,7 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
           selectedBottle: selectedBottle ? {
             id: selectedBottle.id,
             name: selectedBottle.name,
-            price: selectedBottle.price,
+            price: customer?.specialBottlePrice ? Number(customer.specialBottlePrice) : selectedBottle.price,
             imageUrl: selectedBottle.imageUrl
           } : undefined
         });
@@ -347,6 +405,7 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
       // 2. Si eligió un bote para el perfume preparado, sumarlo también al carrito
       if (selectedBottle) {
         const bottleItemId = `${selectedBottle.id}-BOTE-${product.id}`;
+        const bottlePrice = customer?.specialBottlePrice ? Number(customer.specialBottlePrice) : selectedBottle.price;
         const existingBottle = updatedCart.find(item => item.id === bottleItemId);
         if (existingBottle) {
           updatedCart = updatedCart.map(item =>
@@ -354,7 +413,8 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
               ? {
                   ...item,
                   quantity: desiredQty,
-                  totalPrice: Number((desiredQty * item.unitPrice).toFixed(2))
+                  unitPrice: bottlePrice,
+                  totalPrice: Number((desiredQty * bottlePrice).toFixed(2))
                 }
               : item
           );
@@ -364,9 +424,9 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
             product: selectedBottle,
             presentation: 'UNIDAD',
             presentationName: `Bote para ${product.officialName || product.name}`,
-            unitPrice: selectedBottle.price,
+            unitPrice: bottlePrice,
             quantity: desiredQty,
-            totalPrice: Number((selectedBottle.price * desiredQty).toFixed(2))
+            totalPrice: Number((bottlePrice * desiredQty).toFixed(2))
           });
         }
       }
@@ -375,7 +435,7 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     });
 
     triggerCartPulse();
-  }, [triggerCartPulse]);
+  }, [customer?.specialEssencePrice, customer?.specialBottlePrice, triggerCartPulse]);
 
   const addKitToCart = useCallback(({
     essence,

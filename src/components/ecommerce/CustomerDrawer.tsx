@@ -533,9 +533,18 @@ export default function CustomerDrawer() {
                         {/* Cabecera del pedido */}
                         <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-2.5">
                           <div>
-                            <span className="text-[11px] font-black text-indigo-700 font-mono">
-                              #{order.orderNumber || order.id?.slice(-8).toUpperCase()}
-                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[11px] font-black text-indigo-700 font-mono">
+                                #{order.orderNumber || order.id?.slice(-8).toUpperCase()}
+                              </span>
+                              {order.origin && (
+                                <span className={`px-1.5 py-0.2 rounded text-[9px] font-black uppercase ${
+                                  order.channel === 'POS' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800'
+                                }`}>
+                                  {order.origin}
+                                </span>
+                              )}
+                            </div>
                             <p className="text-[10px] text-slate-400 font-medium">{orderDate}</p>
                           </div>
                           <div className="flex items-center gap-1.5 flex-wrap justify-end">
@@ -656,6 +665,42 @@ export default function CustomerDrawer() {
                       <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center gap-2">
                         <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
                         <span>{saveError}</span>
+                      </div>
+                    )}
+
+                    {/* Precios Preferenciales Asignados */}
+                    {customer && (customer.specialEssencePrice != null || customer.specialBottlePrice != null) && (
+                      <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 border border-emerald-500/30 rounded-2xl p-4 shadow-2xs space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                            Tarifas Especiales Asignadas
+                          </span>
+                          <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-600 text-white shadow-2xs">
+                            Activo
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-600 leading-snug">
+                          Cuentas con precios preferenciales exclusivos vinculados a tu cuenta. Se aplican automáticamente al agregar al carrito y en tus compras en tienda física:
+                        </p>
+                        <div className="grid grid-cols-2 gap-2 pt-0.5">
+                          {customer.specialEssencePrice != null && (
+                            <div className="bg-white/90 backdrop-blur-xs p-2.5 rounded-xl border border-emerald-200/60 shadow-2xs text-center">
+                              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Esencias / Oz</div>
+                              <div className="text-sm font-black text-emerald-700 font-mono">
+                                ${Number(customer.specialEssencePrice).toFixed(2)}
+                              </div>
+                            </div>
+                          )}
+                          {customer.specialBottlePrice != null && (
+                            <div className="bg-white/90 backdrop-blur-xs p-2.5 rounded-xl border border-emerald-200/60 shadow-2xs text-center">
+                              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Botes / Ud</div>
+                              <div className="text-sm font-black text-emerald-700 font-mono">
+                                ${Number(customer.specialBottlePrice).toFixed(2)}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
 

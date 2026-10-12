@@ -337,10 +337,16 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
           ) : (
             cart.map((item) => {
               const itemPres = item.presentation || 'ONZA_COMPLETA';
-              const isEssence = item.product.category === 'Esencias para Perfume' || item.product.unit === 'Onza';
+              const cat = item.product.category || '';
+              const isEssence = cat === 'Esencias para Perfume' || cat === 'Esencias & Fragancias' || item.product.unit === 'Onza';
+              const isBottle = cat === 'Botes' || cat === 'Botes & Envases' || cat === 'Envases & Botes' || item.product.name.toLowerCase().startsWith('bote') || item.product.name.toLowerCase().includes('frasco');
               const unitPrice = getItemUnitPrice(item);
-              const fullPriceVal = (isEssence && selectedCustomerObj?.specialEssencePrice) ? Number(selectedCustomerObj.specialEssencePrice) : item.product.price;
-              const halfPriceVal = (isEssence && selectedCustomerObj?.specialEssencePrice) ? Number((Number(selectedCustomerObj.specialEssencePrice) / 2).toFixed(2)) : (item.product.priceHalfOunce != null ? Number(item.product.priceHalfOunce) : Number((item.product.price / 2).toFixed(2)));
+              const fullPriceVal = (isEssence && selectedCustomerObj?.specialEssencePrice) 
+                ? Number(selectedCustomerObj.specialEssencePrice) 
+                : (isBottle && selectedCustomerObj?.specialBottlePrice ? Number(selectedCustomerObj.specialBottlePrice) : item.product.price);
+              const halfPriceVal = (isEssence && selectedCustomerObj?.specialEssencePrice) 
+                ? Number((Number(selectedCustomerObj.specialEssencePrice) / 2).toFixed(2)) 
+                : (item.product.priceHalfOunce != null ? Number(item.product.priceHalfOunce) : Number((item.product.price / 2).toFixed(2)));
 
               return (
                 <div 

@@ -55,7 +55,10 @@ export interface PosCustomerFormModalProps {
   customerTiers: any[];
   custCustomDiscountPct?: string;
   setCustCustomDiscountPct?: (val: string) => void;
-
+  custSpecialEssencePrice?: string;
+  setCustSpecialEssencePrice?: (val: string) => void;
+  custSpecialBottlePrice?: string;
+  setCustSpecialBottlePrice?: (val: string) => void;
 
   setCustDireccion: (val: string) => void;
   onSaveCustomer: (e: React.FormEvent) => void;
@@ -98,7 +101,10 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
   customerTiers,
   custCustomDiscountPct,
   setCustCustomDiscountPct,
-
+  custSpecialEssencePrice = '',
+  setCustSpecialEssencePrice,
+  custSpecialBottlePrice = '',
+  setCustSpecialBottlePrice,
 
   onSaveCustomer,
 }) => {
@@ -401,6 +407,55 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
                 />
               </div>
             )}
+          </div>
+
+          {/* Precios Fijos Especiales (Esencias y Botes) */}
+          <div className="p-3.5 bg-indigo-50/60 rounded-2xl border border-indigo-100 space-y-2.5">
+            <div>
+              <label className="text-xs font-black text-indigo-900 block">
+                Precios Fijos Especiales para este Cliente
+              </label>
+              <p className="text-[11px] text-slate-500">
+                Se aplicarán automáticamente tanto en ventas de mostrador (POS) como al cotizar o iniciar sesión en el ecommerce.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  Precio Fijo Esencias ($ / Onza)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="Ej. 2.75 (vacío = estándar)"
+                    value={custSpecialEssencePrice}
+                    onChange={(e) => setCustSpecialEssencePrice && setCustSpecialEssencePrice(e.target.value)}
+                    className="clay-input w-full pl-7 text-xs font-mono font-bold"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  Precio Fijo Botes ($ / Unidad)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="Ej. 1.25 (vacío = estándar)"
+                    value={custSpecialBottlePrice}
+                    onChange={(e) => setCustSpecialBottlePrice && setCustSpecialBottlePrice(e.target.value)}
+                    className="clay-input w-full pl-7 text-xs font-mono font-bold"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Dirección */}

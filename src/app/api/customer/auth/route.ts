@@ -59,12 +59,14 @@ export async function POST(request: Request) {
             ...(googleId ? [{ googleId }] : []),
           ],
         },
+        include: { tier: true },
       });
 
       if (customer) {
         // Actualizar información de Google si hiciera falta
         customer = await prisma.customer.update({
           where: { id: customer.id },
+          include: { tier: true },
           data: {
             googleId: googleId || customer.googleId,
             avatarUrl: avatarUrl || customer.avatarUrl,
@@ -83,6 +85,7 @@ export async function POST(request: Request) {
             municipality: 'San Salvador',
             documentType: 'DUI',
           },
+          include: { tier: true },
         });
       }
 
@@ -109,8 +112,11 @@ export async function POST(request: Request) {
           tierId: customer.tierId || null,
           tier: customer.tier || null,
           customDiscountPct: customer.customDiscountPct || null,
-
-
+          specialEssencePrice: customer.specialEssencePrice ? Number(customer.specialEssencePrice) : null,
+          specialBottlePrice: customer.specialBottlePrice ? Number(customer.specialBottlePrice) : null,
+          tradeName: customer.tradeName || '',
+          taxCategory: customer.taxCategory || 'OTRO',
+          preferredDoc: customer.preferredDoc || '01',
           sessionToken,
         },
       });
@@ -145,6 +151,7 @@ export async function POST(request: Request) {
       // Verificar si ya existe
       const existing = await prisma.customer.findUnique({
         where: { email: cleanEmail },
+        include: { tier: true },
       });
 
       const passwordHash = hashPassword(password);
@@ -160,6 +167,7 @@ export async function POST(request: Request) {
           // El cliente fue creado desde el POS (sin contraseña). Le asignamos la contraseña para que reclame su cuenta.
           const updatedCustomer = await prisma.customer.update({
             where: { id: existing.id },
+            include: { tier: true },
             data: {
               passwordHash,
               avatarUrl: existing.avatarUrl || avatarUrl,
@@ -183,25 +191,26 @@ export async function POST(request: Request) {
               documentType: updatedCustomer.documentType || 'DUI',
               documentNum: updatedCustomer.documentNum || '',
               department: updatedCustomer.department || 'San Salvador',
-              municipality: updatedCustomer.municipality || 'San Salvador',
+              municipality: updatedCustomer.municipality || 'San Salvador Centro',
               address: updatedCustomer.address || '',
               nrc: updatedCustomer.nrc || '',
               businessName: updatedCustomer.businessName || '',
               activityDesc: updatedCustomer.activityDesc || '',
               avatarUrl: updatedCustomer.avatarUrl,
               authProvider: 'credentials',
-          tierId: customer.tierId || null,
-          tier: customer.tier || null,
-          customDiscountPct: customer.customDiscountPct || null,
-
-
+              tierId: updatedCustomer.tierId || null,
+              tier: updatedCustomer.tier || null,
+              customDiscountPct: updatedCustomer.customDiscountPct || null,
+              specialEssencePrice: updatedCustomer.specialEssencePrice ? Number(updatedCustomer.specialEssencePrice) : null,
+              specialBottlePrice: updatedCustomer.specialBottlePrice ? Number(updatedCustomer.specialBottlePrice) : null,
+              tradeName: updatedCustomer.tradeName || '',
+              taxCategory: updatedCustomer.taxCategory || 'OTRO',
+              preferredDoc: updatedCustomer.preferredDoc || '01',
               sessionToken,
             },
           });
         }
       }
-
-
 
       const customer = await prisma.customer.create({
         data: {
@@ -215,6 +224,7 @@ export async function POST(request: Request) {
           address: sanitizeText(address, 255) || '',
           documentType: 'DUI',
         },
+        include: { tier: true },
       });
 
       const sessionToken = createCustomerToken(customer.id, customer.email || '');
@@ -230,7 +240,7 @@ export async function POST(request: Request) {
           documentType: customer.documentType || 'DUI',
           documentNum: customer.documentNum || '',
           department: customer.department || 'San Salvador',
-          municipality: customer.municipality || 'San Salvador',
+          municipality: customer.municipality || 'San Salvador Centro',
           address: customer.address || '',
           nrc: customer.nrc || '',
           businessName: customer.businessName || '',
@@ -240,8 +250,11 @@ export async function POST(request: Request) {
           tierId: customer.tierId || null,
           tier: customer.tier || null,
           customDiscountPct: customer.customDiscountPct || null,
-
-
+          specialEssencePrice: customer.specialEssencePrice ? Number(customer.specialEssencePrice) : null,
+          specialBottlePrice: customer.specialBottlePrice ? Number(customer.specialBottlePrice) : null,
+          tradeName: customer.tradeName || '',
+          taxCategory: customer.taxCategory || 'OTRO',
+          preferredDoc: customer.preferredDoc || '01',
           sessionToken,
         },
       });
@@ -303,7 +316,7 @@ export async function POST(request: Request) {
           documentType: customer.documentType || 'DUI',
           documentNum: customer.documentNum || '',
           department: customer.department || 'San Salvador',
-          municipality: customer.municipality || 'San Salvador',
+          municipality: customer.municipality || 'San Salvador Centro',
           address: customer.address || '',
           nrc: customer.nrc || '',
           businessName: customer.businessName || '',
@@ -313,8 +326,11 @@ export async function POST(request: Request) {
           tierId: customer.tierId || null,
           tier: customer.tier || null,
           customDiscountPct: customer.customDiscountPct || null,
-
-
+          specialEssencePrice: customer.specialEssencePrice ? Number(customer.specialEssencePrice) : null,
+          specialBottlePrice: customer.specialBottlePrice ? Number(customer.specialBottlePrice) : null,
+          tradeName: customer.tradeName || '',
+          taxCategory: customer.taxCategory || 'OTRO',
+          preferredDoc: customer.preferredDoc || '01',
           sessionToken,
         },
       });
@@ -396,8 +412,11 @@ export async function POST(request: Request) {
           tierId: updated.tierId || null,
           tier: updated.tier || null,
           customDiscountPct: updated.customDiscountPct || null,
-
-
+          specialEssencePrice: updated.specialEssencePrice ? Number(updated.specialEssencePrice) : null,
+          specialBottlePrice: updated.specialBottlePrice ? Number(updated.specialBottlePrice) : null,
+          tradeName: updated.tradeName || '',
+          taxCategory: updated.taxCategory || 'OTRO',
+          preferredDoc: updated.preferredDoc || '01',
           sessionToken,
         },
       });
@@ -412,6 +431,7 @@ export async function POST(request: Request) {
 
       const existing = await prisma.customer.findFirst({
         where: { id: customerId, email: email.toLowerCase().trim() },
+        include: { tier: true },
       });
 
       if (!existing) {
@@ -419,7 +439,35 @@ export async function POST(request: Request) {
       }
 
       const sessionToken = createCustomerToken(existing.id, existing.email || '');
-      return NextResponse.json({ success: true, sessionToken });
+      return NextResponse.json({
+        success: true,
+        sessionToken,
+        customer: {
+          id: existing.id,
+          name: existing.name,
+          email: existing.email || '',
+          phone: existing.phone || '',
+          documentType: existing.documentType || 'DUI',
+          documentNum: existing.documentNum || '',
+          department: existing.department || 'San Salvador',
+          municipality: existing.municipality || 'San Salvador Centro',
+          address: existing.address || '',
+          nrc: existing.nrc || '',
+          businessName: existing.businessName || '',
+          activityDesc: existing.activityDesc || '',
+          avatarUrl: existing.avatarUrl || '',
+          authProvider: existing.googleId ? 'google' : 'credentials',
+          tierId: existing.tierId || null,
+          tier: existing.tier || null,
+          customDiscountPct: existing.customDiscountPct || null,
+          specialEssencePrice: existing.specialEssencePrice ? Number(existing.specialEssencePrice) : null,
+          specialBottlePrice: existing.specialBottlePrice ? Number(existing.specialBottlePrice) : null,
+          tradeName: existing.tradeName || '',
+          taxCategory: existing.taxCategory || 'OTRO',
+          preferredDoc: existing.preferredDoc || '01',
+          sessionToken,
+        },
+      });
     }
 
     return NextResponse.json({ success: false, error: 'Acción no válida' }, { status: 400 });

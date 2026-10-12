@@ -165,7 +165,76 @@ export async function GET(request: Request) {
       }),
     }));
 
-    return NextResponse.json({ success: true, orders: formatted });
+    // Si se consulta un cliente específico, incluir también sus compras en tienda física (POS) para unificar su historial
+    let formattedSales: any[] = [];
+    if (targetCustomerId) {
+      try {
+        const posSales = await prisma.sale.findMany({
+          where: {
+            customerId: targetCustomerId,
+            channel: 'POS',
+            NOT: {
+              OR: [
+                { orderStatus: 'CANCELLED' },
+                { orderStatus: 'CANCELADO' },
+                { orderStatus: 'ANULADA' },
+              ],
+            },
+          },
+          include: {
+            dteDocument: true,
+            items: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        formattedSales = posSales.map((s) => ({
+          id: s.id,
+          orderNumber: s.saleNumber,
+          customerId: s.customerId,
+          customerName: s.cashierName || 'Venta Mostrador',
+          customerEmail: null,
+          customerPhone: '',
+          department: 'San Salvador',
+          municipality: 'San Salvador',
+          shippingAddress: 'Compra en Tienda Física (POS)',
+          deliveryReference: 'Venta de Mostrador',
+          subtotal: Number(s.subtotal || 0),
+          shippingCost: 0,
+          total: Number(s.total || 0),
+          paymentMethod: s.paymentMethod,
+          paymentStatus: s.paymentStatus,
+          orderStatus: s.orderStatus === 'COMPLETED' ? 'ENTREGADO' : (s.orderStatus || 'ENTREGADO'),
+          trackingNumber: null,
+          courierName: 'Mostrador / Sucursal',
+          whatsappNotified: false,
+          channel: 'POS',
+          origin: 'Tienda Física (POS)',
+          notes: s.notes || (s.tipoComprobante === '03' ? 'Crédito Fiscal (CCF)' : 'Factura (FC)'),
+          createdAt: s.createdAt.toISOString(),
+          updatedAt: s.createdAt.toISOString(),
+          sale: s,
+          items: (s.items || []).map((it) => ({
+            id: it.id,
+            orderId: s.id,
+            productId: it.productId,
+            productName: it.productName,
+            presentation: it.productName.includes('½') ? '½ Onza' : '1 Onza',
+            unitPrice: Number(it.unitPrice || 0),
+            quantity: Number(it.quantity || 1),
+            total: Number(it.total || 0),
+          })),
+        }));
+      } catch (salesErr) {
+        console.error('Error fetching POS sales for customer history:', salesErr);
+      }
+    }
+
+    const allPurchases = [...formatted, ...formattedSales].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    return NextResponse.json({ success: true, orders: allPurchases });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
@@ -500,6 +569,14 @@ export async function POST(request: Request) {
     }
 
     const newOrder = await prisma.$transaction(async (tx) => {
+      // 0. Obtener cliente registrado para verificar si tiene precios especiales o descuentos VIP
+      const dbCustomer = resolvedCustomerId
+        ? await tx.customer.findUnique({
+            where: { id: resolvedCustomerId },
+            include: { tier: true },
+          })
+        : null;
+
       // 1. Validar existencias y verificar precios legítimos directamente en la base de datos
       const verifiedItems: {
         productId: string;
@@ -628,12 +705,36 @@ export async function POST(request: Request) {
           throw new Error(`El producto solicitado ya no se encuentra disponible.`);
         }
 
-        // Determinar precio unitario legítimo según categoría y presentación directamente desde BD
+        // Determinar precio unitario legítimo según categoría, presentación y precios especiales del cliente
         let legitimateUnitPrice = Number(prod.price || 0);
         const catName = prod.category?.name || '';
-        if (catName === 'Esencias para Perfume' || !catName) {
+        const isEssence = catName === 'Esencias para Perfume' || !catName;
+        const isBottle = catName === 'Botes' || catName === 'Botes & Envases' || prod.name.toLowerCase().includes('bote');
+
+        if (isEssence && dbCustomer?.specialEssencePrice) {
+          legitimateUnitPrice = Number(dbCustomer.specialEssencePrice);
+          if (presLower.includes('media') || presLower.includes('½') || presLower.includes('half')) {
+            legitimateUnitPrice = Number((legitimateUnitPrice / 2).toFixed(2));
+          }
+        } else if (isBottle && dbCustomer?.specialBottlePrice) {
+          legitimateUnitPrice = Number(dbCustomer.specialBottlePrice);
+        } else if (isEssence) {
           if (presLower.includes('media') || presLower.includes('½') || presLower.includes('half')) {
             legitimateUnitPrice = prod.priceHalfOunce != null ? Number(prod.priceHalfOunce) : Number((legitimateUnitPrice / 2).toFixed(2));
+          }
+        }
+
+        // Aplicar descuento por nivel VIP del cliente si corresponde
+        if (dbCustomer?.tier) {
+          let appliedPct = 0;
+          if (dbCustomer.tier.name === 'Personalizado' && dbCustomer.customDiscountPct) {
+            appliedPct = Number(dbCustomer.customDiscountPct);
+          } else if (dbCustomer.tier.discountPct) {
+            appliedPct = Number(dbCustomer.tier.discountPct);
+          }
+          if (appliedPct > 0) {
+            const discountAmt = Number((legitimateUnitPrice * (appliedPct / 100)).toFixed(4));
+            legitimateUnitPrice = Number((legitimateUnitPrice - discountAmt).toFixed(2));
           }
         }
 

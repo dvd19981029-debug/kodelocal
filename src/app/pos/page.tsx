@@ -50,6 +50,7 @@ import {
   PosCartPanel, 
   PosQuickEditProductModal,
   PosCustomerFormModal,
+  PosCustomerDetailModal,
   PosCheckoutModal,
   PosCompletedSaleModal,
   PosSaleDetailModal,
@@ -143,7 +144,14 @@ export default function PosPage() {
 
   const [customerTiers, setCustomerTiers] = useState<any[]>([]);
 
+  // Modal de Ficha e Historial Unificado de Cliente
+  const [isCustomerDetailModalOpen, setIsCustomerDetailModalOpen] = useState(false);
+  const [selectedCustomerForDetail, setSelectedCustomerForDetail] = useState<CustomerRecord | null>(null);
 
+  const handleOpenCustomerDetailModal = (cust: CustomerRecord) => {
+    setSelectedCustomerForDetail(cust);
+    setIsCustomerDetailModalOpen(true);
+  };
   // Carrito de ventas
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('Esencias para Perfume');
@@ -733,8 +741,9 @@ export default function PosPage() {
   // Helper para formatear items de venta/comanda con presentación
   const getItemPriceDetails = (item: CartItem) => {
     let listPrice = item.product.price;
-    const isEssence = item.product.category === "Esencias para Perfume" || !item.product.category;
-    const isBottle = item.product.category === "Botes" || item.product.category === "Botes & Envases";
+    const cat = item.product.category || '';
+    const isEssence = cat === "Esencias para Perfume" || cat === "Esencias & Fragancias" || item.product.unit === 'Onza' || (!cat && item.product.unit !== 'Unidad');
+    const isBottle = cat === "Botes" || cat === "Botes & Envases" || cat === "Envases & Botes" || item.product.name.toLowerCase().startsWith('bote') || item.product.name.toLowerCase().includes('frasco');
 
     if (isEssence && activeCustomer?.specialEssencePrice) {
       listPrice = Number(activeCustomer.specialEssencePrice);
@@ -1302,6 +1311,8 @@ export default function PosPage() {
     setCustNotas('');
     setCustSpecialEssencePrice('');
     setCustSpecialBottlePrice('');
+    setCustTierId('');
+    setCustCustomDiscountPct('');
     setIsCustomerModalOpen(true);
   };
 
@@ -1326,6 +1337,10 @@ export default function PosPage() {
     setCustMunicipio(muniMatch ? muniMatch.nombre : (munis[0]?.nombre || 'San Salvador Centro'));
     setCustDireccion(cust.direccion || '');
     setCustNotas(cust.notas || '');
+    setCustSpecialEssencePrice(cust.specialEssencePrice != null ? String(cust.specialEssencePrice) : '');
+    setCustSpecialBottlePrice(cust.specialBottlePrice != null ? String(cust.specialBottlePrice) : '');
+    setCustTierId(cust.tierId || '');
+    setCustCustomDiscountPct(cust.customDiscountPct != null ? String(cust.customDiscountPct) : '');
     setIsCustomerModalOpen(true);
   };
 
@@ -1847,6 +1862,8 @@ export default function PosPage() {
                 saleNumber: orderToInvoice.saleNumber,
                 orderStatus: 'COMPLETED',
                 paymentStatus: 'COMPLETED',
+                customerId: selectedCustomerId || (orderToInvoice.cliente as any)?.id || null,
+                tipoComprobante,
                 notes: `[Cobrado en Caja POS - ${tipoComprobante}]`
               })
             }).catch(() => {});
@@ -2377,6 +2394,7 @@ export default function PosPage() {
             isSyncingCustomers={isSyncingCustomers}
             handleOpenNewCustomerModal={handleOpenNewCustomerModal}
             handleOpenEditCustomerModal={handleOpenEditCustomerModal}
+            handleOpenCustomerDetailModal={handleOpenCustomerDetailModal}
             handleStartSaleForCustomer={handleStartSaleForCustomer}
           />
         )}
@@ -2459,11 +2477,29 @@ export default function PosPage() {
         setCustTierId={setCustTierId}
         custCustomDiscountPct={custCustomDiscountPct}
         setCustCustomDiscountPct={setCustCustomDiscountPct}
+        custSpecialEssencePrice={custSpecialEssencePrice}
+        setCustSpecialEssencePrice={setCustSpecialEssencePrice}
+        custSpecialBottlePrice={custSpecialBottlePrice}
+        setCustSpecialBottlePrice={setCustSpecialBottlePrice}
 
         customerTiers={customerTiers}
 
         setCustDireccion={setCustDireccion}
         onSaveCustomer={handleSaveCustomer}
+      />
+
+      {/* ========================================================================= */}
+      {/* MODAL 1.5: FICHA E HISTORIAL UNIFICADO DEL CLIENTE                         */}
+      {/* ========================================================================= */}
+      <PosCustomerDetailModal
+        isOpen={isCustomerDetailModalOpen}
+        onClose={() => {
+          setIsCustomerDetailModalOpen(false);
+          setSelectedCustomerForDetail(null);
+        }}
+        customer={selectedCustomerForDetail}
+        onEditCustomer={handleOpenEditCustomerModal}
+        onStartSale={handleStartSaleForCustomer}
       />
 
       {/* ========================================================================= */}

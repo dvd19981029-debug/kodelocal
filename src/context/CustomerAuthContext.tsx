@@ -22,7 +22,11 @@ export interface CustomerUser {
   tierId?: string | null;
   tier?: any | null;
   customDiscountPct?: number | null;
-
+  specialEssencePrice?: number | null;
+  specialBottlePrice?: number | null;
+  tradeName?: string | null;
+  taxCategory?: string | null;
+  preferredDoc?: string | null;
 }
 
 export interface RegisterData {
@@ -91,8 +95,8 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
         const parsed = JSON.parse(saved);
         setCustomer(parsed);
 
-        // Si la sesión guardada no tiene token firmado, refrescarlo silenciosamente
-        if (parsed.id && parsed.email && !parsed.sessionToken) {
+        // Sincronizar y refrescar datos actualizados del cliente y token de sesión
+        if (parsed.id && parsed.email) {
           fetch('/api/customer/auth', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -104,11 +108,13 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
           })
             .then((r) => r.json())
             .then((d) => {
-              if (d.success && d.sessionToken) {
+              if (d.success && d.customer) {
+                saveCustomerSession({ ...d.customer, sessionToken: d.sessionToken || parsed.sessionToken });
+              } else if (d.success && d.sessionToken) {
                 saveCustomerSession({ ...parsed, sessionToken: d.sessionToken });
               }
             })
-            .catch((e) => console.error('Error refrescando token de sesión:', e));
+            .catch((e) => console.error('Error refrescando sesión de cliente:', e));
         }
       }
     } catch (e) {
