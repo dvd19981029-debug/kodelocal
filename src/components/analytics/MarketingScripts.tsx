@@ -68,6 +68,25 @@ export default function MarketingScripts() {
 
   return (
     <>
+      {/* ================= GOOGLE TAG (gtag.js) ================= */}
+      <Script
+        src="https://www.googletagmanager.com/gtag/js?id=G-F6C37J8FFS"
+        strategy="afterInteractive"
+      />
+      <Script
+        id="gtag-init"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-F6C37J8FFS');
+          `,
+        }}
+      />
+
       {/* ================= GOOGLE TAG MANAGER ================= */}
       {gtmId && (
         <>
