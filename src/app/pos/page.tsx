@@ -501,7 +501,7 @@ export default function PosPage() {
             saleNumber: s.saleNumber,
             orderNumber: s.saleNumber,
             createdAt: s.createdAt,
-            invoicedAt: s.createdAt,
+            invoicedAt: (s.orderStatus === 'COMPLETED' || s.paymentStatus === 'COMPLETED') && !['CANCELLED', 'CANCELADO', 'ANULADA'].includes(String(s.orderStatus || '').toUpperCase()) ? s.createdAt : undefined,
             channel: s.channel || 'POS',
             total: Number(s.total || 0),
             subtotal: Number(s.subtotal || 0),

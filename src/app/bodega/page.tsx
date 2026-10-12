@@ -1407,6 +1407,7 @@ export default function BodegaPage() {
                       </div>
 
                       <div className="pt-2.5 border-t border-slate-100 flex items-center justify-end gap-2">
+                        {order.channel === 'ONLINE' && (
                         <button
                           onClick={() => handleMarkAsCompleted(order.id)}
                           className="clay-btn clay-btn-primary px-3.5 py-1.5 text-xs font-black flex items-center gap-1.5 !bg-indigo-600 !shadow-[3px_4px_10px_rgba(79,70,229,0.35)]"
@@ -1414,6 +1415,7 @@ export default function BodegaPage() {
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           <span>Marcar como Entregado</span>
                         </button>
+                        )}
                       </div>
                     </div>
                   ))}
