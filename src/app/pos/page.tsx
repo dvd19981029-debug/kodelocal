@@ -332,6 +332,16 @@ export default function PosPage() {
     };
   }, []);
 
+  const refreshCustomerTiers = async () => {
+    try {
+      const res = await fetch("/api/customers/tiers");
+      const data = await res.json();
+      if (data.success && Array.isArray(data.tiers)) {
+        setCustomerTiers(data.tiers);
+      }
+    } catch (e) { console.error("Error fetching tiers", e); }
+  };
+
   const refreshCustomers = async () => {
     setIsSyncingCustomers(true);
     try {
@@ -350,11 +360,15 @@ export default function PosPage() {
 
   useEffect(() => {
     refreshCustomers();
+    refreshCustomerTiers();
+
   }, []);
 
   useEffect(() => {
     if (posTab === 'clientes') {
       refreshCustomers();
+    refreshCustomerTiers();
+
     }
   }, [posTab]);
 
