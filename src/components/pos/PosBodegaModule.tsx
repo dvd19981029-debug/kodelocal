@@ -8,7 +8,8 @@ import {
   Truck, 
   ReceiptText, 
   Search, 
-  Eye 
+  Eye,
+  X 
 } from 'lucide-react';
 import { SaleRecord, ProductItem } from '@/lib/store';
 
@@ -24,6 +25,8 @@ export interface PosBodegaModuleProps {
   setBodegaOrdenesSearch: (search: string) => void;
   filteredBodegaOrders: SaleRecord[];
   setSelectedSaleDetail: (sale: SaleRecord) => void;
+  handleMarkOrderReadyFromPos: (orderId: string) => void;
+  handleCancelReadyOrder?: (order: SaleRecord) => void;
   handleMarkOrderDeliveredFromPos: (orderId: string) => void;
 }
 
@@ -40,7 +43,7 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
   filteredBodegaOrders,
   setSelectedSaleDetail,
   handleMarkOrderReadyFromPos,
-
+  handleCancelReadyOrder,
   handleMarkOrderDeliveredFromPos,
 }) => {
   return (
@@ -318,14 +321,27 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                   </button>
 
                   {isReady && (
-                    <button
-                      type="button"
-                      onClick={() => handleMarkOrderDeliveredFromPos(order.id)}
-                      className="clay-btn clay-btn-primary px-4 py-1.5 text-xs font-black flex items-center gap-1.5 !bg-emerald-600 !shadow-[3px_4px_12px_rgba(16,185,129,0.4)] animate-pulse"
-                    >
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Entregar al Cliente</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {handleCancelReadyOrder && (
+                        <button
+                          type="button"
+                          onClick={() => handleCancelReadyOrder(order)}
+                          className="clay-btn clay-btn-light px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-rose-200"
+                          title="Anular comanda y devolver inventario"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                          <span>Anular</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleMarkOrderDeliveredFromPos(order.id)}
+                        className="clay-btn clay-btn-primary px-4 py-1.5 text-xs font-black flex items-center gap-1.5 !bg-emerald-600 !shadow-[3px_4px_12px_rgba(16,185,129,0.4)] animate-pulse"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Entregar al Cliente</span>
+                      </button>
+                    </div>
                   )}
 
                   {isPending && (

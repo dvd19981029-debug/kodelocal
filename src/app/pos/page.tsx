@@ -911,6 +911,79 @@ export default function PosPage() {
     triggerSalesSync();
   };
 
+  const handleCancelReadyOrder = async (order: SaleRecord) => {
+    const ordNum = order.orderNumber || order.saleNumber;
+    if (!confirm(`¿Estás seguro de anular la orden #${ordNum}? Los productos serán devueltos automáticamente al inventario.`)) {
+      return;
+    }
+
+    try {
+      const staffToken = await getStaffToken();
+      if (order.channel === 'ONLINE') {
+        fetch('/api/ecommerce/orders', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
+          body: JSON.stringify({ orderId: order.id, orderStatus: 'CANCELADO', restock: true }),
+        }).catch(err => console.error('Error anulando pedido web:', err));
+      } else {
+        fetch('/api/sales', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
+          body: JSON.stringify({
+            id: order.id,
+            saleNumber: order.saleNumber,
+            orderStatus: 'CANCELADO',
+            restock: true,
+          }),
+        }).catch(err => console.error('Error anulando comanda en POS:', err));
+      }
+    } catch (e) {
+      console.error('Error al anular orden:', e);
+    }
+
+    // 1. Actualizar estado local de la orden a CANCELLED
+    setSales(prev => {
+      const updated = prev.map(s => {
+        if (s.id === order.id || s.saleNumber === order.saleNumber) {
+          return { ...s, status: 'CANCELLED' as const };
+        }
+        return s;
+      });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('kodelocal_sales', JSON.stringify(updated));
+      }
+      return updated;
+    });
+    window.dispatchEvent(new Event('kodelocal_sales_updated'));
+
+    // 2. Restaurar existencias en el inventario local
+    setProducts(prev => {
+      const updated = prev.map(prod => {
+        const item = order.items.find(it => it.productId === prod.id);
+        if (!item) return prod;
+        const isHalf = String(item.unit || '').toLowerCase().includes('media') || String(item.unit || '').includes('½');
+        const qty = Number(item.quantity || 1);
+        if (isHalf) {
+          return { ...prod, stockHalf: (prod.stockHalf || 0) + qty };
+        }
+        return { ...prod, stock: (prod.stock || 0) + qty };
+      });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('kodelocal_products', JSON.stringify(updated));
+      }
+      window.dispatchEvent(new Event('kodelocal_products_updated'));
+      return updated;
+    });
+
+    triggerSalesSync();
+  };
+
   const handleMarkOrderDeliveredFromPos = async (orderId: string) => {
     const targetSale = sales.find(s => s.id === orderId || s.saleNumber === orderId);
 
@@ -2284,6 +2357,7 @@ export default function PosPage() {
             setActiveQuoteSale={setActiveQuoteSale}
             setIsQuoteModalOpen={setIsQuoteModalOpen}
             handleStartInvoiceOrder={handleStartInvoiceOrder}
+            handleCancelReadyOrder={handleCancelReadyOrder}
             dteSearchQuery={dteSearchQuery}
             setDteSearchQuery={setDteSearchQuery}
             dteFilterType={dteFilterType}
@@ -2348,7 +2422,7 @@ export default function PosPage() {
             filteredBodegaOrders={filteredBodegaOrders}
             setSelectedSaleDetail={setSelectedSaleDetail}
             handleMarkOrderReadyFromPos={handleMarkOrderReadyFromPos}
-
+            handleCancelReadyOrder={handleCancelReadyOrder}
             handleMarkOrderDeliveredFromPos={handleMarkOrderDeliveredFromPos}
           />
         )}

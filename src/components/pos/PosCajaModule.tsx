@@ -18,6 +18,7 @@ import {
   Printer,
   Send,
   AlertTriangle,
+  XCircle,
 } from 'lucide-react';
 import { SaleRecord } from '@/lib/store';
 import { PosCorteZ } from './PosCorteZ';
@@ -32,6 +33,7 @@ export interface PosCajaModuleProps {
   setActiveQuoteSale: (sale: SaleRecord) => void;
   setIsQuoteModalOpen: (open: boolean) => void;
   handleStartInvoiceOrder: (order: SaleRecord) => void;
+  handleCancelReadyOrder?: (order: SaleRecord) => void;
   dteSearchQuery: string;
   setDteSearchQuery: (query: string) => void;
   dteFilterType: 'ALL' | '01' | '03' | 'TICKET';
@@ -53,6 +55,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
   setActiveQuoteSale,
   setIsQuoteModalOpen,
   handleStartInvoiceOrder,
+  handleCancelReadyOrder,
   dteSearchQuery,
   setDteSearchQuery,
   dteFilterType,
@@ -310,6 +313,18 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                     </div>
 
                     <div className="flex items-center gap-2 w-full sm:w-auto">
+                      {handleCancelReadyOrder && (
+                        <button
+                          type="button"
+                          onClick={() => handleCancelReadyOrder(order)}
+                          className="clay-btn clay-btn-light px-2.5 py-2 text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 flex items-center justify-center gap-1 border border-rose-200 transition-colors"
+                          title="Anular comanda y devolver inventario al sistema"
+                        >
+                          <XCircle className="w-3.5 h-3.5 text-rose-500" />
+                          <span>Anular</span>
+                        </button>
+                      )}
+
                       <button
                         type="button"
                         onClick={() => {

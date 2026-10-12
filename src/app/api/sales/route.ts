@@ -499,10 +499,9 @@ export async function PATCH(request: Request) {
       }
     }
     
-    // Si se está CANCELANDO, y YA estaba COMPLETADO, devolver el stock.
-    // Si NO estaba completado, NO descontamos nada, por lo que NO hay que devolver nada.
+    // Si se está CANCELANDO, y YA estaba COMPLETADO, en VENTANILLA o viene restock: true, devolver el stock.
     // Reclamo atómico: solo una petición concurrente obtiene count > 0 y devuelve el stock.
-    let shouldRestock = isCancelling && isAlreadyCompleted;
+    let shouldRestock = isCancelling && (isAlreadyCompleted || Boolean(body.restock) || sale.orderStatus === 'READY_AT_WINDOW');
     if (shouldRestock) {
       const cancelClaim = await prisma.sale.updateMany({
         where: {

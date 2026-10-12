@@ -273,8 +273,8 @@ export async function PATCH(request: Request) {
       }
     }
 
-    // SEC-01: Prohibir cancelaciones ilegítimas de órdenes pagadas o despachadas
-    if (orderStatus === 'CANCELADO' || paymentStatus === 'CANCELLED' || paymentStatus === 'REJECTED') {
+    // SEC-01: Prohibir cancelaciones no autorizadas por parte de clientes
+    if (!isStaff && (orderStatus === 'CANCELADO' || paymentStatus === 'CANCELLED' || paymentStatus === 'REJECTED')) {
       if (order.paymentStatus === 'COMPLETED') {
         return NextResponse.json(
           { success: false, error: 'No se puede cancelar una orden con pago ya procesado y completado.' },

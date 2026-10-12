@@ -1443,6 +1443,15 @@ export default function BodegaPage() {
                       </div>
 
                       <div className="pt-2.5 border-t border-slate-100 flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleCancelOrder(order.id, order.channel)}
+                          title="Anular comanda y devolver inventario"
+                          className="clay-btn clay-btn-light px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-rose-200"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                          <span>Anular</span>
+                        </button>
                         {order.channel === 'ONLINE' && (
                         <button
                           onClick={() => handleMarkAsCompleted(order.id)}
