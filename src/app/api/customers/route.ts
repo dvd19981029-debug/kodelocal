@@ -30,6 +30,8 @@ export async function GET() {
       specialEssencePrice: c.specialEssencePrice ? Number(c.specialEssencePrice) : null,
       specialBottlePrice: c.specialBottlePrice ? Number(c.specialBottlePrice) : null,
       tierId: c.tierId || null,
+      customDiscountPct: c.customDiscountPct || null,
+
       tier: c.tier || null,
       createdAt: c.createdAt.toISOString(),
     }));
@@ -64,6 +66,8 @@ export async function POST(request: Request) {
       specialEssencePrice,
       specialBottlePrice,
       tierId,
+      customDiscountPct,
+
     } = body;
 
     if (!name?.trim()) {
@@ -88,6 +92,8 @@ export async function POST(request: Request) {
       specialEssencePrice: specialEssencePrice ? Number(specialEssencePrice) : null,
       specialBottlePrice: specialBottlePrice ? Number(specialBottlePrice) : null,
       tierId: tierId || null,
+          customDiscountPct: customDiscountPct != null ? Number(customDiscountPct) : null,
+
     };
 
     let customer;

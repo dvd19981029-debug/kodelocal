@@ -334,7 +334,14 @@ export default function CheckoutPage() {
           total: totalConEnvio,
           paymentMethod: metodoPago,
           items: cart.map(it => {
-            const pct = customer?.tier?.discountPct ? Number(customer.tier.discountPct) : 0;
+            let pct = 0;
+            if (customer?.tier) {
+              if (customer.tier.name === 'Personalizado' && customer.customDiscountPct) {
+                pct = Number(customer.customDiscountPct);
+              } else if (customer.tier.discountPct) {
+                pct = Number(customer.tier.discountPct);
+              }
+            }
             const discountAmt = pct > 0 ? Number((it.unitPrice * (pct / 100)).toFixed(4)) : 0;
             const finalPrice = it.unitPrice - discountAmt;
             return {

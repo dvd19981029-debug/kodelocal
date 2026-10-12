@@ -139,6 +139,8 @@ export default function PosPage() {
   const [custSpecialEssencePrice, setCustSpecialEssencePrice] = useState('');
   const [custSpecialBottlePrice, setCustSpecialBottlePrice] = useState('');
   const [custTierId, setCustTierId] = useState("");
+  const [custCustomDiscountPct, setCustCustomDiscountPct] = useState<string>("");
+
   const [customerTiers, setCustomerTiers] = useState<any[]>([]);
 
 
@@ -715,13 +717,19 @@ export default function PosPage() {
 
     let finalPrice = listPrice;
     let discountAmt = 0;
-    const customerTier = customerTiers.find(t => t.id === custTierId) || activeCustomer?.tier;
-    if (customerTier && customerTier.discountPct) {
-      const pct = Number(customerTier.discountPct);
-      if (pct > 0) {
-        discountAmt = Number((listPrice * (pct / 100)).toFixed(4));
-        finalPrice = Number((listPrice - discountAmt).toFixed(2));
+    
+    let appliedPct = 0;
+    if (activeCustomer?.tier) {
+      if (activeCustomer.tier.name === 'Personalizado' && activeCustomer.customDiscountPct) {
+        appliedPct = Number(activeCustomer.customDiscountPct);
+      } else if (activeCustomer.tier.discountPct) {
+        appliedPct = Number(activeCustomer.tier.discountPct);
       }
+    }
+
+    if (appliedPct > 0) {
+      discountAmt = Number((listPrice * (appliedPct / 100)).toFixed(4));
+      finalPrice = Number((listPrice - discountAmt).toFixed(2));
     }
     return { listPrice, finalPrice, discountAmt };
   };
@@ -1232,6 +1240,8 @@ export default function PosPage() {
       specialEssencePrice: custSpecialEssencePrice ? parseFloat(custSpecialEssencePrice) : undefined,
       specialBottlePrice: custSpecialBottlePrice ? parseFloat(custSpecialBottlePrice) : undefined,
       tierId: custTierId || null,
+      customDiscountPct: custCustomDiscountPct ? Number(custCustomDiscountPct) : null,
+
 
     };
 
@@ -2297,6 +2307,9 @@ export default function PosPage() {
         custDireccion={custDireccion}
         custTierId={custTierId}
         setCustTierId={setCustTierId}
+        custCustomDiscountPct={custCustomDiscountPct}
+        setCustCustomDiscountPct={setCustCustomDiscountPct}
+
         customerTiers={customerTiers}
 
         setCustDireccion={setCustDireccion}

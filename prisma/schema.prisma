@@ -90,6 +90,8 @@ model Customer {
   passwordHash String?
   notes        String?
   preferredDoc String?       @default("01")
+  customDiscountPct Float?
+
   tierId       String?
   tier         CustomerTier? @relation(fields: [tierId], references: [id], onDelete: SetNull)
 

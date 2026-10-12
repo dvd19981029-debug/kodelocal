@@ -31,6 +31,8 @@ export interface CustomerRecord {
   specialEssencePrice?: number | null;
   specialBottlePrice?: number | null;
   tierId?: string | null;
+  customDiscountPct?: number | null;
+
   tier?: CustomerTier | null;
   createdAt: string;
 }

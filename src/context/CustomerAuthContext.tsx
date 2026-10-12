@@ -19,6 +19,10 @@ export interface CustomerUser {
   avatarUrl?: string;
   authProvider?: 'google' | 'credentials';
   sessionToken?: string;
+  tierId?: string | null;
+  tier?: any | null;
+  customDiscountPct?: number | null;
+
 }
 
 export interface RegisterData {

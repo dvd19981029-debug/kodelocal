@@ -108,6 +108,8 @@ export async function POST(request: Request) {
           authProvider: 'google',
           tierId: customer.tierId || null,
           tier: customer.tier || null,
+          customDiscountPct: customer.customDiscountPct || null,
+
 
           sessionToken,
         },
@@ -190,6 +192,8 @@ export async function POST(request: Request) {
               authProvider: 'credentials',
           tierId: customer.tierId || null,
           tier: customer.tier || null,
+          customDiscountPct: customer.customDiscountPct || null,
+
 
               sessionToken,
             },
@@ -235,6 +239,8 @@ export async function POST(request: Request) {
           authProvider: 'credentials',
           tierId: customer.tierId || null,
           tier: customer.tier || null,
+          customDiscountPct: customer.customDiscountPct || null,
+
 
           sessionToken,
         },
@@ -306,6 +312,8 @@ export async function POST(request: Request) {
           authProvider: 'credentials',
           tierId: customer.tierId || null,
           tier: customer.tier || null,
+          customDiscountPct: customer.customDiscountPct || null,
+
 
           sessionToken,
         },
@@ -387,9 +395,8 @@ export async function POST(request: Request) {
           authProvider: updated.googleId ? 'google' : 'credentials',
           tierId: updated.tierId || null,
           tier: updated.tier || null,
+          customDiscountPct: updated.customDiscountPct || null,
 
-          tierId: customer.tierId || null,
-          tier: customer.tier || null,
 
           sessionToken,
         },

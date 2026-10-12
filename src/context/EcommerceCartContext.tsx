@@ -543,12 +543,18 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
   const totalItems = useMemo(() => cart.reduce((acc, it) => acc + it.quantity, 0), [cart]);
   const rawSubtotal = useMemo(() => Number(cart.reduce((acc, it) => acc + it.totalPrice, 0).toFixed(2)), [cart]);
   const discountTotal = useMemo(() => {
-    if (customer?.tier?.discountPct && rawSubtotal > 0) {
-      const pct = Number(customer.tier.discountPct);
-      if (pct > 0) return Number((rawSubtotal * (pct / 100)).toFixed(2));
+    if (customer?.tier && rawSubtotal > 0) {
+      let appliedPct = 0;
+      if (customer.tier.name === 'Personalizado' && customer.customDiscountPct) {
+        appliedPct = Number(customer.customDiscountPct);
+      } else if (customer.tier.discountPct) {
+        appliedPct = Number(customer.tier.discountPct);
+      }
+
+      if (appliedPct > 0) return Number((rawSubtotal * (appliedPct / 100)).toFixed(2));
     }
     return 0;
-  }, [rawSubtotal, customer?.tier?.discountPct]);
+  }, [rawSubtotal, customer?.tier, customer?.customDiscountPct]);
 
   const subtotal = useMemo(() => Number((rawSubtotal - discountTotal).toFixed(2)), [rawSubtotal, discountTotal]);
 

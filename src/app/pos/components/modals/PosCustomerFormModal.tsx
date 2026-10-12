@@ -53,6 +53,9 @@ export interface PosCustomerFormModalProps {
   custTierId: string;
   setCustTierId: (val: string) => void;
   customerTiers: any[];
+  custCustomDiscountPct?: string;
+  setCustCustomDiscountPct?: (val: string) => void;
+
 
   setCustDireccion: (val: string) => void;
   onSaveCustomer: (e: React.FormEvent) => void;
@@ -93,6 +96,9 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
   custTierId,
   setCustTierId,
   customerTiers,
+  custCustomDiscountPct,
+  setCustCustomDiscountPct,
+
 
   onSaveCustomer,
 }) => {
@@ -362,18 +368,39 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
           </div>
 
           {/* Nivel VIP */}
-          <div>
-            <label className="text-xs font-bold text-slate-700 block mb-1.5">Nivel VIP / Descuento Base</label>
-            <select
-              value={custTierId}
-              onChange={(e) => setCustTierId(e.target.value)}
-              className="w-full pl-3 pr-3 py-2.5 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="">Ninguno (Sin descuento)</option>
-              {customerTiers.map((t) => (
-                <option key={t.id} value={t.id}>{t.name} - {Number(t.discountPct)}% dto.</option>
-              ))}
-            </select>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1.5">Nivel VIP / Descuento Base</label>
+              <select
+                value={custTierId}
+                onChange={(e) => {
+                  setCustTierId(e.target.value);
+                  if (setCustCustomDiscountPct) setCustCustomDiscountPct('');
+                }}
+                className="w-full pl-3 pr-3 py-2.5 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="">Ninguno (Sin descuento)</option>
+                {customerTiers.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name} {t.name !== 'Personalizado' ? `- ${Number(t.discountPct)}% dto.` : ''}</option>
+                ))}
+              </select>
+            </div>
+            {customerTiers.find(t => t.id === custTierId)?.name === 'Personalizado' && (
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1.5">Porcentaje Personalizado (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  required
+                  placeholder="Ej. 12.5"
+                  value={custCustomDiscountPct || ''}
+                  onChange={(e) => setCustCustomDiscountPct && setCustCustomDiscountPct(e.target.value)}
+                  className="clay-input w-full text-xs font-mono"
+                />
+              </div>
+            )}
           </div>
 
           {/* Dirección */}
