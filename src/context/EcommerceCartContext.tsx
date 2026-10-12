@@ -1,6 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import { useCustomerAuth } from "@/context/CustomerAuthContext";
+
 import { ProductItem } from '@/lib/store';
 
 export type ProductPresentation = 
@@ -169,6 +171,9 @@ interface EcommerceCartContextType {
   triggerCartPulse: () => void;
   totalItems: number;
   subtotal: number;
+  rawSubtotal: number;
+  discountTotal: number;
+
   isArmaTuPerfumeActive: boolean;
   setIsArmaTuPerfumeActive: (active: boolean) => void;
   kitConfig: KitConfig;
@@ -193,6 +198,8 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
   const [isCartPulsing, setIsCartPulsing] = useState(false);
   const [isArmaTuPerfumeActive, setIsArmaTuPerfumeActive] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const { customer } = useCustomerAuth();
+
   const [kitConfig, setKitConfig] = useState<KitConfig>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -534,7 +541,18 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
   }, [removeFromCart, triggerCartPulse]);
 
   const totalItems = useMemo(() => cart.reduce((acc, it) => acc + it.quantity, 0), [cart]);
-  const subtotal = useMemo(() => Number(cart.reduce((acc, it) => acc + it.totalPrice, 0).toFixed(2)), [cart]);
+  const rawSubtotal = useMemo(() => Number(cart.reduce((acc, it) => acc + it.totalPrice, 0).toFixed(2)), [cart]);
+  const discountTotal = useMemo(() => {
+    if (customer?.tier?.discountPct && rawSubtotal > 0) {
+      const pct = Number(customer.tier.discountPct);
+      if (pct > 0) return Number((rawSubtotal * (pct / 100)).toFixed(2));
+    }
+    return 0;
+  }, [rawSubtotal, customer?.tier?.discountPct]);
+
+  const subtotal = useMemo(() => Number((rawSubtotal - discountTotal).toFixed(2)), [rawSubtotal, discountTotal]);
+
+
 
   const contextValue = useMemo(() => ({
     cart,
@@ -549,6 +567,9 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     triggerCartPulse,
     totalItems,
     subtotal,
+    rawSubtotal,
+    discountTotal,
+
     isArmaTuPerfumeActive,
     setIsArmaTuPerfumeActive,
     kitConfig,
@@ -565,6 +586,9 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     triggerCartPulse,
     totalItems,
     subtotal,
+    rawSubtotal,
+    discountTotal,
+
     isArmaTuPerfumeActive,
     kitConfig,
     refreshKitConfig

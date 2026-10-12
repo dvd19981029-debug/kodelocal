@@ -333,6 +333,15 @@ export default function CustomerDrawer() {
                     <img
                       src={customer.avatarUrl}
                       alt={customer.name}
+                          {customer.tier && (
+                            <span 
+                              className="text-[10px] px-2 py-0.5 rounded-full font-black text-white shadow-sm"
+                              style={{ backgroundColor: customer.tier.badgeColor || "#6366f1" }}
+                            >
+                              VIP {customer.tier.name}
+                            </span>
+                          )}
+
                       className="w-12 h-12 rounded-2xl object-cover border-2 border-indigo-200 shadow-xs shrink-0"
                     />
                   ) : (
@@ -342,8 +351,16 @@ export default function CustomerDrawer() {
                   )}
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <h3 className="text-base font-black text-slate-900 leading-tight truncate">
-                        {customer.name}
+                      <h3 className="text-base font-black text-slate-900 leading-tight flex items-center gap-2">
+                        <span className="truncate">{customer.name}</span>
+                        {customer.tier && (
+                          <span 
+                            className="text-[10px] px-2 py-0.5 rounded-full font-black text-white shadow-sm shrink-0"
+                            style={{ backgroundColor: customer.tier.badgeColor || "#6366f1" }}
+                          >
+                            VIP {customer.tier.name}
+                          </span>
+                        )}
                       </h3>
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200/70">
                         <Sparkles className="w-2.5 h-2.5 text-indigo-500" />

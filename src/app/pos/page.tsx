@@ -138,6 +138,9 @@ export default function PosPage() {
   const [custNotas, setCustNotas] = useState('');
   const [custSpecialEssencePrice, setCustSpecialEssencePrice] = useState('');
   const [custSpecialBottlePrice, setCustSpecialBottlePrice] = useState('');
+  const [custTierId, setCustTierId] = useState("");
+  const [customerTiers, setCustomerTiers] = useState<any[]>([]);
+
 
   // Carrito de ventas
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -688,32 +691,53 @@ export default function PosPage() {
   const activeBottlePrice = activeCustomer?.specialBottlePrice ? Number(activeCustomer.specialBottlePrice) : null;
 
   // Helper para obtener el precio unitario del item según su presentación
-  const getItemUnitPrice = (item: CartItem): number => {
-    const isEssence = item.product.category === 'Esencias para Perfume' || !item.product.category;
-    if (isEssence && activeCustomer?.specialEssencePrice) {
-      if (item.presentation === 'MEDIA_ONZA') {
-         return Number((activeCustomer.specialEssencePrice / 2).toFixed(2));
-      }
-      return Number(activeCustomer.specialEssencePrice);
-    }
+  const getItemPriceDetails = (item: CartItem) => {
+    let listPrice = item.product.price;
+    const isEssence = item.product.category === "Esencias para Perfume" || !item.product.category;
+    const isBottle = item.product.category === "Botes" || item.product.category === "Botes & Envases";
 
-    const isBottle = item.product.category === 'Botes' || item.product.category === 'Botes & Envases';
-    if (isBottle && activeCustomer?.specialBottlePrice) {
-      return Number(activeCustomer.specialBottlePrice);
-    }
-
-    if (item.presentation === 'MEDIA_ONZA') {
-      return item.product.priceHalfOunce != null 
-        ? Number(item.product.priceHalfOunce) 
-        : Number((item.product.price / 2).toFixed(2));
-    }
-    return item.product.price;
   };
 
   // Helper para formatear items de venta/comanda con presentación
+  const getItemPriceDetails = (item: CartItem) => {
+    let listPrice = item.product.price;
+    const isEssence = item.product.category === "Esencias para Perfume" || !item.product.category;
+    const isBottle = item.product.category === "Botes" || item.product.category === "Botes & Envases";
+
+    if (isEssence && activeCustomer?.specialEssencePrice) {
+      listPrice = Number(activeCustomer.specialEssencePrice);
+    } else if (isBottle && activeCustomer?.specialBottlePrice) {
+      listPrice = Number(activeCustomer.specialBottlePrice);
+    }
+
+    if (item.presentation === "MEDIA_ONZA") {
+      if (isEssence && activeCustomer?.specialEssencePrice) {
+        listPrice = Number((activeCustomer.specialEssencePrice / 2).toFixed(2));
+      } else if (item.product.priceHalfOunce != null) {
+        listPrice = Number(item.product.priceHalfOunce);
+      } else {
+        listPrice = Number((listPrice / 2).toFixed(2));
+      }
+    }
+
+    let finalPrice = listPrice;
+    let discountAmt = 0;
+    const customerTier = customerTiers.find(t => t.id === custTierId) || activeCustomer?.tier;
+    if (customerTier && customerTier.discountPct) {
+      const pct = Number(customerTier.discountPct);
+      if (pct > 0) {
+        discountAmt = Number((listPrice * (pct / 100)).toFixed(4));
+        finalPrice = Number((listPrice - discountAmt).toFixed(2));
+      }
+    }
+    return { listPrice, finalPrice, discountAmt };
+  };
+
+  const getItemUnitPrice = (item: CartItem): number => getItemPriceDetails(item).finalPrice;
+
   const formatCartItem = (i: CartItem) => {
     const isHalfOz = i.presentation === 'MEDIA_ONZA';
-    const unitPrice = getItemUnitPrice(i);
+    const details = getItemPriceDetails(i);
     const displayName = i.product.officialName && i.product.officialName !== i.product.name
       ? `${i.product.officialName} (${i.product.name})`
       : i.product.name;
@@ -721,8 +745,10 @@ export default function PosPage() {
       productId: i.product.id,
       name: isHalfOz ? `${displayName} (½ Oz)` : displayName,
       quantity: i.quantity,
-      price: unitPrice,
-      total: Number((i.quantity * unitPrice).toFixed(2)),
+      price: details.finalPrice,
+      listPrice: details.listPrice,
+      discountAmt: details.discountAmt,
+      total: Number((i.quantity * details.finalPrice).toFixed(2)),
       unit: isHalfOz ? '½ Onza' : (i.product.unit || 'Unidad'),
       presentation: i.presentation || 'ONZA_COMPLETA',
       puesto: i.product.puesto
@@ -1212,6 +1238,8 @@ export default function PosPage() {
       notas: custNotas.trim() || undefined,
       specialEssencePrice: custSpecialEssencePrice ? parseFloat(custSpecialEssencePrice) : undefined,
       specialBottlePrice: custSpecialBottlePrice ? parseFloat(custSpecialBottlePrice) : undefined,
+      tierId: custTierId || null,
+
     };
 
     // Guardar en Supabase PostgreSQL
@@ -2274,6 +2302,10 @@ export default function PosPage() {
         custMunicipio={custMunicipio}
         setCustMunicipio={setCustMunicipio}
         custDireccion={custDireccion}
+        custTierId={custTierId}
+        setCustTierId={setCustTierId}
+        customerTiers={customerTiers}
+
         setCustDireccion={setCustDireccion}
         onSaveCustomer={handleSaveCustomer}
       />

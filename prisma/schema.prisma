@@ -59,36 +59,49 @@ model Product {
   @@index([gender])
 }
 
+model CustomerTier {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  discountPct Decimal    @db.Decimal(5, 2)
+  badgeColor  String?    @default("blue")
+  customers   Customer[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
 model Customer {
-  id              String            @id @default(cuid())
-  name            String
-  documentType    String?           @default("DUI")
-  documentNum     String?
-  nrc             String?
-  businessName    String?
-  activityCode    String?
-  activityDesc    String?
-  email           String?           @unique
-  phone           String?
-  address         String?
-  department      String?
-  municipality    String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  avatarUrl       String?
-  googleId        String?
-  passwordHash    String?
-  notes           String?
-  preferredDoc    String?           @default("01")
-  specialEssencePrice Decimal?      @db.Decimal(10, 2)
-  specialBottlePrice  Decimal?      @db.Decimal(10, 2)
-  taxCategory     String?           @default("OTRO")
-  tradeName       String?
-  addresses       CustomerAddress[]
-  credits         CustomerCredit[]
-  ecommerceOrders EcommerceOrder[]
-  reviews         ProductReview[]
-  sales           Sale[]
+  id           String        @id @default(cuid())
+  name         String
+  documentType String?       @default("DUI")
+  documentNum  String?
+  nrc          String?
+  businessName String?
+  activityCode String?
+  activityDesc String?
+  email        String?       @unique
+  phone        String?
+  address      String?
+  department   String?
+  municipality String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  avatarUrl    String?
+  googleId     String?
+  passwordHash String?
+  notes        String?
+  preferredDoc String?       @default("01")
+  tierId       String?
+  tier         CustomerTier? @relation(fields: [tierId], references: [id], onDelete: SetNull)
+
+  specialEssencePrice Decimal?          @db.Decimal(10, 2)
+  specialBottlePrice  Decimal?          @db.Decimal(10, 2)
+  taxCategory         String?           @default("OTRO")
+  tradeName           String?
+  addresses           CustomerAddress[]
+  credits             CustomerCredit[]
+  ecommerceOrders     EcommerceOrder[]
+  reviews             ProductReview[]
+  sales               Sale[]
 
   @@index([documentNum])
   @@index([name])

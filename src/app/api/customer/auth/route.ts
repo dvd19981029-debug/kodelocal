@@ -106,6 +106,9 @@ export async function POST(request: Request) {
           activityDesc: customer.activityDesc || '',
           avatarUrl: customer.avatarUrl || '',
           authProvider: 'google',
+          tierId: customer.tierId || null,
+          tier: customer.tier || null,
+
           sessionToken,
         },
       });
@@ -185,6 +188,9 @@ export async function POST(request: Request) {
               activityDesc: updatedCustomer.activityDesc || '',
               avatarUrl: updatedCustomer.avatarUrl,
               authProvider: 'credentials',
+          tierId: customer.tierId || null,
+          tier: customer.tier || null,
+
               sessionToken,
             },
           });
@@ -227,6 +233,9 @@ export async function POST(request: Request) {
           activityDesc: customer.activityDesc || '',
           avatarUrl: customer.avatarUrl,
           authProvider: 'credentials',
+          tierId: customer.tierId || null,
+          tier: customer.tier || null,
+
           sessionToken,
         },
       });
@@ -247,6 +256,7 @@ export async function POST(request: Request) {
 
       const customer = await prisma.customer.findUnique({
         where: { email: normalizedEmail },
+        include: { tier: true },
       });
 
       if (!customer) {
@@ -294,6 +304,9 @@ export async function POST(request: Request) {
           activityDesc: customer.activityDesc || '',
           avatarUrl: customer.avatarUrl || '',
           authProvider: 'credentials',
+          tierId: customer.tierId || null,
+          tier: customer.tier || null,
+
           sessionToken,
         },
       });
@@ -336,6 +349,8 @@ export async function POST(request: Request) {
 
       const updated = await prisma.customer.update({
         where: { id: customerId },
+        include: { tier: true },
+
         data: {
           ...(name !== undefined ? { name: sanitizeText(name, 100) } : {}),
           ...(phone !== undefined ? { phone: sanitizePhone(phone) || '' } : {}),
@@ -370,6 +385,12 @@ export async function POST(request: Request) {
           activityDesc: updated.activityDesc || '',
           avatarUrl: updated.avatarUrl || '',
           authProvider: updated.googleId ? 'google' : 'credentials',
+          tierId: updated.tierId || null,
+          tier: updated.tier || null,
+
+          tierId: customer.tierId || null,
+          tier: customer.tier || null,
+
           sessionToken,
         },
       });

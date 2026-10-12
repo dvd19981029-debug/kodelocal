@@ -7,6 +7,8 @@ export interface DteItemInput {
   descripcion: string;
   cantidad: number;
   precioUnitario: number;
+  montoDescuento?: number;
+
   tipoItem?: number; // 1 = Bienes (default), 2 = Servicios
 }
 
@@ -227,6 +229,8 @@ export class FacturaLlamaClient {
         description: (it.descripcion || 'Producto').slice(0, 200),
         quantity: Math.max(1, Math.round(it.cantidad || 1)),
         unitPrice: precioNeto > 0 ? precioNeto : 0.01,
+        discount: it.montoDescuento || 0,
+
         saleType: 'GRAVADA',
       };
     });

@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const customers = await prisma.customer.findMany({
+      include: { tier: true },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -28,6 +29,8 @@ export async function GET() {
       notas: c.notes || '',
       specialEssencePrice: c.specialEssencePrice ? Number(c.specialEssencePrice) : null,
       specialBottlePrice: c.specialBottlePrice ? Number(c.specialBottlePrice) : null,
+      tierId: c.tierId || null,
+      tier: c.tier || null,
       createdAt: c.createdAt.toISOString(),
     }));
 
@@ -60,6 +63,7 @@ export async function POST(request: Request) {
       notas,
       specialEssencePrice,
       specialBottlePrice,
+      tierId,
     } = body;
 
     if (!name?.trim()) {
@@ -83,6 +87,7 @@ export async function POST(request: Request) {
       notes: notas?.trim() || null,
       specialEssencePrice: specialEssencePrice ? Number(specialEssencePrice) : null,
       specialBottlePrice: specialBottlePrice ? Number(specialBottlePrice) : null,
+      tierId: tierId || null,
     };
 
     let customer;

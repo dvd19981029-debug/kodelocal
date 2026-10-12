@@ -4,6 +4,13 @@ export type TipoPersona = 'NATURAL' | 'JURIDICA';
 export type TipoDocumentoCliente = 'DUI' | 'NIT' | 'PASAPORTE' | 'CARNET_RESIDENCIA' | 'OTRO';
 export type CategoriaContribuyente = 'OTRO' | 'MEDIANO' | 'GRANDE';
 
+export interface CustomerTier {
+  id: string;
+  name: string;
+  discountPct: string | number;
+  badgeColor?: string;
+}
+
 export interface CustomerRecord {
   id: string;
   tipoPersona: TipoPersona;
@@ -23,6 +30,8 @@ export interface CustomerRecord {
   notas?: string;
   specialEssencePrice?: number | null;
   specialBottlePrice?: number | null;
+  tierId?: string | null;
+  tier?: CustomerTier | null;
   createdAt: string;
 }
 

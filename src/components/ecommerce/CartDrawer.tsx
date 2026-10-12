@@ -16,6 +16,8 @@ export default function CartDrawer() {
     removeFromCart, 
     clearCart,
     subtotal,
+    rawSubtotal,
+    discountTotal,
     totalItems
   } = useEcommerceCart();
 
@@ -306,8 +308,16 @@ export default function CartDrawer() {
               <div className="space-y-1.5 text-xs">
                 <div className="flex items-center justify-between text-slate-600 font-medium">
                   <span>Subtotal:</span>
-                  <span className="font-black text-slate-900">${subtotal.toFixed(2)}</span>
+                  <span className={discountTotal > 0 ? "font-bold text-slate-500 line-through" : "font-black text-slate-900"}>
+                    ${rawSubtotal.toFixed(2)}
+                  </span>
                 </div>
+                {discountTotal > 0 && (
+                  <div className="flex items-center justify-between text-indigo-700 font-bold">
+                    <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> Descuento VIP:</span>
+                    <span>-${discountTotal.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between text-[11px] text-slate-500">
                   <span>Envío a todo el país:</span>
                   <span className="text-emerald-700 font-bold">Calculado al pagar o Retiro Gratis</span>

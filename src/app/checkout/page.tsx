@@ -38,7 +38,7 @@ import { saveGuestOrder, saveGuestShippingProfile, getGuestShippingProfile } fro
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart, subtotal, totalItems, clearCart } = useEcommerceCart();
+  const { cart, subtotal, rawSubtotal, discountTotal, totalItems, clearCart } = useEcommerceCart();
   const { customer, isLoggedIn, openAuthModal, openDrawer } = useCustomerAuth();
 
   // Método de entrega: Envío a domicilio o Retiro en sucursal
@@ -333,14 +333,21 @@ export default function CheckoutPage() {
           shippingCost,
           total: totalConEnvio,
           paymentMethod: metodoPago,
-          items: cart.map(it => ({
-            productId: it.product.id,
-            productName: it.product.name,
-            presentation: it.presentationName,
-            unitPrice: it.unitPrice,
-            quantity: it.quantity,
-            total: it.totalPrice,
-          })),
+          items: cart.map(it => {
+            const pct = customer?.tier?.discountPct ? Number(customer.tier.discountPct) : 0;
+            const discountAmt = pct > 0 ? Number((it.unitPrice * (pct / 100)).toFixed(4)) : 0;
+            const finalPrice = it.unitPrice - discountAmt;
+            return {
+              productId: it.product.id,
+              productName: it.product.name,
+              presentation: it.presentationName,
+              listPrice: it.unitPrice,
+              unitPrice: finalPrice,
+              discountAmt: discountAmt,
+              quantity: it.quantity,
+              total: Number((finalPrice * it.quantity).toFixed(2)),
+            };
+          }),
           notes: `Entrega: ${metodoEntrega === 'RETIRO' ? 'Retiro en Local San Salvador' : 'Envío a Domicilio'} - Doc: ${tipoComprobante}`,
           numDoc: numDoc || null,
           nrc: nrc || null,
@@ -1415,8 +1422,23 @@ export default function CheckoutPage() {
               <div className="pt-3 border-t border-slate-100 space-y-2 text-xs">
                 <div className="flex justify-between text-slate-600">
                   <span>Subtotal productos:</span>
-                  <span className="font-bold text-slate-800">${subtotal.toFixed(2)}</span>
+                  <span className={discountTotal > 0 ? "font-bold text-slate-400 line-through" : "font-bold text-slate-800"}>
+                    ${rawSubtotal.toFixed(2)}
+                  </span>
                 </div>
+
+                {discountTotal > 0 && (
+                  <div className="flex items-center justify-between text-indigo-700 font-bold mb-1">
+                    <span>Descuento VIP ({customer?.tier?.name}):</span>
+                    <span>-${discountTotal.toFixed(2)}</span>
+                  </div>
+                )}
+                {discountTotal > 0 && (
+                  <div className="flex items-center justify-between text-slate-800 font-bold">
+                    <span>Subtotal con descuento:</span>
+                    <span>${subtotal.toFixed(2)}</span>
+                  </div>
+                )}
 
                 <div className="flex justify-between text-slate-600">
                   <div className="flex items-center gap-1">

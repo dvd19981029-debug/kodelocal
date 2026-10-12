@@ -50,6 +50,10 @@ export interface PosCustomerFormModalProps {
   custMunicipio: string;
   setCustMunicipio: (val: string) => void;
   custDireccion: string;
+  custTierId: string;
+  setCustTierId: (val: string) => void;
+  customerTiers: any[];
+
   setCustDireccion: (val: string) => void;
   onSaveCustomer: (e: React.FormEvent) => void;
 }
@@ -86,6 +90,10 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
   setCustMunicipio,
   custDireccion,
   setCustDireccion,
+  custTierId,
+  setCustTierId,
+  customerTiers,
+
   onSaveCustomer,
 }) => {
   if (!isOpen) return null;
@@ -351,6 +359,21 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
                 className="clay-input w-full text-xs font-mono"
               />
             </div>
+          </div>
+
+          {/* Nivel VIP */}
+          <div>
+            <label className="text-xs font-bold text-slate-700 block mb-1.5">Nivel VIP / Descuento Base</label>
+            <select
+              value={custTierId}
+              onChange={(e) => setCustTierId(e.target.value)}
+              className="w-full pl-3 pr-3 py-2.5 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">Ninguno (Sin descuento)</option>
+              {customerTiers.map((t) => (
+                <option key={t.id} value={t.id}>{t.name} - {Number(t.discountPct)}% dto.</option>
+              ))}
+            </select>
           </div>
 
           {/* Dirección */}
