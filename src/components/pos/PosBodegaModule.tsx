@@ -327,7 +327,7 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                           type="button"
                           onClick={() => handleCancelReadyOrder(order)}
                           className="clay-btn clay-btn-light px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-rose-200"
-                          title="Anular comanda y devolver inventario"
+                          title="Anular comanda"
                         >
                           <X className="w-3.5 h-3.5" />
                           <span>Anular</span>

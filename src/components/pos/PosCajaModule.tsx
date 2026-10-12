@@ -318,7 +318,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                           type="button"
                           onClick={() => handleCancelReadyOrder(order)}
                           className="clay-btn clay-btn-light px-2.5 py-2 text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 flex items-center justify-center gap-1 border border-rose-200 transition-colors"
-                          title="Anular comanda y devolver inventario al sistema"
+                          title="Anular comanda"
                         >
                           <XCircle className="w-3.5 h-3.5 text-rose-500" />
                           <span>Anular</span>

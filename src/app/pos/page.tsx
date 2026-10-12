@@ -923,11 +923,6 @@ export default function PosPage() {
       return;
     }
 
-    // Determinar si esta orden realmente descontó inventario previo:
-    // Sólo las órdenes completadas/pagadas o del ecommerce descuentan inventario.
-    // Las comandas de mostrador en preparación o ventanilla NUNCA descuentan stock hasta ser cobradas en caja.
-    const wasStockDeducted = order.status === 'COMPLETED' || order.paymentStatus === 'COMPLETED' || order.channel === 'ONLINE';
-
     try {
       const staffToken = await getStaffToken();
       if (order.channel === 'ONLINE') {
@@ -937,7 +932,7 @@ export default function PosPage() {
             'Content-Type': 'application/json',
             ...(staffToken ? { 'x-staff-token': staffToken } : {}),
           },
-          body: JSON.stringify({ orderId: order.id, orderNumber: order.orderNumber, orderStatus: 'CANCELADO', restock: true }),
+          body: JSON.stringify({ orderId: order.id, orderNumber: order.orderNumber, orderStatus: 'CANCELADO', restock: false }),
         }).catch(err => console.error('Error anulando pedido web:', err));
       } else {
         fetch('/api/sales', {
@@ -950,7 +945,7 @@ export default function PosPage() {
             id: order.id,
             saleNumber: order.saleNumber || order.orderNumber,
             orderStatus: 'CANCELADO',
-            restock: wasStockDeducted,
+            restock: false,
           }),
         }).catch(err => console.error('Error anulando comanda en POS:', err));
       }
@@ -958,7 +953,7 @@ export default function PosPage() {
       console.error('Error al anular orden:', e);
     }
 
-    // 1. Actualizar estado local de la orden a CANCELLED
+    // Actualizar estado local de la orden a CANCELLED
     setSales(prev => {
       const updated = prev.map(s => {
         if (s.id === order.id || (order.saleNumber && s.saleNumber === order.saleNumber) || (order.orderNumber && s.orderNumber === order.orderNumber)) {
@@ -972,27 +967,6 @@ export default function PosPage() {
       return updated;
     });
     window.dispatchEvent(new Event('kodelocal_sales_updated'));
-
-    // 2. Restaurar existencias en el inventario local SOLO si fueron descontadas previamente
-    if (wasStockDeducted) {
-      setProducts(prev => {
-        const updated = prev.map(prod => {
-          const item = order.items.find(it => it.productId === prod.id);
-          if (!item) return prod;
-          const isHalf = String(item.unit || '').toLowerCase().includes('media') || String(item.unit || '').includes('½');
-          const qty = Number(item.quantity || 1);
-          if (isHalf) {
-            return { ...prod, stockHalf: (prod.stockHalf || 0) + qty };
-          }
-          return { ...prod, stock: (prod.stock || 0) + qty };
-        });
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('kodelocal_products', JSON.stringify(updated));
-        }
-        window.dispatchEvent(new Event('kodelocal_products_updated'));
-        return updated;
-      });
-    }
   };
 
   const handleMarkOrderDeliveredFromPos = async (orderId: string) => {

@@ -517,7 +517,7 @@ export async function PATCH(request: Request) {
     })) !== null;
 
     // Reclamo atómico: solo una petición concurrente obtiene count > 0 y devuelve el stock.
-    let shouldRestock = isCancelling && hasStockDeduction && !alreadyRestocked;
+    let shouldRestock = isCancelling && hasStockDeduction && !alreadyRestocked && body.restock !== false;
     if (shouldRestock) {
       const cancelClaim = await prisma.sale.updateMany({
         where: {

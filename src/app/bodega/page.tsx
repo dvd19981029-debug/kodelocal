@@ -479,7 +479,7 @@ export default function BodegaPage() {
 
   // Cancelar pedido desde bodega
   const handleCancelOrder = async (orderId: string, channel?: 'POS' | 'ONLINE') => {
-    if (!confirm('¿Estás seguro de cancelar esta comanda? El inventario será devuelto automáticamente.')) return;
+    if (!confirm('¿Estás seguro de cancelar esta comanda?')) return;
     
     const isWeb = channel === 'ONLINE';
     const staffToken = await getStaffToken();
@@ -491,7 +491,7 @@ export default function BodegaPage() {
           'Content-Type': 'application/json',
           ...(staffToken ? { 'x-staff-token': staffToken } : {}),
         },
-        body: JSON.stringify({ orderId, orderStatus: 'CANCELADO', restock: true })
+        body: JSON.stringify({ orderId, orderStatus: 'CANCELADO', restock: false })
       }).catch(() => {});
     } else {
       try {
@@ -506,6 +506,7 @@ export default function BodegaPage() {
             saleNumber: sales.find(s => s.id === orderId)?.saleNumber,
             orderStatus: 'CANCELADO',
             expectedStatus: ['PENDING_PREPARATION', 'READY_AT_WINDOW'],
+            restock: false,
           })
         });
         if (res.status === 409) {
@@ -528,7 +529,7 @@ export default function BodegaPage() {
       return updated;
     });
     
-    showToast('❌ Comanda cancelada. El inventario ha sido devuelto.');
+    showToast('❌ Comanda cancelada.');
   };
 
   // Marcar pedido como listo para ventanilla
