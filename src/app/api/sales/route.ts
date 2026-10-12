@@ -499,9 +499,25 @@ export async function PATCH(request: Request) {
       }
     }
     
-    // Si se está CANCELANDO, y YA estaba COMPLETADO, en VENTANILLA o viene restock: true, devolver el stock.
+    // Si se está CANCELANDO, solo devolver stock si realmente fue descontado previamente
+    // (venta que ya estaba facturada/completada o con movimiento previo OUT_SALE en Kardex).
+    // Las comandas en mostrador/ventanilla pendientes de cobro NUNCA descuentan stock, por lo que NO deben devolver stock para no inflar el inventario.
+    const hasStockDeduction = isAlreadyCompleted || (await prisma.stockMovement.findFirst({
+      where: {
+        reference: { in: [`Venta #${sale.saleNumber}`, `Cobro Comanda #${sale.saleNumber}`] },
+        type: 'OUT_SALE',
+      },
+    })) !== null;
+
+    const alreadyRestocked = (await prisma.stockMovement.findFirst({
+      where: {
+        reference: `Anulación Venta #${sale.saleNumber}`,
+        type: 'ADJUSTMENT',
+      },
+    })) !== null;
+
     // Reclamo atómico: solo una petición concurrente obtiene count > 0 y devuelve el stock.
-    let shouldRestock = isCancelling && (isAlreadyCompleted || Boolean(body.restock) || sale.orderStatus === 'READY_AT_WINDOW');
+    let shouldRestock = isCancelling && hasStockDeduction && !alreadyRestocked;
     if (shouldRestock) {
       const cancelClaim = await prisma.sale.updateMany({
         where: {
@@ -520,35 +536,41 @@ export async function PATCH(request: Request) {
             const presLower = String(it.unit || '').toLowerCase();
             const isHalfRestore = presLower.includes('media') || presLower.includes('½');
 
+            let updatedRows: Array<{ stock: number; stockHalf: number }> = [];
             if (isHalfRestore) {
-              await tx.$queryRaw`
+              updatedRows = await tx.$queryRaw`
                 UPDATE "Product"
-                SET "stockHalf" = "stockHalf" + ${qty},
+                SET "stockHalf" = COALESCE("stockHalf", 0) + ${qty},
                     "updatedAt" = NOW()
                 WHERE "id" = ${it.productId}
+                RETURNING "stock", "stockHalf"
               `;
             } else {
-              await tx.$queryRaw`
+              updatedRows = await tx.$queryRaw`
                 UPDATE "Product"
-                SET "stock" = "stock" + ${qty},
+                SET "stock" = COALESCE("stock", 0) + ${qty},
                     "updatedAt" = NOW()
                 WHERE "id" = ${it.productId}
+                RETURNING "stock", "stockHalf"
               `;
             }
 
-            // Registrar movimiento en Kardex
-            await tx.stockMovement.create({
-              data: {
-                productId: it.productId,
-                type: 'ADJUSTMENT',
-                quantity: qty,
-                previousStock: 0, // Not querying previous to save db hit
-                newStock: 0,
-                reference: `Anulación Venta #${sale.saleNumber}`,
-                notes: `Restauración de inventario por cancelación de venta (${isHalfRestore ? '½ Onza' : 'Normal'})`,
-                userName: 'Sistema (Anulación)',
-              }
-            });
+            if (updatedRows && updatedRows.length > 0) {
+              const currentStock = isHalfRestore ? updatedRows[0].stockHalf : updatedRows[0].stock;
+              // Registrar movimiento en Kardex
+              await tx.stockMovement.create({
+                data: {
+                  productId: it.productId,
+                  type: 'ADJUSTMENT',
+                  quantity: qty,
+                  previousStock: Math.max(0, currentStock - qty),
+                  newStock: currentStock,
+                  reference: `Anulación Venta #${sale.saleNumber}`,
+                  notes: `Restauración de inventario por cancelación de venta (${isHalfRestore ? '½ Onza' : 'Normal'})`,
+                  userName: 'Sistema (Anulación)',
+                }
+              });
+            }
           }
         }
       });

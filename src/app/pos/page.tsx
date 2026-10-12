@@ -907,15 +907,26 @@ export default function PosPage() {
         }).catch(() => {});
       }
     } catch (e) {}
-    setSales(prev => prev.map(s => (s.id === orderId || s.saleNumber === orderId) ? { ...s, status: "READY_AT_WINDOW" } : s));
-    triggerSalesSync();
+    setSales(prev => {
+      const updated = prev.map(s => (s.id === orderId || s.saleNumber === orderId) ? { ...s, status: "READY_AT_WINDOW" as const } : s);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('kodelocal_sales', JSON.stringify(updated));
+      }
+      return updated;
+    });
+    window.dispatchEvent(new Event('kodelocal_sales_updated'));
   };
 
   const handleCancelReadyOrder = async (order: SaleRecord) => {
     const ordNum = order.orderNumber || order.saleNumber;
-    if (!confirm(`¿Estás seguro de anular la orden #${ordNum}? Los productos serán devueltos automáticamente al inventario.`)) {
+    if (!confirm(`¿Estás seguro de anular la orden #${ordNum}?`)) {
       return;
     }
+
+    // Determinar si esta orden realmente descontó inventario previo:
+    // Sólo las órdenes completadas/pagadas o del ecommerce descuentan inventario.
+    // Las comandas de mostrador en preparación o ventanilla NUNCA descuentan stock hasta ser cobradas en caja.
+    const wasStockDeducted = order.status === 'COMPLETED' || order.paymentStatus === 'COMPLETED' || order.channel === 'ONLINE';
 
     try {
       const staffToken = await getStaffToken();
@@ -926,7 +937,7 @@ export default function PosPage() {
             'Content-Type': 'application/json',
             ...(staffToken ? { 'x-staff-token': staffToken } : {}),
           },
-          body: JSON.stringify({ orderId: order.id, orderStatus: 'CANCELADO', restock: true }),
+          body: JSON.stringify({ orderId: order.id, orderNumber: order.orderNumber, orderStatus: 'CANCELADO', restock: true }),
         }).catch(err => console.error('Error anulando pedido web:', err));
       } else {
         fetch('/api/sales', {
@@ -937,9 +948,9 @@ export default function PosPage() {
           },
           body: JSON.stringify({
             id: order.id,
-            saleNumber: order.saleNumber,
+            saleNumber: order.saleNumber || order.orderNumber,
             orderStatus: 'CANCELADO',
-            restock: true,
+            restock: wasStockDeducted,
           }),
         }).catch(err => console.error('Error anulando comanda en POS:', err));
       }
@@ -950,7 +961,7 @@ export default function PosPage() {
     // 1. Actualizar estado local de la orden a CANCELLED
     setSales(prev => {
       const updated = prev.map(s => {
-        if (s.id === order.id || s.saleNumber === order.saleNumber) {
+        if (s.id === order.id || (order.saleNumber && s.saleNumber === order.saleNumber) || (order.orderNumber && s.orderNumber === order.orderNumber)) {
           return { ...s, status: 'CANCELLED' as const };
         }
         return s;
@@ -962,26 +973,26 @@ export default function PosPage() {
     });
     window.dispatchEvent(new Event('kodelocal_sales_updated'));
 
-    // 2. Restaurar existencias en el inventario local
-    setProducts(prev => {
-      const updated = prev.map(prod => {
-        const item = order.items.find(it => it.productId === prod.id);
-        if (!item) return prod;
-        const isHalf = String(item.unit || '').toLowerCase().includes('media') || String(item.unit || '').includes('½');
-        const qty = Number(item.quantity || 1);
-        if (isHalf) {
-          return { ...prod, stockHalf: (prod.stockHalf || 0) + qty };
+    // 2. Restaurar existencias en el inventario local SOLO si fueron descontadas previamente
+    if (wasStockDeducted) {
+      setProducts(prev => {
+        const updated = prev.map(prod => {
+          const item = order.items.find(it => it.productId === prod.id);
+          if (!item) return prod;
+          const isHalf = String(item.unit || '').toLowerCase().includes('media') || String(item.unit || '').includes('½');
+          const qty = Number(item.quantity || 1);
+          if (isHalf) {
+            return { ...prod, stockHalf: (prod.stockHalf || 0) + qty };
+          }
+          return { ...prod, stock: (prod.stock || 0) + qty };
+        });
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('kodelocal_products', JSON.stringify(updated));
         }
-        return { ...prod, stock: (prod.stock || 0) + qty };
+        window.dispatchEvent(new Event('kodelocal_products_updated'));
+        return updated;
       });
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('kodelocal_products', JSON.stringify(updated));
-      }
-      window.dispatchEvent(new Event('kodelocal_products_updated'));
-      return updated;
-    });
-
-    triggerSalesSync();
+    }
   };
 
   const handleMarkOrderDeliveredFromPos = async (orderId: string) => {
