@@ -121,6 +121,52 @@
     ],
     "source": "fragrantica"
   },
+  "61": {
+    "kodigo": "61",
+    "contratipo": "Fahrenheit H",
+    "marca": "Dior",
+    "genero": "Caballero",
+    "officialName": "Kelvin H",
+    "brand": "Christian Dior",
+    "family": "CUERO aromático",
+    "accords": [
+      "cuero",
+      "aromático",
+      "amaderado",
+      "fresco especiado",
+      "ozónico",
+      "floral"
+    ],
+    "topNotes": [
+      "Lavanda",
+      "Mandarina",
+      "Flor de espino",
+      "Nuez moscada",
+      "Cedro",
+      "Bergamota",
+      "Manzanilla",
+      "Limón"
+    ],
+    "heartNotes": [
+      "Nuez moscada",
+      "Madreselva",
+      "Clavel",
+      "Sándalo",
+      "Hojas de violeta",
+      "Jazmín",
+      "Lirio de los valles",
+      "Cedro"
+    ],
+    "baseNotes": [
+      "Cuero",
+      "Haba tonka",
+      "Ámbar",
+      "Pachulí",
+      "Almizcle",
+      "Vetiver"
+    ],
+    "source": "fragrantica"
+  },
   "100": {
     "kodigo": "100",
     "contratipo": "1 Million Elixir H",

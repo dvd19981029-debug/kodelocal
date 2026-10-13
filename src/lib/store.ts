@@ -1874,10 +1874,32 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "isAvailableOnline": true,
     "puesto": "A1",
     "stockHalf": 0
+  },
+  {
+    "id": "esencia-apae-061",
+    "sku": "61",
+    "barcode": "741001000061",
+    "name": "Fahrenheit H",
+    "officialName": "Kelvin H",
+    "brand": "Dior",
+    "gender": "Caballero",
+    "category": "Esencias para Perfume",
+    "unit": "Onza",
+    "price": 3.75,
+    "priceHalfOunce": 1.9,
+    "finishedPerfumePrice": 15,
+    "cost": 1.9,
+    "stock": 0,
+    "minStock": 15,
+    "imageUrl": "/images/esencias/esencia_61.webp?v=aroma_official_v4",
+    "description": "Inspirado en FAHRENHEIT DIOR",
+    "isAvailableOnline": true,
+    "puesto": "A1",
+    "stockHalf": 0
   }
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v22_bote_rey_luis";
+export const DATA_VERSION = "2026_oficial_real_v23_fahrenheit_kelvin";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;

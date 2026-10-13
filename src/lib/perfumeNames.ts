@@ -53,7 +53,19 @@ export const INSPIRACION_PERFUME_MAP: Record<string, string> = {
   '46': '360 Red H',
   '47': 'Green Tea F',
   '48': 'Princess F',
-  '49': 'Sauvage Elixir H'
+  '49': 'Sauvage Elixir H',
+  '50': 'Acqua Di Gio Profondo H',
+  '51': 'Acqua Di Gio Profondo H',
+  '52': 'Le Male Elixir H',
+  '53': 'Stronger With You H',
+  '54': '212 Men H',
+  '55': 'Man In Black H',
+  '56': 'Acqua Di Gio Profumo H',
+  '57': 'La Bomba M',
+  '58': 'Good Girl M',
+  '59': 'Toy Boy H',
+  '60': 'Baccarat Rouge 540 U',
+  '61': 'Fahrenheit H'
 };
 
 // Alias de retrocompatibilidad

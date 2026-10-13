@@ -55,7 +55,8 @@ export const CATALOG_DESCRIPTIONS_48: Record<string, string> = {
   '46': 'Una fragancia vibrante, picante y altamente cumplidora. Naranja dulce, canela, lima y bergamota combinadas con clavos de olor, lavanda y una base rica de pachulí, sándalo y almizcle.',
   '47': 'La serenidad reparadora del té verde matutino. Notas efervescentes de ruibarbo, menta, cáscara de naranja y bergamota combinadas con corazón de té verde puro, jazmín y semillas de apio.',
   '48': 'La magia audaz y juvenil para mujeres auténticas. Manzana glaseada, nenúfar y chabacano se funden con chocolate oscuro, guayaba, flor de tiaré y una base dulce de vainilla y ámbar.',
-  '49': 'Una concentración nocturna desbordante y adictiva. Canela cálida y cardamomo salvaje colisionan con un corazón noble de lavanda de Nyons, envueltos en un fondo suntuoso de maderas ricas, regaliz y ámbar licoroso.'
+  '49': 'Una concentración nocturna desbordante y adictiva. Canela cálida y cardamomo salvaje colisionan con un corazón noble de lavanda de Nyons, envueltos en un fondo suntuoso de maderas ricas, regaliz y ámbar licoroso.',
+  '61': 'La legendaria colisión de fuego, vanguardia y distinción. Una apertura fresca de mandarina siciliana, bergamota y lavanda que da paso a un corazón icónico de hojas de violeta, nuez moscada y cedro, culminando sobre una estela magnética de cuero ruso, ámbar y vetiver.'
 };
 
 /**
