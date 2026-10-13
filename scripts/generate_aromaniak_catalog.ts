@@ -153,7 +153,7 @@ async function generateAromaniakCatalog() {
       .replace(/Good Girl M/g, 'Good Girl')
       .replace(/Baccarat Rouge 540 U/g, 'Baccarat Rouge 540');
 
-    // Convertir y cachear thumbnail JPEG optimizado (350px alto, ~10KB)
+    // Convertir y cachear thumbnail JPEG optimizado (320px alto, ~10KB)
     const bottleFileName = `esencia-apae-${String(p.sku).padStart(3, '0')}.webp`;
     const bottleFileFullPath = path.join(esenciasDir, bottleFileName);
     const thumbPath = path.join(thumbsDir, `thumb_${p.sku}.jpg`);
@@ -219,7 +219,7 @@ async function generateAromaniakCatalog() {
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      color: #0f172a;
+      color: #1e1b4b;
       background-color: #ffffff;
       font-size: 8.5px;
       line-height: 1.35;
@@ -238,13 +238,13 @@ async function generateAromaniakCatalog() {
       justify-content: space-between;
     }
 
-    /* Header Temática Aromaniak (Lujo Ámbar / Oro / Carbón) */
+    /* Header Temática Aromaniak - Royal Morado Elegante */
     .page-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 8px;
-      border-bottom: 2px solid #d97706;
+      padding-bottom: 7px;
+      border-bottom: 2.5px solid #581c87;
       margin-bottom: 8px;
     }
 
@@ -255,7 +255,7 @@ async function generateAromaniakCatalog() {
     }
 
     .brand-logo-img {
-      height: 28px;
+      height: 26px;
       object-fit: contain;
     }
 
@@ -265,40 +265,41 @@ async function generateAromaniakCatalog() {
     }
 
     .brand-title {
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 900;
-      letter-spacing: 2px;
+      letter-spacing: 2.5px;
       text-transform: uppercase;
-      color: #0f172a;
+      color: #3b0764;
     }
 
     .brand-sub {
       font-size: 7.5px;
       letter-spacing: 1px;
       text-transform: uppercase;
-      color: #b45309;
+      color: #7e22ce;
       font-weight: 700;
     }
 
     .header-status-badge {
-      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-      border: 1px solid #d97706;
+      background: #581c87;
+      border: 1px solid #3b0764;
       padding: 4px 10px;
-      border-radius: 6px;
+      border-radius: 4px;
       text-align: right;
+      color: #ffffff;
     }
 
     .header-status-title {
-      font-size: 8.5px;
-      letter-spacing: 1px;
+      font-size: 8px;
+      letter-spacing: 1.2px;
       text-transform: uppercase;
       font-weight: 900;
-      color: #92400e;
+      color: #ffffff;
     }
 
     .header-status-sub {
-      font-size: 7px;
-      color: #78350f;
+      font-size: 6.8px;
+      color: #e9d5ff;
       font-weight: 600;
       letter-spacing: 0.5px;
     }
@@ -316,51 +317,37 @@ async function generateAromaniakCatalog() {
     .grid-last {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      grid-auto-rows: calc((297mm - 21mm - 60px) / 4);
+      grid-auto-rows: calc((297mm - 21mm - 56px) / 4);
       gap: 8px;
     }
 
-    /* Tarjeta de Producto Aromaniak */
+    /* Tarjeta de Producto Aromaniak - Diseño Limpio y Sofisticado */
     .product-card {
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
+      border: 1.2px solid #581c87;
+      border-radius: 4px;
       padding: 7px 9px;
       display: flex;
       gap: 9px;
       background-color: #ffffff;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
       align-items: stretch;
       min-height: 0;
-      position: relative;
-    }
-
-    .product-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 3px;
-      height: 100%;
-      background: linear-gradient(180deg, #d97706 0%, #b45309 100%);
-      border-top-left-radius: 6px;
-      border-bottom-left-radius: 6px;
     }
 
     .bottle-col {
-      width: 52px;
+      width: 50px;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      background: #fafafa;
-      border-radius: 4px;
-      border: 1px solid #f1f5f9;
+      background: #faf5ff;
+      border-radius: 3px;
+      border: 1px solid #f3e8ff;
       padding: 2px;
     }
 
     .bottle-img {
-      max-width: 48px;
-      max-height: 88px;
+      max-width: 46px;
+      max-height: 86px;
       object-fit: contain;
     }
 
@@ -380,14 +367,13 @@ async function generateAromaniakCatalog() {
     }
 
     .code-badge {
-      background-color: #0f172a;
-      color: #fef3c7;
+      background-color: #581c87;
+      color: #ffffff;
       font-size: 7.8px;
-      font-weight: 800;
+      font-weight: 900;
       letter-spacing: 1px;
       padding: 1.5px 6px;
-      border-radius: 3px;
-      border: 1px solid #d97706;
+      border-radius: 2px;
       text-transform: uppercase;
     }
 
@@ -397,34 +383,32 @@ async function generateAromaniakCatalog() {
       letter-spacing: 0.8px;
       text-transform: uppercase;
       padding: 1px 5px;
-      border-radius: 3px;
+      border-radius: 2px;
+      border: 1px solid currentColor;
     }
 
     .gender-caballero {
       color: #1e3a8a;
       background: #eff6ff;
-      border: 1px solid #bfdbfe;
     }
 
     .gender-dama {
-      color: #831843;
-      background: #fdf2f8;
-      border: 1px solid #fbcfe8;
+      color: #701a75;
+      background: #fdf4ff;
     }
 
     .gender-unisex {
-      color: #78350f;
-      background: #fef3c7;
-      border: 1px solid #fde68a;
+      color: #581c87;
+      background: #faf5ff;
     }
 
     .contratipo-name {
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: 900;
-      color: #0f172a;
+      color: #3b0764;
       letter-spacing: 0.2px;
       line-height: 1.15;
-      margin-bottom: 1px;
+      margin-bottom: 1.5px;
       text-transform: uppercase;
       white-space: nowrap;
       overflow: hidden;
@@ -432,26 +416,36 @@ async function generateAromaniakCatalog() {
     }
 
     .inspiration-line {
-      font-size: 8px;
-      color: #475569;
+      font-size: 8.2px;
+      color: #334155;
       margin-bottom: 2px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .inspiration-line strong {
-      color: #b45309;
-      font-weight: 800;
+    .inspiration-line .insp-tag {
+      color: #7e22ce;
+      font-weight: 900;
       text-transform: uppercase;
       font-size: 7.5px;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.4px;
+    }
+
+    .inspiration-line .insp-name {
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .inspiration-line .insp-brand {
+      color: #64748b;
+      font-weight: 600;
     }
 
     .family-tag {
       font-size: 7.2px;
       font-weight: 700;
-      color: #64748b;
+      color: #6b21a8;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-bottom: 2px;
@@ -462,27 +456,27 @@ async function generateAromaniakCatalog() {
       color: #334155;
       line-height: 1.28;
       margin-bottom: 2px;
-      border-left: 2px solid #d97706;
+      border-left: 2px solid #7e22ce;
       padding-left: 5px;
     }
 
     .notes-box strong {
       font-weight: 800;
-      color: #0f172a;
+      color: #3b0764;
     }
 
     .description-text {
       font-size: 7.6px;
-      color: #64748b;
+      color: #52525b;
       line-height: 1.3;
     }
 
-    /* Caja especial de cierre Aromaniak */
+    /* Caja especial de cierre Aromaniak en Morado */
     .brand-closing-card {
-      border: 1.5px dashed #d97706;
-      border-radius: 6px;
-      padding: 12px;
-      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+      border: 1.5px solid #7e22ce;
+      border-radius: 4px;
+      padding: 14px;
+      background: #faf5ff;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -492,16 +486,16 @@ async function generateAromaniakCatalog() {
     }
 
     .brand-closing-card .title {
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 900;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
       text-transform: uppercase;
-      color: #92400e;
+      color: #3b0764;
     }
 
     .brand-closing-card .desc {
       font-size: 8px;
-      color: #78350f;
+      color: #4c1d95;
       line-height: 1.4;
       max-width: 90%;
       font-weight: 500;
@@ -509,11 +503,11 @@ async function generateAromaniakCatalog() {
 
     .brand-closing-card .contact-info {
       font-size: 7.5px;
-      font-weight: 800;
-      letter-spacing: 1px;
+      font-weight: 900;
+      letter-spacing: 1.2px;
       margin-top: 3px;
       text-transform: uppercase;
-      color: #b45309;
+      color: #7e22ce;
     }
 
     /* Footer Temático Aromaniak */
@@ -522,7 +516,7 @@ async function generateAromaniakCatalog() {
       justify-content: space-between;
       align-items: center;
       padding-top: 6px;
-      border-top: 1px solid #e2e8f0;
+      border-top: 1.5px solid #581c87;
       font-size: 7.8px;
       letter-spacing: 0.8px;
       text-transform: uppercase;
@@ -531,7 +525,7 @@ async function generateAromaniakCatalog() {
     }
 
     .page-footer strong {
-      color: #b45309;
+      color: #581c87;
     }
   </style>
 </head>
@@ -580,7 +574,7 @@ async function generateAromaniakCatalog() {
                   </div>
                   <div class="contratipo-name">${item.contratipo}</div>
                   <div class="inspiration-line">
-                    <strong>Inspiración:</strong> ${item.originalName} ${item.brand ? `• ${item.brand}` : ''}
+                    <span class="insp-tag">Inspiración:</span> <span class="insp-name">${item.originalName}</span> ${item.brand ? `<span class="insp-brand">(${item.brand})</span>` : ''}
                   </div>
                   <div class="family-tag">${item.family}</div>
                 </div>
