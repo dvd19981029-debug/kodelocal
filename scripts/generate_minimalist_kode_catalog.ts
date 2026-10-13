@@ -15,7 +15,77 @@ async function generateMinimalistCatalog() {
     }
   });
 
-  allFragrances.sort((a, b) => parseInt(a.sku, 10) - parseInt(b.sku, 10));
+  const BEST_SELLER_ORDER = [
+    '49', // Sauvage Elixir (Primero)
+    '1',  // Sauvage
+    '2',  // Bleu
+    '3',  // Acqua Di Gio
+    '4',  // Club De Nuit Intense
+    '5',  // Aventus
+    '6',  // La Vie Est Belle
+    '8',  // Eros
+    '10', // Santal 33
+    '60', // Baccarat Rouge 540
+    '58', // Good Girl
+    '12', // Erba Pura
+    '13', // Coco Mademoiselle
+    '43', // Black Opium
+    '20', // One Million
+    '16', // Invictus
+    '23', // 9PM
+    '28', // Bad Boy
+    '52', // Le Male Elixir
+    '11', // Born in Roma Intense
+    '32', // Born In Roma Donna
+    '50', // Born in Roma Uomo
+    '53', // Stronger With You
+    '61', // Fahrenheit
+    '18', // 212 VIP Rosé
+    '34', // 212 VIP
+    '54', // 212 Men
+    '7',  // Odyssey Mandarin Sky
+    '9',  // L'Eau d'Issey
+    '14', // Light Blue
+    '15', // Boss Bottled
+    '17', // Burberry Her
+    '19', // Polo Blue
+    '21', // Coco
+    '22', // Chance
+    '24', // Le Male
+    '25', // J'adore
+    '26', // Tommy
+    '27', // Chanel N° 5
+    '29', // Be Delicious
+    '30', // Lost Cherry
+    '31', // Scandal
+    '33', // L'Immensité
+    '35', // Swiss Army
+    '36', // Blanc L.12.12
+    '37', // Acqua Di Gio F
+    '38', // Polo Black
+    '39', // Ralph
+    '40', // Yara
+    '41', // Yara Tous
+    '42', // Flowerbomb
+    '44', // Homme Sport
+    '45', // CK One
+    '46', // 360 Red
+    '47', // Green Tea
+    '48', // Vera Wang Princess
+    '51', // Acqua Di Gio Profondo
+    '55', // Man In Black
+    '56', // Acqua Di Gio Profumo
+    '57', // La Bomba
+    '59'  // Toy Boy
+  ];
+
+  allFragrances.sort((a, b) => {
+    const idxA = BEST_SELLER_ORDER.indexOf(a.sku);
+    const idxB = BEST_SELLER_ORDER.indexOf(b.sku);
+    const orderA = idxA === -1 ? 999 : idxA;
+    const orderB = idxB === -1 ? 999 : idxB;
+    return orderA - orderB;
+  });
 
   const items = allFragrances.map(p => {
     const prof = getFragranceProfile(p as any);
