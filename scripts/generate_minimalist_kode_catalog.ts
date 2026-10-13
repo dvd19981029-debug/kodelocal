@@ -252,15 +252,24 @@ async function generateMinimalistCatalog() {
     }
 
     .perfume-name {
-      font-size: 11.5px;
+      font-size: 10.5px;
       font-weight: 900;
       color: #000000;
       letter-spacing: -0.2px;
       line-height: 1.15;
-      margin-bottom: 1px;
+      margin-bottom: 2px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .inspiration-prefix {
+      font-size: 8.5px;
+      font-weight: 700;
+      color: #52525b;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      margin-right: 3px;
     }
 
     .family-tag {
@@ -366,7 +375,7 @@ async function generateMinimalistCatalog() {
                     <span class="kodigo-badge">KÓDIGO #${item.rawSku}</span>
                     <span class="gender-tag">${item.gender}</span>
                   </div>
-                  <div class="perfume-name">${item.originalName}</div>
+                  <div class="perfume-name"><span class="inspiration-prefix">Inspiración:</span>${item.originalName}</div>
                   <div class="family-tag">${item.family}</div>
                 </div>
 
