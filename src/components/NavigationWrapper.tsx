@@ -1,18 +1,33 @@
 'use client';
 
 import React from 'react';
+import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
-import { Navbar } from '@/components/Navbar';
 import EcommerceHeader from '@/components/ecommerce/EcommerceHeader';
-import BlogHeader from '@/components/blog/BlogHeader';
 import PromoTickerBar from '@/components/ecommerce/PromoTickerBar';
 import EcommerceFooter from '@/components/ecommerce/EcommerceFooter';
-import CartDrawer from '@/components/ecommerce/CartDrawer';
-import CustomerDrawer from '@/components/ecommerce/CustomerDrawer';
-import CustomerAuthModal from '@/components/ecommerce/CustomerAuthModal';
-import OpeningNoticeModal from '@/components/ecommerce/OpeningNoticeModal';
-import { EcommerceCartProvider } from '@/context/EcommerceCartContext';
-import { CustomerAuthProvider } from '@/context/CustomerAuthContext';
+import { EcommerceCartProvider, useEcommerceCart } from '@/context/EcommerceCartContext';
+import { CustomerAuthProvider, useCustomerAuth } from '@/context/CustomerAuthContext';
+
+const Navbar = dynamic(() => import('@/components/Navbar').then(m => m.Navbar), { ssr: false });
+const BlogHeader = dynamic(() => import('@/components/blog/BlogHeader'), { ssr: false });
+const CartDrawer = dynamic(() => import('@/components/ecommerce/CartDrawer'), { ssr: false });
+const CustomerDrawer = dynamic(() => import('@/components/ecommerce/CustomerDrawer'), { ssr: false });
+const CustomerAuthModal = dynamic(() => import('@/components/ecommerce/CustomerAuthModal'), { ssr: false });
+const OpeningNoticeModal = dynamic(() => import('@/components/ecommerce/OpeningNoticeModal'), { ssr: false });
+
+function EcommerceLazyOverlays() {
+  const { isCartOpen } = useEcommerceCart();
+  const { isDrawerOpen, isAuthModalOpen } = useCustomerAuth();
+
+  return (
+    <>
+      {isCartOpen && <CartDrawer />}
+      {isDrawerOpen && <CustomerDrawer />}
+      {isAuthModalOpen && <CustomerAuthModal />}
+    </>
+  );
+}
 
 export default function NavigationWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -33,9 +48,7 @@ export default function NavigationWrapper({ children }: { children: React.ReactN
   return (
     <CustomerAuthProvider>
       <EcommerceCartProvider>
-        {!isKodeRoute && <CartDrawer />}
-        {!isKodeRoute && <CustomerDrawer />}
-        {!isKodeRoute && <CustomerAuthModal />}
+        {!isKodeRoute && <EcommerceLazyOverlays />}
 
       {isKodeRoute ? (
         // En KODE: Sistema totalmente independiente (marca paralela sin mezclar con Aromaniak)
@@ -78,4 +91,5 @@ export default function NavigationWrapper({ children }: { children: React.ReactN
     </CustomerAuthProvider>
   );
 }
+
 

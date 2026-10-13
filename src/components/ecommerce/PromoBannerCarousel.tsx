@@ -176,6 +176,7 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
           }}
         >
           {extendedSlides.map((slide, index) => {
+            const isInitialVisible = index === 1;
             return (
               <div
                 key={`${slide.id}-${index}`}
@@ -191,7 +192,9 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
                   src={slide.imageUrl}
                   alt={slide.imageAlt}
                   className="w-full h-full object-fill transform group-hover:scale-[1.01] transition-transform duration-700"
-                  loading="eager"
+                  loading={isInitialVisible ? 'eager' : 'lazy'}
+                  fetchPriority={isInitialVisible ? 'high' : 'low'}
+                  decoding={isInitialVisible ? 'sync' : 'async'}
                 />
               </div>
             );

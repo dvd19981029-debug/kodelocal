@@ -181,7 +181,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
               src={productImage}
               alt={displayName}
               loading={priority ? 'eager' : 'lazy'}
-              fetchPriority={priority ? 'high' : 'auto'}
+              fetchPriority={priority ? 'high' : undefined}
               decoding="async"
               onError={(e) => {
                 e.currentTarget.src = product.category === 'Botes' 

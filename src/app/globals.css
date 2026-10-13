@@ -461,4 +461,10 @@ html, body {
   font-weight: 700;
 }
 
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto none auto 500px;
+}
+
+
 

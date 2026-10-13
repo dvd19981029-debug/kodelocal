@@ -609,5 +609,65 @@ export const CATALOG_PROFILES_48: Record<string, StaticProfile> = {
     season: 'Todo el año / Firma de lujo',
     occasion: 'Eventos exclusivos, cenas de gala, distinción máxima',
     intensity: 'Intensa'
+  },
+  '61': {
+    family: 'Cuero Aromático Amaderado',
+    accords: ['cuero', 'aromático', 'amaderado', 'fresco especiado', 'ozónico', 'floral'],
+    topNotes: ['Lavanda', 'Mandarina', 'Flor de espino', 'Nuez moscada', 'Cedro', 'Bergamota', 'Manzanilla', 'Limón'],
+    heartNotes: ['Nuez moscada', 'Madreselva', 'Clavel', 'Sándalo', 'Hojas de violeta', 'Jazmín', 'Lirio de los valles', 'Cedro'],
+    baseNotes: ['Cuero', 'Haba tonka', 'Ámbar', 'Pachulí', 'Almizcle', 'Vetiver'],
+    season: 'Otoño / Invierno / Noche',
+    occasion: 'Eventos nocturnos, carácter clásico e imponente, citas elegantes',
+    intensity: 'Intensa'
+  },
+  'APAE-2154': {
+    family: 'Floral Frutal',
+    accords: ['floral', 'afrutado', 'fresco', 'dulce', 'acuático'],
+    topNotes: ['Pera', 'Melón', 'Magnolia', 'Melocotón', 'Mandarina', 'Bergamota'],
+    heartNotes: ['Jazmín', 'Lirio de los Valles', 'Nardo', 'Fresia', 'Rosa', 'Orquídea', 'Ciruela', 'Violeta'],
+    baseNotes: ['Almizcle', 'Vainilla', 'Zarzamora', 'Cedro'],
+    season: 'Primavera / Todo el año',
+    occasion: 'Uso diario elegante, bodas, reuniones especiales',
+    intensity: 'Intensa'
+  },
+  'APAE 2123': {
+    family: 'Floral Acuática',
+    accords: ['cítrico', 'acuático', 'verde', 'fresco especiado', 'floral'],
+    topNotes: ['Limón de Amalfi', 'Menta', 'Peonía', 'Piña', 'Melocotón'],
+    heartNotes: ['Jazmín Acuático', 'Lirio de los Valles', 'Calone', 'Fresia', 'Rosa'],
+    baseNotes: ['Cedro de Virginia', 'Azúcar Moreno', 'Ládano Francés', 'Almizcle'],
+    season: 'Primavera / Verano',
+    occasion: 'Días soleados, oficina, frescura diaria',
+    intensity: 'Moderada'
+  },
+  'APAE-3571': {
+    family: 'Ámbar Floral',
+    accords: ['floral', 'pachulí', 'dulce', 'atalcado', 'cálido especiado'],
+    topNotes: ['Té', 'Bergamota', 'Osmanto'],
+    heartNotes: ['Orquídea', 'Jazmín Sambac', 'Rosa Centifolia', 'Fresia', 'Flor de Azahar'],
+    baseNotes: ['Pachulí', 'Almizcle', 'Vainilla'],
+    season: 'Otoño / Invierno / Noche',
+    occasion: 'Citas románticas, fiestas, eventos nocturnos',
+    intensity: 'Intensa'
+  },
+  'NP-31519 ENS2': {
+    family: 'Cítrica Aromática',
+    accords: ['verde', 'cítrico', 'fresco especiado', 'aromático', 'herbal'],
+    topNotes: ['Limón', 'Bergamota', 'Menta', 'Cáscara de Naranja', 'Ruibarbo'],
+    heartNotes: ['Jazmín', 'Musgo de Roble', 'Hinojo', 'Almizcle', 'Clavel'],
+    baseNotes: ['Té Verde', 'Musgo de Roble', 'Almizcle', 'Semillas de Apio', 'Alcaravea'],
+    season: 'Primavera / Verano',
+    occasion: 'Uso diario relajado, mañanas frescas, bienestar',
+    intensity: 'Moderada'
+  },
+  'APAE-3605': {
+    family: 'Ámbar Floral',
+    accords: ['dulce', 'cacao', 'avainillado', 'afrutado', 'floral'],
+    topNotes: ['Manzana', 'Nenúfar', 'Mandarina', 'Albaricoque'],
+    heartNotes: ['Chocolate Negro', 'Guayaba', 'Flor de Tiaré', 'Nardo'],
+    baseNotes: ['Vainilla', 'Ámbar', 'Notas Amaderadas'],
+    season: 'Todo el año',
+    occasion: 'Salidas casuales, citas juveniles, uso diario',
+    intensity: 'Moderada'
   }
 };

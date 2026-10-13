@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
     TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID || "-1003726291110",
   },
   compress: true,
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
   async headers() {
     return [
       {

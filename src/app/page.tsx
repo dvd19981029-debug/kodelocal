@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { 
   Search, 
@@ -27,11 +28,12 @@ import { ProductItem, INITIAL_PRODUCTS, getStoredProducts, saveStoredProducts } 
 import ProductCard from '@/components/ecommerce/ProductCard';
 import PromoBannerCarousel from '@/components/ecommerce/PromoBannerCarousel';
 import ReactiveSearchBar from '@/components/ecommerce/ReactiveSearchBar';
-import PerfumeKitBuilderModal from '@/components/ecommerce/PerfumeKitBuilderModal';
-import HomeBlogSection from '@/components/ecommerce/HomeBlogSection';
-import StoreLocationMapSection from '@/components/ecommerce/StoreLocationMapSection';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
+
+const PerfumeKitBuilderModal = dynamic(() => import('@/components/ecommerce/PerfumeKitBuilderModal'), { ssr: false });
+const HomeBlogSection = dynamic(() => import('@/components/ecommerce/HomeBlogSection'));
+const StoreLocationMapSection = dynamic(() => import('@/components/ecommerce/StoreLocationMapSection'));
 
 export default function EcommerceHomePage() {
   const { setIsArmaTuPerfumeActive } = useEcommerceCart();
@@ -48,7 +50,7 @@ export default function EcommerceHomePage() {
     }
 
     // 2. Sincronizar con la API (aprovechando caché Stale-While-Revalidate)
-    fetch('/api/products?fresh=true', { cache: 'no-store' })
+    fetch('/api/products')
       .then(res => res.json())
       .then(data => {
         if (isMounted && data.success && Array.isArray(data.products) && data.products.length > 0) {
@@ -639,7 +641,7 @@ export default function EcommerceHomePage() {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 sm:gap-x-4 md:gap-x-5 gap-y-10 sm:gap-y-12">
                 {paginatedProducts.map((prod, idx) => (
-                  <ProductCard key={prod.id} product={prod} priority={currentPage === 1 && idx < 4} />
+                  <ProductCard key={prod.id} product={prod} priority={currentPage === 1 && idx < 2} />
                 ))}
               </div>
             )}
@@ -652,7 +654,7 @@ export default function EcommerceHomePage() {
       </section>
 
       {/* ================= SECCIÓN EDUCATIVA: CÓMO PEDIR ================= */}
-      <section className="clay-card p-5 sm:p-8 md:p-10 border border-white/90 bg-white/80 space-y-8 rounded-3xl shadow-sm">
+      <section className="cv-auto clay-card p-5 sm:p-8 md:p-10 border border-white/90 bg-white/80 space-y-8 rounded-3xl shadow-sm">
         <div className="text-center max-w-2xl mx-auto space-y-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 border border-purple-200/80 shadow-2xs">
             <Sparkles className="w-3 h-3 text-purple-600 shrink-0" />
