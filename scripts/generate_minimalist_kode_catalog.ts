@@ -9,58 +9,81 @@ import { getFragranceDescription } from '../src/lib/fragranceDescriptions';
 const prisma = new PrismaClient();
 
 async function generateMinimalistCatalog() {
-  const inStock = await prisma.product.findMany({
+  const allFragrances = await prisma.product.findMany({
     where: {
-      isActive: true,
-      isAvailableOnline: true,
-      stock: { gt: 0 },
       category: { name: 'Esencias para Perfume' }
     }
   });
 
-  inStock.sort((a, b) => parseInt(a.sku, 10) - parseInt(b.sku, 10));
+  allFragrances.sort((a, b) => parseInt(a.sku, 10) - parseInt(b.sku, 10));
 
-  const items = inStock.map(p => {
+  const items = allFragrances.map(p => {
     const prof = getFragranceProfile(p as any);
     const desc = getFragranceDescription(p as any, prof);
     let insp = getInspiracionPerfumeName(p);
 
-    let cleanOriginal = insp.replace(/\s+H$/, '').replace(/\s+F$/, '').trim();
+    let cleanOriginal = insp.replace(/\s+[HFMU]$/, '').trim();
     if (cleanOriginal.toLowerCase() === 'la vida es bella') cleanOriginal = 'La Vie Est Belle';
+    if (cleanOriginal === 'CHNL° 5' || cleanOriginal === 'N° 5') cleanOriginal = 'Chanel N° 5';
+    if (cleanOriginal === 'Donna') cleanOriginal = 'Born In Roma Donna';
+    if (cleanOriginal.includes('La Bomba')) cleanOriginal = 'La Bomba (Carolina Herrera)';
+    if (cleanOriginal === 'Princess') cleanOriginal = 'Vera Wang Princess';
+    if (cleanOriginal === 'Good Girl M' || cleanOriginal === 'Good Girl') cleanOriginal = 'Good Girl';
+
+    let family = prof?.family || 'Fragancia Fina';
+    family = family
+      .replace(/CUERO/gi, 'Cuero')
+      .replace(/AMADERADO/gi, 'Amaderado')
+      .replace(/AMADERADA/gi, 'Amaderada')
+      .replace(/CÍTRICO/gi, 'Cítrico')
+      .replace(/CÍTRICA/gi, 'Cítrica')
+      .replace(/FLORAL/gi, 'Floral')
+      .replace(/ÁMBAR/gi, 'Ámbar')
+      .replace(/CHIPRE/gi, 'Chipre')
+      .replace(/AROMÁTICO/gi, 'Aromático')
+      .replace(/AROMÁTICA/gi, 'Aromática');
+
+    let cleanDesc = desc
+      .replace(/\s+[HFMU]\./g, '.')
+      .replace(/\s+[HFMU]\s+/g, ' ')
+      .replace(/La Bomba M F/g, 'La Bomba')
+      .replace(/La Bomba M/g, 'La Bomba')
+      .replace(/Good Girl M F/g, 'Good Girl')
+      .replace(/Good Girl M/g, 'Good Girl')
+      .replace(/Baccarat Rouge 540 U/g, 'Baccarat Rouge 540');
 
     return {
       rawSku: p.sku,
       sku: p.sku.padStart(2, '0'),
       originalName: cleanOriginal,
       gender: p.gender || 'Unisex',
-      family: prof?.family || 'Fragancia Fina',
+      family: family,
       topNotes: prof?.topNotes || [],
       heartNotes: prof?.heartNotes || [],
       baseNotes: prof?.baseNotes || [],
-      description: desc
+      description: cleanDesc
     };
   });
 
-  console.log(`Total in-stock products to render: ${items.length}`);
+  console.log(`Total fragrances to render: ${items.length}`);
 
   // Base64 de la botella KODE
   const bottlePath = path.join(__dirname, '../public/images/kode_bottle_card.jpg');
   const bottleBase64 = fs.readFileSync(bottlePath).toString('base64');
   const bottleUri = `data:image/jpeg;base64,${bottleBase64}`;
 
-  // Distribuir en 4 páginas perfectas: 8, 8, 8, 7
-  const pages = [
-    items.slice(0, 8),
-    items.slice(8, 16),
-    items.slice(16, 24),
-    items.slice(24, 31)
-  ];
+  // Distribuir en páginas de 8 ítems cada una
+  const ITEMS_PER_PAGE = 8;
+  const pages: (typeof items)[] = [];
+  for (let i = 0; i < items.length; i += ITEMS_PER_PAGE) {
+    pages.push(items.slice(i, i + ITEMS_PER_PAGE));
+  }
 
   const htmlContent = `<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>KÖDE • Catálogo de Disponibilidad Inmediata</title>
+  <title>KÖDE • Catálogo Oficial de Fragancias</title>
   <style>
     @page {
       size: A4 portrait;
@@ -149,7 +172,7 @@ async function generateMinimalistCatalog() {
       background-color: #000000;
     }
 
-    /* Grid de tarjetas (4 filas x 2 columnas = 8 tarjetas por página) */
+    /* Grid de tarjetas para páginas 1 a 7 */
     .grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -158,41 +181,47 @@ async function generateMinimalistCatalog() {
       flex: 1;
     }
 
-    .product-card {
-      border: 1px solid #000000;
-      padding: 8px 10px;
-      background: #ffffff;
-      display: flex;
-      gap: 10px;
-      align-items: center;
+    /* Grid de la última página (3 filas exactas y balanceadas) */
+    .grid-last {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-auto-rows: calc((297mm - 21mm - 55px) / 4);
+      gap: 8px;
     }
 
-    .bottle-box {
-      width: 44px;
-      height: 68px;
-      position: relative;
-      flex-shrink: 0;
-      background: #ffffff;
-      border: 1px solid #e4e4e7;
+    /* Tarjeta de Producto */
+    .product-card {
+      border: 1px solid #000000;
+      padding: 7px 9px;
+      display: flex;
+      gap: 9px;
+      background-color: #ffffff;
+      align-items: stretch;
+      min-height: 0;
+    }
+
+    .bottle-col {
+      width: 48px;
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
+      flex-shrink: 0;
+      background: #fafafa;
+      border: 1px solid #f4f4f5;
     }
 
     .bottle-img {
-      width: 100%;
-      height: 100%;
+      max-width: 42px;
+      max-height: 85px;
       object-fit: contain;
     }
 
-    .product-info {
+    .info-col {
       flex: 1;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       min-width: 0;
-      height: 100%;
     }
 
     .card-top {
@@ -203,39 +232,39 @@ async function generateMinimalistCatalog() {
     }
 
     .kodigo-badge {
-      background: #000000;
+      background-color: #000000;
       color: #ffffff;
-      font-size: 8.5px;
+      font-size: 8px;
       font-weight: 900;
+      letter-spacing: 1.2px;
       padding: 1.5px 6px;
-      letter-spacing: 1px;
       text-transform: uppercase;
     }
 
     .gender-tag {
       font-size: 7.5px;
       font-weight: 800;
+      letter-spacing: 1px;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
       color: #000000;
       border: 1px solid #000000;
       padding: 1px 5px;
     }
 
-    .inspiration-title {
-      font-size: 12.5px;
+    .perfume-name {
+      font-size: 11.5px;
       font-weight: 900;
       color: #000000;
       letter-spacing: -0.2px;
-      line-height: 1.2;
-      margin-bottom: 1.5px;
+      line-height: 1.15;
+      margin-bottom: 1px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .family-line {
-      font-size: 7.8px;
+    .family-tag {
+      font-size: 7.5px;
       font-weight: 700;
       color: #71717a;
       text-transform: uppercase;
@@ -263,7 +292,7 @@ async function generateMinimalistCatalog() {
       line-height: 1.32;
     }
 
-    /* Caja especial de cierre para el 8vo espacio de la página 4 */
+    /* Caja especial de cierre para el 6to espacio de la página 8 */
     .brand-closing-card {
       border: 1px dashed #000000;
       padding: 12px;
@@ -273,13 +302,13 @@ async function generateMinimalistCatalog() {
       justify-content: center;
       align-items: center;
       text-align: center;
-      gap: 4px;
+      gap: 5px;
     }
 
     .brand-closing-card .title {
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 900;
-      letter-spacing: 3px;
+      letter-spacing: 4px;
       text-transform: uppercase;
       color: #000000;
     }
@@ -298,10 +327,10 @@ async function generateMinimalistCatalog() {
       align-items: center;
       padding-top: 6px;
       border-top: 1px solid #000000;
-      color: #000000;
       font-size: 8px;
-      letter-spacing: 1.5px;
+      letter-spacing: 1px;
       text-transform: uppercase;
+      color: #000000;
       font-weight: 700;
     }
   </style>
@@ -310,61 +339,47 @@ async function generateMinimalistCatalog() {
 
   ${pages.map((pageItems, pageIdx) => {
     const pageNum = pageIdx + 1;
-    const isLastPage = pageNum === 4;
+    const isLastPage = pageNum === pages.length;
 
     return `
     <div class="catalog-page">
       <div>
         <div class="page-header">
           <div class="brand-section">
-            <div class="brand-logo">K O D E</div>
-            <div class="brand-tagline">Disponibilidad Inmediata • Stock en Ecommerce</div>
+            <span class="brand-logo">K O D E</span>
+            <span class="brand-tagline">Colección Oficial de Fragancias</span>
           </div>
-          <div class="header-status">
-            ${items.length} Fragancias Disponibles
-          </div>
+          <div class="header-status">61 Fragancias Oficiales</div>
         </div>
 
-        <div class="grid">
+        <div class="${isLastPage ? 'grid-last' : 'grid'}">
           ${pageItems.map(item => {
-            const topStr = item.topNotes.length ? item.topNotes.slice(0, 3).join(', ') : '';
-            const heartStr = item.heartNotes.length ? item.heartNotes.slice(0, 3).join(', ') : '';
-            const baseStr = item.baseNotes.length ? item.baseNotes.slice(0, 3).join(', ') : '';
-
-            let notesHtml = '';
-            if (topStr && heartStr) {
-              notesHtml = `<strong>Salida:</strong> ${topStr} • <strong>Corazón:</strong> ${heartStr}`;
-            } else if (topStr && baseStr) {
-              notesHtml = `<strong>Salida:</strong> ${topStr} • <strong>Fondo:</strong> ${baseStr}`;
-            }
-
+            const hasNotes = item.topNotes.length > 0 || item.heartNotes.length > 0 || item.baseNotes.length > 0;
             return `
             <div class="product-card">
-              <div class="bottle-box">
-                <img src="${bottleUri}" alt="KODE ${item.sku}" class="bottle-img" />
+              <div class="bottle-col">
+                <img src="${bottleUri}" class="bottle-img" alt="KÖDE" />
               </div>
-
-              <div class="product-info">
+              <div class="info-col">
                 <div>
                   <div class="card-top">
                     <span class="kodigo-badge">KÓDIGO #${item.rawSku}</span>
                     <span class="gender-tag">${item.gender}</span>
                   </div>
-
-                  <div class="inspiration-title" title="${item.originalName}">
-                    ${item.originalName}
-                  </div>
-
-                  <div class="family-line">
-                    ${item.family}
-                  </div>
+                  <div class="perfume-name">${item.originalName}</div>
+                  <div class="family-tag">${item.family}</div>
                 </div>
 
-                <div>
-                  ${notesHtml ? `<div class="notes-box">${notesHtml}</div>` : ''}
-                  <div class="description-text">
-                    ${item.description}
-                  </div>
+                ${hasNotes ? `
+                <div class="notes-box">
+                  ${item.topNotes.length ? `<strong>Salida:</strong> ${item.topNotes.slice(0, 3).join(', ')} • ` : ''}
+                  ${item.heartNotes.length ? `<strong>Corazón:</strong> ${item.heartNotes.slice(0, 3).join(', ')}` : ''}
+                  ${!item.heartNotes.length && item.baseNotes.length ? `<strong>Fondo:</strong> ${item.baseNotes.slice(0, 3).join(', ')}` : ''}
+                </div>
+                ` : ''}
+
+                <div class="description-text">
+                  ${item.description}
                 </div>
               </div>
             </div>
@@ -377,7 +392,7 @@ async function generateMinimalistCatalog() {
               <div class="desc">
                 Concentrado de perfumería fina europea. Formulación de alta fijación y proyección duradera.
               </div>
-              <div style="font-size: 7.5px; font-weight: 800; letter-spacing: 1px; margin-top: 4px; text-transform: uppercase;">
+              <div style="font-size: 8px; font-weight: 800; letter-spacing: 1px; margin-top: 4px; text-transform: uppercase;">
                 Eau de Parfum • 100ml / 3.33 fl. oz.
               </div>
             </div>
@@ -416,10 +431,13 @@ async function generateMinimalistCatalog() {
     fs.unlinkSync(htmlPath);
   }
 
-  // Copiar a Downloads y otras rutas
+  // Copiar a Downloads y a artifact
   const downloadsPath = '/Users/luis/Downloads/catalogo-kode.pdf';
   fs.copyFileSync(pdfPath, downloadsPath);
   console.log('Copied to', downloadsPath);
+
+  const artifactPath = '/Users/luis/.gemini/antigravity/brain/df42a998-2501-42cc-9c0f-81717543349b/catalogo-kode.pdf';
+  fs.copyFileSync(pdfPath, artifactPath);
 
   await prisma.$disconnect();
 }
