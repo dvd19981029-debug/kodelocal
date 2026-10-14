@@ -20,6 +20,7 @@ export interface OfflineSalePayload {
   notes?: string;
   tipoComprobante?: string;
   codigoGeneracion?: string;
+  dteInfo?: any;
   cashierName?: string;
   customerId?: string;
   cliente?: {
@@ -205,6 +206,7 @@ export async function flushOfflineQueue(
           const dteData = await dteRes.json().catch(() => ({}));
           if (dteData?.dte?.codigoGeneracion) {
             item.codigoGeneracion = dteData.dte.codigoGeneracion;
+            item.dteInfo = dteData.dte;
             item.requiresDte = false;
             console.log(`✅ [OfflineSync] DTE certificado por Factura Llama / MH. Código: ${item.codigoGeneracion}`);
 
@@ -267,6 +269,7 @@ export async function flushOfflineQueue(
           notes: item.notes,
           tipoComprobante: item.tipoComprobante,
           codigoGeneracion: item.codigoGeneracion,
+          dteInfo: item.dteInfo,
           cashierName: item.cashierName || 'Caja 1',
           customerId: item.customerId,
           cliente: item.cliente,
@@ -387,6 +390,7 @@ export async function syncSaleOnlineOrQueue(
         if (dteData?.dte?.codigoGeneracion) {
           currentCodigoGeneracion = dteData.dte.codigoGeneracion;
           sale.codigoGeneracion = currentCodigoGeneracion;
+          sale.dteInfo = dteData.dte;
           sale.requiresDte = false;
         }
       } catch (_) {}
@@ -412,6 +416,7 @@ export async function syncSaleOnlineOrQueue(
         notes: sale.notes,
         tipoComprobante: sale.tipoComprobante,
         codigoGeneracion: currentCodigoGeneracion,
+        dteInfo: sale.dteInfo,
         cashierName: sale.cashierName || 'Caja 1',
         customerId: sale.customerId,
         cliente: sale.cliente,

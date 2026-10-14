@@ -3,6 +3,24 @@ import { facturaLlama } from '@/lib/facturalama';
 import { prisma } from '@/lib/prisma';
 import { verifyStaffRequest } from '@/lib/customerAuthToken';
 
+function parseMhDateSafe(rawDate?: string | Date | null): Date {
+  if (!rawDate) return new Date();
+  if (rawDate instanceof Date) {
+    return !isNaN(rawDate.getTime()) ? rawDate : new Date();
+  }
+  const str = String(rawDate).trim();
+  // Formato Ministerio de Hacienda El Salvador: "DD/MM/YYYY HH:mm:ss" o "DD/MM/YYYY"
+  const svMatch = str.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}:\d{2}:\d{2}))?/);
+  if (svMatch) {
+    const [, dd, mm, yyyy, time] = svMatch;
+    const isoStr = `${yyyy}-${mm}-${dd}T${time || '00:00:00'}-06:00`;
+    const parsedSv = new Date(isoStr);
+    if (!isNaN(parsedSv.getTime())) return parsedSv;
+  }
+  const direct = new Date(str);
+  return !isNaN(direct.getTime()) ? direct : new Date();
+}
+
 export async function POST(request: Request) {
   try {
     const { authorized } = verifyStaffRequest(request);
@@ -61,21 +79,53 @@ export async function POST(request: Request) {
 
     // 2. Registrar en base de datos en la tabla DteDocument (con TODO el Json de request y response)
     try {
-      if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('placeholder')) {
-        const saleExists = saleId
-          ? await prisma.sale.findFirst({
+      if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('placeholder') && dteResult.codigoGeneracion) {
+        let finalSaleId: string | null = null;
+        if (saleId) {
+          const cleanSaleId = String(saleId).trim();
+          const saleExists = await prisma.sale.findFirst({
+            where: {
+              OR: [{ id: cleanSaleId }, { saleNumber: cleanSaleId }],
+            },
+          });
+          if (saleExists) {
+            finalSaleId = saleExists.id;
+          } else {
+            const ecomOrder = await prisma.ecommerceOrder.findFirst({
               where: {
-                OR: [{ id: saleId }, { saleNumber: saleId }],
+                OR: [{ id: cleanSaleId }, { orderNumber: cleanSaleId }],
               },
-            })
-          : null;
-        const finalSaleId = saleExists ? saleExists.id : null;
+            });
+            if (ecomOrder?.saleId) {
+              finalSaleId = ecomOrder.saleId;
+            }
+          }
+        }
+
+        const safeFhProcesamiento = parseMhDateSafe(dteResult.fhProcesamiento);
+        const resolvedEstado =
+          dteResult.estado === 'PROCESADO'
+            ? 'PROCESADO'
+            : dteResult.simulated
+            ? 'SIMULADO'
+            : 'RECHAZADO';
 
         const fullRequestData = {
           clientRequest: body,
           facturaLlamaPayload: dteResult.sentPayload || null,
         };
         const fullResponseData = dteResult.rawResponse || dteResult;
+
+        // Si la venta ya tenía otro DteDocument asociado (ej: reintento con nuevo codigoGeneracion),
+        // liberar el vínculo anterior para evitar colisión en @unique(saleId)
+        if (finalSaleId) {
+          await prisma.dteDocument.deleteMany({
+            where: {
+              saleId: finalSaleId,
+              codigoGeneracion: { not: dteResult.codigoGeneracion },
+            },
+          });
+        }
 
         await prisma.dteDocument.upsert({
           where: { codigoGeneracion: dteResult.codigoGeneracion },
@@ -85,19 +135,19 @@ export async function POST(request: Request) {
             codigoGeneracion: dteResult.codigoGeneracion,
             numeroControl: dteResult.numeroControl || null,
             selloRecepcion: dteResult.selloRecepcion || null,
-            estado: dteResult.estado === 'PROCESADO' ? 'PROCESADO' : dteResult.simulated ? 'SIMULADO' : 'RECHAZADO',
-            fhProcesamiento: dteResult.fhProcesamiento ? new Date(dteResult.fhProcesamiento) : new Date(),
+            estado: resolvedEstado,
+            fhProcesamiento: safeFhProcesamiento,
             mensajeRespuesta: dteResult.mensaje || null,
             observaciones: dteResult.rawResponse?.mhResponse?.observaciones ? JSON.stringify(dteResult.rawResponse.mhResponse.observaciones) : null,
             requestJson: JSON.stringify(fullRequestData, null, 2),
             responseJson: JSON.stringify(fullResponseData, null, 2),
           },
           update: {
-            saleId: finalSaleId || undefined,
+            ...(finalSaleId ? { saleId: finalSaleId } : {}),
             numeroControl: dteResult.numeroControl || null,
             selloRecepcion: dteResult.selloRecepcion || null,
-            estado: dteResult.estado === 'PROCESADO' ? 'PROCESADO' : dteResult.simulated ? 'SIMULADO' : 'RECHAZADO',
-            fhProcesamiento: dteResult.fhProcesamiento ? new Date(dteResult.fhProcesamiento) : new Date(),
+            estado: resolvedEstado,
+            fhProcesamiento: safeFhProcesamiento,
             mensajeRespuesta: dteResult.mensaje || null,
             observaciones: dteResult.rawResponse?.mhResponse?.observaciones ? JSON.stringify(dteResult.rawResponse.mhResponse.observaciones) : null,
             requestJson: JSON.stringify(fullRequestData, null, 2),

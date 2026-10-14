@@ -4,6 +4,76 @@ import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
+function parseMhDateSafe(rawDate?: string | Date | null): Date {
+  if (!rawDate) return new Date();
+  if (rawDate instanceof Date) {
+    return !isNaN(rawDate.getTime()) ? rawDate : new Date();
+  }
+  const str = String(rawDate).trim();
+  const svMatch = str.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}:\d{2}:\d{2}))?/);
+  if (svMatch) {
+    const [, dd, mm, yyyy, time] = svMatch;
+    const parsedSv = new Date(`${yyyy}-${mm}-${dd}T${time || '00:00:00'}-06:00`);
+    if (!isNaN(parsedSv.getTime())) return parsedSv;
+  }
+  const direct = new Date(str);
+  return !isNaN(direct.getTime()) ? direct : new Date();
+}
+
+async function linkOrUpsertDteForSale(
+  dbClient: any,
+  saleId: string,
+  codigoGeneracion?: string | null,
+  dteInfo?: any,
+  tipoComprobante?: string | null
+) {
+  const codGen = String(codigoGeneracion || dteInfo?.codigoGeneracion || '').trim();
+  if (!codGen || !saleId) return;
+
+  await dbClient.dteDocument.deleteMany({
+    where: {
+      saleId,
+      codigoGeneracion: { not: codGen },
+    },
+  });
+
+  if (dteInfo && typeof dteInfo === 'object') {
+    const resolvedEstado =
+      dteInfo.estado === 'PROCESADO'
+        ? 'PROCESADO'
+        : dteInfo.simulated || dteInfo.estado === 'SIMULADO'
+        ? 'SIMULADO'
+        : 'RECHAZADO';
+    const safeDate = parseMhDateSafe(dteInfo.fhProcesamiento);
+    const tipoDteEnum = tipoComprobante === '03' ? 'CREDITO_FISCAL_03' : 'FACTURA_01';
+
+    await dbClient.dteDocument.upsert({
+      where: { codigoGeneracion: codGen },
+      create: {
+        saleId,
+        tipoDte: tipoDteEnum,
+        codigoGeneracion: codGen,
+        numeroControl: dteInfo.numeroControl || null,
+        selloRecepcion: dteInfo.selloRecepcion || null,
+        estado: resolvedEstado,
+        fhProcesamiento: safeDate,
+        mensajeRespuesta: dteInfo.mensaje || null,
+      },
+      update: {
+        saleId,
+        ...(dteInfo.numeroControl ? { numeroControl: dteInfo.numeroControl } : {}),
+        ...(dteInfo.selloRecepcion ? { selloRecepcion: dteInfo.selloRecepcion } : {}),
+        ...(dteInfo.estado ? { estado: resolvedEstado } : {}),
+      },
+    });
+  } else {
+    await dbClient.dteDocument.updateMany({
+      where: { codigoGeneracion: codGen },
+      data: { saleId },
+    });
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const authHeader = request.headers.get('authorization') || '';
@@ -104,6 +174,7 @@ export async function POST(request: Request) {
       paymentReference,
       tipoComprobante,
       codigoGeneracion,
+      dteInfo,
       orderStatus,
     } = body;
 
@@ -118,11 +189,14 @@ export async function POST(request: Request) {
         include: { items: true, customer: true, dteDocument: true, payments: true },
       });
       if (existingSale) {
-        if (codigoGeneracion) {
-          await prisma.dteDocument.updateMany({
-            where: { codigoGeneracion },
-            data: { saleId: existingSale.id },
-          });
+        if (codigoGeneracion || dteInfo?.codigoGeneracion) {
+          await linkOrUpsertDteForSale(
+            prisma,
+            existingSale.id,
+            codigoGeneracion,
+            dteInfo,
+            tipoComprobante || existingSale.tipoComprobante
+          );
         }
 
         const wasAlreadyCompleted =
@@ -468,12 +542,15 @@ export async function POST(request: Request) {
         },
       });
 
-      // 1.1 Si vino código de generación de DTE, vincularlo a esta venta
-      if (codigoGeneracion) {
-        await tx.dteDocument.updateMany({
-          where: { codigoGeneracion },
-          data: { saleId: createdSale.id },
-        });
+      // 1.1 Si vino código de generación o dteInfo de DTE, vincularlo o registrarlo en esta venta
+      if (codigoGeneracion || dteInfo?.codigoGeneracion) {
+        await linkOrUpsertDteForSale(
+          tx,
+          createdSale.id,
+          codigoGeneracion,
+          dteInfo,
+          tipoComprobante
+        );
       }
 
       // 1.2 Si corresponde a una orden de Ecommerce, vincular la venta a EcommerceOrder.saleId
@@ -903,6 +980,16 @@ export async function PATCH(request: Request) {
       }
     } else if (notes) {
       updatedNotes = [sale.notes, notes].filter(Boolean).join(' ');
+    }
+
+    if (body.codigoGeneracion || body.dteInfo?.codigoGeneracion) {
+      await linkOrUpsertDteForSale(
+        prisma,
+        sale.id,
+        body.codigoGeneracion,
+        body.dteInfo,
+        tipoComprobante || sale.tipoComprobante
+      );
     }
 
     const updated = await prisma.sale.update({

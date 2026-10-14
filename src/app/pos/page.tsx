@@ -1767,12 +1767,13 @@ export default function PosPage() {
     const changeAmount = parsedCash ? parsedCash - totalToBill : undefined;
     const staffToken = await getStaffToken().catch(() => null);
 
+    const counterSaleNumber = !isOrderFromWindow ? `CMD-${Math.floor(1000 + Math.random() * 9000)}` : undefined;
     let dteResponseData = null;
     if (tipoComprobante === '01' || tipoComprobante === '03') {
       try {
         const saleRefId = isOrderFromWindow
           ? (orderToInvoice.orderNumber || orderToInvoice.saleNumber || orderToInvoice.id)
-          : `POS-${Date.now()}`;
+          : counterSaleNumber!;
 
         const res = await fetch('/api/dte', {
           method: 'POST',
@@ -1981,6 +1982,8 @@ export default function PosPage() {
               paymentStatus: 'COMPLETED',
               customerId: selectedCustomerId || (orderToInvoice.cliente as any)?.id || null,
               tipoComprobante,
+              codigoGeneracion: dteResponseData?.codigoGeneracion,
+              dteInfo: completedRecord!.dteInfo,
               notes: `[Cobrado en Caja POS - ${tipoComprobante}]`
             })
           }).catch(() => {});
@@ -1988,7 +1991,7 @@ export default function PosPage() {
       }
     } else {
       // Venta directa desde el mostrador
-      const saleNumber = `CMD-${Math.floor(1000 + Math.random() * 9000)}`;
+      const saleNumber = counterSaleNumber!;
       const newSale: SaleRecord = {
         id: `sale-${Date.now()}`,
         saleNumber,
@@ -2056,6 +2059,7 @@ export default function PosPage() {
         notes: completedRecord.tipoComprobante,
         tipoComprobante: completedRecord.tipoComprobante,
         codigoGeneracion: completedRecord.dteInfo?.codigoGeneracion,
+        dteInfo: completedRecord.dteInfo,
         cashierName: completedRecord.cajero || getActiveSessionUI().name,
         customerId: selectedCustomerId || (completedRecord.cliente as any)?.id || undefined,
         cliente: {
@@ -2157,6 +2161,21 @@ export default function PosPage() {
           window.dispatchEvent(new Event('kodelocal_sales_updated'));
           return updated;
         });
+
+        fetch('/api/sales', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
+          body: JSON.stringify({
+            id: sale.id,
+            saleNumber: sale.saleNumber,
+            tipoComprobante: sale.tipoComprobante === '03' ? '03' : '01',
+            codigoGeneracion: data.dte.codigoGeneracion,
+            dteInfo: newDteInfo,
+          }),
+        }).catch(() => {});
 
         alert(`✅ DTE emitido exitosamente.\nCódigo: ${data.dte.codigoGeneracion}\nSello: ${data.dte.selloRecepcion || 'Recibido por MH'}`);
       } else {
