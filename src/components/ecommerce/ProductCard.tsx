@@ -220,11 +220,11 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
               {getGenderBadge(product.gender)}
             </div>
 
-            {/* Badge Agotado en esquina superior derecha */}
+            {/* Badge Agotado / En camino en esquina superior derecha */}
             {isOutOfStock && (
               <div className="absolute top-2 right-2 z-10">
                 <span className="bg-slate-900 text-white text-[8px] sm:text-[9px] font-black py-0.5 px-2 rounded-md shadow-md tracking-wider uppercase">
-                  Agotado
+                  {isBottle ? 'En camino' : 'Agotado'}
                 </span>
               </div>
             )}
@@ -270,7 +270,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                   : 'text-emerald-700 font-bold'
               }`}>
                 {availableUnits === 0
-                  ? 'Sin existencias'
+                  ? (isBottle ? 'En camino' : 'Sin existencias')
                   : isBelowMinAlert
                   ? isEssence
                     ? selectedPresentation === 'MEDIA_ONZA'
@@ -350,7 +350,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                 disabled
                 className="w-full h-[38px] sm:h-[40px] text-[9.5px] sm:text-xs font-black rounded-xl bg-slate-100 text-slate-400 cursor-not-allowed text-center flex items-center justify-center"
               >
-                Agotado
+                {isBottle ? 'En camino' : 'Agotado'}
               </button>
             ) : currentQuantity > 0 ? (
               /* YA ESTÁ EN EL CARRITO: Misma altura fija de 38px/40px */

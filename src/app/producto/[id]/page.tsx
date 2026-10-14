@@ -389,7 +389,7 @@ export default function ProductDetailPage() {
               <div className="absolute top-3 right-3 z-10">
                 {isOutOfStock ? (
                   <span className="bg-slate-900 text-white text-xs font-black py-1 px-3 rounded-lg shadow-md uppercase tracking-wider">
-                    Agotado
+                    {isBottle ? 'En camino' : 'Agotado'}
                   </span>
                 ) : (
                   <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-xs font-black py-1 px-3 rounded-lg shadow-md flex items-center gap-1">

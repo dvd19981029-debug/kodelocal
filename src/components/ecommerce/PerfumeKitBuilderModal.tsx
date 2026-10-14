@@ -575,7 +575,7 @@ export default function PerfumeKitBuilderModal({
                               : 'text-emerald-700 font-bold bg-emerald-50'
                           }`}>
                             {isBottleOutOfStock
-                              ? 'Sin existencias'
+                              ? 'En camino'
                               : isBottleBelowMin
                               ? bStock === 1 ? '¡Solo 1!' : `¡Solo ${bStock}!`
                               : 'Disponible'}
