@@ -395,5 +395,23 @@ export const MOCK_100ML_BOTTLES: ProductItem[] = [
     imageUrl: '/images/botes/bote_100ml_wolf.jpg',
     isAvailableOnline: true,
     puesto: 'B6',
+  },
+  {
+    id: 'bote-100ml-golf-club',
+    sku: 'BOT-100-GCL',
+    barcode: '741002000024',
+    name: 'Bote Golf Club 100ml Rosca',
+    officialName: 'Golf Club',
+    brand: '',
+    gender: 'Unisex',
+    category: 'Botes',
+    unit: 'Unidad',
+    price: 1.45,
+    cost: 0.55,
+    stock: 20,
+    minStock: 10,
+    imageUrl: '/images/botes/bote_100ml_golf_club.jpg',
+    isAvailableOnline: true,
+    puesto: 'B6',
   }
 ];

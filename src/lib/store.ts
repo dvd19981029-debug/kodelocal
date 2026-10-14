@@ -1634,6 +1634,26 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "stockHalf": 0
   },
   {
+    "id": "bote-100ml-golf-club",
+    "sku": "BOT-100-GCL",
+    "barcode": "741002000024",
+    "name": "Bote Golf Club 100ml Rosca",
+    "officialName": "Golf Club",
+    "brand": "",
+    "gender": "Unisex",
+    "category": "Botes",
+    "unit": "Unidad",
+    "price": 1.45,
+    "cost": 0.55,
+    "stock": 20,
+    "minStock": 10,
+    "imageUrl": "/images/botes/bote_100ml_golf_club.jpg",
+    "description": "Frasco rectangular contorneado de vidrio transparente 100ml con hombros redondeados, cierre de rosca y tapa metálica plateada cromada.",
+    "isAvailableOnline": true,
+    "puesto": "B6",
+    "stockHalf": 0
+  },
+  {
     "id": "bolsa-lujo",
     "sku": "EMP-BOL",
     "barcode": "741999000EMP-BOL",
@@ -1959,7 +1979,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   }
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v26_bote_wolf";
+export const DATA_VERSION = "2026_oficial_real_v27_bote_golf_club";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;
