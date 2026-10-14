@@ -341,7 +341,11 @@ export default function BodegaPage() {
         let posSales: SaleRecord[] = [];
         let posLoaded = false;
         try {
-          const salesRes = await fetch('/api/sales?limit=100');
+          const salesRes = await fetch('/api/sales?limit=100', {
+            headers: {
+              ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+            },
+          });
           const salesData = await salesRes.json();
           if (salesData.success && Array.isArray(salesData.sales)) {
             posLoaded = true;
@@ -349,8 +353,12 @@ export default function BodegaPage() {
               .filter((s: any) => s.channel === 'POS' || s.orderStatus === 'PENDING_PREPARATION' || s.orderStatus === 'READY_AT_WINDOW')
               .map((s: any) => {
                 let pNotes: any = null;
-                if (s.notes && s.notes.startsWith('{')) {
-                  try { pNotes = JSON.parse(s.notes); } catch (_) {}
+                if (s.notes && s.notes.trim().startsWith('{')) {
+                  try {
+                    const lastBrace = s.notes.lastIndexOf('}');
+                    const jsonPart = lastBrace !== -1 ? s.notes.slice(0, lastBrace + 1) : s.notes;
+                    pNotes = JSON.parse(jsonPart);
+                  } catch (_) {}
                 }
                 const resolvedTipo = s.tipoComprobante && s.tipoComprobante !== 'TICKET'
                   ? s.tipoComprobante
@@ -408,7 +416,15 @@ export default function BodegaPage() {
           });
           const mergedMap = new Map<string, SaleRecord>();
           localNonWeb.forEach(s => mergedMap.set(s.saleNumber || s.id, s));
-          posSales.forEach(s => mergedMap.set(s.saleNumber || s.id, s));
+          posSales.forEach(s => {
+            const key = s.saleNumber || s.id;
+            const prevLocal = mergedMap.get(key);
+            if (prevLocal?.cliente?.nombre && prevLocal.cliente.nombre !== 'Consumidor Final' && (!s.cliente?.nombre || s.cliente.nombre === 'Consumidor Final')) {
+              mergedMap.set(key, { ...s, cliente: prevLocal.cliente });
+            } else {
+              mergedMap.set(key, s);
+            }
+          });
           webSales.forEach(s => mergedMap.set(s.saleNumber || s.id, s));
           const merged = Array.from(mergedMap.values());
           if (typeof window !== 'undefined') {
@@ -1257,15 +1273,21 @@ export default function BodegaPage() {
                           <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 mb-3">
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-mono font-black text-sm text-indigo-700">
+                                <span className="font-mono font-black text-sm text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-lg">
                                   #{order.saleNumber}
                                 </span>
+                                <span className="font-black text-sm text-slate-800 flex items-center gap-1.5 bg-slate-100/90 border border-slate-200 px-2.5 py-0.5 rounded-lg">
+                                  <User className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                                  <span>{order.cliente?.nombre || 'Consumidor Final'}</span>
+                                </span>
                                 <span className={`clay-badge text-[10px] font-black py-0.5 px-2 ${
-                                  order.tipoComprobante === '03' || order.cliente?.nrc
+                                  (order.tipoComprobante || (order.cliente?.nrc ? '03' : '01')) === '03'
                                     ? 'bg-purple-100 text-purple-900 border border-purple-200'
+                                    : order.tipoComprobante === 'TICKET'
+                                    ? 'bg-slate-100 text-slate-700 border border-slate-200'
                                     : 'bg-blue-100 text-blue-900 border border-blue-200'
                                 }`}>
-                                  {order.tipoComprobante === '03' || order.cliente?.nrc ? 'Crédito Fiscal (CCF)' : 'Factura (FC)'}
+                                  {(order.tipoComprobante || (order.cliente?.nrc ? '03' : '01')) === '03' ? 'Crédito Fiscal (CCF)' : order.tipoComprobante === 'TICKET' ? 'Ticket' : 'Factura (FC)'}
                                 </span>
                                 <span className="clay-badge text-[10px] font-black py-0.5 px-2 bg-rose-100 text-rose-900 border border-rose-200">
                                   ⏳ Por Preparar
@@ -1276,10 +1298,10 @@ export default function BodegaPage() {
                                   </span>
                                 )}
                               </div>
-                              <div className="flex items-center gap-2 text-[10.5px] text-slate-400 mt-0.5 font-medium">
+                              <div className="flex items-center gap-2 text-[10.5px] text-slate-400 mt-1 font-medium">
                                 <span>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                 <span>•</span>
-                                <span>{order.cliente?.nombre || 'Consumidor Final'}</span>
+                                <span>Cliente: <strong className="text-slate-800 font-black">{order.cliente?.nombre || 'Consumidor Final'}</strong></span>
                               </div>
                               {order.deliveryNotes && (
                                 <p className="text-[10px] text-indigo-700 font-semibold mt-1 bg-indigo-50/70 p-1.5 rounded-lg border border-indigo-100">
@@ -1424,15 +1446,21 @@ export default function BodegaPage() {
                         <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 mb-3">
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-mono font-black text-sm text-emerald-700">
+                              <span className="font-mono font-black text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-lg">
                                 #{order.saleNumber}
                               </span>
+                              <span className="font-black text-sm text-slate-800 flex items-center gap-1.5 bg-slate-100/90 border border-slate-200 px-2.5 py-0.5 rounded-lg">
+                                <User className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                                <span>{order.cliente?.nombre || 'Consumidor Final'}</span>
+                              </span>
                               <span className={`clay-badge text-[10px] font-black py-0.5 px-2 ${
-                                order.tipoComprobante === '03' || order.cliente?.nrc
+                                (order.tipoComprobante || (order.cliente?.nrc ? '03' : '01')) === '03'
                                   ? 'bg-purple-100 text-purple-900 border border-purple-200'
+                                  : order.tipoComprobante === 'TICKET'
+                                  ? 'bg-slate-100 text-slate-700 border border-slate-200'
                                   : 'bg-blue-100 text-blue-900 border border-blue-200'
                               }`}>
-                                {order.tipoComprobante === '03' || order.cliente?.nrc ? 'Crédito Fiscal (CCF)' : 'Factura (FC)'}
+                                {(order.tipoComprobante || (order.cliente?.nrc ? '03' : '01')) === '03' ? 'Crédito Fiscal (CCF)' : order.tipoComprobante === 'TICKET' ? 'Ticket' : 'Factura (FC)'}
                               </span>
                               <span className="clay-badge text-[10px] font-black py-0.5 px-2 bg-emerald-100 text-emerald-900 border border-emerald-200">
                                 ✅ Listo en Ventanilla
@@ -1443,8 +1471,8 @@ export default function BodegaPage() {
                                 </span>
                               )}
                             </div>
-                            <span className="text-[10.5px] text-slate-400 font-medium block mt-0.5">
-                              Cliente: <strong>{order.cliente?.nombre || 'Consumidor Final'}</strong>
+                            <span className="text-[10.5px] text-slate-400 font-medium block mt-1">
+                              Cliente: <strong className="text-slate-800 font-black">{order.cliente?.nombre || 'Consumidor Final'}</strong>
                             </span>
                             {order.deliveryNotes && (
                               <p className="text-[10px] text-emerald-800 font-semibold mt-1 bg-emerald-50/70 p-1.5 rounded-lg border border-emerald-100">

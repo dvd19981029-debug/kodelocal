@@ -2478,6 +2478,7 @@ export default function PosPage() {
             handleMarkOrderReadyFromPos={handleMarkOrderReadyFromPos}
             handleCancelReadyOrder={handleCancelReadyOrder}
             handleMarkOrderDeliveredFromPos={handleMarkOrderDeliveredFromPos}
+            customers={customers}
           />
         )}
 

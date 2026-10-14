@@ -177,6 +177,15 @@ export async function POST(request: Request) {
         }
       }
 
+      let validCustomerId: string | null = null;
+      if (customerId) {
+        const foundCust = await tx.customer.findUnique({
+          where: { id: String(customerId) },
+          select: { id: true },
+        });
+        if (foundCust) validCustomerId = foundCust.id;
+      }
+
       const createdSale = await tx.sale.create({
         data: {
           saleNumber: saleNumber || `VEN-${Date.now().toString().slice(-6)}`,
@@ -193,7 +202,7 @@ export async function POST(request: Request) {
           cashChange: cashChange ? Number(cashChange) : null,
           notes: notes || null,
           cashierName: cashierName || 'Caja 1',
-          customerId: customerId || null,
+          customerId: validCustomerId,
           shiftId: actualShiftId || null,
           items: {
             create: resolvedItems.map((it) => ({
@@ -577,6 +586,22 @@ export async function PATCH(request: Request) {
     }
 
 
+    let updatedNotes: string | undefined = undefined;
+    if (sale.notes && sale.notes.trim().startsWith('{')) {
+      try {
+        const lastBrace = sale.notes.lastIndexOf('}');
+        const jsonPart = lastBrace !== -1 ? sale.notes.slice(0, lastBrace + 1) : sale.notes;
+        const parsed = JSON.parse(jsonPart);
+        if (tipoComprobante) parsed.tipoComprobante = tipoComprobante;
+        if (notes) parsed.statusLog = [parsed.statusLog, notes].filter(Boolean).join(' ');
+        updatedNotes = JSON.stringify(parsed);
+      } catch (_) {
+        if (notes) updatedNotes = [sale.notes, notes].filter(Boolean).join(' ');
+      }
+    } else if (notes) {
+      updatedNotes = [sale.notes, notes].filter(Boolean).join(' ');
+    }
+
     const updated = await prisma.sale.update({
       where: { id: sale.id },
       data: {
@@ -584,7 +609,7 @@ export async function PATCH(request: Request) {
         ...(paymentStatus ? { paymentStatus } : {}),
         ...(tipoComprobante ? { tipoComprobante } : {}),
         ...(customerId !== undefined ? { customerId: customerId || null } : {}),
-        ...(notes ? { notes: [sale.notes, notes].filter(Boolean).join(' ') } : {}),
+        ...(updatedNotes !== undefined ? { notes: updatedNotes } : {}),
       },
       include: {
         customer: true,

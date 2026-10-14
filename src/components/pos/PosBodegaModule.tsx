@@ -9,8 +9,10 @@ import {
   ReceiptText, 
   Search, 
   Eye,
-  X 
+  X,
+  User
 } from 'lucide-react';
+import { CustomerRecord } from '@/lib/customers';
 import { SaleRecord, ProductItem } from '@/lib/store';
 
 export interface PosBodegaModuleProps {
@@ -28,6 +30,7 @@ export interface PosBodegaModuleProps {
   handleMarkOrderReadyFromPos: (orderId: string) => void;
   handleCancelReadyOrder?: (order: SaleRecord) => void;
   handleMarkOrderDeliveredFromPos: (orderId: string) => void;
+  customers?: CustomerRecord[];
 }
 
 export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
@@ -45,7 +48,20 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
   handleMarkOrderReadyFromPos,
   handleCancelReadyOrder,
   handleMarkOrderDeliveredFromPos,
+  customers,
 }) => {
+  const resolveCustomerName = (order: SaleRecord) => {
+    if (order.cliente?.nombre && order.cliente.nombre.trim() !== '' && order.cliente.nombre.toLowerCase().trim() !== 'consumidor final') {
+      return order.cliente.nombre;
+    }
+    const custId = (order.cliente as any)?.id || (order as any).customerId;
+    if (custId && customers) {
+      const found = customers.find(c => c.id === custId);
+      if (found?.name) return found.name;
+    }
+    return order.cliente?.nombre || 'Consumidor Final';
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in">
       {/* Cabecera & Métricas de Órdenes */}
@@ -229,15 +245,21 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono font-black text-sm text-indigo-700">
+                        <span className="font-mono font-black text-sm text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-lg">
                           #{order.saleNumber}
                         </span>
+                        <span className="font-black text-sm text-slate-800 flex items-center gap-1.5 bg-slate-100/90 border border-slate-200 px-2.5 py-0.5 rounded-lg">
+                          <User className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                          <span>{resolveCustomerName(order)}</span>
+                        </span>
                         <span className={`clay-badge text-[10px] font-black py-0.5 px-2 ${
-                          order.tipoComprobante === '03' || order.cliente?.nrc
+                          (order.tipoComprobante || (order.cliente?.nrc ? '03' : '01')) === '03'
                             ? 'bg-purple-100 text-purple-900 border border-purple-200'
+                            : order.tipoComprobante === 'TICKET'
+                            ? 'bg-slate-100 text-slate-700 border border-slate-200'
                             : 'bg-blue-100 text-blue-900 border border-blue-200'
                         }`}>
-                          {order.tipoComprobante === '03' || order.cliente?.nrc ? 'Crédito Fiscal (CCF)' : 'Factura (FC)'}
+                          {(order.tipoComprobante || (order.cliente?.nrc ? '03' : '01')) === '03' ? 'Crédito Fiscal (CCF)' : order.tipoComprobante === 'TICKET' ? 'Ticket' : 'Factura (FC)'}
                         </span>
                         <span className={`clay-badge text-[10px] font-black py-0.5 px-2.5 ${
                           isReady 
@@ -252,7 +274,7 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                       <div className="flex items-center gap-2 text-[10.5px] text-slate-400 mt-1 font-medium">
                         <span>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         <span>•</span>
-                        <span>Cliente: <strong className="text-slate-700">{order.cliente?.nombre || 'Consumidor Final'}</strong></span>
+                        <span>Cliente: <strong className="text-slate-800 font-black">{resolveCustomerName(order)}</strong></span>
                       </div>
                     </div>
 
