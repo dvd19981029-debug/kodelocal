@@ -921,13 +921,16 @@ export default function PosPage() {
             "Content-Type": "application/json",
             ...(staffToken ? { "x-staff-token": staffToken } : {}),
           },
-          body: JSON.stringify({ orderId, orderStatus: "READY_AT_WINDOW" }),
+          body: JSON.stringify({ orderId, orderNumber: targetSale?.orderNumber || targetSale?.saleNumber, orderStatus: "EN_RUTA" }),
         }).catch(err => console.error(err));
       }
       if (!targetSale || targetSale.channel !== "ONLINE") {
         fetch("/api/sales", {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(staffToken ? { "x-staff-token": staffToken } : {}),
+          },
           body: JSON.stringify({ id: orderId, saleNumber: targetSale?.saleNumber, orderStatus: "READY_AT_WINDOW" }),
         }).catch(() => {});
       }
@@ -957,7 +960,7 @@ export default function PosPage() {
             'Content-Type': 'application/json',
             ...(staffToken ? { 'x-staff-token': staffToken } : {}),
           },
-          body: JSON.stringify({ orderId: order.id, orderNumber: order.orderNumber, orderStatus: 'CANCELADO', restock: false }),
+          body: JSON.stringify({ orderId: order.id, orderNumber: order.orderNumber || order.saleNumber, orderStatus: 'CANCELADO', restock: true }),
         }).catch(err => console.error('Error anulando pedido web:', err));
       } else {
         fetch('/api/sales', {
@@ -1007,14 +1010,17 @@ export default function PosPage() {
             'Content-Type': 'application/json',
             ...(staffToken ? { 'x-staff-token': staffToken } : {}),
           },
-          body: JSON.stringify({ orderId, orderStatus: 'ENTREGADO' }),
+          body: JSON.stringify({ orderId, orderNumber: targetSale?.orderNumber || targetSale?.saleNumber, orderStatus: 'ENTREGADO' }),
         }).catch(err => console.error('Error sincronizando despacho web desde POS:', err));
       }
 
       if (!targetSale || targetSale.channel !== 'ONLINE') {
         fetch('/api/sales', {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
           body: JSON.stringify({ id: orderId, saleNumber: targetSale?.saleNumber, orderStatus: 'COMPLETED' }),
         }).catch(() => {});
       }
@@ -1758,6 +1764,7 @@ export default function PosPage() {
 
     const parsedCash = paymentMethod === 'CASH' ? parseFloat(cashAmount) : undefined;
     const changeAmount = parsedCash ? parsedCash - totalToBill : undefined;
+    const staffToken = await getStaffToken().catch(() => null);
 
     let dteResponseData = null;
     if (tipoComprobante === '01' || tipoComprobante === '03') {
@@ -1768,7 +1775,10 @@ export default function PosPage() {
 
         const res = await fetch('/api/dte', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
           body: JSON.stringify({
             tipoDte: tipoComprobante,
             saleId: saleRefId,
@@ -1813,29 +1823,41 @@ export default function PosPage() {
       }
     }
 
-    // Descontar inventario oficial
-    setProducts(prev => {
-      const updated = prev.map(prod => {
-        const matchingItems = itemsToBill.filter(ci => ci.productId === prod.id);
-        if (matchingItems.length > 0) {
-          let fullDeduct = 0;
-          let halfDeduct = 0;
-          matchingItems.forEach(ci => {
-            const isHalf = (ci as any).presentation === 'MEDIA_ONZA' || ci.unit === '½ Onza' || String(ci.name).includes('½');
-            if (isHalf) halfDeduct += ci.quantity; else fullDeduct += ci.quantity;
-          });
-          return {
-            ...prod,
-            stock: Math.max(0, prod.stock - fullDeduct),
-            stockHalf: Math.max(0, (prod.stockHalf || 0) - halfDeduct),
-          };
-        }
-        return prod;
+    // Descontar inventario oficial localmente solo si NO es un pedido web (los pedidos web ya descuentan stock al crearse en el checkout)
+    const isWebOrderBeingInvoiced = isOrderFromWindow && orderToInvoice.channel === 'ONLINE';
+    if (!isWebOrderBeingInvoiced) {
+      setProducts(prev => {
+        const updated = prev.map(prod => {
+          const matchingItems = itemsToBill.filter(
+            ci => ci.productId && ci.productId !== 'ENVIO-DOM' && (ci.productId === prod.id || ci.productId === prod.sku)
+          );
+          if (matchingItems.length > 0) {
+            let fullDeduct = 0;
+            let halfDeduct = 0;
+            matchingItems.forEach(ci => {
+              const unitLower = String(ci.unit || '').toLowerCase();
+              const nameLower = String(ci.name || '').toLowerCase();
+              const isHalf =
+                (ci as any).presentation === 'MEDIA_ONZA' ||
+                unitLower.includes('media') ||
+                unitLower.includes('½') ||
+                nameLower.includes('media onza') ||
+                nameLower.includes('½');
+              if (isHalf) halfDeduct += ci.quantity; else fullDeduct += ci.quantity;
+            });
+            return {
+              ...prod,
+              stock: Math.max(0, prod.stock - fullDeduct),
+              stockHalf: Math.max(0, (prod.stockHalf || 0) - halfDeduct),
+            };
+          }
+          return prod;
+        });
+        localStorage.setItem('kodelocal_products', JSON.stringify(updated));
+        window.dispatchEvent(new Event('kodelocal_products_updated'));
+        return updated;
       });
-      localStorage.setItem('kodelocal_products', JSON.stringify(updated));
-      window.dispatchEvent(new Event('kodelocal_products_updated'));
-      return updated;
-    });
+    }
 
     let completedRecord: SaleRecord;
 
@@ -1929,38 +1951,39 @@ export default function PosPage() {
 
       // Sincronizar estado ENTREGADO / COMPLETED con Supabase para que Bodega en cualquier dispositivo lo vea al instante
       if (orderToInvoice) {
-        getStaffToken().then(staffToken => {
-          if (orderToInvoice.channel === 'ONLINE') {
-            fetch('/api/ecommerce/orders', {
-              method: 'PATCH',
-              headers: {
-                'Content-Type': 'application/json',
-                ...(staffToken ? { 'x-staff-token': staffToken } : {}),
-              },
-              body: JSON.stringify({
-                orderId: orderToInvoice.id,
-                orderNumber: orderToInvoice.orderNumber || orderToInvoice.saleNumber,
-                orderStatus: 'ENTREGADO',
-                paymentStatus: 'COMPLETED',
-                notes: `[Cobrado en Caja POS - ${tipoComprobante}]`
-              }),
-            }).catch(e => console.error('Error sincronizando orden cobrada con Supabase:', e));
-          } else {
-            fetch('/api/sales', {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                id: orderToInvoice.id,
-                saleNumber: orderToInvoice.saleNumber,
-                orderStatus: 'COMPLETED',
-                paymentStatus: 'COMPLETED',
-                customerId: selectedCustomerId || (orderToInvoice.cliente as any)?.id || null,
-                tipoComprobante,
-                notes: `[Cobrado en Caja POS - ${tipoComprobante}]`
-              })
-            }).catch(() => {});
-          }
-        }).catch(() => {});
+        if (orderToInvoice.channel === 'ONLINE') {
+          fetch('/api/ecommerce/orders', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+            },
+            body: JSON.stringify({
+              orderId: orderToInvoice.id,
+              orderNumber: orderToInvoice.orderNumber || orderToInvoice.saleNumber,
+              orderStatus: 'ENTREGADO',
+              paymentStatus: 'COMPLETED',
+              notes: `[Cobrado en Caja POS - ${tipoComprobante}${dteResponseData?.codigoGeneracion ? ` - DTE: ${dteResponseData.codigoGeneracion}` : ''}]`
+            }),
+          }).catch(e => console.error('Error sincronizando orden cobrada con Supabase:', e));
+        } else {
+          fetch('/api/sales', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+            },
+            body: JSON.stringify({
+              id: orderToInvoice.id,
+              saleNumber: orderToInvoice.saleNumber,
+              orderStatus: 'COMPLETED',
+              paymentStatus: 'COMPLETED',
+              customerId: selectedCustomerId || (orderToInvoice.cliente as any)?.id || null,
+              tipoComprobante,
+              notes: `[Cobrado en Caja POS - ${tipoComprobante}]`
+            })
+          }).catch(() => {});
+        }
       }
     } else {
       // Venta directa desde el mostrador
@@ -2022,7 +2045,7 @@ export default function PosPage() {
     if (completedRecord!) {
       syncSaleOnlineOrQueue({
         saleNumber: completedRecord.saleNumber,
-        channel: 'POS',
+        channel: isWebOrderBeingInvoiced ? 'ONLINE' : 'POS',
         subtotal: completedRecord.subtotal,
         ivaTotal: completedRecord.ivaTotal,
         total: completedRecord.total,
@@ -2033,6 +2056,7 @@ export default function PosPage() {
         tipoComprobante: completedRecord.tipoComprobante,
         codigoGeneracion: completedRecord.dteInfo?.codigoGeneracion,
         cashierName: completedRecord.cajero || getActiveSessionUI().name,
+        customerId: selectedCustomerId || (completedRecord.cliente as any)?.id || undefined,
         cliente: {
           nombre: clienteNombre || completedRecord.cliente?.nombre || 'Consumidor Final',
           numDocumento: clienteDoc || completedRecord.cliente?.numDocumento,
@@ -2052,6 +2076,9 @@ export default function PosPage() {
           price: it.price,
           total: it.total,
           unit: it.unit,
+          presentation: (it as any).presentation,
+          puesto: (it as any).puesto,
+          tipoItem: (it as any).tipoItem || (it.productId === 'ENVIO-DOM' ? 2 : 1),
         })),
       }, (freshProds) => {
         setProducts(freshProds);
@@ -2060,24 +2087,6 @@ export default function PosPage() {
           console.warn('📦 Venta resguardada en cola offline:', syncRes.error);
         }
       });
-
-      // Si era una orden web de ventanilla, sincronizar estado ENTREGADO en base de datos
-      if (isOrderFromWindow && orderToInvoice.orderNumber) {
-        getStaffToken().then(staffToken => {
-          fetch('/api/ecommerce/orders', {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              ...(staffToken ? { 'x-staff-token': staffToken } : {}),
-            },
-            body: JSON.stringify({
-              orderNumber: orderToInvoice.orderNumber,
-              orderStatus: 'ENTREGADO',
-              notes: `[Entregado y Facturado en Caja ${dteResponseData?.codigoGeneracion ? `- DTE: ${dteResponseData.codigoGeneracion}` : ''}]`,
-            }),
-          }).catch(err => console.error('Error actualizando pedido ecommerce a ENTREGADO:', err));
-        });
-      }
     }
   };
 
@@ -2085,9 +2094,13 @@ export default function PosPage() {
   const handleTransmitDte = async (sale: SaleRecord) => {
     setIsTransmittingDteId(sale.id || sale.saleNumber);
     try {
+      const staffToken = await getStaffToken().catch(() => null);
       const res = await fetch('/api/dte', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
         body: JSON.stringify({
           tipoDte: sale.tipoComprobante === '03' ? '03' : '01',
           saleId: sale.saleNumber || sale.id,

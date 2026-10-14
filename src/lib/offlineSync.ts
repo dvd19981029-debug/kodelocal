@@ -6,6 +6,8 @@
  * como se restablece la conexión a la red.
  */
 
+import { getStaffToken } from './auth';
+
 export interface OfflineSalePayload {
   saleNumber: string;
   channel?: 'POS' | 'ONLINE';
@@ -19,6 +21,7 @@ export interface OfflineSalePayload {
   tipoComprobante?: string;
   codigoGeneracion?: string;
   cashierName?: string;
+  customerId?: string;
   cliente?: {
     nombre: string;
     numDocumento?: string;
@@ -39,6 +42,8 @@ export interface OfflineSalePayload {
     total: number;
     presentation?: string;
     unit?: string;
+    puesto?: string;
+    tipoItem?: number;
   }>;
   enqueuedAt: string;
   attempts: number;
@@ -153,6 +158,7 @@ export async function flushOfflineQueue(
   let lastErrorMessage: string | undefined;
 
   console.log(`🚀 [OfflineSync] Procesando ${queue.length} ventas pendientes en segundo plano...`);
+  const staffToken = await getStaffToken().catch(() => null);
 
   for (const item of queue) {
     try {
@@ -162,7 +168,10 @@ export async function flushOfflineQueue(
           console.log(`📡 [OfflineSync] Retransmitiendo DTE-${item.tipoComprobante} a Factura Llama para venta #${item.saleNumber}...`);
           const dteRes = await fetch('/api/dte', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+            },
             body: JSON.stringify({
               tipoDte: item.tipoComprobante,
               saleId: item.saleNumber,
@@ -184,6 +193,7 @@ export async function flushOfflineQueue(
                 precioUnitario: i.price,
                 total: i.total,
                 unit: i.unit,
+                tipoItem: i.tipoItem || (i.productId === 'ENVIO-DOM' ? 2 : 1),
               })),
               total: item.total,
               subtotal: item.subtotal,
@@ -239,7 +249,10 @@ export async function flushOfflineQueue(
       // 2. Asentar la venta en Supabase (POST /api/sales) vinculada al DTE
       const response = await fetch('/api/sales', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
         body: JSON.stringify({
           saleNumber: item.saleNumber,
           channel: item.channel || 'POS',
@@ -247,12 +260,16 @@ export async function flushOfflineQueue(
           ivaTotal: item.ivaTotal,
           total: item.total,
           paymentMethod: item.paymentMethod,
+          paymentStatus: 'COMPLETED',
+          orderStatus: 'COMPLETED',
           cashReceived: item.cashReceived,
           cashChange: item.cashChange,
           notes: item.notes,
           tipoComprobante: item.tipoComprobante,
           codigoGeneracion: item.codigoGeneracion,
           cashierName: item.cashierName || 'Caja 1',
+          customerId: item.customerId,
+          cliente: item.cliente,
           items: item.items,
         }),
       });
@@ -335,13 +352,18 @@ export async function syncSaleOnlineOrQueue(
 
   // 2. Intentar envío en vivo
   try {
+    const staffToken = await getStaffToken().catch(() => null);
+
     // Si la venta requiere DTE fiscal y no tiene código de generación todavía, intentar emitirlo ahora
     let currentCodigoGeneracion = sale.codigoGeneracion;
     if ((sale.requiresDte || !currentCodigoGeneracion) && (sale.tipoComprobante === '01' || sale.tipoComprobante === '03')) {
       try {
         const dteRes = await fetch('/api/dte', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
           body: JSON.stringify({
             tipoDte: sale.tipoComprobante,
             saleId: sale.saleNumber,
@@ -353,6 +375,7 @@ export async function syncSaleOnlineOrQueue(
               precioUnitario: i.price,
               total: i.total,
               unit: i.unit,
+              tipoItem: i.tipoItem || (i.productId === 'ENVIO-DOM' ? 2 : 1),
             })),
             total: sale.total,
             subtotal: sale.subtotal,
@@ -371,7 +394,10 @@ export async function syncSaleOnlineOrQueue(
 
     const res = await fetch('/api/sales', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+      },
       body: JSON.stringify({
         saleNumber: sale.saleNumber,
         channel: sale.channel || 'POS',
@@ -379,12 +405,16 @@ export async function syncSaleOnlineOrQueue(
         ivaTotal: sale.ivaTotal,
         total: sale.total,
         paymentMethod: sale.paymentMethod || 'CASH',
+        paymentStatus: 'COMPLETED',
+        orderStatus: 'COMPLETED',
         cashReceived: sale.cashReceived,
         cashChange: sale.cashChange,
         notes: sale.notes,
         tipoComprobante: sale.tipoComprobante,
         codigoGeneracion: currentCodigoGeneracion,
         cashierName: sale.cashierName || 'Caja 1',
+        customerId: sale.customerId,
+        cliente: sale.cliente,
         items: sale.items,
       }),
     });

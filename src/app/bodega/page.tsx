@@ -395,8 +395,8 @@ export default function BodegaPage() {
                     quantity: it.quantity,
                     price: Number(it.unitPrice || 0),
                     total: Number(it.total || 0),
-                    unit: 'Onza',
-                    puesto: it.product?.puesto || 'A1',
+                    unit: it.unit || (String(it.productName || '').includes('½') ? '½ Onza' : 'Onza'),
+                    puesto: it.puesto || it.product?.puesto || 'A1',
                   }))
                 };
               });
@@ -521,7 +521,7 @@ export default function BodegaPage() {
           'Content-Type': 'application/json',
           ...(staffToken ? { 'x-staff-token': staffToken } : {}),
         },
-        body: JSON.stringify({ orderId, orderStatus: 'CANCELADO', restock: false })
+        body: JSON.stringify({ orderId, orderStatus: 'CANCELADO', restock: true })
       }).catch(() => {});
     } else {
       try {

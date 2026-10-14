@@ -107,7 +107,11 @@ export async function POST(request: Request) {
       orderStatus,
     } = body;
 
-    // 0. Idempotencia: Si la venta ya existe registrada en la base de datos (ej: sincronización repetida o reconexión)
+    // 0. Idempotencia: Si la venta ya existe registrada en la base de datos (ej: comanda enviada a Bodega que ahora se factura, o reconexión)
+    const targetOrderStatus = orderStatus || 'COMPLETED';
+    const targetPaymentStatus = paymentStatus || 'COMPLETED';
+    const isIncomingCompleted = targetPaymentStatus === 'COMPLETED' || targetOrderStatus === 'COMPLETED';
+
     if (saleNumber) {
       const existingSale = await prisma.sale.findUnique({
         where: { saleNumber },
@@ -120,6 +124,157 @@ export async function POST(request: Request) {
             data: { saleId: existingSale.id },
           });
         }
+
+        const wasAlreadyCompleted =
+          existingSale.paymentStatus === 'COMPLETED' || existingSale.orderStatus === 'COMPLETED';
+        const isCancelled =
+          existingSale.orderStatus === 'CANCELLED' ||
+          existingSale.orderStatus === 'CANCELADO' ||
+          existingSale.orderStatus === 'ANULADA';
+
+        // Si la venta existía como comanda pendiente (PENDING_PREPARATION / READY_AT_WINDOW) y ahora se está facturando/cobrando:
+        if (isIncomingCompleted && !wasAlreadyCompleted && !isCancelled) {
+          const claim = await prisma.sale.updateMany({
+            where: {
+              id: existingSale.id,
+              paymentStatus: { not: 'COMPLETED' },
+              OR: [{ orderStatus: null }, { orderStatus: { not: 'COMPLETED' } }],
+            },
+            data: {
+              orderStatus: 'COMPLETED',
+              paymentStatus: 'COMPLETED',
+              ...(paymentMethod ? { paymentMethod } : {}),
+              ...(tipoComprobante ? { tipoComprobante } : {}),
+              ...(cashReceived !== undefined ? { cashReceived: cashReceived ? Number(cashReceived) : null } : {}),
+              ...(cashChange !== undefined ? { cashChange: cashChange ? Number(cashChange) : null } : {}),
+              ...(cashierName ? { cashierName } : {}),
+            },
+          });
+
+          if (claim.count > 0 && existingSale.items && existingSale.items.length > 0) {
+            const existingDeduction = await prisma.stockMovement.findFirst({
+              where: {
+                reference: {
+                  in: [
+                    `Venta #${existingSale.saleNumber}`,
+                    `Cobro Comanda #${existingSale.saleNumber}`,
+                    `Pedido Web #${existingSale.saleNumber}`,
+                  ],
+                },
+                type: 'OUT_SALE',
+              },
+            });
+
+            const isWebOrder =
+              existingSale.channel === 'ONLINE' || String(existingSale.saleNumber || '').startsWith('WEB-');
+
+            if (!existingDeduction && !isWebOrder) {
+              await prisma.$transaction(async (tx) => {
+                const productIds = Array.from(
+                  new Set(existingSale.items.map((it) => it.productId).filter(Boolean))
+                ) as string[];
+                const dbProducts = productIds.length > 0
+                  ? await tx.product.findMany({ where: { id: { in: productIds } } })
+                  : [];
+                const productMap = new Map(dbProducts.map((p) => [p.id, p]));
+                const stockDeltas = new Map<string, number>();
+                const halfDeltas = new Map<string, number>();
+
+                for (const it of existingSale.items) {
+                  if (!it.productId || it.productId === 'ENVIO-DOM') continue;
+                  const nameLower = String(it.productName || '').toLowerCase();
+                  if (nameLower.includes('servicio de envío')) continue;
+                  const prod = productMap.get(it.productId);
+                  if (!prod) continue;
+
+                  const unitLower = String(it.unit || '').toLowerCase();
+                  const isHalfOz =
+                    unitLower.includes('media') ||
+                    unitLower.includes('½') ||
+                    nameLower.includes('media onza') ||
+                    nameLower.includes('½');
+                  const qty = Math.max(1, Number(it.quantity || 1));
+
+                  if (isHalfOz) {
+                    halfDeltas.set(prod.id, (halfDeltas.get(prod.id) || 0) + qty);
+                  } else {
+                    stockDeltas.set(prod.id, (stockDeltas.get(prod.id) || 0) + qty);
+                  }
+                }
+
+                for (const [prodId, totalDeduct] of stockDeltas.entries()) {
+                  const updatedRows: Array<{ stock: number }> = await tx.$queryRaw`
+                    UPDATE "Product"
+                    SET "stock" = GREATEST(0, "stock" - ${totalDeduct}),
+                        "updatedAt" = NOW()
+                    WHERE "id" = ${prodId}
+                    RETURNING "stock"
+                  `;
+                  const newStock = updatedRows && updatedRows.length > 0 ? updatedRows[0].stock : 0;
+                  await tx.stockMovement.create({
+                    data: {
+                      productId: prodId,
+                      type: 'OUT_SALE',
+                      quantity: totalDeduct,
+                      previousStock: newStock + totalDeduct,
+                      newStock,
+                      reference: `Cobro Comanda #${existingSale.saleNumber}`,
+                      notes: `Venta cobrada por ${cashierName || existingSale.cashierName || 'Caja'} (${paymentMethod || existingSale.paymentMethod})`,
+                      userName: cashierName || existingSale.cashierName || 'Sistema (Caja)',
+                    },
+                  });
+                }
+
+                for (const [prodId, totalHalf] of halfDeltas.entries()) {
+                  const updatedRows: Array<{ stockHalf: number }> = await tx.$queryRaw`
+                    UPDATE "Product"
+                    SET "stockHalf" = GREATEST(0, "stockHalf" - ${totalHalf}),
+                        "updatedAt" = NOW()
+                    WHERE "id" = ${prodId}
+                    RETURNING "stockHalf"
+                  `;
+                  const newHalf = updatedRows && updatedRows.length > 0 ? updatedRows[0].stockHalf : 0;
+                  await tx.stockMovement.create({
+                    data: {
+                      productId: prodId,
+                      type: 'OUT_SALE',
+                      quantity: totalHalf,
+                      previousStock: newHalf + totalHalf,
+                      newStock: newHalf,
+                      reference: `Cobro Comanda #${existingSale.saleNumber}`,
+                      notes: `½ Onza • Venta cobrada por ${cashierName || existingSale.cashierName || 'Caja'} (${paymentMethod || existingSale.paymentMethod})`,
+                      userName: cashierName || existingSale.cashierName || 'Sistema (Caja)',
+                    },
+                  });
+                }
+              });
+            }
+
+            if (!existingSale.payments || existingSale.payments.length === 0) {
+              await prisma.salePayment.create({
+                data: {
+                  saleId: existingSale.id,
+                  amount: Number(total || existingSale.total || 0),
+                  paymentMethod: paymentMethod || existingSale.paymentMethod || 'CASH',
+                  reference: paymentReference || null,
+                  notes: cashReceived ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}` : null,
+                  cashierName: cashierName || existingSale.cashierName || 'Caja 1',
+                  shiftId: existingSale.shiftId || null,
+                },
+              });
+            }
+          }
+
+          const refreshedSale = await prisma.sale.findUnique({
+            where: { id: existingSale.id },
+            include: { items: true, customer: true, dteDocument: true, payments: true },
+          });
+          return NextResponse.json({
+            success: true,
+            sale: refreshedSale || existingSale,
+          });
+        }
+
         return NextResponse.json({
           success: true,
           alreadyExists: true,
@@ -129,38 +284,101 @@ export async function POST(request: Request) {
       }
     }
 
-    // Pre-validar productos existentes en DB para evitar violaciones de clave foránea en SaleItem
-    
+    // Pre-validar y resolver productos en DB con precisión (por ID, SKU, código de barras o nombre)
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ success: false, error: 'Venta Fantasma Detectada: La orden no puede ser procesada sin artículos.' }, { status: 400 });
     }
     const rawItems = Array.isArray(items) ? items : [];
-    const rawProductIds = rawItems.map((it: any) => it.productId).filter(Boolean);
+    const rawProductIds = rawItems
+      .map((it: any) => String(it.productId || '').trim())
+      .filter((id: string) => id.length > 0 && id !== 'ENVIO-DOM');
+
     const existingDbProducts = await prisma.product.findMany({
-      where: { id: { in: rawProductIds } },
+      where: rawProductIds.length > 0
+        ? {
+            OR: [
+              { id: { in: rawProductIds } },
+              { sku: { in: rawProductIds } },
+              { barcode: { in: rawProductIds } },
+            ],
+          }
+        : undefined,
     });
-    const existingDbProductIds = new Set(existingDbProducts.map((p) => p.id));
+
+    const byId = new Map(existingDbProducts.map((p) => [p.id, p]));
+    const bySku = new Map(
+      existingDbProducts.filter((p) => p.sku).map((p) => [String(p.sku).toLowerCase().trim(), p])
+    );
+    const byBarcode = new Map(
+      existingDbProducts.filter((p) => p.barcode).map((p) => [String(p.barcode).toLowerCase().trim(), p])
+    );
+
     let fallbackProduct = existingDbProducts[0];
     if (!fallbackProduct) {
       fallbackProduct = (await prisma.product.findFirst({ select: { id: true, name: true } })) as any;
     }
 
-    const resolvedItems = rawItems.map((it: any) => {
-      let finalProductId = it.productId;
-      if (!existingDbProductIds.has(finalProductId)) {
-        finalProductId = fallbackProduct?.id || 'esencia-apae-001';
+    const resolvedItems = [];
+    for (const it of rawItems) {
+      const rawId = String(it.productId || '').trim();
+      const rawName = String(it.name || it.productName || 'Producto').trim();
+      const nameLower = rawName.toLowerCase();
+
+      const isServiceItem =
+        rawId === 'ENVIO-DOM' ||
+        it.tipoItem === 2 ||
+        nameLower.includes('servicio de envío');
+
+      let matchedProd = !isServiceItem
+        ? byId.get(rawId) || bySku.get(rawId.toLowerCase()) || byBarcode.get(rawId.toLowerCase())
+        : undefined;
+
+      // Si aún no coincidió por ID/SKU y no es un servicio, buscar por nombre limpio en la DB
+      if (!matchedProd && !isServiceItem && rawName) {
+        const cleanBaseName = rawName
+          .replace(/\s*\(½\s*Oz\)/gi, '')
+          .replace(/\s*\(1\s*Onza\)/gi, '')
+          .replace(/\s*\(Media\s*Onza\)/gi, '')
+          .trim();
+        matchedProd = (await prisma.product.findFirst({
+          where: {
+            OR: [
+              { name: { equals: cleanBaseName, mode: 'insensitive' } },
+              { officialName: { equals: cleanBaseName, mode: 'insensitive' } },
+            ],
+          },
+        })) as any;
+        if (matchedProd) {
+          byId.set(matchedProd.id, matchedProd);
+        }
       }
-      return {
+
+      const unitLower = String(it.unit || '').toLowerCase();
+      const presUpper = String(it.presentation || '').toUpperCase();
+      const isHalfOz =
+        presUpper === 'MEDIA_ONZA' ||
+        unitLower.includes('media') ||
+        unitLower.includes('½') ||
+        nameLower.includes('media onza') ||
+        nameLower.includes('½');
+
+      const finalProductId = matchedProd ? matchedProd.id : (fallbackProduct?.id || 'esencia-apae-001');
+      const skipStockDeduction = isServiceItem || !matchedProd;
+
+      resolvedItems.push({
         productId: finalProductId,
-        productName: it.name || it.productName || 'Producto',
+        productName: rawName,
         quantity: Math.max(1, Math.round(Number(it.quantity || 1))),
         unitPrice: Number(it.unitPrice || it.price || 0),
         ivaRate: 0.13,
         total: Number(it.total || 0),
-        presentation: it.presentation,
-        unit: it.unit,
-      };
-    });
+        presentation: isHalfOz ? 'MEDIA_ONZA' : (it.presentation || 'ONZA_COMPLETA'),
+        unit: isServiceItem ? 'Servicio' : isHalfOz ? '½ Onza' : (it.unit || 'Onza'),
+        puesto: it.puesto || matchedProd?.puesto || null,
+        isHalfOz,
+        skipStockDeduction,
+      });
+    }
 
     const result = await prisma.$transaction(async (tx) => {
       // 1. Crear Venta principal
@@ -185,19 +403,45 @@ export async function POST(request: Request) {
         });
         if (foundCust) validCustomerId = foundCust.id;
       }
+      if (!validCustomerId) {
+        const clientEmail = String(body.cliente?.email || body.cliente?.correo || '').trim().toLowerCase();
+        if (clientEmail) {
+          const foundByEmail = await tx.customer.findFirst({
+            where: { email: { equals: clientEmail, mode: 'insensitive' } },
+            select: { id: true },
+          });
+          if (foundByEmail) validCustomerId = foundByEmail.id;
+        }
+      }
+
+      // Verificar si corresponde a un pedido de Ecommerce existente (cuyo stock YA fue descontado al crear el pedido web)
+      const isOnlineOrderNumber = String(saleNumber || '').startsWith('WEB-');
+      const linkedEcommerceOrder = saleNumber
+        ? await tx.ecommerceOrder.findUnique({
+            where: { orderNumber: String(saleNumber) },
+            select: { id: true, customerId: true },
+          })
+        : null;
+
+      if (!validCustomerId && linkedEcommerceOrder?.customerId) {
+        validCustomerId = linkedEcommerceOrder.customerId;
+      }
+
+      const effectiveChannel =
+        linkedEcommerceOrder || isOnlineOrderNumber || channel === 'ONLINE' ? 'ONLINE' : (channel || 'POS');
 
       const createdSale = await tx.sale.create({
         data: {
           saleNumber: saleNumber || `VEN-${Date.now().toString().slice(-6)}`,
-          channel: channel || 'POS',
+          channel: effectiveChannel,
           tipoComprobante: tipoComprobante || (notes === '01' || notes === '03' ? notes : 'TICKET'),
-          orderStatus: orderStatus || 'COMPLETED',
+          orderStatus: targetOrderStatus,
           subtotal: Number(subtotal || 0),
           ivaTotal: Number(ivaTotal || 0),
           discountTotal: Number(discountTotal || 0),
           total: Number(total || 0),
           paymentMethod: paymentMethod || 'CASH',
-          paymentStatus: paymentStatus || 'COMPLETED',
+          paymentStatus: targetPaymentStatus,
           cashReceived: cashReceived ? Number(cashReceived) : null,
           cashChange: cashChange ? Number(cashChange) : null,
           notes: notes || null,
@@ -212,6 +456,8 @@ export async function POST(request: Request) {
               unitPrice: it.unitPrice,
               ivaRate: it.ivaRate,
               total: it.total,
+              unit: it.unit,
+              puesto: it.puesto,
             })),
           },
         },
@@ -230,25 +476,57 @@ export async function POST(request: Request) {
         });
       }
 
-      // 2. Registrar el PAGO RECIBIDO en la tabla SalePayment
-      const paymentRecord = await tx.salePayment.create({
-        data: {
-          saleId: createdSale.id,
-          amount: Number(total || 0),
-          paymentMethod: paymentMethod || 'CASH',
-          reference: paymentReference || null,
-          notes: cashReceived ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}` : null,
-          cashierName: cashierName || 'Caja 1',
-          shiftId: actualShiftId || null,
+      // 1.2 Si corresponde a una orden de Ecommerce, vincular la venta a EcommerceOrder.saleId
+      if (linkedEcommerceOrder) {
+        await tx.ecommerceOrder.update({
+          where: { id: linkedEcommerceOrder.id },
+          data: { saleId: createdSale.id },
+        });
+      }
+
+      // 2. Registrar el PAGO RECIBIDO en la tabla SalePayment SOLO si la venta ya está pagada/completada
+      let paymentRecord = null;
+      if (isIncomingCompleted) {
+        paymentRecord = await tx.salePayment.create({
+          data: {
+            saleId: createdSale.id,
+            amount: Number(total || 0),
+            paymentMethod: paymentMethod || 'CASH',
+            reference: paymentReference || null,
+            notes: cashReceived ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}` : null,
+            cashierName: cashierName || 'Caja 1',
+            shiftId: actualShiftId || null,
+          },
+        });
+      }
+
+      // 3. Descontar existencias y asentar Kardex en lote (OUT_SALE) SOLO SI:
+      //    - La venta está facturada/completada (no es una comanda pendiente de cobro)
+      //    - NO es una orden web cuyo inventario ya se descontó en POST /api/ecommerce/orders
+      //    - NO tiene ya un movimiento OUT_SALE previo para este número de venta
+      const priorMovement = await tx.stockMovement.findFirst({
+        where: {
+          reference: {
+            in: [
+              `Venta #${createdSale.saleNumber}`,
+              `Cobro Comanda #${createdSale.saleNumber}`,
+              `Pedido Web #${createdSale.saleNumber}`,
+            ],
+          },
+          type: 'OUT_SALE',
         },
       });
 
-      // 3. Descontar existencias y asentar Kardex en lote (OUT_SALE) SOLO SI YA ESTÁ FACTURADO/PAGADO
-      const isCompletingSale = paymentStatus === 'COMPLETED' || orderStatus === 'COMPLETED';
-      if (isCompletingSale && resolvedItems.length > 0) {
-        const productIds = Array.from(
-          new Set(resolvedItems.map((it) => it.productId).filter(Boolean))
-        ) as string[];
+      const shouldDeductInventory =
+        isIncomingCompleted &&
+        !linkedEcommerceOrder &&
+        !isOnlineOrderNumber &&
+        effectiveChannel !== 'ONLINE' &&
+        !priorMovement;
+
+      if (shouldDeductInventory && resolvedItems.length > 0) {
+        const physicalItems = resolvedItems.filter((it) => !it.skipStockDeduction && it.productId);
+        const productIds = Array.from(new Set(physicalItems.map((it) => it.productId))) as string[];
 
         if (productIds.length > 0) {
           const dbProducts = await tx.product.findMany({
@@ -258,24 +536,16 @@ export async function POST(request: Request) {
 
           const stockDeltas = new Map<string, number>();
           const halfDeltas = new Map<string, number>();
-          for (const it of resolvedItems) {
-            if (!it.productId) continue;
+          for (const it of physicalItems) {
             const prod = productMap.get(it.productId);
             if (!prod) continue;
 
-            const isHalfOz =
-              it.presentation === 'MEDIA_ONZA' ||
-              it.unit === '½ Onza' ||
-              String(it.productName || '').includes('½');
-
-            if (isHalfOz) {
-              halfDeltas.set(prod.id, (halfDeltas.get(prod.id) || 0) + Number(it.quantity || 0));
-              continue;
+            const soldQty = Math.max(1, Number(it.quantity || 1));
+            if (it.isHalfOz) {
+              halfDeltas.set(prod.id, (halfDeltas.get(prod.id) || 0) + soldQty);
+            } else {
+              stockDeltas.set(prod.id, (stockDeltas.get(prod.id) || 0) + soldQty);
             }
-            const soldQty = Number(it.quantity || 0);
-
-            const currentDeduct = stockDeltas.get(prod.id) || 0;
-            stockDeltas.set(prod.id, currentDeduct + soldQty);
           }
 
           const kardexData: Array<{
@@ -286,27 +556,28 @@ export async function POST(request: Request) {
             newStock: number;
             reference: string;
             notes: string;
+            userName: string;
           }> = [];
 
           for (const [prodId, totalDeduct] of stockDeltas.entries()) {
-            const prod = productMap.get(prodId);
-            if (!prod) continue;
-
-            const updated = await tx.product.update({
-              where: { id: prodId },
-              data: { stock: { decrement: totalDeduct } }
-            });
-            const previousStock = updated.stock + totalDeduct;
-            const newStock = updated.stock;
+            const updatedRows: Array<{ stock: number }> = await tx.$queryRaw`
+              UPDATE "Product"
+              SET "stock" = GREATEST(0, "stock" - ${totalDeduct}),
+                  "updatedAt" = NOW()
+              WHERE "id" = ${prodId}
+              RETURNING "stock"
+            `;
+            const newStock = updatedRows && updatedRows.length > 0 ? updatedRows[0].stock : 0;
 
             kardexData.push({
               productId: prodId,
               type: 'OUT_SALE',
               quantity: totalDeduct,
-              previousStock,
+              previousStock: newStock + totalDeduct,
               newStock,
               reference: `Venta #${createdSale.saleNumber}`,
-              notes: `Venta cobrada por ${cashierName || 'Caja'} (${paymentMethod})`,
+              notes: `Venta cobrada por ${cashierName || 'Caja'} (${paymentMethod || 'CASH'})`,
+              userName: cashierName || 'Sistema (Caja)',
             });
           }
 
@@ -326,7 +597,8 @@ export async function POST(request: Request) {
               previousStock: newHalf + totalHalf,
               newStock: newHalf,
               reference: `Venta #${createdSale.saleNumber}`,
-              notes: `½ Onza • Venta cobrada por ${cashierName || 'Caja'} (${paymentMethod})`,
+              notes: `½ Onza • Venta cobrada por ${cashierName || 'Caja'} (${paymentMethod || 'CASH'})`,
+              userName: cashierName || 'Sistema (Caja)',
             });
           }
 
@@ -422,89 +694,113 @@ export async function PATCH(request: Request) {
 
     // Si está transicionando a completado (ej. cobrando una comanda que estaba pendiente)
     if (shouldDeduct && sale.items && sale.items.length > 0) {
-      try {
-      await prisma.$transaction(async (tx) => {
-        // Descontar inventario aquí
-        const productIds = Array.from(new Set(sale.items.map((it) => it.productId).filter(Boolean))) as string[];
-        if (productIds.length > 0) {
-          const dbProducts = await tx.product.findMany({ where: { id: { in: productIds } } });
-          const productMap = new Map(dbProducts.map((p) => [p.id, p]));
-          const stockDeltas = new Map<string, number>();
-          const halfDeltas = new Map<string, number>();
-
-          for (const it of sale.items) {
-            if (!it.productId) continue;
-            const prod = productMap.get(it.productId);
-            if (!prod) continue;
-
-            const isHalfOz = String(it.unit || '').toLowerCase().includes('media') || String(it.unit || '').toLowerCase().includes('½');
-            const qty = Math.max(1, Number(it.quantity || 1));
-
-            if (isHalfOz) {
-              halfDeltas.set(prod.id, (halfDeltas.get(prod.id) || 0) + qty);
-            } else {
-              stockDeltas.set(prod.id, (stockDeltas.get(prod.id) || 0) + qty);
-            }
-          }
-
-          // Deducir normales
-          for (const [prodId, totalDeduct] of stockDeltas.entries()) {
-            const prod = productMap.get(prodId);
-            if (!prod) continue;
-            const updated = await tx.product.update({
-              where: { id: prodId },
-              data: { stock: { decrement: totalDeduct } }
-            });
-            await tx.stockMovement.create({
-              data: {
-                productId: prodId,
-                type: 'OUT_SALE',
-                quantity: totalDeduct,
-                previousStock: updated.stock + totalDeduct,
-                newStock: updated.stock,
-                reference: `Cobro Comanda #${sale.saleNumber}`,
-                notes: 'Descuento de inventario post-facturación',
-                userName: 'Sistema (Caja)',
-              }
-            });
-          }
-
-          // Deducir medias
-          for (const [prodId, totalHalf] of halfDeltas.entries()) {
-            const updatedRows: Array<{ stockHalf: number }> = await tx.$queryRaw`
-              UPDATE "Product"
-              SET "stockHalf" = GREATEST(0, "stockHalf" - ${totalHalf}),
-                  "updatedAt" = NOW()
-              WHERE "id" = ${prodId}
-              RETURNING "stockHalf"
-            `;
-            if (updatedRows && updatedRows.length > 0) {
-              await tx.stockMovement.create({
-                data: {
-                  productId: prodId,
-                  type: 'OUT_SALE',
-                  quantity: totalHalf,
-                  previousStock: updatedRows[0].stockHalf + totalHalf,
-                  newStock: updatedRows[0].stockHalf,
-                  reference: `Cobro Comanda #${sale.saleNumber}`,
-                  notes: '½ Onza - Descuento de inventario post-facturación',
-                  userName: 'Sistema (Caja)',
-                }
-              });
-            }
-          }
-        }
-      });
-      } catch (deductErr) {
-        // Revertir el reclamo para que la comanda pueda reintentarse sin quedar completada sin descuento
-        await prisma.sale.updateMany({
-          where: { id: sale.id },
-          data: {
-            orderStatus: sale.orderStatus,
-            paymentStatus: sale.paymentStatus,
+      const priorOutMovement = await prisma.stockMovement.findFirst({
+        where: {
+          reference: {
+            in: [
+              `Venta #${sale.saleNumber}`,
+              `Cobro Comanda #${sale.saleNumber}`,
+              `Pedido Web #${sale.saleNumber}`,
+            ],
           },
-        });
-        throw deductErr;
+          type: 'OUT_SALE',
+        },
+      });
+      const isOnlineSale = sale.channel === 'ONLINE' || String(sale.saleNumber || '').startsWith('WEB-');
+
+      if (!priorOutMovement && !isOnlineSale) {
+        try {
+          await prisma.$transaction(async (tx) => {
+            const productIds = Array.from(new Set(sale.items.map((it) => it.productId).filter(Boolean))) as string[];
+            if (productIds.length > 0) {
+              const dbProducts = await tx.product.findMany({ where: { id: { in: productIds } } });
+              const productMap = new Map(dbProducts.map((p) => [p.id, p]));
+              const stockDeltas = new Map<string, number>();
+              const halfDeltas = new Map<string, number>();
+
+              for (const it of sale.items) {
+                if (!it.productId || it.productId === 'ENVIO-DOM') continue;
+                const nameLower = String(it.productName || '').toLowerCase();
+                if (nameLower.includes('servicio de envío')) continue;
+                const prod = productMap.get(it.productId);
+                if (!prod) continue;
+
+                const unitLower = String(it.unit || '').toLowerCase();
+                const isHalfOz =
+                  unitLower.includes('media') ||
+                  unitLower.includes('½') ||
+                  nameLower.includes('media onza') ||
+                  nameLower.includes('½');
+                const qty = Math.max(1, Number(it.quantity || 1));
+
+                if (isHalfOz) {
+                  halfDeltas.set(prod.id, (halfDeltas.get(prod.id) || 0) + qty);
+                } else {
+                  stockDeltas.set(prod.id, (stockDeltas.get(prod.id) || 0) + qty);
+                }
+              }
+
+              // Deducir normales
+              for (const [prodId, totalDeduct] of stockDeltas.entries()) {
+                const updatedRows: Array<{ stock: number }> = await tx.$queryRaw`
+                  UPDATE "Product"
+                  SET "stock" = GREATEST(0, "stock" - ${totalDeduct}),
+                      "updatedAt" = NOW()
+                  WHERE "id" = ${prodId}
+                  RETURNING "stock"
+                `;
+                const newStock = updatedRows && updatedRows.length > 0 ? updatedRows[0].stock : 0;
+                await tx.stockMovement.create({
+                  data: {
+                    productId: prodId,
+                    type: 'OUT_SALE',
+                    quantity: totalDeduct,
+                    previousStock: newStock + totalDeduct,
+                    newStock,
+                    reference: `Cobro Comanda #${sale.saleNumber}`,
+                    notes: 'Descuento de inventario post-facturación',
+                    userName: 'Sistema (Caja)',
+                  },
+                });
+              }
+
+              // Deducir medias
+              for (const [prodId, totalHalf] of halfDeltas.entries()) {
+                const updatedRows: Array<{ stockHalf: number }> = await tx.$queryRaw`
+                  UPDATE "Product"
+                  SET "stockHalf" = GREATEST(0, "stockHalf" - ${totalHalf}),
+                      "updatedAt" = NOW()
+                  WHERE "id" = ${prodId}
+                  RETURNING "stockHalf"
+                `;
+                if (updatedRows && updatedRows.length > 0) {
+                  await tx.stockMovement.create({
+                    data: {
+                      productId: prodId,
+                      type: 'OUT_SALE',
+                      quantity: totalHalf,
+                      previousStock: updatedRows[0].stockHalf + totalHalf,
+                      newStock: updatedRows[0].stockHalf,
+                      reference: `Cobro Comanda #${sale.saleNumber}`,
+                      notes: '½ Onza - Descuento de inventario post-facturación',
+                      userName: 'Sistema (Caja)',
+                    },
+                  });
+                }
+              }
+            }
+          });
+        } catch (deductErr) {
+          // Revertir el reclamo para que la comanda pueda reintentarse sin quedar completada sin descuento
+          await prisma.sale.updateMany({
+            where: { id: sale.id },
+            data: {
+              orderStatus: sale.orderStatus,
+              paymentStatus: sale.paymentStatus,
+            },
+          });
+          throw deductErr;
+        }
       }
     }
     
@@ -540,10 +836,17 @@ export async function PATCH(request: Request) {
     if (shouldRestock && sale.items && sale.items.length > 0) {
       await prisma.$transaction(async (tx) => {
         for (const it of sale.items) {
-          if (it.productId) {
+          if (it.productId && it.productId !== 'ENVIO-DOM') {
+            const nameLower = String(it.productName || '').toLowerCase();
+            if (nameLower.includes('servicio de envío')) continue;
+
             const qty = Math.max(1, it.quantity || 1);
             const presLower = String(it.unit || '').toLowerCase();
-            const isHalfRestore = presLower.includes('media') || presLower.includes('½');
+            const isHalfRestore =
+              presLower.includes('media') ||
+              presLower.includes('½') ||
+              nameLower.includes('media onza') ||
+              nameLower.includes('½');
 
             let updatedRows: Array<{ stock: number; stockHalf: number }> = [];
             if (isHalfRestore) {

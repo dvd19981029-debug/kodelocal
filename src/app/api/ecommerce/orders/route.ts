@@ -298,8 +298,8 @@ export async function PATCH(request: Request) {
       }
     }
 
-    // SEC-01: Protección contra marcado arbitrario de pedidos como COMPLETED
-    if (paymentStatus === 'COMPLETED') {
+    // SEC-01: Protección contra marcado arbitrario de pedidos como COMPLETED (excepto personal de Caja/POS autorizado)
+    if (paymentStatus === 'COMPLETED' && !isStaff) {
       if (order.paymentStatus === 'COMPLETED') {
         return NextResponse.json({ success: true, order });
       }
@@ -359,37 +359,45 @@ export async function PATCH(request: Request) {
       }
     }
 
-    // Si se cancela o rechaza el pedido y no estaba cancelado previamente (o se fuerza restock), restaurar existencias
+    // Si se cancela o rechaza el pedido y no estaba cancelado previamente (o se fuerza restock), restaurar existencias una única vez
     const isAlreadyCancelled = order.orderStatus === 'CANCELADO' || order.paymentStatus === 'CANCELLED';
     const isCancelling = (orderStatus === 'CANCELADO' || paymentStatus === 'CANCELLED' || paymentStatus === 'REJECTED' || restock === true) && !isAlreadyCancelled;
-    if (isCancelling && order.items && order.items.length > 0) {
-      for (const it of order.items) {
-        if (it.productId) {
-          const qty = Math.max(1, it.quantity || 1);
-          const presLower = String(it.presentation || '').toLowerCase();
-          const isHalfRestore = presLower.includes('media') || presLower.includes('½');
-          try {
-            const updatedProd = await prisma.product.update({
-              where: { id: it.productId },
-              data: isHalfRestore
-                ? { stockHalf: { increment: qty } }
-                : { stock: { increment: qty } },
-            });
-            
-            await prisma.stockMovement.create({
-              data: {
-                productId: it.productId,
-                type: 'RETURN',
-                quantity: qty,
-                previousStock: isHalfRestore ? (updatedProd as any).stockHalf - qty : updatedProd.stock - qty,
-                newStock: isHalfRestore ? (updatedProd as any).stockHalf : updatedProd.stock,
-                reference: `Devolución Web #${order.orderNumber}`,
-                notes: isHalfRestore ? '½ Onza • Reversión de pedido cancelado/rechazado' : 'Reversión de pedido cancelado/rechazado',
-                userName: 'Sistema',
-              }
-            });
-          } catch (stockErr) {
-            console.warn(`No se pudo restaurar inventario para producto ${it.productId}:`, stockErr);
+    if (isCancelling && order.items && order.items.length > 0 && restock !== false) {
+      const existingReturn = await prisma.stockMovement.findFirst({
+        where: {
+          reference: `Devolución Web #${order.orderNumber}`,
+          type: 'RETURN',
+        },
+      });
+      if (!existingReturn) {
+        for (const it of order.items) {
+          if (it.productId) {
+            const qty = Math.max(1, it.quantity || 1);
+            const presLower = String(it.presentation || '').toLowerCase();
+            const isHalfRestore = presLower.includes('media') || presLower.includes('½');
+            try {
+              const updatedProd = await prisma.product.update({
+                where: { id: it.productId },
+                data: isHalfRestore
+                  ? { stockHalf: { increment: qty } }
+                  : { stock: { increment: qty } },
+              });
+              
+              await prisma.stockMovement.create({
+                data: {
+                  productId: it.productId,
+                  type: 'RETURN',
+                  quantity: qty,
+                  previousStock: isHalfRestore ? (updatedProd as any).stockHalf - qty : updatedProd.stock - qty,
+                  newStock: isHalfRestore ? (updatedProd as any).stockHalf : updatedProd.stock,
+                  reference: `Devolución Web #${order.orderNumber}`,
+                  notes: isHalfRestore ? '½ Onza • Reversión de pedido cancelado/rechazado' : 'Reversión de pedido cancelado/rechazado',
+                  userName: 'Sistema',
+                }
+              });
+            } catch (stockErr) {
+              console.warn(`No se pudo restaurar inventario para producto ${it.productId}:`, stockErr);
+            }
           }
         }
       }
