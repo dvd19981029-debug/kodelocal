@@ -217,12 +217,12 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
                         <h3 className="font-black text-[12px] text-slate-900 line-clamp-1 leading-snug">
                           {product.officialName}
                         </h3>
-                        <span className="text-[10px] text-slate-500 font-medium block truncate">
-                          Inspirado en {product.name}
+                        <span className="text-[11px] text-slate-600 font-semibold block leading-tight line-clamp-2 mt-0.5">
+                          Inspirado en <span className="font-black text-slate-950">{product.name}</span>
                         </span>
                       </div>
                     ) : (
-                      <h3 className="font-bold text-[11.5px] text-slate-800 line-clamp-2 leading-snug min-h-[28px] mt-0.5">
+                      <h3 className="font-black text-[12px] text-slate-950 line-clamp-2 leading-snug min-h-[28px] mt-0.5">
                         {product.name}
                       </h3>
                     )}
