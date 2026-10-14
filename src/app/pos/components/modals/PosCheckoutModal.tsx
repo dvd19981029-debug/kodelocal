@@ -133,11 +133,13 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
                   <span>{clienteNombre || orderToInvoice.cliente?.nombre || 'Consumidor Final'}</span>
                 </span>
                 <span className={`text-xs font-black px-2.5 py-0.5 rounded-lg border ${
-                  orderToInvoice.tipoComprobante === '03' || orderToInvoice.cliente?.nrc || tipoComprobante === '03'
+                  tipoComprobante === '03'
                     ? 'bg-purple-100 text-purple-800 border-purple-300'
+                    : tipoComprobante === 'TICKET'
+                    ? 'bg-slate-100 text-slate-700 border-slate-300'
                     : 'bg-blue-100 text-blue-800 border-blue-300'
                 }`}>
-                  {orderToInvoice.tipoComprobante === '03' || orderToInvoice.cliente?.nrc || tipoComprobante === '03' ? 'Crédito Fiscal (CCF-03)' : 'Factura (FC-01)'}
+                  {tipoComprobante === '03' ? 'Crédito Fiscal (CCF-03)' : tipoComprobante === 'TICKET' ? 'Ticket Local' : 'Factura (FC-01)'}
                 </span>
               </>
             )}
@@ -341,11 +343,13 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
             </label>
             {orderToInvoice && (
               <span className={`text-[11px] font-black px-2 py-0.5 rounded-md border ${
-                orderToInvoice.tipoComprobante === '03' || orderToInvoice.cliente?.nrc
+                (orderToInvoice.tipoComprobante || (orderToInvoice.cliente?.nrc ? '03' : '01')) === '03'
                   ? 'bg-purple-100 text-purple-800 border-purple-200'
+                  : orderToInvoice.tipoComprobante === 'TICKET'
+                  ? 'bg-slate-100 text-slate-700 border-slate-200'
                   : 'bg-blue-100 text-blue-800 border-blue-200'
               }`}>
-                Pedido en comanda: {orderToInvoice.tipoComprobante === '03' || orderToInvoice.cliente?.nrc ? 'Crédito Fiscal (03)' : 'Factura (01)'}
+                Pedido en comanda: {(orderToInvoice.tipoComprobante || (orderToInvoice.cliente?.nrc ? '03' : '01')) === '03' ? 'Crédito Fiscal (03)' : orderToInvoice.tipoComprobante === 'TICKET' ? 'Ticket Local' : 'Factura (01)'}
               </span>
             )}
           </div>

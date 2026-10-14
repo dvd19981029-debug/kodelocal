@@ -540,10 +540,13 @@ export default function PosPage() {
                 try {
                   const pNotes = JSON.parse(s.notes);
                   if (pNotes?.cliente) parsedClient = pNotes.cliente;
-                  if (pNotes?.tipoComprobante) parsedTipo = pNotes.tipoComprobante;
+                  if (!parsedTipo && pNotes?.tipoComprobante) parsedTipo = pNotes.tipoComprobante;
                 } catch (_) {}
               }
-              const resolvedTipo: '01' | '03' = (parsedTipo === '03' || s.customer?.nrc || parsedClient?.nrc) ? '03' : (parsedTipo === '01' ? '01' : (s.tipoComprobante === '03' ? '03' : '01'));
+              const resolvedTipo: '01' | '03' | 'TICKET' =
+                parsedTipo === '03' || parsedTipo === '01' || parsedTipo === 'TICKET'
+                  ? parsedTipo
+                  : (s.customer?.nrc || parsedClient?.nrc ? '03' : '01');
 
               return {
                 id: s.id,
@@ -1630,7 +1633,10 @@ export default function PosPage() {
       setClienteMunicipio(order.cliente?.municipio || 'San Salvador Centro');
     }
 
-    const tipo: '01' | '03' = (order.tipoComprobante === '03' || order.cliente?.nrc) ? '03' : '01';
+    const tipo: TipoComprobante =
+      order.tipoComprobante === '03' || order.tipoComprobante === '01' || order.tipoComprobante === 'TICKET'
+        ? order.tipoComprobante
+        : (order.cliente?.nrc ? '03' : '01');
     setTipoComprobante(tipo);
 
     const ordMethod = order.paymentMethod || 'CASH';
@@ -1645,6 +1651,39 @@ export default function PosPage() {
       setCashAmount('');
     }
     setIsCheckoutOpen(true);
+  };
+
+  // Cambiar tipo de comprobante directamente desde la tarjeta de orden en Caja
+  const handleChangeOrderDteType = (order: SaleRecord, newTipo: '01' | '03' | 'TICKET') => {
+    setSales(prev => {
+      const updated = prev.map(s =>
+        (s.id === order.id || s.saleNumber === order.saleNumber)
+          ? { ...s, tipoComprobante: newTipo }
+          : s
+      );
+      saveStoredSales(updated);
+      return updated;
+    });
+
+    if (orderToInvoice && (orderToInvoice.id === order.id || orderToInvoice.saleNumber === order.saleNumber)) {
+      setOrderToInvoice({ ...orderToInvoice, tipoComprobante: newTipo });
+      setTipoComprobante(newTipo);
+    }
+
+    getStaffToken().then(staffToken => {
+      fetch('/api/sales', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({
+          id: order.id,
+          saleNumber: order.saleNumber,
+          tipoComprobante: newTipo,
+        }),
+      }).catch(err => console.error('Error actualizando tipoComprobante en orden:', err));
+    });
   };
 
   // Finalizar venta, emitir DTE oficial ante Hacienda y descontar stock
@@ -2370,6 +2409,7 @@ export default function PosPage() {
             setIsQuoteModalOpen={setIsQuoteModalOpen}
             handleStartInvoiceOrder={handleStartInvoiceOrder}
             handleCancelReadyOrder={handleCancelReadyOrder}
+            handleChangeOrderDteType={handleChangeOrderDteType}
             dteSearchQuery={dteSearchQuery}
             setDteSearchQuery={setDteSearchQuery}
             dteFilterType={dteFilterType}

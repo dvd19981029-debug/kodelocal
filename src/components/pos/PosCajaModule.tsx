@@ -36,6 +36,7 @@ export interface PosCajaModuleProps {
   setIsQuoteModalOpen: (open: boolean) => void;
   handleStartInvoiceOrder: (order: SaleRecord) => void;
   handleCancelReadyOrder?: (order: SaleRecord) => void;
+  handleChangeOrderDteType?: (order: SaleRecord, newTipo: '01' | '03' | 'TICKET') => void;
   dteSearchQuery: string;
   setDteSearchQuery: (query: string) => void;
   dteFilterType: 'ALL' | '01' | '03' | 'TICKET';
@@ -59,6 +60,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
   setIsQuoteModalOpen,
   handleStartInvoiceOrder,
   handleCancelReadyOrder,
+  handleChangeOrderDteType,
   dteSearchQuery,
   setDteSearchQuery,
   dteFilterType,
@@ -255,11 +257,17 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                             <span>{resolveCustomerName(order)}</span>
                           </span>
                           <span className={`px-2 py-0.5 text-xs font-black rounded-lg border ${
-                            order.tipoComprobante === '03' || order.cliente?.nrc
+                            (order.tipoComprobante || (order.cliente?.nrc ? '03' : '01')) === '03'
                               ? 'bg-purple-100 text-purple-800 border-purple-300'
+                              : order.tipoComprobante === 'TICKET'
+                              ? 'bg-slate-100 text-slate-700 border-slate-300'
                               : 'bg-blue-100 text-blue-800 border-blue-300'
                           }`}>
-                            {order.tipoComprobante === '03' || order.cliente?.nrc ? 'Crédito Fiscal (CCF)' : 'Factura (FC)'}
+                            {(order.tipoComprobante || (order.cliente?.nrc ? '03' : '01')) === '03'
+                              ? 'Crédito Fiscal (CCF)'
+                              : order.tipoComprobante === 'TICKET'
+                              ? 'Ticket'
+                              : 'Factura (FC)'}
                           </span>
                           <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500 text-white flex items-center gap-1 shadow-sm">
                             <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
@@ -290,13 +298,31 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                       </div>
 
                       <div className="flex flex-col sm:items-end gap-1">
-                        <span className={`clay-badge text-[10.5px] font-bold py-0.5 px-2 ${
-                          order.tipoComprobante === '03' || order.cliente.nrc
-                            ? 'bg-purple-100 text-purple-800 border border-purple-200'
-                            : 'bg-indigo-100 text-indigo-800 border border-indigo-200'
-                        }`}>
-                          {order.tipoComprobante === '03' || order.cliente.nrc ? 'Crédito Fiscal (CCF-03)' : 'Factura (FC-01)'}
-                        </span>
+                        <div className="inline-flex bg-white p-1 rounded-xl border border-slate-200 shadow-2xs gap-1">
+                          {(['TICKET', '01', '03'] as const).map((tipo) => {
+                            const currentTipo = order.tipoComprobante || (order.cliente?.nrc ? '03' : '01');
+                            const isSelected = currentTipo === tipo;
+                            return (
+                              <button
+                                key={tipo}
+                                type="button"
+                                onClick={() => handleChangeOrderDteType?.(order, tipo)}
+                                className={`px-2.5 py-1 rounded-lg text-[10.5px] font-black transition-all ${
+                                  isSelected
+                                    ? tipo === '03'
+                                      ? 'bg-purple-600 text-white shadow-xs'
+                                      : tipo === '01'
+                                      ? 'bg-indigo-600 text-white shadow-xs'
+                                      : 'bg-slate-700 text-white shadow-xs'
+                                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+                                }`}
+                                title={`Cambiar comprobante a ${tipo === '03' ? 'Crédito Fiscal (CCF-03)' : tipo === '01' ? 'Factura (FC-01)' : 'Ticket'}`}
+                              >
+                                {tipo === '03' ? 'CCF (03)' : tipo === '01' ? 'Factura (FC-01)' : 'Ticket'}
+                              </button>
+                            );
+                          })}
+                        </div>
                         {order.cliente.nrc && (
                           <span className="text-[10px] font-mono text-purple-700 font-bold">NRC: {order.cliente.nrc}</span>
                         )}
