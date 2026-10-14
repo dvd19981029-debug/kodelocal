@@ -606,9 +606,8 @@ export default function PosPage() {
               const queuedNumbers = new Set(getOfflineSalesQueue().map(q => q.saleNumber));
               prev.forEach(p => {
                 if (!mergedMap.has(p.saleNumber)) {
-                  const isComanda = p.status === 'PENDING_PREPARATION' || p.status === 'READY_AT_WINDOW';
                   const isFresh = Date.now() - new Date(p.createdAt).getTime() < 2 * 60 * 1000;
-                  if (p.channel === 'ONLINE' || !isComanda || isFresh || queuedNumbers.has(p.saleNumber)) {
+                  if (p.channel === 'ONLINE' || isFresh || queuedNumbers.has(p.saleNumber)) {
                     mergedMap.set(p.saleNumber, p);
                   }
                 } else {
