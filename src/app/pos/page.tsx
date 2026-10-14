@@ -546,8 +546,8 @@ export default function PosPage() {
                 } catch (_) {}
               }
               const resolvedTipo: '01' | '03' | 'TICKET' =
-                parsedTipo === '03' || parsedTipo === '01' || parsedTipo === 'TICKET'
-                  ? parsedTipo
+                parsedTipo === '03'
+                  ? '03'
                   : (s.customer?.nrc || parsedClient?.nrc ? '03' : '01');
 
               return {
@@ -1663,9 +1663,7 @@ export default function PosPage() {
     }
 
     const tipo: TipoComprobante =
-      order.tipoComprobante === '03' || order.tipoComprobante === '01' || order.tipoComprobante === 'TICKET'
-        ? order.tipoComprobante
-        : (order.cliente?.nrc || matchedCust?.nrc ? '03' : '01');
+      order.tipoComprobante === '03' || order.cliente?.nrc || matchedCust?.nrc ? '03' : '01';
     setTipoComprobante(tipo);
 
     const ordMethod = order.paymentMethod || 'CASH';

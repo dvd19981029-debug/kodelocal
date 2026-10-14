@@ -299,8 +299,8 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
 
                       <div className="flex flex-col sm:items-end gap-1">
                         <div className="inline-flex bg-white p-1 rounded-xl border border-slate-200 shadow-2xs gap-1">
-                          {(['TICKET', '01', '03'] as const).map((tipo) => {
-                            const currentTipo = order.tipoComprobante || (order.cliente?.nrc ? '03' : '01');
+                          {(['01', '03'] as const).map((tipo) => {
+                            const currentTipo = order.tipoComprobante === '03' || order.cliente?.nrc ? '03' : '01';
                             const isSelected = currentTipo === tipo;
                             return (
                               <button
@@ -311,14 +311,12 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                                   isSelected
                                     ? tipo === '03'
                                       ? 'bg-purple-600 text-white shadow-xs'
-                                      : tipo === '01'
-                                      ? 'bg-indigo-600 text-white shadow-xs'
-                                      : 'bg-slate-700 text-white shadow-xs'
+                                      : 'bg-indigo-600 text-white shadow-xs'
                                     : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
                                 }`}
-                                title={`Cambiar comprobante a ${tipo === '03' ? 'Crédito Fiscal (CCF-03)' : tipo === '01' ? 'Factura (FC-01)' : 'Ticket'}`}
+                                title={`Cambiar comprobante a ${tipo === '03' ? 'Crédito Fiscal (CCF-03)' : 'Factura (FC-01)'}`}
                               >
-                                {tipo === '03' ? 'CCF (03)' : tipo === '01' ? 'Factura (FC-01)' : 'Ticket'}
+                                {tipo === '03' ? 'CCF (03)' : 'Factura (FC-01)'}
                               </button>
                             );
                           })}
@@ -459,17 +457,6 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                 }`}
               >
                 Crédito Fiscal (03)
-              </button>
-              <button
-                type="button"
-                onClick={() => setDteFilterType('TICKET')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                  dteFilterType === 'TICKET'
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                Tickets
               </button>
             </div>
           </div>

@@ -180,7 +180,7 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
             <label className="text-xs font-bold text-slate-700 block mb-1.5">
               Documento Tributario Preferido para Facturación *
             </label>
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
                 onClick={() => setCustDocumentoPreferido('01')}
@@ -210,22 +210,6 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
                 <span className="leading-tight">Crédito Fiscal CCF (03)</span>
                 <span className={`text-[9.5px] ${custDocumentoPreferido === '03' ? 'text-purple-100' : 'text-slate-400'}`}>
                   Contribuyentes
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setCustDocumentoPreferido('TICKET')}
-                className={`p-2.5 rounded-xl text-xs font-bold transition-all border flex flex-col items-center justify-center text-center gap-1 ${
-                  custDocumentoPreferido === 'TICKET'
-                    ? 'bg-indigo-600 text-white shadow-md border-indigo-600'
-                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                }`}
-              >
-                <ReceiptText className="w-4 h-4" />
-                <span className="leading-tight">Ticket de Venta</span>
-                <span className={`text-[9.5px] ${custDocumentoPreferido === 'TICKET' ? 'text-indigo-100' : 'text-slate-400'}`}>
-                  Venta Mostrador
                 </span>
               </button>
             </div>

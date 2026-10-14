@@ -354,16 +354,7 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
               </span>
             )}
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              type="button"
-              onClick={() => setTipoComprobante('TICKET')}
-              className={`p-2.5 rounded-xl text-xs font-bold text-center transition-all ${
-                tipoComprobante === 'TICKET' ? 'clay-btn-primary' : 'clay-btn-light'
-              }`}
-            >
-              Ticket Local
-            </button>
+          <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => setTipoComprobante('01')}
