@@ -359,5 +359,23 @@ export const MOCK_100ML_BOTTLES: ProductItem[] = [
     imageUrl: '/images/botes/bote_100ml_miss.jpg',
     isAvailableOnline: true,
     puesto: 'B6',
+  },
+  {
+    id: 'bote-100ml-goliat',
+    sku: 'BOT-100-GOL',
+    barcode: '741002000022',
+    name: 'Bote Goliat 100ml Rosca',
+    officialName: 'Goliat',
+    brand: '',
+    gender: 'Unisex',
+    category: 'Botes',
+    unit: 'Unidad',
+    price: 1.45,
+    cost: 0.55,
+    stock: 20,
+    minStock: 10,
+    imageUrl: '/images/botes/bote_100ml_goliat.jpg',
+    isAvailableOnline: true,
+    puesto: 'B6',
   }
 ];

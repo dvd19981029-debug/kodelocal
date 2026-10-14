@@ -1594,6 +1594,26 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "stockHalf": 0
   },
   {
+    "id": "bote-100ml-goliat",
+    "sku": "BOT-100-GOL",
+    "barcode": "741002000022",
+    "name": "Bote Goliat 100ml Rosca",
+    "officialName": "Goliat",
+    "brand": "",
+    "gender": "Unisex",
+    "category": "Botes",
+    "unit": "Unidad",
+    "price": 1.45,
+    "cost": 0.55,
+    "stock": 20,
+    "minStock": 10,
+    "imageUrl": "/images/botes/bote_100ml_goliat.jpg",
+    "description": "Frasco de vidrio pesado 100ml con base gruesa, hombros redondeados, cuello de rosca y tapa cilíndrica negra brillante.",
+    "isAvailableOnline": true,
+    "puesto": "B6",
+    "stockHalf": 0
+  },
+  {
     "id": "bolsa-lujo",
     "sku": "EMP-BOL",
     "barcode": "741999000EMP-BOL",
@@ -1919,7 +1939,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   }
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v24_bote_miss";
+export const DATA_VERSION = "2026_oficial_real_v25_bote_goliat";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;
