@@ -589,8 +589,8 @@ export default function CustomerDrawer() {
                                   )}
                                 </div>
                                 {item.inspiredBy && (
-                                  <span className="text-[10px] text-indigo-600 font-semibold pl-4">
-                                    Inspirado en: <strong className="text-slate-600 font-medium">{item.inspiredBy}</strong>
+                                  <span className="text-[10.5px] text-slate-600 font-medium pl-4">
+                                    Inspirado en: <strong className="text-slate-950 font-black">{item.inspiredBy}</strong>
                                   </span>
                                 )}
                               </div>

@@ -421,9 +421,9 @@ export default function PerfumeKitBuilderModal({
                                 </p>
                               </div>
                             </div>
-                            <p className="text-[9.5px] text-slate-500 font-medium truncate mt-1 bg-slate-50 px-1.5 py-0.5 rounded-md border border-slate-100" title={`Inspirado en ${getInspiracionPerfumeName(essence)}`}>
-                              <span className="text-slate-400">Inspirado en: </span>
-                              <strong className="text-purple-900 font-bold">
+                            <p className="text-[10.5px] text-slate-600 font-medium truncate mt-1 bg-slate-50 px-1.5 py-0.5 rounded-md border border-slate-100" title={`Inspirado en ${getInspiracionPerfumeName(essence)}`}>
+                              <span className="text-slate-600 font-medium">Inspirado en: </span>
+                              <strong className="text-slate-950 font-black">
                                 {getInspiracionPerfumeName(essence)}
                               </strong>
                             </p>
@@ -472,8 +472,8 @@ export default function PerfumeKitBuilderModal({
                       <strong className="text-xs sm:text-sm font-black text-purple-950 truncate block">
                         {formatPerfumeDisplayName(selectedEssence)}
                       </strong>
-                      <span className="text-[10px] text-purple-800 font-medium truncate block">
-                        Inspirado en: {getInspiracionPerfumeName(selectedEssence)}
+                      <span className="text-[11px] text-slate-700 font-medium truncate block">
+                        Inspirado en: <strong className="text-slate-950 font-black">{getInspiracionPerfumeName(selectedEssence)}</strong>
                       </span>
                     </div>
                   </div>

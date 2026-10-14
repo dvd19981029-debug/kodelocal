@@ -434,9 +434,9 @@ export default function ProductDetailPage() {
 
               {/* Subtítulo según la categoría */}
               {isEssence && (
-                <div className="text-xs sm:text-sm text-slate-600 font-medium flex items-center gap-1.5 flex-wrap pt-0.5">
-                  <span className="text-slate-500 font-medium">Inspirado en:</span>
-                  <strong className="text-slate-800 font-black text-sm sm:text-base">
+                <div className="text-xs sm:text-sm text-slate-700 font-medium flex items-center gap-1.5 flex-wrap pt-0.5">
+                  <span className="text-slate-600 font-semibold">Inspirado en:</span>
+                  <strong className="text-slate-950 font-black text-sm sm:text-base">
                     {getInspiracionPerfumeName(product)}
                   </strong>
                 </div>

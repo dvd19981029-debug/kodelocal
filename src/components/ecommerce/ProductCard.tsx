@@ -144,16 +144,14 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
 
   // Nombre de inspiración (contratipo) y cálculo dinámico de escala de texto
   const inspiracionPerfumeName = getInspiracionPerfumeName(product);
-  const inspiracionNameLength = displayName.length;
+  const inspiracionNameLength = inspiracionPerfumeName.length;
 
-  // Si el nombre es largo, reducimos el tamaño progresivamente para que quepa sin salirse de la tarjeta
-  const inspiredSizeClass = inspiracionNameLength > 30
-    ? 'text-[8px] sm:text-[9px]'
+  // Si el nombre es largo, ajustamos el tamaño manteniendo alta legibilidad
+  const inspiredSizeClass = inspiracionNameLength > 32
+    ? 'text-[10.5px] sm:text-[11.5px]'
     : inspiracionNameLength > 22
-    ? 'text-[9px] sm:text-[10px]'
-    : inspiracionNameLength > 16
-    ? 'text-[10px] sm:text-[11px]'
-    : 'text-[10.5px] sm:text-xs';
+    ? 'text-[11px] sm:text-xs'
+    : 'text-xs sm:text-[13px]';
 
   return (
     <>
@@ -287,11 +285,11 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
             <div className="mt-0.5 h-8 sm:h-9 flex items-center">
               {isEssence ? (
                 <p 
-                  className={`${inspiredSizeClass} text-slate-600 leading-tight line-clamp-2 break-words`} 
+                  className={`${inspiredSizeClass} text-slate-700 leading-tight line-clamp-2 break-words`} 
                   title={`Inspirado en ${inspiracionPerfumeName}`}
                 >
-                  <span className="text-slate-500 font-normal">Inspirado en </span>
-                  <span className="font-semibold text-slate-700">
+                  <span className="text-slate-600 font-medium">Inspirado en </span>
+                  <span className="font-black text-slate-950">
                     {inspiracionPerfumeName}
                   </span>
                 </p>

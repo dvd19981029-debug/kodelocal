@@ -160,11 +160,11 @@ export default function CartDrawer() {
                             <h4 className="font-black text-xs sm:text-sm text-slate-900 leading-snug truncate" title={displayName}>
                               {displayName}
                             </h4>
-                            <div className="text-[10px] truncate" title={item.product.category === 'Esencias para Perfume' ? `Inspirado en ${getInspiracionPerfumeName(item.product)}` : ''}>
+                            <div className="text-[11px] truncate" title={item.product.category === 'Esencias para Perfume' ? `Inspirado en ${getInspiracionPerfumeName(item.product)}` : ''}>
                               {item.product.category === 'Esencias para Perfume' ? (
                                 <>
-                                  <span className="text-slate-500 font-medium">Inspirado en </span>
-                                  <span className="text-slate-700 font-bold text-[11px]">{getInspiracionPerfumeName(item.product)}</span>
+                                  <span className="text-slate-600 font-medium">Inspirado en </span>
+                                  <span className="text-slate-950 font-black text-[11.5px]">{getInspiracionPerfumeName(item.product)}</span>
                                 </>
                               ) : (
                                 <span className="text-slate-500 font-medium">{item.product.unit || 'Unidad'}</span>
