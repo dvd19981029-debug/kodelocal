@@ -1754,6 +1754,26 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "stockHalf": 0
   },
   {
+    "id": "caja-carton-generica",
+    "sku": "EMP-CAJ-GEN",
+    "barcode": "741999000EMP-CAJ-GEN",
+    "name": "Caja de cartón genérica lista para sellar con el logo de tu marca para hacer envíos",
+    "officialName": "Caja Genérica",
+    "brand": "",
+    "gender": "Unisex",
+    "category": "Insumos y Materia Prima",
+    "unit": "Unidad",
+    "price": 0.5,
+    "cost": 0.2,
+    "stock": 100,
+    "minStock": 20,
+    "imageUrl": "/images/insumos/caja_carton_generica.jpg",
+    "description": "Caja de cartón genérica lista para sellar con el logo de tu marca para hacer envíos",
+    "isAvailableOnline": true,
+    "puesto": "C2",
+    "stockHalf": 0
+  },
+  {
     "id": "esencia-apae-050",
     "sku": "50",
     "barcode": "741001000050",
@@ -2019,7 +2039,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   }
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v30_alcohol_1l_380";
+export const DATA_VERSION = "2026_oficial_real_v31_caja_generica";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;

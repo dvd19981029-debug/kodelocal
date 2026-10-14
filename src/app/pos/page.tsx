@@ -697,7 +697,11 @@ export default function PosPage() {
   const filteredProducts = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     return products.filter(product => {
-      const matchesCat = selectedCategory === 'Todos' || product.category === selectedCategory;
+      const matchesCat =
+        selectedCategory === 'Todos' ||
+        product.category === selectedCategory ||
+        ((selectedCategory === 'Empaque' || selectedCategory === 'Insumos y Materia Prima') &&
+          product.id === 'caja-carton-generica');
       const matchesGender = 
         selectedGender === 'Todos' || 
         (product.gender && product.gender.toLowerCase() === selectedGender.toLowerCase());
