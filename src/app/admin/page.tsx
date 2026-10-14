@@ -232,50 +232,48 @@ export default function AdminPage() {
       })
       .catch(err => console.error('Error cargando roles desde Supabase:', err));
 
-    getStaffToken().then(staffToken => {
-      const headers: Record<string, string> = staffToken ? { 'x-staff-token': staffToken } : {};
+    fetch('/api/sales?limit=500')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.sales)) {
+          setSales(data.sales);
+        }
+      })
+      .catch(err => console.error('Error fetching sales:', err));
 
-      fetch('/api/sales?limit=500', { headers })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && Array.isArray(data.sales)) {
-            setSales(data.sales);
-          }
-        })
-        .catch(err => console.error('Error fetching sales:', err));
+    fetch('/api/suppliers')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.suppliers)) {
+          setSuppliers(data.suppliers);
+        }
+      })
+      .catch(err => console.error('Error fetching suppliers:', err));
 
-      fetch('/api/suppliers', { headers })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && Array.isArray(data.suppliers)) {
-            setSuppliers(data.suppliers);
-          }
-        })
-        .catch(err => console.error('Error fetching suppliers:', err));
-
-      fetch('/api/purchases', { headers })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && Array.isArray(data.purchases)) {
-            setPurchases(data.purchases);
-          }
-        })
-        .catch(err => console.error('Error sincronizando compras con Supabase:', err));
-
-      fetch('/api/kardex', { headers })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && Array.isArray(data.movements)) {
-            setKardexMovements(data.movements);
-          }
-        })
-        .catch(err => console.error('Error fetching kardex from Supabase:', err));
-    });
+    fetch('/api/purchases')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.purchases)) {
+          setPurchases(data.purchases);
+        }
+      })
+      .catch(err => console.error('Error sincronizando compras con Supabase:', err));
   }, []);
 
   // Kárdex de Inventario
   const [kardexMovements, setKardexMovements] = useState<KardexMovement[]>([]);
   const [kardexFilterProduct, setKardexFilterProduct] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/kardex')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.movements)) {
+          setKardexMovements(data.movements);
+        }
+      })
+      .catch(err => console.error('Error fetching kardex from Supabase:', err));
+  }, []);
 
   const handleAddKardexMovement = (movement: KardexMovement) => {
     // Si queremos actualizar locamente para reflejar rápido, lo hacemos,
