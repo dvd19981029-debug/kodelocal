@@ -221,11 +221,78 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const body = await request.json();
-    const { purchaseId, action, receivedBy, receivedNotes, items } = body;
+    const authHeader = request.headers.get('authorization') || '';
+    const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : null;
+    const staffHeaderToken = request.headers.get('x-staff-token');
+    const cookieHeader = request.headers.get('cookie') || '';
+    const staffCookieMatch = cookieHeader.match(/kodelocal_staff_token=([^;]+)/);
+    const staffCookieToken = staffCookieMatch ? staffCookieMatch[1] : null;
 
-    if (!purchaseId) {
-      return NextResponse.json({ success: false, error: 'purchaseId es requerido' }, { status: 400 });
+    const isStaff =
+      verifyStaffInternalToken(staffHeaderToken) ||
+      verifyStaffInternalToken(bearerToken) ||
+      verifyStaffInternalToken(staffCookieToken);
+
+    if (!isStaff) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Se requiere autenticacion de administrador.' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { purchaseId, purchaseNumber, action, receivedBy, receivedNotes, items, amount, date, paymentMethod, reference, notes } = body;
+
+    if (!purchaseId && !purchaseNumber) {
+      return NextResponse.json({ success: false, error: 'purchaseId o purchaseNumber es requerido' }, { status: 400 });
+    }
+
+    if (action === 'add_payment') {
+      const numAmount = Number(amount);
+      if (isNaN(numAmount) || numAmount <= 0) {
+        return NextResponse.json({ success: false, error: 'Monto de abono inválido' }, { status: 400 });
+      }
+
+      const result = await prisma.$transaction(async (tx) => {
+        const purchase = await tx.purchase.findFirst({
+          where: {
+            OR: [
+              ...(purchaseId ? [{ id: String(purchaseId) }] : []),
+              ...(purchaseNumber ? [{ purchaseNumber: String(purchaseNumber) }] : []),
+            ],
+          },
+          include: { payments: true },
+        });
+
+        if (!purchase) {
+          throw new Error('Compra no encontrada en Supabase');
+        }
+
+        const currentSaldo = Number(purchase.saldoPendiente || 0);
+        const newSaldo = Math.max(0, Number((currentSaldo - numAmount).toFixed(2)));
+        const newStatus = newSaldo <= 0.001 ? 'PAGADO' : 'PENDIENTE';
+
+        const createdPayment = await tx.purchasePayment.create({
+          data: {
+            purchaseId: purchase.id,
+            date: date ? new Date(date) : new Date(),
+            amount: numAmount,
+            paymentMethod: paymentMethod || 'EFECTIVO',
+            reference: reference || null,
+            notes: notes || null,
+          },
+        });
+
+        const updatedPurchase = await tx.purchase.update({
+          where: { id: purchase.id },
+          data: {
+            saldoPendiente: newSaldo,
+            paymentStatus: newStatus,
+          },
+          include: { items: true, supplier: true, payments: true },
+        });
+
+        return { purchase: updatedPurchase, payment: createdPayment };
+      });
+
+      return NextResponse.json({ success: true, ...result });
     }
 
     if (action === 'receive') {
@@ -301,7 +368,54 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({ success: false, error: 'Acción no soportada' }, { status: 400 });
   } catch (error: any) {
-    console.error('Error aplicando ingreso a bodega en Supabase:', error);
+    console.error('Error aplicando cambio en compra en Supabase:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const authHeader = request.headers.get('authorization') || '';
+    const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : null;
+    const staffHeaderToken = request.headers.get('x-staff-token');
+    const cookieHeader = request.headers.get('cookie') || '';
+    const staffCookieMatch = cookieHeader.match(/kodelocal_staff_token=([^;]+)/);
+    const staffCookieToken = staffCookieMatch ? staffCookieMatch[1] : null;
+
+    const isStaff =
+      verifyStaffInternalToken(staffHeaderToken) ||
+      verifyStaffInternalToken(bearerToken) ||
+      verifyStaffInternalToken(staffCookieToken);
+
+    if (!isStaff) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    let id = searchParams.get('id');
+    let purchaseNumber = searchParams.get('purchaseNumber');
+
+    if (!id && !purchaseNumber) {
+      const body = await request.json().catch(() => ({}));
+      id = body.id;
+      purchaseNumber = body.purchaseNumber;
+    }
+
+    if (!id && !purchaseNumber) {
+      return NextResponse.json({ success: false, error: 'id o purchaseNumber requerido' }, { status: 400 });
+    }
+
+    await prisma.purchase.deleteMany({
+      where: {
+        OR: [
+          ...(id ? [{ id: String(id) }] : []),
+          ...(purchaseNumber ? [{ purchaseNumber: String(purchaseNumber) }] : []),
+        ],
+      },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

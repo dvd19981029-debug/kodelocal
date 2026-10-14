@@ -213,49 +213,69 @@ export default function AdminPage() {
       })
       .catch(err => console.error('Error sincronizando productos con Supabase:', err));
 
-    
-    fetch('/api/sales?limit=500')
+    fetch('/api/categories')
       .then(res => res.json())
       .then(data => {
-        if (data.success && Array.isArray(data.sales)) {
-          setSales(data.sales);
+        if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+          setCategories(data.categories);
         }
       })
-      .catch(err => console.error('Error fetching sales:', err));
+      .catch(err => console.error('Error cargando categorías desde Supabase:', err));
 
-    fetch('/api/suppliers')
+    fetch('/api/roles')
       .then(res => res.json())
       .then(data => {
-        if (data.success && Array.isArray(data.suppliers)) {
-          setSuppliers(data.suppliers);
+        if (data.success && Array.isArray(data.roles) && data.roles.length > 0) {
+          setRoles(data.roles);
+          saveStoredRoles(data.roles);
         }
       })
-      .catch(err => console.error('Error fetching suppliers:', err));
+      .catch(err => console.error('Error cargando roles desde Supabase:', err));
 
-    fetch('/api/purchases')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.purchases)) {
-          setPurchases(data.purchases);
-        }
-      })
-      .catch(err => console.error('Error sincronizando compras con Supabase:', err));
+    getStaffToken().then(staffToken => {
+      const headers: Record<string, string> = staffToken ? { 'x-staff-token': staffToken } : {};
+
+      fetch('/api/sales?limit=500', { headers })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.sales)) {
+            setSales(data.sales);
+          }
+        })
+        .catch(err => console.error('Error fetching sales:', err));
+
+      fetch('/api/suppliers', { headers })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.suppliers)) {
+            setSuppliers(data.suppliers);
+          }
+        })
+        .catch(err => console.error('Error fetching suppliers:', err));
+
+      fetch('/api/purchases', { headers })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.purchases)) {
+            setPurchases(data.purchases);
+          }
+        })
+        .catch(err => console.error('Error sincronizando compras con Supabase:', err));
+
+      fetch('/api/kardex', { headers })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.movements)) {
+            setKardexMovements(data.movements);
+          }
+        })
+        .catch(err => console.error('Error fetching kardex from Supabase:', err));
+    });
   }, []);
 
   // Kárdex de Inventario
   const [kardexMovements, setKardexMovements] = useState<KardexMovement[]>([]);
   const [kardexFilterProduct, setKardexFilterProduct] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch('/api/kardex')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.movements)) {
-          setKardexMovements(data.movements);
-        }
-      })
-      .catch(err => console.error('Error fetching kardex from Supabase:', err));
-  }, []);
 
   const handleAddKardexMovement = (movement: KardexMovement) => {
     // Si queremos actualizar locamente para reflejar rápido, lo hacemos,
@@ -507,12 +527,27 @@ export default function AdminPage() {
     alert(`¡Precios actualizados para las ${totalEsencias} esencias y perfume terminado!`);
   };
 
-  const handleAddCategory = (e: React.FormEvent) => {
+  const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCatName.trim()) return;
-    if (categories.includes(newCatName.trim())) return;
-    setCategories(prev => [...prev, newCatName.trim()]);
+    const catName = newCatName.trim();
+    if (!catName) return;
+    if (categories.includes(catName)) return;
+    setCategories(prev => [...prev, catName]);
     setNewCatName('');
+
+    try {
+      const staffToken = await getStaffToken();
+      await fetch('/api/categories', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({ name: catName }),
+      });
+    } catch (err) {
+      console.error('Error guardando categoría en Supabase:', err);
+    }
   };
 
   const handleStartEdit = (p: ProductItem) => {
@@ -630,31 +665,60 @@ export default function AdminPage() {
     setIsRoleModalOpen(true);
   };
 
-  const handleSaveRole = (e: React.FormEvent) => {
+  const handleSaveRole = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingRole || !editingRole.name.trim()) return;
 
-    setRoles(prev => {
-      const exists = prev.some(r => r.id === editingRole.id);
-      if (exists) {
-        return prev.map(r => r.id === editingRole.id ? editingRole : r);
-      } else {
-        return [...prev, editingRole];
-      }
-    });
+    const roleToSave = { ...editingRole };
+    const exists = roles.some(r => r.id === roleToSave.id);
+    const updatedRoles = exists
+      ? roles.map(r => (r.id === roleToSave.id ? roleToSave : r))
+      : [...roles, roleToSave];
 
+    setRoles(updatedRoles);
+    saveStoredRoles(updatedRoles);
     setIsRoleModalOpen(false);
     setEditingRole(null);
+
+    try {
+      const staffToken = await getStaffToken();
+      await fetch('/api/roles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({ roles: updatedRoles }),
+      });
+    } catch (err) {
+      console.error('Error guardando roles en Supabase:', err);
+    }
   };
 
-  const handleDeleteRole = (roleId: string) => {
+  const handleDeleteRole = async (roleId: string) => {
     const roleToDelete = roles.find(r => r.id === roleId);
     if (!roleToDelete || roleToDelete.isSystem) {
       alert('No se pueden eliminar los roles base del sistema.');
       return;
     }
     if (confirm(`¿Estás seguro de eliminar el rol "${roleToDelete.name}"?`)) {
-      setRoles(prev => prev.filter(r => r.id !== roleId));
+      const updatedRoles = roles.filter(r => r.id !== roleId);
+      setRoles(updatedRoles);
+      saveStoredRoles(updatedRoles);
+
+      try {
+        const staffToken = await getStaffToken();
+        await fetch('/api/roles', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
+          body: JSON.stringify({ roles: updatedRoles }),
+        });
+      } catch (err) {
+        console.error('Error actualizando roles en Supabase:', err);
+      }
     }
   };
 

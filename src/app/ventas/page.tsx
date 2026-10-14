@@ -25,6 +25,7 @@ import {
 import { SaleRecord } from '@/lib/store';
 import { printThermalTicketPdf, downloadThermalTicketPdf } from '@/lib/thermalTicketPdf';
 import { flushOfflineQueue } from '@/lib/offlineSync';
+import { getStaffToken } from '@/lib/auth';
 
 export default function VentasPage() {
   const [sales, setSales] = useState<SaleRecord[]>(() => {
@@ -49,80 +50,86 @@ export default function VentasPage() {
 
   // Cargar ventas y DTEs oficiales registrados en la base de datos Supabase
   useEffect(() => {
-    fetch('/api/sales?limit=150')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.sales)) {
-          const dbSales: SaleRecord[] = data.sales.map((s: any) => ({
-            id: s.id,
-            saleNumber: s.saleNumber,
-            orderNumber: s.saleNumber,
-            createdAt: s.createdAt,
-            invoicedAt: s.createdAt,
-            channel: s.channel || 'POS',
-            total: Number(s.total || 0),
-            subtotal: Number(s.subtotal || 0),
-            ivaTotal: Number(s.ivaTotal || 0),
-            shippingCost: Number(s.shippingCost || 0),
-            paymentMethod: s.paymentMethod || 'CASH',
-            paymentStatus: s.paymentStatus || 'COMPLETED',
-            status: s.orderStatus || 'COMPLETED',
-            tipoComprobante: s.tipoComprobante || '01',
-            cajero: s.cashierName || 'Caja 1',
-            vendedor: s.sellerName || 'Mostrador',
-            cliente: {
-              nombre: s.customer?.name || 'Consumidor Final',
-              numDocumento: s.customer?.documentNum || undefined,
-              nrc: s.customer?.nrc || undefined,
-              correo: s.customer?.email || undefined,
-              telefono: s.customer?.phone || undefined,
-              direccion: s.customer?.address || undefined,
-              actividadEconomica: s.customer?.activityDesc || undefined,
-            },
-            items: (s.items || []).map((it: any) => ({
-              productId: it.productId,
-              name: it.productName,
-              quantity: it.quantity,
-              price: Number(it.unitPrice || 0),
-              total: Number(it.total || 0),
-              unit: it.unit || 'Unidad',
-            })),
-            dteInfo: s.dteDocument ? {
-              codigoGeneracion: s.dteDocument.codigoGeneracion,
-              numeroControl: s.dteDocument.numeroControl,
-              selloRecepcion: s.dteDocument.selloRecepcion,
-              estado: s.dteDocument.estado,
-              simulated: s.dteDocument.estado === 'SIMULADO',
-              mensaje: s.dteDocument.mensajeRespuesta,
-              mhDteUrl: s.dteDocument.mhDteUrl,
-              pdfUrl: `/api/dte/${s.dteDocument.codigoGeneracion}/pdf`,
-              jsonUrl: `/api/dte/${s.dteDocument.codigoGeneracion}/json`,
-              fhProcesamiento: s.dteDocument.fhProcesamiento,
-            } : undefined,
-          }));
-
-          setSales(prev => {
-            const mergedMap = new Map<string, SaleRecord>();
-            dbSales.forEach(s => mergedMap.set(s.saleNumber, s));
-            prev.forEach(p => {
-              if (!mergedMap.has(p.saleNumber)) {
-                mergedMap.set(p.saleNumber, p);
-              } else {
-                const existing = mergedMap.get(p.saleNumber)!;
-                if (!existing.dteInfo && p.dteInfo) {
-                  existing.dteInfo = p.dteInfo;
-                }
-              }
-            });
-            const merged = Array.from(mergedMap.values());
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('kodelocal_sales', JSON.stringify(merged));
-            }
-            return merged;
-          });
-        }
+    getStaffToken().then(staffToken => {
+      fetch('/api/sales?limit=150', {
+        headers: {
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
       })
-      .catch(err => console.error('Error cargando ventas desde DB en /ventas:', err));
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.sales)) {
+            const dbSales: SaleRecord[] = data.sales.map((s: any) => ({
+              id: s.id,
+              saleNumber: s.saleNumber,
+              orderNumber: s.saleNumber,
+              createdAt: s.createdAt,
+              invoicedAt: s.createdAt,
+              channel: s.channel || 'POS',
+              total: Number(s.total || 0),
+              subtotal: Number(s.subtotal || 0),
+              ivaTotal: Number(s.ivaTotal || 0),
+              shippingCost: Number(s.shippingCost || 0),
+              paymentMethod: s.paymentMethod || 'CASH',
+              paymentStatus: s.paymentStatus || 'COMPLETED',
+              status: s.orderStatus || 'COMPLETED',
+              tipoComprobante: s.tipoComprobante || '01',
+              cajero: s.cashierName || 'Caja 1',
+              vendedor: s.sellerName || 'Mostrador',
+              cliente: {
+                nombre: s.customer?.name || 'Consumidor Final',
+                numDocumento: s.customer?.documentNum || undefined,
+                nrc: s.customer?.nrc || undefined,
+                correo: s.customer?.email || undefined,
+                telefono: s.customer?.phone || undefined,
+                direccion: s.customer?.address || undefined,
+                actividadEconomica: s.customer?.activityDesc || undefined,
+              },
+              items: (s.items || []).map((it: any) => ({
+                productId: it.productId,
+                name: it.productName,
+                quantity: it.quantity,
+                price: Number(it.unitPrice || 0),
+                total: Number(it.total || 0),
+                unit: it.unit || 'Unidad',
+              })),
+              dteInfo: s.dteDocument ? {
+                codigoGeneracion: s.dteDocument.codigoGeneracion,
+                numeroControl: s.dteDocument.numeroControl,
+                selloRecepcion: s.dteDocument.selloRecepcion,
+                estado: s.dteDocument.estado,
+                simulated: s.dteDocument.estado === 'SIMULADO',
+                mensaje: s.dteDocument.mensajeRespuesta,
+                mhDteUrl: s.dteDocument.mhDteUrl,
+                pdfUrl: `/api/dte/${s.dteDocument.codigoGeneracion}/pdf`,
+                jsonUrl: `/api/dte/${s.dteDocument.codigoGeneracion}/json`,
+                fhProcesamiento: s.dteDocument.fhProcesamiento,
+              } : undefined,
+            }));
+
+            setSales(prev => {
+              const mergedMap = new Map<string, SaleRecord>();
+              dbSales.forEach(s => mergedMap.set(s.saleNumber, s));
+              prev.forEach(p => {
+                if (!mergedMap.has(p.saleNumber)) {
+                  mergedMap.set(p.saleNumber, p);
+                } else {
+                  const existing = mergedMap.get(p.saleNumber)!;
+                  if (!existing.dteInfo && p.dteInfo) {
+                    existing.dteInfo = p.dteInfo;
+                  }
+                }
+              });
+              const merged = Array.from(mergedMap.values());
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('kodelocal_sales', JSON.stringify(merged));
+              }
+              return merged;
+            });
+          }
+        })
+        .catch(err => console.error('Error cargando ventas desde DB en /ventas:', err));
+    });
   }, []);
 
   // Escuchar sincronización de ventas desde el motor offline
@@ -186,9 +193,13 @@ export default function VentasPage() {
   const handleTransmitDte = async (sale: SaleRecord) => {
     setTransmittingId(sale.id);
     try {
+      const staffToken = await getStaffToken().catch(() => null);
       const res = await fetch('/api/dte', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
         body: JSON.stringify({
           tipoDte: sale.tipoComprobante === '03' ? '03' : '01',
           saleId: sale.saleNumber || sale.id,
@@ -243,6 +254,21 @@ export default function VentasPage() {
         setSales(updatedSales);
         localStorage.setItem('kodelocal_sales', JSON.stringify(updatedSales));
         window.dispatchEvent(new Event('kodelocal_sales_updated'));
+
+        fetch('/api/sales', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
+          body: JSON.stringify({
+            id: sale.id,
+            saleNumber: sale.saleNumber,
+            tipoComprobante: sale.tipoComprobante === '03' ? '03' : '01',
+            codigoGeneracion: data.dte.codigoGeneracion,
+            dteInfo: newDteInfo,
+          }),
+        }).catch(() => {});
 
         if (selectedSale && (selectedSale.id === sale.id || selectedSale.saleNumber === sale.saleNumber)) {
           setSelectedSale({ ...selectedSale, dteInfo: newDteInfo });

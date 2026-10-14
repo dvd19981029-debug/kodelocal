@@ -37,6 +37,7 @@ import {
 } from '@/lib/purchases';
 import { ProductItem, PERFUME_CATEGORIES } from '@/lib/store';
 import { KardexMovement } from '@/lib/kardex';
+import { getStaffToken } from '@/lib/auth';
 
 interface ComprasModuleProps {
   products: ProductItem[];
@@ -364,51 +365,63 @@ export default function ComprasModule({
     onUpdatePurchases([newPurchase, ...purchases]);
 
     // 3.1 Sincronizar en tiempo real con Supabase (ingreso a tabla Purchase, actualización de stock y Kardex)
-    fetch('/api/purchases', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        purchaseNumber: newPurchase.purchaseNumber,
-        tipoDte: newPurchase.tipoDte,
-        supplierId: newPurchase.supplierId,
-        supplierName: newPurchase.supplierName,
-        purchaseDate: newPurchase.purchaseDate,
-        dueDate: newPurchase.dueDate,
-        creditDays: newPurchase.creditDays,
-        docNumber: newPurchase.docNumber,
-        controlNumber: newPurchase.controlNumber,
-        condicion: newPurchase.condicion,
-        paymentMethod: newPurchase.paymentMethod,
-        paymentStatus: newPurchase.paymentStatus,
-        subtotalNeto: newPurchase.subtotalNeto,
-        iva: newPurchase.iva,
-        total: newPurchase.total,
-        saldoPendiente: newPurchase.saldoPendiente,
-        notes: newPurchase.notes,
-        items: newPurchase.items.map(it => ({
-          productId: it.productId,
-          productName: it.productName,
-          productSku: it.productSku,
-          unit: it.unit,
-          quantity: it.quantity,
-          costPrice: it.costPrice,
-          subtotal: it.subtotal,
-        })),
-      }),
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          fetch('/api/products')
-            .then(r => r.json())
-            .then(pData => {
-              if (pData.success && Array.isArray(pData.products)) {
-                onUpdateProducts(pData.products);
-              }
-            });
-        }
+    getStaffToken().then(staffToken => {
+      fetch('/api/purchases', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({
+          purchaseNumber: newPurchase.purchaseNumber,
+          tipoDte: newPurchase.tipoDte,
+          supplierId: newPurchase.supplierId,
+          supplierName: newPurchase.supplierName,
+          purchaseDate: newPurchase.purchaseDate,
+          dueDate: newPurchase.dueDate,
+          creditDays: newPurchase.creditDays,
+          docNumber: newPurchase.docNumber,
+          controlNumber: newPurchase.controlNumber,
+          condicion: newPurchase.condicion,
+          paymentMethod: newPurchase.paymentMethod,
+          paymentStatus: newPurchase.paymentStatus,
+          subtotalNeto: newPurchase.subtotalNeto,
+          iva: newPurchase.iva,
+          total: newPurchase.total,
+          saldoPendiente: newPurchase.saldoPendiente,
+          notes: newPurchase.notes,
+          items: newPurchase.items.map(it => ({
+            productId: it.productId,
+            productName: it.productName,
+            productSku: it.productSku,
+            unit: it.unit,
+            quantity: it.quantity,
+            costPrice: it.costPrice,
+            subtotal: it.subtotal,
+          })),
+        }),
       })
-      .catch(err => console.error('Error guardando compra en Supabase:', err));
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            if (data.purchase?.id) {
+              onUpdatePurchases(
+                [newPurchase, ...purchases].map(p =>
+                  p.purchaseNumber === newPurchase.purchaseNumber ? { ...p, id: data.purchase.id } : p
+                )
+              );
+            }
+            fetch('/api/products')
+              .then(r => r.json())
+              .then(pData => {
+                if (pData.success && Array.isArray(pData.products)) {
+                  onUpdateProducts(pData.products);
+                }
+              });
+          }
+        })
+        .catch(err => console.error('Error guardando compra en Supabase:', err));
+    });
 
     // 4. Limpiar formulario y regresar a la vista de historial
     setFormDocNumber('');
@@ -439,7 +452,7 @@ export default function ComprasModule({
   };
 
   // Registrar abono
-  const handleSaveAbono = (e: React.FormEvent) => {
+  const handleSaveAbono = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeAbonoPurchase) return;
 
@@ -454,12 +467,13 @@ export default function ComprasModule({
       return;
     }
 
-    const newSaldo = Math.max(0, parseFloat((activeAbonoPurchase.saldoPendiente - amount).toFixed(2)));
+    const targetPurchase = activeAbonoPurchase;
+    const newSaldo = Math.max(0, parseFloat((targetPurchase.saldoPendiente - amount).toFixed(2)));
     const newStatus = newSaldo <= 0.001 ? 'PAGADO' : 'PENDIENTE';
 
     const newPayment: PurchasePayment = {
       id: `pay-${Date.now()}`,
-      purchaseId: activeAbonoPurchase.id,
+      purchaseId: targetPurchase.id,
       date: abonoDate,
       amount,
       paymentMethod: abonoMethod,
@@ -468,7 +482,7 @@ export default function ComprasModule({
     };
 
     const updatedPurchases = purchases.map(p => {
-      if (p.id === activeAbonoPurchase.id) {
+      if (p.id === targetPurchase.id || p.purchaseNumber === targetPurchase.purchaseNumber) {
         return {
           ...p,
           saldoPendiente: newSaldo,
@@ -481,28 +495,55 @@ export default function ComprasModule({
 
     onUpdatePurchases(updatedPurchases);
     setActiveAbonoPurchase(null);
+
+    try {
+      const staffToken = await getStaffToken();
+      await fetch('/api/purchases', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({
+          action: 'add_payment',
+          purchaseId: targetPurchase.id,
+          purchaseNumber: targetPurchase.purchaseNumber,
+          amount,
+          date: abonoDate,
+          paymentMethod: abonoMethod,
+          reference: abonoRef.trim() || undefined,
+          notes: abonoNotes.trim() || undefined,
+        }),
+      });
+    } catch (err) {
+      console.error('Error guardando abono en Supabase:', err);
+    }
+
     showToast(`✅ Abono de $${amount.toFixed(2)} registrado correctamente.`);
   };
 
   // Guardar o Crear Proveedor
-    const handleSaveSupplier = async (e: React.FormEvent) => {
+  const handleSaveSupplier = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingSupplier || !editingSupplier.name.trim()) return;
 
     try {
+      const staffToken = await getStaffToken();
       const res = await fetch('/api/suppliers', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
         body: JSON.stringify(editingSupplier)
       });
       const data = await res.json();
       if (data.success) {
-        // Refresh local state with DB record
         const exists = suppliers.some(s => s.id === editingSupplier.id);
         if (exists) {
-           onUpdateSuppliers(suppliers.map(s => s.id === editingSupplier.id ? data.supplier : s));
+          onUpdateSuppliers(suppliers.map(s => s.id === editingSupplier.id ? data.supplier : s));
         } else {
-           onUpdateSuppliers([...suppliers, data.supplier]);
+          onUpdateSuppliers([...suppliers, data.supplier]);
         }
         setIsSupplierModalOpen(false);
         setEditingSupplier(null);
@@ -516,22 +557,34 @@ export default function ComprasModule({
   };
 
   // Eliminar Proveedor
-  const handleDeleteSupplier = (id: string) => {
+  const handleDeleteSupplier = async (id: string) => {
     const s = suppliers.find(sup => sup.id === id);
     if (!s) return;
     if (confirm(`¿Estás seguro de eliminar al proveedor "${s.name}"?`)) {
       onUpdateSuppliers(suppliers.filter(sup => sup.id !== id));
+      try {
+        const staffToken = await getStaffToken();
+        await fetch(`/api/suppliers?id=${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          headers: {
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
+        });
+      } catch (err) {
+        console.error('Error eliminando proveedor en Supabase:', err);
+      }
       showToast(`Proveedor eliminado.`);
     }
   };
 
   // Crear Producto Rápido al Vuelo
-  const handleSaveQuickProduct = (e: React.FormEvent) => {
+  const handleSaveQuickProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!quickProdName.trim()) return;
 
+    const tempId = `prod-${Date.now()}`;
     const newProd: ProductItem = {
-      id: `prod-${Date.now()}`,
+      id: tempId,
       sku: `INS-${String(products.length + 101)}`,
       barcode: `74100${String(products.length + 101).padStart(7, '0')}`,
       name: quickProdName.trim(),
@@ -578,6 +631,38 @@ export default function ComprasModule({
 
     setQuickProdName('');
     showToast(`✅ Insumo "${newProd.name}" creado e insertado en la compra.`);
+
+    try {
+      const staffToken = await getStaffToken();
+      const res = await fetch('/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({
+          sku: newProd.sku,
+          brand: newProd.brand,
+          name: newProd.name,
+          category: newProd.category,
+          unit: newProd.unit,
+          price: newProd.price,
+          cost: newProd.cost,
+          stock: 0,
+          imageUrl: newProd.imageUrl,
+          isAvailableOnline: true,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.product) {
+        onUpdateProducts([data.product, ...products]);
+        setFormItems(prev =>
+          prev.map(it => (it.productId === tempId ? { ...it, productId: data.product.id } : it))
+        );
+      }
+    } catch (err) {
+      console.error('Error guardando producto rápido en Supabase:', err);
+    }
   };
 
   return (

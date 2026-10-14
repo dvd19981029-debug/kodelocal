@@ -56,9 +56,10 @@ export async function POST(request: Request) {
     }
 
     let supplier;
-    if (id && !id.startsWith('SUP-')) {
+    const existing = id ? await prisma.supplier.findUnique({ where: { id: String(id) } }) : null;
+    if (existing) {
       supplier = await prisma.supplier.update({
-        where: { id },
+        where: { id: existing.id },
         data: { name, contactPerson, nit, nrc, phone, email, address, category: category || 'Esencias & Fragancias', creditDays: Number(creditDays || 0), notes },
       });
     } else {
@@ -68,6 +69,45 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: true, supplier });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const authHeader = request.headers.get('authorization') || '';
+    const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : null;
+    const staffHeaderToken = request.headers.get('x-staff-token');
+    const cookieHeader = request.headers.get('cookie') || '';
+    const staffCookieMatch = cookieHeader.match(/kodelocal_staff_token=([^;]+)/);
+    const staffCookieToken = staffCookieMatch ? staffCookieMatch[1] : null;
+
+    const isStaff =
+      verifyStaffInternalToken(staffHeaderToken) ||
+      verifyStaffInternalToken(bearerToken) ||
+      verifyStaffInternalToken(staffCookieToken);
+
+    if (!isStaff) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Se requiere autenticacion de administrador.' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    let id = searchParams.get('id');
+    if (!id) {
+      const body = await request.json().catch(() => ({}));
+      id = body.id;
+    }
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'ID de proveedor requerido' }, { status: 400 });
+    }
+
+    await prisma.supplier.delete({
+      where: { id: String(id) },
+    });
+
+    return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
