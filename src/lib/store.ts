@@ -1718,7 +1718,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "sku": "INS-ALC-1L",
     "barcode": "741999000INS-ALC-1L",
     "name": "Alcohol especial para perfumería con fijador (1 Litro)",
-    "officialName": "Alcohol Perfumero con Fijador",
+    "officialName": "Alcohol Perfumero con Fijador (1 Litro)",
     "brand": "",
     "gender": "Unisex",
     "category": "Insumos y Materia Prima",
@@ -1729,6 +1729,26 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "minStock": 10,
     "imageUrl": "/images/insumos/alcohol_perfumero_fijador_1l.jpg",
     "description": "Alcohol especial para perfumería con fijador (1 Litro)",
+    "isAvailableOnline": true,
+    "puesto": "C1",
+    "stockHalf": 0
+  },
+  {
+    "id": "alcohol-perfumero-fijador-medio-litro",
+    "sku": "INS-ALC-500ML",
+    "barcode": "741999000INS-ALC-500ML",
+    "name": "Alcohol especial para perfumería con fijador (Medio Litro)",
+    "officialName": "Alcohol Perfumero con Fijador (½ Litro)",
+    "brand": "",
+    "gender": "Unisex",
+    "category": "Insumos y Materia Prima",
+    "unit": "½ Litro",
+    "price": 2.3,
+    "cost": 1.1,
+    "stock": 14,
+    "minStock": 5,
+    "imageUrl": "/images/insumos/alcohol_perfumero_fijador_medio_litro.jpg",
+    "description": "Alcohol especial para perfumería con fijador (Medio Litro)",
     "isAvailableOnline": true,
     "puesto": "C1",
     "stockHalf": 0
@@ -1999,7 +2019,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   }
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v28_alcohol_perfumero_1l";
+export const DATA_VERSION = "2026_oficial_real_v29_alcohol_perfumero_medio_litro";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;
