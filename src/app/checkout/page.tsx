@@ -318,9 +318,13 @@ export default function CheckoutPage() {
       // Guardar pedido permanentemente en Supabase y descontar inventario
       const orderRes = await fetch('/api/ecommerce/orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(customer?.sessionToken ? { 'Authorization': `Bearer ${customer.sessionToken}` } : {}),
+        },
         body: JSON.stringify({
           orderNumber,
+          sessionToken: customer?.sessionToken || undefined,
           customerId: customer?.id || null,
           customerName: nombre,
           customerEmail: email || null,

@@ -1,16 +1,22 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import crypto from 'crypto';
+import { verifyStaffRequest } from '@/lib/customerAuthToken';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
+    const { authorized, payload } = verifyStaffRequest(request);
+    if (!authorized) {
+      return NextResponse.json({ success: false, error: 'No autorizado' }, { status: 401 });
+    }
+    const isAdmin = String(payload?.role || '').toUpperCase() === 'ADMIN';
+
     const staff = await prisma.staffUser.findMany({
       orderBy: { createdAt: 'desc' },
     });
     
-    // Convert to frontend UserAccount format without revealing hash
+    // Convert to frontend UserAccount format without revealing hash (and only expose PIN to ADMIN)
     const formatted = staff.map(s => ({
       id: s.id,
       name: s.name,
@@ -19,7 +25,7 @@ export async function GET(request: Request) {
       cashRegister: s.cashRegister,
       isActive: s.isActive,
       createdAt: s.createdAt.toISOString(),
-      pin: s.pin || '0000'
+      pin: isAdmin ? (s.pin || '0000') : '****'
     }));
 
     return NextResponse.json({ success: true, staff: formatted });
@@ -30,6 +36,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const { authorized } = verifyStaffRequest(request, ['ADMIN']);
+    if (!authorized) {
+      return NextResponse.json({ success: false, error: 'No autorizado: se requiere rol de Administrador' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { id, name, email, role, cashRegister, isActive, pin } = body;
 
@@ -71,6 +82,11 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const { authorized } = verifyStaffRequest(request, ['ADMIN']);
+    if (!authorized) {
+      return NextResponse.json({ success: false, error: 'No autorizado: se requiere rol de Administrador' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     if (!id) return NextResponse.json({ success: false, error: 'ID requerido' }, { status: 400 });
@@ -87,3 +103,4 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+

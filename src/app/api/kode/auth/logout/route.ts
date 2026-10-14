@@ -8,11 +8,16 @@ export async function POST() {
     message: 'Sesión cerrada correctamente',
   });
 
-  response.cookies.set('kode_session', '', {
+  const clearOpts = {
     path: '/',
     maxAge: 0,
     expires: new Date(0),
-  });
+  };
+
+  response.cookies.set('kodelocal_staff_token', '', { ...clearOpts, httpOnly: true });
+  response.cookies.set('kode_session_ui', '', clearOpts);
+  response.cookies.set('kode_session', '', clearOpts);
 
   return response;
 }
+

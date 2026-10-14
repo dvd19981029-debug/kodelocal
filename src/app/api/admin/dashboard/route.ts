@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getVisitMetricsForPeriod } from '@/lib/visits';
+import { verifyStaffRequest } from '@/lib/customerAuthToken';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,6 +31,14 @@ function getPeriodFilter(period: string) {
 
 export async function GET(request: Request) {
   try {
+    const { authorized } = verifyStaffRequest(request);
+    if (!authorized) {
+      return NextResponse.json(
+        { success: false, error: 'No autorizado. Se requiere sesión activa de gerencia/personal.' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const period = (searchParams.get('period') || 'mes') as 'hoy' | '7d' | 'mes' | 'anio' | 'todo';
     const dateCondition = getPeriodFilter(period);

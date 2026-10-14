@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { verifyStaffRequest, verifyCustomerToken } from '@/lib/customerAuthToken';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +12,15 @@ export async function GET(
     const { id } = await params;
     if (!id) {
       return NextResponse.json({ success: false, error: 'ID de cliente requerido' }, { status: 400 });
+    }
+
+    const { authorized: isStaff } = verifyStaffRequest(request);
+    const authHeader = request.headers.get('authorization') || '';
+    const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : null;
+    const customerPayload = verifyCustomerToken(bearerToken);
+
+    if (!isStaff && (!customerPayload || customerPayload.customerId !== id)) {
+      return NextResponse.json({ success: false, error: 'No autorizado' }, { status: 401 });
     }
 
     const customer = await prisma.customer.findUnique({

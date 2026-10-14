@@ -3,7 +3,7 @@ import { revalidatePath } from 'next/cache';
 import fs from 'fs';
 import { prisma } from '@/lib/prisma';
 import { INITIAL_PRODUCTS } from '@/lib/store';
-import { verifyStaffInternalToken } from '@/lib/customerAuthToken';
+import { verifyStaffInternalToken, verifyStaffRequest } from '@/lib/customerAuthToken';
 import { checkRateLimit } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
@@ -33,9 +33,10 @@ export async function GET(request: Request) {
       );
     }
 
+    const { authorized: isStaff } = verifyStaffRequest(request);
     const { searchParams } = new URL(request.url);
     const inStockOnly = searchParams.get('inStock') === 'true';
-    const isFreshRequested = searchParams.get('fresh') === 'true' || searchParams.has('_t');
+    const isFreshRequested = searchParams.get('fresh') === 'true' || searchParams.has('_t') || isStaff;
     const responseHeaders = isFreshRequested ? NO_CACHE_HEADERS : CACHE_HEADERS;
 
     // Consultar productos en la base de datos de Supabase
@@ -59,7 +60,7 @@ export async function GET(request: Request) {
       return NextResponse.json({
         success: true,
         source: 'fallback',
-        products: INITIAL_PRODUCTS,
+        products: INITIAL_PRODUCTS.map(({ cost, ...rest }) => (isStaff ? { ...rest, cost } : rest)),
         counts: {
           total: INITIAL_PRODUCTS.length,
           inStock: INITIAL_PRODUCTS.filter(p => p.stock > 0).length,
@@ -81,7 +82,7 @@ export async function GET(request: Request) {
       price: Number(p.price),
       priceHalfOunce: p.priceHalfOunce != null ? Number(p.priceHalfOunce) : (p.category?.name === 'Esencias para Perfume' || !p.category?.name ? Number((Number(p.price) / 2).toFixed(2)) : undefined),
       finishedPerfumePrice: p.finishedPerfumePrice != null ? Number(p.finishedPerfumePrice) : (p.category?.name === 'Esencias para Perfume' || !p.category?.name ? 15.00 : undefined),
-      cost: Number(p.cost || 0),
+      ...(isStaff ? { cost: Number(p.cost || 0) } : {}),
       stock: p.stock,
       stockHalf: (p as any).stockHalf ?? 0,
       minStock: p.minStock,

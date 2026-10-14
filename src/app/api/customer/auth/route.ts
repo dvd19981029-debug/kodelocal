@@ -1,16 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import crypto from 'crypto';
-import { createCustomerToken, verifyCustomerToken } from '@/lib/customerAuthToken';
+import { createCustomerToken, verifyCustomerToken, hashPasswordSecure, verifyPasswordSecure } from '@/lib/customerAuthToken';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { sanitizeText, sanitizeEmail, sanitizePhone, sanitizeDocument } from '@/lib/sanitize';
+import { supabase } from '@/lib/supabaseClient';
 
 export const dynamic = 'force-dynamic';
-
-function hashPassword(password: string): string {
-  const salt = 'aromaniak_salt_2026';
-  return crypto.createHmac('sha256', salt).update(password).digest('hex');
-}
 
 export async function POST(request: Request) {
   try {
@@ -18,10 +13,10 @@ export async function POST(request: Request) {
     const { action } = body;
 
     // ================= RATE LIMITING (SEC-05 / REQ-SEC-01) =================
-    if (action === 'login' || action === 'register' || action === 'google') {
+    if (action === 'login' || action === 'register' || action === 'google' || action === 'get_token') {
       const rl = await checkRateLimit(request, {
         keyPrefix: 'customer_auth',
-        maxRequests: 5,
+        maxRequests: action === 'get_token' ? 20 : 8,
         windowMs: 60 * 1000,
       });
       if (!rl.allowed) {
@@ -40,47 +35,67 @@ export async function POST(request: Request) {
 
     // ================= 1. REGISTRO / LOGIN CON GOOGLE =================
     if (action === 'google') {
-      const { email, name, avatarUrl, googleId } = body;
+      const { name, avatarUrl, accessToken } = body;
+      const authHeader = request.headers.get('authorization');
+      const tokenToVerify = accessToken || (authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : null);
 
-      if (!email) {
+      if (!tokenToVerify) {
         return NextResponse.json(
-          { success: false, error: 'Correo de Google no proporcionado' },
-          { status: 400 }
+          { success: false, error: 'Token de autenticación de Google requerido' },
+          { status: 401 }
         );
       }
 
-      const normalizedEmail = email.toLowerCase().trim();
+      // Verificar criptográficamente el access_token contra Supabase Auth
+      const { data: userData, error: authErr } = await supabase.auth.getUser(tokenToVerify);
+      if (authErr || !userData?.user?.email) {
+        return NextResponse.json(
+          { success: false, error: 'Sesión de Google inválida o expirada' },
+          { status: 401 }
+        );
+      }
+
+      const normalizedEmail = userData.user.email.toLowerCase().trim();
+      const verifiedGoogleId = userData.user.id;
+      const verifiedName =
+        userData.user.user_metadata?.full_name ||
+        userData.user.user_metadata?.name ||
+        name ||
+        'Cliente Aromaniak';
+      const verifiedAvatar =
+        userData.user.user_metadata?.avatar_url ||
+        userData.user.user_metadata?.picture ||
+        avatarUrl ||
+        '';
 
       // Buscar si el cliente ya existe por email o googleId
       let customer = await prisma.customer.findFirst({
         where: {
           OR: [
             { email: normalizedEmail },
-            ...(googleId ? [{ googleId }] : []),
+            ...(verifiedGoogleId ? [{ googleId: verifiedGoogleId }] : []),
           ],
         },
         include: { tier: true },
       });
 
       if (customer) {
-        // Actualizar información de Google si hiciera falta
         customer = await prisma.customer.update({
           where: { id: customer.id },
           include: { tier: true },
           data: {
-            googleId: googleId || customer.googleId,
-            avatarUrl: avatarUrl || customer.avatarUrl,
-            name: customer.name || name || 'Cliente Aromaniak',
+            googleId: verifiedGoogleId || customer.googleId,
+            avatarUrl: verifiedAvatar || customer.avatarUrl,
+            name: customer.name || verifiedName,
           },
         });
       } else {
-        // Crear nuevo cliente registrado con Google
         customer = await prisma.customer.create({
           data: {
-            name: name || 'Cliente Aromaniak',
+            name: verifiedName,
             email: normalizedEmail,
-            googleId: googleId || `google_${Date.now()}`,
-            avatarUrl: avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name || 'Cliente')}`,
+            googleId: verifiedGoogleId || `google_${Date.now()}`,
+            avatarUrl: verifiedAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(verifiedName)}`,
             department: 'San Salvador',
             municipality: 'San Salvador',
             documentType: 'DUI',
@@ -154,7 +169,7 @@ export async function POST(request: Request) {
         include: { tier: true },
       });
 
-      const passwordHash = hashPassword(password);
+      const passwordHash = hashPasswordSecure(String(password));
       const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanName)}`;
 
       if (existing) {
@@ -286,18 +301,32 @@ export async function POST(request: Request) {
       }
 
       if (customer.passwordHash) {
-        const hash = hashPassword(password);
-        if (hash !== customer.passwordHash) {
+        const check = verifyPasswordSecure(String(password), customer.passwordHash);
+        if (!check.valid) {
           return NextResponse.json(
             { success: false, error: 'Contraseña incorrecta. Verifica tus datos.' },
             { status: 401 }
           );
+        }
+        if (check.needsRehash) {
+          await prisma.customer.update({
+            where: { id: customer.id },
+            data: { passwordHash: hashPasswordSecure(String(password)) },
+          }).catch(() => {});
         }
       } else if (customer.googleId) {
         return NextResponse.json(
           { 
             success: false, 
             error: 'Esta cuenta fue creada con Google. Por favor haz clic en "Continuar con Google".' 
+          },
+          { status: 400 }
+        );
+      } else {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Tu cuenta fue registrada en tienda física. Crea tu contraseña en la pestaña "Crear Cuenta" usando este mismo correo.',
           },
           { status: 400 }
         );
@@ -427,6 +456,18 @@ export async function POST(request: Request) {
       const { customerId, email } = body;
       if (!customerId || !email) {
         return NextResponse.json({ success: false, error: 'Datos insuficientes' }, { status: 400 });
+      }
+
+      // SEC-CRITICAL: Exigir un sessionToken válido perteneciente al propio cliente para refrescar su sesión
+      const authHeader = request.headers.get('authorization');
+      const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : (body.sessionToken || null);
+      const verified = verifyCustomerToken(token);
+
+      if (!verified || verified.customerId !== customerId) {
+        return NextResponse.json(
+          { success: false, error: 'Sesión inválida o expirada. Por favor inicia sesión nuevamente.' },
+          { status: 401 }
+        );
       }
 
       const existing = await prisma.customer.findFirst({

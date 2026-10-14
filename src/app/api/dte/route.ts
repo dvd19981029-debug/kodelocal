@@ -1,9 +1,18 @@
 import { NextResponse } from 'next/server';
 import { facturaLlama } from '@/lib/facturalama';
 import { prisma } from '@/lib/prisma';
+import { verifyStaffRequest } from '@/lib/customerAuthToken';
 
 export async function POST(request: Request) {
   try {
+    const { authorized } = verifyStaffRequest(request);
+    if (!authorized) {
+      return NextResponse.json(
+        { success: false, error: 'No autorizado. Se requiere sesión activa de personal para emitir DTE.' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { tipoDte, saleId, items, cliente, metodoPago } = body;
 

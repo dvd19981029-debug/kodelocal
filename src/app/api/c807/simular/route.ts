@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server';
+import { verifyStaffRequest } from '@/lib/customerAuthToken';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
+  const staff = verifyStaffRequest(request);
+  if (!staff) {
+    return NextResponse.json({ error: 'Acceso denegado: Se requiere sesión activa de personal.' }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
-  const guia = searchParams.get('guia') || 'C807-KOD-889922';
+  const rawGuia = searchParams.get('guia') || 'C807-KOD-889922';
+  const guia = rawGuia.replace(/[^a-zA-Z0-9_-]/g, '');
 
   const html = `<!DOCTYPE html>
 <html lang="es">

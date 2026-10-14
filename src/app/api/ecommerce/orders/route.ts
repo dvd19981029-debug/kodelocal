@@ -519,7 +519,14 @@ export async function POST(request: Request) {
     const cleanGiro = sanitizeText(giro, 200) || null;
     const cleanTipoComprobante = sanitizeText(tipoComprobante, 10) || '01';
 
-    let resolvedCustomerId = customerId;
+    // Verificar si el comprador tiene sesión autenticada de cliente o de personal
+    const authHeader = request.headers.get('authorization') || '';
+    const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : (body.sessionToken || null);
+    const staffHeaderToken = request.headers.get('x-staff-token');
+    const isStaff = verifyStaffInternalToken(staffHeaderToken) || verifyStaffInternalToken(bearerToken);
+    const verifiedCustomer = verifyCustomerToken(bearerToken);
+
+    let resolvedCustomerId = verifiedCustomer ? verifiedCustomer.customerId : (isStaff ? customerId : null);
     if (!resolvedCustomerId && (cleanCustomerEmail || cleanCustomerPhone || cleanCustomerName)) {
       try {
         let cust = await prisma.customer.findFirst({
@@ -532,13 +539,16 @@ export async function POST(request: Request) {
         });
 
         if (cust) {
+          // SEC-IDOR: Si es un invitado no autenticado cuyo correo/teléfono coincide con una cuenta existente,
+          // vincular el pedido a su historial pero SOLO rellenar campos fiscales que estuvieran vacíos (sin sobrescribir).
+          const canOverwriteFiscal = isStaff || (verifiedCustomer && verifiedCustomer.customerId === cust.id);
           cust = await prisma.customer.update({
             where: { id: cust.id },
             data: {
-              ...(cleanNumDoc ? { documentNum: cleanNumDoc } : {}),
-              ...(cleanNrc ? { nrc: cleanNrc } : {}),
-              ...(cleanGiro ? { activityDesc: cleanGiro } : {}),
-              ...(cleanTipoComprobante ? { preferredDoc: cleanTipoComprobante } : {}),
+              ...(cleanNumDoc && (canOverwriteFiscal || !cust.documentNum || cust.documentNum === '00000000-0') ? { documentNum: cleanNumDoc } : {}),
+              ...(cleanNrc && (canOverwriteFiscal || !cust.nrc) ? { nrc: cleanNrc } : {}),
+              ...(cleanGiro && (canOverwriteFiscal || !cust.activityDesc) ? { activityDesc: cleanGiro } : {}),
+              ...(cleanTipoComprobante && canOverwriteFiscal ? { preferredDoc: cleanTipoComprobante } : {}),
               ...(cleanShippingAddress && !cust.address ? { address: cleanShippingAddress } : {}),
               ...(cleanDepartment && !cust.department ? { department: cleanDepartment } : {}),
               ...(cleanMunicipality && !cust.municipality ? { municipality: cleanMunicipality } : {}),
@@ -568,9 +578,14 @@ export async function POST(request: Request) {
       }
     }
 
+    // SEC-PRICING: Solo aplicar precios especiales mayoristas / VIP si el cliente demostró su identidad con sessionToken válido (o es personal del POS)
+    const isAuthenticatedForSpecialPricing = Boolean(
+      isStaff || (verifiedCustomer && resolvedCustomerId && verifiedCustomer.customerId === resolvedCustomerId)
+    );
+
     const newOrder = await prisma.$transaction(async (tx) => {
-      // 0. Obtener cliente registrado para verificar si tiene precios especiales o descuentos VIP
-      const dbCustomer = resolvedCustomerId
+      // 0. Obtener cliente registrado para verificar si tiene precios especiales o descuentos VIP (solo si está autenticado)
+      const dbCustomer = (resolvedCustomerId && isAuthenticatedForSpecialPricing)
         ? await tx.customer.findUnique({
             where: { id: resolvedCustomerId },
             include: { tier: true },

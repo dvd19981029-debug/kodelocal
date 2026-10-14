@@ -50,7 +50,11 @@ export async function GET(request: Request) {
     const payloadStr = Buffer.from(payloadB64, 'base64').toString('utf-8');
     const googleProfile = JSON.parse(payloadStr);
 
-    const email = googleProfile.email.toLowerCase();
+    if (googleProfile.aud !== clientId || googleProfile.email_verified === false || !googleProfile.email) {
+      return NextResponse.redirect(`${url.origin}/login?error=${encodeURIComponent('Token de Google no válido o correo no verificado')}`);
+    }
+
+    const email = googleProfile.email.toLowerCase().trim();
 
     // Buscar si el empleado existe
     const staffUser = await prisma.staffUser.findUnique({
@@ -69,7 +73,7 @@ export async function GET(request: Request) {
     });
 
     // Crear el token seguro interno
-    const token = createStaffInternalToken(staffUser.role);
+    const token = createStaffInternalToken(staffUser.role, staffUser.email, staffUser.name, staffUser.id);
 
     // Redirigir según el rol
     const targetUrl = staffUser.role === 'ADMIN' ? '/admin' : '/pos';

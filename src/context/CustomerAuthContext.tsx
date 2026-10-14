@@ -96,14 +96,18 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
         setCustomer(parsed);
 
         // Sincronizar y refrescar datos actualizados del cliente y token de sesión
-        if (parsed.id && parsed.email) {
+        if (parsed.id && parsed.email && parsed.sessionToken) {
           fetch('/api/customer/auth', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${parsed.sessionToken}`,
+            },
             body: JSON.stringify({
               action: 'get_token',
               customerId: parsed.id,
               email: parsed.email,
+              sessionToken: parsed.sessionToken,
             }),
           })
             .then((r) => r.json())
@@ -123,20 +127,24 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
       setIsLoading(false);
     }
 
-    const syncGoogleUser = async (u: any) => {
+    const syncGoogleUser = async (u: any, accessToken?: string) => {
       const googleName = u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0] || 'Cliente';
       const googleAvatar = u.user_metadata?.avatar_url || u.user_metadata?.picture || '';
 
       try {
         const res = await fetch('/api/customer/auth', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+          },
           body: JSON.stringify({
             action: 'google',
             name: googleName,
             email: u.email,
             avatarUrl: googleAvatar,
             googleId: u.id,
+            accessToken,
           }),
         });
         const data = await res.json();
@@ -152,14 +160,14 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     // 2. Escuchar cambios de autenticación de Supabase (OAuth con Google)
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        syncGoogleUser(session.user);
+        syncGoogleUser(session.user, session.access_token);
       }
     });
 
     // 3. Revisar si ya hay una sesión activa de Supabase en el navegador
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        syncGoogleUser(session.user);
+        syncGoogleUser(session.user, session.access_token);
       }
     });
 

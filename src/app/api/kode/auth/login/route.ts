@@ -1,11 +1,31 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { createStaffInternalToken } from '@/lib/customerAuthToken';
+import { createStaffInternalToken, verifyPasswordSecure, hashPasswordSecure } from '@/lib/customerAuthToken';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
+    // Rate Limiting contra ataques de fuerza bruta de PIN / contraseña (máx 8 intentos por minuto por IP)
+    const rl = await checkRateLimit(request, {
+      keyPrefix: 'staff_login',
+      maxRequests: 8,
+      windowMs: 60 * 1000,
+    });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Demasiados intentos de inicio de sesión. Por favor espera ${rl.resetSeconds} segundos.`,
+        },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(rl.resetSeconds) },
+        }
+      );
+    }
+
     const body = await request.json();
     const { identifier, password, isPin } = body;
 
@@ -16,7 +36,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const cleanId = String(identifier).trim();
+    const cleanId = String(identifier).trim().toLowerCase();
     const cleanPwd = String(password).trim();
 
     let staffUser = null;
@@ -26,10 +46,31 @@ export async function POST(request: Request) {
         where: { email: cleanId, pin: cleanPwd, isActive: true }
       });
     } else {
-      // For standard password logic (if they want non-Google passwords in future)
-      staffUser = await prisma.staffUser.findFirst({
-        where: { email: cleanId, passwordHash: cleanPwd, isActive: true }
+      const candidate = await prisma.staffUser.findFirst({
+        where: {
+          OR: [
+            { email: cleanId },
+            { id: String(identifier).trim() },
+          ],
+          isActive: true,
+        },
       });
+      if (candidate) {
+        if (candidate.pin && candidate.pin === cleanPwd) {
+          staffUser = candidate;
+        } else if (candidate.passwordHash && candidate.passwordHash !== 'GOOGLE_OAUTH_ONLY') {
+          const check = verifyPasswordSecure(cleanPwd, candidate.passwordHash);
+          if (check.valid) {
+            staffUser = candidate;
+            if (check.needsRehash) {
+              await prisma.staffUser.update({
+                where: { id: candidate.id },
+                data: { passwordHash: hashPasswordSecure(cleanPwd) },
+              }).catch(() => {});
+            }
+          }
+        }
+      }
     }
 
     if (!staffUser) {
@@ -44,7 +85,7 @@ export async function POST(request: Request) {
       data: { lastLogin: new Date() }
     });
 
-    const safeToken = createStaffInternalToken(staffUser.role);
+    const safeToken = createStaffInternalToken(staffUser.role, staffUser.email, staffUser.name, staffUser.id);
 
     const response = NextResponse.json({
       success: true,
@@ -85,3 +126,4 @@ export async function POST(request: Request) {
     );
   }
 }
+

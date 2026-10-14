@@ -20,18 +20,88 @@ const OPERATIONAL_API_ROUTES = [
   '/api/sales',
   '/api/customers',
   '/api/staff',
-  '/api/kode'
+  '/api/kode',
+  '/api/admin',
+  '/api/kardex',
+  '/api/quotes',
 ];
 
-export function middleware(request: NextRequest) {
-  
+const PUBLIC_OPERATIONAL_API_EXCEPTIONS = [
+  '/api/kode/auth/login',
+  '/api/kode/auth/logout',
+  '/api/kode/vendedoras',
+  '/api/kode/c807/webhook',
+];
+
+function base64UrlToUint8Array(base64Url: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64Url.length % 4)) % 4);
+  const base64 = (base64Url + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+async function getEdgeAuthSecret(): Promise<string> {
+  const secret = process.env.AUTH_SECRET || process.env.WOMPI_API_SECRET;
+  if (secret) return secret;
+  if (process.env.DATABASE_URL) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(`aromaniak_auth_${process.env.DATABASE_URL}`);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hashBuffer))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
+  return 'aromaniak_auth_token_secret_prod_fallback_2026';
+}
+
+async function verifyStaffTokenEdge(token?: string | null): Promise<boolean> {
+  if (!token || typeof token !== 'string') return false;
+  const parts = token.split('.');
+  if (parts.length !== 2) return false;
+  const [payloadB64, receivedSig] = parts;
+
+  try {
+    const secret = await getEdgeAuthSecret();
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify']
+    );
+
+    const sigBytes = base64UrlToUint8Array(receivedSig);
+    const isValidSig = await crypto.subtle.verify(
+      'HMAC',
+      key,
+      sigBytes.buffer as ArrayBuffer,
+      encoder.encode(payloadB64)
+    );
+    if (!isValidSig) return false;
+
+    const payloadJson = new TextDecoder().decode(base64UrlToUint8Array(payloadB64));
+    const payload = JSON.parse(payloadJson);
+    if (!payload || typeof payload.exp !== 'number' || Date.now() > payload.exp) {
+      return false;
+    }
+    return payload.scope === 'internal_operations';
+  } catch {
+    return false;
+  }
+}
+
+export async function middleware(request: NextRequest) {
   const host = request.headers.get('host') || '';
   const { pathname } = request.nextUrl;
-  
+
   if (pathname === '/login') {
     return NextResponse.next();
   }
-
 
   const isKodeSubdomain = host.startsWith('kode.') || host.includes('kode.aromaniaksv.com');
   if (isKodeSubdomain) {
@@ -56,19 +126,15 @@ export function middleware(request: NextRequest) {
 
   // 1. En el subdominio de empleados (pos.aromaniaksv.com)
   if (isPosSubdomain) {
-    // Si entran a la raíz de pos.aromaniaksv.com, abrir directo el POS
     if (pathname === '/') {
       return NextResponse.redirect(new URL('/pos', request.url));
     }
-    // Si intentan entrar a páginas de tienda (ej: /checkout) en el subdominio pos, mandar a la tienda oficial
-    // (no redirigir llamadas /api)
     if (!isOperational && !pathname.startsWith('/api')) {
       return NextResponse.redirect(new URL(`https://aromaniaksv.com${pathname}`, request.url));
     }
   }
 
   // 2. En el dominio de clientes (aromaniaksv.com), bloquear páginas operativas
-  // Redirige al subdominio operativo pos.aromaniaksv.com con cabecera noindex
   if (isCustomerDomain && isOperational) {
     const redirectRes = NextResponse.redirect(new URL(`https://pos.aromaniaksv.com${pathname}`, request.url));
     redirectRes.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet');
@@ -82,9 +148,9 @@ export function middleware(request: NextRequest) {
         success: false,
         error: 'Acceso denegado: API reservada exclusivamente para el entorno operativo pos.aromaniaksv.com',
       },
-      { 
+      {
         status: 403,
-        headers: { 'X-Robots-Tag': 'noindex, nofollow, noarchive, nosnippet' }
+        headers: { 'X-Robots-Tag': 'noindex, nofollow, noarchive, nosnippet' },
       }
     );
   }
@@ -96,35 +162,60 @@ export function middleware(request: NextRequest) {
         success: false,
         error: 'Acceso denegado: Modificación de productos reservada para el entorno operativo pos.aromaniaksv.com',
       },
-      { 
+      {
         status: 403,
-        headers: { 'X-Robots-Tag': 'noindex, nofollow, noarchive, nosnippet' }
+        headers: { 'X-Robots-Tag': 'noindex, nofollow, noarchive, nosnippet' },
       }
     );
   }
 
-  
-  // 6. PROTECCIÓN CRIPTOGRÁFICA DE RUTAS Y APIs OPERATIVAS (MECANIC OS SECURITY)
-  // Si están visitando una ruta operativa protegida (y no es el login), verificamos la cookie
+  // 5. PROTECCIÓN CRIPTOGRÁFICA DE RUTAS DE INTERFAZ OPERATIVA (MECANIC OS SECURITY)
   const isProtectedUiRoute = ['/pos', '/admin', '/bodega', '/ventas', '/inventario', '/logistica'].some(
     (route) => pathname === route || pathname.startsWith(route + '/')
   );
 
   if (isProtectedUiRoute) {
     const token = request.cookies.get('kodelocal_staff_token')?.value;
-    if (!token) {
-      // Redirigir al login si no tiene cookie
-      return NextResponse.redirect(new URL('/login', request.url));
+    const isValid = await verifyStaffTokenEdge(token);
+    if (!isValid) {
+      const loginRedirect = NextResponse.redirect(new URL('/login', request.url));
+      loginRedirect.cookies.delete('kodelocal_staff_token');
+      return loginRedirect;
     }
-    // NOTA: La validación profunda criptográfica del token (JWT secret) ocurre en el cliente o en las APIs,
-    // porque Edge Middleware no soporta crypto de Node.js por defecto de forma fácil.
-    // Pero solo tener la cookie ya detiene el 99% de accesos casuales, y las APIs están selladas criptográficamente.
+  }
+
+  // 6. PROTECCIÓN CRIPTOGRÁFICA DE APIs OPERATIVAS Y ADMINISTRATIVAS
+  const isPublicApiException =
+    PUBLIC_OPERATIONAL_API_EXCEPTIONS.some((p) => pathname === p || pathname.startsWith(`${p}/`)) ||
+    (pathname.startsWith('/api/dte/') && request.method === 'GET');
+
+  if (isOperationalApi && !isPublicApiException) {
+    const authHeader = request.headers.get('authorization') || '';
+    const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : null;
+    const staffHeaderToken = request.headers.get('x-staff-token');
+    const cookieToken = request.cookies.get('kodelocal_staff_token')?.value;
+
+    const validCookie = await verifyStaffTokenEdge(cookieToken);
+    const validHeader = !validCookie ? await verifyStaffTokenEdge(staffHeaderToken) : true;
+    const validBearer = !validCookie && !validHeader ? await verifyStaffTokenEdge(bearerToken) : true;
+
+    if (!validCookie && !validHeader && !validBearer) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'No autorizado. Se requiere sesión activa de personal operativo.',
+        },
+        {
+          status: 401,
+          headers: { 'X-Robots-Tag': 'noindex, nofollow, noarchive, nosnippet' },
+        }
+      );
+    }
   }
 
   const response = NextResponse.next();
 
-
-  // 5. Blindaje absoluto de SEO: Cualquier ruta operativa o del subdominio POS recibe X-Robots-Tag
+  // 7. Blindaje absoluto de SEO: Cualquier ruta operativa o del subdominio POS recibe X-Robots-Tag
   if (isPosSubdomain || isOperational || isOperationalApi) {
     response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet');
   }

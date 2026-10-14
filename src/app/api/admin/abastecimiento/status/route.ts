@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { verifyStaffRequest } from '@/lib/customerAuthToken';
 
 export async function GET(request: Request) {
   try {
+    const { authorized } = verifyStaffRequest(request);
+    if (!authorized) {
+      return NextResponse.json({ success: false, error: 'No autorizado' }, { status: 401 });
+    }
+
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 

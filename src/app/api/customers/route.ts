@@ -1,10 +1,19 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { verifyStaffRequest } from '@/lib/customerAuthToken';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { authorized } = verifyStaffRequest(request);
+    if (!authorized) {
+      return NextResponse.json(
+        { success: false, error: 'No autorizado. Se requiere sesión activa de personal operativo.' },
+        { status: 401 }
+      );
+    }
+
     const customers = await prisma.customer.findMany({
       include: { tier: true },
       orderBy: { createdAt: 'desc' },
@@ -45,6 +54,14 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const { authorized } = verifyStaffRequest(request);
+    if (!authorized) {
+      return NextResponse.json(
+        { success: false, error: 'No autorizado. Se requiere sesión activa de personal operativo.' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const {
       id,

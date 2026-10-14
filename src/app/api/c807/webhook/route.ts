@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { queryKode } from '@/lib/kodeDb';
 import { c807Client } from '@/lib/c807';
+import { checkRateLimit } from '@/lib/rateLimit';
+import { verifyStaffRequest } from '@/lib/customerAuthToken';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +16,30 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const rl = await checkRateLimit(request, {
+    keyPrefix: 'c807_webhook',
+    maxRequests: 60,
+    windowMs: 60_000,
+  });
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { success: false, error: 'Demasiadas peticiones al webhook.' },
+      { status: 429, headers: { 'Retry-After': String(rl.resetSeconds) } }
+    );
+  }
+
+  const expectedSecret = process.env.C807_WEBHOOK_SECRET;
+  if (expectedSecret) {
+    const providedSecret =
+      request.headers.get('x-c807-secret') ||
+      request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim() ||
+      new URL(request.url).searchParams.get('secret');
+    const isStaff = Boolean(verifyStaffRequest(request));
+    if (!isStaff && providedSecret !== expectedSecret) {
+      return NextResponse.json({ success: false, error: 'Webhook no autorizado' }, { status: 401 });
+    }
+  }
+
   try {
     let body: any = null;
     try {
