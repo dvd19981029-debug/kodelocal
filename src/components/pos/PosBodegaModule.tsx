@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { CustomerRecord } from '@/lib/customers';
 import { SaleRecord, ProductItem } from '@/lib/store';
+import { getOriginalFragranceInfo } from '@/lib/perfumeNames';
 
 export interface PosBodegaModuleProps {
   sales: SaleRecord[];
@@ -322,19 +323,28 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                     <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-wider block">
                       Productos en Comanda ({order.items.length}):
                     </span>
-                    {order.items.map((it, idx) => (
-                      <div key={idx} className="p-2 rounded-xl bg-white border border-slate-200 text-xs flex justify-between items-center gap-2">
-                        <div className="truncate">
-                          <span className="font-bold text-slate-800 block truncate">{it.name}</span>
-                          <span className="text-[10px] text-slate-400 font-mono font-bold">
-                            Cant: <strong className="text-indigo-700">{it.quantity} {it.unit || 'Oz'}</strong>
+                    {order.items.map((it, idx) => {
+                      const origInfo = getOriginalFragranceInfo(it, products);
+                      return (
+                        <div key={idx} className="p-2 rounded-xl bg-white border border-slate-200 text-xs flex justify-between items-center gap-2">
+                          <div className="truncate min-w-0 flex-1">
+                            <span className="font-bold text-slate-800 block truncate">{it.name}</span>
+                            {origInfo?.originalName && (
+                              <span className="text-[10px] text-slate-500 font-medium block truncate mt-0.5">
+                                Original: <strong className="text-slate-900 font-black">{origInfo.originalName}</strong>
+                                {origInfo.brand && <span className="text-slate-400"> ({origInfo.brand})</span>}
+                              </span>
+                            )}
+                            <span className="text-[10px] text-slate-400 font-mono font-bold block mt-0.5">
+                              Cant: <strong className="text-indigo-700">{it.quantity} {it.unit || 'Oz'}</strong>
+                            </span>
+                          </div>
+                          <span className="clay-badge text-[9.5px] font-mono font-black text-amber-950 bg-amber-100 px-2 py-0.5 border border-amber-300 shrink-0">
+                            📍 Puesto: {it.puesto || products.find(p => p.id === it.productId)?.puesto || 'A1'}
                           </span>
                         </div>
-                        <span className="clay-badge text-[9.5px] font-mono font-black text-amber-950 bg-amber-100 px-2 py-0.5 border border-amber-300 shrink-0">
-                          📍 Puesto: {it.puesto || products.find(p => p.id === it.productId)?.puesto || 'A1'}
-                        </span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 

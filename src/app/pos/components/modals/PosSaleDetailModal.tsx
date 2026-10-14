@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, CheckCircle2, FileDown, ExternalLink, Printer } from 'lucide-react';
 import { SaleRecord } from '@/lib/store';
+import { getOriginalFragranceInfo } from '@/lib/perfumeNames';
 
 export interface PosSaleDetailModalProps {
   sale: SaleRecord | null;
@@ -52,15 +53,24 @@ export const PosSaleDetailModal: React.FC<PosSaleDetailModalProps> = ({
           )}
 
           <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl p-2 max-h-48 overflow-y-auto">
-            {sale.items.map((it, idx) => (
-              <div key={idx} className="py-1 flex justify-between items-center text-xs">
-                <div>
-                  <span className="font-bold text-slate-800 block">{it.name}</span>
-                  <span className="text-[10px] text-slate-400">{it.quantity} {it.unit || 'Oz'} x ${it.price.toFixed(2)}</span>
+            {sale.items.map((it, idx) => {
+              const origInfo = getOriginalFragranceInfo(it);
+              return (
+                <div key={idx} className="py-1 flex justify-between items-center text-xs">
+                  <div>
+                    <span className="font-bold text-slate-800 block">{it.name}</span>
+                    {origInfo?.originalName && (
+                      <span className="text-[10px] text-slate-500 font-medium block">
+                        Original: <strong className="text-slate-800">{origInfo.originalName}</strong>
+                        {origInfo.brand && <span className="text-slate-400"> ({origInfo.brand})</span>}
+                      </span>
+                    )}
+                    <span className="text-[10px] text-slate-400">{it.quantity} {it.unit || 'Oz'} x ${it.price.toFixed(2)}</span>
+                  </div>
+                  <span className="font-mono font-black text-slate-800">${it.total.toFixed(2)}</span>
                 </div>
-                <span className="font-mono font-black text-slate-800">${it.total.toFixed(2)}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="p-2.5 rounded-xl bg-indigo-50/60 border border-indigo-100 space-y-1 text-xs">

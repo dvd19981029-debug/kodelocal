@@ -52,6 +52,7 @@ import {
 import { getActiveUser, UserAccount, getStaffToken } from '@/lib/auth';
 import { supabase } from '@/lib/supabaseClient';
 import { getOfflineSalesQueue } from '@/lib/offlineSync';
+import { getOriginalFragranceInfo } from '@/lib/perfumeNames';
 
 // Singleton para el AudioContext
 let globalAudioCtx: AudioContext | null = null;
@@ -293,15 +294,23 @@ export default function BodegaPage() {
             correo: o.customerEmail || undefined,
             direccion: `${o.shippingAddress}, ${o.municipality}, ${o.department}`,
           },
-          items: o.items.map((it: any) => ({
-            productId: it.productId,
-            name: `${it.productName} (${it.presentation})`,
-            quantity: it.quantity,
-            price: it.unitPrice,
-            total: it.total,
-            unit: it.presentation,
-            puesto: it.product?.puesto || 'A1',
-          }))
+          items: o.items.map((it: any) => {
+            const prod = it.product || products.find((p: any) => p.id === it.productId || p.sku === it.productId);
+            const origInfo = getOriginalFragranceInfo({ ...it, product: prod }, products);
+            return {
+              productId: it.productId,
+              name: `${it.productName} (${it.presentation})`,
+              quantity: it.quantity,
+              price: it.unitPrice,
+              total: it.total,
+              unit: it.presentation,
+              puesto: it.product?.puesto || prod?.puesto || 'A1',
+              originalName: origInfo?.originalName || it.inspiredBy || undefined,
+              inspiredBy: origInfo?.originalName || it.inspiredBy || undefined,
+              brand: origInfo?.brand || prod?.brand || undefined,
+              product: prod || it.product || undefined,
+            };
+          })
         }));
 
         // Detección de nuevos pedidos para alerta sonora y visual inmediata
@@ -315,7 +324,11 @@ export default function BodegaPage() {
             // Construir el texto detallado con pausas usando comas
             let speechText = `Nuevo pedido, cliente ${clientName}. Lléva: `;
             if (first.items && first.items.length > 0) {
-              const itemTexts = first.items.map((it: any) => `${it.quantity} ${it.unit === 'Onza' ? (it.quantity === 1 ? 'onza' : 'onzas') : 'unidades'} de ${it.name}, en el estante ${it.puesto || 'A1'}`);
+              const itemTexts = first.items.map((it: any) => {
+                const orig = getOriginalFragranceInfo(it, products);
+                const origDesc = orig?.originalName ? `, original ${orig.originalName}` : '';
+                return `${it.quantity} ${it.unit === 'Onza' ? (it.quantity === 1 ? 'onza' : 'onzas') : 'unidades'} de ${it.name}${origDesc}, en el estante ${it.puesto || 'A1'}`;
+              });
               speechText += itemTexts.join(', y ');
             } else {
               speechText += 'varios productos, revisar pantalla.';
@@ -389,15 +402,23 @@ export default function BodegaPage() {
                     correo: s.customer?.email || pNotes?.cliente?.correo || undefined,
                     direccion: s.customer?.address || pNotes?.cliente?.direccion || undefined,
                   },
-                  items: (s.items || []).map((it: any) => ({
-                    productId: it.productId,
-                    name: it.productName,
-                    quantity: it.quantity,
-                    price: Number(it.unitPrice || 0),
-                    total: Number(it.total || 0),
-                    unit: it.unit || (String(it.productName || '').includes('½') ? '½ Onza' : 'Onza'),
-                    puesto: it.puesto || it.product?.puesto || 'A1',
-                  }))
+                  items: (s.items || []).map((it: any) => {
+                    const prod = it.product || products.find((p: any) => p.id === it.productId || p.sku === it.productId);
+                    const origInfo = getOriginalFragranceInfo({ ...it, product: prod }, products);
+                    return {
+                      productId: it.productId,
+                      name: it.productName || it.name,
+                      quantity: it.quantity,
+                      price: Number(it.unitPrice || 0),
+                      total: Number(it.total || 0),
+                      unit: it.unit || (String(it.productName || '').includes('½') ? '½ Onza' : 'Onza'),
+                      puesto: it.puesto || prod?.puesto || 'A1',
+                      originalName: origInfo?.originalName || undefined,
+                      inspiredBy: origInfo?.originalName || undefined,
+                      brand: origInfo?.brand || prod?.brand || undefined,
+                      product: prod,
+                    };
+                  })
                 };
               });
           }
@@ -1323,6 +1344,7 @@ export default function BodegaPage() {
                             {order.items.map((item, idx) => {
                               const isChecked = checkedItems[`${order.id}-${idx}`];
                               const shelfLocation = item.puesto || products.find(p => p.id === item.productId)?.puesto || 'A1';
+                              const origInfo = getOriginalFragranceInfo(item, products);
 
                               return (
                                 <div 
@@ -1334,18 +1356,31 @@ export default function BodegaPage() {
                                       : 'bg-white border-slate-200 hover:border-indigo-200 shadow-sm'
                                   }`}
                                 >
-                                  <div className="flex items-center gap-2.5 overflow-hidden">
+                                  <div className="flex items-center gap-2.5 overflow-hidden min-w-0 flex-1">
                                     <input
                                       type="checkbox"
                                       checked={!!isChecked}
                                       onChange={() => {}}
-                                      className="w-4 h-4 rounded text-indigo-600 cursor-pointer pointer-events-none"
+                                      className="w-4 h-4 rounded text-indigo-600 cursor-pointer pointer-events-none shrink-0"
                                     />
-                                    <div className="truncate">
+                                    <div className="truncate min-w-0 flex-1">
                                       <h4 className="font-black text-xs text-slate-800 truncate">
                                         {item.name}
                                       </h4>
-                                      <span className="text-[10.5px] font-bold text-slate-500">
+                                      {origInfo?.originalName && (
+                                        <div className="flex items-center gap-1.5 text-[11px] truncate mt-0.5">
+                                          <span className="text-slate-500 font-medium shrink-0">Original:</span>
+                                          <span className="font-black text-slate-900 bg-amber-50/90 text-amber-950 px-1.5 py-0.5 rounded border border-amber-200/90 truncate shadow-[0_1px_2px_rgba(0,0,0,0.03)] font-sans">
+                                            {origInfo.originalName}
+                                          </span>
+                                          {origInfo.brand && (
+                                            <span className="text-[10px] text-slate-400 font-semibold truncate shrink-0">
+                                              • {origInfo.brand}
+                                            </span>
+                                          )}
+                                        </div>
+                                      )}
+                                      <span className="text-[10.5px] font-bold text-slate-500 block mt-0.5">
                                         Cantidad: <strong className="text-indigo-700">{item.quantity} {item.unit || 'Oz'}</strong>
                                       </span>
                                     </div>
@@ -1490,12 +1525,23 @@ export default function BodegaPage() {
                         </div>
 
                         <div className="space-y-1.5 mb-3">
-                          {order.items.map((item, idx) => (
-                            <div key={idx} className="p-2 rounded-xl bg-slate-50 border border-slate-200 text-xs flex justify-between items-center">
-                              <span className="font-bold text-slate-800">{item.name}</span>
-                              <span className="font-mono font-black text-indigo-700">{item.quantity} {item.unit || 'Oz'}</span>
-                            </div>
-                          ))}
+                          {order.items.map((item, idx) => {
+                            const origInfo = getOriginalFragranceInfo(item, products);
+                            return (
+                              <div key={idx} className="p-2 rounded-xl bg-slate-50 border border-slate-200 text-xs flex justify-between items-center gap-2">
+                                <div className="truncate min-w-0 flex-1">
+                                  <span className="font-bold text-slate-800 block truncate">{item.name}</span>
+                                  {origInfo?.originalName && (
+                                    <span className="text-[10px] text-slate-500 font-medium block truncate mt-0.5">
+                                      Original: <strong className="text-slate-900 font-black">{origInfo.originalName}</strong>
+                                      {origInfo.brand && <span className="text-slate-400"> ({origInfo.brand})</span>}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="font-mono font-black text-indigo-700 shrink-0">{item.quantity} {item.unit || 'Oz'}</span>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
 
@@ -1726,13 +1772,18 @@ export default function BodegaPage() {
                             </td>
                             <td className="py-2 px-3">
                               <span className="font-extrabold text-slate-800 block text-xs">
-                                {prod.name}
+                                {prod.officialName || prod.name}
                               </span>
-                              {prod.brand && (
+                              {prod.officialName && prod.officialName !== prod.name ? (
+                                <span className="text-[10.5px] text-amber-900 font-semibold block">
+                                  Original: <strong className="text-slate-800">{prod.name}</strong>
+                                  {prod.brand && <span className="text-slate-400"> ({prod.brand})</span>}
+                                </span>
+                              ) : prod.brand ? (
                                 <span className="text-[10px] text-slate-400 font-medium">
                                   Contratipo / Marca: {prod.brand}
                                 </span>
-                              )}
+                              ) : null}
                             </td>
                             <td className="py-2 px-3">
                               <span className="text-[10.5px] text-slate-600 font-medium">

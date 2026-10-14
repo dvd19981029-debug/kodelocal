@@ -84,6 +84,10 @@ export interface SaleRecord {
     total: number;
     unit?: string;
     puesto?: string;
+    originalName?: string;
+    inspiredBy?: string;
+    brand?: string;
+    product?: any;
   }[];
 }
 

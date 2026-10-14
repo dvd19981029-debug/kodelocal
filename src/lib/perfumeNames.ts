@@ -54,7 +54,7 @@ export const INSPIRACION_PERFUME_MAP: Record<string, string> = {
   '47': 'Green Tea F',
   '48': 'Princess F',
   '49': 'Sauvage Elixir H',
-  '50': 'Acqua Di Gio Profondo H',
+  '50': 'Born in Roma Uomo H',
   '51': 'Acqua Di Gio Profondo H',
   '52': 'Le Male Elixir H',
   '53': 'Stronger With You H',
@@ -293,5 +293,203 @@ export function getBottleLabelConfig(name: string): BottleLabelConfig {
   const fontSize = maxLen <= 8 ? '4.0cqw' : maxLen <= 11 ? '3.3cqw' : '2.8cqw';
   return { lines: [line1, line2], fontSize };
 }
+
+export interface OriginalFragranceInfo {
+  originalName: string;
+  brand?: string;
+  sku?: string;
+}
+
+/**
+ * Mapeo de nombres oficiales/comerciales de catálogo de Aromaniak hacia su perfume original / contratipo
+ */
+export const OFFICIAL_TO_ORIGINAL_MAP: Record<string, { originalName: string; brand: string; sku: string }> = {
+  'FIERA': { originalName: 'Sauvage H', brand: 'Dior', sku: '1' },
+  'MARINO': { originalName: 'Bleu H', brand: 'Chanel', sku: '2' },
+  'DAVID OCEAN': { originalName: 'Acqua Di Gio H', brand: 'Giorgio Armani', sku: '3' },
+  'VIDEOCLUB': { originalName: 'Club De Nuit Intense H', brand: 'Armaf', sku: '4' },
+  'EXPLORADOR': { originalName: 'Aventus H', brand: 'Creed', sku: '5' },
+  'ELLA ES LINDA': { originalName: 'La Vie Est Belle F', brand: 'Lancôme', sku: '6' },
+  'CITRIC HEAVEN': { originalName: 'Odyssey Mandarin Sky H', brand: 'Armaf', sku: '7' },
+  'ATREVIDO': { originalName: 'Eros H', brand: 'Versace', sku: '8' },
+  'NIPPON': { originalName: "L'Eau d'Issey H", brand: 'Issey Miyake', sku: '9' },
+  'NICHO Y PAPIRO': { originalName: 'Santal 33', brand: 'Le Labo', sku: '10' },
+  'EUROBOY INTENSE': { originalName: 'Born in Roma Intense H', brand: 'Valentino', sku: '11' },
+  'HIEDRAFRAIS': { originalName: 'Erba Pura', brand: 'Xerjoff', sku: '12' },
+  'PINK LADY': { originalName: 'Coco Mademoiselle F', brand: 'Chanel', sku: '13' },
+  'OCEAN LORD': { originalName: 'Light Blue H', brand: 'Dolce & Gabbana', sku: '14' },
+  'WALLSTREET WOLF': { originalName: 'Boss Bottled H', brand: 'Hugo Boss', sku: '15' },
+  'KICKBOX': { originalName: 'Invictus H', brand: 'Paco Rabanne', sku: '16' },
+  'EURO HEIRESS': { originalName: 'Burberry Her F', brand: 'Burberry', sku: '17' },
+  'MANEATER': { originalName: '212 VIP Rosé F', brand: 'Carolina Herrera', sku: '18' },
+  'ELITE': { originalName: 'Polo Blue H', brand: 'Ralph Lauren', sku: '19' },
+  'RICHRICH': { originalName: 'One Million H', brand: 'Paco Rabanne', sku: '20' },
+  'LADY MONEY': { originalName: 'Coco F', brand: 'Chanel', sku: '21' },
+  'NEW YORK LADY': { originalName: 'Chance F', brand: 'Chanel', sku: '22' },
+  'HABIBI': { originalName: '9PM H', brand: 'Afnan', sku: '23' },
+  'THE MAN': { originalName: 'Le Male H', brand: 'Jean Paul Gaultier', sku: '24' },
+  'MAGNOLIA': { originalName: "J'adore F", brand: 'Dior', sku: '25' },
+  'AMERICAN BOY': { originalName: 'Tommy H', brand: 'Tommy Hilfiger', sku: '26' },
+  'OBERLIN': { originalName: 'N° 5 F', brand: 'Chanel', sku: '27' },
+  'IRRESISTIBLE': { originalName: 'Bad Boy H', brand: 'Carolina Herrera', sku: '28' },
+  'CHARLI APPLE': { originalName: 'Be Delicious F', brand: 'DKNY', sku: '29' },
+  'MON CHERRY': { originalName: 'Lost Cherry', brand: 'Tom Ford', sku: '30' },
+  'PARTYBOY': { originalName: 'Scandal H', brand: 'Jean Paul Gaultier', sku: '31' },
+  'EURO GIRL': { originalName: 'Donna F', brand: 'Valentino', sku: '32' },
+  'KING LUIS': { originalName: "L'Immensité H", brand: 'Louis Vuitton', sku: '33' },
+  'WIFE MATERIAL': { originalName: '212 VIP F', brand: 'Carolina Herrera', sku: '34' },
+  'EURO SAMURAI': { originalName: 'Swiss Army H', brand: 'Victorinox', sku: '35' },
+  'BASIC WHITE': { originalName: 'Blanc L.12.12 H', brand: 'Lacoste', sku: '36' },
+  'GEORGIA ICON': { originalName: 'Acqua Di Gio F', brand: 'Giorgio Armani', sku: '37' },
+  'NIGHT SKY': { originalName: 'Polo Black H', brand: 'Ralph Lauren', sku: '38' },
+  'COWBOY GIRL': { originalName: 'Ralph F', brand: 'Ralph Lauren', sku: '39' },
+  'DUBAI': { originalName: 'Yara F', brand: 'Lattafa', sku: '40' },
+  'BURJ KHALIFA': { originalName: 'Yara Tous F', brand: 'Lattafa', sku: '41' },
+  'ATOMIC FLOWER': { originalName: 'Flowerbomb F', brand: 'Viktor & Rolf', sku: '42' },
+  'AROMA ADDICT': { originalName: 'Black Opium F', brand: 'Yves Saint Laurent', sku: '43' },
+  'EMPERADOR': { originalName: 'Homme Sport H', brand: 'Dior', sku: '44' },
+  'CLASSIC MAN': { originalName: 'CK One', brand: 'Calvin Klein', sku: '45' },
+  'ENGLAND PHONE': { originalName: '360 Red H', brand: 'Perry Ellis', sku: '46' },
+  'ENGLAND FOREST': { originalName: 'Green Tea F', brand: 'Elizabeth Arden', sku: '47' },
+  'ROMANOV': { originalName: 'Princess F', brand: 'Vera Wang', sku: '48' },
+  'FIERA ELIXIR': { originalName: 'Sauvage Elixir H', brand: 'Dior', sku: '49' },
+  'EUROBOY': { originalName: 'Born in Roma Uomo H', brand: 'Valentino', sku: '50' },
+  'DEEP OCEAN': { originalName: 'Acqua Di Gio Profondo H', brand: 'Giorgio Armani', sku: '51' },
+  'THE MAN ELIXIR': { originalName: 'Le Male Elixir H', brand: 'Jean Paul Gaultier', sku: '52' },
+  'ALWAYS WITH YOU': { originalName: 'Stronger With You H', brand: 'Giorgio Armani', sku: '53' },
+  'MANHATTAN': { originalName: '212 Men H', brand: 'Carolina Herrera', sku: '54' },
+  'BLACK VOLCANO': { originalName: 'Man In Black H', brand: 'Bvlgari', sku: '55' },
+  'BLACK OCEAN': { originalName: 'Acqua Di Gio Profumo H', brand: 'Giorgio Armani', sku: '56' },
+  'SWEET BOMB': { originalName: 'La Bomba M', brand: 'Viktor & Rolf', sku: '57' },
+  'FEMME FATALE': { originalName: 'Good Girl M', brand: 'Carolina Herrera', sku: '58' },
+  'BLACK BEAR': { originalName: 'Toy Boy H', brand: 'Moschino', sku: '59' },
+  'CRISTAL ROUGE': { originalName: 'Baccarat Rouge 540 U', brand: 'Maison Francis Kurkdjian', sku: '60' },
+  'KELVIN': { originalName: 'Fahrenheit H', brand: 'Dior', sku: '61' },
+};
+
+// Generar variaciones con sufijos H / F / M / U para match instantáneo
+Object.keys(OFFICIAL_TO_ORIGINAL_MAP).forEach((key) => {
+  const val = OFFICIAL_TO_ORIGINAL_MAP[key];
+  OFFICIAL_TO_ORIGINAL_MAP[`${key} H`] = val;
+  OFFICIAL_TO_ORIGINAL_MAP[`${key} F`] = val;
+  OFFICIAL_TO_ORIGINAL_MAP[`${key} M`] = val;
+  OFFICIAL_TO_ORIGINAL_MAP[`${key} U`] = val;
+});
+
+/**
+ * Resuelve el nombre del perfume original / contratipo para cualquier producto o ítem de comanda.
+ * Retorna null si el ítem es un insumo, frasco o no corresponde a una fragancia.
+ */
+export function getOriginalFragranceInfo(
+  item: {
+    productId?: string | null;
+    productSku?: string | null;
+    name?: string | null;
+    inspiredBy?: string | null;
+    originalName?: string | null;
+    brand?: string | null;
+    product?: any;
+  } | null | undefined,
+  allProducts?: any[]
+): OriginalFragranceInfo | null {
+  if (!item) return null;
+
+  // 1. Si ya trae inspiredBy u originalName explícito y no vacío
+  if (item.originalName && typeof item.originalName === 'string' && item.originalName.trim()) {
+    return { originalName: item.originalName.trim(), brand: item.brand || undefined };
+  }
+  if (item.inspiredBy && typeof item.inspiredBy === 'string' && item.inspiredBy.trim()) {
+    return { originalName: item.inspiredBy.trim(), brand: item.brand || undefined };
+  }
+
+  // 2. Extraer el nombre limpio (quitando sufijos de presentación como "(½ Onza)", "(Unidad)", "(Litro)", etc.)
+  const rawName = String(item.name || '').trim();
+  const cleanName = rawName.replace(/\s*\([^)]*\)/g, '').trim();
+  const upperClean = cleanName.toUpperCase();
+
+  // Filtrar artículos que sabemos NO son fragancias (Botes, Alcohol, Empaque)
+  const nonFragranceKeywords = [
+    'ALCOHOL', 'FIJADOR', 'GOLIAT', 'REY LUIS', 'BOTE', 'FRASCO', 
+    'ATOMIZADOR', 'VALVULA', 'VÁLVULA', 'TAPA', 'CAJA', 'BOLSA', 
+    'EMPAQUE', 'SOLVENTE', 'DILUYENTE', 'PIPETAS', 'PROBETA'
+  ];
+  if (nonFragranceKeywords.some(kw => upperClean.includes(kw))) {
+    return null;
+  }
+
+  // 3. Buscar en el mapeo directo OFFICIAL_TO_ORIGINAL_MAP
+  if (OFFICIAL_TO_ORIGINAL_MAP[upperClean]) {
+    const found = OFFICIAL_TO_ORIGINAL_MAP[upperClean];
+    return {
+      originalName: found.originalName,
+      brand: found.brand,
+      sku: found.sku,
+    };
+  }
+
+  // Buscar sin sufijos de género (ej: "FIERA ELIXIR" si upperClean es "FIERA ELIXIR H")
+  const withoutGender = upperClean.replace(/\s+[HFUM]$/i, '').trim();
+  if (OFFICIAL_TO_ORIGINAL_MAP[withoutGender]) {
+    const found = OFFICIAL_TO_ORIGINAL_MAP[withoutGender];
+    return {
+      originalName: found.originalName,
+      brand: found.brand,
+      sku: found.sku,
+    };
+  }
+
+  // 4. Buscar en la lista de productos (allProducts o item.product)
+  const prod = item.product || (Array.isArray(allProducts) ? allProducts.find(p => 
+    p.id === item.productId || 
+    p.sku === item.productId ||
+    p.sku === item.productSku ||
+    (p.officialName && p.officialName.trim().toUpperCase() === upperClean) ||
+    (p.officialName && p.officialName.trim().toUpperCase() === withoutGender) ||
+    (p.name && p.name.trim().toUpperCase() === upperClean)
+  ) : null);
+
+  if (prod) {
+    if (prod.category && !prod.category.toLowerCase().includes('esencia') && !prod.category.toLowerCase().includes('perfume')) {
+      return null;
+    }
+
+    const official = (prod.officialName || '').trim();
+    const prodName = (prod.name || '').trim();
+
+    if (prodName && official && prodName.toLowerCase() !== official.toLowerCase()) {
+      return {
+        originalName: prodName,
+        brand: prod.brand || undefined,
+        sku: prod.sku || undefined,
+      };
+    }
+
+    if (prod.sku && INSPIRACION_PERFUME_MAP[String(prod.sku)]) {
+      const orig = INSPIRACION_PERFUME_MAP[String(prod.sku)];
+      if (orig.toLowerCase() !== cleanName.toLowerCase()) {
+        return {
+          originalName: orig,
+          brand: prod.brand || undefined,
+          sku: String(prod.sku),
+        };
+      }
+    }
+  }
+
+  // 5. Fallback por SKU si item.productId o item.productSku es un SKU numérico (1-61)
+  const potentialSku = String(item.productSku || item.productId || '').trim();
+  if (potentialSku && INSPIRACION_PERFUME_MAP[potentialSku]) {
+    const orig = INSPIRACION_PERFUME_MAP[potentialSku];
+    if (orig.toLowerCase() !== cleanName.toLowerCase()) {
+      return {
+        originalName: orig,
+        sku: potentialSku,
+      };
+    }
+  }
+
+  return null;
+}
+
 
 
