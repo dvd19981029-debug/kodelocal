@@ -15,7 +15,10 @@ function renderTicketToDoc(doc: any, ticket: SaleRecord): number {
   const rightM = 68;
   const centerX = 35.5;
 
-  let y = 8;
+  // Los primeros 32mm (256 líneas de puntos a 203 DPI = Banda 0 del driver POS-80 en macOS)
+  // se dejan en blanco (bytes 0x00 NUL) para evitar que el encabezado inicial del driver
+  // corrompa los primeros 32mm como caracteres ASCII (!@ÇHü...) y se coma "AROMANIAK SV".
+  let y = 34;
 
   const drawDashedDivider = (currentY: number) => {
     doc.setFont('courier', 'normal');
