@@ -6,12 +6,14 @@ export interface PosCompletedSaleModalProps {
   sale: SaleRecord | null;
   onClose: () => void;
   onPrint: () => void;
+  onDownloadPdf?: () => void;
 }
 
 export const PosCompletedSaleModal: React.FC<PosCompletedSaleModalProps> = ({
   sale,
   onClose,
   onPrint,
+  onDownloadPdf,
 }) => {
   if (!sale) return null;
 
@@ -96,11 +98,23 @@ export const PosCompletedSaleModal: React.FC<PosCompletedSaleModalProps> = ({
           <button
             type="button"
             onClick={onPrint}
-            className="clay-btn clay-btn-light flex-1 py-2 text-xs font-bold flex items-center justify-center gap-1"
+            className="clay-btn clay-btn-light flex-1 py-2 text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm"
+            title="Imprimir ticket térmico de 80mm"
           >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Imprimir Ticket</span>
+            <Printer className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Imprimir (80mm)</span>
           </button>
+          {onDownloadPdf && (
+            <button
+              type="button"
+              onClick={onDownloadPdf}
+              className="clay-btn clay-btn-light py-2 px-2.5 text-xs font-bold flex items-center justify-center gap-1 text-slate-700 shadow-sm"
+              title="Descargar archivo PDF del ticket térmico (80mm)"
+            >
+              <FileDown className="w-3.5 h-3.5 text-slate-600" />
+              <span>PDF</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={onClose}

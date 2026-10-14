@@ -23,6 +23,7 @@ import {
   FileDown
 } from 'lucide-react';
 import { SaleRecord } from '@/lib/store';
+import { printThermalTicketPdf, downloadThermalTicketPdf } from '@/lib/thermalTicketPdf';
 import { flushOfflineQueue } from '@/lib/offlineSync';
 
 export default function VentasPage() {
@@ -833,13 +834,21 @@ export default function VentasPage() {
               </div>
             </div>
 
-            {/* Botón Imprimir */}
-            <div className="mt-5">
+            {/* Botones Imprimir y Descargar PDF 80mm */}
+            <div className="mt-5 flex gap-2">
               <button
-                onClick={() => window.print()}
-                className="clay-btn clay-btn-light w-full py-3 text-xs flex items-center justify-center gap-2"
+                onClick={() => printThermalTicketPdf(selectedSale)}
+                className="clay-btn clay-btn-light flex-1 py-3 text-xs flex items-center justify-center gap-2 font-bold"
+                title="Imprimir ticket térmico en 80mm continuo"
               >
-                <Printer className="w-4 h-4" /> Imprimir Comprobante
+                <Printer className="w-4 h-4 text-indigo-600" /> Imprimir (80mm)
+              </button>
+              <button
+                onClick={() => downloadThermalTicketPdf(selectedSale)}
+                className="clay-btn clay-btn-light px-4 py-3 text-xs flex items-center justify-center gap-1.5 font-bold text-slate-700"
+                title="Descargar archivo PDF del ticket térmico (80mm)"
+              >
+                <FileDown className="w-4 h-4 text-slate-600" /> PDF
               </button>
             </div>
           </div>

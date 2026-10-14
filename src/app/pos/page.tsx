@@ -6,6 +6,7 @@ import { INITIAL_PRODUCTS, ProductItem, CartItem, SaleRecord, PERFUME_CATEGORIES
 import CotizacionModal, { type CotizacionNotices } from '@/components/pos/CotizacionModal';
 import CotizacionesHistoryModal from '@/components/pos/CotizacionesHistoryModal';
 import ThermalTicket from '@/components/pos/ThermalTicket';
+import { printThermalTicketPdf, downloadThermalTicketPdf } from '@/lib/thermalTicketPdf';
 import { StockWarningBanner } from '@/components/pos/StockWarningBanner';
 import { PosCustomerModule } from '@/components/pos/PosCustomerModule';
 import { PosSalesModule } from '@/components/pos/PosSalesModule';
@@ -2656,7 +2657,8 @@ export default function PosPage() {
       <PosCompletedSaleModal
         sale={completedSale}
         onClose={() => setCompletedSale(null)}
-        onPrint={() => window.print()}
+        onPrint={() => completedSale && printThermalTicketPdf(completedSale)}
+        onDownloadPdf={() => completedSale && downloadThermalTicketPdf(completedSale)}
       />
 
       {/* ========================================================================= */}
@@ -2665,7 +2667,8 @@ export default function PosPage() {
       <PosSaleDetailModal
         sale={selectedSaleDetail}
         onClose={() => setSelectedSaleDetail(null)}
-        onPrint={() => window.print()}
+        onPrint={() => selectedSaleDetail && printThermalTicketPdf(selectedSaleDetail)}
+        onDownloadPdf={() => selectedSaleDetail && downloadThermalTicketPdf(selectedSaleDetail)}
       />
 
       {/* ========================================================================= */}
