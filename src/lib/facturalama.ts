@@ -49,15 +49,12 @@ export class FacturaLlamaClient {
   private baseUrl: string;
 
   constructor() {
-    this.apiKey = process.env.FACTURALLAMA_API_KEY || 'test_sk_45b8180f-9dab-44d5-9575-ba1487c73ed1';
+    this.apiKey = process.env.FACTURALLAMA_API_KEY || 'live_sk_1b857a22-475e-4966-a80b-54a7f80f0177';
     this.apiVersion = process.env.FACTURALLAMA_API_VERSION || '1';
     this.baseUrl = process.env.FACTURALLAMA_BASE_URL || 'https://api.facturallama.com';
   }
 
   getApiKey(): string {
-    if (process.env.FACTURALLAMA_API_KEY) {
-      return process.env.FACTURALLAMA_API_KEY;
-    }
     try {
       const { getActiveFacturaLlamaApiKey } = require('./kodeConfig');
       const active = getActiveFacturaLlamaApiKey();
@@ -65,7 +62,10 @@ export class FacturaLlamaClient {
     } catch {
       // ignore
     }
-    return this.apiKey || 'test_sk_45b8180f-9dab-44d5-9575-ba1487c73ed1';
+    if (process.env.FACTURALLAMA_API_KEY) {
+      return process.env.FACTURALLAMA_API_KEY;
+    }
+    return this.apiKey || 'live_sk_1b857a22-475e-4966-a80b-54a7f80f0177';
   }
 
   isSimulated(): boolean {
@@ -122,7 +122,23 @@ export class FacturaLlamaClient {
 
     // 2. Transmisión Real a la API de Factura Llama
     try {
-      const endpoint = tipoDte === '03' ? `${this.baseUrl}/dte/ccf` : `${this.baseUrl}/dte/fc`;
+      let activeApiKey = this.getApiKey();
+      let apiVer = this.apiVersion;
+      let activeBaseUrl = this.baseUrl;
+      let activeAmbiente = 'PRODUCCION';
+
+      try {
+        const { getKodeConfigAsync, getActiveFacturaLlamaApiKey } = await import('./kodeConfig');
+        const config = await getKodeConfigAsync();
+        activeApiKey = getActiveFacturaLlamaApiKey(config) || activeApiKey;
+        apiVer = config.facturaLlamaApiVersion || apiVer;
+        activeBaseUrl = config.facturaLlamaBaseUrl || activeBaseUrl;
+        activeAmbiente = config.ambiente?.toUpperCase() || activeAmbiente;
+      } catch (err) {
+        console.warn('[FacturaLlama] Error obteniendo config de DB, usando fallback:', err);
+      }
+
+      const endpoint = tipoDte === '03' ? `${activeBaseUrl}/dte/ccf` : `${activeBaseUrl}/dte/fc`;
       const payload = this.buildFacturaLlamaPayload({
         tipoDte,
         codigoGeneracion,
@@ -131,14 +147,14 @@ export class FacturaLlamaClient {
         metodoPago: params.metodoPago,
       });
 
-      console.log(`[FacturaLlama] Transmitiendo DTE-${tipoDte} a ${endpoint}...`);
+      console.log(`[FacturaLlama] [${activeAmbiente}] Transmitiendo DTE-${tipoDte} a ${endpoint} con API Key ${activeApiKey.slice(0, 10)}...`);
 
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': this.getApiKey(),
-          'X-API-Version': this.apiVersion,
+          'X-API-Key': activeApiKey,
+          'X-API-Version': apiVer,
         },
         body: JSON.stringify(payload),
       });

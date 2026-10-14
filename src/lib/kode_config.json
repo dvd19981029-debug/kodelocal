@@ -1,11 +1,11 @@
 {
-  "ambiente": "sandbox",
-  "testApiKey": "test_sk_45b8180f-9dab-44d5-9575-ba1487c73ed1",
-  "liveApiKey": "live_sk_18558fbf-1c1b-445b-b124-b79fb4f45c67",
-  "facturaLlamaApiKey": "test_sk_45b8180f-9dab-44d5-9575-ba1487c73ed1",
+  "ambiente": "produccion",
+  "testApiKey": "test_sk_77425a0a-6d88-490e-a006-07cdd031b05c",
+  "liveApiKey": "live_sk_1b857a22-475e-4966-a80b-54a7f80f0177",
+  "facturaLlamaApiKey": "live_sk_1b857a22-475e-4966-a80b-54a7f80f0177",
   "facturaLlamaApiVersion": "1",
   "facturaLlamaBaseUrl": "https://api.facturallama.com",
   "defaultEmail": "luisg@forbiddensoluciones.com",
   "defaultDui": "123456789",
-  "updatedAt": "2026-09-22T20:00:00.000Z"
+  "updatedAt": "2026-10-14T17:01:46.736Z"
 }

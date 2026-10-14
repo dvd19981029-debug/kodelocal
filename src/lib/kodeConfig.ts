@@ -20,10 +20,10 @@ export interface KodeConfig {
 }
 
 const DEFAULT_CONFIG: KodeConfig = {
-  ambiente: 'sandbox',
-  testApiKey: 'test_sk_45b8180f-9dab-44d5-9575-ba1487c73ed1',
-  liveApiKey: 'live_sk_18558fbf-1c1b-445b-b124-b79fb4f45c67',
-  facturaLlamaApiKey: 'test_sk_45b8180f-9dab-44d5-9575-ba1487c73ed1',
+  ambiente: 'produccion',
+  testApiKey: 'test_sk_77425a0a-6d88-490e-a006-07cdd031b05c',
+  liveApiKey: 'live_sk_1b857a22-475e-4966-a80b-54a7f80f0177',
+  facturaLlamaApiKey: 'live_sk_1b857a22-475e-4966-a80b-54a7f80f0177',
   facturaLlamaApiVersion: '1',
   facturaLlamaBaseUrl: 'https://api.facturallama.com',
   defaultEmail: 'luisg@forbiddensoluciones.com',
@@ -43,9 +43,17 @@ const CACHE_TTL_MS = 10000; // 10 segundos
 export function getActiveFacturaLlamaApiKey(config?: KodeConfig): string {
   const cfg = config || getKodeConfig();
   if (cfg.ambiente === 'sandbox') {
-    return cfg.testApiKey || 'test_sk_45b8180f-9dab-44d5-9575-ba1487c73ed1';
+    return cfg.testApiKey || 'test_sk_77425a0a-6d88-490e-a006-07cdd031b05c';
   }
-  return cfg.liveApiKey || cfg.facturaLlamaApiKey || 'live_sk_18558fbf-1c1b-445b-b124-b79fb4f45c67';
+  return cfg.liveApiKey || cfg.facturaLlamaApiKey || 'live_sk_1b857a22-475e-4966-a80b-54a7f80f0177';
+}
+
+/**
+ * Retorna la API Key activa para Factura Llama asíncronamente leyendo de la base de datos
+ */
+export async function getActiveFacturaLlamaApiKeyAsync(): Promise<string> {
+  const config = await getKodeConfigAsync();
+  return getActiveFacturaLlamaApiKey(config);
 }
 
 /**
