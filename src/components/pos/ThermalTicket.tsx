@@ -84,13 +84,18 @@ export default function ThermalTicket({ ticket }: ThermalTicketProps) {
               </div>
               {isDte && currentTicket.dteInfo && (() => {
                 const dte = currentTicket.dteInfo as any;
+                const parsedDteDate = dte.fhProcesamiento ? new Date(dte.fhProcesamiento) : null;
+                const dteDateStr =
+                  parsedDteDate && !isNaN(parsedDteDate.getTime())
+                    ? parsedDteDate.toLocaleString('es-SV')
+                    : dte.fhProcesamiento && !String(dte.fhProcesamiento).includes('Invalid')
+                    ? String(dte.fhProcesamiento)
+                    : `${formattedDate} ${formattedTime}`;
                 return (
                   <>
                     <div>Fecha y hora de generacion:</div>
                     <div style={{ paddingLeft: '4px' }}>
-                      {dte.fhProcesamiento
-                        ? new Date(dte.fhProcesamiento).toLocaleString('es-SV')
-                        : `${formattedDate} ${formattedTime}`}
+                      {dteDateStr}
                     </div>
                     <div>Codigo de generacion:</div>
                     <div style={{ fontWeight: 'bold', wordBreak: 'break-all', fontFamily: 'monospace' }}>
@@ -142,12 +147,13 @@ export default function ThermalTicket({ ticket }: ThermalTicketProps) {
                 const price = Number(it.price || 0).toFixed(2);
                 const itemTotal = Number(it.total || 0).toFixed(2);
                 const name = (it.name || 'PRODUCTO').toUpperCase();
+                const alreadyHasUnit = /\((?:1\s*)?onza|½\s*(?:onza|oz)|1\/2\s*(?:onza|oz)|media\s*onza\)/i.test(name);
 
                 return (
                   <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2px', lineHeight: 1.25 }}>
                     <span style={{ width: '38px', fontFamily: 'monospace' }}>{qty}</span>
                     <span style={{ flex: 1, textAlign: 'left', paddingLeft: '4px', paddingRight: '4px', wordBreak: 'break-word' }}>
-                      {name} {it.unit ? `(${it.unit})` : ''}
+                      {name} {it.unit && !alreadyHasUnit ? `(${it.unit})` : ''}
                     </span>
                     <span style={{ width: '42px', textAlign: 'right', fontFamily: 'monospace' }}>{price}</span>
                     <span style={{ width: '48px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 'bold' }}>{itemTotal}G</span>

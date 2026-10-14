@@ -8,88 +8,19 @@ export interface ThermalTicketOptions {
 }
 
 /**
- * Calcula con exactitud la altura total en milímetros requerida para el ticket según su contenido.
+ * Dibuja el contenido del ticket en el documento jsPDF y retorna la coordenada Y final exacta en mm.
  */
-function calculateTicketHeightMm(ticket: SaleRecord): number {
-  let h = 10; // Margen superior/inferior inicial
+function renderTicketToDoc(doc: any, ticket: SaleRecord): number {
+  const leftM = 3;
+  const rightM = 68;
+  const centerX = 35.5;
 
-  // 1. Encabezado emisor: ~36mm
-  h += 36;
-
-  // 2. Metadatos venta (Recibo, cajero, sucursal, fecha): ~18mm
-  h += 18;
-
-  // 3. Bloque fiscal / DTE:
-  const isDte = Boolean(ticket.dteInfo?.codigoGeneracion);
-  if (isDte) {
-    h += 34; // Código gen, control, sello, fecha
-  } else {
-    h += 12; // Comprobante interno
-  }
-
-  // Cliente si existe
-  if (ticket.cliente?.nombre) {
-    h += 10;
-    if (ticket.cliente?.nrc) h += 5;
-  }
-
-  // 4. Encabezado de tabla: ~8mm
-  h += 8;
-
-  // 5. Ítems: cada producto ocupa entre 6mm y 10mm dependiendo del largo del nombre
-  const items = ticket.items || [];
-  for (const it of items) {
-    const name = it.name || 'PRODUCTO';
-    // Si el nombre tiene más de 20 caracteres probablemente use 2 líneas
-    const lines = Math.ceil(name.length / 22);
-    h += Math.max(6, lines * 4 + 2);
-  }
-
-  // 6. Resumen de totales e impuestos: ~28mm
-  h += 28;
-  if (ticket.cashReceived != null) {
-    h += 10; // Efectivo recibido y cambio
-  }
-
-  // 7. Pie de página y leyenda: ~26mm
-  h += 26;
-  if (isDte) {
-    h += 12; // Enlace consulta hacienda
-  }
-
-  // 8. Código de barras: ~18mm
-  h += 18;
-
-  // Margen de seguridad para corte de papel
-  h += 12;
-
-  return Math.ceil(h);
-}
-
-/**
- * Construye el documento jsPDF con formato continuo de 80 mm
- */
-export async function buildThermalTicketPdf(ticket: SaleRecord): Promise<any> {
-  const { jsPDF } = await import('jspdf');
-
-  const totalHeight = calculateTicketHeightMm(ticket);
-  const doc = new jsPDF({
-    unit: 'mm',
-    format: [80, totalHeight],
-  });
-
-  const leftM = 4;
-  const rightM = 76;
-  const centerX = 40;
-
-  let y = 6;
+  let y = 8;
 
   const drawDashedDivider = (currentY: number) => {
-    doc.setLineDashPattern([1, 1], 0);
-    doc.setLineWidth(0.2);
-    doc.setDrawColor(0, 0, 0);
-    doc.line(leftM, currentY, rightM, currentY);
-    doc.setLineDashPattern([], 0);
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(7.5);
+    doc.text('------------------------------------------', centerX, currentY, { align: 'center' });
   };
 
   const drawSolidDivider = (currentY: number) => {
@@ -101,49 +32,44 @@ export async function buildThermalTicketPdf(ticket: SaleRecord): Promise<any> {
   // ================= 1. ENCABEZADO DEL EMISOR =================
   doc.setTextColor(0, 0, 0);
   doc.setFont('courier', 'bold');
-  doc.setFontSize(13);
+  doc.setFontSize(12);
   doc.text('AROMANIAK SV', centerX, y, { align: 'center' });
-  y += 4.5;
+  y += 4.2;
 
   doc.setFont('courier', 'normal');
-  doc.setFontSize(8);
-  doc.text('VENTA DE PERFUMERIA Y FRAGANCIAS', centerX, y, { align: 'center' });
-  y += 3.5;
-
   doc.setFontSize(7.5);
-  doc.text('COLONIA ESCALON, CALLE PRINCIPAL #123', centerX, y, { align: 'center' });
-  y += 3.2;
+  doc.text('VENTA DE PERFUMERIA Y FRAGANCIAS', centerX, y, { align: 'center' });
+  y += 3.3;
 
-  doc.text('MUNICIPIO Y DEPARTAMENTO DE', centerX, y, { align: 'center' });
-  y += 3.2;
+  doc.setFontSize(7);
+  doc.text('CENTRO COMERCIAL EL ROSAL, CALLE EL PROGRESO', centerX, y, { align: 'center' });
+  y += 3;
 
   doc.text('SAN SALVADOR, EL SALVADOR', centerX, y, { align: 'center' });
   y += 3.2;
 
-  doc.text('IVA DL 245678-9  NIT: 0614-120590-101-2', centerX, y, { align: 'center' });
-  y += 3.5;
-
   doc.setFont('courier', 'bold');
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.text('AROMANIAK S.A. DE C.V.', centerX, y, { align: 'center' });
-  y += 3.5;
+  y += 3.2;
 
   doc.setFont('courier', 'normal');
   doc.setFontSize(6.5);
   doc.text('GIRO: VENTA AL POR MENOR DE PERFUMERIA Y COSMETICOS', centerX, y, { align: 'center' });
-  y += 4;
+  y += 3.5;
 
   drawDashedDivider(y);
   y += 3.5;
 
   // ================= 2. METADATOS DE VENTA Y CAJA =================
   const ticketDate = ticket.createdAt ? new Date(ticket.createdAt) : new Date();
-  const formattedDate = ticketDate.toLocaleDateString('es-SV', {
+  const safeTicketDate = !isNaN(ticketDate.getTime()) ? ticketDate : new Date();
+  const formattedDate = safeTicketDate.toLocaleDateString('es-SV', {
     day: '2-digit',
     month: '2-digit',
     year: '2-digit',
   });
-  const formattedTime = ticketDate.toLocaleTimeString('es-SV', {
+  const formattedTime = safeTicketDate.toLocaleTimeString('es-SV', {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
@@ -151,22 +77,22 @@ export async function buildThermalTicketPdf(ticket: SaleRecord): Promise<any> {
   }).toLowerCase();
 
   doc.setFont('courier', 'bold');
-  doc.setFontSize(8.5);
+  doc.setFontSize(8);
   doc.text(`Rec.: ${ticket.saleNumber || ticket.id}`, leftM, y);
-  y += 3.5;
+  y += 3.3;
 
   doc.setFont('courier', 'normal');
-  doc.setFontSize(7.5);
+  doc.setFontSize(7.2);
   doc.text(`Cajero: ${(ticket.cajero || 'Caja 1').slice(0, 16)}`, leftM, y);
   doc.text(`Trans: ${(ticket.id ? ticket.id.slice(-6).toUpperCase() : '1001')}`, rightM, y, { align: 'right' });
-  y += 3.3;
+  y += 3.1;
 
   doc.text('Suc.: S001', leftM, y);
   doc.text('Caja: 1', rightM, y, { align: 'right' });
-  y += 3.3;
+  y += 3.1;
 
   doc.text(`Fecha: ${formattedDate} ${formattedTime}`, leftM, y);
-  y += 4;
+  y += 3.5;
 
   drawDashedDivider(y);
   y += 3.5;
@@ -175,117 +101,127 @@ export async function buildThermalTicketPdf(ticket: SaleRecord): Promise<any> {
   const isDte = Boolean(ticket.dteInfo && ticket.dteInfo.codigoGeneracion);
   const docTipoLabel = ticket.tipoComprobante === '03'
     ? 'COMPROBANTE DE CREDITO FISCAL'
+    : ticket.tipoComprobante === 'TICKET'
+    ? 'TICKET DE VENTA'
     : 'FACTURA CONSUMIDOR FINAL';
 
   doc.setFont('courier', 'bold');
-  doc.setFontSize(8);
+  doc.setFontSize(7.8);
   doc.text(isDte ? 'NO ES UN DOCUMENTO FISCAL' : 'COMPROBANTE INTERNO DE PAGO', centerX, y, { align: 'center' });
-  y += 3.5;
+  y += 3.3;
 
-  doc.setFontSize(7.5);
+  doc.setFontSize(7.2);
   doc.text(`TIPO DOC: ${docTipoLabel}`, leftM, y);
-  y += 3.5;
+  y += 3.3;
 
   if (isDte && ticket.dteInfo) {
     const dte = ticket.dteInfo;
     doc.setFont('courier', 'normal');
-    doc.setFontSize(7);
+    doc.setFontSize(6.8);
     doc.text('Fecha y hora de generacion:', leftM, y);
-    y += 3;
-    const dteDate = dte.fhProcesamiento ? new Date(dte.fhProcesamiento).toLocaleString('es-SV') : `${formattedDate} ${formattedTime}`;
+    y += 2.9;
+    const parsedDteDate = dte.fhProcesamiento ? new Date(dte.fhProcesamiento) : null;
+    const dteDate =
+      parsedDteDate && !isNaN(parsedDteDate.getTime())
+        ? parsedDteDate.toLocaleString('es-SV')
+        : dte.fhProcesamiento && !String(dte.fhProcesamiento).includes('Invalid')
+        ? String(dte.fhProcesamiento)
+        : `${formattedDate} ${formattedTime}`;
     doc.text(`  ${dteDate}`, leftM, y);
-    y += 3.2;
+    y += 3.1;
 
     doc.text('Codigo de generacion:', leftM, y);
-    y += 3;
+    y += 2.9;
     doc.setFont('courier', 'bold');
-    doc.setFontSize(6.8);
+    doc.setFontSize(6.4);
     doc.text(`  ${dte.codigoGeneracion || ''}`, leftM, y);
-    y += 3.2;
+    y += 3.1;
 
     if (dte.numeroControl) {
       doc.setFont('courier', 'normal');
-      doc.setFontSize(7);
+      doc.setFontSize(6.8);
       doc.text('Numero de control:', leftM, y);
-      y += 3;
+      y += 2.9;
       doc.setFont('courier', 'bold');
-      doc.setFontSize(7);
+      doc.setFontSize(6.8);
       doc.text(`  ${dte.numeroControl}`, leftM, y);
-      y += 3.2;
+      y += 3.1;
     }
 
     if (dte.selloRecepcion) {
       doc.setFont('courier', 'normal');
-      doc.setFontSize(7);
+      doc.setFontSize(6.8);
       doc.text('Sello de recepcion MH:', leftM, y);
-      y += 3;
+      y += 2.9;
       doc.setFont('courier', 'bold');
-      doc.setFontSize(6.5);
+      doc.setFontSize(6.2);
       doc.text(`  ${dte.selloRecepcion.slice(0, 36)}`, leftM, y);
-      y += 3.2;
+      y += 3.1;
     }
   }
 
   // Datos de cliente si aplica
   if (ticket.cliente?.nombre) {
     doc.setFont('courier', 'normal');
-    doc.setFontSize(7.5);
-    doc.text(`CLIENTE: ${ticket.cliente.nombre.slice(0, 30)}`, leftM, y);
-    y += 3.2;
+    doc.setFontSize(7.2);
+    doc.text(`CLIENTE: ${ticket.cliente.nombre.slice(0, 28)}`, leftM, y);
+    y += 3.1;
     if (ticket.cliente.numDocumento) {
       doc.text(`DOC: ${ticket.cliente.numDocumento}`, leftM, y);
-      y += 3.2;
+      y += 3.1;
     }
     if (ticket.cliente.nrc) {
       doc.text(`NRC: ${ticket.cliente.nrc}`, leftM, y);
-      y += 3.2;
+      y += 3.1;
     }
   }
 
-  y += 1;
+  y += 0.5;
   drawDashedDivider(y);
   y += 3.5;
 
   // ================= 4. TABLA DE ÍTEMS / PRODUCTOS =================
   doc.setFont('courier', 'bold');
-  doc.setFontSize(7.5);
+  doc.setFontSize(7.2);
   doc.text('CANT', leftM, y);
-  doc.text('DESCRIPCION', leftM + 10, y);
-  doc.text('P.U.', rightM - 18, y, { align: 'right' });
+  doc.text('DESCRIPCION', leftM + 8, y);
+  doc.text('P.U.', rightM - 16, y, { align: 'right' });
   doc.text('TOTAL', rightM, y, { align: 'right' });
-  y += 2.5;
+  y += 2.2;
 
   drawSolidDivider(y);
-  y += 3;
+  y += 3.2;
 
   doc.setFont('courier', 'normal');
-  doc.setFontSize(7.2);
+  doc.setFontSize(7);
 
   const items = ticket.items || [];
   for (const it of items) {
     const qty = String(it.quantity || 1);
     const price = Number(it.price || 0).toFixed(2);
     const itemTotal = `${Number(it.total || 0).toFixed(2)}G`;
-    const fullName = `${(it.name || 'PRODUCTO').toUpperCase()}${it.unit ? ` (${it.unit})` : ''}`;
+    const baseName = (it.name || 'PRODUCTO').toUpperCase();
+    const alreadyHasUnit = /\((?:1\s*)?onza|½\s*(?:onza|oz)|1\/2\s*(?:onza|oz)|media\s*onza\)/i.test(baseName);
+    const fullName = `${baseName}${it.unit && !alreadyHasUnit ? ` (${it.unit})` : ''}`;
 
     // Partir descripción si es larga para que no se sobreponga
-    const splitDesc = doc.splitTextToSize(fullName, 36);
+    const splitDesc = doc.splitTextToSize(fullName, 33);
 
     doc.text(qty, leftM, y);
-    doc.text(splitDesc[0], leftM + 10, y);
-    doc.text(price, rightM - 18, y, { align: 'right' });
+    doc.text(splitDesc[0], leftM + 8, y);
+    doc.text(price, rightM - 16, y, { align: 'right' });
     doc.text(itemTotal, rightM, y, { align: 'right' });
 
-    y += 3.2;
+    y += 3.1;
 
     // Si hubo más líneas de descripción
     for (let i = 1; i < splitDesc.length; i++) {
-      doc.text(splitDesc[i], leftM + 10, y);
-      y += 3;
+      doc.text(splitDesc[i], leftM + 8, y);
+      y += 2.9;
     }
   }
 
-  y += 1;
+  y += 0.8;
   drawDashedDivider(y);
   y += 3.5;
 
@@ -297,114 +233,134 @@ export async function buildThermalTicketPdf(ticket: SaleRecord): Promise<any> {
   doc.setFont('courier', 'bold');
   doc.setFontSize(6.5);
   doc.text('G=GRAVADO   E=EXENTO', leftM, y);
-  y += 3.5;
+  y += 3.2;
 
   doc.setFont('courier', 'normal');
-  doc.setFontSize(7.5);
+  doc.setFontSize(7.2);
   doc.text('SUB TOTAL $:', leftM, y);
   doc.text(subtotal, rightM, y, { align: 'right' });
-  y += 3.2;
+  y += 3.1;
 
   doc.text('EXENTO $:', leftM, y);
   doc.text('0.00', rightM, y, { align: 'right' });
-  y += 3.2;
+  y += 3.1;
 
   doc.text('GRAVADO $:', leftM, y);
   doc.text(subtotal, rightM, y, { align: 'right' });
-  y += 3.5;
+  y += 3.4;
 
   doc.setFont('courier', 'bold');
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   doc.text('TOTAL A PAGAR $:', leftM, y);
   doc.text(`$${total}`, rightM, y, { align: 'right' });
-  y += 4;
+  y += 3.8;
 
   // Forma de pago
   const payLabel = ticket.paymentMethod === 'CARD'
     ? 'TARJETA (WOMPI)'
     : ticket.paymentMethod === 'TRANSFER'
-    ? 'TRANSFERENCIA BANCARIA'
-    : ticket.paymentMethod === 'BITCOIN'
-    ? 'BITCOIN'
+    ? 'TRANSFERENCIA'
     : 'EFECTIVO';
 
   doc.setFont('courier', 'normal');
-  doc.setFontSize(7.5);
+  doc.setFontSize(7.2);
   doc.text(`PAGO: ${payLabel}:`, leftM, y);
   doc.text(`$${total}`, rightM, y, { align: 'right' });
-  y += 3.2;
+  y += 3.1;
 
   if (ticket.cashReceived != null) {
     doc.text('EFECTIVO RECIBIDO:', leftM, y);
     doc.text(`$${Number(ticket.cashReceived).toFixed(2)}`, rightM, y, { align: 'right' });
-    y += 3.2;
+    y += 3.1;
 
     doc.text('CAMBIO ENTREGADO:', leftM, y);
     doc.text(`$${Number(ticket.cashChange || 0).toFixed(2)}`, rightM, y, { align: 'right' });
-    y += 3.2;
+    y += 3.1;
   }
 
   doc.text('NUMERO DE PRODUCTOS:', leftM, y);
   doc.text(String(totalItemsCount), rightM, y, { align: 'right' });
-  y += 4;
+  y += 3.5;
 
   drawDashedDivider(y);
-  y += 4;
+  y += 3.5;
 
   // ================= 6. PIE DE PÁGINA Y LEYENDA =================
   doc.setFont('courier', 'bold');
-  doc.setFontSize(8.5);
+  doc.setFontSize(8);
   doc.text('GRACIAS POR TU COMPRA', centerX, y, { align: 'center' });
-  y += 3.5;
+  y += 3.3;
 
   doc.text('AROMANIAK SV', centerX, y, { align: 'center' });
-  y += 3.2;
+  y += 3.1;
 
   doc.setFont('courier', 'normal');
-  doc.setFontSize(7.5);
+  doc.setFontSize(7.2);
   doc.text('www.aromaniaksv.com', centerX, y, { align: 'center' });
-  y += 3.2;
+  y += 3.1;
 
-  doc.text('SERVICIO AL CLIENTE TEL. +503 2245-8800', centerX, y, { align: 'center' });
-  y += 3.2;
-
-  doc.setFontSize(6.8);
+  doc.setFontSize(6.5);
   doc.text('Para reclamos presentar este Ticket', centerX, y, { align: 'center' });
-  y += 3;
+  y += 2.9;
   doc.text('y tu Documento de Identidad Personal', centerX, y, { align: 'center' });
-  y += 4;
+  y += 3.5;
 
   if (isDte) {
     drawDashedDivider(y);
-    y += 3.5;
-    doc.setFontSize(6.5);
+    y += 3.3;
+    doc.setFontSize(6.2);
     doc.text('Consulta tu factura electronica en:', centerX, y, { align: 'center' });
-    y += 3;
+    y += 2.9;
     doc.setFont('courier', 'bold');
     doc.text('https://admin.factura.gob.sv/consultaPublica', centerX, y, { align: 'center' });
-    y += 4.5;
+    y += 4;
   }
 
   // ================= 7. CÓDIGO DE BARRAS TÉRMICO =================
   const barPattern = [
     2, 4, 1, 3, 2, 5, 1, 3, 2, 4, 2, 3, 1, 5, 2, 3, 1, 4, 2, 5, 1, 3, 2, 4, 1, 3, 2, 4, 1, 5, 2, 3
   ];
-  let barX = centerX - 24;
-  const barH = 7;
+  let barX = centerX - 22;
+  const barH = 6.5;
 
   doc.setFillColor(0, 0, 0);
   for (let i = 0; i < barPattern.length; i++) {
-    const w = barPattern[i] * 0.35;
+    const w = barPattern[i] * 0.32;
     if (i % 2 === 0) {
       doc.rect(barX, y, w, barH, 'F');
     }
-    barX += w + 0.35;
+    barX += w + 0.32;
   }
   y += barH + 2.5;
 
   doc.setFont('courier', 'normal');
-  doc.setFontSize(7.5);
+  doc.setFontSize(7.2);
   doc.text(`*${ticket.saleNumber || ticket.id}*`, centerX, y, { align: 'center' });
+
+  return Math.ceil(y + 6);
+}
+
+/**
+ * Construye el documento jsPDF con formato continuo exacto de 72 mm (área imprimible de rollo 80 mm)
+ */
+export async function buildThermalTicketPdf(ticket: SaleRecord): Promise<any> {
+  const { jsPDF } = await import('jspdf');
+
+  // Pasada 1: medir el alto exacto real para evitar espacio vacío inferior que desplace el origen PDF hacia arriba
+  const measureDoc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: [72, 300],
+  });
+  const exactHeight = Math.max(80, renderTicketToDoc(measureDoc, ticket));
+
+  // Pasada 2: generar el PDF con el alto exacto
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: [72, exactHeight],
+  });
+  renderTicketToDoc(doc, ticket);
 
   return doc;
 }
