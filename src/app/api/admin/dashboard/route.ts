@@ -6,27 +6,23 @@ import { verifyStaffRequest } from '@/lib/customerAuthToken';
 export const dynamic = 'force-dynamic';
 
 function getPeriodFilter(period: string) {
+  const productionStart = new Date('2026-10-14T00:00:00-06:00');
   const now = new Date();
   const svDateStr = now.toLocaleDateString('en-CA', { timeZone: 'America/El_Salvador' });
   const [year, month] = svDateStr.split('-');
 
+  let start = productionStart;
   if (period === 'hoy') {
-    const startOfToday = new Date(`${svDateStr}T00:00:00-06:00`);
-    return { gte: startOfToday };
+    start = new Date(`${svDateStr}T00:00:00-06:00`);
+  } else if (period === '7d') {
+    start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  } else if (period === 'mes') {
+    start = new Date(`${year}-${month}-01T00:00:00-06:00`);
+  } else if (period === 'anio') {
+    start = new Date(`${year}-01-01T00:00:00-06:00`);
   }
-  if (period === '7d') {
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    return { gte: sevenDaysAgo };
-  }
-  if (period === 'mes') {
-    const startOfMonth = new Date(`${year}-${month}-01T00:00:00-06:00`);
-    return { gte: startOfMonth };
-  }
-  if (period === 'anio') {
-    const startOfYear = new Date(`${year}-01-01T00:00:00-06:00`);
-    return { gte: startOfYear };
-  }
-  return undefined; // 'todo'
+
+  return { gte: start < productionStart ? productionStart : start };
 }
 
 export async function GET(request: Request) {
@@ -100,10 +96,21 @@ export async function GET(request: Request) {
       productCostMap.set(p.name.toLowerCase().trim(), Number(p.cost || 1.95));
     });
 
-    // 2. Agregaciones de Ventas
-    const validOrders = orders.filter((o) => o.orderStatus !== 'CANCELADO');
+    // 2. Agregaciones de Ventas (solo órdenes completadas y sin duplicar pedidos web cobrados en POS)
+    const validOrders = orders.filter(
+      (o) => o.orderStatus !== 'CANCELADO' && (o.paymentMethod !== 'CARD' || o.paymentStatus === 'COMPLETED')
+    );
+    const ecomOrderNumbers = new Set(validOrders.map((o) => o.orderNumber));
+    const validSales = sales.filter((s) => {
+      const st = String(s.orderStatus || '').toUpperCase();
+      if (st === 'CANCELADO' || st === 'CANCELLED' || st === 'ANULADA') return false;
+      if (s.paymentStatus !== 'COMPLETED' && st !== 'COMPLETED') return false;
+      if (ecomOrderNumbers.has(s.saleNumber)) return false;
+      return true;
+    });
+
     const ecommerceTotal = validOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
-    const posTotal = sales.reduce((sum, s) => sum + Number(s.total || 0), 0);
+    const posTotal = validSales.reduce((sum, s) => sum + Number(s.total || 0), 0);
     const totalVentas = ecommerceTotal + posTotal;
 
     // 3. Gastos de Insumos y Costos
@@ -114,18 +121,19 @@ export async function GET(request: Request) {
     let onzasVendidas = 0;
     const productAgg: Record<string, { name: string; quantity: number; revenue: number; ounces: number }> = {};
 
-    const processItem = (it: { productName: string; presentation?: string | null; quantity: number; total: any; productId?: string | null }) => {
+    const processItem = (it: { productName: string; presentation?: string | null; unit?: string | null; quantity: number; total: any; productId?: string | null }) => {
       const qty = it.quantity || 1;
       const rev = Number(it.total || 0);
       const rawName = it.productName || 'Producto';
-      // Limpiar sufijos como "(1 Onza)"
+      const rawLower = rawName.toLowerCase();
+      // Limpiar sufijos como "(1 Onza)" o "(½ Oz)"
       const cleanName = rawName.replace(/\s*\([^)]*\)/g, '').trim();
 
       let oz = 0;
-      const pres = (it.presentation || '').toLowerCase();
+      const pres = String(it.presentation || it.unit || '').toLowerCase();
       const nameLower = cleanName.toLowerCase();
 
-      if (pres.includes('½') || pres.includes('0.5') || pres.includes('media')) {
+      if (pres.includes('½') || pres.includes('0.5') || pres.includes('media') || rawLower.includes('½') || rawLower.includes('media onza')) {
         oz = 0.5 * qty;
       } else if (pres.includes('1.5')) {
         oz = 1.5 * qty;
@@ -137,10 +145,11 @@ export async function GET(request: Request) {
 
       onzasVendidas += oz;
 
-      const itemCost = (it.productId && productCostMap.get(it.productId)) ||
+      const baseUnitCost =
+        (it.productId && productCostMap.get(it.productId)) ||
         productCostMap.get(cleanName.toLowerCase()) ||
-        (oz > 0 ? oz * 1.95 : rev * 0.45);
-      cogsTotal += itemCost * (oz > 0 ? 1 : qty);
+        (oz > 0 ? 1.95 : rev * 0.45);
+      cogsTotal += oz > 0 ? baseUnitCost * oz : baseUnitCost * qty;
 
       if (!productAgg[cleanName]) {
         productAgg[cleanName] = { name: cleanName, quantity: 0, revenue: 0, ounces: 0 };
@@ -151,14 +160,14 @@ export async function GET(request: Request) {
     };
 
     validOrders.forEach((o) => o.items.forEach(processItem));
-    sales.forEach((s) => s.items.forEach(processItem));
+    validSales.forEach((s) => s.items.forEach(processItem));
 
     // Si hay compras directas registradas se usan compras, sino se usa el costo directo de insumos vendidos
     const totalGastosCompras = purchasesTotal > 0 ? purchasesTotal : Number(cogsTotal.toFixed(2));
     const margenOperativoBruto = Number((totalVentas - totalGastosCompras).toFixed(2));
     const margenPorcentual = totalVentas > 0 ? Number(((margenOperativoBruto / totalVentas) * 100).toFixed(1)) : 0;
 
-    const totalPedidos = validOrders.length + sales.length;
+    const totalPedidos = validOrders.length + validSales.length;
     const ticketPromedio = totalPedidos > 0 ? Number((totalVentas / totalPedidos).toFixed(2)) : 0;
 
     // 4. Pedidos por Estado (Logística Aromaniak)
@@ -182,7 +191,7 @@ export async function GET(request: Request) {
         total: Number(rutaOrders.reduce((acc, o) => acc + Number(o.total || 0), 0).toFixed(2)),
       },
       entregados: {
-        count: entregadosOrders.length + sales.length, // Las ventas en mostrador se consideran entregadas de inmediato
+        count: entregadosOrders.length + validSales.length, // Las ventas en mostrador se consideran entregadas de inmediato
         total: Number((entregadosOrders.reduce((acc, o) => acc + Number(o.total || 0), 0) + posTotal).toFixed(2)),
       },
       cancelados: {
@@ -193,7 +202,7 @@ export async function GET(request: Request) {
 
     // 5. Canales de Venta
     const ecommerceOrdersCount = validOrders.length;
-    const posSalesCount = sales.length;
+    const posSalesCount = validSales.length;
     const totalTransactions = ecommerceOrdersCount + posSalesCount || 1;
 
     const canales = {
@@ -228,7 +237,7 @@ export async function GET(request: Request) {
       }
     });
 
-    sales.forEach((s) => {
+    validSales.forEach((s) => {
       const tot = Number(s.total || 0);
       if (s.paymentMethod === 'CARD') {
         cardCount++;
@@ -738,7 +747,7 @@ export async function GET(request: Request) {
       date: o.createdAt.toISOString(),
     }));
 
-    const recentPos = sales.slice(0, 5).map((s) => ({
+    const recentPos = validSales.slice(0, 5).map((s) => ({
       id: s.id,
       number: s.saleNumber,
       customer: s.cashierName ? `Mostrador (${s.cashierName})` : 'Mostrador Local',

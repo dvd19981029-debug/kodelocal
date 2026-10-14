@@ -212,8 +212,8 @@ export async function getVisitMetricsForPeriod(
     } catch {}
   }
 
-  // Filtrar según el período solicitado
-  let filteredDays = Object.values(records);
+  // Filtrar según el período solicitado (solo desde inicio de producción 2026-10-14)
+  let filteredDays = Object.values(records).filter((r) => r.date >= '2026-10-14');
 
   if (period === 'hoy') {
     filteredDays = filteredDays.filter((r) => r.date === today);
@@ -275,7 +275,7 @@ export async function getVisitMetricsForPeriod(
       const dateStr = targetDate.toLocaleDateString('en-CA', { timeZone: 'America/El_Salvador' });
       const dayName = daysOfWeek[targetDate.getDay()];
       const dayNum = targetDate.getDate();
-      const rec = records[dateStr];
+      const rec = dateStr >= '2026-10-14' ? records[dateStr] : undefined;
       graficaVisitas.push({
         label: `${dayName} ${dayNum}`,
         dateKey: dateStr,
@@ -285,17 +285,18 @@ export async function getVisitMetricsForPeriod(
     }
   } else if (period === 'mes') {
     // Gráfica de todos los días transcurridos del mes en curso
+    const monthsShort = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
     const [yStr, mStr] = today.split('-');
-    const currentDay = parseInt(today.split('-')[2], 10);
     const yearNum = parseInt(yStr, 10);
     const monthNum = parseInt(mStr, 10);
+    const monthLabel = monthsShort[monthNum - 1] || 'Oct';
     const daysInMonth = new Date(yearNum, monthNum, 0).getDate();
     for (let d = 1; d <= daysInMonth; d++) {
       const dStr = String(d).padStart(2, '0');
       const dateKey = `${yStr}-${mStr}-${dStr}`;
-      const rec = records[dateKey];
+      const rec = dateKey >= '2026-10-14' ? records[dateKey] : undefined;
       graficaVisitas.push({
-        label: `${d} Sep`,
+        label: `${d} ${monthLabel}`,
         dateKey,
         visits: rec?.visits || 0,
         pageViews: rec?.pageViews || 0,
@@ -308,10 +309,10 @@ export async function getVisitMetricsForPeriod(
     for (let m = 0; m < 12; m++) {
       const monthStr = String(m + 1).padStart(2, '0');
       const prefix = `2026-${monthStr}`;
-      const monthVisits = Object.values(records)
+      const monthVisits = filteredDays
         .filter((r) => r.date.startsWith(prefix))
         .reduce((sum, r) => sum + r.visits, 0);
-      const monthPages = Object.values(records)
+      const monthPages = filteredDays
         .filter((r) => r.date.startsWith(prefix))
         .reduce((sum, r) => sum + r.pageViews, 0);
       graficaVisitas.push({
