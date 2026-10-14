@@ -844,65 +844,95 @@ export default function ProductDetailPage() {
           {/* ================= ESPECIFICACIONES TÉCNICAS (PARA INSUMOS / ALCOHOL / MATERIALES) ================= */}
           {!isEssence && !isBottle && (
             <div className="space-y-4">
-              <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-4 shadow-xs">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                  <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-amber-500" />
-                    <span>Especificaciones del Insumo de Perfumería</span>
-                  </h3>
-                  <span className="text-[10.5px] font-bold text-slate-400 font-mono">
-                    {product.sku || 'INSUMO'}
-                  </span>
-                </div>
-                
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
-                    <span className="text-[10px] font-black uppercase text-slate-400">Pureza</span>
-                    <strong className="text-xs sm:text-sm font-bold text-slate-800">Grado Perfumería</strong>
+              {product.id.includes('alcohol') || product.name.toLowerCase().includes('alcohol') ? (
+                <>
+                  <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-4 shadow-xs">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                      <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-amber-500" />
+                        <span>Especificaciones del Alcohol Perfumero</span>
+                      </h3>
+                      <span className="text-[10.5px] font-bold text-slate-400 font-mono">
+                        {product.sku || 'INSUMO'}
+                      </span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Pureza</span>
+                        <strong className="text-xs sm:text-sm font-bold text-slate-800">Grado Perfumería</strong>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Fijación</span>
+                        <strong className="text-xs sm:text-sm font-bold text-slate-800">Fijador Integrado</strong>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Presentación</span>
+                        <strong className="text-xs sm:text-sm font-bold text-slate-800">{product.unit || 'Litro'}</strong>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Solubilidad</span>
+                        <strong className="text-xs sm:text-sm font-bold text-slate-800">100% Homogénea</strong>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Compatibilidad</span>
+                        <strong className="text-xs sm:text-sm font-bold text-slate-800">Perfumería Fina</strong>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Calidad</span>
+                        <strong className="text-xs sm:text-sm font-bold text-indigo-700">Aromaniak Pro</strong>
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
-                    <span className="text-[10px] font-black uppercase text-slate-400">Fijación</span>
-                    <strong className="text-xs sm:text-sm font-bold text-slate-800">Fijador Integrado</strong>
-                  </div>
-                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
-                    <span className="text-[10px] font-black uppercase text-slate-400">Aroma Propio</span>
-                    <strong className="text-xs sm:text-sm font-bold text-slate-800">Neutro / Inodoro</strong>
-                  </div>
-                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
-                    <span className="text-[10px] font-black uppercase text-slate-400">Solubilidad</span>
-                    <strong className="text-xs sm:text-sm font-bold text-slate-800">100% Homogénea</strong>
-                  </div>
-                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
-                    <span className="text-[10px] font-black uppercase text-slate-400">Compatibilidad</span>
-                    <strong className="text-xs sm:text-sm font-bold text-slate-800">Perfumería Fina</strong>
-                  </div>
-                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
-                    <span className="text-[10px] font-black uppercase text-slate-400">Calidad</span>
-                    <strong className="text-xs sm:text-sm font-bold text-indigo-700">Aromaniak Pro</strong>
-                  </div>
-                </div>
-              </div>
 
-              {/* Tarjeta de Guía de Preparación y Recomendaciones */}
-              <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-3 shadow-xs">
-                <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                  <Droplets className="w-4 h-4 text-indigo-600" />
-                  <span>Guía de Mezcla y Preparación Recomendada</span>
-                </h4>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Para preparar un perfume de alta concentración en frasco de 100ml, se recomienda utilizar de <strong>1 onza (30ml)</strong> a un máximo de <strong>1.5 onzas (45ml)</strong> de esencia pura concentrada, completando el volumen restante con este alcohol especial para perfumería.
-                </p>
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <div className="p-2.5 rounded-xl bg-indigo-50/60 border border-indigo-100/80 text-[11px] font-bold text-indigo-950 flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                    <span>No distorsiona el aroma</span>
+                  {/* Tarjeta de Guía de Preparación y Recomendaciones */}
+                  <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-3 shadow-xs">
+                    <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                      <Droplets className="w-4 h-4 text-indigo-600" />
+                      <span>Guía de Mezcla y Preparación Recomendada</span>
+                    </h4>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      Para preparar un perfume de alta concentración en frasco de 100ml, se recomienda utilizar de <strong>1 onza (30ml)</strong> a un máximo de <strong>1.5 onzas (45ml)</strong> de esencia pura concentrada, completando el volumen restante con este alcohol especial para perfumería con fijador.
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      <div className="p-2.5 rounded-xl bg-indigo-50/60 border border-indigo-100/80 text-[11px] font-bold text-indigo-950 flex items-center gap-2">
+                        <Check className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                        <span>No distorsiona el aroma</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-amber-50/60 border border-amber-100/80 text-[11px] font-bold text-amber-950 flex items-center gap-2">
+                        <Check className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span>Estela y fijación duradera</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-amber-50/60 border border-amber-100/80 text-[11px] font-bold text-amber-950 flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                    <span>Estela y fijación duradera</span>
+                </>
+              ) : (
+                <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-4 shadow-xs">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                    <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-500" />
+                      <span>Especificaciones de Empaque</span>
+                    </h3>
+                    <span className="text-[10.5px] font-bold text-slate-400 font-mono">
+                      {product.sku || 'EMPAQUE'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Material</span>
+                      <strong className="text-xs sm:text-sm font-bold text-slate-800">Cartón Kraft</strong>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Diseño</span>
+                      <strong className="text-xs sm:text-sm font-bold text-slate-800">Liso sin marca</strong>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Personalización</span>
+                      <strong className="text-xs sm:text-sm font-bold text-indigo-700">Lista para tu logo</strong>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
@@ -915,12 +945,14 @@ export default function ProductDetailPage() {
         {/* Descripción de la fragancia o envase */}
         <div className="md:col-span-7 clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-3 shadow-xs">
           <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider">
-            {isEssence ? 'Detalles de la fragancia' : 'Detalles del envase'}
+            {isEssence ? 'Detalles de la fragancia' : isBottle ? 'Detalles del envase' : 'Detalles del producto'}
           </h3>
           <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
             {isEssence
               ? getFragranceDescription(product, profile)
-              : (product.description || 'Frasco de vidrio de 100ml de alta resistencia con cierre de rosca. Todos nuestros botes son de rosca para que no se tenga que usar máquina selladora y que sea fácil para todos cerrarlo, asegurando un sellado hermético que preserva intacta la fragancia.')}
+              : isBottle
+              ? (product.description || 'Frasco de vidrio de 100ml de alta resistencia con cierre de rosca. Todos nuestros botes son de rosca para que no se tenga que usar máquina selladora y que sea fácil para todos cerrarlo, asegurando un sellado hermético que preserva intacta la fragancia.')
+              : (product.description || product.name)}
           </p>
           {isEssence && profile ? (
             <div className="grid grid-cols-2 gap-2.5 pt-1 text-center">
@@ -933,7 +965,7 @@ export default function ProductDetailPage() {
                 <span className="text-xs font-bold text-slate-800">{profile.occasion}</span>
               </div>
             </div>
-          ) : (
+          ) : isBottle ? (
             <div className="grid grid-cols-3 gap-2 pt-1 text-center">
               <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
                 <span className="text-[9.5px] font-black uppercase text-slate-400 block">Formato</span>
@@ -946,6 +978,36 @@ export default function ProductDetailPage() {
               <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
                 <span className="text-[9.5px] font-black uppercase text-slate-400 block">Acabado</span>
                 <span className="text-xs font-bold text-indigo-700">Premium</span>
+              </div>
+            </div>
+          ) : (product.id.includes('alcohol') || product.name.toLowerCase().includes('alcohol')) ? (
+            <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Presentación</span>
+                <span className="text-xs font-bold text-slate-800">{product.unit || 'Litro'}</span>
+              </div>
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Fórmula</span>
+                <span className="text-xs font-bold text-slate-800">Con Fijador</span>
+              </div>
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Grado</span>
+                <span className="text-xs font-bold text-indigo-700">Perfumería</span>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Capacidad</span>
+                <span className="text-xs font-bold text-slate-800">Frasco 100 ml</span>
+              </div>
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Material</span>
+                <span className="text-xs font-bold text-slate-800">Cartón Kraft</span>
+              </div>
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Uso</span>
+                <span className="text-xs font-bold text-indigo-700">Envíos / Tu Marca</span>
               </div>
             </div>
           )}
