@@ -44,6 +44,9 @@ export default function LoginPage() {
       const data = await res.json();
       
       if (data.success) {
+        if (data.token && typeof window !== 'undefined') {
+          sessionStorage.setItem('kodelocal_staff_token', data.token);
+        }
         if (data.user.rol === 'ADMIN') {
           router.push('/admin');
         } else if (data.user.rol === 'BODEGA') {
@@ -75,6 +78,9 @@ export default function LoginPage() {
       const data = await res.json();
       
       if (data.success) {
+        if (data.token && typeof window !== 'undefined') {
+          sessionStorage.setItem('kodelocal_staff_token', data.token);
+        }
         if (data.user.rol === 'ADMIN') {
           router.push('/admin');
         } else if (data.user.rol === 'BODEGA') {

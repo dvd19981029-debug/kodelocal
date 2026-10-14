@@ -89,6 +89,7 @@ export async function POST(request: Request) {
 
     const response = NextResponse.json({
       success: true,
+      token: safeToken,
       user: {
         id: staffUser.id,
         nombre: staffUser.name,

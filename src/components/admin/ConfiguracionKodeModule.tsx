@@ -45,6 +45,16 @@ import {
   Key
 } from 'lucide-react';
 import { DEPARTAMENTOS_CATALOG, MUNICIPIOS_CATALOG } from '@/lib/svTerritory';
+import { getStaffToken } from '@/lib/auth';
+
+const kodeFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+  const staffToken = await getStaffToken();
+  const headers = new Headers(init?.headers || {});
+  if (staffToken && !headers.has('x-staff-token')) {
+    headers.set('x-staff-token', staffToken);
+  }
+  return fetch(input, { ...init, headers });
+};
 
 type KodeAdminTab = 'configuracion' | 'empleados' | 'formas_pago' | 'comisiones' | 'reportes';
 
@@ -215,7 +225,7 @@ export default function ConfiguracionKodeModule() {
   const fetchConfig = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/kode/config');
+      const res = await kodeFetch('/api/kode/config');
       const data = await res.json();
       if (data.success && data.config) {
         setAmbiente(data.config.ambiente || 'sandbox');
@@ -236,7 +246,7 @@ export default function ConfiguracionKodeModule() {
   const fetchEmpleados = async () => {
     try {
       setLoadingEmpleados(true);
-      const res = await fetch('/api/kode/empleados');
+      const res = await kodeFetch('/api/kode/empleados');
       const data = await res.json();
       if (data.success) {
         setEmpleados(data.empleados || []);
@@ -251,7 +261,7 @@ export default function ConfiguracionKodeModule() {
   const fetchReportes = async () => {
     try {
       setLoadingReportes(true);
-      const res = await fetch('/api/kode/reportes');
+      const res = await kodeFetch('/api/kode/reportes');
       const data = await res.json();
       if (data.success) {
         setReportesData(data);
@@ -266,7 +276,7 @@ export default function ConfiguracionKodeModule() {
   const fetchFormasPago = async () => {
     try {
       setLoadingFormasPago(true);
-      const res = await fetch('/api/kode/formas-pago');
+      const res = await kodeFetch('/api/kode/formas-pago');
       const data = await res.json();
       if (data.success && (data.formasPago || data.formas_pago)) {
         const list: FormaPagoAdmin[] = data.formasPago || data.formas_pago || [];
@@ -286,7 +296,7 @@ export default function ConfiguracionKodeModule() {
     setSelectedFormaPago(fp);
     try {
       setLoadingTransacciones(true);
-      const res = await fetch(`/api/kode/pagos?forma_pago_id=${fp.id}`);
+      const res = await kodeFetch(`/api/kode/pagos?forma_pago_id=${fp.id}`);
       const data = await res.json();
       if (data.success) {
         setTransaccionesFormaPago(data.pagos || []);
@@ -304,7 +314,7 @@ export default function ConfiguracionKodeModule() {
   const handleToggleActivoFormaPago = async (fp: FormaPagoAdmin, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     try {
-      const res = await fetch('/api/kode/formas-pago', {
+      const res = await kodeFetch('/api/kode/formas-pago', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -340,7 +350,7 @@ export default function ConfiguracionKodeModule() {
       if (modalFormaPago.isEdit) {
         payload.id = modalFormaPago.id;
       }
-      const res = await fetch('/api/kode/formas-pago', {
+      const res = await kodeFetch('/api/kode/formas-pago', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -365,7 +375,7 @@ export default function ConfiguracionKodeModule() {
     }
     try {
       setAplicandoComisionGlobal(true);
-      const res = await fetch('/api/kode/empleados', {
+      const res = await kodeFetch('/api/kode/empleados', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -398,7 +408,7 @@ export default function ConfiguracionKodeModule() {
 
     try {
       setLoading(true);
-      const res = await fetch('/api/kode/config', {
+      const res = await kodeFetch('/api/kode/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -507,7 +517,7 @@ export default function ConfiguracionKodeModule() {
         payload.id = editingEmpleado.id;
       }
 
-      const res = await fetch(url, {
+      const res = await kodeFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -553,7 +563,7 @@ export default function ConfiguracionKodeModule() {
 
   const handleToggleActivo = async (emp: Empleado) => {
     try {
-      const res = await fetch('/api/kode/empleados', {
+      const res = await kodeFetch('/api/kode/empleados', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -580,7 +590,7 @@ export default function ConfiguracionKodeModule() {
     if (!empleadoToDelete) return;
     try {
       setDeleteLoading(true);
-      const res = await fetch(`/api/kode/empleados?id=${empleadoToDelete.id}`, {
+      const res = await kodeFetch(`/api/kode/empleados?id=${empleadoToDelete.id}`, {
         method: 'DELETE',
       });
       const data = await res.json();
@@ -631,7 +641,7 @@ export default function ConfiguracionKodeModule() {
       setFseLoading(true);
       setFseResult(null);
 
-      const res = await fetch('/api/kode/dte/fse', {
+      const res = await kodeFetch('/api/kode/dte/fse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

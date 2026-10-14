@@ -7,10 +7,10 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    // Rate Limiting para generación de token de staff (REQ-SEC-01: máx 15 req/min por IP)
+    // Rate Limiting para generación de token de staff (REQ-SEC-01: máx 120 req/min por IP)
     const rl = await checkRateLimit(request, {
       keyPrefix: 'staff_token',
-      maxRequests: 15,
+      maxRequests: 120,
       windowMs: 60 * 1000,
     });
     if (!rl.allowed) {

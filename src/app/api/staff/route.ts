@@ -9,7 +9,8 @@ async function isRequestFromAdmin(request: Request): Promise<{ authorized: boole
   if (!authorized || !payload) {
     return { authorized: false, isAdmin: false };
   }
-  if (String(payload.role || '').toUpperCase() === 'ADMIN') {
+  const roleUpper = String(payload.role || '').toUpperCase();
+  if (roleUpper === 'ADMIN' || roleUpper.includes('ADMIN') || roleUpper.includes('GEREN')) {
     return { authorized: true, isAdmin: true };
   }
   if (payload.id || payload.email) {
@@ -22,8 +23,11 @@ async function isRequestFromAdmin(request: Request): Promise<{ authorized: boole
         isActive: true,
       },
     });
-    if (dbUser && String(dbUser.role || '').toUpperCase() === 'ADMIN') {
-      return { authorized: true, isAdmin: true };
+    if (dbUser) {
+      const dbRoleUpper = String(dbUser.role || '').toUpperCase();
+      if (dbRoleUpper === 'ADMIN' || dbRoleUpper.includes('ADMIN') || dbRoleUpper.includes('GEREN')) {
+        return { authorized: true, isAdmin: true };
+      }
     }
   }
   return { authorized: true, isAdmin: false };

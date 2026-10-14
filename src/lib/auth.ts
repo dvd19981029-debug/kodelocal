@@ -165,27 +165,39 @@ export function setActiveUser(user: UserAccount | null) {
   sessionStorage.removeItem('kodelocal_staff_token');
 }
 
+let inFlightTokenPromise: Promise<string | null> | null = null;
+
 export async function getStaffToken(): Promise<string | null> {
   if (typeof window === 'undefined') return null;
   const cached = sessionStorage.getItem('kodelocal_staff_token');
   if (cached) return cached;
 
-  const activeUser = getActiveUser();
-  try {
-    const res = await fetch('/api/staff/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: activeUser?.email, role: activeUser?.role || 'STAFF' }),
-    });
-    const data = await res.json();
-    if (data.success && data.token) {
-      sessionStorage.setItem('kodelocal_staff_token', data.token);
-      return data.token;
-    }
-  } catch (err) {
-    console.error('Error al obtener token de staff:', err);
+  if (inFlightTokenPromise) {
+    return inFlightTokenPromise;
   }
-  return null;
+
+  inFlightTokenPromise = (async () => {
+    const activeUser = getActiveUser();
+    try {
+      const res = await fetch('/api/staff/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: activeUser?.email, role: activeUser?.role || 'STAFF' }),
+      });
+      const data = await res.json();
+      if (data.success && data.token) {
+        sessionStorage.setItem('kodelocal_staff_token', data.token);
+        return data.token;
+      }
+    } catch (err) {
+      console.error('Error al obtener token de staff:', err);
+    } finally {
+      inFlightTokenPromise = null;
+    }
+    return null;
+  })();
+
+  return inFlightTokenPromise;
 }
 
 export function getActiveSessionUI() {
