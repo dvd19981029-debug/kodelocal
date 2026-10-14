@@ -377,5 +377,23 @@ export const MOCK_100ML_BOTTLES: ProductItem[] = [
     imageUrl: '/images/botes/bote_100ml_goliat.jpg',
     isAvailableOnline: true,
     puesto: 'B6',
+  },
+  {
+    id: 'bote-100ml-wolf',
+    sku: 'BOT-100-WOL',
+    barcode: '741002000023',
+    name: 'Bote Wolf 100ml Rosca',
+    officialName: 'Wolf',
+    brand: '',
+    gender: 'Unisex',
+    category: 'Botes',
+    unit: 'Unidad',
+    price: 1.45,
+    cost: 0.55,
+    stock: 50,
+    minStock: 15,
+    imageUrl: '/images/botes/bote_100ml_wolf.jpg',
+    isAvailableOnline: true,
+    puesto: 'B6',
   }
 ];

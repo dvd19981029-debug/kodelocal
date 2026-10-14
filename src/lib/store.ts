@@ -1614,6 +1614,26 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "stockHalf": 0
   },
   {
+    "id": "bote-100ml-wolf",
+    "sku": "BOT-100-WOL",
+    "barcode": "741002000023",
+    "name": "Bote Wolf 100ml Rosca",
+    "officialName": "Wolf",
+    "brand": "",
+    "gender": "Unisex",
+    "category": "Botes",
+    "unit": "Unidad",
+    "price": 1.45,
+    "cost": 0.55,
+    "stock": 50,
+    "minStock": 15,
+    "imageUrl": "/images/botes/bote_100ml_wolf.jpg",
+    "description": "Frasco cilíndrico de vidrio transparente 100ml tipo campana con aro en la base, cierre de rosca y tapa metálica plateada cromada.",
+    "isAvailableOnline": true,
+    "puesto": "B6",
+    "stockHalf": 0
+  },
+  {
     "id": "bolsa-lujo",
     "sku": "EMP-BOL",
     "barcode": "741999000EMP-BOL",
@@ -1939,7 +1959,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   }
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v25_bote_goliat";
+export const DATA_VERSION = "2026_oficial_real_v26_bote_wolf";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;
