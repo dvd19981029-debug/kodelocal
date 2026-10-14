@@ -163,20 +163,20 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
               }`}
             >
               <div>
-                <div className="flex items-center justify-between gap-1 mb-1">
-                  <div className="flex items-center gap-1">
-                    <span className="clay-badge text-[9px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-100/80 px-1.5 py-0.5 rounded-md">
+                <div className="flex items-center justify-between gap-1 mb-1.5 min-w-0 w-full">
+                  <div className="flex items-center gap-1 min-w-0 shrink-0">
+                    <span className="clay-badge !text-[9.5px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-100/80 !px-1.5 !py-0.5 rounded-md shrink-0">
                       #{product.sku}
                     </span>
                     {product.puesto && (
-                      <span className="text-[9px] font-medium text-slate-500" title={`Puesto: ${product.puesto}`}>
+                      <span className="text-[8.5px] leading-[1.05] font-semibold text-slate-500 max-w-[34px] break-words" title={`Puesto: ${product.puesto}`}>
                         Estante {product.puesto}
                       </span>
                     )}
                   </div>
                   
-                  <div className="flex items-center gap-1">
-                    <span className={`clay-badge text-[9px] font-bold py-0.5 px-1.5 rounded-md whitespace-nowrap ${
+                  <div className="flex items-center gap-1 min-w-0 justify-end">
+                    <span className={`clay-badge !text-[9px] font-bold !py-0.5 !px-2 !gap-0.5 rounded-full whitespace-nowrap tracking-tight truncate max-w-full ${
                       isOutOfStock 
                         ? 'bg-rose-50 text-rose-700 border border-rose-200' 
                         : isLowStock 
@@ -188,7 +188,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
                     <button
                       type="button"
                       onClick={(e) => onOpenEditProduct(e, product)}
-                      className="w-5 h-5 rounded-md bg-slate-100 hover:bg-indigo-100 text-slate-500 hover:text-indigo-600 flex items-center justify-center transition-colors shadow-2xs"
+                      className="w-4 h-4 shrink-0 rounded-md bg-slate-100 hover:bg-indigo-100 text-slate-500 hover:text-indigo-600 flex items-center justify-center transition-colors shadow-2xs"
                       title="Editar nombre, inspiración y precios del producto"
                     >
                       <Edit3 className="w-2.5 h-2.5" />
