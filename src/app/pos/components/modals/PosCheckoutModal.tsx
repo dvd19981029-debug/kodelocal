@@ -18,6 +18,7 @@ import {
   DEPARTAMENTOS_CATALOG, 
   getMunicipiosByDepartamento 
 } from '@/lib/svTerritory';
+import { GiroSearchSelect } from '@/components/common/GiroSearchSelect';
 import { PaymentMethod, TipoComprobante } from '../../types';
 
 export interface PosCheckoutModalProps {
@@ -439,14 +440,13 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
             {tipoComprobante === '03' && (
               <div>
                 <label className="text-[10.5px] font-semibold text-slate-600 block mb-0.5">
-                  Giro / Actividad Económica *
+                  Giro / Actividad Económica (CAT-019 MH) *
                 </label>
-                <input
-                  type="text"
+                <GiroSearchSelect
                   value={clienteGiro}
-                  onChange={(e) => setClienteGiro(e.target.value)}
-                  placeholder="Ej. Venta al por menor de cosméticos"
-                  className="clay-input w-full text-xs py-1.5"
+                  onChange={(val) => setClienteGiro(val)}
+                  variant="compact"
+                  placeholder="Buscar por código o giro (ej. 47722, cosméticos...)"
                 />
               </div>
             )}

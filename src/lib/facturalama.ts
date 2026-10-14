@@ -1,6 +1,7 @@
 // src/lib/facturalama.ts
 import { randomUUID } from 'crypto';
 import { resolveDepartamentoCode, resolveMunicipioCode } from './svTerritory';
+import { resolveGiroMH } from './svGirosCat019';
 
 export interface DteItemInput {
   codigo?: string;
@@ -290,11 +291,12 @@ export class FacturaLlamaClient {
 
     const deptCodeCCF = resolveDepartamentoCode(cliente?.departamento);
     const muniCodeCCF = resolveMunicipioCode(deptCodeCCF, cliente?.municipio);
+    const resolvedGiroCCF = resolveGiroMH(cliente?.descActividad || cliente?.codActividad, cliente?.codActividad);
 
     const recipientCCF: any = {
       name: cliente?.nombre?.trim() || 'Empresa Cliente S.A. de C.V.',
       nrc: cleanNrc.slice(0, 8),
-      economicActivity: cliente?.codActividad || '47411',
+      economicActivity: resolvedGiroCCF?.code || '47722',
       contributorType: 'JURIDICA',
       email: (cliente?.correo && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cliente.correo.trim()))
         ? cliente.correo.trim()

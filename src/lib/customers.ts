@@ -19,7 +19,8 @@ export interface CustomerRecord {
   tipoDocumento: TipoDocumentoCliente;
   numDocumento: string; // DUI o NIT
   nrc?: string; // Número de Registro de Contribuyente (Requerido para CCF)
-  actividadEconomica?: string; // Giro o Actividad Comercial según Hacienda
+  codActividad?: string; // Código CAT-019 Hacienda (ej. 47722)
+  actividadEconomica?: string; // Giro o Actividad Comercial según Hacienda (CAT-019)
   categoriaContribuyente?: CategoriaContribuyente;
   documentoPreferido?: '01' | '03' | 'TICKET'; // Documento preferido para facturar: 01 (Factura), 03 (CCF), TICKET
   email: string;
@@ -55,14 +56,17 @@ export const DEPARTAMENTOS_SV = [
 ];
 
 export const GIROS_COMUNES_SV = [
-  'Venta al por menor de productos cosméticos y de tocador en comercios especializados',
-  'Comercio al por menor de otros productos nuevos en comercios especializados',
-  'Servicios de peluquería y otros tratamientos de belleza',
-  'Venta de productos medicinales, cosméticos y artículos de tocador',
-  'Comercio al por mayor de perfumería y cosméticos',
-  'Servicios personales diversos',
-  'Venta al por menor por correo o por internet',
-  'Consumidor Final / Particular'
+  '47722 - Venta al por menor de productos cosméticos y de tocador',
+  '46491 - Venta al por mayor de productos medicinales, cosméticos, perfumería y productos de limpieza',
+  '20232 - Fabricación de perfumes, cosméticos y productos de higiene y cuidado personal, incluyendo tintes, champú, etc.',
+  '47892 - Venta al por menor de productos medicinales, cosméticos, de tocador y de limpieza en puestos de ferias y mercados',
+  '96020 - Peluquería y otros tratamientos de belleza',
+  '47711 - Venta al por menor de prendas de vestir y accesorios de vestir',
+  '47739 - Venta al por menor de otros productos n.c.p.',
+  '47910 - Venta al por menor por correo o internet',
+  '10006 - Comerciante',
+  '10001 - Empleados',
+  '10005 - Otros'
 ];
 
 export const INITIAL_CUSTOMERS: CustomerRecord[] = [];

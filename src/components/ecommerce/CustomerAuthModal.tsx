@@ -7,9 +7,12 @@ import {
   EyeOff, 
   CheckCircle2, 
   AlertCircle,
-  Loader2
+  Loader2,
+  Building2
 } from 'lucide-react';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
+import { DEPARTAMENTOS_CATALOG, getMunicipiosByDepartamento } from '@/lib/svTerritory';
+import { GiroSearchSelect } from '@/components/common/GiroSearchSelect';
 
 export default function CustomerAuthModal() {
   const { 
@@ -41,6 +44,17 @@ export default function CustomerAuthModal() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+
+  // Datos de Crédito Fiscal (CCF) en registro
+  const [isCreditFiscal, setIsCreditFiscal] = useState(false);
+  const [businessName, setBusinessName] = useState('');
+  const [documentNum, setDocumentNum] = useState('');
+  const [nrc, setNrc] = useState('');
+  const [activityDesc, setActivityDesc] = useState('');
+  const [activityCode, setActivityCode] = useState('');
+  const [department, setDepartment] = useState('San Salvador');
+  const [municipality, setMunicipality] = useState('San Salvador Centro');
+  const [address, setAddress] = useState('');
 
   if (!isAuthModalOpen) return null;
 
@@ -77,11 +91,27 @@ export default function CustomerAuthModal() {
         setIsLoading(false);
         return;
       }
+      if (isCreditFiscal && (!nrc.trim() || !documentNum.trim() || !activityDesc.trim())) {
+        setErrorMessage('Para Crédito Fiscal ingresa tu NIT/DUI, NRC y Giro de Hacienda.');
+        setIsLoading(false);
+        return;
+      }
       const res = await registerCustomer({
         name,
         email,
         password,
         phone,
+        isCreditFiscal,
+        businessName: isCreditFiscal ? (businessName.trim() || name.trim()) : undefined,
+        documentType: isCreditFiscal ? 'NIT' : 'DUI',
+        documentNum: documentNum.trim() || undefined,
+        nrc: isCreditFiscal ? nrc.trim() : undefined,
+        activityCode: isCreditFiscal ? activityCode : undefined,
+        activityDesc: isCreditFiscal ? activityDesc : undefined,
+        preferredDoc: isCreditFiscal ? '03' : '01',
+        department: isCreditFiscal ? department : undefined,
+        municipality: isCreditFiscal ? municipality : undefined,
+        address: isCreditFiscal ? address.trim() : undefined,
       });
       if (!res.success) {
         setErrorMessage(res.error || 'Error al crear la cuenta');
@@ -97,7 +127,7 @@ export default function CustomerAuthModal() {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
       
       {/* Tarjeta Modal Principal con bordes redondeados y sombra suave */}
-      <div className="relative w-full max-w-sm sm:max-w-[400px] bg-white rounded-[2.5rem] p-7 sm:p-9 shadow-[0_25px_60px_rgba(0,0,0,0.18),inset_1px_1px_2px_rgba(255,255,255,0.9)] border border-slate-100 max-h-[92vh] overflow-y-auto">
+      <div className={`relative w-full ${authModalTab === 'register' && isCreditFiscal ? 'max-w-lg' : 'max-w-sm sm:max-w-[400px]'} bg-white rounded-[2.5rem] p-7 sm:p-9 shadow-[0_25px_60px_rgba(0,0,0,0.18),inset_1px_1px_2px_rgba(255,255,255,0.9)] border border-slate-100 max-h-[92vh] overflow-y-auto transition-all`}>
         
         {/* Botón Cerrar (X) */}
         <button 
@@ -119,7 +149,7 @@ export default function CustomerAuthModal() {
           <p className="text-xs sm:text-sm text-slate-500 font-medium">
             {authModalTab === 'login' 
               ? 'Entra para acceder a tus cupones' 
-              : 'Regístrate para acceder a tus cupones'}
+              : 'Regístrate para acceder a tus cupones y facturación rápida'}
           </p>
         </div>
 
@@ -220,6 +250,136 @@ export default function CustomerAuthModal() {
                 onChange={(e) => setPhone(e.target.value)}
                 className="w-full px-4 py-3 text-sm rounded-2xl bg-white border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#52b747] focus:ring-2 focus:ring-[#52b747]/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] font-medium transition-all"
               />
+            </div>
+          )}
+
+          {authModalTab === 'register' && (
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-3">
+              <label className="flex items-center justify-between gap-2 cursor-pointer select-none">
+                <span className="flex items-center gap-2 text-xs font-extrabold text-slate-800">
+                  <Building2 className="w-4 h-4 text-[#52b747]" />
+                  <span>Requiero Crédito Fiscal (CCF) en mis compras</span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={isCreditFiscal}
+                  onChange={(e) => setIsCreditFiscal(e.target.checked)}
+                  className="rounded border-slate-300 text-[#52b747] focus:ring-[#52b747] w-4 h-4 cursor-pointer"
+                />
+              </label>
+
+              {isCreditFiscal && (
+                <div className="space-y-3 pt-2 border-t border-slate-200/70 animate-in fade-in duration-150">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                      Razón Social / Nombre de Contribuyente *
+                    </label>
+                    <input
+                      type="text"
+                      required={isCreditFiscal}
+                      placeholder="Nombre en tarjeta de IVA o Razón Social"
+                      value={businessName}
+                      onChange={(e) => setBusinessName(e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#52b747] font-medium"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                        NIT / DUI Contribuyente *
+                      </label>
+                      <input
+                        type="text"
+                        required={isCreditFiscal}
+                        placeholder="0614-000000-000-0"
+                        value={documentNum}
+                        onChange={(e) => setDocumentNum(e.target.value)}
+                        className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#52b747] font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                        NRC (Registro IVA) *
+                      </label>
+                      <input
+                        type="text"
+                        required={isCreditFiscal}
+                        placeholder="123456-7"
+                        value={nrc}
+                        onChange={(e) => setNrc(e.target.value)}
+                        className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#52b747] font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                      Giro / Actividad Económica (Hacienda CAT-019) *
+                    </label>
+                    <GiroSearchSelect
+                      value={activityDesc}
+                      onChange={(val, giroObj) => {
+                        setActivityDesc(val);
+                        setActivityCode(giroObj?.code || '');
+                      }}
+                      required={isCreditFiscal}
+                      variant="ecommerce"
+                      placeholder="Buscar giro de Hacienda por código o nombre..."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                        Departamento Fiscal *
+                      </label>
+                      <select
+                        value={department}
+                        onChange={(e) => {
+                          const newDept = e.target.value;
+                          setDepartment(newDept);
+                          const munis = getMunicipiosByDepartamento(newDept);
+                          if (munis.length > 0) setMunicipality(munis[0].nombre);
+                        }}
+                        className="w-full px-2.5 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#52b747] font-medium"
+                      >
+                        {DEPARTAMENTOS_CATALOG.map((dep) => (
+                          <option key={dep.id} value={dep.nombre}>{dep.nombre}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                        Municipio / Distrito *
+                      </label>
+                      <select
+                        value={municipality}
+                        onChange={(e) => setMunicipality(e.target.value)}
+                        className="w-full px-2.5 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#52b747] font-medium"
+                      >
+                        {getMunicipiosByDepartamento(department).map((m) => (
+                          <option key={m.id} value={m.nombre}>{m.nombre}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                      Dirección Fiscal *
+                    </label>
+                    <input
+                      type="text"
+                      required={isCreditFiscal}
+                      placeholder="Colonia, calle, número de local o casa"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#52b747] font-medium"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

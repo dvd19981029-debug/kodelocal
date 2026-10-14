@@ -6,6 +6,7 @@ import { checkRateLimit } from '@/lib/rateLimit';
 import { sanitizeText, sanitizeEmail, sanitizePhone, sanitizeDocument } from '@/lib/sanitize';
 import { sendOrderConfirmationEmail } from '@/lib/orderEmailService';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
+import { resolveGiroMH, formatGiroOption } from '@/lib/svGirosCat019';
 
 export const dynamic = 'force-dynamic';
 
@@ -503,20 +504,27 @@ export async function POST(request: Request) {
       nrc,
       giro,
       tipoComprobante,
+      businessName,
+      fiscalAddress,
     } = body;
 
     // Sanitización estricta de entradas (SEC-07)
     const cleanCustomerName = sanitizeText(customerName, 100) || 'Cliente Online';
+    const cleanBusinessName = sanitizeText(businessName, 150) || null;
     const cleanCustomerEmail = sanitizeEmail(customerEmail);
     const cleanCustomerPhone = sanitizePhone(customerPhone) || '';
     const cleanDepartment = sanitizeText(department, 50) || 'San Salvador';
     const cleanMunicipality = sanitizeText(municipality, 60) || 'San Salvador Centro';
     const cleanShippingAddress = sanitizeText(shippingAddress, 255);
+    const cleanFiscalAddress = sanitizeText(fiscalAddress, 255) || null;
     const cleanDeliveryReference = sanitizeText(deliveryReference, 255) || null;
     const cleanNotes = sanitizeText(notes, 500) || null;
     const cleanNumDoc = sanitizeDocument(numDoc, 30) || '00000000-0';
     const cleanNrc = sanitizeDocument(nrc, 30) || null;
     const cleanGiro = sanitizeText(giro, 200) || null;
+    const resolvedGiro = resolveGiroMH(cleanGiro);
+    const resolvedActivityCode = resolvedGiro?.code || null;
+    const resolvedActivityDesc = resolvedGiro ? formatGiroOption(resolvedGiro) : cleanGiro;
     const cleanTipoComprobante = sanitizeText(tipoComprobante, 10) || '01';
 
     // Verificar si el comprador tiene sesión autenticada de cliente o de personal
@@ -527,48 +535,66 @@ export async function POST(request: Request) {
     const verifiedCustomer = verifyCustomerToken(bearerToken);
 
     let resolvedCustomerId = verifiedCustomer ? verifiedCustomer.customerId : (isStaff ? customerId : null);
-    if (!resolvedCustomerId && (cleanCustomerEmail || cleanCustomerPhone || cleanCustomerName)) {
+    if (resolvedCustomerId || cleanCustomerEmail || cleanCustomerPhone || cleanCustomerName) {
       try {
-        let cust = await prisma.customer.findFirst({
-          where: {
-            OR: [
-              ...(cleanCustomerEmail ? [{ email: cleanCustomerEmail }] : []),
-              ...(cleanCustomerPhone ? [{ phone: cleanCustomerPhone }] : []),
-            ],
-          },
-        });
+        let cust = null;
+        if (cleanCustomerEmail) {
+          cust = await prisma.customer.findFirst({
+            where: { email: { equals: cleanCustomerEmail, mode: 'insensitive' } },
+          });
+        }
+        if (!cust && resolvedCustomerId) {
+          cust = await prisma.customer.findUnique({
+            where: { id: resolvedCustomerId },
+          });
+        }
+        if (!cust && cleanCustomerPhone) {
+          cust = await prisma.customer.findFirst({
+            where: { phone: cleanCustomerPhone },
+          });
+        }
+
+        const isCcfOrder = cleanTipoComprobante === '03' || Boolean(cleanNrc);
 
         if (cust) {
-          // SEC-IDOR: Si es un invitado no autenticado cuyo correo/teléfono coincide con una cuenta existente,
-          // vincular el pedido a su historial pero SOLO rellenar campos fiscales que estuvieran vacíos (sin sobrescribir).
-          const canOverwriteFiscal = isStaff || (verifiedCustomer && verifiedCustomer.customerId === cust.id);
           cust = await prisma.customer.update({
             where: { id: cust.id },
             data: {
-              ...(cleanNumDoc && (canOverwriteFiscal || !cust.documentNum || cust.documentNum === '00000000-0') ? { documentNum: cleanNumDoc } : {}),
-              ...(cleanNrc && (canOverwriteFiscal || !cust.nrc) ? { nrc: cleanNrc } : {}),
-              ...(cleanGiro && (canOverwriteFiscal || !cust.activityDesc) ? { activityDesc: cleanGiro } : {}),
-              ...(cleanTipoComprobante && canOverwriteFiscal ? { preferredDoc: cleanTipoComprobante } : {}),
-              ...(cleanShippingAddress && !cust.address ? { address: cleanShippingAddress } : {}),
-              ...(cleanDepartment && !cust.department ? { department: cleanDepartment } : {}),
-              ...(cleanMunicipality && !cust.municipality ? { municipality: cleanMunicipality } : {}),
+              ...(cleanCustomerEmail && !cust.email ? { email: cleanCustomerEmail } : {}),
+              ...(cleanCustomerPhone ? { phone: cleanCustomerPhone } : {}),
+              ...(cleanBusinessName ? { businessName: cleanBusinessName, name: cleanBusinessName } : {}),
+              ...(cleanCustomerName && cleanCustomerName !== 'Cliente Online' ? { tradeName: cleanCustomerName } : {}),
+              ...(cleanNumDoc && cleanNumDoc !== '00000000-0' ? {
+                documentNum: cleanNumDoc,
+                documentType: isCcfOrder ? 'NIT' : (cust.documentType || 'DUI'),
+              } : {}),
+              ...(cleanNrc ? { nrc: cleanNrc } : {}),
+              ...(resolvedActivityCode ? { activityCode: resolvedActivityCode } : {}),
+              ...(resolvedActivityDesc ? { activityDesc: resolvedActivityDesc } : {}),
+              ...(isCcfOrder ? { preferredDoc: '03' } : (cleanTipoComprobante ? { preferredDoc: cleanTipoComprobante } : {})),
+              ...(cleanFiscalAddress || cleanShippingAddress ? { address: cleanFiscalAddress || cleanShippingAddress } : {}),
+              ...(cleanDepartment ? { department: cleanDepartment } : {}),
+              ...(cleanMunicipality ? { municipality: cleanMunicipality } : {}),
             },
           });
           resolvedCustomerId = cust.id;
         } else {
           cust = await prisma.customer.create({
             data: {
-              name: cleanCustomerName,
+              name: cleanBusinessName || cleanCustomerName,
+              businessName: cleanBusinessName || (isCcfOrder ? cleanCustomerName : null),
+              tradeName: cleanCustomerName,
               email: cleanCustomerEmail || null,
               phone: cleanCustomerPhone || null,
-              documentType: cleanTipoComprobante === '03' ? 'NIT' : 'DUI',
+              documentType: isCcfOrder ? 'NIT' : 'DUI',
               documentNum: cleanNumDoc,
               nrc: cleanNrc,
-              activityDesc: cleanGiro,
+              activityCode: resolvedActivityCode,
+              activityDesc: resolvedActivityDesc,
               preferredDoc: cleanTipoComprobante,
               department: cleanDepartment,
               municipality: cleanMunicipality,
-              address: cleanShippingAddress || null,
+              address: cleanFiscalAddress || cleanShippingAddress || null,
             },
           });
           resolvedCustomerId = cust.id;

@@ -17,6 +17,7 @@ import {
   DEPARTAMENTOS_CATALOG, 
   getMunicipiosByDepartamento 
 } from '@/lib/svTerritory';
+import { GiroSearchSelect } from '@/components/common/GiroSearchSelect';
 import { TipoComprobante } from '../../types';
 
 export interface PosCustomerFormModalProps {
@@ -315,14 +316,13 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="sm:col-span-2">
               <label className="text-xs font-bold text-slate-700 block mb-1">
-                Actividad Económica / Giro (para Hacienda CCF)
+                Actividad Económica / Giro (Catálogo Oficial MH CAT-019)
               </label>
-              <input
-                type="text"
-                placeholder="Ej. Venta al por menor de cosméticos y perfumes"
+              <GiroSearchSelect
                 value={custGiro}
-                onChange={(e) => setCustGiro(e.target.value)}
-                className="clay-input w-full text-xs font-medium"
+                onChange={(val) => setCustGiro(val)}
+                variant="pos"
+                placeholder="Buscar por código o giro (ej. 47722, cosméticos, ropa...)"
               />
             </div>
 

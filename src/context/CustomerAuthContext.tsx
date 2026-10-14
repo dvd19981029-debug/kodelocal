@@ -15,6 +15,7 @@ export interface CustomerUser {
   address?: string;
   nrc?: string;
   businessName?: string;
+  activityCode?: string;
   activityDesc?: string;
   avatarUrl?: string;
   authProvider?: 'google' | 'credentials';
@@ -37,6 +38,14 @@ export interface RegisterData {
   department?: string;
   municipality?: string;
   address?: string;
+  documentType?: string;
+  documentNum?: string;
+  nrc?: string;
+  businessName?: string;
+  activityCode?: string;
+  activityDesc?: string;
+  preferredDoc?: string;
+  isCreditFiscal?: boolean;
 }
 
 interface CustomerAuthContextType {

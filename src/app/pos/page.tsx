@@ -467,16 +467,17 @@ export default function PosPage() {
               vendedor: 'Tienda Online (aromaniaksv.com)',
               tipoComprobante: resolvedDoc,
               cliente: {
-                nombre: o.customerName,
-                telefono: o.customerPhone,
+                id: o.customerId || o.customer?.id || undefined,
+                nombre: (resolvedDoc === '03' && o.customer?.businessName) ? o.customer.businessName : o.customerName,
+                telefono: o.customerPhone || o.customer?.phone,
                 correo: o.customerEmail || o.customer?.email || undefined,
-                direccion: `${o.shippingAddress}, ${o.municipality}, ${o.department}`,
+                direccion: o.customer?.address || `${o.shippingAddress}, ${o.municipality}, ${o.department}`,
                 numDocumento: o.customer?.documentNum || undefined,
                 nrc: o.customer?.nrc || undefined,
                 actividadEconomica: o.customer?.activityDesc || undefined,
-                departamento: o.department,
-                municipio: o.municipality,
-              },
+                departamento: o.customer?.department || o.department,
+                municipio: o.customer?.municipality || o.municipality,
+              } as any,
               items: [
                 ...o.items.map((it: any) => ({
                   productId: it.productId,
@@ -658,7 +659,10 @@ export default function PosPage() {
     // Agrupa ráfagas de eventos (una venta toca varias filas) en una sola recarga
     const scheduleSalesSync = () => {
       if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => syncSalesFromServer(), 600);
+      debounceTimer = setTimeout(() => {
+        syncSalesFromServer();
+        refreshCustomers();
+      }, 600);
     };
     const scheduleProductsSync = () => {
       if (productsTimer) clearTimeout(productsTimer);
@@ -669,6 +673,7 @@ export default function PosPage() {
       .channel('pos-realtime-channel')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'Sale' }, scheduleSalesSync)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'EcommerceOrder' }, scheduleSalesSync)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'Customer' }, () => refreshCustomers())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'Product' }, scheduleProductsSync)
       .subscribe();
 
@@ -683,6 +688,7 @@ export default function PosPage() {
       if (document.visibilityState === 'visible') {
         syncSalesFromServer();
         refreshProductsFromServer();
+        refreshCustomers();
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);
@@ -1597,22 +1603,26 @@ export default function PosPage() {
   const handleStartInvoiceOrder = (order: SaleRecord) => {
     setOrderToInvoice(order);
 
-    // 1. Buscar por ID directo si viene en el cliente o la orden
+    // 1. Buscar por Correo (prioridad para relacionar con Ecommerce) o ID directo
+    const normEmail = order.cliente?.correo?.toLowerCase().trim();
     const directId = (order.cliente as any)?.id || (order as any).customerId;
-    let matchedCust = directId ? customers.find(c => c.id === directId) : undefined;
+    let matchedCust = normEmail
+      ? customers.find(c => c.email && c.email.toLowerCase().trim() === normEmail)
+      : undefined;
+    if (!matchedCust && directId) {
+      matchedCust = customers.find(c => c.id === directId);
+    }
 
-    // 2. Si no, buscar por Documento (DUI/NIT/NRC), Correo, Teléfono o Nombre exacto
+    // 2. Si no, buscar por NRC, Documento válido (DUI/NIT), Teléfono o Nombre exacto
     if (!matchedCust) {
       const orderDoc = order.cliente?.numDocumento?.replace(/\D/g, '');
       const orderNrc = order.cliente?.nrc?.replace(/\D/g, '');
-      const normEmail = order.cliente?.correo?.toLowerCase().trim();
       const cleanPhone = order.cliente?.telefono?.replace(/\D/g, '');
       const normName = order.cliente?.nombre?.toLowerCase().trim();
 
       matchedCust = customers.find(c => {
         if (orderNrc && c.nrc && c.nrc.replace(/\D/g, '') === orderNrc) return true;
-        if (orderDoc && c.numDocumento && c.numDocumento.replace(/\D/g, '') === orderDoc) return true;
-        if (normEmail && c.email && c.email.toLowerCase().trim() === normEmail) return true;
+        if (orderDoc && orderDoc !== '000000000' && c.numDocumento && c.numDocumento.replace(/\D/g, '') === orderDoc) return true;
         if (cleanPhone && c.phone && c.phone.replace(/\D/g, '') === cleanPhone) return true;
         if (normName && normName !== 'consumidor final' && c.name && c.name.toLowerCase().trim() === normName) return true;
         return false;
@@ -1621,6 +1631,18 @@ export default function PosPage() {
 
     if (matchedCust) {
       handleSelectCustomer(matchedCust.id);
+      if (order.cliente?.nombre && order.cliente.nombre !== 'Consumidor Final') {
+        setClienteNombre(order.cliente.nombre);
+      }
+      if (order.cliente?.numDocumento && order.cliente.numDocumento !== '00000000-0') {
+        setClienteDoc(order.cliente.numDocumento);
+      }
+      if (order.cliente?.nrc) setClienteNrc(order.cliente.nrc);
+      if (order.cliente?.correo) setClienteEmail(order.cliente.correo);
+      if (order.cliente?.actividadEconomica) setClienteGiro(order.cliente.actividadEconomica);
+      if (order.cliente?.direccion) setClienteDireccion(order.cliente.direccion);
+      if (order.cliente?.departamento) setClienteDepartamento(order.cliente.departamento);
+      if (order.cliente?.municipio) setClienteMunicipio(order.cliente.municipio);
     } else {
       setSelectedCustomerId('');
       setClienteNombre(order.cliente?.nombre || 'Consumidor Final');
@@ -1636,7 +1658,7 @@ export default function PosPage() {
     const tipo: TipoComprobante =
       order.tipoComprobante === '03' || order.tipoComprobante === '01' || order.tipoComprobante === 'TICKET'
         ? order.tipoComprobante
-        : (order.cliente?.nrc ? '03' : '01');
+        : (order.cliente?.nrc || matchedCust?.nrc ? '03' : '01');
     setTipoComprobante(tipo);
 
     const ordMethod = order.paymentMethod || 'CASH';
@@ -1661,7 +1683,9 @@ export default function PosPage() {
           ? { ...s, tipoComprobante: newTipo }
           : s
       );
-      saveStoredSales(updated);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('kodelocal_sales', JSON.stringify(updated));
+      }
       return updated;
     });
 
@@ -1706,6 +1730,31 @@ export default function PosPage() {
     }
 
     setIsProcessing(true);
+
+    // Asociar y guardar los datos fiscales/contacto del cliente por su correo o ID
+    if (clienteEmail.trim() || selectedCustomerId || (tipoComprobante === '03' && clienteNrc.trim())) {
+      fetch('/api/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedCustomerId || undefined,
+          tipoPersona: tipoComprobante === '03' || clienteNrc.trim() ? 'JURIDICA' : 'NATURAL',
+          name: clienteNombre.trim() || 'Consumidor Final',
+          tipoDocumento: tipoComprobante === '03' ? 'NIT' : 'DUI',
+          numDocumento: clienteDoc.trim() || '00000000-0',
+          nrc: clienteNrc.trim() || undefined,
+          actividadEconomica: clienteGiro.trim() || undefined,
+          documentoPreferido: tipoComprobante === '03' ? '03' : '01',
+          email: clienteEmail.trim() || undefined,
+          phone: selectedCustomerObj?.phone || (isOrderFromWindow ? orderToInvoice.cliente?.telefono : undefined),
+          departamento: clienteDepartamento || 'San Salvador',
+          municipio: clienteMunicipio || 'San Salvador Centro',
+          direccion: clienteDireccion.trim() || undefined,
+        }),
+      })
+        .then(() => refreshCustomers())
+        .catch(() => {});
+    }
 
     const parsedCash = paymentMethod === 'CASH' ? parseFloat(cashAmount) : undefined;
     const changeAmount = parsedCash ? parsedCash - totalToBill : undefined;

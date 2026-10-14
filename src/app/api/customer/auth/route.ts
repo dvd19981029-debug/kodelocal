@@ -4,8 +4,39 @@ import { createCustomerToken, verifyCustomerToken, hashPasswordSecure, verifyPas
 import { checkRateLimit } from '@/lib/rateLimit';
 import { sanitizeText, sanitizeEmail, sanitizePhone, sanitizeDocument } from '@/lib/sanitize';
 import { supabase } from '@/lib/supabaseClient';
+import { resolveGiroMH, formatGiroOption } from '@/lib/svGirosCat019';
 
 export const dynamic = 'force-dynamic';
+
+function formatAuthCustomerResponse(customer: any, authProvider: 'google' | 'credentials', sessionToken: string) {
+  const resolvedGiro = resolveGiroMH(customer.activityDesc, customer.activityCode);
+  return {
+    id: customer.id,
+    name: customer.name,
+    email: customer.email || '',
+    phone: customer.phone || '',
+    documentType: customer.documentType || (customer.nrc ? 'NIT' : 'DUI'),
+    documentNum: customer.documentNum || '',
+    department: customer.department || 'San Salvador',
+    municipality: customer.municipality || 'San Salvador Centro',
+    address: customer.address || '',
+    nrc: customer.nrc || '',
+    businessName: customer.businessName || customer.tradeName || '',
+    activityCode: resolvedGiro?.code || customer.activityCode || '',
+    activityDesc: resolvedGiro ? formatGiroOption(resolvedGiro) : (customer.activityDesc || ''),
+    avatarUrl: customer.avatarUrl || '',
+    authProvider,
+    tierId: customer.tierId || null,
+    tier: customer.tier || null,
+    customDiscountPct: customer.customDiscountPct || null,
+    specialEssencePrice: customer.specialEssencePrice ? Number(customer.specialEssencePrice) : null,
+    specialBottlePrice: customer.specialBottlePrice ? Number(customer.specialBottlePrice) : null,
+    tradeName: customer.tradeName || customer.businessName || '',
+    taxCategory: customer.taxCategory || 'OTRO',
+    preferredDoc: customer.preferredDoc || (customer.nrc ? '03' : '01'),
+    sessionToken,
+  };
+}
 
 export async function POST(request: Request) {
   try {
@@ -97,7 +128,7 @@ export async function POST(request: Request) {
             googleId: verifiedGoogleId || `google_${Date.now()}`,
             avatarUrl: verifiedAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(verifiedName)}`,
             department: 'San Salvador',
-            municipality: 'San Salvador',
+            municipality: 'San Salvador Centro',
             documentType: 'DUI',
           },
           include: { tier: true },
@@ -109,37 +140,29 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         sessionToken,
-        customer: {
-          id: customer.id,
-          name: customer.name,
-          email: customer.email,
-          phone: customer.phone || '',
-          documentType: customer.documentType || 'DUI',
-          documentNum: customer.documentNum || '',
-          department: customer.department || 'San Salvador',
-          municipality: customer.municipality || 'San Salvador Centro',
-          address: customer.address || '',
-          nrc: customer.nrc || '',
-          businessName: customer.businessName || '',
-          activityDesc: customer.activityDesc || '',
-          avatarUrl: customer.avatarUrl || '',
-          authProvider: 'google',
-          tierId: customer.tierId || null,
-          tier: customer.tier || null,
-          customDiscountPct: customer.customDiscountPct || null,
-          specialEssencePrice: customer.specialEssencePrice ? Number(customer.specialEssencePrice) : null,
-          specialBottlePrice: customer.specialBottlePrice ? Number(customer.specialBottlePrice) : null,
-          tradeName: customer.tradeName || '',
-          taxCategory: customer.taxCategory || 'OTRO',
-          preferredDoc: customer.preferredDoc || '01',
-          sessionToken,
-        },
+        customer: formatAuthCustomerResponse(customer, 'google', sessionToken),
       });
     }
 
     // ================= 2. REGISTRO TRADICIONAL CON FORMULARIO =================
     if (action === 'register') {
-      const { name, email, password, phone, department, municipality, address } = body;
+      const {
+        name,
+        email,
+        password,
+        phone,
+        department,
+        municipality,
+        address,
+        documentType,
+        documentNum,
+        nrc,
+        businessName,
+        activityCode,
+        activityDesc,
+        preferredDoc,
+        isCreditFiscal,
+      } = body;
 
       if (!name || !email || !password) {
         return NextResponse.json(
@@ -163,7 +186,19 @@ export async function POST(request: Request) {
         );
       }
 
-      // Verificar si ya existe
+      const cleanNrc = sanitizeDocument(nrc, 30) || null;
+      const cleanDocNum = sanitizeDocument(documentNum, 30) || null;
+      const cleanBusinessName = sanitizeText(businessName, 120) || null;
+      const resolvedGiro = resolveGiroMH(activityDesc, activityCode);
+      const cleanActCode = resolvedGiro?.code || sanitizeText(activityCode, 20) || null;
+      const cleanActDesc = resolvedGiro
+        ? formatGiroOption(resolvedGiro)
+        : (sanitizeText(activityDesc, 200) || null);
+      const wantsCCF = Boolean(isCreditFiscal || cleanNrc || preferredDoc === '03');
+      const resolvedDocType = wantsCCF ? 'NIT' : (sanitizeText(documentType, 20) || 'DUI');
+      const resolvedPrefDoc = wantsCCF ? '03' : (sanitizeText(preferredDoc, 10) || '01');
+
+      // Verificar si ya existe por correo
       const existing = await prisma.customer.findUnique({
         where: { email: cleanEmail },
         include: { tier: true },
@@ -179,17 +214,26 @@ export async function POST(request: Request) {
             { status: 409 }
           );
         } else {
-          // El cliente fue creado desde el POS (sin contraseña). Le asignamos la contraseña para que reclame su cuenta.
+          // El cliente fue creado desde el POS o en pedido previo (sin contraseña). Asociamos su contraseña y datos fiscales a su mismo registro por correo.
           const updatedCustomer = await prisma.customer.update({
             where: { id: existing.id },
             include: { tier: true },
             data: {
+              name: cleanName || existing.name,
               passwordHash,
               avatarUrl: existing.avatarUrl || avatarUrl,
-              phone: existing.phone || sanitizePhone(phone) || '',
-              department: existing.department || sanitizeText(department, 50) || 'San Salvador',
-              municipality: existing.municipality || sanitizeText(municipality, 60) || 'San Salvador Centro',
-              address: existing.address || sanitizeText(address, 255) || '',
+              phone: sanitizePhone(phone) || existing.phone || '',
+              department: sanitizeText(department, 50) || existing.department || 'San Salvador',
+              municipality: sanitizeText(municipality, 60) || existing.municipality || 'San Salvador Centro',
+              address: sanitizeText(address, 255) || existing.address || '',
+              documentType: cleanDocNum ? resolvedDocType : (existing.documentType || resolvedDocType),
+              documentNum: cleanDocNum || existing.documentNum || '',
+              nrc: cleanNrc || existing.nrc || null,
+              businessName: cleanBusinessName || existing.businessName || (wantsCCF ? cleanName : null),
+              tradeName: cleanBusinessName || existing.tradeName || null,
+              activityCode: cleanActCode || existing.activityCode || null,
+              activityDesc: cleanActDesc || existing.activityDesc || null,
+              preferredDoc: wantsCCF ? '03' : (existing.preferredDoc || resolvedPrefDoc),
             }
           });
           
@@ -198,31 +242,7 @@ export async function POST(request: Request) {
           return NextResponse.json({
             success: true,
             sessionToken,
-            customer: {
-              id: updatedCustomer.id,
-              name: updatedCustomer.name,
-              email: updatedCustomer.email,
-              phone: updatedCustomer.phone || '',
-              documentType: updatedCustomer.documentType || 'DUI',
-              documentNum: updatedCustomer.documentNum || '',
-              department: updatedCustomer.department || 'San Salvador',
-              municipality: updatedCustomer.municipality || 'San Salvador Centro',
-              address: updatedCustomer.address || '',
-              nrc: updatedCustomer.nrc || '',
-              businessName: updatedCustomer.businessName || '',
-              activityDesc: updatedCustomer.activityDesc || '',
-              avatarUrl: updatedCustomer.avatarUrl,
-              authProvider: 'credentials',
-              tierId: updatedCustomer.tierId || null,
-              tier: updatedCustomer.tier || null,
-              customDiscountPct: updatedCustomer.customDiscountPct || null,
-              specialEssencePrice: updatedCustomer.specialEssencePrice ? Number(updatedCustomer.specialEssencePrice) : null,
-              specialBottlePrice: updatedCustomer.specialBottlePrice ? Number(updatedCustomer.specialBottlePrice) : null,
-              tradeName: updatedCustomer.tradeName || '',
-              taxCategory: updatedCustomer.taxCategory || 'OTRO',
-              preferredDoc: updatedCustomer.preferredDoc || '01',
-              sessionToken,
-            },
+            customer: formatAuthCustomerResponse(updatedCustomer, 'credentials', sessionToken),
           });
         }
       }
@@ -237,7 +257,14 @@ export async function POST(request: Request) {
           department: sanitizeText(department, 50) || 'San Salvador',
           municipality: sanitizeText(municipality, 60) || 'San Salvador Centro',
           address: sanitizeText(address, 255) || '',
-          documentType: 'DUI',
+          documentType: resolvedDocType,
+          documentNum: cleanDocNum || '',
+          nrc: cleanNrc,
+          businessName: cleanBusinessName || (wantsCCF ? cleanName : null),
+          tradeName: cleanBusinessName,
+          activityCode: cleanActCode,
+          activityDesc: cleanActDesc,
+          preferredDoc: resolvedPrefDoc,
         },
         include: { tier: true },
       });
@@ -247,31 +274,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         sessionToken,
-        customer: {
-          id: customer.id,
-          name: customer.name,
-          email: customer.email,
-          phone: customer.phone || '',
-          documentType: customer.documentType || 'DUI',
-          documentNum: customer.documentNum || '',
-          department: customer.department || 'San Salvador',
-          municipality: customer.municipality || 'San Salvador Centro',
-          address: customer.address || '',
-          nrc: customer.nrc || '',
-          businessName: customer.businessName || '',
-          activityDesc: customer.activityDesc || '',
-          avatarUrl: customer.avatarUrl,
-          authProvider: 'credentials',
-          tierId: customer.tierId || null,
-          tier: customer.tier || null,
-          customDiscountPct: customer.customDiscountPct || null,
-          specialEssencePrice: customer.specialEssencePrice ? Number(customer.specialEssencePrice) : null,
-          specialBottlePrice: customer.specialBottlePrice ? Number(customer.specialBottlePrice) : null,
-          tradeName: customer.tradeName || '',
-          taxCategory: customer.taxCategory || 'OTRO',
-          preferredDoc: customer.preferredDoc || '01',
-          sessionToken,
-        },
+        customer: formatAuthCustomerResponse(customer, 'credentials', sessionToken),
       });
     }
 
@@ -337,31 +340,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         sessionToken,
-        customer: {
-          id: customer.id,
-          name: customer.name,
-          email: customer.email,
-          phone: customer.phone || '',
-          documentType: customer.documentType || 'DUI',
-          documentNum: customer.documentNum || '',
-          department: customer.department || 'San Salvador',
-          municipality: customer.municipality || 'San Salvador Centro',
-          address: customer.address || '',
-          nrc: customer.nrc || '',
-          businessName: customer.businessName || '',
-          activityDesc: customer.activityDesc || '',
-          avatarUrl: customer.avatarUrl || '',
-          authProvider: 'credentials',
-          tierId: customer.tierId || null,
-          tier: customer.tier || null,
-          customDiscountPct: customer.customDiscountPct || null,
-          specialEssencePrice: customer.specialEssencePrice ? Number(customer.specialEssencePrice) : null,
-          specialBottlePrice: customer.specialBottlePrice ? Number(customer.specialBottlePrice) : null,
-          tradeName: customer.tradeName || '',
-          taxCategory: customer.taxCategory || 'OTRO',
-          preferredDoc: customer.preferredDoc || '01',
-          sessionToken,
-        },
+        customer: formatAuthCustomerResponse(customer, 'credentials', sessionToken),
       });
     }
 
@@ -378,7 +357,9 @@ export async function POST(request: Request) {
         address,
         nrc,
         businessName,
-        activityDesc 
+        activityCode,
+        activityDesc,
+        preferredDoc,
       } = body;
 
       if (!customerId) {
@@ -400,10 +381,15 @@ export async function POST(request: Request) {
         );
       }
 
+      const resolvedGiro = (activityDesc !== undefined || activityCode !== undefined)
+        ? resolveGiroMH(activityDesc, activityCode)
+        : null;
+      const cleanNrcVal = nrc !== undefined ? (sanitizeDocument(nrc, 30) || '') : undefined;
+      const cleanBizVal = businessName !== undefined ? sanitizeText(businessName, 120) : undefined;
+
       const updated = await prisma.customer.update({
         where: { id: customerId },
         include: { tier: true },
-
         data: {
           ...(name !== undefined ? { name: sanitizeText(name, 100) } : {}),
           ...(phone !== undefined ? { phone: sanitizePhone(phone) || '' } : {}),
@@ -412,9 +398,19 @@ export async function POST(request: Request) {
           ...(department !== undefined ? { department: sanitizeText(department, 50) } : {}),
           ...(municipality !== undefined ? { municipality: sanitizeText(municipality, 60) } : {}),
           ...(address !== undefined ? { address: sanitizeText(address, 255) } : {}),
-          ...(nrc !== undefined ? { nrc: sanitizeDocument(nrc, 30) || '' } : {}),
-          ...(businessName !== undefined ? { businessName: sanitizeText(businessName, 120) } : {}),
-          ...(activityDesc !== undefined ? { activityDesc: sanitizeText(activityDesc, 200) } : {}),
+          ...(cleanNrcVal !== undefined ? { nrc: cleanNrcVal || null } : {}),
+          ...(cleanBizVal !== undefined ? { businessName: cleanBizVal || null, tradeName: cleanBizVal || null } : {}),
+          ...(activityDesc !== undefined || activityCode !== undefined
+            ? {
+                activityCode: resolvedGiro?.code || (activityCode ? sanitizeText(activityCode, 20) : null),
+                activityDesc: resolvedGiro ? formatGiroOption(resolvedGiro) : (activityDesc ? sanitizeText(activityDesc, 200) : null),
+              }
+            : {}),
+          ...(preferredDoc !== undefined
+            ? { preferredDoc: sanitizeText(preferredDoc, 10) }
+            : cleanNrcVal !== undefined
+            ? { preferredDoc: cleanNrcVal ? '03' : '01' }
+            : {}),
         },
       });
 
@@ -423,31 +419,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         sessionToken,
-        customer: {
-          id: updated.id,
-          name: updated.name,
-          email: updated.email || '',
-          phone: updated.phone || '',
-          documentType: updated.documentType || 'DUI',
-          documentNum: updated.documentNum || '',
-          department: updated.department || 'San Salvador',
-          municipality: updated.municipality || 'San Salvador Centro',
-          address: updated.address || '',
-          nrc: updated.nrc || '',
-          businessName: updated.businessName || '',
-          activityDesc: updated.activityDesc || '',
-          avatarUrl: updated.avatarUrl || '',
-          authProvider: updated.googleId ? 'google' : 'credentials',
-          tierId: updated.tierId || null,
-          tier: updated.tier || null,
-          customDiscountPct: updated.customDiscountPct || null,
-          specialEssencePrice: updated.specialEssencePrice ? Number(updated.specialEssencePrice) : null,
-          specialBottlePrice: updated.specialBottlePrice ? Number(updated.specialBottlePrice) : null,
-          tradeName: updated.tradeName || '',
-          taxCategory: updated.taxCategory || 'OTRO',
-          preferredDoc: updated.preferredDoc || '01',
-          sessionToken,
-        },
+        customer: formatAuthCustomerResponse(updated, updated.googleId ? 'google' : 'credentials', sessionToken),
       });
     }
 
@@ -483,31 +455,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         sessionToken,
-        customer: {
-          id: existing.id,
-          name: existing.name,
-          email: existing.email || '',
-          phone: existing.phone || '',
-          documentType: existing.documentType || 'DUI',
-          documentNum: existing.documentNum || '',
-          department: existing.department || 'San Salvador',
-          municipality: existing.municipality || 'San Salvador Centro',
-          address: existing.address || '',
-          nrc: existing.nrc || '',
-          businessName: existing.businessName || '',
-          activityDesc: existing.activityDesc || '',
-          avatarUrl: existing.avatarUrl || '',
-          authProvider: existing.googleId ? 'google' : 'credentials',
-          tierId: existing.tierId || null,
-          tier: existing.tier || null,
-          customDiscountPct: existing.customDiscountPct || null,
-          specialEssencePrice: existing.specialEssencePrice ? Number(existing.specialEssencePrice) : null,
-          specialBottlePrice: existing.specialBottlePrice ? Number(existing.specialBottlePrice) : null,
-          tradeName: existing.tradeName || '',
-          taxCategory: existing.taxCategory || 'OTRO',
-          preferredDoc: existing.preferredDoc || '01',
-          sessionToken,
-        },
+        customer: formatAuthCustomerResponse(existing, existing.googleId ? 'google' : 'credentials', sessionToken),
       });
     }
 

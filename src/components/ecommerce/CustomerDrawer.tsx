@@ -26,6 +26,7 @@ import {
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { DEPARTAMENTOS_CATALOG, MUNICIPIOS_CATALOG } from '@/lib/svTerritory';
 import { getGuestOrders, addGuestOrderNumber, getGuestShippingProfile, saveGuestShippingProfile } from '@/lib/guestOrderStorage';
+import { GiroSearchSelect } from '@/components/common/GiroSearchSelect';
 
 export default function CustomerDrawer() {
   const { 
@@ -223,14 +224,15 @@ export default function CustomerDrawer() {
         const res = await updateCustomerProfile({
           name,
           phone,
-          documentType,
+          documentType: isCreditFiscal ? 'NIT' : documentType,
           documentNum,
           department,
           municipality,
           address,
-          businessName: isCreditFiscal ? businessName : '',
+          businessName: isCreditFiscal ? (businessName || name) : '',
           nrc: isCreditFiscal ? nrc : '',
           activityDesc: isCreditFiscal ? activityDesc : '',
+          preferredDoc: isCreditFiscal ? '03' : '01',
         });
 
         if (res.success) {
@@ -844,27 +846,24 @@ export default function CustomerDrawer() {
                             />
                           </div>
 
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <label className="block text-[11px] font-bold text-slate-700 mb-1">NRC</label>
-                              <input
-                                type="text"
-                                value={nrc}
-                                onChange={(e) => setNrc(e.target.value)}
-                                placeholder="000000-0"
-                                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:bg-white focus:border-indigo-500 focus:outline-none transition-colors"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[11px] font-bold text-slate-700 mb-1">Giro / Actividad Económica</label>
-                              <input
-                                type="text"
-                                value={activityDesc}
-                                onChange={(e) => setActivityDesc(e.target.value)}
-                                placeholder="Ej. Comercio al por menor"
-                                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:bg-white focus:border-indigo-500 focus:outline-none transition-colors"
-                              />
-                            </div>
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-700 mb-1">NRC</label>
+                            <input
+                              type="text"
+                              value={nrc}
+                              onChange={(e) => setNrc(e.target.value)}
+                              placeholder="000000-0"
+                              className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:bg-white focus:border-indigo-500 focus:outline-none transition-colors font-mono"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-700 mb-1">Giro / Actividad Económica (Hacienda CAT-019)</label>
+                            <GiroSearchSelect
+                              value={activityDesc}
+                              onChange={(val) => setActivityDesc(val)}
+                              variant="ecommerce"
+                              placeholder="Buscar giro oficial de Hacienda por código o nombre..."
+                            />
                           </div>
                         </div>
                       )}

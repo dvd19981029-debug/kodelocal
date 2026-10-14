@@ -35,11 +35,12 @@ import { SaleRecord } from '@/lib/store';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { saveGuestOrder, saveGuestShippingProfile, getGuestShippingProfile } from '@/lib/guestOrderStorage';
+import { GiroSearchSelect } from '@/components/common/GiroSearchSelect';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, subtotal, rawSubtotal, discountTotal, totalItems, clearCart } = useEcommerceCart();
-  const { customer, isLoggedIn, openAuthModal, openDrawer } = useCustomerAuth();
+  const { customer, isLoggedIn, openAuthModal, openDrawer, updateCustomerProfile } = useCustomerAuth();
 
   // Método de entrega: Envío a domicilio o Retiro en sucursal
   const [metodoEntrega, setMetodoEntrega] = useState<'ENVIO' | 'RETIRO'>('ENVIO');
@@ -49,7 +50,7 @@ export default function CheckoutPage() {
   const [telefono, setTelefono] = useState(customer?.phone || '');
   const [email, setEmail] = useState(customer?.email || '');
   const [departamento, setDepartamento] = useState(customer?.department || 'San Salvador');
-  const [municipio, setMunicipio] = useState('San Salvador');
+  const [municipio, setMunicipio] = useState(customer?.municipality || 'San Salvador Centro');
   const [direccion, setDireccion] = useState(customer?.address || '');
   const [referencia, setReferencia] = useState('');
 
@@ -61,40 +62,52 @@ export default function CheckoutPage() {
     setTimeout(() => setCopiedBank(null), 2500);
   };
 
-  // Tipo de comprobante
-  const [tipoComprobante, setTipoComprobante] = useState<'TICKET' | '01' | '03'>(customer?.nrc ? '03' : '01');
+  // Tipo de comprobante y datos de Crédito Fiscal (CCF)
+  const [tipoComprobante, setTipoComprobante] = useState<'TICKET' | '01' | '03'>(
+    customer?.nrc || customer?.preferredDoc === '03' ? '03' : '01'
+  );
+  const [razonSocial, setRazonSocial] = useState(customer?.businessName || customer?.name || '');
   const [numDoc, setNumDoc] = useState(customer?.documentNum || '');
   const [nrc, setNrc] = useState(customer?.nrc || '');
   const [giro, setGiro] = useState(customer?.activityDesc || '');
+  const [direccionFiscal, setDireccionFiscal] = useState(customer?.address || '');
 
   // Actualizar si el cliente inicia sesión o tiene datos guardados en su perfil
   React.useEffect(() => {
     if (customer) {
       if (customer.name) setNombre(customer.name);
+      if (customer.businessName || customer.name) setRazonSocial(customer.businessName || customer.name);
       if (customer.email) setEmail(customer.email);
       if (customer.phone) setTelefono(customer.phone);
       if (customer.department) setDepartamento(customer.department);
       if (customer.municipality) setMunicipio(customer.municipality);
-      if (customer.address) setDireccion(customer.address);
+      if (customer.address) {
+        setDireccion(customer.address);
+        setDireccionFiscal((prev) => prev || customer.address || '');
+      }
       if (customer.documentNum) setNumDoc(customer.documentNum);
-      if (customer.nrc) {
-        setNrc(customer.nrc);
-        setTipoComprobante('03'); // Si tiene NRC, preseleccionar Crédito Fiscal
+      if (customer.nrc || customer.preferredDoc === '03') {
+        if (customer.nrc) setNrc(customer.nrc);
+        setTipoComprobante('03'); // Si tiene NRC o preferencia 03, preseleccionar Crédito Fiscal
       }
       if (customer.activityDesc) setGiro(customer.activityDesc);
     }
-  }, [customer?.id, customer?.documentNum, customer?.nrc, customer?.address, customer?.phone, customer?.name]);
+  }, [customer?.id, customer?.documentNum, customer?.nrc, customer?.activityDesc, customer?.businessName, customer?.address, customer?.phone, customer?.name, customer?.preferredDoc]);
 
   // Cargar datos de envío guardados previamente si el usuario es invitado
   React.useEffect(() => {
     if (!customer) {
       const guestProfile = getGuestShippingProfile();
       if (guestProfile.name) setNombre((prev) => prev || guestProfile.name || '');
+      if (guestProfile.businessName || guestProfile.name) setRazonSocial((prev) => prev || guestProfile.businessName || guestProfile.name || '');
       if (guestProfile.phone) setTelefono((prev) => prev || guestProfile.phone || '');
       if (guestProfile.email) setEmail((prev) => prev || guestProfile.email || '');
       if (guestProfile.department) setDepartamento((prev) => (prev === 'San Salvador' ? guestProfile.department || prev : prev));
-      if (guestProfile.municipality) setMunicipio((prev) => (prev === 'San Salvador' ? guestProfile.municipality || prev : prev));
-      if (guestProfile.address) setDireccion((prev) => prev || guestProfile.address || '');
+      if (guestProfile.municipality) setMunicipio((prev) => (prev === 'San Salvador Centro' || prev === 'San Salvador' ? guestProfile.municipality || prev : prev));
+      if (guestProfile.address) {
+        setDireccion((prev) => prev || guestProfile.address || '');
+        setDireccionFiscal((prev) => prev || guestProfile.address || '');
+      }
       if (guestProfile.reference) setReferencia((prev) => prev || guestProfile.reference || '');
       if (guestProfile.documentNum) setNumDoc((prev) => prev || guestProfile.documentNum || '');
       if (guestProfile.tipoComprobante) setTipoComprobante((prev) => (prev === '01' ? guestProfile.tipoComprobante || prev : prev));
@@ -212,6 +225,17 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (tipoComprobante === '03') {
+      if (!email.trim()) {
+        alert('Por favor ingresa tu Correo Electrónico para asociar tus datos fiscales y enviarte tu Crédito Fiscal (CCF).');
+        return;
+      }
+      if (!nrc.trim() || !numDoc.trim() || !giro.trim()) {
+        alert('Para emitir Crédito Fiscal (CCF) por favor completa tu NRC, NIT/DUI y Giro de Hacienda.');
+        return;
+      }
+    }
+
     if (cart.length === 0) {
       alert('Tu carrito está vacío.');
       return;
@@ -251,6 +275,8 @@ export default function CheckoutPage() {
       const direccionFinal = metodoEntrega === 'RETIRO' 
         ? 'Retiro en Local San Salvador (Centro Comercial El Rosal, Calle El Progreso) - Aromaniak' 
         : `${direccion}, ${municipio}, ${departamento}`;
+      const effectiveClientName = tipoComprobante === '03' && razonSocial.trim() ? razonSocial.trim() : nombre.trim();
+      const effectiveFiscalAddress = direccionFiscal.trim() || direccion.trim() || direccionFinal;
 
       const newOrder: SaleRecord = {
         id: saleId,
@@ -270,10 +296,12 @@ export default function CheckoutPage() {
         status: 'PENDING_PREPARATION', // Llega directo a Bodega para preparar
         vendedor: 'Tienda Online Aromaniak',
         cliente: {
-          nombre,
+          nombre: effectiveClientName,
           telefono,
-          correo: email || undefined,
-          direccion: direccionFinal,
+          correo: email.trim().toLowerCase() || undefined,
+          direccion: tipoComprobante === '03' ? effectiveFiscalAddress : direccionFinal,
+          departamento,
+          municipio,
           numDocumento: numDoc || undefined,
           nrc: nrc || undefined,
           actividadEconomica: giro || undefined
@@ -289,31 +317,57 @@ export default function CheckoutPage() {
         }))
       };
 
-
-      // 2. Intentar registrar cliente en la lista
+      // 2. Sincronizar cliente localmente en POS (asociado por correo electrónico primero)
       try {
         const existingCustomers = getStoredCustomers();
-        const exists = existingCustomers.find(c => c.phone === telefono || (numDoc && c.numDocumento === numDoc));
-        if (!exists) {
-          const newCust: CustomerRecord = {
-            id: `cli-${Date.now()}`,
-            tipoPersona: tipoComprobante === '03' ? 'JURIDICA' : 'NATURAL',
-            name: nombre,
-            tipoDocumento: tipoComprobante === '03' ? 'NIT' : 'DUI',
-            numDocumento: numDoc || '00000000-0',
-            email: email || '',
-            phone: telefono,
-            departamento: metodoEntrega === 'RETIRO' ? 'San Salvador' : departamento,
-            municipio: metodoEntrega === 'RETIRO' ? 'San Salvador' : municipio,
-            direccion: direccionFinal,
-            documentoPreferido: tipoComprobante,
-            nrc: nrc || undefined,
-            actividadEconomica: giro || undefined,
-            createdAt: now
-          };
-          saveStoredCustomers([newCust, ...existingCustomers]);
+        const normMail = email.trim().toLowerCase();
+        const matchIdx = existingCustomers.findIndex(c =>
+          (normMail && c.email && c.email.toLowerCase().trim() === normMail) ||
+          (telefono && c.phone === telefono) ||
+          (numDoc && c.numDocumento === numDoc)
+        );
+        const custRecordData: CustomerRecord = {
+          id: matchIdx >= 0 ? existingCustomers[matchIdx].id : (customer?.id || `cli-${Date.now()}`),
+          tipoPersona: tipoComprobante === '03' ? 'JURIDICA' : 'NATURAL',
+          name: effectiveClientName,
+          nombreComercial: tipoComprobante === '03' ? (razonSocial.trim() || nombre.trim()) : undefined,
+          tipoDocumento: tipoComprobante === '03' ? 'NIT' : 'DUI',
+          numDocumento: numDoc || '00000000-0',
+          email: normMail || '',
+          phone: telefono,
+          departamento,
+          municipio,
+          direccion: effectiveFiscalAddress,
+          documentoPreferido: tipoComprobante,
+          nrc: nrc || undefined,
+          actividadEconomica: giro || undefined,
+          createdAt: matchIdx >= 0 ? existingCustomers[matchIdx].createdAt : now
+        };
+        if (matchIdx >= 0) {
+          const updatedList = [...existingCustomers];
+          updatedList[matchIdx] = { ...updatedList[matchIdx], ...custRecordData };
+          saveStoredCustomers(updatedList);
+        } else {
+          saveStoredCustomers([custRecordData, ...existingCustomers]);
         }
       } catch (e) {}
+
+      // Si el cliente tiene sesión iniciada, actualizar también su perfil de cuenta con los datos fiscales ingresados
+      if (customer?.id) {
+        updateCustomerProfile({
+          name: nombre.trim(),
+          phone: telefono.trim(),
+          documentType: tipoComprobante === '03' ? 'NIT' : 'DUI',
+          documentNum: numDoc.trim() || customer.documentNum,
+          department: departamento,
+          municipality: municipio,
+          address: effectiveFiscalAddress,
+          businessName: tipoComprobante === '03' ? (razonSocial.trim() || nombre.trim()) : (customer.businessName || ''),
+          nrc: tipoComprobante === '03' ? nrc.trim() : (customer.nrc || ''),
+          activityDesc: tipoComprobante === '03' ? giro.trim() : (customer.activityDesc || ''),
+          preferredDoc: tipoComprobante,
+        }).catch(() => {});
+      }
 
       // Guardar pedido permanentemente en Supabase y descontar inventario
       const orderRes = await fetch('/api/ecommerce/orders', {
@@ -326,12 +380,14 @@ export default function CheckoutPage() {
           orderNumber,
           sessionToken: customer?.sessionToken || undefined,
           customerId: customer?.id || null,
-          customerName: nombre,
-          customerEmail: email || null,
+          customerName: effectiveClientName,
+          businessName: tipoComprobante === '03' ? (razonSocial.trim() || nombre.trim()) : null,
+          customerEmail: email.trim().toLowerCase() || null,
           customerPhone: telefono,
-          department: metodoEntrega === 'RETIRO' ? 'San Salvador' : departamento,
-          municipality: metodoEntrega === 'RETIRO' ? 'San Salvador' : municipio,
+          department: metodoEntrega === 'RETIRO' && tipoComprobante !== '03' ? 'San Salvador' : departamento,
+          municipality: metodoEntrega === 'RETIRO' && tipoComprobante !== '03' ? 'San Salvador Centro' : municipio,
           shippingAddress: direccionFinal,
+          fiscalAddress: effectiveFiscalAddress,
           deliveryReference: metodoEntrega === 'RETIRO' ? 'Retiro en Sucursal' : (referencia || 'N/A'),
           subtotal,
           shippingCost,
@@ -387,16 +443,16 @@ export default function CheckoutPage() {
       saveGuestShippingProfile({
         name: nombre,
         phone: telefono,
-        email: email || customer?.email,
-        department: metodoEntrega === 'RETIRO' ? 'San Salvador' : departamento,
-        municipality: metodoEntrega === 'RETIRO' ? 'San Salvador Centro' : municipio,
-        address: direccionFinal,
+        email: email.trim().toLowerCase() || customer?.email,
+        department: departamento,
+        municipality: municipio,
+        address: effectiveFiscalAddress,
         reference: referencia || undefined,
         metodoEntrega,
         documentType: tipoComprobante === '03' ? 'NIT' : 'DUI',
         documentNum: numDoc || undefined,
         tipoComprobante,
-        businessName: tipoComprobante === '03' ? nombre : undefined,
+        businessName: tipoComprobante === '03' ? (razonSocial.trim() || nombre.trim()) : undefined,
         nrc: nrc || undefined,
         activityDesc: giro || undefined,
       });
@@ -1055,10 +1111,11 @@ export default function CheckoutPage() {
 
                 <div>
                   <label className="font-bold text-slate-700 block mb-1">
-                    Correo Electrónico (Opcional)
+                    Correo Electrónico {tipoComprobante === '03' ? <span className="text-rose-500">*</span> : '(Recomendado para guardar tus datos)'}
                   </label>
                   <input
                     type="email"
+                    required={tipoComprobante === '03'}
                     placeholder="carmen@ejemplo.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -1312,7 +1369,20 @@ export default function CheckoutPage() {
                   />
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs animate-in fade-in duration-150">
+                  <div className="sm:col-span-2">
+                    <label className="font-bold text-slate-700 block mb-1">
+                      Razón Social / Nombre según Tarjeta de Contribuyente <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej. Distribuidora Las Fragancias S.A. de C.V."
+                      value={razonSocial}
+                      onChange={(e) => setRazonSocial(e.target.value)}
+                      className="clay-input w-full font-bold"
+                    />
+                  </div>
                   <div>
                     <label className="font-bold text-slate-700 block mb-1">
                       NRC <span className="text-rose-500">*</span>
@@ -1328,12 +1398,12 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <label className="font-bold text-slate-700 block mb-1">
-                      NIT / Documento <span className="text-rose-500">*</span>
+                      NIT / DUI de Contribuyente <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
                       required
-                      placeholder="0614-..."
+                      placeholder="0614-000000-000-0"
                       value={numDoc}
                       onChange={(e) => setNumDoc(e.target.value)}
                       className="clay-input w-full font-mono"
@@ -1341,14 +1411,64 @@ export default function CheckoutPage() {
                   </div>
                   <div className="sm:col-span-2">
                     <label className="font-bold text-slate-700 block mb-1">
-                      Giro o Actividad Económica
+                      Giro o Actividad Económica (Catálogo Oficial MH CAT-019) <span className="text-rose-500">*</span>
+                    </label>
+                    <GiroSearchSelect
+                      value={giro}
+                      onChange={(val) => setGiro(val)}
+                      required
+                      variant="pos"
+                      placeholder="Buscar giro oficial de Hacienda por código o actividad (ej. 47722, cosméticos...)"
+                    />
+                  </div>
+                  {metodoEntrega === 'RETIRO' && (
+                    <>
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Departamento Fiscal <span className="text-rose-500">*</span>
+                        </label>
+                        <select
+                          value={departamento}
+                          onChange={(e) => {
+                            const newDept = e.target.value;
+                            setDepartamento(newDept);
+                            const munis = getMunicipiosByDepartamento(newDept);
+                            if (munis.length > 0) setMunicipio(munis[0].nombre);
+                          }}
+                          className="clay-input w-full font-bold"
+                        >
+                          {DEPARTAMENTOS_CATALOG.map((dep) => (
+                            <option key={dep.id} value={dep.nombre}>{dep.nombre}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Municipio / Distrito Fiscal <span className="text-rose-500">*</span>
+                        </label>
+                        <select
+                          value={municipio}
+                          onChange={(e) => setMunicipio(e.target.value)}
+                          className="clay-input w-full font-bold"
+                        >
+                          {getMunicipiosByDepartamento(departamento).map((m) => (
+                            <option key={m.id} value={m.nombre}>{m.nombre}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </>
+                  )}
+                  <div className="sm:col-span-2">
+                    <label className="font-bold text-slate-700 block mb-1">
+                      Dirección Fiscal (según tarjeta NRC) <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
-                      placeholder="Ej. Venta de productos..."
-                      value={giro}
-                      onChange={(e) => setGiro(e.target.value)}
-                      className="clay-input w-full"
+                      required={metodoEntrega === 'RETIRO'}
+                      placeholder="Colonia, calle, número de local o casa registrada en Hacienda"
+                      value={direccionFiscal || direccion}
+                      onChange={(e) => setDireccionFiscal(e.target.value)}
+                      className="clay-input w-full font-medium"
                     />
                   </div>
                 </div>
