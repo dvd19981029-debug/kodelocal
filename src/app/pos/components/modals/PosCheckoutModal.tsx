@@ -547,12 +547,11 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
               <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block mb-1.5">
                 Método de Pago
               </label>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {[
                   { id: 'CASH', label: 'Efectivo', icon: Banknote },
                   { id: 'CARD', label: 'Tarjeta', icon: CreditCard },
                   { id: 'TRANSFER', label: 'Transf.', icon: Building },
-                  { id: 'BITCOIN', label: 'Bitcoin', icon: QrCode },
                 ].map((method) => {
                   const Icon = method.icon;
                   return (
