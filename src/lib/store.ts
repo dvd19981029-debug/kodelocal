@@ -1723,7 +1723,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Unisex",
     "category": "Insumos y Materia Prima",
     "unit": "Litro",
-    "price": 2.3,
+    "price": 3.8,
     "cost": 1.1,
     "stock": 30,
     "minStock": 10,
@@ -2019,7 +2019,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   }
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v29_alcohol_perfumero_medio_litro";
+export const DATA_VERSION = "2026_oficial_real_v30_alcohol_1l_380";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;
