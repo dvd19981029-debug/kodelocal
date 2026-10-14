@@ -341,5 +341,23 @@ export const MOCK_100ML_BOTTLES: ProductItem[] = [
     imageUrl: '/images/botes/bote_100ml_rey_luis.jpg',
     isAvailableOnline: true,
     puesto: 'B6',
+  },
+  {
+    id: 'bote-100ml-miss',
+    sku: 'BOT-100-MIS',
+    barcode: '741002000021',
+    name: 'Bote Miss 100ml Rosca',
+    officialName: 'Miss',
+    brand: '',
+    gender: 'Unisex',
+    category: 'Botes',
+    unit: 'Unidad',
+    price: 1.45,
+    cost: 0.55,
+    stock: 50,
+    minStock: 15,
+    imageUrl: '/images/botes/bote_100ml_miss.jpg',
+    isAvailableOnline: true,
+    puesto: 'B6',
   }
 ];

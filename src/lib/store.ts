@@ -1574,6 +1574,26 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "stockHalf": 0
   },
   {
+    "id": "bote-100ml-miss",
+    "sku": "BOT-100-MIS",
+    "barcode": "741002000021",
+    "name": "Bote Miss 100ml Rosca",
+    "officialName": "Miss",
+    "brand": "",
+    "gender": "Unisex",
+    "category": "Botes",
+    "unit": "Unidad",
+    "price": 1.45,
+    "cost": 0.55,
+    "stock": 50,
+    "minStock": 15,
+    "imageUrl": "/images/botes/bote_100ml_miss.jpg",
+    "description": "Frasco rectangular de vidrio cristalino 100ml con cuello dorado de rosca y tapa facetada transparente de lujo.",
+    "isAvailableOnline": true,
+    "puesto": "B6",
+    "stockHalf": 0
+  },
+  {
     "id": "bolsa-lujo",
     "sku": "EMP-BOL",
     "barcode": "741999000EMP-BOL",
@@ -1899,7 +1919,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   }
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v23_fahrenheit_kelvin";
+export const DATA_VERSION = "2026_oficial_real_v24_bote_miss";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;

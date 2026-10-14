@@ -373,7 +373,11 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
                       </div>
                       {item.product.officialName && item.product.officialName !== item.product.name && (
                         <p className="text-[10.5px] text-slate-600 font-semibold leading-snug truncate">
-                          Inspirado en <span className="font-black text-slate-950">{item.product.name}</span>
+                          {isEssence ? (
+                            <>Inspirado en <span className="font-black text-slate-950">{item.product.name}</span></>
+                          ) : (
+                            <span>{item.product.name}</span>
+                          )}
                         </p>
                       )}
                       <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-500">

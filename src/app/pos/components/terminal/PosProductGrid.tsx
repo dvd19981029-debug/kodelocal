@@ -218,7 +218,11 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
                           {product.officialName}
                         </h3>
                         <span className="text-[11px] text-slate-600 font-semibold block leading-tight line-clamp-2 mt-0.5">
-                          Inspirado en <span className="font-black text-slate-950">{product.name}</span>
+                          {isEssence ? (
+                            <>Inspirado en <span className="font-black text-slate-950">{product.name}</span></>
+                          ) : (
+                            <span className="font-semibold text-slate-600">{product.name}</span>
+                          )}
                         </span>
                       </div>
                     ) : (
