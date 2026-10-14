@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createStaffInternalToken, verifyPasswordSecure, hashPasswordSecure } from '@/lib/customerAuthToken';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { queryKode } from '@/lib/kodeDb';
 
 export const dynamic = 'force-dynamic';
 
@@ -74,16 +75,67 @@ export async function POST(request: Request) {
     }
 
     if (!staffUser) {
+      try {
+        const kodeRes = await queryKode(
+          `SELECT id, nombre, email, username, password, rol, activo 
+           FROM public.usuarios 
+           WHERE (LOWER(email) = $1 OR LOWER(username) = $1) AND activo = TRUE 
+           LIMIT 1`,
+          [cleanId]
+        );
+        if (kodeRes.rows.length > 0) {
+          const kUser = kodeRes.rows[0];
+          const pwdMatch = kUser.password === cleanPwd || (isPin && kUser.password === cleanPwd);
+          if (pwdMatch) {
+            const passwordHash = hashPasswordSecure(cleanPwd);
+            const userRole = String(kUser.rol || 'CASHIER').toUpperCase() === 'ADMIN' ? 'ADMIN' : 'CASHIER';
+            const syncedStaff = await prisma.staffUser.upsert({
+              where: { email: kUser.email.toLowerCase().trim() },
+              update: {
+                name: kUser.nombre,
+                role: userRole,
+                isActive: true,
+                passwordHash,
+                pin: isPin ? cleanPwd : '123',
+                lastLogin: new Date(),
+              },
+              create: {
+                name: kUser.nombre,
+                email: kUser.email.toLowerCase().trim(),
+                role: userRole,
+                isActive: true,
+                passwordHash,
+                pin: isPin ? cleanPwd : '123',
+                lastLogin: new Date(),
+              }
+            }).catch(() => null);
+
+            staffUser = syncedStaff || {
+              id: kUser.id,
+              name: kUser.nombre,
+              email: kUser.email,
+              role: userRole,
+            };
+          }
+        }
+      } catch (err) {
+        console.error('Error fallback auth with public.usuarios:', err);
+      }
+    }
+
+    if (!staffUser) {
       return NextResponse.json(
         { success: false, error: 'Credenciales o PIN inválidos.' },
         { status: 401 }
       );
     }
 
-    await prisma.staffUser.update({
-      where: { id: staffUser.id },
-      data: { lastLogin: new Date() }
-    });
+    if (staffUser.id) {
+      await prisma.staffUser.update({
+        where: { id: staffUser.id },
+        data: { lastLogin: new Date() }
+      }).catch(() => {});
+    }
 
     const safeToken = createStaffInternalToken(staffUser.role, staffUser.email, staffUser.name, staffUser.id);
 

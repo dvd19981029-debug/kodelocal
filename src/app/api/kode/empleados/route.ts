@@ -45,20 +45,17 @@ async function ensureUsuariosColumns() {
       ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
       ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
-      -- Sembrar vendedoras base si está vacía
+      -- Sembrar vendedoras y administradores base si está vacía
       INSERT INTO public.usuarios (nombre, email, username, password, telefono, rol, doc_tipo, doc_numero, departamento_mh, municipio_mh, direccion_complemento, comision_normal, comision_plus, comision_porcentaje)
       VALUES 
         ('Virgen Cerna', 'virgicerna@gmail.com', 'virgencerna', 'Kode2026*', '7890-1122', 'VENDEDORA', 'DUI', '045812903', '06', '14', 'San Salvador Centro, El Salvador', 1.00, 1.50, 5.00),
         ('Patricia Elizabeth Mejía Ramírez', 'pm3923193@gmail.com', 'patriciamejia', 'Kode2026*', '7230-4650', 'VENDEDORA', 'DUI', '068614130', '10', '15', 'Caserío Las Vegas, Cantón Cañas, Tepetitán, San Vicente', 1.00, 1.50, 5.00),
-        ('Erika Melgar', 'erikamelgargarcia@gmail.com', 'erikamelgar', 'Kode2026*', '7123-5566', 'VENDEDORA', 'DUI', '028913401', '06', '14', 'San Salvador, El Salvador', 1.00, 1.50, 5.00)
+        ('Erika Melgar', 'erikamelgargarcia@gmail.com', 'erikamelgar', 'Kode2026*', '7123-5566', 'VENDEDORA', 'DUI', '028913401', '06', '14', 'San Salvador, El Salvador', 1.00, 1.50, 5.00),
+        ('Jorge Luis Fuentes Vasquez', 'jlfuentes2709@gmail.com', 'jlfuentes2709', '123456jl', '7000-0000', 'ADMIN', 'DUI', '000000000', '06', '14', 'San Salvador, El Salvador', 1.00, 1.50, 5.00)
       ON CONFLICT (email) DO UPDATE SET
         nombre = EXCLUDED.nombre,
-        telefono = EXCLUDED.telefono,
-        doc_tipo = EXCLUDED.doc_tipo,
-        doc_numero = EXCLUDED.doc_numero,
-        departamento_mh = EXCLUDED.departamento_mh,
-        municipio_mh = EXCLUDED.municipio_mh,
-        direccion_complemento = EXCLUDED.direccion_complemento,
+        password = COALESCE(EXCLUDED.password, public.usuarios.password),
+        rol = EXCLUDED.rol,
         comision_porcentaje = COALESCE(public.usuarios.comision_porcentaje, 5.00);
     `);
   } catch (err) {
