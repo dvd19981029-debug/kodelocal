@@ -55,7 +55,17 @@ export class FacturaLlamaClient {
   }
 
   getApiKey(): string {
-    return process.env.FACTURALLAMA_API_KEY || this.apiKey || 'test_sk_45b8180f-9dab-44d5-9575-ba1487c73ed1';
+    if (process.env.FACTURALLAMA_API_KEY) {
+      return process.env.FACTURALLAMA_API_KEY;
+    }
+    try {
+      const { getActiveFacturaLlamaApiKey } = require('./kodeConfig');
+      const active = getActiveFacturaLlamaApiKey();
+      if (active) return active;
+    } catch {
+      // ignore
+    }
+    return this.apiKey || 'test_sk_45b8180f-9dab-44d5-9575-ba1487c73ed1';
   }
 
   isSimulated(): boolean {

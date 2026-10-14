@@ -448,28 +448,26 @@ export default function ConfiguracionKodeModule() {
       setTesting(true);
       setTestResult(null);
 
-      const res = await fetch(baseUrl, {
-        method: 'GET',
-        headers: {
-          'X-API-Key': activeKey.trim(),
-          'X-API-Version': apiVersion.trim(),
-        },
-      }).catch(() => null);
+      const res = await kodeFetch('/api/kode/config/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apiKey: activeKey.trim(),
+          apiVersion: apiVersion.trim(),
+          baseUrl: baseUrl.trim(),
+        }),
+      });
 
-      if (res && (res.status === 200 || res.status === 404 || res.status === 405)) {
+      const data = await res.json();
+      if (data.success) {
         setTestResult({
           ok: true,
-          message: `Conexión alcanzada con Factura Llama (${baseUrl}). Clave ${ambiente.toUpperCase()} verificada.`,
-        });
-      } else if (res && res.status === 401) {
-        setTestResult({
-          ok: false,
-          message: `Error 401: La API Key de ${ambiente.toUpperCase()} no fue autorizada por Factura Llama. Verifica la clave.`,
+          message: `✅ Conexión autorizada con Factura Llama (${ambiente.toUpperCase()}): ${data.message}`,
         });
       } else {
         setTestResult({
-          ok: true,
-          message: `Servidor de Factura Llama respondió con estado HTTP ${res?.status || 'disponible'}.`,
+          ok: false,
+          message: `❌ ${data.error || 'Error al conectar con Factura Llama'}`,
         });
       }
     } catch (e: any) {

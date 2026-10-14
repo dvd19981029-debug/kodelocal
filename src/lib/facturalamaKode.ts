@@ -2,7 +2,7 @@
 // Emisor oficial de DTE para KODE a través de Factura Llama según el payload exacto de la empresa
 
 import { randomUUID } from 'crypto';
-import { getKodeConfig, getActiveFacturaLlamaApiKey } from './kodeConfig';
+import { getKodeConfig, getKodeConfigAsync, getActiveFacturaLlamaApiKey } from './kodeConfig';
 import { resolveMhDeptoCode, resolveMhMunicipioCodeFromKode } from './svTerritory';
 
 export interface KodeDteItem {
@@ -96,7 +96,7 @@ export function buildKodeDtePayload(input: EmitirDteKodeInput) {
  * Emite el DTE llamando directamente a la API de Factura Llama con la API Key configurada
  */
 export async function emitirDteKode(input: EmitirDteKodeInput): Promise<KodeDteResult> {
-  const config = getKodeConfig();
+  const config = await getKodeConfigAsync();
   const activeApiKey = getActiveFacturaLlamaApiKey(config);
   const { dteId, payload } = buildKodeDtePayload(input);
   const endpoint = `${config.facturaLlamaBaseUrl}/dte/fc`;
@@ -184,7 +184,7 @@ export interface EmitirDteFseKodeInput {
  * Endpoint oficial: POST /dte/fse
  */
 export async function emitirDteFseKode(input: EmitirDteFseKodeInput): Promise<KodeDteResult> {
-  const config = getKodeConfig();
+  const config = await getKodeConfigAsync();
   const activeApiKey = getActiveFacturaLlamaApiKey(config);
   const dteId = randomUUID();
   const endpoint = `${config.facturaLlamaBaseUrl}/dte/fse`;

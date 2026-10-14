@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getKodeConfig, saveKodeConfig } from '@/lib/kodeConfig';
+import { getKodeConfigAsync, saveKodeConfigAsync } from '@/lib/kodeConfig';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const config = getKodeConfig();
+    const config = await getKodeConfigAsync();
     return NextResponse.json({
       success: true,
       config,
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       defaultDui,
     } = body;
 
-    const updated = saveKodeConfig({
+    const updated = await saveKodeConfigAsync({
       ...(ambiente ? { ambiente } : {}),
       ...(testApiKey !== undefined ? { testApiKey: testApiKey.trim() } : {}),
       ...(liveApiKey !== undefined ? { liveApiKey: liveApiKey.trim() } : {}),
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Configuración de Kode actualizada exitosamente',
+      message: 'Configuración de Kode actualizada exitosamente en base de datos',
       config: updated,
     });
   } catch (error: any) {
