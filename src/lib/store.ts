@@ -1654,66 +1654,6 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "stockHalf": 0
   },
   {
-    "id": "bolsa-lujo",
-    "sku": "EMP-BOL",
-    "barcode": "741999000EMP-BOL",
-    "name": "Bolsa de Lujo Kraft Aromaniak",
-    "officialName": "",
-    "brand": "",
-    "gender": "Unisex",
-    "category": "Empaque",
-    "unit": "Unidad",
-    "price": 0.5,
-    "cost": 0.2,
-    "stock": 0,
-    "minStock": 20,
-    "imageUrl": "/images/essence_bottle_blank.webp",
-    "description": "",
-    "isAvailableOnline": true,
-    "puesto": "",
-    "stockHalf": 0
-  },
-  {
-    "id": "caja-regalo",
-    "sku": "EMP-CAJ",
-    "barcode": "741999000EMP-CAJ",
-    "name": "Caja de Presentación / Regalo",
-    "officialName": "",
-    "brand": "",
-    "gender": "Unisex",
-    "category": "Empaque",
-    "unit": "Unidad",
-    "price": 0.75,
-    "cost": 0.35,
-    "stock": 0,
-    "minStock": 20,
-    "imageUrl": "/images/essence_bottle_blank.webp",
-    "description": "",
-    "isAvailableOnline": true,
-    "puesto": "",
-    "stockHalf": 0
-  },
-  {
-    "id": "alcohol-perfumeria",
-    "sku": "INS-ALC",
-    "barcode": "741999000INS-ALC",
-    "name": "Alcohol de Perfumería Especial 96° (Galón)",
-    "officialName": "",
-    "brand": "",
-    "gender": "Unisex",
-    "category": "Insumos y Materia Prima",
-    "unit": "Galón",
-    "price": 18,
-    "cost": 11.5,
-    "stock": 0,
-    "minStock": 20,
-    "imageUrl": "/images/essence_bottle_blank.webp",
-    "description": "",
-    "isAvailableOnline": true,
-    "puesto": "",
-    "stockHalf": 0
-  },
-  {
     "id": "alcohol-perfumero-fijador-1l",
     "sku": "INS-ALC-1L",
     "barcode": "741999000INS-ALC-1L",
@@ -2039,7 +1979,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   }
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v32_alcohol_swap";
+export const DATA_VERSION = "2026_oficial_real_v33_remove_placeholders";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;
