@@ -318,7 +318,7 @@ export async function POST(request: Request) {
       fallbackProduct = (await prisma.product.findFirst({ select: { id: true, name: true } })) as any;
     }
 
-    const resolvedItems = [];
+    const resolvedItems: any[] = [];
     for (const it of rawItems) {
       const rawId = String(it.productId || '').trim();
       const rawName = String(it.name || it.productName || 'Producto').trim();

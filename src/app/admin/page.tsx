@@ -93,14 +93,20 @@ export default function AdminPage() {
   // Datos
   const [users, setUsers] = useState<UserAccount[]>([]);
   useEffect(() => {
-    fetch('/api/staff')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.staff)) {
-          setUsers(data.staff);
-        }
+    getStaffToken().then(staffToken => {
+      fetch('/api/staff', {
+        headers: {
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
       })
-      .catch(err => console.error('Error loading staff', err));
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.staff)) {
+            setUsers(data.staff);
+          }
+        })
+        .catch(err => console.error('Error loading staff', err));
+    });
   }, []);
   const [products, setProducts] = useState<ProductItem[]>([]);
 
@@ -341,31 +347,37 @@ export default function AdminPage() {
     if (!editingUser) return;
     
     try {
+      const staffToken = await getStaffToken();
       const res = await fetch('/api/staff', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
         body: JSON.stringify(editingUser)
       });
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.user) {
         setUsers(prev => {
-          const exists = prev.find(u => u.id === data.user.id || u.email === data.user.email);
+          const exists = prev.find(u => u.id === data.user.id || u.email.toLowerCase() === data.user.email.toLowerCase());
           if (exists) {
             return prev.map(u => (u.id === exists.id ? { ...data.user, pin: data.user.pin || '0000' } : u));
           }
           return [{ ...data.user, pin: data.user.pin || '0000' }, ...prev];
         });
+        setIsUserModalOpen(false);
+        setEditingUser(null);
+      } else {
+        alert(data.error || 'No se pudo guardar el usuario.');
       }
-    } catch(err) {
+    } catch (err) {
       console.error(err);
+      alert('Error de conexión al guardar el usuario.');
     }
-    
-    setIsUserModalOpen(false);
-    setEditingUser(null);
   };
 
 
-  const handleToggleUserStatus = (userId: string) => {
+  const handleToggleUserStatus = async (userId: string) => {
     const target = users.find(u => u.id === userId);
     if (!target) return;
     if (target.role === 'ADMIN') {
@@ -374,6 +386,19 @@ export default function AdminPage() {
     }
     const newStatus = target.isActive === false ? true : false;
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, isActive: newStatus } : u));
+    try {
+      const staffToken = await getStaffToken();
+      await fetch('/api/staff', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({ ...target, isActive: newStatus }),
+      });
+    } catch (err) {
+      console.error('Error actualizando estado de usuario:', err);
+    }
   };
 
   const handleGenerateRandomPin = () => {
@@ -1733,9 +1758,25 @@ export default function AdminPage() {
 
                             {u.role !== 'ADMIN' && (
                               <button
-                                onClick={() => {
+                                onClick={async () => {
                                   if (confirm(`¿Estás seguro de eliminar el usuario "${u.name}"?`)) {
-                                    setUsers(prev => prev.filter(x => x.id !== u.id));
+                                    try {
+                                      const staffToken = await getStaffToken();
+                                      const res = await fetch(`/api/staff?id=${encodeURIComponent(u.id)}`, {
+                                        method: 'DELETE',
+                                        headers: {
+                                          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+                                        },
+                                      });
+                                      const data = await res.json();
+                                      if (data.success) {
+                                        setUsers(prev => prev.filter(x => x.id !== u.id));
+                                      } else {
+                                        alert(data.error || 'No se pudo eliminar el usuario.');
+                                      }
+                                    } catch (err) {
+                                      console.error('Error eliminando usuario:', err);
+                                    }
                                   }
                                 }}
                                 className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"

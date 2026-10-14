@@ -1,16 +1,40 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyStaffRequest } from '@/lib/customerAuthToken';
+import { verifyStaffRequest, hashPasswordSecure } from '@/lib/customerAuthToken';
 
 export const dynamic = 'force-dynamic';
 
+async function isRequestFromAdmin(request: Request): Promise<{ authorized: boolean; isAdmin: boolean }> {
+  const { authorized, payload } = verifyStaffRequest(request);
+  if (!authorized || !payload) {
+    return { authorized: false, isAdmin: false };
+  }
+  if (String(payload.role || '').toUpperCase() === 'ADMIN') {
+    return { authorized: true, isAdmin: true };
+  }
+  if (payload.id || payload.email) {
+    const dbUser = await prisma.staffUser.findFirst({
+      where: {
+        OR: [
+          ...(payload.id ? [{ id: String(payload.id) }] : []),
+          ...(payload.email ? [{ email: String(payload.email).toLowerCase().trim() }] : []),
+        ],
+        isActive: true,
+      },
+    });
+    if (dbUser && String(dbUser.role || '').toUpperCase() === 'ADMIN') {
+      return { authorized: true, isAdmin: true };
+    }
+  }
+  return { authorized: true, isAdmin: false };
+}
+
 export async function GET(request: Request) {
   try {
-    const { authorized, payload } = verifyStaffRequest(request);
+    const { authorized, isAdmin } = await isRequestFromAdmin(request);
     if (!authorized) {
       return NextResponse.json({ success: false, error: 'No autorizado' }, { status: 401 });
     }
-    const isAdmin = String(payload?.role || '').toUpperCase() === 'ADMIN';
 
     const staff = await prisma.staffUser.findMany({
       orderBy: { createdAt: 'desc' },
@@ -36,45 +60,78 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { authorized } = verifyStaffRequest(request, ['ADMIN']);
-    if (!authorized) {
+    const { authorized, isAdmin } = await isRequestFromAdmin(request);
+    if (!authorized || !isAdmin) {
       return NextResponse.json({ success: false, error: 'No autorizado: se requiere rol de Administrador' }, { status: 403 });
     }
 
     const body = await request.json();
-    const { id, name, email, role, cashRegister, isActive, pin } = body;
+    const { id, name, email, role, cashRegister, isActive, pin, password } = body;
 
-    if (!name || !email) {
+    const cleanName = String(name || '').trim();
+    const cleanEmail = String(email || '').trim().toLowerCase();
+
+    if (!cleanName || !cleanEmail) {
       return NextResponse.json({ success: false, error: 'Nombre y correo requeridos' }, { status: 400 });
     }
 
-    const data = {
-      name,
-      email: email.toLowerCase(),
+    const cleanPassword = typeof password === 'string' ? password.trim() : '';
+    const baseData = {
+      name: cleanName,
+      email: cleanEmail,
       role: role || 'CASHIER',
       cashRegister: cashRegister || 'Caja Principal',
       isActive: isActive !== false,
-      pin: pin || '1234',
-      passwordHash: 'GOOGLE_OAUTH_ONLY' // Default dummy hash
+      pin: pin ? String(pin).trim() : '1234',
     };
 
+    const isTempId = !id || String(id).startsWith('usr-') || String(id).startsWith('user-');
+    const existingById = !isTempId
+      ? await prisma.staffUser.findUnique({ where: { id: String(id) } })
+      : null;
+
     let user;
-    if (id && !id.startsWith('user-')) {
+    if (existingById) {
       user = await prisma.staffUser.update({
-        where: { id },
-        data,
+        where: { id: existingById.id },
+        data: {
+          ...baseData,
+          ...(cleanPassword ? { passwordHash: hashPasswordSecure(cleanPassword) } : {}),
+        },
       });
     } else {
-      // Check existing email
-      const existing = await prisma.staffUser.findUnique({ where: { email: data.email } });
-      if (existing) {
-        user = await prisma.staffUser.update({ where: { id: existing.id }, data });
+      const existingByEmail = await prisma.staffUser.findUnique({ where: { email: cleanEmail } });
+      if (existingByEmail) {
+        user = await prisma.staffUser.update({
+          where: { id: existingByEmail.id },
+          data: {
+            ...baseData,
+            ...(cleanPassword ? { passwordHash: hashPasswordSecure(cleanPassword) } : {}),
+          },
+        });
       } else {
-        user = await prisma.staffUser.create({ data });
+        user = await prisma.staffUser.create({
+          data: {
+            ...baseData,
+            passwordHash: cleanPassword ? hashPasswordSecure(cleanPassword) : 'GOOGLE_OAUTH_ONLY',
+          },
+        });
       }
     }
 
-    return NextResponse.json({ success: true, user });
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        cashRegister: user.cashRegister,
+        isActive: user.isActive,
+        createdAt: user.createdAt.toISOString(),
+        pin: user.pin || '0000',
+      },
+    });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
@@ -82,8 +139,8 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const { authorized } = verifyStaffRequest(request, ['ADMIN']);
-    if (!authorized) {
+    const { authorized, isAdmin } = await isRequestFromAdmin(request);
+    if (!authorized || !isAdmin) {
       return NextResponse.json({ success: false, error: 'No autorizado: se requiere rol de Administrador' }, { status: 403 });
     }
 
@@ -103,4 +160,5 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+
 
