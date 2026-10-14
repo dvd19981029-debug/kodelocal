@@ -7,6 +7,10 @@ export const getProductImage = (product: Product | undefined | null): string => 
     return product.imageUrl || '/images/botes/bote_100ml_degrade_azul_noche.jpg';
   }
 
+  if (product.category !== 'Esencias para Perfume' && product.imageUrl) {
+    return product.imageUrl;
+  }
+
   // Esencias -> Devolvemos el envase en blanco estático (muy ligero, webp)
   // El frontend (ProductCard, etc) debe sobreponer el nombre usando CSS si lo desea.
   return '/images/essence_bottle_blank.webp';

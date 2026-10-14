@@ -296,7 +296,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
               ) : isBottle ? (
                 <span className="text-[10.5px] sm:text-xs text-slate-500 font-normal truncate">Frasco de Vidrio • Cierre de Rosca</span>
               ) : (
-                <span className="text-[10.5px] sm:text-xs text-slate-500 font-normal truncate">{product.unit || 'Unidad'} • Disponible</span>
+                <span className="text-[10.5px] sm:text-xs text-slate-700 font-semibold line-clamp-2 leading-tight">{product.description || `${product.unit || 'Unidad'} • Disponible`}</span>
               )}
             </div>
           </div>

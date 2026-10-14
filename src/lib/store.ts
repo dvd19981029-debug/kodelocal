@@ -1714,6 +1714,26 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "stockHalf": 0
   },
   {
+    "id": "alcohol-perfumero-fijador-1l",
+    "sku": "INS-ALC-1L",
+    "barcode": "741999000INS-ALC-1L",
+    "name": "Alcohol especial para perfumería con fijador (1 Litro)",
+    "officialName": "Alcohol Perfumero con Fijador",
+    "brand": "",
+    "gender": "Unisex",
+    "category": "Insumos y Materia Prima",
+    "unit": "Litro",
+    "price": 2.3,
+    "cost": 1.1,
+    "stock": 30,
+    "minStock": 10,
+    "imageUrl": "/images/insumos/alcohol_perfumero_fijador_1l.jpg",
+    "description": "Alcohol especial para perfumería con fijador (1 Litro)",
+    "isAvailableOnline": true,
+    "puesto": "C1",
+    "stockHalf": 0
+  },
+  {
     "id": "esencia-apae-050",
     "sku": "50",
     "barcode": "741001000050",
@@ -1979,7 +1999,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   }
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v27_bote_golf_club";
+export const DATA_VERSION = "2026_oficial_real_v28_alcohol_perfumero_1l";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;
