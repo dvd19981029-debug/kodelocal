@@ -14,7 +14,6 @@ const BlogHeader = dynamic(() => import('@/components/blog/BlogHeader'), { ssr: 
 const CartDrawer = dynamic(() => import('@/components/ecommerce/CartDrawer'), { ssr: false });
 const CustomerDrawer = dynamic(() => import('@/components/ecommerce/CustomerDrawer'), { ssr: false });
 const CustomerAuthModal = dynamic(() => import('@/components/ecommerce/CustomerAuthModal'), { ssr: false });
-const OpeningNoticeModal = dynamic(() => import('@/components/ecommerce/OpeningNoticeModal'), { ssr: false });
 
 function EcommerceLazyOverlays() {
   const { isCartOpen } = useEcommerceCart();
@@ -78,7 +77,6 @@ export default function NavigationWrapper({ children }: { children: React.ReactN
         <div className="flex flex-col min-h-screen relative">
           {/* Parche visual para el arrastre (rubber-banding) en iOS Safari para el TickerBar */}
           <div className="absolute top-0 left-0 w-full h-[50vh] bg-[#4338ca] -translate-y-full z-0"></div>
-          <OpeningNoticeModal />
           <PromoTickerBar />
           <EcommerceHeader />
           <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 lg:p-8">
