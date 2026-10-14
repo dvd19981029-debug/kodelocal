@@ -1727,7 +1727,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "cost": 1.1,
     "stock": 30,
     "minStock": 10,
-    "imageUrl": "/images/insumos/alcohol_perfumero_fijador_1l.jpg",
+    "imageUrl": "/images/insumos/alcohol_perfumero_fijador_1l.jpg?v=2",
     "description": "Alcohol especial para perfumería con fijador (1 Litro)",
     "isAvailableOnline": true,
     "puesto": "C1",
@@ -1747,7 +1747,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "cost": 1.1,
     "stock": 14,
     "minStock": 5,
-    "imageUrl": "/images/insumos/alcohol_perfumero_fijador_medio_litro.jpg",
+    "imageUrl": "/images/insumos/alcohol_perfumero_fijador_medio_litro.jpg?v=2",
     "description": "Alcohol especial para perfumería con fijador (Medio Litro)",
     "isAvailableOnline": true,
     "puesto": "C1",
@@ -2039,7 +2039,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   }
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v31_caja_generica";
+export const DATA_VERSION = "2026_oficial_real_v32_alcohol_swap";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;
