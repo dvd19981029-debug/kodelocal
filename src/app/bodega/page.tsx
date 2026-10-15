@@ -1381,7 +1381,7 @@ export default function BodegaPage() {
                                         </div>
                                       )}
                                       <span className="text-[10.5px] font-bold text-slate-500 block mt-0.5">
-                                        Cantidad: <strong className="text-indigo-700">{item.quantity} {item.unit || 'Oz'}</strong>
+                                        Cantidad: <strong className="text-indigo-700">{item.quantity} {/^\d/.test(String(item.unit || '').trim()) ? `× ${item.unit}` : (item.unit || 'Oz')}</strong>
                                       </span>
                                     </div>
                                   </div>
@@ -1538,7 +1538,7 @@ export default function BodegaPage() {
                                     </span>
                                   )}
                                 </div>
-                                <span className="font-mono font-black text-indigo-700 shrink-0">{item.quantity} {item.unit || 'Oz'}</span>
+                                <span className="font-mono font-black text-indigo-700 shrink-0">{item.quantity} {/^\d/.test(String(item.unit || '').trim()) ? `× ${item.unit}` : (item.unit || 'Oz')}</span>
                               </div>
                             );
                           })}

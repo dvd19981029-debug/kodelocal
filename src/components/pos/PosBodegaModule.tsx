@@ -336,7 +336,7 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                               </span>
                             )}
                             <span className="text-[10px] text-slate-400 font-mono font-bold block mt-0.5">
-                              Cant: <strong className="text-indigo-700">{it.quantity} {it.unit || 'Oz'}</strong>
+                              Cant: <strong className="text-indigo-700">{it.quantity} {/^\d/.test(String(it.unit || '').trim()) ? `× ${it.unit}` : (it.unit || 'Oz')}</strong>
                             </span>
                           </div>
                           <span className="clay-badge text-[9.5px] font-mono font-black text-amber-950 bg-amber-100 px-2 py-0.5 border border-amber-300 shrink-0">
