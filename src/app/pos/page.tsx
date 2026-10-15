@@ -615,10 +615,26 @@ export default function PosPage() {
                   if (!existing.dteInfo && p.dteInfo) {
                     existing.dteInfo = p.dteInfo;
                   }
-                  if (p.cliente?.nombre && p.cliente.nombre !== 'Consumidor Final') {
-                    if (!existing.cliente || existing.cliente.nombre === 'Consumidor Final') {
-                      existing.cliente = p.cliente;
-                    }
+                  if (p.channel === 'ONLINE') {
+                    existing.channel = 'ONLINE';
+                  }
+                  if (!existing.deliveryNotes && p.deliveryNotes) {
+                    existing.deliveryNotes = p.deliveryNotes;
+                  }
+                  if (p.cliente) {
+                    existing.cliente = {
+                      ...p.cliente,
+                      ...existing.cliente,
+                      nombre:
+                        existing.cliente?.nombre && existing.cliente.nombre !== 'Consumidor Final'
+                          ? existing.cliente.nombre
+                          : p.cliente.nombre || 'Consumidor Final',
+                      telefono: existing.cliente?.telefono || p.cliente.telefono,
+                      correo: existing.cliente?.correo || p.cliente.correo,
+                      direccion: existing.cliente?.direccion || p.cliente.direccion,
+                      departamento: (existing.cliente as any)?.departamento || (p.cliente as any)?.departamento,
+                      municipio: (existing.cliente as any)?.municipio || (p.cliente as any)?.municipio,
+                    } as any;
                   }
                 }
               });

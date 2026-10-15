@@ -45,6 +45,42 @@ export const PosSaleDetailModal: React.FC<PosSaleDetailModalProps> = ({
               <span className="font-mono">{sale.cliente.numDocumento}</span>
             </div>
           )}
+          {sale.cliente.telefono && (
+            <div className="flex justify-between">
+              <span className="text-slate-500">Teléfono:</span>
+              <span className="font-mono font-bold text-slate-800">{sale.cliente.telefono}</span>
+            </div>
+          )}
+          {sale.cliente.correo && (
+            <div className="flex justify-between">
+              <span className="text-slate-500">Correo:</span>
+              <span className="text-slate-700">{sale.cliente.correo}</span>
+            </div>
+          )}
+          {((sale.cliente as any).municipio || (sale.cliente as any).departamento) && (
+            <div className="flex justify-between gap-2">
+              <span className="text-slate-500 shrink-0">Ubicación:</span>
+              <span className="font-bold text-slate-800 text-right">
+                {[(sale.cliente as any).municipio, (sale.cliente as any).departamento].filter(Boolean).join(', ')}
+              </span>
+            </div>
+          )}
+          {(sale.cliente.direccion || sale.deliveryNotes) && (
+            <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80 space-y-1 text-[11px]">
+              {sale.cliente.direccion && (
+                <div>
+                  <span className="font-bold text-amber-900 block">Dirección de Envío:</span>
+                  <span className="text-slate-700 leading-snug block">{sale.cliente.direccion}</span>
+                </div>
+              )}
+              {sale.deliveryNotes && (
+                <div>
+                  <span className="font-bold text-amber-900 block">Detalle / Referencia de Entrega:</span>
+                  <span className="text-slate-700 leading-snug block">{sale.deliveryNotes}</span>
+                </div>
+              )}
+            </div>
+          )}
           {sale.dteInfo?.numeroControl && (
             <div className="flex justify-between">
               <span className="text-slate-500">N° Control Hacienda:</span>

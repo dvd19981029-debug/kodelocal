@@ -7,6 +7,7 @@ import { sanitizeText, sanitizeEmail, sanitizePhone, sanitizeDocument } from '@/
 import { sendOrderConfirmationEmail } from '@/lib/orderEmailService';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { resolveGiroMH, formatGiroOption } from '@/lib/svGirosCat019';
+import { c807Client } from '@/lib/c807';
 
 export const dynamic = 'force-dynamic';
 
@@ -403,16 +404,56 @@ export async function PATCH(request: Request) {
       }
     }
 
+    let resolvedTracking = trackingNumber;
+    let resolvedCourier = courierName;
+    let resolvedOrderStatus = isCancelling ? 'CANCELADO' : orderStatus;
+
+    if (body.generarGuiaC807 && isStaff) {
+      if (order.trackingNumber) {
+        return NextResponse.json(
+          { success: false, error: `Este pedido ya tiene guía generada: ${order.trackingNumber}` },
+          { status: 409 }
+        );
+      }
+      const c807Res = await c807Client.generarGuia({
+        numero_pedido: order.orderNumber,
+        cliente_nombre: order.customerName,
+        cliente_direccion: order.shippingAddress,
+        cliente_telefono: order.customerPhone,
+        cliente_correo: order.customerEmail || undefined,
+        cliente_departamento: order.department,
+        cliente_municipio: order.municipality,
+        cliente_referencia: order.deliveryReference || undefined,
+        tipo_pago:
+          order.paymentStatus === 'COMPLETED'
+            ? 'TARJETA'
+            : order.paymentMethod === 'TRANSFER'
+            ? 'TRANSFERENCIA'
+            : 'CONTRAENTREGA',
+        total: Number(order.total || 0),
+        observaciones: `Pedido Aromaniak #${order.orderNumber}`,
+      });
+      if (!c807Res.success) {
+        return NextResponse.json(
+          { success: false, error: c807Res.error || 'Error al generar guía en C807 Express' },
+          { status: 502 }
+        );
+      }
+      resolvedTracking = c807Res.numero_guia;
+      resolvedCourier = 'C807 Express';
+      if (!resolvedOrderStatus) resolvedOrderStatus = 'EN_RUTA';
+    }
+
     const safePaymentStatus = (paymentStatus === 'REJECTED' || paymentStatus === 'CANCELLED' || isCancelling) ? 'CANCELLED' : paymentStatus;
-    const safeOrderStatus = isCancelling ? 'CANCELADO' : orderStatus;
+    const safeOrderStatus = resolvedOrderStatus;
 
     const updated = await prisma.ecommerceOrder.update({
       where: { id: order.id },
       data: {
         ...(safeOrderStatus ? { orderStatus: safeOrderStatus } : {}),
         ...(safePaymentStatus ? { paymentStatus: safePaymentStatus } : {}),
-        ...(courierName ? { courierName } : {}),
-        ...(trackingNumber ? { trackingNumber } : {}),
+        ...(resolvedCourier ? { courierName: resolvedCourier } : {}),
+        ...(resolvedTracking ? { trackingNumber: resolvedTracking } : {}),
         ...(notes ? { notes: [order.notes, notes].filter(Boolean).join(' ') } : {}),
       },
       include: {
