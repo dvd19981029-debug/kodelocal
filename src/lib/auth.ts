@@ -170,7 +170,19 @@ let inFlightTokenPromise: Promise<string | null> | null = null;
 export async function getStaffToken(): Promise<string | null> {
   if (typeof window === 'undefined') return null;
   const cached = sessionStorage.getItem('kodelocal_staff_token');
-  if (cached) return cached;
+  if (cached) {
+    try {
+      const payloadB64 = cached.split('.')[0];
+      if (payloadB64) {
+        const base64 = payloadB64.replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(atob(base64));
+        if (payload && typeof payload.exp === 'number' && payload.exp > Date.now() + 60_000) {
+          return cached;
+        }
+      }
+    } catch (_) {}
+    sessionStorage.removeItem('kodelocal_staff_token');
+  }
 
   if (inFlightTokenPromise) {
     return inFlightTokenPromise;

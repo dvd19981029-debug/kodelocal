@@ -252,12 +252,21 @@ export default function BodegaPage() {
   const fetchEcommerceOrders = useCallback(async () => {
     try {
       setIsSyncing(true);
-      const staffToken = await getStaffToken();
-      const res = await fetch('/api/ecommerce/orders', {
+      let staffToken = await getStaffToken();
+      let res = await fetch('/api/ecommerce/orders', {
         headers: {
           ...(staffToken ? { 'x-staff-token': staffToken } : {}),
         },
       });
+      if (res.status === 401 && typeof window !== 'undefined') {
+        sessionStorage.removeItem('kodelocal_staff_token');
+        staffToken = await getStaffToken();
+        res = await fetch('/api/ecommerce/orders', {
+          headers: {
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
+        });
+      }
       const data = await res.json();
       if (data.success && Array.isArray(data.orders)) {
         // Solo enviar a preparación en bodega pedidos con pago confirmado (autorización de Wompi)

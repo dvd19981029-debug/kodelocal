@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getWompiTransaction } from '@/lib/wompi';
-import { verifyCustomerToken, verifyStaffInternalToken } from '@/lib/customerAuthToken';
+import { verifyCustomerToken, verifyStaffInternalToken, verifyStaffRequest } from '@/lib/customerAuthToken';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { sanitizeText, sanitizeEmail, sanitizePhone, sanitizeDocument } from '@/lib/sanitize';
 import { sendOrderConfirmationEmail } from '@/lib/orderEmailService';
@@ -36,7 +36,10 @@ export async function GET(request: Request) {
     const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : null;
     const staffHeaderToken = request.headers.get('x-staff-token');
 
-    const isStaff = verifyStaffInternalToken(staffHeaderToken) || verifyStaffInternalToken(bearerToken);
+    const isStaff =
+      verifyStaffRequest(request).authorized ||
+      verifyStaffInternalToken(staffHeaderToken) ||
+      verifyStaffInternalToken(bearerToken);
     const customerPayload = verifyCustomerToken(bearerToken);
 
     // SEC-BOLA-01: Proteger consultas de invitados contra ataques de fuerza bruta / scraping
@@ -269,7 +272,10 @@ export async function PATCH(request: Request) {
     const authHeader = request.headers.get('authorization') || '';
     const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : null;
     const staffHeaderToken = request.headers.get('x-staff-token');
-    const isStaff = verifyStaffInternalToken(staffHeaderToken) || verifyStaffInternalToken(bearerToken);
+    const isStaff =
+      verifyStaffRequest(request).authorized ||
+      verifyStaffInternalToken(staffHeaderToken) ||
+      verifyStaffInternalToken(bearerToken);
     const customerPayload = verifyCustomerToken(bearerToken);
 
     // SEC-02: Control de autorización de despacho (BOLA / IDOR)
