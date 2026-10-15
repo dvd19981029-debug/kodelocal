@@ -207,20 +207,15 @@ export function buildOrderConfirmationHtml(data: OrderEmailData): string {
               </table>
 
               ${isTransfer && !isPaid ? `
-                <!-- Ficha de Cuentas para Transferencia -->
+                <!-- Ficha de Transferencia -->
                 <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 16px; background-color: #fffbeb; border: 1px solid #fef3c7; border-radius: 16px; padding: 14px;">
                   <tr>
                     <td>
                       <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #b45309; letter-spacing: 0.05em; margin-bottom: 4px;">
-                        🏦 Cuentas Bancarias para Transferir
+                        🏦 Transferencia Banco Agrícola
                       </div>
                       <div style="font-size: 11.5px; color: #92400e; margin-bottom: 8px;">
                         Titular: <strong>Aromaniak El Salvador</strong> &bull; Monto: <strong>$${data.total.toFixed(2)}</strong>
-                      </div>
-                      <div style="font-size: 11.5px; color: #78350f; line-height: 1.6;">
-                        &bull; <strong>Banco Agrícola (Ahorro):</strong> 300-478921-0<br>
-                        &bull; <strong>BAC Credomatic (Ahorro):</strong> 201-839210<br>
-                        &bull; <strong>Banco Cuscatlán (Corriente):</strong> 024-109283-7
                       </div>
                       <div style="margin-top: 10px;">
                         <a href="${whatsappUrl}" target="_blank" style="display: inline-block; padding: 8px 16px; background-color: #16a34a; color: #ffffff; text-decoration: none; font-size: 11.5px; font-weight: 800; border-radius: 10px;">

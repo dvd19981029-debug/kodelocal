@@ -87,7 +87,7 @@ export default function EcommerceFooter() {
               </li>
               <li className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-blue-500 shrink-0" />
-                <span>Banco Agrícola, BAC & Cuscatlán</span>
+                <span>Banco Agrícola</span>
               </li>
               <li className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-purple-500 shrink-0" />
