@@ -922,7 +922,7 @@ export async function POST(request: Request) {
       const isRetiro = (cleanDeliveryReference && cleanDeliveryReference.includes('Retiro')) ||
                        (cleanShippingAddress && cleanShippingAddress.includes('Retiro')) ||
                        (cleanNotes && cleanNotes.includes('Retiro'));
-      const verifiedShippingCost = isRetiro ? 0.00 : 3.50;
+      const verifiedShippingCost = isRetiro ? 0.00 : 2.99;
       const verifiedTotal = Number((verifiedSubtotal + verifiedShippingCost).toFixed(2));
 
       // 3. Crear la orden oficial de ecommerce con los precios y totales verificados

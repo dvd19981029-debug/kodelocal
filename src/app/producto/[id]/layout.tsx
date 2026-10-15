@@ -180,7 +180,7 @@ export default async function ProductLayout({
         '@type': 'OfferShippingDetails',
         shippingRate: {
           '@type': 'MonetaryAmount',
-          value: '3.50',
+          value: '2.99',
           currency: 'USD',
         },
         shippingDestination: {
