@@ -108,6 +108,87 @@ const isPickup = (o: EcoOrder) =>
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleString('es-SV', { dateStyle: 'medium', timeStyle: 'short' });
 
+// Pedido real = no cancelado y, si es con tarjeta, con pago confirmado.
+// Misma regla que usa la pestaña "Por preparar" de Bodega.
+const isRealOrder = (o: EcoOrder) => {
+  if (o.orderStatus === 'CANCELADO' || o.paymentStatus === 'CANCELLED') return false;
+  if (o.paymentMethod === 'CARD' && o.paymentStatus !== 'COMPLETED') return false;
+  return true;
+};
+
+// Busca un pedido real del mismo cliente, mismo total y dentro de 24 h (intento previo del mismo carrito)
+const findRealTwin = (o: EcoOrder, all: EcoOrder[]): EcoOrder | null => {
+  const t = new Date(o.createdAt).getTime();
+  return (
+    all.find(
+      (x) =>
+        x.id !== o.id &&
+        isRealOrder(x) &&
+        x.customerPhone === o.customerPhone &&
+        Math.abs(Number(x.total) - Number(o.total)) < 0.01 &&
+        Math.abs(new Date(x.createdAt).getTime() - t) < 24 * 60 * 60 * 1000
+    ) || null
+  );
+};
+
+function ReadinessBadge({ order: o, twin }: { order: EcoOrder; twin: EcoOrder | null }) {
+  let text: string;
+  let cls: string;
+  if (o.orderStatus === 'CANCELADO' || o.paymentStatus === 'CANCELLED') {
+    text = 'Cancelado';
+    cls = 'bg-rose-100 text-rose-800';
+  } else if (!isRealOrder(o)) {
+    text = twin ? `Intento previo de ${twin.orderNumber}` : 'Sin pagar';
+    cls = 'bg-slate-200 text-slate-700';
+  } else if (o.orderStatus === 'ENTREGADO') {
+    text = 'Ya entregado';
+    cls = 'bg-slate-100 text-slate-600';
+  } else if (o.orderStatus === 'EN_RUTA') {
+    text = 'En camino';
+    cls = 'bg-blue-100 text-blue-800';
+  } else {
+    text = 'Listo para preparar';
+    cls = 'bg-emerald-100 text-emerald-800';
+  }
+  return (
+    <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-black font-sans ${cls}`}>{text}</span>
+  );
+}
+
+function ReadinessBanner({ order: o, twin }: { order: EcoOrder; twin: EcoOrder | null }) {
+  if (o.orderStatus === 'CANCELADO' || o.paymentStatus === 'CANCELLED') {
+    return (
+      <div className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs font-bold text-rose-800">
+        Pedido cancelado. No se debe preparar ni enviar.
+      </div>
+    );
+  }
+  if (!isRealOrder(o)) {
+    return (
+      <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900">
+        <div className="font-black">No preparar: el pago con tarjeta no se ha confirmado.</div>
+        <div className="mt-0.5">
+          {twin
+            ? `Es un intento previo. El pedido que sí está pagado es ${twin.orderNumber}.`
+            : 'Solo se atiende si más adelante aparece como "Pagado". Puede ser un pago abandonado.'}
+        </div>
+      </div>
+    );
+  }
+  if (o.orderStatus === 'ENTREGADO') {
+    return (
+      <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 text-xs font-bold text-slate-700">
+        Pedido ya entregado.
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs font-black text-emerald-800">
+      Pedido válido: preparar y enviar.
+    </div>
+  );
+}
+
 export default function EcommerceOrdersPanel() {
   const [orders, setOrders] = useState<EcoOrder[]>([]);
   const [loading, setLoading] = useState(false);
@@ -115,6 +196,7 @@ export default function EcommerceOrdersPanel() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selected, setSelected] = useState<EcoOrder | null>(null);
+  const [showUnpaid, setShowUnpaid] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -139,9 +221,12 @@ export default function EcommerceOrdersPanel() {
     load();
   }, [load]);
 
+  const hiddenCount = useMemo(() => orders.filter((o) => !isRealOrder(o)).length, [orders]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return orders.filter((o) => {
+      if (!showUnpaid && !isRealOrder(o)) return false;
       if (statusFilter !== 'ALL' && o.orderStatus !== statusFilter) return false;
       if (!q) return true;
       return (
@@ -151,7 +236,7 @@ export default function EcommerceOrdersPanel() {
         (o.customerEmail || '').toLowerCase().includes(q)
       );
     });
-  }, [orders, search, statusFilter]);
+  }, [orders, search, statusFilter, showUnpaid]);
 
   return (
     <div className="space-y-4">
@@ -200,6 +285,19 @@ export default function EcommerceOrdersPanel() {
             </option>
           ))}
         </select>
+        <label className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-600 rounded-lg border border-slate-200 bg-white cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={showUnpaid}
+            onChange={(e) => setShowUnpaid(e.target.checked)}
+          />
+          Mostrar intentos sin pagar y cancelados
+          {hiddenCount > 0 && !showUnpaid && (
+            <span className="px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px]">
+              {hiddenCount} ocultos
+            </span>
+          )}
+        </label>
       </div>
 
       {error && (
@@ -230,9 +328,20 @@ export default function EcommerceOrdersPanel() {
                 </td>
               </tr>
             )}
-            {filtered.map((o) => (
-              <tr key={o.id} className="border-b border-slate-100 hover:bg-slate-50">
-                <td className="py-2.5 px-3 font-mono font-bold text-slate-800">{o.orderNumber}</td>
+            {filtered.map((o) => {
+              const real = isRealOrder(o);
+              const twin = real ? null : findRealTwin(o, orders);
+              return (
+              <tr
+                key={o.id}
+                className={`border-b border-slate-100 hover:bg-slate-50 ${real ? '' : 'opacity-60'}`}
+              >
+                <td className="py-2.5 px-3 font-mono font-bold text-slate-800">
+                  {o.orderNumber}
+                  <div className="mt-1">
+                    <ReadinessBadge order={o} twin={twin} />
+                  </div>
+                </td>
                 <td className="py-2.5 px-3 text-slate-600">{fmtDate(o.createdAt)}</td>
                 <td className="py-2.5 px-3">
                   <div className="font-bold text-slate-800">{o.customerName}</div>
@@ -266,12 +375,19 @@ export default function EcommerceOrdersPanel() {
                   </button>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
 
-      {selected && <OrderDetailModal order={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        <OrderDetailModal
+          order={selected}
+          twin={isRealOrder(selected) ? null : findRealTwin(selected, orders)}
+          onClose={() => setSelected(null)}
+        />
+      )}
     </div>
   );
 }
@@ -298,7 +414,15 @@ function Row({ label, value }: { label: string; value?: React.ReactNode }) {
   );
 }
 
-function OrderDetailModal({ order: o, onClose }: { order: EcoOrder; onClose: () => void }) {
+function OrderDetailModal({
+  order: o,
+  twin,
+  onClose,
+}: {
+  order: EcoOrder;
+  twin: EcoOrder | null;
+  onClose: () => void;
+}) {
   const pickup = isPickup(o);
   const dte = o.sale?.dteDocument;
   const isCcf = o.sale?.tipoComprobante === '03' || Boolean(o.customer?.nrc);
@@ -329,6 +453,10 @@ function OrderDetailModal({ order: o, onClose }: { order: EcoOrder; onClose: () 
               <X className="w-4 h-4" />
             </button>
           </div>
+        </div>
+
+        <div className="px-5 pt-4">
+          <ReadinessBanner order={o} twin={twin} />
         </div>
 
         <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-3">
