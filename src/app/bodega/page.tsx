@@ -33,8 +33,10 @@ import {
   Volume2,
   VolumeX,
   Radio,
+  ShoppingBag,
   X
 } from 'lucide-react';
+import EcommerceOrdersPanel from './EcommerceOrdersPanel';
 import { 
   SaleRecord, 
   ProductItem, 
@@ -124,7 +126,7 @@ function playNewOrderChime(orderDetails?: string) {
   }
 }
 
-type BodegaTab = 'por_preparar' | 'listos' | 'entregados' | 'inventario' | 'ingreso_compras';
+type BodegaTab = 'por_preparar' | 'listos' | 'entregados' | 'inventario' | 'ingreso_compras' | 'ecommerce';
 
 export default function BodegaPage() {
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
@@ -1231,6 +1233,24 @@ export default function BodegaPage() {
                 {pendingPurchasesCount}
               </span>
             </button>
+
+            {/* 6. Ecommerce */}
+            <button
+              onClick={() => {
+                setBodegaTab('ecommerce');
+                setActiveConfrontationPurchase(null);
+              }}
+              className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all text-left ${
+                bodegaTab === 'ecommerce'
+                  ? 'clay-btn-primary !shadow-[3px_4px_10px_rgba(124,58,237,0.35)]'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <ShoppingBag className={`w-4 h-4 ${bodegaTab === 'ecommerce' ? 'text-white' : 'text-violet-600'}`} />
+                <span>Ecommerce</span>
+              </div>
+            </button>
           </div>
 
           {/* Tarjeta Informativa de Puestos Físicos */}
@@ -2231,6 +2251,11 @@ export default function BodegaPage() {
 
             </div>
           )}
+
+          {/* ======================================================================= */}
+          {/* TAB 6: PEDIDOS ECOMMERCE                                                */}
+          {/* ======================================================================= */}
+          {bodegaTab === 'ecommerce' && <EcommerceOrdersPanel />}
 
         </main>
       </div>
