@@ -2253,7 +2253,7 @@ export default function PosPage() {
   }, [orderToInvoice, cartSubtotal]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 pb-20 lg:pb-16 max-w-[1650px] mx-auto items-start w-full max-w-full overflow-x-hidden">
+    <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 pb-20 lg:pb-16 max-w-[1650px] mx-auto items-start w-full max-w-full overflow-x-clip">
       
       {/* ========================================================================= */}
       {/* MENÚ LATERAL IZQUIERDO DE PUNTO DE VENTA (DINÁMICO / EXPANDIBLE AL HOVER) */}
