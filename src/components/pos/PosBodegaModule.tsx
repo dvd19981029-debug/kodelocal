@@ -162,7 +162,7 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            Todos ({sales.length})
+            Todos ({readyInWindowCount + pendingPreparationCount})
           </button>
           <button
             type="button"

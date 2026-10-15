@@ -911,6 +911,8 @@ export default function PosPage() {
       const isReady = s.status === 'READY_AT_WINDOW';
       const isCompleted = s.status === 'COMPLETED';
 
+      // "Todos" muestra solo pedidos activos; los entregados se ven en la pestaña "Entregados"
+      if (bodegaOrdenesFilter === 'ALL' && isCompleted) return false;
       if (bodegaOrdenesFilter === 'PENDING' && !isPending) return false;
       if (bodegaOrdenesFilter === 'READY' && !isReady) return false;
       if (bodegaOrdenesFilter === 'COMPLETED' && !isCompleted) return false;
