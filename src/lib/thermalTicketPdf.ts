@@ -1,7 +1,8 @@
 // src/lib/thermalTicketPdf.ts
 // Generador profesional de Ticket Térmico en PDF continuo de 80mm usando jsPDF
 
-import { SaleRecord } from './store';
+import { SaleRecord, ProductItem } from './store';
+import { getOriginalFragranceInfo } from './perfumeNames';
 
 export interface ThermalTicketOptions {
   autoPrint?: boolean;
@@ -433,3 +434,310 @@ export async function printThermalTicketPdf(ticket: SaleRecord): Promise<void> {
     await openThermalTicketPdf(ticket);
   }
 }
+
+// ============================================================================
+// ORDEN DE DESPACHO / BODEGA (FORMATO TÉRMICO 80MM EN PDF)
+// ============================================================================
+
+const cleanPdfText = (s: string) =>
+  String(s || '')
+    .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '')
+    .replace(/×/g, 'x')
+    .replace(/•/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+/**
+ * Dibuja la Orden de Despacho de Bodega en formato térmico de 80mm (72mm área imprimible)
+ * mostrando claramente:
+ *  - Perfume con su nombre y su inspiración
+ *  - Posición clara del estante (Puesto)
+ *  - Cantidad claramente expresada
+ */
+function renderDispatchOrderToDoc(doc: any, ticket: SaleRecord, products?: ProductItem[]): number {
+  const leftM = 3;
+  const rightM = 68;
+  const centerX = 35.5;
+
+  // Mismo margen superior seguro de 42mm para impresora térmica POS-80
+  let y = 42;
+
+  const drawDashedDivider = (currentY: number) => {
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(7.5);
+    doc.text('------------------------------------------', centerX, currentY, { align: 'center' });
+  };
+
+  const drawSolidDivider = (currentY: number, lineWidth = 0.35) => {
+    doc.setLineWidth(lineWidth);
+    doc.setDrawColor(0, 0, 0);
+    doc.line(leftM, currentY, rightM, currentY);
+  };
+
+  // ================= 1. ENCABEZADO ORDEN DE DESPACHO =================
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(11);
+  doc.text('AROMANIAK SV', centerX, y, { align: 'center' });
+  y += 3.5;
+
+  drawSolidDivider(y, 0.4);
+  y += 4.2;
+
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(10.5);
+  doc.text('ORDEN DE DESPACHO - BODEGA', centerX, y, { align: 'center' });
+  y += 2.2;
+
+  drawSolidDivider(y, 0.4);
+  y += 4.2;
+
+  // ================= 2. DATOS DE LA ORDEN =================
+  const ticketDate = ticket.createdAt ? new Date(ticket.createdAt) : new Date();
+  const safeTicketDate = !isNaN(ticketDate.getTime()) ? ticketDate : new Date();
+  const formattedDate = safeTicketDate.toLocaleDateString('es-SV', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+  });
+  const formattedTime = safeTicketDate.toLocaleTimeString('es-SV', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  }).toLowerCase();
+
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(9.5);
+  doc.text(`ORDEN: #${cleanPdfText(ticket.saleNumber || ticket.id)}`, leftM, y);
+  y += 3.8;
+
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(7.5);
+  doc.text(`Fecha: ${formattedDate} ${formattedTime}`, leftM, y);
+  y += 3.3;
+
+  const origenLabel = cleanPdfText(ticket.vendedor || ticket.cajero || 'Caja 1');
+  doc.text(`Origen: ${origenLabel.slice(0, 32)}`, leftM, y);
+  y += 3.5;
+
+  const customerName = cleanPdfText(ticket.cliente?.nombre || 'Consumidor Final');
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(8);
+  const splitClient = doc.splitTextToSize(`Cliente: ${customerName}`, 64);
+  for (const line of splitClient) {
+    doc.text(line, leftM, y);
+    y += 3.3;
+  }
+
+  if (ticket.deliveryNotes) {
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(7.2);
+    const splitNotes = doc.splitTextToSize(cleanPdfText(ticket.deliveryNotes), 64);
+    for (const line of splitNotes) {
+      doc.text(line, leftM, y);
+      y += 3.1;
+    }
+  }
+
+  y += 1;
+  drawSolidDivider(y, 0.35);
+  y += 3.8;
+
+  // ================= 3. DETALLE DE PRODUCTOS Y ESTANTES =================
+  const items = ticket.items || [];
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(8);
+  doc.text(`PRODUCTOS A PREPARAR (${items.length}):`, leftM, y);
+  y += 2.5;
+
+  drawDashedDivider(y);
+  y += 4;
+
+  for (let idx = 0; idx < items.length; idx++) {
+    const it = items[idx];
+    const origInfo = getOriginalFragranceInfo(it, products);
+    const shelfLocation = cleanPdfText(
+      it.puesto || products?.find(p => p.id === it.productId)?.puesto || 'A1'
+    ).toUpperCase();
+
+    const unitStr = cleanPdfText(it.unit || 'Oz');
+    const qtyFormatted = /^\d/.test(unitStr)
+      ? `${it.quantity} x ${unitStr}`
+      : `${it.quantity} ${unitStr}`;
+
+    const perfumeName = cleanPdfText(it.name || 'PRODUCTO');
+
+    // Caja destacada de PUESTO / ESTANTE a la derecha
+    const boxW = 22;
+    const boxH = 5.4;
+    const boxX = rightM - boxW;
+    const boxY = y - 3.8;
+    doc.setLineWidth(0.35);
+    doc.setDrawColor(0, 0, 0);
+    doc.rect(boxX, boxY, boxW, boxH);
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(8.2);
+    doc.text(`PUESTO: ${shelfLocation}`, boxX + boxW / 2, y - 0.3, { align: 'center' });
+
+    // Nombre del perfume con casilla de chequeo
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(8.5);
+    const splitName = doc.splitTextToSize(`[ ] ${idx + 1}. ${perfumeName}`, 41);
+    for (let i = 0; i < splitName.length; i++) {
+      doc.text(splitName[i], leftM, y);
+      y += 3.4;
+    }
+
+    // Si el nombre solo ocupó 1 línea, asegurar espacio debajo de la caja del puesto
+    if (splitName.length === 1) {
+      y += 0.8;
+    }
+
+    // Inspiración / Original bien claro
+    if (origInfo?.originalName) {
+      const inspText = `Inspiracion: ${cleanPdfText(origInfo.originalName)}${
+        origInfo.brand ? ` (${cleanPdfText(origInfo.brand)})` : ''
+      }`;
+      doc.setFont('courier', 'bold');
+      doc.setFontSize(7.8);
+      const splitInsp = doc.splitTextToSize(inspText, 62);
+      for (const line of splitInsp) {
+        doc.text(line, leftM + 2, y);
+        y += 3.2;
+      }
+    }
+
+    // Cantidad y Posición en Estante claramente expresadas
+    y += 0.5;
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(8.8);
+    doc.text(`CANTIDAD: ${qtyFormatted}`, leftM + 2, y);
+    doc.text(`ESTANTE: ${shelfLocation}`, rightM, y, { align: 'right' });
+    y += 3.2;
+
+    drawDashedDivider(y);
+    y += 3.8;
+  }
+
+  // ================= 4. RESUMEN Y CONTROL DE DESPACHO =================
+  const totalUnidades = items.reduce((acc, it) => acc + (Number(it.quantity) || 1), 0);
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(8.2);
+  doc.text(`TOTAL LINEAS: ${items.length}`, leftM, y);
+  doc.text(`VOLUMEN TOTAL: ${totalUnidades}`, rightM, y, { align: 'right' });
+  y += 5;
+
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(7.5);
+  doc.text('Preparado por: _______________________', leftM, y);
+  y += 4.5;
+
+  // Código de barras de referencia de la orden
+  const barPattern = [
+    2, 4, 1, 3, 2, 5, 1, 3, 2, 4, 2, 3, 1, 5, 2, 3, 1, 4, 2, 5, 1, 3, 2, 4, 1, 3, 2, 4, 1, 5, 2, 3
+  ];
+  let barX = centerX - 22;
+  const barH = 5.5;
+
+  doc.setFillColor(0, 0, 0);
+  for (let i = 0; i < barPattern.length; i++) {
+    const w = barPattern[i] * 0.32;
+    if (i % 2 === 0) {
+      doc.rect(barX, y, w, barH, 'F');
+    }
+    barX += w + 0.32;
+  }
+  y += barH + 2.5;
+
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(7.2);
+  doc.text(`*${cleanPdfText(ticket.saleNumber || ticket.id)}*`, centerX, y, { align: 'center' });
+
+  return Math.ceil(y + 6);
+}
+
+/**
+ * Construye el documento jsPDF de 80mm (72mm área imprimible) para la Orden de Despacho de Bodega
+ */
+export async function buildDispatchTicketPdf(ticket: SaleRecord, products?: ProductItem[]): Promise<any> {
+  const { jsPDF } = await import('jspdf');
+
+  const measureDoc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: [72, 300],
+  });
+  const exactHeight = Math.max(80, renderDispatchOrderToDoc(measureDoc, ticket, products));
+
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: [72, exactHeight],
+  });
+  renderDispatchOrderToDoc(doc, ticket, products);
+
+  return doc;
+}
+
+/**
+ * Descarga el PDF de 80mm de la Orden de Despacho
+ */
+export async function downloadDispatchTicketPdf(ticket: SaleRecord, products?: ProductItem[]): Promise<void> {
+  const doc = await buildDispatchTicketPdf(ticket, products);
+  const filename = `Orden-Despacho-${ticket.saleNumber || ticket.id}.pdf`;
+  doc.save(filename);
+}
+
+/**
+ * Abre el PDF de 80mm de la Orden de Despacho en una nueva pestaña
+ */
+export async function openDispatchTicketPdf(ticket: SaleRecord, products?: ProductItem[]): Promise<void> {
+  const doc = await buildDispatchTicketPdf(ticket, products);
+  const blob = doc.output('blob');
+  const blobUrl = URL.createObjectURL(blob);
+  window.open(blobUrl, '_blank');
+}
+
+/**
+ * Envía a imprimir directamente el PDF de 80mm de la Orden de Despacho para la ticketera térmica
+ */
+export async function printDispatchTicketPdf(ticket: SaleRecord, products?: ProductItem[]): Promise<void> {
+  try {
+    const doc = await buildDispatchTicketPdf(ticket, products);
+    const blob = doc.output('blob');
+    const blobUrl = URL.createObjectURL(blob);
+
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.src = blobUrl;
+
+    document.body.appendChild(iframe);
+
+    iframe.onload = () => {
+      setTimeout(() => {
+        try {
+          iframe.focus();
+          iframe.contentWindow?.print();
+        } catch {
+          window.open(blobUrl, '_blank');
+        } finally {
+          setTimeout(() => {
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe);
+            }
+            URL.revokeObjectURL(blobUrl);
+          }, 60000);
+        }
+      }, 300);
+    };
+  } catch (err) {
+    console.error('Error generando o imprimiendo orden de despacho térmica PDF:', err);
+    await openDispatchTicketPdf(ticket, products);
+  }
+}
+

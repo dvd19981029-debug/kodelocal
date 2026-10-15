@@ -55,6 +55,7 @@ import { getActiveUser, UserAccount, getStaffToken } from '@/lib/auth';
 import { supabase } from '@/lib/supabaseClient';
 import { getOfflineSalesQueue } from '@/lib/offlineSync';
 import { getOriginalFragranceInfo } from '@/lib/perfumeNames';
+import { printDispatchTicketPdf, downloadDispatchTicketPdf } from '@/lib/thermalTicketPdf';
 
 // Singleton para el AudioContext
 let globalAudioCtx: AudioContext | null = null;
@@ -1426,12 +1427,30 @@ export default function BodegaPage() {
                         </div>
 
                         {/* Botones de Acción */}
-                        <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
+                        <div className="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
                           <span className="text-[10px] text-slate-400 font-medium">
                             {order.vendedor ? `Caja: ${order.vendedor}` : 'Caja 1'}
                           </span>
 
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => printDispatchTicketPdf(order, products)}
+                              title="Imprimir Orden de Despacho en ticketera térmica 80mm"
+                              className="clay-btn clay-btn-light px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50 border border-indigo-200"
+                            >
+                              <Printer className="w-3.5 h-3.5" />
+                              <span>Imprimir Tk</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => downloadDispatchTicketPdf(order, products)}
+                              title="Descargar PDF de Orden de Despacho (80mm)"
+                              className="clay-btn clay-btn-light px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              <span>PDF</span>
+                            </button>
                             <button
                               onClick={() => handleCancelOrder(order.id, order.channel)}
                               title="Cancelar y devolver inventario"
@@ -1574,7 +1593,25 @@ export default function BodegaPage() {
                         </div>
                       </div>
 
-                      <div className="pt-2.5 border-t border-slate-100 flex items-center justify-end gap-2">
+                      <div className="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => printDispatchTicketPdf(order, products)}
+                          title="Imprimir Orden de Despacho en ticketera térmica 80mm"
+                          className="clay-btn clay-btn-light px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50 border border-indigo-200"
+                        >
+                          <Printer className="w-3.5 h-3.5" />
+                          <span>Imprimir Tk</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => downloadDispatchTicketPdf(order, products)}
+                          title="Descargar PDF de Orden de Despacho (80mm)"
+                          className="clay-btn clay-btn-light px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          <span>PDF</span>
+                        </button>
                         <button
                           type="button"
                           onClick={() => handleCancelOrder(order.id, order.channel)}
