@@ -198,7 +198,7 @@ export const PosSidebar: React.FC<PosSidebarProps> = ({
       <aside 
         onMouseEnter={() => setIsSidebarHovered(true)}
         onMouseLeave={() => setIsSidebarHovered(false)}
-        className={`hidden lg:block w-full ${isSidebarPinned ? 'lg:w-64' : 'lg:w-16'} shrink-0 relative lg:sticky lg:top-4 lg:self-start lg:z-30 transition-all duration-300 ease-in-out`}
+        className={`hidden lg:block w-full ${isSidebarPinned ? 'lg:w-64' : 'lg:w-16'} shrink-0 relative lg:sticky lg:top-24 lg:self-start lg:z-30 transition-all duration-300 ease-in-out`}
       >
       <div className={`${
         isSidebarExpanded && !isSidebarPinned
