@@ -1461,7 +1461,17 @@ export default function CheckoutPage() {
 
                 {discountTotal > 0 && (
                   <div className="flex items-center justify-between text-indigo-700 font-bold mb-1">
-                    <span>Descuento VIP ({customer?.tier?.name || 'Tarifa Preferencial'}):</span>
+                    <span>
+                      Descuento VIP (
+                      {customer?.tier?.name === 'Personalizado' && customer?.customDiscountPct
+                        ? `Personalizado ${customer.customDiscountPct}%`
+                        : customer?.tier?.name
+                        ? `${customer.tier.name}${customer.tier.discountPct ? ` ${customer.tier.discountPct}%` : ''}`
+                        : customer?.customDiscountPct
+                        ? `${customer.customDiscountPct}%`
+                        : 'Tarifa Preferencial'}
+                      ):
+                    </span>
                     <span>-${discountTotal.toFixed(2)}</span>
                   </div>
                 )}
@@ -1495,6 +1505,17 @@ export default function CheckoutPage() {
                   <span>Total a Pagar:</span>
                   <span className="text-indigo-700 text-lg font-black">${totalConEnvio.toFixed(2)}</span>
                 </div>
+
+                {discountTotal > 0 && (
+                  <div className="mt-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs text-emerald-800">
+                    <span className="font-bold">
+                      Total ahorrado con tu nivel {customer?.tier?.name || 'Preferencial'}:
+                    </span>
+                    <span className="font-black text-emerald-700">
+                      ${discountTotal.toFixed(2)}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Botón de Confirmación */}

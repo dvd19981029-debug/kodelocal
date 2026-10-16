@@ -78,9 +78,43 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerTab, setDrawerTab] = useState<'orders' | 'profile'>('orders');
 
+  const refreshSessionFromServer = (targetUser?: CustomerUser | null) => {
+    try {
+      const saved = targetUser || (() => {
+        const raw = localStorage.getItem('aromaniak_customer_session');
+        return raw ? JSON.parse(raw) : null;
+      })();
+      if (saved?.id && saved?.email && saved?.sessionToken) {
+        fetch('/api/customer/auth', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${saved.sessionToken}`,
+          },
+          body: JSON.stringify({
+            action: 'get_token',
+            customerId: saved.id,
+            email: saved.email,
+            sessionToken: saved.sessionToken,
+          }),
+        })
+          .then((r) => r.json())
+          .then((d) => {
+            if (d.success && d.customer) {
+              saveCustomerSession({ ...d.customer, sessionToken: d.sessionToken || saved.sessionToken });
+            } else if (d.success && d.sessionToken) {
+              saveCustomerSession({ ...saved, sessionToken: d.sessionToken });
+            }
+          })
+          .catch((e) => console.error('Error refrescando sesión de cliente:', e));
+      }
+    } catch (_) {}
+  };
+
   const openDrawer = (tab: 'orders' | 'profile' = 'orders') => {
     setDrawerTab(tab);
     setIsDrawerOpen(true);
+    refreshSessionFromServer();
   };
 
   const closeDrawer = () => {
@@ -103,38 +137,16 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
       if (saved) {
         const parsed = JSON.parse(saved);
         setCustomer(parsed);
-
-        // Sincronizar y refrescar datos actualizados del cliente y token de sesión
-        if (parsed.id && parsed.email && parsed.sessionToken) {
-          fetch('/api/customer/auth', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${parsed.sessionToken}`,
-            },
-            body: JSON.stringify({
-              action: 'get_token',
-              customerId: parsed.id,
-              email: parsed.email,
-              sessionToken: parsed.sessionToken,
-            }),
-          })
-            .then((r) => r.json())
-            .then((d) => {
-              if (d.success && d.customer) {
-                saveCustomerSession({ ...d.customer, sessionToken: d.sessionToken || parsed.sessionToken });
-              } else if (d.success && d.sessionToken) {
-                saveCustomerSession({ ...parsed, sessionToken: d.sessionToken });
-              }
-            })
-            .catch((e) => console.error('Error refrescando sesión de cliente:', e));
-        }
+        refreshSessionFromServer(parsed);
       }
     } catch (e) {
       console.error('Error restaurando sesión de cliente:', e);
     } finally {
       setIsLoading(false);
     }
+
+    const handleFocus = () => refreshSessionFromServer();
+    window.addEventListener('focus', handleFocus);
 
     const syncGoogleUser = async (u: any, accessToken?: string) => {
       const googleName = u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0] || 'Cliente';
@@ -181,6 +193,7 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     });
 
     return () => {
+      window.removeEventListener('focus', handleFocus);
       authListener?.subscription?.unsubscribe();
     };
   }, []);
