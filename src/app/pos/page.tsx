@@ -82,6 +82,7 @@ export default function PosPage() {
   const [cajaSubTab, setCajaSubTab] = useState<CajaSubTab>('listas_facturar');
   const [dteFilterType, setDteFilterType] = useState<DteFilterType>('ALL');
   const [dteSearchQuery, setDteSearchQuery] = useState('');
+  const [dteSortBy, setDteSortBy] = useState<'FACTURACION' | 'CREACION'>('FACTURACION');
 
   // Cotización / Prefactura Modal
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
@@ -451,6 +452,7 @@ export default function PosPage() {
               saleNumber: o.orderNumber,
               orderNumber: o.orderNumber,
               createdAt: o.createdAt,
+              invoicedAt: dteDoc?.fhProcesamiento || dteDoc?.createdAt || o.sale?.createdAt || undefined,
               channel: 'ONLINE',
               total: Number(o.total || 0),
               subtotal: Number(o.subtotal || 0),
@@ -507,8 +509,13 @@ export default function PosPage() {
           setSales(prev => {
             const updatedWebSales = webSales.map(ws => {
               const prevMatch = prev.find(p => p.saleNumber === ws.saleNumber || p.id === ws.id);
-              if (prevMatch?.dteInfo && !ws.dteInfo) {
-                return { ...ws, dteInfo: prevMatch.dteInfo, status: prevMatch.status || ws.status };
+              if (prevMatch) {
+                return {
+                  ...ws,
+                  dteInfo: ws.dteInfo || prevMatch.dteInfo,
+                  invoicedAt: ws.invoicedAt || prevMatch.invoicedAt || prevMatch.dteInfo?.fhProcesamiento,
+                  status: prevMatch.status || ws.status,
+                };
               }
               return ws;
             });
@@ -555,7 +562,7 @@ export default function PosPage() {
                 saleNumber: s.saleNumber,
                 orderNumber: s.saleNumber,
                 createdAt: s.createdAt,
-                invoicedAt: (s.orderStatus === 'COMPLETED' || s.paymentStatus === 'COMPLETED') && !['CANCELLED', 'CANCELADO', 'ANULADA'].includes(String(s.orderStatus || '').toUpperCase()) ? s.createdAt : undefined,
+                invoicedAt: s.dteDocument?.fhProcesamiento || s.dteDocument?.createdAt || ((s.orderStatus === 'COMPLETED' || s.paymentStatus === 'COMPLETED') && !['CANCELLED', 'CANCELADO', 'ANULADA'].includes(String(s.orderStatus || '').toUpperCase()) ? (s.updatedAt || s.createdAt) : undefined),
                 channel: s.channel || 'POS',
                 total: Number(s.total || 0),
                 subtotal: Number(s.subtotal || 0),
@@ -617,6 +624,10 @@ export default function PosPage() {
                   }
                   if (p.channel === 'ONLINE') {
                     existing.channel = 'ONLINE';
+                    if (p.createdAt) {
+                      existing.invoicedAt = existing.invoicedAt || existing.createdAt;
+                      existing.createdAt = p.createdAt;
+                    }
                   }
                   if (!existing.deliveryNotes && p.deliveryNotes) {
                     existing.deliveryNotes = p.deliveryNotes;
@@ -2233,21 +2244,46 @@ export default function PosPage() {
 
   // Filtro para la pestaña de DTEs emitidos
   const filteredDteSales = useMemo(() => {
-    return completedDteSales.filter(sale => {
-      if (dteFilterType === '01' && sale.tipoComprobante !== '01') return false;
-      if (dteFilterType === '03' && sale.tipoComprobante !== '03') return false;
-      if (dteFilterType === 'TICKET' && sale.tipoComprobante !== 'TICKET') return false;
-      if (!dteSearchQuery.trim()) return true;
-      const q = dteSearchQuery.toLowerCase().trim();
-      return (
-        sale.saleNumber.toLowerCase().includes(q) ||
-        (sale.orderNumber && sale.orderNumber.toLowerCase().includes(q)) ||
-        (sale.cliente?.nombre && sale.cliente.nombre.toLowerCase().includes(q)) ||
-        (sale.dteInfo?.numeroControl && sale.dteInfo.numeroControl.toLowerCase().includes(q)) ||
-        (sale.dteInfo?.codigoGeneracion && sale.dteInfo.codigoGeneracion.toLowerCase().includes(q))
-      );
-    });
-  }, [completedDteSales, dteFilterType, dteSearchQuery]);
+    const parseTs = (val?: string | Date | null) => {
+      if (!val) return 0;
+      if (val instanceof Date) return isNaN(val.getTime()) ? 0 : val.getTime();
+      const str = String(val).trim();
+      const svMatch = str.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}:\d{2}:\d{2}))?/);
+      if (svMatch) {
+        const [, dd, mm, yyyy, t] = svMatch;
+        const parsed = new Date(`${yyyy}-${mm}-${dd}T${t || '00:00:00'}-06:00`).getTime();
+        if (!isNaN(parsed)) return parsed;
+      }
+      const ts = new Date(str).getTime();
+      return isNaN(ts) ? 0 : ts;
+    };
+
+    return completedDteSales
+      .filter(sale => {
+        if (dteFilterType === '01' && sale.tipoComprobante !== '01') return false;
+        if (dteFilterType === '03' && sale.tipoComprobante !== '03') return false;
+        if (dteFilterType === 'TICKET' && sale.tipoComprobante !== 'TICKET') return false;
+        if (!dteSearchQuery.trim()) return true;
+        const q = dteSearchQuery.toLowerCase().trim();
+        return (
+          sale.saleNumber.toLowerCase().includes(q) ||
+          (sale.orderNumber && sale.orderNumber.toLowerCase().includes(q)) ||
+          (sale.cliente?.nombre && sale.cliente.nombre.toLowerCase().includes(q)) ||
+          (sale.dteInfo?.numeroControl && sale.dteInfo.numeroControl.toLowerCase().includes(q)) ||
+          (sale.dteInfo?.codigoGeneracion && sale.dteInfo.codigoGeneracion.toLowerCase().includes(q))
+        );
+      })
+      .sort((a, b) => {
+        if (dteSortBy === 'CREACION') {
+          const tsA = parseTs(a.createdAt) || parseTs(a.invoicedAt);
+          const tsB = parseTs(b.createdAt) || parseTs(b.invoicedAt);
+          return tsB - tsA;
+        }
+        const tsA = parseTs(a.dteInfo?.fhProcesamiento) || parseTs(a.invoicedAt) || parseTs(a.createdAt);
+        const tsB = parseTs(b.dteInfo?.fhProcesamiento) || parseTs(b.invoicedAt) || parseTs(b.createdAt);
+        return tsB - tsA;
+      });
+  }, [completedDteSales, dteFilterType, dteSearchQuery, dteSortBy]);
 
   // Monto total a cobrar (depende de si se factura comanda de ventanilla o carrito directo)
   const currentBillingTotal = useMemo(() => {
@@ -2511,6 +2547,8 @@ export default function PosPage() {
             setDteSearchQuery={setDteSearchQuery}
             dteFilterType={dteFilterType}
             setDteFilterType={setDteFilterType}
+            dteSortBy={dteSortBy}
+            setDteSortBy={setDteSortBy}
             filteredDteSales={filteredDteSales}
             setSelectedSaleDetail={setSelectedSaleDetail}
             setCompletedSale={setCompletedSale}

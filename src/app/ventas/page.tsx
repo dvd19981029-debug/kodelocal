@@ -179,6 +179,10 @@ export default function VentasPage() {
         (s.dteInfo?.codigoGeneracion && s.dteInfo.codigoGeneracion.toLowerCase().includes(q)) ||
         (s.dteInfo?.numeroControl && s.dteInfo.numeroControl.toLowerCase().includes(q))
       );
+    }).sort((a, b) => {
+      const tsA = new Date(a.dteInfo?.fhProcesamiento || a.invoicedAt || a.createdAt).getTime() || 0;
+      const tsB = new Date(b.dteInfo?.fhProcesamiento || b.invoicedAt || b.createdAt).getTime() || 0;
+      return tsB - tsA;
     });
   }, [sales, searchQuery, filterTab]);
 
