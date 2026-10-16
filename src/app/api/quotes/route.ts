@@ -32,6 +32,30 @@ function currentListPrice(
   return Number(prod.price);
 }
 
+// Estado de la prefactura. Se guarda como JSON en `notes` (sin migración de BD):
+// sin marca = PENDIENTE; con marca = ENVIADA_BODEGA o ANULADA.
+type QuoteMeta = {
+  __q: 1;
+  status: 'ENVIADA_BODEGA' | 'ANULADA';
+  saleNumber?: string | null;
+  at?: string;
+  reason?: string | null;
+};
+
+function parseQuoteMeta(notes: string | null | undefined): QuoteMeta | null {
+  if (!notes) return null;
+  try {
+    const p = JSON.parse(notes);
+    if (p && p.__q === 1 && (p.status === 'ENVIADA_BODEGA' || p.status === 'ANULADA')) return p as QuoteMeta;
+  } catch {}
+  return null;
+}
+
+// Filtro Prisma: prefacturas sin marca de estado (pendientes)
+const PENDING_WHERE = {
+  OR: [{ notes: null }, { NOT: { notes: { contains: '"__q"' } } }],
+};
+
 export async function GET(request: Request) {
   try {
     if (!isStaffRequest(request)) {
@@ -39,6 +63,13 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
+
+    // Contador rápido de prefacturas pendientes (insignia del menú lateral)
+    if (searchParams.get('countOnly') === '1') {
+      const pending = await prisma.quote.count({ where: PENDING_WHERE });
+      return NextResponse.json({ success: true, pending });
+    }
+
     const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '100', 10), 1), 250);
     const search = (searchParams.get('search') || '').trim();
 
@@ -120,6 +151,8 @@ export async function GET(request: Request) {
         }
       }
 
+      const meta = parseQuoteMeta(q.notes);
+
       return {
         id: q.id,
         quoteNumber: q.quoteNumber,
@@ -134,7 +167,11 @@ export async function GET(request: Request) {
         ivaTotal: Number(q.ivaTotal),
         total: Number(q.total),
         sellerName: q.sellerName,
-        notes: q.notes,
+        notes: meta ? null : q.notes,
+        status: meta?.status || 'PENDIENTE',
+        sentSaleNumber: meta?.saleNumber || null,
+        statusAt: meta?.at || null,
+        statusReason: meta?.reason || null,
         validUntil: q.validUntil,
         createdAt: q.createdAt,
         items,
@@ -250,6 +287,69 @@ export async function POST(request: Request) {
     });
   } catch (error: any) {
     console.error('Error creando cotización:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+// Cambia el estado de una prefactura:
+//  - send:    la marca como ENVIADA_BODEGA (reclamo atómico: evita doble envío entre cajeros)
+//  - cancel:  la marca como ANULADA
+//  - release: revierte un `send` (si falló la creación de la comanda)
+export async function PATCH(request: Request) {
+  try {
+    if (!isStaffRequest(request)) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id, action, saleNumber, reason } = await request.json();
+    if (!id || !['send', 'cancel', 'release'].includes(action)) {
+      return NextResponse.json({ success: false, error: 'Solicitud inválida' }, { status: 400 });
+    }
+
+    if (action === 'release') {
+      const released = await prisma.quote.updateMany({
+        where: { id, notes: { contains: '"ENVIADA_BODEGA"' } },
+        data: { notes: null },
+      });
+      return NextResponse.json({ success: true, released: released.count });
+    }
+
+    const meta: QuoteMeta = {
+      __q: 1,
+      status: action === 'send' ? 'ENVIADA_BODEGA' : 'ANULADA',
+      saleNumber: action === 'send' ? String(saleNumber || '') || null : null,
+      at: new Date().toISOString(),
+      reason: action === 'cancel' ? String(reason || '') || null : null,
+    };
+
+    // Solo se puede cambiar el estado si sigue pendiente (reclamo atómico)
+    const claim = await prisma.quote.updateMany({
+      where: { id, ...PENDING_WHERE },
+      data: { notes: JSON.stringify(meta) },
+    });
+
+    if (claim.count === 0) {
+      const q = await prisma.quote.findUnique({ where: { id }, select: { notes: true } });
+      if (!q) {
+        return NextResponse.json({ success: false, error: 'Prefactura no encontrada' }, { status: 404 });
+      }
+      const current = parseQuoteMeta(q.notes);
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            current?.status === 'ENVIADA_BODEGA'
+              ? 'Esta prefactura ya fue enviada a bodega'
+              : 'Esta prefactura ya fue anulada',
+          status: current?.status || null,
+        },
+        { status: 409 }
+      );
+    }
+
+    return NextResponse.json({ success: true, status: meta.status });
+  } catch (error: any) {
+    console.error('Error actualizando cotización:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

@@ -17,6 +17,7 @@ export type {
 
 export type PosTab =
   | 'nueva_orden'
+  | 'prefacturas'
   | 'caja_facturacion'
   | 'clientes'
   | 'ventas'

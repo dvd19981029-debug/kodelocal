@@ -54,6 +54,8 @@ export interface PosCartPanelProps {
   handleOpenQuoteModal: () => void;
   onOpenQuoteHistory?: () => void;
   onOpenCheckout: () => void;
+  /** Número de la prefactura cargada para edición (si aplica) */
+  editingQuoteNumber?: string | null;
 }
 
 export const PosCartPanel: React.FC<PosCartPanelProps> = ({
@@ -83,6 +85,7 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
   handleOpenQuoteModal,
   onOpenQuoteHistory,
   onOpenCheckout,
+  editingQuoteNumber,
 }) => {
   return (
     <div className="w-full xl:w-96 flex flex-col gap-4 shrink-0">
@@ -108,6 +111,16 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
             </button>
           )}
         </div>
+
+        {editingQuoteNumber && (
+          <div className="mt-2 p-2 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 font-bold flex items-start gap-1.5">
+            <FileText className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-px" />
+            <span>
+              Editando prefactura <span className="font-mono">{editingQuoteNumber}</span>. Al enviarla a prefactura de nuevo
+              reemplaza la anterior; al enviarla a bodega queda confirmada.
+            </span>
+          </div>
+        )}
 
         {/* Selector de Cliente para Cotización y Venta (Buscador Interactivo) */}
         <div className="mt-2.5 p-2 rounded-xl bg-indigo-50/60 border border-indigo-100/80 space-y-1.5 relative">
@@ -513,19 +526,19 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
               className="clay-btn clay-btn-primary w-full py-2 px-3 text-xs mt-1 rounded-xl shadow-md flex items-center justify-center gap-1.5 font-bold !bg-gradient-to-r !from-indigo-600 !to-indigo-800 text-white hover:brightness-110 active:scale-[0.99] transition-all"
             >
               <Box className="w-3.5 h-3.5 text-amber-300" />
-              <span>Mandar a Preparar (Bodega)</span>
+              <span>Enviar a Preparar (Bodega)</span>
             </button>
 
-            {/* Fila de Botones Secundarios: Cotización PDF y Cobro Directo */}
+            {/* Fila de Botones Secundarios: Prefactura y Cobro Directo */}
             <div className="grid grid-cols-2 gap-1.5 mt-0.5">
               <button
                 type="button"
                 onClick={handleOpenQuoteModal}
                 className="clay-btn clay-btn-light py-1.5 px-2 text-[11px] rounded-lg flex items-center justify-center gap-1 font-bold text-slate-700 hover:text-indigo-700 hover:bg-indigo-50 border border-slate-200 transition-all"
-                title="Generar cotización o prefactura en PDF para compartir"
+                title="Guardar como prefactura (cotización) para confirmar con el cliente; podrás enviarla a bodega después"
               >
                 <FileText className="w-3 h-3 text-indigo-600" />
-                <span>Cotización (PDF)</span>
+                <span>Enviar a prefactura</span>
               </button>
 
               <button
@@ -546,10 +559,10 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
             type="button"
             onClick={onOpenQuoteHistory}
             className="clay-btn clay-btn-light w-full py-1.5 px-2 text-[11px] rounded-lg flex items-center justify-center gap-1 font-bold text-slate-700 hover:text-amber-700 hover:bg-amber-50 border border-slate-200 transition-all shrink-0"
-            title="Ver y descargar cotizaciones realizadas"
+            title="Ver las prefacturas pendientes de confirmar"
           >
             <FileText className="w-3 h-3 text-amber-600" />
-            <span>Historial de cotizaciones</span>
+            <span>Ver prefacturas</span>
           </button>
         )}
       </div>

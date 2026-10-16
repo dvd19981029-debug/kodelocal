@@ -12,6 +12,7 @@ import { PosCustomerModule } from '@/components/pos/PosCustomerModule';
 import { PosSalesModule } from '@/components/pos/PosSalesModule';
 import { PosCajaModule } from '@/components/pos/PosCajaModule';
 import { PosBodegaModule } from '@/components/pos/PosBodegaModule';
+import PosPrefacturasModule, { type SavedQuote } from '@/components/pos/PosPrefacturasModule';
 import { 
   CustomerRecord, 
   TipoPersona, 
@@ -89,6 +90,11 @@ export default function PosPage() {
   const [activeQuoteSale, setActiveQuoteSale] = useState<SaleRecord | null>(null);
   const [activeQuoteNotices, setActiveQuoteNotices] = useState<CotizacionNotices | null>(null);
   const [isQuoteHistoryOpen, setIsQuoteHistoryOpen] = useState(false);
+
+  // Prefacturas: la que se está editando en el Cotizador, contador de pendientes y clave de recarga del módulo
+  const [editingQuote, setEditingQuote] = useState<{ id: string; quoteNumber: string } | null>(null);
+  const [prefacturasPending, setPrefacturasPending] = useState(0);
+  const [prefacturasRefreshKey, setPrefacturasRefreshKey] = useState(0);
 
   // Orden activa que se está cobrando/facturando en Caja
   const [orderToInvoice, setOrderToInvoice] = useState<SaleRecord | null>(null);
@@ -380,6 +386,12 @@ export default function PosPage() {
     refreshCustomerTiers();
 
     }
+  }, [posTab]);
+
+  // Contador de prefacturas pendientes (insignia del menú lateral)
+  useEffect(() => {
+    refreshPrefacturasCount();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [posTab]);
 
   useEffect(() => {
@@ -1333,6 +1345,7 @@ export default function PosPage() {
 
   const clearCart = () => {
     setCart([]);
+    setEditingQuote(null);
   };
 
   const handleOpenEditProduct = (e: React.MouseEvent, product: ProductItem) => {
@@ -1670,7 +1683,8 @@ export default function PosPage() {
       items: cart.map(formatCartItem)
     };
 
-    // Guardar la cotización en la base de datos (historial descargable)
+    // Guardar la prefactura (cotización) en la base de datos
+    let saved = false;
     try {
       const staffToken = await getStaffToken();
       const res = await fetch('/api/quotes', {
@@ -1699,9 +1713,24 @@ export default function PosPage() {
         quoteSale.orderNumber = data.quote.quoteNumber;
         quoteSale.saleNumber = data.quote.quoteNumber;
         quoteSale.createdAt = data.quote.createdAt;
+        saved = true;
       }
     } catch (err) {
-      console.error('No se pudo guardar la cotización en el historial:', err);
+      console.error('No se pudo guardar la prefactura:', err);
+    }
+
+    if (saved) {
+      // Si se estaba editando una prefactura, la anterior queda reemplazada
+      if (editingQuote) {
+        await patchQuote(editingQuote.id, 'cancel', { reason: `Reemplazada por ${quoteSale.saleNumber}` });
+      }
+      clearCart();
+      bumpPrefacturas();
+    } else {
+      alert(
+        'No se pudo guardar la prefactura en el sistema (sin conexión o sesión vencida).\n' +
+        'Se muestra el PDF para compartirlo, pero NO quedará en "Prefacturas". Tu carrito sigue intacto.'
+      );
     }
 
     setActiveQuoteNotices(null);
@@ -1758,6 +1787,14 @@ export default function PosPage() {
     window.dispatchEvent(new Event('kodelocal_sales_updated'));
     setSales(updatedSales);
 
+    // Si el carrito venía de editar una prefactura, queda confirmada y enviada a bodega
+    if (editingQuote) {
+      patchQuote(editingQuote.id, 'send', { saleNumber: cmdNum }).then(result => {
+        if (!result.ok) console.warn('No se pudo marcar la prefactura como enviada:', result.error);
+        bumpPrefacturas();
+      });
+    }
+
     // Persistir comanda en Supabase para que Bodega en cualquier dispositivo la reciba al instante
     getStaffToken().then(staffToken => {
       fetch('/api/sales', {
@@ -1794,6 +1831,280 @@ export default function PosPage() {
     setTimeout(() => {
       setOrderSentToast(null);
     }, 7000);
+  };
+
+  // =========================================================================
+  // PREFACTURAS (cotizaciones pendientes de confirmar con el cliente)
+  // =========================================================================
+  const patchQuote = async (
+    id: string,
+    action: 'send' | 'cancel' | 'release',
+    extra: { saleNumber?: string; reason?: string } = {}
+  ): Promise<{ ok: boolean; error?: string }> => {
+    try {
+      const staffToken = await getStaffToken();
+      const res = await fetch('/api/quotes', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({ id, action, ...extra }),
+      });
+      const data = await res.json().catch(() => ({}));
+      return data.success
+        ? { ok: true }
+        : { ok: false, error: data.error || 'No se pudo actualizar la prefactura' };
+    } catch {
+      return { ok: false, error: 'Error de conexión al actualizar la prefactura' };
+    }
+  };
+
+  const refreshPrefacturasCount = async () => {
+    try {
+      const staffToken = await getStaffToken();
+      const res = await fetch('/api/quotes?countOnly=1', {
+        cache: 'no-store',
+        headers: { ...(staffToken ? { 'x-staff-token': staffToken } : {}) },
+      });
+      const data = await res.json();
+      if (data.success) setPrefacturasPending(Number(data.pending || 0));
+    } catch {
+      // el contador es informativo; si falla no se bloquea nada
+    }
+  };
+
+  const bumpPrefacturas = () => {
+    setPrefacturasRefreshKey(k => k + 1);
+    refreshPrefacturasCount();
+  };
+
+  // Busca el cliente registrado que corresponde a los datos de una prefactura / comanda
+  const findCustomerForPerson = (p: {
+    id?: string;
+    correo?: string;
+    numDocumento?: string;
+    nrc?: string;
+    telefono?: string;
+    nombre?: string;
+  }): CustomerRecord | undefined => {
+    const normEmail = p.correo?.toLowerCase().trim();
+    let matched = normEmail
+      ? customers.find(c => c.email && c.email.toLowerCase().trim() === normEmail)
+      : undefined;
+    if (!matched && p.id) matched = customers.find(c => c.id === p.id);
+    if (matched) return matched;
+
+    const doc = p.numDocumento?.replace(/\D/g, '');
+    const nrc = p.nrc?.replace(/\D/g, '');
+    const phone = p.telefono?.replace(/\D/g, '');
+    const name = p.nombre?.toLowerCase().trim();
+    return customers.find(c => {
+      if (nrc && c.nrc && c.nrc.replace(/\D/g, '') === nrc) return true;
+      if (doc && doc !== '000000000' && c.numDocumento && c.numDocumento.replace(/\D/g, '') === doc) return true;
+      if (phone && c.phone && c.phone.replace(/\D/g, '') === phone) return true;
+      if (name && name !== 'consumidor final' && c.name && c.name.toLowerCase().trim() === name) return true;
+      return false;
+    });
+  };
+
+  // Cargar una prefactura en el Cotizador para modificarla
+  const handleEditQuoteInPos = (quote: SavedQuote) => {
+    if (cart.length > 0 && !confirm('El carrito actual tiene productos. ¿Reemplazarlo con los de la prefactura?')) {
+      return;
+    }
+
+    const restoredCart: CartItem[] = [];
+    for (const it of quote.items || []) {
+      if (it.productId === 'ENVIO-DOM') continue;
+      const cleanName = String(it.name || '')
+        .replace(/\s*\(½\s*Oz\)/gi, '')
+        .replace(/\s*\(1\s*Onza\)/gi, '')
+        .replace(/\s*\(Media\s*Onza\)/gi, '')
+        .trim()
+        .toLowerCase();
+
+      const matchedProd = products.find(
+        p =>
+          p.id === it.productId ||
+          (p.sku && p.sku === it.productId) ||
+          p.name.toLowerCase().trim() === cleanName ||
+          (p.officialName && p.officialName.toLowerCase().trim() === cleanName)
+      );
+      if (!matchedProd) continue;
+
+      const unitLower = String(it.unit || '').toLowerCase();
+      const nameLower = String(it.name || '').toLowerCase();
+      const isHalf =
+        it.presentation === 'MEDIA_ONZA' ||
+        unitLower.includes('media') ||
+        unitLower.includes('½') ||
+        nameLower.includes('media onza') ||
+        nameLower.includes('½');
+      const isEssence =
+        PERFUME_CATEGORIES.includes(matchedProd.category) ||
+        unitLower.includes('onza') ||
+        unitLower.includes('oz');
+
+      const presentation: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD' = isHalf
+        ? 'MEDIA_ONZA'
+        : isEssence
+        ? 'ONZA_COMPLETA'
+        : 'UNIDAD';
+
+      restoredCart.push({
+        product: matchedProd,
+        quantity: Math.max(1, Number(it.quantity || 1)),
+        presentation,
+      });
+    }
+
+    if (restoredCart.length === 0) {
+      alert('No se pudieron cargar los productos de esta prefactura en el catálogo.');
+      return;
+    }
+
+    setCart(restoredCart);
+
+    const matchedCust = findCustomerForPerson({
+      correo: quote.customerEmail || undefined,
+      numDocumento: quote.customerDoc || undefined,
+      nrc: quote.customerNrc || undefined,
+      telefono: quote.customerPhone || undefined,
+      nombre: quote.customerName,
+    });
+
+    if (matchedCust) {
+      handleSelectCustomer(matchedCust.id);
+    } else {
+      setSelectedCustomerId('');
+      setClienteNombre(quote.customerName || 'Consumidor Final');
+      setClienteDoc(quote.customerDoc || '');
+      setClienteNrc(quote.customerNrc || '');
+      setClienteEmail(quote.customerEmail || '');
+      setClienteDireccion(quote.customerAddress || '');
+    }
+
+    setTipoComprobante(quote.tipoComprobante === '03' || quote.customerNrc || matchedCust?.nrc ? '03' : '01');
+    setEditingQuote({ id: quote.id, quoteNumber: quote.quoteNumber });
+    setPosTab('nueva_orden');
+  };
+
+  // Enviar una prefactura confirmada directamente a Bodega (con los precios cotizados)
+  const handleSendQuoteToBodega = async (quote: SavedQuote): Promise<boolean> => {
+    const ordNum = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
+    const cmdNum = `CMD-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    // 1. Reclamar la prefactura (evita que otro cajero la envíe al mismo tiempo)
+    const claim = await patchQuote(quote.id, 'send', { saleNumber: cmdNum });
+    if (!claim.ok) {
+      alert(claim.error || 'No se pudo enviar la prefactura a Bodega.');
+      bumpPrefacturas();
+      return false;
+    }
+
+    const clientObj = findCustomerForPerson({
+      correo: quote.customerEmail || undefined,
+      numDocumento: quote.customerDoc || undefined,
+      nrc: quote.customerNrc || undefined,
+      telefono: quote.customerPhone || undefined,
+      nombre: quote.customerName,
+    });
+    const tipo: TipoComprobante = quote.tipoComprobante === '03' ? '03' : '01';
+    const items = (quote.items || []).map(it => ({
+      productId: it.productId || '',
+      name: it.name,
+      quantity: it.quantity,
+      price: it.price,
+      total: it.total,
+      unit: it.unit || undefined,
+      presentation: it.presentation || undefined,
+      puesto: it.puesto || undefined,
+    }));
+    const cliente = {
+      id: clientObj?.id || undefined,
+      nombre: clientObj?.name || quote.customerName,
+      numDocumento: clientObj?.numDocumento || quote.customerDoc || undefined,
+      nrc: clientObj?.nrc || quote.customerNrc || undefined,
+      correo: clientObj?.email || quote.customerEmail || undefined,
+      telefono: clientObj?.phone || quote.customerPhone || undefined,
+      direccion: clientObj?.direccion || quote.customerAddress || undefined,
+      actividadEconomica: clientObj?.actividadEconomica || undefined,
+      categoriaContribuyente: clientObj?.categoriaContribuyente || undefined,
+    };
+
+    // 2. Crear la comanda en el servidor; si falla, se libera la prefactura
+    try {
+      const staffToken = await getStaffToken();
+      const res = await fetch('/api/sales', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({
+          saleNumber: cmdNum,
+          channel: 'POS',
+          subtotal: quote.subtotal,
+          ivaTotal: quote.ivaTotal,
+          total: quote.total,
+          tipoComprobante: tipo,
+          paymentMethod: 'CASH',
+          paymentStatus: 'PENDING',
+          orderStatus: 'PENDING_PREPARATION',
+          notes: JSON.stringify({
+            desc: `Comanda mostrador para Bodega (prefactura ${quote.quoteNumber})`,
+            cliente,
+            tipoComprobante: tipo,
+            quoteNumber: quote.quoteNumber,
+          }),
+          cashierName: 'Vendedora Mostrador',
+          customerId: clientObj?.id || null,
+          items,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) {
+        throw new Error(data.error || `Error ${res.status}`);
+      }
+    } catch (err: any) {
+      await patchQuote(quote.id, 'release');
+      alert(`No se pudo enviar a Bodega: ${err?.message || 'error de conexión'}.\nLa prefactura sigue pendiente.`);
+      bumpPrefacturas();
+      return false;
+    }
+
+    // 3. Reflejar la comanda en el POS local (igual que "Enviar a Preparar")
+    const newOrder: SaleRecord = {
+      id: `ord-${Date.now()}`,
+      orderNumber: ordNum,
+      saleNumber: cmdNum,
+      createdAt: new Date().toISOString(),
+      total: quote.total,
+      subtotal: quote.subtotal,
+      ivaTotal: quote.ivaTotal,
+      tipoComprobante: tipo,
+      cliente: cliente as any,
+      status: 'PENDING_PREPARATION',
+      vendedor: 'Vendedora Mostrador',
+      items: items as any,
+    };
+    const savedSales = JSON.parse(localStorage.getItem('kodelocal_sales') || '[]');
+    const updatedSales = [newOrder, ...savedSales];
+    localStorage.setItem('kodelocal_sales', JSON.stringify(updatedSales));
+    window.dispatchEvent(new Event('kodelocal_sales_updated'));
+    setSales(updatedSales);
+    return true;
+  };
+
+  const handleCancelQuote = async (quote: SavedQuote, reason: string): Promise<boolean> => {
+    const result = await patchQuote(quote.id, 'cancel', { reason });
+    if (!result.ok) {
+      alert(result.error || 'No se pudo anular la prefactura.');
+      bumpPrefacturas();
+      return false;
+    }
+    return true;
   };
 
   // Iniciar cobro de orden lista en ventanilla (desde Caja)
@@ -2476,6 +2787,7 @@ export default function PosPage() {
       {/* ========================================================================= */}
       <PosSidebar
         posTab={posTab}
+        prefacturasCount={prefacturasPending}
         setPosTab={setPosTab}
         isSidebarExpanded={isSidebarExpanded}
         isSidebarPinned={isSidebarPinned}
@@ -2566,7 +2878,8 @@ export default function PosPage() {
                   cartSubtotal={cartSubtotal}
                   handleSendOrderToBodega={handleSendOrderToBodega}
                   handleOpenQuoteModal={handleOpenQuoteModal}
-                  onOpenQuoteHistory={() => setIsQuoteHistoryOpen(true)}
+                  editingQuoteNumber={editingQuote?.quoteNumber || null}
+                  onOpenQuoteHistory={() => setPosTab('prefacturas')}
                   onOpenCheckout={() => {
                     setOrderToInvoice(null);
                     setIsCheckoutOpen(true);
@@ -2688,9 +3001,10 @@ export default function PosPage() {
                         setIsMobileCartOpen(false);
                         handleOpenQuoteModal();
                       }}
+                      editingQuoteNumber={editingQuote?.quoteNumber || null}
                       onOpenQuoteHistory={() => {
                         setIsMobileCartOpen(false);
-                        setIsQuoteHistoryOpen(true);
+                        setPosTab('prefacturas');
                       }}
                       onOpenCheckout={() => {
                         setIsMobileCartOpen(false);
@@ -2794,6 +3108,25 @@ export default function PosPage() {
             handleEditOrderInPos={handleEditOrderInPos}
             handleMarkOrderDeliveredFromPos={handleMarkOrderDeliveredFromPos}
             customers={customers}
+          />
+        )}
+
+        {/* ======================================================================= */}
+        {/* PESTAÑA: PREFACTURAS (COTIZACIONES PENDIENTES DE CONFIRMAR)              */}
+        {/* ======================================================================= */}
+        {posTab === 'prefacturas' && (
+          <PosPrefacturasModule
+            refreshKey={prefacturasRefreshKey}
+            onOpenQuote={(sale, notices) => {
+              setActiveQuoteSale(sale);
+              setActiveQuoteNotices(notices);
+              setIsQuoteModalOpen(true);
+            }}
+            onEdit={handleEditQuoteInPos}
+            onSendToBodega={handleSendQuoteToBodega}
+            onCancel={handleCancelQuote}
+            onChanged={refreshPrefacturasCount}
+            onGoToCotizador={() => setPosTab('nueva_orden')}
           />
         )}
 

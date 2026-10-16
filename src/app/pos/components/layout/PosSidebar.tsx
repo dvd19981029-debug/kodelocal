@@ -9,13 +9,15 @@ import {
   Droplets, 
   Truck, 
   ExternalLink, 
-  RotateCw 
+  RotateCw,
+  FileText 
 } from 'lucide-react';
 import { PosTab } from '../../types';
 
 export interface PosSidebarProps {
   posTab: PosTab;
   setPosTab: (tab: PosTab) => void;
+  prefacturasCount?: number;
   isSidebarExpanded: boolean;
   isSidebarPinned: boolean;
   setIsSidebarPinned: (pinned: boolean) => void;
@@ -37,6 +39,7 @@ export interface PosSidebarProps {
 export const PosSidebar: React.FC<PosSidebarProps> = ({
   posTab,
   setPosTab,
+  prefacturasCount = 0,
   isSidebarExpanded,
   isSidebarPinned,
   setIsSidebarPinned,
@@ -77,6 +80,28 @@ export const PosSidebar: React.FC<PosSidebarProps> = ({
                 posTab === 'nueva_orden' || posTab === 'pos' ? 'bg-white text-indigo-900' : 'bg-indigo-600 text-white'
               }`}>
                 {totalItemsCount}
+              </span>
+            )}
+          </button>
+
+          {/* 1b. Prefacturas */}
+          <button
+            type="button"
+            onClick={() => setPosTab('prefacturas')}
+            className={`flex items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-bold transition-all ${
+              posTab === 'prefacturas'
+                ? 'clay-btn-primary !shadow-[2px_3px_8px_rgba(79,70,229,0.35)]'
+                : 'clay-card !p-1.5 text-slate-600 bg-white/80 hover:bg-white'
+            }`}
+            title="Prefacturas (cotizaciones)"
+          >
+            <FileText className={`w-3.5 h-3.5 shrink-0 ${posTab === 'prefacturas' ? 'text-white' : 'text-indigo-500'}`} />
+            <span className="truncate">Prefact.</span>
+            {prefacturasCount > 0 && (
+              <span className={`text-[9.5px] font-black px-1.5 py-0.2 rounded-full ${
+                posTab === 'prefacturas' ? 'bg-white text-indigo-900' : 'bg-indigo-600 text-white'
+              }`}>
+                {prefacturasCount}
               </span>
             )}
           </button>
@@ -269,6 +294,43 @@ export const PosSidebar: React.FC<PosSidebarProps> = ({
               }`}>
                 {totalItemsCount}
               </span>
+            )}
+          </button>
+
+          {/* 1b. Prefacturas (cotizaciones pendientes de confirmar) */}
+          <button
+            type="button"
+            onClick={() => setPosTab('prefacturas')}
+            className={`w-full flex items-center ${isSidebarExpanded ? 'justify-between px-3 py-2.5' : 'justify-center p-2.5'} rounded-xl text-xs font-bold transition-all relative ${
+              posTab === 'prefacturas'
+                ? 'clay-btn-primary !shadow-[3px_4px_10px_rgba(79,70,229,0.35)]'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+            title="Prefacturas (cotizaciones)"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="relative shrink-0 flex items-center justify-center">
+                <FileText className={`w-4 h-4 ${posTab === 'prefacturas' ? 'text-white' : 'text-indigo-500'}`} />
+                {!isSidebarExpanded && prefacturasCount > 0 && (
+                  <span className="absolute -top-2 -right-2 min-w-[16px] h-4 px-1 bg-indigo-600 text-white rounded-full text-[9px] font-black flex items-center justify-center shadow-xs">
+                    {prefacturasCount}
+                  </span>
+                )}
+              </div>
+              {isSidebarExpanded && (
+                <span className="truncate animate-in fade-in duration-150">Prefacturas</span>
+              )}
+            </div>
+            {isSidebarExpanded && (
+              prefacturasCount > 0 ? (
+                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
+                  posTab === 'prefacturas' ? 'bg-white text-indigo-900' : 'bg-indigo-100 text-indigo-800'
+                }`}>
+                  {prefacturasCount} pend.
+                </span>
+              ) : (
+                <span className="text-[10px] text-slate-400 font-mono shrink-0">0</span>
+              )
             )}
           </button>
 
