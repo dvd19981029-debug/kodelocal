@@ -200,6 +200,13 @@ export async function POST(request: Request) {
 
     const tierInclude = { tier: true, bottleTier: true, suppliesTier: true };
 
+    const namesReferToSameCustomer = (nameA?: string | null, nameB?: string | null): boolean => {
+      const a = (nameA || '').trim().toLowerCase().replace(/\s+/g, ' ');
+      const b = (nameB || '').trim().toLowerCase().replace(/\s+/g, ' ');
+      if (!a || !b) return false;
+      return a === b || a.includes(b) || b.includes(a);
+    };
+
     let customer;
     if (id && !id.startsWith('cli-')) {
       if (data.email) {
@@ -207,12 +214,8 @@ export async function POST(request: Request) {
           where: { email: { equals: data.email, mode: 'insensitive' }, NOT: { id } },
         });
         if (conflict) {
-          customer = await prisma.customer.update({
-            where: { id: conflict.id },
-            include: tierInclude,
-            data,
-          });
-          return NextResponse.json({ success: true, customer });
+          // No sobrescribir otro cliente distinto; preservar el correo del titular original
+          data.email = null;
         }
       }
 
@@ -222,13 +225,22 @@ export async function POST(request: Request) {
         data,
       });
     } else {
-      // Priorizar coincidencia por correo electrónico real (no genérico)
-      let existing = data.email && !isGenericPlaceholderEmail(data.email)
-        ? await prisma.customer.findFirst({
-            where: { email: { equals: data.email, mode: 'insensitive' } },
-            include: tierInclude,
-          })
-        : null;
+      // Priorizar coincidencia por correo electrónico real (no genérico) solo si pertenece a la misma persona
+      let existing = null;
+      if (data.email && !isGenericPlaceholderEmail(data.email)) {
+        const byEmail = await prisma.customer.findFirst({
+          where: { email: { equals: data.email, mode: 'insensitive' } },
+          include: tierInclude,
+        });
+        if (byEmail) {
+          if (namesReferToSameCustomer(byEmail.name, data.name)) {
+            existing = byEmail;
+          } else {
+            // El correo ya pertenece a otra persona distinta: no sobrescribir a esa persona
+            data.email = null;
+          }
+        }
+      }
 
       // Por documento o teléfono solo reutilizar si no son valores genéricos (123456789 / 00000000) y el nombre coincide
       if (!existing && data.documentNum && !isGenericPlaceholderDocument(data.documentNum)) {
@@ -236,7 +248,7 @@ export async function POST(request: Request) {
           where: { documentNum: data.documentNum },
           include: tierInclude,
         });
-        if (byDoc && byDoc.name.trim().toLowerCase() === data.name.trim().toLowerCase()) {
+        if (byDoc && namesReferToSameCustomer(byDoc.name, data.name)) {
           existing = byDoc;
         }
       }
@@ -246,7 +258,7 @@ export async function POST(request: Request) {
           where: { phone: data.phone },
           include: tierInclude,
         });
-        if (byPhone && byPhone.name.trim().toLowerCase() === data.name.trim().toLowerCase()) {
+        if (byPhone && namesReferToSameCustomer(byPhone.name, data.name)) {
           existing = byPhone;
         }
       }

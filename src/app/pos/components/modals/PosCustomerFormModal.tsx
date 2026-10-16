@@ -285,12 +285,12 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
 
             <div>
               <label className="text-xs font-bold text-slate-700 block mb-1">
-                N° de Documento ({custTipoDocumento}) *
+                N° de Documento ({custTipoDocumento}) {(custTipoPersona === 'JURIDICA' || custDocumentoPreferido === '03') ? '*' : '(Opcional)'}
               </label>
               <input
                 type="text"
-                required
-                placeholder={custTipoDocumento === 'DUI' ? '00000000-0' : '0614-000000-000-0'}
+                required={custTipoPersona === 'JURIDICA' || custDocumentoPreferido === '03'}
+                placeholder={custTipoDocumento === 'DUI' ? '00000000-0 (opcional en Factura)' : '0614-000000-000-0'}
                 value={custNumDocumento}
                 onChange={(e) => setCustNumDocumento(e.target.value)}
                 className="clay-input w-full text-xs font-mono font-bold"
@@ -346,12 +346,12 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-bold text-slate-700 block mb-1">
-                Correo Electrónico (Recepción DTE PDF/JSON) *
+                Correo Electrónico (Recepción DTE PDF/JSON) {(custTipoPersona === 'JURIDICA' || custDocumentoPreferido === '03') ? '*' : '(Opcional)'}
               </label>
               <input
                 type="email"
-                required
-                placeholder="facturacion@cliente.com"
+                required={custTipoPersona === 'JURIDICA' || custDocumentoPreferido === '03'}
+                placeholder="Opcional si no tiene correo"
                 value={custEmail}
                 onChange={(e) => setCustEmail(e.target.value)}
                 className="clay-input w-full text-xs font-bold font-mono"
