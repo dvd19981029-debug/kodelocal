@@ -65,9 +65,12 @@ export async function GET(request: Request) {
           officialName: true,
           unit: true,
           stock: true,
+          stockHalf: true,
           minStock: true,
           price: true,
           cost: true,
+          supplier: true,
+          gender: true,
         },
       }),
       prisma.dteDocument.count({
@@ -488,18 +491,24 @@ export async function GET(request: Request) {
       .sort((a, b) => b.totalSpent - a.totalSpent)
       .slice(0, 8);
 
-    // 14. Proyección de Agotamiento de Stock (Días de Inventario Restante)
+    // 14. Proyección de Agotamiento de Stock (Días de Inventario Restante — POS + E-commerce)
     const now = new Date();
-    const earliestOrder = orders.reduce(
-      (earliest, o) => (new Date(o.createdAt) < new Date(earliest) ? o.createdAt : earliest),
-      now
-    );
+    const allTxDates = [
+      ...validOrders.map((o) => new Date(o.createdAt)),
+      ...validSales.map((s) => new Date(s.createdAt)),
+    ];
+    const earliestTxDate =
+      allTxDates.length > 0
+        ? allTxDates.reduce((earliest, d) => (d < earliest ? d : earliest), now)
+        : now;
     const daysElapsed = Math.max(
       1,
-      Math.round((now.getTime() - new Date(earliestOrder).getTime()) / (1000 * 60 * 60 * 24))
+      Math.ceil((now.getTime() - earliestTxDate.getTime()) / (1000 * 60 * 60 * 24))
     );
 
-    const productUsageForProjection: Record<string, { units: number; ounces: number }> = {};
+    const productUsageById: Record<string, { units: number; ounces: number }> = {};
+    const productUsageByName: Record<string, { units: number; ounces: number }> = {};
+
     validOrders.forEach((o) => {
       o.items.forEach((it) => {
         const clean = (it.productName || '')
@@ -513,41 +522,71 @@ export async function GET(request: Request) {
         if (pres.includes('½') || pres.includes('0.5')) oz = 0.5 * qty;
         else if (pres.includes('1.5')) oz = 1.5 * qty;
 
-        if (!productUsageForProjection[clean]) productUsageForProjection[clean] = { units: 0, ounces: 0 };
-        productUsageForProjection[clean].units += qty;
-        productUsageForProjection[clean].ounces += oz;
+        if (it.productId) {
+          if (!productUsageById[it.productId]) productUsageById[it.productId] = { units: 0, ounces: 0 };
+          productUsageById[it.productId].units += qty;
+          productUsageById[it.productId].ounces += oz;
+        }
+        if (!productUsageByName[clean]) productUsageByName[clean] = { units: 0, ounces: 0 };
+        productUsageByName[clean].units += qty;
+        productUsageByName[clean].ounces += oz;
+      });
+    });
+
+    validSales.forEach((s) => {
+      s.items.forEach((it) => {
+        if (
+          it.unit === 'Servicio' ||
+          it.productId === 'ENVIO-DOM' ||
+          (it.productName || '').toLowerCase().includes('servicio de envío')
+        ) {
+          return;
+        }
+        const qty = it.quantity || 1;
+        const combined = `${it.unit || ''} ${it.productName || ''}`.toLowerCase();
+        const isHalf = combined.includes('½') || combined.includes('media') || combined.includes('0.5');
+        const oz = it.productId.startsWith('esencia') && isHalf ? qty * 0.5 : qty;
+
+        if (it.productId) {
+          if (!productUsageById[it.productId]) productUsageById[it.productId] = { units: 0, ounces: 0 };
+          productUsageById[it.productId].units += qty;
+          productUsageById[it.productId].ounces += oz;
+        }
       });
     });
 
     const proyeccionAgotamiento = products
       .map((p) => {
         const usage =
-          productUsageForProjection[p.name] ||
-          (p.officialName ? productUsageForProjection[p.officialName] : null) || { units: 0, ounces: 0 };
+          productUsageById[p.id] ||
+          productUsageByName[p.name] ||
+          (p.officialName ? productUsageByName[p.officialName] : null) || { units: 0, ounces: 0 };
+        const isEss = p.id.startsWith('esencia') || (p.unit || '').toLowerCase().includes('onza');
+        const effectiveStock = isEss ? p.stock + (p.stockHalf || 0) * 0.5 : p.stock;
         const dailyBurnOunces = usage.ounces / daysElapsed;
-        const daysLeft = dailyBurnOunces > 0 ? Math.round(p.stock / dailyBurnOunces) : 999;
+        const daysLeft = dailyBurnOunces > 0 ? Math.round(effectiveStock / dailyBurnOunces) : 999;
 
         let urgency: 'CRITICO' | 'ALERTA' | 'OPTIMO' = 'OPTIMO';
-        if (p.stock <= (p.minStock || 10) || daysLeft <= 7) urgency = 'CRITICO';
+        if (effectiveStock <= (p.minStock || 10) || daysLeft <= 7) urgency = 'CRITICO';
         else if (daysLeft <= 15) urgency = 'ALERTA';
 
         const reorderSuggestion =
           urgency === 'CRITICO'
-            ? Math.max(64, Math.round(dailyBurnOunces * 30))
-            : Math.max(32, Math.round(dailyBurnOunces * 20));
+            ? Math.max(35, Math.round(dailyBurnOunces * 30))
+            : Math.max(18, Math.round(dailyBurnOunces * 20));
 
         return {
           id: p.id,
           name: p.officialName ? `${p.officialName} (${p.name})` : p.name,
           rawName: p.name,
-          stock: p.stock,
+          stock: effectiveStock,
           minStock: p.minStock || 15,
           unit: p.unit || 'Onza',
           dailyRate: Number(dailyBurnOunces.toFixed(2)),
           totalSold: Number(usage.ounces.toFixed(1)),
           daysLeft: daysLeft > 365 ? 999 : daysLeft,
           urgency,
-          supplier: p.supplier || '',
+          supplier: p.supplier || 'APAESA GUATEMALA',
           reorderSuggestion,
         };
       })
