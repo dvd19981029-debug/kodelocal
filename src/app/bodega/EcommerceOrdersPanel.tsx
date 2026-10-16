@@ -105,7 +105,10 @@ const STATUS_COLORS: Record<string, string> = {
 const money = (n: number) => `$${Number(n || 0).toFixed(2)}`;
 
 const isPickup = (o: EcoOrder) =>
-  /retiro/i.test(o.deliveryReference || '') || /^retiro/i.test(o.shippingAddress || '');
+  /retiro/i.test(o.deliveryReference || '') ||
+  /retiro/i.test(o.shippingAddress || '') ||
+  /retiro/i.test(o.notes || '') ||
+  Number(o.shippingCost ?? 1) === 0;
 
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleString('es-SV', { dateStyle: 'medium', timeStyle: 'short' });
@@ -437,6 +440,7 @@ function OrderDetailModal({
   const [generatingGuide, setGeneratingGuide] = useState(false);
 
   const handleGenerateGuide = async () => {
+    if (pickup) return;
     setGeneratingGuide(true);
     try {
       const staffToken = await getStaffToken();

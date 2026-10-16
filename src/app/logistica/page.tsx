@@ -27,12 +27,19 @@ interface Shipment {
   department: string;
   deliveryReference: string | null;
   carrier: string;
+  isPickup: boolean;
   status: 'PREPARING' | 'IN_TRANSIT' | 'DELIVERED' | 'FAILED';
   paymentStatus: string;
   paymentMethod: string;
   orderTotal: number;
   createdAt: string;
 }
+
+const isPickupOrder = (o: any) =>
+  /retiro/i.test(o.deliveryReference || '') ||
+  /retiro/i.test(o.shippingAddress || '') ||
+  /retiro/i.test(o.notes || '') ||
+  Number(o.shippingCost ?? 1) === 0;
 
 export default function LogisticaPage() {
   const [shipments, setShipments] = useState<Shipment[]>([]);
@@ -50,33 +57,39 @@ export default function LogisticaPage() {
       const data = await res.json();
       if (data.success && Array.isArray(data.orders)) {
         const valid = data.orders.filter((o: any) => {
+          if (o.channel === 'POS') return false;
           if (o.orderStatus === 'CANCELADO') return false;
           if (o.paymentMethod === 'CARD' && o.paymentStatus !== 'COMPLETED') return false;
+          if (isPickupOrder(o)) return false;
           return true;
         });
-        const mapped: Shipment[] = valid.map((o: any) => ({
-          id: o.id,
-          orderNumber: o.orderNumber,
-          trackingNumber: o.trackingNumber || null,
-          customerName: o.customerName || 'Cliente Online',
-          phone: o.customerPhone || '',
-          email: o.customerEmail || null,
-          address: o.shippingAddress || '',
-          municipality: o.municipality || '',
-          department: o.department || 'San Salvador',
-          deliveryReference: o.deliveryReference || null,
-          carrier: o.courierName || 'C807 Express',
-          status:
-            o.orderStatus === 'ENTREGADO'
-              ? 'DELIVERED'
-              : o.orderStatus === 'EN_RUTA'
-              ? 'IN_TRANSIT'
-              : 'PREPARING',
-          paymentStatus: o.paymentStatus || 'PENDING',
-          paymentMethod: o.paymentMethod || 'CARD',
-          orderTotal: Number(o.total || 0),
-          createdAt: o.createdAt,
-        }));
+        const mapped: Shipment[] = valid.map((o: any) => {
+          const pickup = isPickupOrder(o);
+          return {
+            id: o.id,
+            orderNumber: o.orderNumber,
+            trackingNumber: o.trackingNumber || null,
+            customerName: o.customerName || 'Cliente Online',
+            phone: o.customerPhone || '',
+            email: o.customerEmail || null,
+            address: o.shippingAddress || '',
+            municipality: o.municipality || '',
+            department: o.department || 'San Salvador',
+            deliveryReference: o.deliveryReference || null,
+            carrier: pickup ? 'Retiro en Sucursal' : (o.courierName || 'C807 Express'),
+            isPickup: pickup,
+            status:
+              o.orderStatus === 'ENTREGADO'
+                ? 'DELIVERED'
+                : o.orderStatus === 'EN_RUTA'
+                ? 'IN_TRANSIT'
+                : 'PREPARING',
+            paymentStatus: o.paymentStatus || 'PENDING',
+            paymentMethod: o.paymentMethod || 'CARD',
+            orderTotal: Number(o.total || 0),
+            createdAt: o.createdAt,
+          };
+        });
         setShipments(mapped);
       }
     } catch (err) {
@@ -108,6 +121,7 @@ export default function LogisticaPage() {
   };
 
   const handleGenerarGuiaC807 = async (shipment: Shipment) => {
+    if (shipment.isPickup) return;
     setGeneratingId(shipment.id);
     try {
       const staffToken = await getStaffToken();
@@ -307,7 +321,7 @@ export default function LogisticaPage() {
 
               {/* Botones de Guía C807 y cambio de estado */}
               <div className="flex items-center gap-1.5 flex-wrap">
-                {!shipment.trackingNumber && (
+                {!shipment.isPickup && !shipment.trackingNumber && (
                   <button
                     type="button"
                     disabled={generatingId === shipment.id}

@@ -415,6 +415,17 @@ export async function PATCH(request: Request) {
     let resolvedOrderStatus = isCancelling ? 'CANCELADO' : orderStatus;
 
     if (body.generarGuiaC807 && isStaff) {
+      const isPickupOrder =
+        /retiro/i.test(order.deliveryReference || '') ||
+        /retiro/i.test(order.shippingAddress || '') ||
+        /retiro/i.test(order.notes || '') ||
+        Number(order.shippingCost ?? 1) === 0;
+      if (isPickupOrder) {
+        return NextResponse.json(
+          { success: false, error: 'No se permite generar guía C807 para pedidos con retiro en sucursal.' },
+          { status: 400 }
+        );
+      }
       if (order.trackingNumber) {
         return NextResponse.json(
           { success: false, error: `Este pedido ya tiene guía generada: ${order.trackingNumber}` },
