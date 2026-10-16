@@ -117,8 +117,17 @@ export async function POST(request: Request) {
           },
         });
 
-        // ====== DEDUCCIÓN DE KARDEX (BUGFIX) ======
-        if (paidOrder.items && paidOrder.items.length > 0) {
+        // ====== DEDUCCIÓN DE KARDEX (SOLO SI NO SE DESCONTÓ AL CREAR EL PEDIDO) ======
+        const existingDeductions = await prisma.stockMovement.count({
+          where: {
+            OR: [
+              { reference: { contains: paidOrder.orderNumber } },
+              { notes: { contains: paidOrder.orderNumber } },
+            ],
+          },
+        });
+
+        if (existingDeductions === 0 && paidOrder.items && paidOrder.items.length > 0) {
           const productIds = Array.from(new Set(paidOrder.items.map(it => it.productId).filter(Boolean)));
           
           if (productIds.length > 0) {
