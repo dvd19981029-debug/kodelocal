@@ -557,20 +557,23 @@ export default function PosPage() {
                   ? '03'
                   : (s.customer?.nrc || parsedClient?.nrc ? '03' : '01');
 
+              const isCancelledSale = ['CANCELLED', 'CANCELADO', 'ANULADA'].includes(String(s.orderStatus || '').toUpperCase());
+              const hasProcessedDte = s.dteDocument?.estado === 'PROCESADO' && !isCancelledSale;
+
               return {
                 id: s.id,
                 saleNumber: s.saleNumber,
                 orderNumber: s.saleNumber,
                 createdAt: s.createdAt,
-                invoicedAt: s.dteDocument?.fhProcesamiento || s.dteDocument?.createdAt || ((s.orderStatus === 'COMPLETED' || s.paymentStatus === 'COMPLETED') && !['CANCELLED', 'CANCELADO', 'ANULADA'].includes(String(s.orderStatus || '').toUpperCase()) ? (s.updatedAt || s.createdAt) : undefined),
+                invoicedAt: s.dteDocument?.fhProcesamiento || s.dteDocument?.createdAt || ((s.orderStatus === 'COMPLETED' || s.paymentStatus === 'COMPLETED') && !isCancelledSale ? (s.updatedAt || s.createdAt) : undefined),
                 channel: s.channel || 'POS',
                 total: Number(s.total || 0),
                 subtotal: Number(s.subtotal || 0),
                 ivaTotal: Number(s.ivaTotal || 0),
                 shippingCost: Number(s.shippingCost || 0),
                 paymentMethod: s.paymentMethod || 'CASH',
-                paymentStatus: s.paymentStatus || 'COMPLETED',
-                status: s.orderStatus || 'COMPLETED',
+                paymentStatus: hasProcessedDte ? 'COMPLETED' : (s.paymentStatus || 'COMPLETED'),
+                status: hasProcessedDte ? 'COMPLETED' : (s.orderStatus || 'COMPLETED'),
                 tipoComprobante: resolvedTipo,
                 cajero: s.cashierName || getActiveSessionUI().name,
                 vendedor: s.sellerName || 'Mostrador',

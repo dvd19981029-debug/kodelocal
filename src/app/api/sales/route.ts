@@ -276,17 +276,27 @@ export async function POST(request: Request) {
                   }
                 }
 
-                for (const [prodId, totalDeduct] of stockDeltas.entries()) {
-                  const updatedRows: Array<{ stock: number }> = await tx.$queryRaw`
-                    UPDATE "Product"
-                    SET "stock" = GREATEST(0, "stock" - ${totalDeduct}),
-                        "updatedAt" = NOW()
-                    WHERE "id" = ${prodId}
-                    RETURNING "stock"
-                  `;
-                  const newStock = updatedRows && updatedRows.length > 0 ? updatedRows[0].stock : 0;
-                  await tx.stockMovement.create({
-                    data: {
+                  const kardexBatch: Array<{
+                    productId: string;
+                    type: 'OUT_SALE';
+                    quantity: number;
+                    previousStock: number;
+                    newStock: number;
+                    reference: string;
+                    notes: string;
+                    userName: string;
+                  }> = [];
+
+                  for (const [prodId, totalDeduct] of stockDeltas.entries()) {
+                    const updatedRows: Array<{ stock: number }> = await tx.$queryRaw`
+                      UPDATE "Product"
+                      SET "stock" = GREATEST(0, "stock" - ${totalDeduct}),
+                          "updatedAt" = NOW()
+                      WHERE "id" = ${prodId}
+                      RETURNING "stock"
+                    `;
+                    const newStock = updatedRows && updatedRows.length > 0 ? updatedRows[0].stock : 0;
+                    kardexBatch.push({
                       productId: prodId,
                       type: 'OUT_SALE',
                       quantity: totalDeduct,
@@ -295,21 +305,19 @@ export async function POST(request: Request) {
                       reference: `Cobro Comanda #${existingSale.saleNumber}`,
                       notes: `Venta cobrada por ${cashierName || existingSale.cashierName || 'Caja'} (${paymentMethod || existingSale.paymentMethod})`,
                       userName: cashierName || existingSale.cashierName || 'Sistema (Caja)',
-                    },
-                  });
-                }
+                    });
+                  }
 
-                for (const [prodId, totalHalf] of halfDeltas.entries()) {
-                  const updatedRows: Array<{ stockHalf: number }> = await tx.$queryRaw`
-                    UPDATE "Product"
-                    SET "stockHalf" = GREATEST(0, "stockHalf" - ${totalHalf}),
-                        "updatedAt" = NOW()
-                    WHERE "id" = ${prodId}
-                    RETURNING "stockHalf"
-                  `;
-                  const newHalf = updatedRows && updatedRows.length > 0 ? updatedRows[0].stockHalf : 0;
-                  await tx.stockMovement.create({
-                    data: {
+                  for (const [prodId, totalHalf] of halfDeltas.entries()) {
+                    const updatedRows: Array<{ stockHalf: number }> = await tx.$queryRaw`
+                      UPDATE "Product"
+                      SET "stockHalf" = GREATEST(0, "stockHalf" - ${totalHalf}),
+                          "updatedAt" = NOW()
+                      WHERE "id" = ${prodId}
+                      RETURNING "stockHalf"
+                    `;
+                    const newHalf = updatedRows && updatedRows.length > 0 ? updatedRows[0].stockHalf : 0;
+                    kardexBatch.push({
                       productId: prodId,
                       type: 'OUT_SALE',
                       quantity: totalHalf,
@@ -318,11 +326,14 @@ export async function POST(request: Request) {
                       reference: `Cobro Comanda #${existingSale.saleNumber}`,
                       notes: `½ Onza • Venta cobrada por ${cashierName || existingSale.cashierName || 'Caja'} (${paymentMethod || existingSale.paymentMethod})`,
                       userName: cashierName || existingSale.cashierName || 'Sistema (Caja)',
-                    },
-                  });
-                }
-              });
-            }
+                    });
+                  }
+
+                  if (kardexBatch.length > 0) {
+                    await tx.stockMovement.createMany({ data: kardexBatch });
+                  }
+                }, { maxWait: 15000, timeout: 30000 });
+              }
 
             if (!existingSale.payments || existingSale.payments.length === 0) {
               await prisma.salePayment.create({
@@ -688,7 +699,7 @@ export async function POST(request: Request) {
       }
 
       return { sale: createdSale, payment: paymentRecord };
-    });
+    }, { maxWait: 15000, timeout: 30000 });
 
     return NextResponse.json({ success: true, ...result });
   } catch (error: any) {
@@ -817,6 +828,17 @@ export async function PATCH(request: Request) {
                 }
               }
 
+              const kardexBatch: Array<{
+                productId: string;
+                type: 'OUT_SALE';
+                quantity: number;
+                previousStock: number;
+                newStock: number;
+                reference: string;
+                notes: string;
+                userName: string;
+              }> = [];
+
               // Deducir normales
               for (const [prodId, totalDeduct] of stockDeltas.entries()) {
                 const updatedRows: Array<{ stock: number }> = await tx.$queryRaw`
@@ -827,17 +849,15 @@ export async function PATCH(request: Request) {
                   RETURNING "stock"
                 `;
                 const newStock = updatedRows && updatedRows.length > 0 ? updatedRows[0].stock : 0;
-                await tx.stockMovement.create({
-                  data: {
-                    productId: prodId,
-                    type: 'OUT_SALE',
-                    quantity: totalDeduct,
-                    previousStock: newStock + totalDeduct,
-                    newStock,
-                    reference: `Cobro Comanda #${sale.saleNumber}`,
-                    notes: 'Descuento de inventario post-facturación',
-                    userName: 'Sistema (Caja)',
-                  },
+                kardexBatch.push({
+                  productId: prodId,
+                  type: 'OUT_SALE',
+                  quantity: totalDeduct,
+                  previousStock: newStock + totalDeduct,
+                  newStock,
+                  reference: `Cobro Comanda #${sale.saleNumber}`,
+                  notes: 'Descuento de inventario post-facturación',
+                  userName: 'Sistema (Caja)',
                 });
               }
 
@@ -851,22 +871,24 @@ export async function PATCH(request: Request) {
                   RETURNING "stockHalf"
                 `;
                 if (updatedRows && updatedRows.length > 0) {
-                  await tx.stockMovement.create({
-                    data: {
-                      productId: prodId,
-                      type: 'OUT_SALE',
-                      quantity: totalHalf,
-                      previousStock: updatedRows[0].stockHalf + totalHalf,
-                      newStock: updatedRows[0].stockHalf,
-                      reference: `Cobro Comanda #${sale.saleNumber}`,
-                      notes: '½ Onza - Descuento de inventario post-facturación',
-                      userName: 'Sistema (Caja)',
-                    },
+                  kardexBatch.push({
+                    productId: prodId,
+                    type: 'OUT_SALE',
+                    quantity: totalHalf,
+                    previousStock: updatedRows[0].stockHalf + totalHalf,
+                    newStock: updatedRows[0].stockHalf,
+                    reference: `Cobro Comanda #${sale.saleNumber}`,
+                    notes: '½ Onza - Descuento de inventario post-facturación',
+                    userName: 'Sistema (Caja)',
                   });
                 }
               }
+
+              if (kardexBatch.length > 0) {
+                await tx.stockMovement.createMany({ data: kardexBatch });
+              }
             }
-          });
+          }, { maxWait: 15000, timeout: 30000 });
         } catch (deductErr) {
           // Revertir el reclamo para que la comanda pueda reintentarse sin quedar completada sin descuento
           await prisma.sale.updateMany({
@@ -962,16 +984,18 @@ export async function PATCH(request: Request) {
             }
           }
         }
-      });
+      }, { maxWait: 15000, timeout: 30000 });
     }
 
 
     let updatedNotes: string | undefined = undefined;
+    let parsedClientFromNotes: any = null;
     if (sale.notes && sale.notes.trim().startsWith('{')) {
       try {
         const lastBrace = sale.notes.lastIndexOf('}');
         const jsonPart = lastBrace !== -1 ? sale.notes.slice(0, lastBrace + 1) : sale.notes;
         const parsed = JSON.parse(jsonPart);
+        parsedClientFromNotes = parsed?.cliente || null;
         if (tipoComprobante) parsed.tipoComprobante = tipoComprobante;
         if (notes) parsed.statusLog = [parsed.statusLog, notes].filter(Boolean).join(' ');
         updatedNotes = JSON.stringify(parsed);
@@ -992,13 +1016,43 @@ export async function PATCH(request: Request) {
       );
     }
 
+    let resolvedCustomerId: string | null | undefined = undefined;
+    if (customerId !== undefined) {
+      if (!customerId) {
+        resolvedCustomerId = null;
+      } else {
+        const cleanCid = String(customerId).trim();
+        if (!cleanCid.startsWith('cli-')) {
+          const foundCust = await prisma.customer.findUnique({
+            where: { id: cleanCid },
+            select: { id: true },
+          });
+          if (foundCust) resolvedCustomerId = foundCust.id;
+        }
+        if (!resolvedCustomerId && parsedClientFromNotes) {
+          const docNum = String(parsedClientFromNotes.numDocumento || '').trim();
+          const emailStr = String(parsedClientFromNotes.correo || parsedClientFromNotes.email || '').trim();
+          const byDocOrEmail = await prisma.customer.findFirst({
+            where: {
+              OR: [
+                ...(docNum && docNum !== '00000000-0' ? [{ documentNum: docNum }] : []),
+                ...(emailStr ? [{ email: { equals: emailStr, mode: 'insensitive' as const } }] : []),
+              ],
+            },
+            select: { id: true },
+          });
+          if (byDocOrEmail) resolvedCustomerId = byDocOrEmail.id;
+        }
+      }
+    }
+
     const updated = await prisma.sale.update({
       where: { id: sale.id },
       data: {
         ...(orderStatus ? { orderStatus } : {}),
         ...(paymentStatus ? { paymentStatus } : {}),
         ...(tipoComprobante ? { tipoComprobante } : {}),
-        ...(customerId !== undefined ? { customerId: customerId || null } : {}),
+        ...(resolvedCustomerId !== undefined ? { customerId: resolvedCustomerId } : {}),
         ...(updatedNotes !== undefined ? { notes: updatedNotes } : {}),
       },
       include: {

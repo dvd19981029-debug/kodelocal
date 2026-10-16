@@ -389,6 +389,9 @@ export default function BodegaPage() {
                   ? s.tipoComprobante
                   : (pNotes?.tipoComprobante || (s.customer?.nrc || pNotes?.cliente?.nrc ? '03' : '01'));
 
+                const isCancelledSale = ['CANCELLED', 'CANCELADO', 'ANULADA'].includes(String(s.orderStatus || '').toUpperCase());
+                const hasProcessedDte = s.dteDocument?.estado === 'PROCESADO' && !isCancelledSale;
+
                 return {
                   id: s.id,
                   saleNumber: s.saleNumber,
@@ -401,9 +404,9 @@ export default function BodegaPage() {
                   shippingCost: 0,
                   tipoComprobante: resolvedTipo,
                   paymentMethod: s.paymentMethod || 'CASH',
-                  paymentStatus: s.paymentStatus || 'COMPLETED',
+                  paymentStatus: hasProcessedDte ? 'COMPLETED' : (s.paymentStatus || 'COMPLETED'),
                   notes: s.notes || undefined,
-                  status: s.orderStatus || 'COMPLETED',
+                  status: hasProcessedDte ? 'COMPLETED' : (s.orderStatus || 'COMPLETED'),
                   vendedor: s.sellerName || s.cashierName || 'Vendedora Mostrador',
                   cliente: {
                     id: s.customerId || s.customer?.id || pNotes?.cliente?.id,
