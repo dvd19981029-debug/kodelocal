@@ -62,6 +62,32 @@ export async function GET(request: Request) {
   }
 }
 
+function isGenericPlaceholderEmail(email?: string | null): boolean {
+  if (!email) return true;
+  const e = email.trim().toLowerCase();
+  if (!e) return true;
+  return (
+    /^(cliente|clientes|sin|sincorreo|nocorreo|no|ninguno|na|test|correo|consumidor|final|anonimo|ventas|factura|facturacion)@/.test(e) ||
+    e === 'cliente@gmail.com' ||
+    e === 'sin@correo.com' ||
+    e === 'no@tiene.com'
+  );
+}
+
+function isGenericPlaceholderDocument(doc?: string | null): boolean {
+  if (!doc) return true;
+  const d = doc.trim().replace(/[-\s']/g, '');
+  if (!d) return true;
+  return /^(0+|9+|12345678\d?|123456789\d*|00000000\d?)$/.test(d);
+}
+
+function isGenericPlaceholderPhone(phone?: string | null): boolean {
+  if (!phone) return true;
+  const p = phone.trim().replace(/\D/g, '');
+  if (!p) return true;
+  return /^(0+|7+|9+|2+|12345678)$/.test(p);
+}
+
 export async function POST(request: Request) {
   try {
     const { authorized } = verifyStaffRequest(request);
@@ -135,7 +161,8 @@ export async function POST(request: Request) {
       data.taxCategory = categoriaContribuyente || 'OTRO';
     }
     if (email !== undefined) {
-      data.email = email?.trim()?.toLowerCase() || null;
+      const cleanEmail = email?.trim()?.toLowerCase() || null;
+      data.email = isGenericPlaceholderEmail(cleanEmail) ? null : cleanEmail;
     }
     if (phone !== undefined) {
       data.phone = phone?.trim() || null;
@@ -195,26 +222,33 @@ export async function POST(request: Request) {
         data,
       });
     } else {
-      // Priorizar coincidencia por correo electrónico (case-insensitive) y como respaldo por documento o teléfono
-      let existing = data.email
+      // Priorizar coincidencia por correo electrónico real (no genérico)
+      let existing = data.email && !isGenericPlaceholderEmail(data.email)
         ? await prisma.customer.findFirst({
             where: { email: { equals: data.email, mode: 'insensitive' } },
             include: tierInclude,
           })
         : null;
 
-      if (!existing && data.documentNum && data.documentNum !== '00000000-0') {
-        existing = await prisma.customer.findFirst({
+      // Por documento o teléfono solo reutilizar si no son valores genéricos (123456789 / 00000000) y el nombre coincide
+      if (!existing && data.documentNum && !isGenericPlaceholderDocument(data.documentNum)) {
+        const byDoc = await prisma.customer.findFirst({
           where: { documentNum: data.documentNum },
           include: tierInclude,
         });
+        if (byDoc && byDoc.name.trim().toLowerCase() === data.name.trim().toLowerCase()) {
+          existing = byDoc;
+        }
       }
 
-      if (!existing && data.phone) {
-        existing = await prisma.customer.findFirst({
+      if (!existing && data.phone && !isGenericPlaceholderPhone(data.phone)) {
+        const byPhone = await prisma.customer.findFirst({
           where: { phone: data.phone },
           include: tierInclude,
         });
+        if (byPhone && byPhone.name.trim().toLowerCase() === data.name.trim().toLowerCase()) {
+          existing = byPhone;
+        }
       }
 
       if (existing) {

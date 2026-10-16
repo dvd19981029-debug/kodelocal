@@ -595,12 +595,15 @@ export default function PosPage() {
                 vendedor: s.sellerName || 'Mostrador',
                 cliente: {
                   id: s.customerId || s.customer?.id || parsedClient?.id,
-                  nombre: s.customer?.name || parsedClient?.nombre || 'Consumidor Final',
-                  numDocumento: s.customer?.documentNum || parsedClient?.numDocumento || undefined,
+                  nombre:
+                    parsedClient?.nombre && parsedClient.nombre !== 'Consumidor Final'
+                      ? parsedClient.nombre
+                      : s.customer?.name || 'Consumidor Final',
+                  numDocumento: parsedClient?.numDocumento || s.customer?.documentNum || undefined,
                   nrc: s.customer?.nrc || parsedClient?.nrc || undefined,
                   correo: s.customer?.email || parsedClient?.correo || undefined,
-                  telefono: s.customer?.phone || parsedClient?.telefono || undefined,
-                  direccion: s.customer?.address || parsedClient?.direccion || undefined,
+                  telefono: parsedClient?.telefono || s.customer?.phone || undefined,
+                  direccion: parsedClient?.direccion || s.customer?.address || undefined,
                   actividadEconomica: s.customer?.activityDesc || parsedClient?.actividadEconomica || undefined,
                 },
                 items: (s.items || []).map((it: any) => ({
