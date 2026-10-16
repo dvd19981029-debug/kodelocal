@@ -447,7 +447,7 @@ export async function PATCH(request: Request) {
       }
       resolvedTracking = c807Res.numero_guia;
       resolvedCourier = 'C807 Express';
-      if (!resolvedOrderStatus) resolvedOrderStatus = 'EN_RUTA';
+      resolvedOrderStatus = 'EN_RUTA';
     }
 
     const safePaymentStatus = (paymentStatus === 'REJECTED' || paymentStatus === 'CANCELLED' || isCancelling) ? 'CANCELLED' : paymentStatus;

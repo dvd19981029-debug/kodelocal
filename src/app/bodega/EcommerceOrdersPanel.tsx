@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import {
   ShoppingBag,
   RefreshCw,
@@ -15,6 +16,7 @@ import {
   Package,
   FileText,
   Store,
+  ExternalLink,
 } from 'lucide-react';
 import { getStaffToken } from '@/lib/auth';
 
@@ -386,6 +388,10 @@ export default function EcommerceOrdersPanel() {
           order={selected}
           twin={isRealOrder(selected) ? null : findRealTwin(selected, orders)}
           onClose={() => setSelected(null)}
+          onOrderUpdated={(updatedOrder) => {
+            setOrders((prev) => prev.map((item) => (item.id === updatedOrder.id ? { ...item, ...updatedOrder } : item)));
+            setSelected((prev) => (prev && prev.id === updatedOrder.id ? { ...prev, ...updatedOrder } : prev));
+          }}
         />
       )}
     </div>
@@ -418,14 +424,52 @@ function OrderDetailModal({
   order: o,
   twin,
   onClose,
+  onOrderUpdated,
 }: {
   order: EcoOrder;
   twin: EcoOrder | null;
   onClose: () => void;
+  onOrderUpdated: (updated: Partial<EcoOrder> & { id: string }) => void;
 }) {
   const pickup = isPickup(o);
   const dte = o.sale?.dteDocument;
   const isCcf = o.sale?.tipoComprobante === '03' || Boolean(o.customer?.nrc);
+  const [generatingGuide, setGeneratingGuide] = useState(false);
+
+  const handleGenerateGuide = async () => {
+    setGeneratingGuide(true);
+    try {
+      const staffToken = await getStaffToken();
+      const res = await fetch('/api/ecommerce/orders', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({
+          orderId: o.id,
+          orderNumber: o.orderNumber,
+          generarGuiaC807: true,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.order?.trackingNumber) {
+        onOrderUpdated({
+          id: o.id,
+          trackingNumber: data.order.trackingNumber,
+          courierName: data.order.courierName || 'C807 Express',
+          orderStatus: data.order.orderStatus || 'EN_RUTA',
+        });
+        alert(`✅ Guía C807 generada exitosamente: ${data.order.trackingNumber}\nEl pedido fue enviado a la vista de Logística.`);
+      } else {
+        alert(`Error al generar guía C807: ${data.error || 'No se pudo generar la guía'}`);
+      }
+    } catch (err: any) {
+      alert(`Error de conexión con C807: ${err?.message || 'Error desconocido'}`);
+    } finally {
+      setGeneratingGuide(false);
+    }
+  };
 
   return (
     <div
@@ -520,6 +564,48 @@ function OrderDetailModal({
             <Row label="Mensajero / courier" value={o.courierName} />
             <Row label="N° de guía" value={o.trackingNumber} />
             <Row label="WhatsApp notificado" value={o.whatsappNotified ? 'Sí' : 'No'} />
+            {!pickup && isRealOrder(o) && (
+              <div className="pt-2 mt-2 border-t border-slate-200 flex flex-wrap items-center gap-2">
+                {o.trackingNumber ? (
+                  <>
+                    <a
+                      href={`https://c807xpress.com/tracking/?guia=${encodeURIComponent(o.trackingNumber)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="clay-btn clay-btn-light px-3 py-1.5 text-[11px] font-bold text-indigo-700 inline-flex items-center gap-1.5 rounded-lg"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Rastrear Guía {o.trackingNumber}</span>
+                    </a>
+                    <Link
+                      href="/logistica"
+                      className="clay-btn-primary px-3 py-1.5 text-[11px] font-bold inline-flex items-center gap-1.5 rounded-lg"
+                    >
+                      <Truck className="w-3.5 h-3.5" />
+                      <span>Ir a Logística</span>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      disabled={generatingGuide}
+                      onClick={handleGenerateGuide}
+                      className="clay-btn-primary px-3.5 py-2 text-xs font-black inline-flex items-center gap-1.5 rounded-xl disabled:opacity-50"
+                    >
+                      <Truck className="w-3.5 h-3.5" />
+                      <span>{generatingGuide ? 'Generando Guía C807...' : 'Generar Guía C807 y Enviar a Logística'}</span>
+                    </button>
+                    <Link
+                      href="/logistica"
+                      className="clay-btn clay-btn-light px-2.5 py-2 text-[11px] font-bold text-slate-700 inline-flex items-center gap-1 rounded-xl"
+                    >
+                      <span>Ver Logística</span>
+                    </Link>
+                  </>
+                )}
+              </div>
+            )}
           </Section>
 
           <div className="md:col-span-2">

@@ -37,10 +37,10 @@ export class C807Client {
   constructor() {
     this.authUrl = process.env.C807_AUTH_URL || 'https://app.c807.com/admin.php/sesion/get_token';
     this.createGuideUrl = process.env.C807_CREATE_GUIDE_URL || 'https://app.c807.com/guia.php/api/set_registro';
-    const envBasic = process.env.C807_BASIC_AUTH;
+    const envBasic = process.env.C807_AROMANIAK_BASIC_AUTH || process.env.C807_BASIC_AUTH;
     this.basicAuth =
       envBasic && !envBasic.includes('YWRtaW5AbHVpc2VnbToyMDI2')
-        ? envBasic
+        ? (envBasic.startsWith('Basic ') ? envBasic : `Basic ${envBasic}`)
         : 'Basic QURNSU5Aa29kZToyMDI2'; // ADMIN@kode:2026
     this.telegramToken = process.env.TELEGRAM_TOKEN || '8865534990:AAHD-hl9hCzo9IUs4DL0n8TFiQ6BR0hCJow';
     this.telegramChatId = process.env.TELEGRAM_CHAT_ID || '-5596828280';
