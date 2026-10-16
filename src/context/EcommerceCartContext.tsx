@@ -36,11 +36,20 @@ export function applyCustomerProductPricing(
     return { price: originalPrice, originalPrice };
   }
 
-  const isEssence = product.category === 'Esencias para Perfume';
+  const catStr = String(product.category || '');
+  const prodNameLower = (product.name || '').toLowerCase();
+  const isEssence =
+    catStr === 'Esencias para Perfume' ||
+    catStr === 'Esencias & Fragancias' ||
+    catStr === 'Arma tu propio perfume' ||
+    product.unit === 'Onza';
   const isBottle =
-    product.category === 'Botes' ||
-    product.category === 'Botes & Envases' ||
-    product.name.toLowerCase().includes('bote');
+    !isEssence &&
+    (catStr === 'Botes' ||
+      catStr === 'Botes & Envases' ||
+      catStr === 'Envases & Botes' ||
+      prodNameLower.includes('bote') ||
+      prodNameLower.includes('frasco'));
 
   let effectivePrice = originalPrice;
 
@@ -54,19 +63,30 @@ export function applyCustomerProductPricing(
     effectivePrice = Number(Number(customer.specialBottlePrice).toFixed(2));
   }
 
-  if (customer.tier) {
+  const activeCategoryTier = isEssence
+    ? customer.tier
+    : isBottle
+    ? customer.bottleTier
+    : customer.suppliesTier;
+  const activeCategoryCustomPct = isEssence
+    ? customer.customDiscountPct
+    : isBottle
+    ? customer.bottleCustomDiscountPct
+    : customer.suppliesCustomDiscountPct;
+
+  if (activeCategoryTier) {
     let appliedPct = 0;
-    if (customer.tier.name === 'Personalizado' && customer.customDiscountPct) {
-      appliedPct = Number(customer.customDiscountPct);
-    } else if (customer.tier.discountPct) {
-      appliedPct = Number(customer.tier.discountPct);
+    if (activeCategoryTier.name === 'Personalizado' && activeCategoryCustomPct) {
+      appliedPct = Number(activeCategoryCustomPct);
+    } else if (activeCategoryTier.discountPct) {
+      appliedPct = Number(activeCategoryTier.discountPct);
     }
     if (appliedPct > 0) {
       const discountAmt = effectivePrice * (appliedPct / 100);
       effectivePrice = Number((effectivePrice - discountAmt).toFixed(2));
     }
-  } else if (customer.customDiscountPct && Number(customer.customDiscountPct) > 0) {
-    const appliedPct = Number(customer.customDiscountPct);
+  } else if (activeCategoryCustomPct && Number(activeCategoryCustomPct) > 0) {
+    const appliedPct = Number(activeCategoryCustomPct);
     const discountAmt = effectivePrice * (appliedPct / 100);
     effectivePrice = Number((effectivePrice - discountAmt).toFixed(2));
   }
@@ -373,6 +393,12 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     customer?.tierId,
     customer?.tier?.discountPct,
     customer?.customDiscountPct,
+    customer?.bottleTierId,
+    customer?.bottleTier?.discountPct,
+    customer?.bottleCustomDiscountPct,
+    customer?.suppliesTierId,
+    customer?.suppliesTier?.discountPct,
+    customer?.suppliesCustomDiscountPct,
     isMounted,
   ]);
 

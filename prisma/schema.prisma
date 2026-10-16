@@ -60,13 +60,15 @@ model Product {
 }
 
 model CustomerTier {
-  id          String     @id @default(cuid())
-  name        String     @unique
-  discountPct Decimal    @db.Decimal(5, 2)
-  badgeColor  String?    @default("blue")
-  customers   Customer[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id                String     @id @default(cuid())
+  name              String     @unique
+  discountPct       Decimal    @db.Decimal(5, 2)
+  badgeColor        String?    @default("blue")
+  customers         Customer[] @relation("CustomerEssenceTier")
+  bottleCustomers   Customer[] @relation("CustomerBottleTier")
+  suppliesCustomers Customer[] @relation("CustomerSuppliesTier")
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
 }
 
 model Customer {
@@ -93,7 +95,15 @@ model Customer {
   customDiscountPct Float?
 
   tierId       String?
-  tier         CustomerTier? @relation(fields: [tierId], references: [id], onDelete: SetNull)
+  tier         CustomerTier? @relation("CustomerEssenceTier", fields: [tierId], references: [id], onDelete: SetNull)
+
+  bottleTierId              String?
+  bottleTier                CustomerTier? @relation("CustomerBottleTier", fields: [bottleTierId], references: [id], onDelete: SetNull)
+  bottleCustomDiscountPct   Float?
+
+  suppliesTierId            String?
+  suppliesTier              CustomerTier? @relation("CustomerSuppliesTier", fields: [suppliesTierId], references: [id], onDelete: SetNull)
+  suppliesCustomDiscountPct Float?
 
   specialEssencePrice Decimal?          @db.Decimal(10, 2)
   specialBottlePrice  Decimal?          @db.Decimal(10, 2)

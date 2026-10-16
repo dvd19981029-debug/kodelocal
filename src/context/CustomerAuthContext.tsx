@@ -23,6 +23,12 @@ export interface CustomerUser {
   tierId?: string | null;
   tier?: any | null;
   customDiscountPct?: number | null;
+  bottleTierId?: string | null;
+  bottleTier?: any | null;
+  bottleCustomDiscountPct?: number | null;
+  suppliesTierId?: string | null;
+  suppliesTier?: any | null;
+  suppliesCustomDiscountPct?: number | null;
   specialEssencePrice?: number | null;
   specialBottlePrice?: number | null;
   tradeName?: string | null;

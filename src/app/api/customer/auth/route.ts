@@ -29,6 +29,12 @@ function formatAuthCustomerResponse(customer: any, authProvider: 'google' | 'cre
     tierId: customer.tierId || null,
     tier: customer.tier || null,
     customDiscountPct: customer.customDiscountPct || null,
+    bottleTierId: customer.bottleTierId || null,
+    bottleTier: customer.bottleTier || null,
+    bottleCustomDiscountPct: customer.bottleCustomDiscountPct || null,
+    suppliesTierId: customer.suppliesTierId || null,
+    suppliesTier: customer.suppliesTier || null,
+    suppliesCustomDiscountPct: customer.suppliesCustomDiscountPct || null,
     specialEssencePrice: customer.specialEssencePrice ? Number(customer.specialEssencePrice) : null,
     specialBottlePrice: customer.specialBottlePrice ? Number(customer.specialBottlePrice) : null,
     tradeName: customer.tradeName || customer.businessName || '',
@@ -151,13 +157,13 @@ export async function POST(request: Request) {
             ...(verifiedGoogleId ? [{ googleId: verifiedGoogleId }] : []),
           ],
         },
-        include: { tier: true },
+        include: { tier: true, bottleTier: true, suppliesTier: true },
       });
 
       if (customer) {
         customer = await prisma.customer.update({
           where: { id: customer.id },
-          include: { tier: true },
+          include: { tier: true, bottleTier: true, suppliesTier: true },
           data: {
             email: customer.email || normalizedEmail,
             googleId: verifiedGoogleId || customer.googleId,
@@ -176,7 +182,7 @@ export async function POST(request: Request) {
             municipality: 'San Salvador Centro',
             documentType: 'DUI',
           },
-          include: { tier: true },
+          include: { tier: true, bottleTier: true, suppliesTier: true },
         });
       }
 
@@ -248,7 +254,7 @@ export async function POST(request: Request) {
       // Verificar si ya existe por correo (case-insensitive) o por DUI/NIT si fue creado en tienda sin correo
       let existing = await prisma.customer.findFirst({
         where: { email: { equals: cleanEmail, mode: 'insensitive' } },
-        include: { tier: true },
+        include: { tier: true, bottleTier: true, suppliesTier: true },
       });
 
       if (!existing && cleanDocNum && cleanDocNum !== '00000000-0') {
@@ -259,7 +265,7 @@ export async function POST(request: Request) {
             passwordHash: null,
             googleId: null,
           },
-          include: { tier: true },
+          include: { tier: true, bottleTier: true, suppliesTier: true },
         });
         if (byDoc) existing = byDoc;
       }
@@ -277,7 +283,7 @@ export async function POST(request: Request) {
           // El cliente fue creado desde el POS o en pedido previo (sin contraseña). Asociamos su contraseña y datos fiscales a su mismo registro.
           const updatedCustomer = await prisma.customer.update({
             where: { id: existing.id },
-            include: { tier: true },
+            include: { tier: true, bottleTier: true, suppliesTier: true },
             data: {
               email: cleanEmail,
               name: cleanName || existing.name,
@@ -329,7 +335,7 @@ export async function POST(request: Request) {
           activityDesc: cleanActDesc,
           preferredDoc: resolvedPrefDoc,
         },
-        include: { tier: true },
+        include: { tier: true, bottleTier: true, suppliesTier: true },
       });
 
       await linkCustomerPurchases(customer);
@@ -358,7 +364,7 @@ export async function POST(request: Request) {
 
       const customer = await prisma.customer.findFirst({
         where: { email: { equals: normalizedEmail, mode: 'insensitive' } },
-        include: { tier: true },
+        include: { tier: true, bottleTier: true, suppliesTier: true },
       });
 
       if (!customer) {
@@ -456,7 +462,7 @@ export async function POST(request: Request) {
 
       const updated = await prisma.customer.update({
         where: { id: customerId },
-        include: { tier: true },
+        include: { tier: true, bottleTier: true, suppliesTier: true },
         data: {
           ...(name !== undefined ? { name: sanitizeText(name, 100) } : {}),
           ...(phone !== undefined ? { phone: sanitizePhone(phone) || '' } : {}),
@@ -513,7 +519,7 @@ export async function POST(request: Request) {
 
       const existing = await prisma.customer.findFirst({
         where: { id: customerId },
-        include: { tier: true },
+        include: { tier: true, bottleTier: true, suppliesTier: true },
       });
 
       if (!existing) {

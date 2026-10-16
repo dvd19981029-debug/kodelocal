@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     }
 
     const customers = await prisma.customer.findMany({
-      include: { tier: true },
+      include: { tier: true, bottleTier: true, suppliesTier: true },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -45,6 +45,12 @@ export async function GET(request: Request) {
         tierId: c.tierId || null,
         customDiscountPct: c.customDiscountPct || null,
         tier: c.tier || null,
+        bottleTierId: c.bottleTierId || null,
+        bottleCustomDiscountPct: c.bottleCustomDiscountPct || null,
+        bottleTier: c.bottleTier || null,
+        suppliesTierId: c.suppliesTierId || null,
+        suppliesCustomDiscountPct: c.suppliesCustomDiscountPct || null,
+        suppliesTier: c.suppliesTier || null,
         createdAt: c.createdAt.toISOString(),
       };
     });
@@ -89,6 +95,10 @@ export async function POST(request: Request) {
       specialBottlePrice,
       tierId,
       customDiscountPct,
+      bottleTierId,
+      bottleCustomDiscountPct,
+      suppliesTierId,
+      suppliesCustomDiscountPct,
     } = body;
 
     if (!name?.trim()) {
@@ -148,6 +158,20 @@ export async function POST(request: Request) {
     if (customDiscountPct !== undefined) {
       data.customDiscountPct = (customDiscountPct !== null && customDiscountPct !== '') ? Number(customDiscountPct) : null;
     }
+    if (bottleTierId !== undefined) {
+      data.bottleTierId = bottleTierId || null;
+    }
+    if (bottleCustomDiscountPct !== undefined) {
+      data.bottleCustomDiscountPct = (bottleCustomDiscountPct !== null && bottleCustomDiscountPct !== '') ? Number(bottleCustomDiscountPct) : null;
+    }
+    if (suppliesTierId !== undefined) {
+      data.suppliesTierId = suppliesTierId || null;
+    }
+    if (suppliesCustomDiscountPct !== undefined) {
+      data.suppliesCustomDiscountPct = (suppliesCustomDiscountPct !== null && suppliesCustomDiscountPct !== '') ? Number(suppliesCustomDiscountPct) : null;
+    }
+
+    const tierInclude = { tier: true, bottleTier: true, suppliesTier: true };
 
     let customer;
     if (id && !id.startsWith('cli-')) {
@@ -158,7 +182,7 @@ export async function POST(request: Request) {
         if (conflict) {
           customer = await prisma.customer.update({
             where: { id: conflict.id },
-            include: { tier: true },
+            include: tierInclude,
             data,
           });
           return NextResponse.json({ success: true, customer });
@@ -167,7 +191,7 @@ export async function POST(request: Request) {
 
       customer = await prisma.customer.update({
         where: { id },
-        include: { tier: true },
+        include: tierInclude,
         data,
       });
     } else {
@@ -175,34 +199,34 @@ export async function POST(request: Request) {
       let existing = data.email
         ? await prisma.customer.findFirst({
             where: { email: { equals: data.email, mode: 'insensitive' } },
-            include: { tier: true },
+            include: tierInclude,
           })
         : null;
 
       if (!existing && data.documentNum && data.documentNum !== '00000000-0') {
         existing = await prisma.customer.findFirst({
           where: { documentNum: data.documentNum },
-          include: { tier: true },
+          include: tierInclude,
         });
       }
 
       if (!existing && data.phone) {
         existing = await prisma.customer.findFirst({
           where: { phone: data.phone },
-          include: { tier: true },
+          include: tierInclude,
         });
       }
 
       if (existing) {
         customer = await prisma.customer.update({
           where: { id: existing.id },
-          include: { tier: true },
+          include: tierInclude,
           data,
         });
       } else {
         customer = await prisma.customer.create({
           data,
-          include: { tier: true },
+          include: tierInclude,
         });
       }
     }

@@ -33,8 +33,13 @@ export interface CustomerRecord {
   specialBottlePrice?: number | null;
   tierId?: string | null;
   customDiscountPct?: number | null;
-
   tier?: CustomerTier | null;
+  bottleTierId?: string | null;
+  bottleCustomDiscountPct?: number | null;
+  bottleTier?: CustomerTier | null;
+  suppliesTierId?: string | null;
+  suppliesCustomDiscountPct?: number | null;
+  suppliesTier?: CustomerTier | null;
   createdAt: string;
 }
 

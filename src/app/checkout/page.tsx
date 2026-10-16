@@ -1459,22 +1459,28 @@ export default function CheckoutPage() {
                   </span>
                 </div>
 
-                {discountTotal > 0 && (
-                  <div className="flex items-center justify-between text-indigo-700 font-bold mb-1">
-                    <span>
-                      Descuento VIP (
-                      {customer?.tier?.name === 'Personalizado' && customer?.customDiscountPct
-                        ? `Personalizado ${customer.customDiscountPct}%`
-                        : customer?.tier?.name
-                        ? `${customer.tier.name}${customer.tier.discountPct ? ` ${customer.tier.discountPct}%` : ''}`
-                        : customer?.customDiscountPct
-                        ? `${customer.customDiscountPct}%`
-                        : 'Tarifa Preferencial'}
-                      ):
-                    </span>
-                    <span>-${discountTotal.toFixed(2)}</span>
-                  </div>
-                )}
+                {discountTotal > 0 && (() => {
+                  const activeTierLabels: string[] = [];
+                  const fmtTier = (label: string, t: any, cPct: any) => {
+                    if (t?.name === 'Personalizado' && cPct) return `${label}: ${cPct}%`;
+                    if (t?.name) return `${label}: ${t.name}${t.discountPct ? ` ${t.discountPct}%` : ''}`;
+                    if (cPct && Number(cPct) > 0) return `${label}: ${cPct}%`;
+                    return null;
+                  };
+                  const essLbl = fmtTier('Esencias', customer?.tier, customer?.customDiscountPct);
+                  const botLbl = fmtTier('Botes', customer?.bottleTier, customer?.bottleCustomDiscountPct);
+                  const supLbl = fmtTier('Insumos', customer?.suppliesTier, customer?.suppliesCustomDiscountPct);
+                  if (essLbl) activeTierLabels.push(essLbl);
+                  if (botLbl) activeTierLabels.push(botLbl);
+                  if (supLbl) activeTierLabels.push(supLbl);
+                  const discountLabel = activeTierLabels.length > 0 ? activeTierLabels.join(' • ') : 'Tarifa Preferencial';
+                  return (
+                    <div className="flex items-center justify-between text-indigo-700 font-bold mb-1">
+                      <span>Descuento VIP ({discountLabel}):</span>
+                      <span>-${discountTotal.toFixed(2)}</span>
+                    </div>
+                  );
+                })()}
                 {discountTotal > 0 && (
                   <div className="flex items-center justify-between text-slate-800 font-bold">
                     <span>Subtotal con descuento:</span>
@@ -1509,7 +1515,7 @@ export default function CheckoutPage() {
                 {discountTotal > 0 && (
                   <div className="mt-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs text-emerald-800">
                     <span className="font-bold">
-                      Total ahorrado con tu nivel {customer?.tier?.name || 'Preferencial'}:
+                      Total ahorrado con tu nivel {customer?.tier?.name || customer?.bottleTier?.name || customer?.suppliesTier?.name || 'Preferencial'}:
                     </span>
                     <span className="font-black text-emerald-700">
                       ${discountTotal.toFixed(2)}

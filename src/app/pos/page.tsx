@@ -149,6 +149,10 @@ export default function PosPage() {
   const [custSpecialBottlePrice, setCustSpecialBottlePrice] = useState('');
   const [custTierId, setCustTierId] = useState("");
   const [custCustomDiscountPct, setCustCustomDiscountPct] = useState<string>("");
+  const [custBottleTierId, setCustBottleTierId] = useState("");
+  const [custBottleCustomDiscountPct, setCustBottleCustomDiscountPct] = useState<string>("");
+  const [custSuppliesTierId, setCustSuppliesTierId] = useState("");
+  const [custSuppliesCustomDiscountPct, setCustSuppliesCustomDiscountPct] = useState<string>("");
 
   const [customerTiers, setCustomerTiers] = useState<any[]>([]);
 
@@ -798,7 +802,7 @@ export default function PosPage() {
     let listPrice = item.product.price;
     const cat = item.product.category || '';
     const isEssence = cat === "Esencias para Perfume" || cat === "Esencias & Fragancias" || item.product.unit === 'Onza' || (!cat && item.product.unit !== 'Unidad');
-    const isBottle = cat === "Botes" || cat === "Botes & Envases" || cat === "Envases & Botes" || item.product.name.toLowerCase().startsWith('bote') || item.product.name.toLowerCase().includes('frasco');
+    const isBottle = !isEssence && (cat === "Botes" || cat === "Botes & Envases" || cat === "Envases & Botes" || item.product.name.toLowerCase().startsWith('bote') || item.product.name.toLowerCase().includes('frasco'));
 
     if (isEssence && activeCustomer?.specialEssencePrice) {
       listPrice = Number(activeCustomer.specialEssencePrice);
@@ -818,14 +822,27 @@ export default function PosPage() {
 
     let finalPrice = listPrice;
     let discountAmt = 0;
-    
+
+    const activeCategoryTier = isEssence
+      ? activeCustomer?.tier
+      : isBottle
+      ? activeCustomer?.bottleTier
+      : activeCustomer?.suppliesTier;
+    const activeCategoryCustomPct = isEssence
+      ? activeCustomer?.customDiscountPct
+      : isBottle
+      ? activeCustomer?.bottleCustomDiscountPct
+      : activeCustomer?.suppliesCustomDiscountPct;
+
     let appliedPct = 0;
-    if (activeCustomer?.tier) {
-      if (activeCustomer.tier.name === 'Personalizado' && activeCustomer.customDiscountPct) {
-        appliedPct = Number(activeCustomer.customDiscountPct);
-      } else if (activeCustomer.tier.discountPct) {
-        appliedPct = Number(activeCustomer.tier.discountPct);
+    if (activeCategoryTier) {
+      if (activeCategoryTier.name === 'Personalizado' && activeCategoryCustomPct) {
+        appliedPct = Number(activeCategoryCustomPct);
+      } else if (activeCategoryTier.discountPct) {
+        appliedPct = Number(activeCategoryTier.discountPct);
       }
+    } else if (activeCategoryCustomPct && Number(activeCategoryCustomPct) > 0) {
+      appliedPct = Number(activeCategoryCustomPct);
     }
 
     if (appliedPct > 0) {
@@ -1511,6 +1528,10 @@ export default function PosPage() {
     setCustSpecialBottlePrice('');
     setCustTierId('');
     setCustCustomDiscountPct('');
+    setCustBottleTierId('');
+    setCustBottleCustomDiscountPct('');
+    setCustSuppliesTierId('');
+    setCustSuppliesCustomDiscountPct('');
     setIsCustomerModalOpen(true);
   };
 
@@ -1539,6 +1560,10 @@ export default function PosPage() {
     setCustSpecialBottlePrice(cust.specialBottlePrice != null ? String(cust.specialBottlePrice) : '');
     setCustTierId(cust.tierId || '');
     setCustCustomDiscountPct(cust.customDiscountPct != null ? String(cust.customDiscountPct) : '');
+    setCustBottleTierId(cust.bottleTierId || '');
+    setCustBottleCustomDiscountPct(cust.bottleCustomDiscountPct != null ? String(cust.bottleCustomDiscountPct) : '');
+    setCustSuppliesTierId(cust.suppliesTierId || '');
+    setCustSuppliesCustomDiscountPct(cust.suppliesCustomDiscountPct != null ? String(cust.suppliesCustomDiscountPct) : '');
     setIsCustomerModalOpen(true);
   };
 
@@ -1556,6 +1581,8 @@ export default function PosPage() {
     }
 
     const matchedTier = customerTiers.find(t => t.id === custTierId) || null;
+    const matchedBottleTier = customerTiers.find(t => t.id === custBottleTierId) || null;
+    const matchedSuppliesTier = customerTiers.find(t => t.id === custSuppliesTierId) || null;
 
     const customerPayload = {
       tipoPersona: custTipoPersona,
@@ -1583,6 +1610,22 @@ export default function PosPage() {
         badgeColor: matchedTier.badgeColor || '#6366f1',
       } : null,
       customDiscountPct: custCustomDiscountPct ? Number(custCustomDiscountPct) : null,
+      bottleTierId: custBottleTierId || null,
+      bottleTier: matchedBottleTier ? {
+        id: matchedBottleTier.id,
+        name: matchedBottleTier.name,
+        discountPct: Number(matchedBottleTier.discountPct || 0),
+        badgeColor: matchedBottleTier.badgeColor || '#6366f1',
+      } : null,
+      bottleCustomDiscountPct: custBottleCustomDiscountPct ? Number(custBottleCustomDiscountPct) : null,
+      suppliesTierId: custSuppliesTierId || null,
+      suppliesTier: matchedSuppliesTier ? {
+        id: matchedSuppliesTier.id,
+        name: matchedSuppliesTier.name,
+        discountPct: Number(matchedSuppliesTier.discountPct || 0),
+        badgeColor: matchedSuppliesTier.badgeColor || '#6366f1',
+      } : null,
+      suppliesCustomDiscountPct: custSuppliesCustomDiscountPct ? Number(custSuppliesCustomDiscountPct) : null,
     };
 
     const tempOrEditId = editingCustomerId || `cli-${Date.now()}`;
@@ -3170,6 +3213,14 @@ export default function PosPage() {
         setCustTierId={setCustTierId}
         custCustomDiscountPct={custCustomDiscountPct}
         setCustCustomDiscountPct={setCustCustomDiscountPct}
+        custBottleTierId={custBottleTierId}
+        setCustBottleTierId={setCustBottleTierId}
+        custBottleCustomDiscountPct={custBottleCustomDiscountPct}
+        setCustBottleCustomDiscountPct={setCustBottleCustomDiscountPct}
+        custSuppliesTierId={custSuppliesTierId}
+        setCustSuppliesTierId={setCustSuppliesTierId}
+        custSuppliesCustomDiscountPct={custSuppliesCustomDiscountPct}
+        setCustSuppliesCustomDiscountPct={setCustSuppliesCustomDiscountPct}
         custSpecialEssencePrice={custSpecialEssencePrice}
         setCustSpecialEssencePrice={setCustSpecialEssencePrice}
         custSpecialBottlePrice={custSpecialBottlePrice}

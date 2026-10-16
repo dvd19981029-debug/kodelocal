@@ -27,6 +27,8 @@ export async function GET(
       where: { id },
       include: {
         tier: true,
+        bottleTier: true,
+        suppliesTier: true,
       },
     });
 
@@ -178,6 +180,12 @@ export async function GET(
         tierId: customer.tierId || null,
         tier: customer.tier || null,
         customDiscountPct: customer.customDiscountPct || null,
+        bottleTierId: customer.bottleTierId || null,
+        bottleTier: customer.bottleTier || null,
+        bottleCustomDiscountPct: customer.bottleCustomDiscountPct || null,
+        suppliesTierId: customer.suppliesTierId || null,
+        suppliesTier: customer.suppliesTier || null,
+        suppliesCustomDiscountPct: customer.suppliesCustomDiscountPct || null,
         createdAt: customer.createdAt.toISOString(),
       },
       metrics: {

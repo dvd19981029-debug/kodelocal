@@ -724,7 +724,7 @@ export async function POST(request: Request) {
       const dbCustomer = (resolvedCustomerId && isAuthenticatedForSpecialPricing)
         ? await tx.customer.findUnique({
             where: { id: resolvedCustomerId },
-            include: { tier: true },
+            include: { tier: true, bottleTier: true, suppliesTier: true },
           })
         : null;
 
@@ -875,8 +875,9 @@ export async function POST(request: Request) {
         // Determinar precio unitario legítimo según categoría, presentación y precios especiales del cliente
         let legitimateUnitPrice = Number(prod.price || 0);
         const catName = prod.category?.name || '';
-        const isEssence = catName === 'Esencias para Perfume' || !catName;
-        const isBottle = catName === 'Botes' || catName === 'Botes & Envases' || prod.name.toLowerCase().includes('bote');
+        const prodNameLower = prod.name.toLowerCase();
+        const isEssence = catName === 'Esencias para Perfume' || catName === 'Esencias & Fragancias' || prod.unit === 'Onza' || !catName;
+        const isBottle = !isEssence && (catName === 'Botes' || catName === 'Botes & Envases' || catName === 'Envases & Botes' || prodNameLower.includes('bote') || prodNameLower.includes('frasco'));
 
         if (isEssence && dbCustomer?.specialEssencePrice) {
           legitimateUnitPrice = Number(dbCustomer.specialEssencePrice);
@@ -891,20 +892,31 @@ export async function POST(request: Request) {
           }
         }
 
-        // Aplicar descuento por nivel VIP del cliente si corresponde
-        if (dbCustomer?.tier) {
+        // Aplicar descuento por nivel VIP según la categoría específica del producto (Esencias, Botes o Insumos)
+        const activeCategoryTier = isEssence
+          ? dbCustomer?.tier
+          : isBottle
+          ? dbCustomer?.bottleTier
+          : dbCustomer?.suppliesTier;
+        const activeCategoryCustomPct = isEssence
+          ? dbCustomer?.customDiscountPct
+          : isBottle
+          ? dbCustomer?.bottleCustomDiscountPct
+          : dbCustomer?.suppliesCustomDiscountPct;
+
+        if (activeCategoryTier) {
           let appliedPct = 0;
-          if (dbCustomer.tier.name === 'Personalizado' && dbCustomer.customDiscountPct) {
-            appliedPct = Number(dbCustomer.customDiscountPct);
-          } else if (dbCustomer.tier.discountPct) {
-            appliedPct = Number(dbCustomer.tier.discountPct);
+          if (activeCategoryTier.name === 'Personalizado' && activeCategoryCustomPct) {
+            appliedPct = Number(activeCategoryCustomPct);
+          } else if (activeCategoryTier.discountPct) {
+            appliedPct = Number(activeCategoryTier.discountPct);
           }
           if (appliedPct > 0) {
             const discountAmt = legitimateUnitPrice * (appliedPct / 100);
             legitimateUnitPrice = Number((legitimateUnitPrice - discountAmt).toFixed(2));
           }
-        } else if (dbCustomer?.customDiscountPct && Number(dbCustomer.customDiscountPct) > 0) {
-          const appliedPct = Number(dbCustomer.customDiscountPct);
+        } else if (activeCategoryCustomPct && Number(activeCategoryCustomPct) > 0) {
+          const appliedPct = Number(activeCategoryCustomPct);
           const discountAmt = legitimateUnitPrice * (appliedPct / 100);
           legitimateUnitPrice = Number((legitimateUnitPrice - discountAmt).toFixed(2));
         }

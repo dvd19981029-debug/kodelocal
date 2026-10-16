@@ -56,6 +56,14 @@ export interface PosCustomerFormModalProps {
   customerTiers: any[];
   custCustomDiscountPct?: string;
   setCustCustomDiscountPct?: (val: string) => void;
+  custBottleTierId?: string;
+  setCustBottleTierId?: (val: string) => void;
+  custBottleCustomDiscountPct?: string;
+  setCustBottleCustomDiscountPct?: (val: string) => void;
+  custSuppliesTierId?: string;
+  setCustSuppliesTierId?: (val: string) => void;
+  custSuppliesCustomDiscountPct?: string;
+  setCustSuppliesCustomDiscountPct?: (val: string) => void;
   custSpecialEssencePrice?: string;
   setCustSpecialEssencePrice?: (val: string) => void;
   custSpecialBottlePrice?: string;
@@ -102,6 +110,14 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
   customerTiers,
   custCustomDiscountPct,
   setCustCustomDiscountPct,
+  custBottleTierId = '',
+  setCustBottleTierId,
+  custBottleCustomDiscountPct,
+  setCustBottleCustomDiscountPct,
+  custSuppliesTierId = '',
+  setCustSuppliesTierId,
+  custSuppliesCustomDiscountPct,
+  setCustSuppliesCustomDiscountPct,
   custSpecialEssencePrice = '',
   setCustSpecialEssencePrice,
   custSpecialBottlePrice = '',
@@ -357,40 +373,138 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
             </div>
           </div>
 
-          {/* Nivel VIP */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Niveles de Descuento por Categoría (Esencias, Botes, Insumos) */}
+          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1.5">Nivel VIP / Descuento Base</label>
-              <select
-                value={custTierId}
-                onChange={(e) => {
-                  setCustTierId(e.target.value);
-                  if (setCustCustomDiscountPct) setCustCustomDiscountPct('');
-                }}
-                className="w-full pl-3 pr-3 py-2.5 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="">Ninguno (Sin descuento)</option>
-                {customerTiers.map((t) => (
-                  <option key={t.id} value={t.id}>{t.name} {t.name !== 'Personalizado' ? `- ${Number(t.discountPct)}% dto.` : ''}</option>
-                ))}
-              </select>
+              <label className="text-xs font-black text-slate-800 block">
+                Niveles de Descuento por Categoría
+              </label>
+              <p className="text-[11px] text-slate-500">
+                Asigna descuentos independientes por categoría (solo en Esencias, solo en Botes, solo en Insumos o combinados).
+              </p>
             </div>
-            {customerTiers.find(t => t.id === custTierId)?.name === 'Personalizado' && (
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1.5">Porcentaje Personalizado (%)</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.01"
-                  required
-                  placeholder="Ej. 12.5"
-                  value={custCustomDiscountPct || ''}
-                  onChange={(e) => setCustCustomDiscountPct && setCustCustomDiscountPct(e.target.value)}
-                  className="clay-input w-full text-xs font-mono"
-                />
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* 1. Descuento en Esencias */}
+              <div className="space-y-2">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Descuento en Esencias
+                  </label>
+                  <select
+                    value={custTierId}
+                    onChange={(e) => {
+                      setCustTierId(e.target.value);
+                      if (setCustCustomDiscountPct) setCustCustomDiscountPct('');
+                    }}
+                    className="w-full pl-2.5 pr-2.5 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="">Ninguno (Sin dto.)</option>
+                    {customerTiers.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name} {t.name !== 'Personalizado' ? `- ${Number(t.discountPct)}% dto.` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {customerTiers.find((t) => t.id === custTierId)?.name === 'Personalizado' && (
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-600 block mb-1">% Esencias</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      required
+                      placeholder="Ej. 10"
+                      value={custCustomDiscountPct || ''}
+                      onChange={(e) => setCustCustomDiscountPct && setCustCustomDiscountPct(e.target.value)}
+                      className="clay-input w-full text-xs font-mono"
+                    />
+                  </div>
+                )}
               </div>
-            )}
+
+              {/* 2. Descuento en Botes */}
+              <div className="space-y-2">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Descuento en Botes
+                  </label>
+                  <select
+                    value={custBottleTierId}
+                    onChange={(e) => {
+                      if (setCustBottleTierId) setCustBottleTierId(e.target.value);
+                      if (setCustBottleCustomDiscountPct) setCustBottleCustomDiscountPct('');
+                    }}
+                    className="w-full pl-2.5 pr-2.5 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="">Ninguno (Sin dto.)</option>
+                    {customerTiers.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name} {t.name !== 'Personalizado' ? `- ${Number(t.discountPct)}% dto.` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {customerTiers.find((t) => t.id === custBottleTierId)?.name === 'Personalizado' && (
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-600 block mb-1">% Botes</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      required
+                      placeholder="Ej. 10"
+                      value={custBottleCustomDiscountPct || ''}
+                      onChange={(e) => setCustBottleCustomDiscountPct && setCustBottleCustomDiscountPct(e.target.value)}
+                      className="clay-input w-full text-xs font-mono"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* 3. Descuento en Insumos */}
+              <div className="space-y-2">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Descuento en Insumos
+                  </label>
+                  <select
+                    value={custSuppliesTierId}
+                    onChange={(e) => {
+                      if (setCustSuppliesTierId) setCustSuppliesTierId(e.target.value);
+                      if (setCustSuppliesCustomDiscountPct) setCustSuppliesCustomDiscountPct('');
+                    }}
+                    className="w-full pl-2.5 pr-2.5 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="">Ninguno (Sin dto.)</option>
+                    {customerTiers.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name} {t.name !== 'Personalizado' ? `- ${Number(t.discountPct)}% dto.` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {customerTiers.find((t) => t.id === custSuppliesTierId)?.name === 'Personalizado' && (
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-600 block mb-1">% Insumos</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      required
+                      placeholder="Ej. 10"
+                      value={custSuppliesCustomDiscountPct || ''}
+                      onChange={(e) => setCustSuppliesCustomDiscountPct && setCustSuppliesCustomDiscountPct(e.target.value)}
+                      className="clay-input w-full text-xs font-mono"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Precios Fijos Especiales (Esencias y Botes) */}
