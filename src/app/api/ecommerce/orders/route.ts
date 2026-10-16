@@ -83,6 +83,50 @@ export async function GET(request: Request) {
       targetCustomerId = queryCustomerId;
     }
 
+    if (targetCustomerId) {
+      try {
+        const custRecord = await prisma.customer.findUnique({
+          where: { id: targetCustomerId },
+          select: { id: true, email: true, documentNum: true },
+        });
+        if (custRecord) {
+          const cleanEmail = custRecord.email?.trim();
+          const cleanDoc = custRecord.documentNum?.trim();
+          if (cleanEmail) {
+            await prisma.ecommerceOrder.updateMany({
+              where: {
+                customerId: null,
+                customerEmail: { equals: cleanEmail, mode: 'insensitive' },
+              },
+              data: { customerId: custRecord.id },
+            });
+            await prisma.sale.updateMany({
+              where: {
+                customerId: null,
+                OR: [
+                  { notes: { contains: cleanEmail, mode: 'insensitive' } },
+                  { dteDocument: { requestJson: { contains: cleanEmail, mode: 'insensitive' } } },
+                ],
+              },
+              data: { customerId: custRecord.id },
+            });
+          }
+          if (cleanDoc && cleanDoc !== '00000000-0') {
+            await prisma.sale.updateMany({
+              where: {
+                customerId: null,
+                OR: [
+                  { notes: { contains: cleanDoc } },
+                  { dteDocument: { requestJson: { contains: cleanDoc } } },
+                ],
+              },
+              data: { customerId: custRecord.id },
+            });
+          }
+        }
+      } catch (_) {}
+    }
+
     const orders = await prisma.ecommerceOrder.findMany({
       where: {
         ...(isGuestQuery ? {
@@ -780,7 +824,23 @@ export async function POST(request: Request) {
             }
           }
 
-          const kitUnitPrice = isPlus ? Number((baseKitPrice + dynamicExtraShotPrice).toFixed(2)) : baseKitPrice;
+          let kitUnitPrice = isPlus ? Number((baseKitPrice + dynamicExtraShotPrice).toFixed(2)) : baseKitPrice;
+          if (dbCustomer?.tier) {
+            let appliedPct = 0;
+            if (dbCustomer.tier.name === 'Personalizado' && dbCustomer.customDiscountPct) {
+              appliedPct = Number(dbCustomer.customDiscountPct);
+            } else if (dbCustomer.tier.discountPct) {
+              appliedPct = Number(dbCustomer.tier.discountPct);
+            }
+            if (appliedPct > 0) {
+              const discountAmt = kitUnitPrice * (appliedPct / 100);
+              kitUnitPrice = Number((kitUnitPrice - discountAmt).toFixed(2));
+            }
+          } else if (dbCustomer?.customDiscountPct && Number(dbCustomer.customDiscountPct) > 0) {
+            const appliedPct = Number(dbCustomer.customDiscountPct);
+            const discountAmt = kitUnitPrice * (appliedPct / 100);
+            kitUnitPrice = Number((kitUnitPrice - discountAmt).toFixed(2));
+          }
           const lineTotal = Number((kitUnitPrice * qty).toFixed(2));
           verifiedSubtotal += lineTotal;
 
@@ -840,9 +900,13 @@ export async function POST(request: Request) {
             appliedPct = Number(dbCustomer.tier.discountPct);
           }
           if (appliedPct > 0) {
-            const discountAmt = Number((legitimateUnitPrice * (appliedPct / 100)).toFixed(4));
+            const discountAmt = legitimateUnitPrice * (appliedPct / 100);
             legitimateUnitPrice = Number((legitimateUnitPrice - discountAmt).toFixed(2));
           }
+        } else if (dbCustomer?.customDiscountPct && Number(dbCustomer.customDiscountPct) > 0) {
+          const appliedPct = Number(dbCustomer.customDiscountPct);
+          const discountAmt = legitimateUnitPrice * (appliedPct / 100);
+          legitimateUnitPrice = Number((legitimateUnitPrice - discountAmt).toFixed(2));
         }
 
         const lineTotal = Number((legitimateUnitPrice * qty).toFixed(2));

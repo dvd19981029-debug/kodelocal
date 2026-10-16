@@ -489,13 +489,23 @@ export async function POST(request: Request) {
         if (foundCust) validCustomerId = foundCust.id;
       }
       if (!validCustomerId) {
-        const clientEmail = String(body.cliente?.email || body.cliente?.correo || '').trim().toLowerCase();
-        if (clientEmail) {
-          const foundByEmail = await tx.customer.findFirst({
-            where: { email: { equals: clientEmail, mode: 'insensitive' } },
+        let clientEmail = String(body.cliente?.email || body.cliente?.correo || '').trim().toLowerCase();
+        if (!clientEmail && notes) {
+          const emailMatch = String(notes).match(/Email:\s*([^\s|\]]+)/i);
+          if (emailMatch?.[1]) clientEmail = emailMatch[1].trim().toLowerCase();
+        }
+        const clientDoc = String(body.cliente?.numDocumento || '').trim();
+        if (clientEmail || (clientDoc && clientDoc !== '00000000-0')) {
+          const foundCust = await tx.customer.findFirst({
+            where: {
+              OR: [
+                ...(clientEmail ? [{ email: { equals: clientEmail, mode: 'insensitive' as const } }] : []),
+                ...(clientDoc && clientDoc !== '00000000-0' ? [{ documentNum: clientDoc }] : []),
+              ],
+            },
             select: { id: true },
           });
-          if (foundByEmail) validCustomerId = foundByEmail.id;
+          if (foundCust) validCustomerId = foundCust.id;
         }
       }
 
@@ -1017,32 +1027,33 @@ export async function PATCH(request: Request) {
     }
 
     let resolvedCustomerId: string | null | undefined = undefined;
-    if (customerId !== undefined) {
-      if (!customerId) {
-        resolvedCustomerId = null;
-      } else {
-        const cleanCid = String(customerId).trim();
-        if (!cleanCid.startsWith('cli-')) {
-          const foundCust = await prisma.customer.findUnique({
-            where: { id: cleanCid },
-            select: { id: true },
-          });
-          if (foundCust) resolvedCustomerId = foundCust.id;
-        }
-        if (!resolvedCustomerId && parsedClientFromNotes) {
-          const docNum = String(parsedClientFromNotes.numDocumento || '').trim();
-          const emailStr = String(parsedClientFromNotes.correo || parsedClientFromNotes.email || '').trim();
-          const byDocOrEmail = await prisma.customer.findFirst({
-            where: {
-              OR: [
-                ...(docNum && docNum !== '00000000-0' ? [{ documentNum: docNum }] : []),
-                ...(emailStr ? [{ email: { equals: emailStr, mode: 'insensitive' as const } }] : []),
-              ],
-            },
-            select: { id: true },
-          });
-          if (byDocOrEmail) resolvedCustomerId = byDocOrEmail.id;
-        }
+    if (customerId && !String(customerId).trim().startsWith('cli-')) {
+      const cleanCid = String(customerId).trim();
+      const foundCust = await prisma.customer.findUnique({
+        where: { id: cleanCid },
+        select: { id: true },
+      });
+      if (foundCust) resolvedCustomerId = foundCust.id;
+    }
+
+    if (!resolvedCustomerId && !sale.customerId) {
+      const docNum = String(parsedClientFromNotes?.numDocumento || body.cliente?.numDocumento || '').trim();
+      let emailStr = String(parsedClientFromNotes?.correo || parsedClientFromNotes?.email || body.cliente?.email || body.cliente?.correo || '').trim();
+      if (!emailStr && sale.notes) {
+        const emailMatch = sale.notes.match(/Email:\s*([^\s|\]]+)/i);
+        if (emailMatch?.[1]) emailStr = emailMatch[1].trim();
+      }
+      if ((docNum && docNum !== '00000000-0') || emailStr) {
+        const byDocOrEmail = await prisma.customer.findFirst({
+          where: {
+            OR: [
+              ...(docNum && docNum !== '00000000-0' ? [{ documentNum: docNum }] : []),
+              ...(emailStr ? [{ email: { equals: emailStr, mode: 'insensitive' as const } }] : []),
+            ],
+          },
+          select: { id: true },
+        });
+        if (byDocOrEmail) resolvedCustomerId = byDocOrEmail.id;
       }
     }
 

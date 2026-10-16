@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ShoppingBag, Check, Sparkles, Plus, Minus } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS } from '@/lib/store';
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
+import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName, formatPerfumeDisplayName, getBottleLabelConfig } from '@/lib/perfumeNames';
 import { getProductUrl } from '@/lib/productUrl';
@@ -17,7 +18,8 @@ interface ProductCardProps {
 
 function ProductCardComponent({ product, priority = false }: ProductCardProps) {
   const { cart, addToCart, updateQuantity } = useEcommerceCart();
-  const presentations = getPresentationsForProduct(product);
+  const { customer } = useCustomerAuth();
+  const presentations = getPresentationsForProduct(product, customer);
   
   // Presentación por defecto: 'ONZA_COMPLETA' (1 Onza seleccionada primero)
   const defaultPres = product.category === 'Esencias para Perfume' 

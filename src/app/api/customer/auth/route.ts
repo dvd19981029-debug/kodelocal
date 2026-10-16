@@ -38,6 +38,50 @@ function formatAuthCustomerResponse(customer: any, authProvider: 'google' | 'cre
   };
 }
 
+async function linkCustomerPurchases(customer: any) {
+  if (!customer?.id) return;
+  try {
+    const cleanEmail = customer.email?.trim()?.toLowerCase();
+    const cleanDoc = customer.documentNum?.trim();
+
+    if (cleanEmail) {
+      await prisma.ecommerceOrder.updateMany({
+        where: {
+          customerId: null,
+          customerEmail: { equals: cleanEmail, mode: 'insensitive' },
+        },
+        data: { customerId: customer.id },
+      });
+
+      await prisma.sale.updateMany({
+        where: {
+          customerId: null,
+          OR: [
+            { notes: { contains: cleanEmail, mode: 'insensitive' } },
+            { dteDocument: { requestJson: { contains: cleanEmail, mode: 'insensitive' } } },
+          ],
+        },
+        data: { customerId: customer.id },
+      });
+    }
+
+    if (cleanDoc && cleanDoc !== '00000000-0') {
+      await prisma.sale.updateMany({
+        where: {
+          customerId: null,
+          OR: [
+            { notes: { contains: cleanDoc } },
+            { dteDocument: { requestJson: { contains: cleanDoc } } },
+          ],
+        },
+        data: { customerId: customer.id },
+      });
+    }
+  } catch (err) {
+    console.error('Error linking customer purchases:', err);
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -99,11 +143,11 @@ export async function POST(request: Request) {
         avatarUrl ||
         '';
 
-      // Buscar si el cliente ya existe por email o googleId
+      // Buscar si el cliente ya existe por email (case-insensitive) o googleId
       let customer = await prisma.customer.findFirst({
         where: {
           OR: [
-            { email: normalizedEmail },
+            { email: { equals: normalizedEmail, mode: 'insensitive' } },
             ...(verifiedGoogleId ? [{ googleId: verifiedGoogleId }] : []),
           ],
         },
@@ -115,6 +159,7 @@ export async function POST(request: Request) {
           where: { id: customer.id },
           include: { tier: true },
           data: {
+            email: customer.email || normalizedEmail,
             googleId: verifiedGoogleId || customer.googleId,
             avatarUrl: verifiedAvatar || customer.avatarUrl,
             name: customer.name || verifiedName,
@@ -134,6 +179,8 @@ export async function POST(request: Request) {
           include: { tier: true },
         });
       }
+
+      await linkCustomerPurchases(customer);
 
       const sessionToken = createCustomerToken(customer.id, customer.email || '');
 
@@ -198,11 +245,24 @@ export async function POST(request: Request) {
       const resolvedDocType = wantsCCF ? 'NIT' : (sanitizeText(documentType, 20) || 'DUI');
       const resolvedPrefDoc = wantsCCF ? '03' : (sanitizeText(preferredDoc, 10) || '01');
 
-      // Verificar si ya existe por correo
-      const existing = await prisma.customer.findUnique({
-        where: { email: cleanEmail },
+      // Verificar si ya existe por correo (case-insensitive) o por DUI/NIT si fue creado en tienda sin correo
+      let existing = await prisma.customer.findFirst({
+        where: { email: { equals: cleanEmail, mode: 'insensitive' } },
         include: { tier: true },
       });
+
+      if (!existing && cleanDocNum && cleanDocNum !== '00000000-0') {
+        const byDoc = await prisma.customer.findFirst({
+          where: {
+            documentNum: cleanDocNum,
+            email: null,
+            passwordHash: null,
+            googleId: null,
+          },
+          include: { tier: true },
+        });
+        if (byDoc) existing = byDoc;
+      }
 
       const passwordHash = hashPasswordSecure(String(password));
       const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanName)}`;
@@ -214,11 +274,12 @@ export async function POST(request: Request) {
             { status: 409 }
           );
         } else {
-          // El cliente fue creado desde el POS o en pedido previo (sin contraseña). Asociamos su contraseña y datos fiscales a su mismo registro por correo.
+          // El cliente fue creado desde el POS o en pedido previo (sin contraseña). Asociamos su contraseña y datos fiscales a su mismo registro.
           const updatedCustomer = await prisma.customer.update({
             where: { id: existing.id },
             include: { tier: true },
             data: {
+              email: cleanEmail,
               name: cleanName || existing.name,
               passwordHash,
               avatarUrl: existing.avatarUrl || avatarUrl,
@@ -236,6 +297,8 @@ export async function POST(request: Request) {
               preferredDoc: wantsCCF ? '03' : (existing.preferredDoc || resolvedPrefDoc),
             }
           });
+
+          await linkCustomerPurchases(updatedCustomer);
           
           const sessionToken = createCustomerToken(updatedCustomer.id, updatedCustomer.email || '');
           
@@ -269,6 +332,8 @@ export async function POST(request: Request) {
         include: { tier: true },
       });
 
+      await linkCustomerPurchases(customer);
+
       const sessionToken = createCustomerToken(customer.id, customer.email || '');
 
       return NextResponse.json({
@@ -291,8 +356,8 @@ export async function POST(request: Request) {
 
       const normalizedEmail = email.toLowerCase().trim();
 
-      const customer = await prisma.customer.findUnique({
-        where: { email: normalizedEmail },
+      const customer = await prisma.customer.findFirst({
+        where: { email: { equals: normalizedEmail, mode: 'insensitive' } },
         include: { tier: true },
       });
 
@@ -334,6 +399,8 @@ export async function POST(request: Request) {
           { status: 400 }
         );
       }
+
+      await linkCustomerPurchases(customer);
 
       const sessionToken = createCustomerToken(customer.id, customer.email || '');
 
@@ -414,6 +481,8 @@ export async function POST(request: Request) {
         },
       });
 
+      await linkCustomerPurchases(updated);
+
       const sessionToken = createCustomerToken(updated.id, updated.email || '');
 
       return NextResponse.json({
@@ -443,13 +512,15 @@ export async function POST(request: Request) {
       }
 
       const existing = await prisma.customer.findFirst({
-        where: { id: customerId, email: email.toLowerCase().trim() },
+        where: { id: customerId },
         include: { tier: true },
       });
 
       if (!existing) {
         return NextResponse.json({ success: false, error: 'Cliente no encontrado' }, { status: 404 });
       }
+
+      await linkCustomerPurchases(existing);
 
       const sessionToken = createCustomerToken(existing.id, existing.email || '');
       return NextResponse.json({

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS, getStoredProducts, saveStoredProducts } from '@/lib/store';
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
+import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getFragranceProfile, getFragranceAccordBars } from '@/lib/fragranceProfiles';
 import ProductCard from '@/components/ecommerce/ProductCard';
@@ -42,6 +43,7 @@ export default function ProductDetailPage() {
   const [justAdded, setJustAdded] = useState(false);
 
   const { cart, addToCart, updateQuantity } = useEcommerceCart();
+  const { customer } = useCustomerAuth();
 
   // 1. Sincronización con catálogo local o API
   useEffect(() => {
@@ -105,8 +107,8 @@ export default function ProductDetailPage() {
 
   const presentations = useMemo(() => {
     if (!product) return [];
-    return getPresentationsForProduct(product);
-  }, [product]);
+    return getPresentationsForProduct(product, customer);
+  }, [product, customer]);
 
   const activeOption = useMemo(() => {
     return presentations.find(p => p.id === selectedPresentation) || presentations[0];

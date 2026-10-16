@@ -394,21 +394,14 @@ export default function CheckoutPage() {
           total: totalConEnvio,
           paymentMethod: metodoPago,
           items: cart.map(it => {
-            let pct = 0;
-            if (customer?.tier) {
-              if (customer.tier.name === 'Personalizado' && customer.customDiscountPct) {
-                pct = Number(customer.customDiscountPct);
-              } else if (customer.tier.discountPct) {
-                pct = Number(customer.tier.discountPct);
-              }
-            }
-            const discountAmt = pct > 0 ? Number((it.unitPrice * (pct / 100)).toFixed(4)) : 0;
-            const finalPrice = it.unitPrice - discountAmt;
+            const origPrice = it.originalUnitPrice ?? it.unitPrice;
+            const finalPrice = it.unitPrice;
+            const discountAmt = Number(Math.max(0, origPrice - finalPrice).toFixed(4));
             return {
               productId: it.product.id,
               productName: it.product.name,
               presentation: it.presentationName,
-              listPrice: it.unitPrice,
+              listPrice: origPrice,
               unitPrice: finalPrice,
               discountAmt: discountAmt,
               quantity: it.quantity,
@@ -1468,7 +1461,7 @@ export default function CheckoutPage() {
 
                 {discountTotal > 0 && (
                   <div className="flex items-center justify-between text-indigo-700 font-bold mb-1">
-                    <span>Descuento VIP ({customer?.tier?.name}):</span>
+                    <span>Descuento VIP ({customer?.tier?.name || 'Tarifa Preferencial'}):</span>
                     <span>-${discountTotal.toFixed(2)}</span>
                   </div>
                 )}

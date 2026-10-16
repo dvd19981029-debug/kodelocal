@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ShoppingBag, Check, ShieldCheck, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS } from '@/lib/store';
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
+import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { getProductUrl } from '@/lib/productUrl';
@@ -28,13 +29,14 @@ export default function BlogInlineProductCallout({
   catalog,
 }: InlineCalloutProps) {
   const { cart, addToCart } = useEcommerceCart();
+  const { customer } = useCustomerAuth();
   const liveProducts = useLiveProducts(catalog);
   const liveProductMap = React.useMemo(() => new Map(liveProducts.map(p => [p.id, p])), [liveProducts]);
 
   // Producto principal sincronizado en tiempo real
   const initialMain = recommendations?.primaryProduct || product || INITIAL_PRODUCTS[0];
   const mainProduct = (initialMain ? liveProductMap.get(initialMain.id) : null) || initialMain;
-  const presentations = getPresentationsForProduct(mainProduct);
+  const presentations = getPresentationsForProduct(mainProduct, customer);
   const [selectedPresentation, setSelectedPresentation] = useState<ProductPresentation>(
     mainProduct.category === 'Esencias para Perfume' ? 'ONZA_COMPLETA' : 'UNIDAD'
   );

@@ -1542,6 +1542,8 @@ export default function PosPage() {
       return;
     }
 
+    const matchedTier = customerTiers.find(t => t.id === custTierId) || null;
+
     const customerPayload = {
       tipoPersona: custTipoPersona,
       name: custName.trim(),
@@ -1558,23 +1560,46 @@ export default function PosPage() {
       municipio: custMunicipio.trim() || undefined,
       direccion: custDireccion.trim() || undefined,
       notas: custNotas.trim() || undefined,
-      specialEssencePrice: custSpecialEssencePrice ? parseFloat(custSpecialEssencePrice) : undefined,
-      specialBottlePrice: custSpecialBottlePrice ? parseFloat(custSpecialBottlePrice) : undefined,
+      specialEssencePrice: custSpecialEssencePrice ? parseFloat(custSpecialEssencePrice) : null,
+      specialBottlePrice: custSpecialBottlePrice ? parseFloat(custSpecialBottlePrice) : null,
       tierId: custTierId || null,
+      tier: matchedTier ? {
+        id: matchedTier.id,
+        name: matchedTier.name,
+        discountPct: Number(matchedTier.discountPct || 0),
+        badgeColor: matchedTier.badgeColor || '#6366f1',
+      } : null,
       customDiscountPct: custCustomDiscountPct ? Number(custCustomDiscountPct) : null,
-
-
     };
 
+    const tempOrEditId = editingCustomerId || `cli-${Date.now()}`;
+
     // Guardar en Supabase PostgreSQL
-    fetch('/api/customers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: editingCustomerId || undefined,
-        ...customerPayload,
-      }),
-    }).catch(err => console.error('Error guardando cliente en Supabase:', err));
+    getStaffToken()
+      .catch(() => null)
+      .then((staffToken) =>
+        fetch('/api/customers', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
+          body: JSON.stringify({
+            id: editingCustomerId || undefined,
+            ...customerPayload,
+          }),
+        })
+      )
+      .then(res => res.json())
+      .then(data => {
+        if (data?.success && data?.customer) {
+          refreshCustomers();
+          if (!editingCustomerId && data.customer.id) {
+            setSelectedCustomerId(prev => (prev === tempOrEditId ? data.customer.id : prev));
+          }
+        }
+      })
+      .catch(err => console.error('Error guardando cliente en Supabase:', err));
 
     if (editingCustomerId) {
       setCustomers(prev => {
@@ -1596,7 +1621,7 @@ export default function PosPage() {
       }
     } else {
       const newCust: CustomerRecord = {
-        id: `cli-${Date.now()}`,
+        id: tempOrEditId,
         ...customerPayload,
         createdAt: new Date().toISOString()
       };
@@ -1901,34 +1926,44 @@ export default function PosPage() {
 
     setIsProcessing(true);
 
-    // Asociar y guardar los datos fiscales/contacto del cliente por su correo o ID
-    if (clienteEmail.trim() || selectedCustomerId || (tipoComprobante === '03' && clienteNrc.trim())) {
-      fetch('/api/customers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: selectedCustomerId || undefined,
-          tipoPersona: tipoComprobante === '03' || clienteNrc.trim() ? 'JURIDICA' : 'NATURAL',
-          name: clienteNombre.trim() || 'Consumidor Final',
-          tipoDocumento: tipoComprobante === '03' ? 'NIT' : 'DUI',
-          numDocumento: clienteDoc.trim() || '00000000-0',
-          nrc: clienteNrc.trim() || undefined,
-          actividadEconomica: clienteGiro.trim() || undefined,
-          documentoPreferido: tipoComprobante === '03' ? '03' : '01',
-          email: clienteEmail.trim() || undefined,
-          phone: selectedCustomerObj?.phone || (isOrderFromWindow ? orderToInvoice.cliente?.telefono : undefined),
-          departamento: clienteDepartamento || 'San Salvador',
-          municipio: clienteMunicipio || 'San Salvador Centro',
-          direccion: clienteDireccion.trim() || undefined,
-        }),
-      })
-        .then(() => refreshCustomers())
-        .catch(() => {});
-    }
-
     const parsedCash = paymentMethod === 'CASH' ? parseFloat(cashAmount) : undefined;
     const changeAmount = parsedCash ? parsedCash - totalToBill : undefined;
     const staffToken = await getStaffToken().catch(() => null);
+
+    let resolvedCheckoutCustomerId = selectedCustomerId || (isOrderFromWindow ? (orderToInvoice.cliente as any)?.id : undefined) || undefined;
+
+    // Asociar y guardar los datos fiscales/contacto del cliente por su correo o ID
+    if (clienteEmail.trim() || selectedCustomerId || (tipoComprobante === '03' && clienteNrc.trim()) || (clienteDoc.trim() && clienteDoc.trim() !== '00000000-0')) {
+      try {
+        const custRes = await fetch('/api/customers', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
+          body: JSON.stringify({
+            id: selectedCustomerId || undefined,
+            tipoPersona: tipoComprobante === '03' || clienteNrc.trim() ? 'JURIDICA' : 'NATURAL',
+            name: clienteNombre.trim() || 'Consumidor Final',
+            tipoDocumento: tipoComprobante === '03' ? 'NIT' : 'DUI',
+            numDocumento: clienteDoc.trim() || '00000000-0',
+            nrc: clienteNrc.trim() || undefined,
+            actividadEconomica: clienteGiro.trim() || undefined,
+            documentoPreferido: tipoComprobante === '03' ? '03' : '01',
+            email: clienteEmail.trim() || undefined,
+            phone: selectedCustomerObj?.phone || (isOrderFromWindow ? orderToInvoice.cliente?.telefono : undefined),
+            departamento: clienteDepartamento || 'San Salvador',
+            municipio: clienteMunicipio || 'San Salvador Centro',
+            direccion: clienteDireccion.trim() || undefined,
+          }),
+        });
+        const custData = await custRes.json();
+        if (custData?.success && custData?.customer?.id) {
+          resolvedCheckoutCustomerId = custData.customer.id;
+        }
+        refreshCustomers();
+      } catch (_) {}
+    }
 
     const counterSaleNumber = !isOrderFromWindow ? `CMD-${Math.floor(1000 + Math.random() * 9000)}` : undefined;
     let dteResponseData = null;
@@ -2143,7 +2178,13 @@ export default function PosPage() {
               saleNumber: orderToInvoice.saleNumber,
               orderStatus: 'COMPLETED',
               paymentStatus: 'COMPLETED',
-              customerId: selectedCustomerId || (orderToInvoice.cliente as any)?.id || null,
+              customerId: resolvedCheckoutCustomerId || selectedCustomerId || (orderToInvoice.cliente as any)?.id || null,
+              cliente: {
+                nombre: clienteNombre,
+                numDocumento: clienteDoc,
+                email: clienteEmail,
+                nrc: clienteNrc,
+              },
               tipoComprobante,
               codigoGeneracion: dteResponseData?.codigoGeneracion,
               dteInfo: completedRecord!.dteInfo,
@@ -2224,7 +2265,7 @@ export default function PosPage() {
         codigoGeneracion: completedRecord.dteInfo?.codigoGeneracion,
         dteInfo: completedRecord.dteInfo,
         cashierName: completedRecord.cajero || getActiveSessionUI().name,
-        customerId: selectedCustomerId || (completedRecord.cliente as any)?.id || undefined,
+        customerId: resolvedCheckoutCustomerId || selectedCustomerId || (completedRecord.cliente as any)?.id || undefined,
         cliente: {
           nombre: clienteNombre || completedRecord.cliente?.nombre || 'Consumidor Final',
           numDocumento: clienteDoc || completedRecord.cliente?.numDocumento,

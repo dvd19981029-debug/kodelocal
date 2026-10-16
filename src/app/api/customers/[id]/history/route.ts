@@ -34,10 +34,48 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Cliente no encontrado' }, { status: 404 });
     }
 
+    // 0. Vincular automáticamente compras previas por correo o documento que aún no tengan customerId
+    try {
+      const cleanEmail = customer.email?.trim();
+      const cleanDoc = customer.documentNum?.trim();
+      if (cleanEmail) {
+        await prisma.ecommerceOrder.updateMany({
+          where: {
+            customerId: null,
+            customerEmail: { equals: cleanEmail, mode: 'insensitive' },
+          },
+          data: { customerId: customer.id },
+        });
+        await prisma.sale.updateMany({
+          where: {
+            customerId: null,
+            OR: [
+              { notes: { contains: cleanEmail, mode: 'insensitive' } },
+              { dteDocument: { requestJson: { contains: cleanEmail, mode: 'insensitive' } } },
+            ],
+          },
+          data: { customerId: customer.id },
+        });
+      }
+      if (cleanDoc && cleanDoc !== '00000000-0') {
+        await prisma.sale.updateMany({
+          where: {
+            customerId: null,
+            OR: [
+              { notes: { contains: cleanDoc } },
+              { dteDocument: { requestJson: { contains: cleanDoc } } },
+            ],
+          },
+          data: { customerId: customer.id },
+        });
+      }
+    } catch (_) {}
+
     // 1. Obtener ventas en tienda física (POS)
     const posSales = await prisma.sale.findMany({
       where: {
         customerId: id,
+        channel: 'POS',
         NOT: {
           OR: [
             { orderStatus: 'CANCELLED' },
