@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   XCircle,
   User,
+  RotateCcw,
 } from 'lucide-react';
 import { CustomerRecord } from '@/lib/customers';
 import { SaleRecord } from '@/lib/store';
@@ -36,6 +37,7 @@ export interface PosCajaModuleProps {
   setIsQuoteModalOpen: (open: boolean) => void;
   handleStartInvoiceOrder: (order: SaleRecord) => void;
   handleCancelReadyOrder?: (order: SaleRecord) => void;
+  handleEditOrderInPos?: (order: SaleRecord) => void;
   handleChangeOrderDteType?: (order: SaleRecord, newTipo: '01' | '03' | 'TICKET') => void;
   dteSearchQuery: string;
   setDteSearchQuery: (query: string) => void;
@@ -62,6 +64,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
   setIsQuoteModalOpen,
   handleStartInvoiceOrder,
   handleCancelReadyOrder,
+  handleEditOrderInPos,
   handleChangeOrderDteType,
   dteSearchQuery,
   setDteSearchQuery,
@@ -367,7 +370,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                       Subtotal: <strong className="font-mono text-slate-700">${order.subtotal.toFixed(2)}</strong> • IVA (13%): <strong className="font-mono text-slate-700">${order.ivaTotal.toFixed(2)}</strong>
                     </div>
 
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
                       {handleCancelReadyOrder && (
                         <button
                           type="button"
@@ -377,6 +380,18 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                         >
                           <XCircle className="w-3.5 h-3.5 text-rose-500" />
                           <span>Anular</span>
+                        </button>
+                      )}
+
+                      {handleEditOrderInPos && order.channel !== 'ONLINE' && (
+                        <button
+                          type="button"
+                          onClick={() => handleEditOrderInPos(order)}
+                          className="clay-btn clay-btn-light px-2.5 py-2 text-xs font-bold text-amber-700 hover:text-amber-800 hover:bg-amber-50 flex items-center justify-center gap-1 border border-amber-200 transition-colors"
+                          title="Devolver al Cotizador para modificar productos"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5 text-amber-600" />
+                          <span>Editar</span>
                         </button>
                       )}
 

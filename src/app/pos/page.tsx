@@ -1029,6 +1029,140 @@ export default function PosPage() {
     window.dispatchEvent(new Event('kodelocal_sales_updated'));
   };
 
+  const handleEditOrderInPos = async (order: SaleRecord) => {
+    const ordNum = order.orderNumber || order.saleNumber;
+    if (!confirm(`¿Devolver la comanda #${ordNum} al Cotizador para modificarla?\nSe cargarán sus productos y cliente en el carrito y se anulará la comanda anterior.`)) {
+      return;
+    }
+
+    // 1. Reconstruir ítems en el carrito del Cotizador
+    const restoredCart: CartItem[] = [];
+    for (const it of order.items || []) {
+      if (it.productId === 'ENVIO-DOM') continue;
+      const cleanName = String(it.name || '')
+        .replace(/\s*\(½\s*Oz\)/gi, '')
+        .replace(/\s*\(1\s*Onza\)/gi, '')
+        .replace(/\s*\(Media\s*Onza\)/gi, '')
+        .trim()
+        .toLowerCase();
+
+      const matchedProd = products.find(
+        p =>
+          p.id === it.productId ||
+          (p.sku && p.sku === it.productId) ||
+          p.name.toLowerCase().trim() === cleanName ||
+          (p.officialName && p.officialName.toLowerCase().trim() === cleanName)
+      );
+      if (!matchedProd) continue;
+
+      const unitLower = String(it.unit || '').toLowerCase();
+      const nameLower = String(it.name || '').toLowerCase();
+      const isHalf =
+        (it as any).presentation === 'MEDIA_ONZA' ||
+        unitLower.includes('media') ||
+        unitLower.includes('½') ||
+        nameLower.includes('media onza') ||
+        nameLower.includes('½');
+      const isEssence =
+        PERFUME_CATEGORIES.includes(matchedProd.category) ||
+        unitLower.includes('onza') ||
+        unitLower.includes('oz');
+
+      const presentation: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD' = isHalf
+        ? 'MEDIA_ONZA'
+        : isEssence
+        ? 'ONZA_COMPLETA'
+        : 'UNIDAD';
+
+      restoredCart.push({
+        product: matchedProd,
+        quantity: Math.max(1, Number(it.quantity || 1)),
+        presentation,
+      });
+    }
+
+    if (restoredCart.length === 0) {
+      alert('No se pudieron cargar los productos de esta comanda en el catálogo.');
+      return;
+    }
+
+    setCart(restoredCart);
+
+    // 2. Restaurar datos del cliente en el Cotizador
+    const directId = (order.cliente as any)?.id || (order as any).customerId;
+    let matchedCust = directId ? customers.find(c => c.id === directId) : undefined;
+    if (!matchedCust) {
+      const orderDoc = order.cliente?.numDocumento?.replace(/\D/g, '');
+      const orderNrc = order.cliente?.nrc?.replace(/\D/g, '');
+      const cleanPhone = order.cliente?.telefono?.replace(/\D/g, '');
+      const normName = order.cliente?.nombre?.toLowerCase().trim();
+      matchedCust = customers.find(c => {
+        if (orderNrc && c.nrc && c.nrc.replace(/\D/g, '') === orderNrc) return true;
+        if (orderDoc && orderDoc !== '000000000' && c.numDocumento && c.numDocumento.replace(/\D/g, '') === orderDoc) return true;
+        if (cleanPhone && c.phone && c.phone.replace(/\D/g, '') === cleanPhone) return true;
+        if (normName && normName !== 'consumidor final' && c.name && c.name.toLowerCase().trim() === normName) return true;
+        return false;
+      });
+    }
+
+    if (matchedCust) {
+      handleSelectCustomer(matchedCust.id);
+    } else {
+      setSelectedCustomerId('');
+      setClienteNombre(order.cliente?.nombre || 'Consumidor Final');
+      setClienteDoc(order.cliente?.numDocumento || '');
+      setClienteNrc(order.cliente?.nrc || '');
+      setClienteEmail(order.cliente?.correo || '');
+      setClienteGiro(order.cliente?.actividadEconomica || '');
+      setClienteDireccion(order.cliente?.direccion || '');
+      setClienteDepartamento(order.cliente?.departamento || 'San Salvador');
+      setClienteMunicipio(order.cliente?.municipio || 'San Salvador Centro');
+    }
+
+    const tipo: TipoComprobante =
+      order.tipoComprobante === '03' || order.cliente?.nrc || matchedCust?.nrc ? '03' : '01';
+    setTipoComprobante(tipo);
+
+    // 3. Anular la comanda anterior en el servidor y localmente (sin tocar inventario ya que no fue cobrada)
+    try {
+      const staffToken = await getStaffToken();
+      fetch('/api/sales', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({
+          id: order.id,
+          saleNumber: order.saleNumber || order.orderNumber,
+          orderStatus: 'CANCELADO',
+          restock: false,
+        }),
+      }).catch(err => console.error('Error anulando comanda previa al editar:', err));
+    } catch (_) {}
+
+    setSales(prev => {
+      const updated = prev.map(s => {
+        if (
+          s.id === order.id ||
+          (order.saleNumber && s.saleNumber === order.saleNumber) ||
+          (order.orderNumber && s.orderNumber === order.orderNumber)
+        ) {
+          return { ...s, status: 'CANCELLED' as const };
+        }
+        return s;
+      });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('kodelocal_sales', JSON.stringify(updated));
+      }
+      return updated;
+    });
+    window.dispatchEvent(new Event('kodelocal_sales_updated'));
+
+    // 4. Ir directamente al Cotizador para editar y volver a enviar
+    setPosTab('nueva_orden');
+  };
+
   const handleMarkOrderDeliveredFromPos = async (orderId: string) => {
     const targetSale = sales.find(s => s.id === orderId || s.saleNumber === orderId);
 
@@ -2545,6 +2679,7 @@ export default function PosPage() {
             setIsQuoteModalOpen={setIsQuoteModalOpen}
             handleStartInvoiceOrder={handleStartInvoiceOrder}
             handleCancelReadyOrder={handleCancelReadyOrder}
+            handleEditOrderInPos={handleEditOrderInPos}
             handleChangeOrderDteType={handleChangeOrderDteType}
             dteSearchQuery={dteSearchQuery}
             setDteSearchQuery={setDteSearchQuery}
@@ -2615,6 +2750,7 @@ export default function PosPage() {
             setSelectedSaleDetail={setSelectedSaleDetail}
             handleMarkOrderReadyFromPos={handleMarkOrderReadyFromPos}
             handleCancelReadyOrder={handleCancelReadyOrder}
+            handleEditOrderInPos={handleEditOrderInPos}
             handleMarkOrderDeliveredFromPos={handleMarkOrderDeliveredFromPos}
             customers={customers}
           />

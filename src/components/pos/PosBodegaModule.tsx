@@ -10,7 +10,8 @@ import {
   Search, 
   Eye,
   X,
-  User
+  User,
+  RotateCcw
 } from 'lucide-react';
 import { CustomerRecord } from '@/lib/customers';
 import { SaleRecord, ProductItem } from '@/lib/store';
@@ -30,6 +31,7 @@ export interface PosBodegaModuleProps {
   setSelectedSaleDetail: (sale: SaleRecord) => void;
   handleMarkOrderReadyFromPos: (orderId: string) => void;
   handleCancelReadyOrder?: (order: SaleRecord) => void;
+  handleEditOrderInPos?: (order: SaleRecord) => void;
   handleMarkOrderDeliveredFromPos: (orderId: string) => void;
   customers?: CustomerRecord[];
 }
@@ -48,6 +50,7 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
   setSelectedSaleDetail,
   handleMarkOrderReadyFromPos,
   handleCancelReadyOrder,
+  handleEditOrderInPos,
   handleMarkOrderDeliveredFromPos,
   customers,
 }) => {
@@ -360,7 +363,7 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                   </button>
 
                   {isReady && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {handleCancelReadyOrder && (
                         <button
                           type="button"
@@ -370,6 +373,17 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                         >
                           <X className="w-3.5 h-3.5" />
                           <span>Anular</span>
+                        </button>
+                      )}
+                      {handleEditOrderInPos && order.channel !== 'ONLINE' && (
+                        <button
+                          type="button"
+                          onClick={() => handleEditOrderInPos(order)}
+                          className="clay-btn clay-btn-light px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 text-amber-700 hover:text-amber-800 hover:bg-amber-50 border border-amber-200"
+                          title="Devolver al Cotizador para modificar productos"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>Editar</span>
                         </button>
                       )}
                       <button
@@ -384,11 +398,22 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                   )}
 
                   {isPending && (
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-[11px] font-bold text-amber-700 flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5 animate-spin" />
                         <span>Bodega preparando...</span>
                       </span>
+                      {handleEditOrderInPos && order.channel !== 'ONLINE' && (
+                        <button
+                          type="button"
+                          onClick={() => handleEditOrderInPos(order)}
+                          className="clay-btn clay-btn-light px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 text-amber-700 hover:text-amber-800 hover:bg-amber-50 border border-amber-200"
+                          title="Devolver al Cotizador para modificar productos"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>Editar</span>
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() => handleMarkOrderReadyFromPos(order.id)}
