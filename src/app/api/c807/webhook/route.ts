@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 import { queryKode } from '@/lib/kodeDb';
 import { c807Client } from '@/lib/c807';
 import { checkRateLimit } from '@/lib/rateLimit';
@@ -9,7 +10,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   return NextResponse.json({
     status: 'online',
-    servicio: 'C807 Express Webhook Receiver para KODE',
+    servicio: 'C807 Express Webhook Receiver (Aromaniak & KODE)',
     metodo_requerido: 'POST',
     timestamp: new Date().toISOString(),
   });
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
       request.headers.get('x-c807-secret') ||
       request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim() ||
       new URL(request.url).searchParams.get('secret');
-    const isStaff = Boolean(verifyStaffRequest(request));
+    const isStaff = Boolean(verifyStaffRequest(request).authorized);
     if (!isStaff && providedSecret !== expectedSecret) {
       return NextResponse.json({ success: false, error: 'Webhook no autorizado' }, { status: 401 });
     }
@@ -81,6 +82,48 @@ export async function POST(request: Request) {
     }
 
     const estatusFinal = nuevoEstatus || (codigo === '15' ? 'Llegó a su destino' : codigo === '13' ? 'Recogido en origen' : 'Actualización de ruta');
+    const estatusLower = estatusFinal.toLowerCase();
+
+    const esEntregado =
+      codigo === '15' ||
+      estatusLower.includes('llegó a su destino') ||
+      estatusLower.includes('llego a su destino') ||
+      estatusLower.includes('entregad');
+
+    const esEnRuta =
+      codigo === '13' ||
+      estatusLower.includes('recogido') ||
+      estatusLower.includes('en ruta') ||
+      estatusLower.includes('tránsito') ||
+      estatusLower.includes('transito');
+
+    // 0. Actualizar pedido de Aromaniak (EcommerceOrder) si coincide trackingNumber
+    const aromaOrder = await prisma.ecommerceOrder.findFirst({
+      where: {
+        trackingNumber: { equals: numGuia, mode: 'insensitive' },
+      },
+    });
+
+    if (aromaOrder) {
+      const nextOrderStatus = esEntregado
+        ? 'ENTREGADO'
+        : esEnRuta && aromaOrder.orderStatus !== 'ENTREGADO'
+        ? 'EN_RUTA'
+        : aromaOrder.orderStatus;
+
+      const statusNote = `[C807 ${estatusFinal}${razon ? ` - ${razon}` : ''}]`;
+      const updatedNotes = aromaOrder.notes?.includes(statusNote)
+        ? aromaOrder.notes
+        : [aromaOrder.notes, statusNote].filter(Boolean).join(' ');
+
+      await prisma.ecommerceOrder.update({
+        where: { id: aromaOrder.id },
+        data: {
+          orderStatus: nextOrderStatus as any,
+          notes: updatedNotes,
+        },
+      });
+    }
 
     // 1. Buscar el pedido en la base de datos de Kode (insensible a mayúsculas/minúsculas)
     const res = await queryKode(
@@ -94,33 +137,27 @@ export async function POST(request: Request) {
     );
 
     if (res.rowCount === 0) {
+      if (aromaOrder) {
+        return NextResponse.json({
+          success: true,
+          message: 'Estatus C807 actualizado en pedido Aromaniak',
+          pedido: aromaOrder.orderNumber,
+          guia: numGuia,
+          estatus: estatusFinal,
+          codigo: codigo || null,
+          estado_general: esEntregado ? 'ENTREGADO' : esEnRuta ? 'EN_RUTA' : aromaOrder.orderStatus,
+        });
+      }
       console.warn(`[C807 Webhook] No se encontró pedido con la guía "${numGuia}"`);
       return NextResponse.json({
         success: true,
-        advertencia: `No se encontró pedido asociado a la guía ${numGuia} en KODE`,
+        advertencia: `No se encontró pedido asociado a la guía ${numGuia}`,
         guia: numGuia,
         estatus: estatusFinal,
       });
     }
 
     const pedido = res.rows[0];
-    const estatusLower = estatusFinal.toLowerCase();
-
-    // Determinar cambios de estado general según eventos oficiales de C807 Express
-    // Código 15 = Entrega ("Llegó a su destino")
-    const esEntregado =
-      codigo === '15' ||
-      estatusLower.includes('llegó a su destino') ||
-      estatusLower.includes('llego a su destino') ||
-      estatusLower.includes('entregad');
-
-    // Código 13 = Recogido en origen / En ruta
-    const esEnRuta =
-      codigo === '13' ||
-      estatusLower.includes('recogido') ||
-      estatusLower.includes('en ruta') ||
-      estatusLower.includes('tránsito') ||
-      estatusLower.includes('transito');
 
     let nuevoEstadoGeneral = pedido.estado;
     if (esEntregado) {
