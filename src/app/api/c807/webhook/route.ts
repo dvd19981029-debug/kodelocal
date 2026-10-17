@@ -125,6 +125,41 @@ export async function POST(request: Request) {
       });
     }
 
+    // 0b. Actualizar envío POS Domicilio (Shipment / Sale) si coincide trackingNumber
+    const posShipment = await prisma.shipment.findFirst({
+      where: {
+        trackingNumber: { equals: numGuia, mode: 'insensitive' },
+      },
+      include: { sale: true },
+    });
+
+    if (posShipment) {
+      await prisma.shipment.update({
+        where: { id: posShipment.id },
+        data: {
+          status: esEntregado ? 'DELIVERED' : esEnRuta ? 'IN_TRANSIT' : posShipment.status,
+          ...(esEntregado ? { deliveredAt: new Date() } : {}),
+        },
+      });
+
+      if (posShipment.sale?.notes && posShipment.sale.notes.trim().startsWith('{')) {
+        try {
+          const lastBrace = posShipment.sale.notes.lastIndexOf('}');
+          const jsonPart = lastBrace !== -1 ? posShipment.sale.notes.slice(0, lastBrace + 1) : posShipment.sale.notes;
+          const parsed = JSON.parse(jsonPart);
+          parsed.domicilio = {
+            ...(parsed.domicilio || {}),
+            domicilioStatus: esEntregado ? 'ENTREGADO' : esEnRuta ? 'EN_RUTA' : (parsed.domicilio?.domicilioStatus || 'EN_RUTA'),
+            lastWebhookStatus: estatusFinal,
+          };
+          await prisma.sale.update({
+            where: { id: posShipment.sale.id },
+            data: { notes: JSON.stringify(parsed) },
+          });
+        } catch (_) {}
+      }
+    }
+
     // 1. Buscar el pedido en la base de datos de Kode (insensible a mayúsculas/minúsculas)
     const res = await queryKode(
       `SELECT p.id, p.numero_pedido, p.estado, p.tipo_pago, p.total, p.c807_guia_numero,
@@ -137,15 +172,15 @@ export async function POST(request: Request) {
     );
 
     if (res.rowCount === 0) {
-      if (aromaOrder) {
+      if (aromaOrder || posShipment) {
         return NextResponse.json({
           success: true,
           message: 'Estatus C807 actualizado en pedido Aromaniak',
-          pedido: aromaOrder.orderNumber,
+          pedido: aromaOrder?.orderNumber || posShipment?.sale?.saleNumber || numGuia,
           guia: numGuia,
           estatus: estatusFinal,
           codigo: codigo || null,
-          estado_general: esEntregado ? 'ENTREGADO' : esEnRuta ? 'EN_RUTA' : aromaOrder.orderStatus,
+          estado_general: esEntregado ? 'ENTREGADO' : esEnRuta ? 'EN_RUTA' : (aromaOrder?.orderStatus || 'EN_RUTA'),
         });
       }
       console.warn(`[C807 Webhook] No se encontró pedido con la guía "${numGuia}"`);

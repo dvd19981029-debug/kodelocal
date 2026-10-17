@@ -12,6 +12,7 @@ import { PosCustomerModule } from '@/components/pos/PosCustomerModule';
 import { PosSalesModule } from '@/components/pos/PosSalesModule';
 import { PosCajaModule } from '@/components/pos/PosCajaModule';
 import { PosBodegaModule } from '@/components/pos/PosBodegaModule';
+import PosDomicilioPanel from '@/components/pos/PosDomicilioPanel';
 import PosPrefacturasModule, { type SavedQuote } from '@/components/pos/PosPrefacturasModule';
 import { 
   CustomerRecord, 
@@ -188,6 +189,14 @@ export default function PosPage() {
   const [clienteMunicipio, setClienteMunicipio] = useState('San Salvador Centro');
   const [clienteDireccion, setClienteDireccion] = useState('');
   const [isTransmittingDteId, setIsTransmittingDteId] = useState<string | null>(null);
+
+  // Estado de Envío a Domicilio en Orden Actual POS
+  const [isOrderDomicilio, setIsOrderDomicilio] = useState(false);
+  const [domicilioPhone, setDomicilioPhone] = useState('');
+  const [domicilioDepartment, setDomicilioDepartment] = useState('San Salvador');
+  const [domicilioMunicipality, setDomicilioMunicipality] = useState('San Salvador');
+  const [domicilioAddress, setDomicilioAddress] = useState('');
+  const [domicilioReference, setDomicilioReference] = useState('');
 
   // Buscador interactivo de clientes en Carrito (Combobox)
   const [cartCustomerQuery, setCartCustomerQuery] = useState('');
@@ -561,12 +570,30 @@ export default function PosPage() {
             const dbSales: SaleRecord[] = data.sales.map((s: any) => {
               let parsedClient: any = null;
               let parsedTipo: any = s.tipoComprobante;
+              let parsedIsDomicilio = false;
+              let parsedDomicilio: any = undefined;
               if (s.notes && s.notes.startsWith('{')) {
                 try {
-                  const pNotes = JSON.parse(s.notes);
+                  const lastBrace = s.notes.lastIndexOf('}');
+                  const jsonPart = lastBrace !== -1 ? s.notes.slice(0, lastBrace + 1) : s.notes;
+                  const pNotes = JSON.parse(jsonPart);
                   if (pNotes?.cliente) parsedClient = pNotes.cliente;
                   if (!parsedTipo && pNotes?.tipoComprobante) parsedTipo = pNotes.tipoComprobante;
+                  if (pNotes?.isDomicilio || pNotes?.domicilio?.isDomicilio) {
+                    parsedIsDomicilio = true;
+                  }
+                  if (pNotes?.domicilio) {
+                    parsedDomicilio = pNotes.domicilio;
+                  }
                 } catch (_) {}
+              }
+              const hasEnvioDomItem = Array.isArray(s.items) && s.items.some((it: any) =>
+                it.productId === 'ENVIO-DOM' ||
+                String(it.productName || '').toLowerCase().includes('servicio de envío')
+              );
+              const firstShipment = Array.isArray(s.shipments) && s.shipments.length > 0 ? s.shipments[0] : null;
+              if (hasEnvioDomItem || firstShipment) {
+                parsedIsDomicilio = true;
               }
               const resolvedTipo: '01' | '03' | 'TICKET' =
                 parsedTipo === '03'
@@ -593,6 +620,20 @@ export default function PosPage() {
                 tipoComprobante: resolvedTipo,
                 cajero: s.cashierName || getActiveSessionUI().name,
                 vendedor: s.sellerName || 'Mostrador',
+                isDomicilio: parsedIsDomicilio,
+                domicilio: parsedIsDomicilio ? {
+                  isDomicilio: true,
+                  customerName: parsedDomicilio?.customerName || parsedClient?.nombre || s.customer?.name || 'Consumidor Final',
+                  customerPhone: parsedDomicilio?.customerPhone || parsedClient?.telefono || s.customer?.phone || firstShipment?.phone || undefined,
+                  customerEmail: parsedDomicilio?.customerEmail || parsedClient?.correo || s.customer?.email || undefined,
+                  department: parsedDomicilio?.department || parsedClient?.departamento || s.customer?.department || firstShipment?.department || 'San Salvador',
+                  municipality: parsedDomicilio?.municipality || parsedClient?.municipio || s.customer?.municipality || firstShipment?.municipality || 'San Salvador',
+                  shippingAddress: parsedDomicilio?.shippingAddress || parsedClient?.direccion || s.customer?.address || firstShipment?.address || undefined,
+                  deliveryReference: parsedDomicilio?.deliveryReference || parsedClient?.referencia || undefined,
+                  trackingNumber: parsedDomicilio?.trackingNumber || firstShipment?.trackingNumber || undefined,
+                  courierName: parsedDomicilio?.courierName || firstShipment?.carrier || undefined,
+                  domicilioStatus: parsedDomicilio?.domicilioStatus || (firstShipment?.trackingNumber ? 'EN_RUTA' : 'PENDIENTE'),
+                } : undefined,
                 cliente: {
                   id: s.customerId || s.customer?.id || parsedClient?.id,
                   nombre:
@@ -604,6 +645,8 @@ export default function PosPage() {
                   correo: s.customer?.email || parsedClient?.correo || undefined,
                   telefono: parsedClient?.telefono || s.customer?.phone || undefined,
                   direccion: parsedClient?.direccion || s.customer?.address || undefined,
+                  departamento: parsedClient?.departamento || s.customer?.department || undefined,
+                  municipio: parsedClient?.municipio || s.customer?.municipality || undefined,
                   actividadEconomica: s.customer?.activityDesc || parsedClient?.actividadEconomica || undefined,
                 },
                 items: (s.items || []).map((it: any) => ({
@@ -1158,6 +1201,16 @@ export default function PosPage() {
       setClienteMunicipio(order.cliente?.municipio || 'San Salvador Centro');
     }
 
+    const isDom = Boolean(order.isDomicilio || order.domicilio?.isDomicilio);
+    setIsOrderDomicilio(isDom);
+    if (isDom) {
+      setDomicilioPhone(order.domicilio?.customerPhone || order.cliente?.telefono || matchedCust?.phone || '');
+      setDomicilioDepartment(order.domicilio?.department || order.cliente?.departamento || matchedCust?.departamento || 'San Salvador');
+      setDomicilioMunicipality(order.domicilio?.municipality || order.cliente?.municipio || matchedCust?.municipio || 'San Salvador');
+      setDomicilioAddress(order.domicilio?.shippingAddress || order.cliente?.direccion || matchedCust?.direccion || '');
+      setDomicilioReference(order.domicilio?.deliveryReference || '');
+    }
+
     const tipo: TipoComprobante =
       order.tipoComprobante === '03' || order.cliente?.nrc || matchedCust?.nrc ? '03' : '01';
     setTipoComprobante(tipo);
@@ -1255,6 +1308,9 @@ export default function PosPage() {
     if (availableForPres <= 0) {
       alert(isHalfPres ? '¡Sin frascos de ½ onza!' : '¡Producto sin existencias!');
       return;
+    }
+    if (product.id === 'ENVIO-DOM' || product.name.toLowerCase().includes('envío a domicilio')) {
+      setIsOrderDomicilio(true);
     }
     setCart(prev => {
       const existing = prev.find(item => 
@@ -1373,6 +1429,8 @@ export default function PosPage() {
   const clearCart = () => {
     setCart([]);
     setEditingQuote(null);
+    setIsOrderDomicilio(false);
+    setDomicilioReference('');
   };
 
   const handleOpenEditProduct = (e: React.MouseEvent, product: ProductItem) => {
@@ -1491,6 +1549,10 @@ export default function PosPage() {
       const muniMatch = munis.find(m => m.nombre.toLowerCase() === (found.municipio || '').toLowerCase());
       setClienteMunicipio(muniMatch ? muniMatch.nombre : (munis[0]?.nombre || 'San Salvador Centro'));
       setClienteDireccion(found.direccion || '');
+      setDomicilioPhone(found.phone || '');
+      setDomicilioDepartment(dept);
+      setDomicilioMunicipality(found.municipio || 'San Salvador');
+      setDomicilioAddress(found.direccion || '');
       if (found.nrc || found.tipoPersona === 'JURIDICA' || found.documentoPreferido === '03') {
         setTipoComprobante('03');
       } else {
@@ -1505,6 +1567,10 @@ export default function PosPage() {
       setClienteDepartamento('San Salvador');
       setClienteMunicipio('San Salvador Centro');
       setClienteDireccion('');
+      setDomicilioPhone('');
+      setDomicilioDepartment('San Salvador');
+      setDomicilioMunicipality('San Salvador');
+      setDomicilioAddress('');
       setTipoComprobante('01');
     }
   };
@@ -1805,9 +1871,29 @@ export default function PosPage() {
     const resolvedClientDoc = clientObj?.numDocumento || clienteDoc || undefined;
     const resolvedClientNrc = clientObj?.nrc || clienteNrc || undefined;
     const resolvedClientEmail = clientObj?.email || clienteEmail || undefined;
-    const resolvedClientPhone = clientObj?.phone || undefined;
-    const resolvedClientAddress = clientObj?.direccion || clienteDireccion || undefined;
+    const resolvedClientPhone = (isOrderDomicilio && domicilioPhone.trim()) ? domicilioPhone.trim() : (clientObj?.phone || undefined);
+    const resolvedClientAddress = (isOrderDomicilio && domicilioAddress.trim()) ? domicilioAddress.trim() : (clientObj?.direccion || clienteDireccion || undefined);
+    const resolvedClientDept = (isOrderDomicilio && domicilioDepartment) ? domicilioDepartment : (clientObj?.departamento || clienteDepartamento || 'San Salvador');
+    const resolvedClientMuni = (isOrderDomicilio && domicilioMunicipality) ? domicilioMunicipality : (clientObj?.municipio || clienteMunicipio || 'San Salvador');
     const resolvedClientGiro = clientObj?.actividadEconomica || clienteGiro || undefined;
+
+    const effectiveIsDomicilio =
+      isOrderDomicilio ||
+      cart.some(i => i.product.id === 'ENVIO-DOM' || i.product.name.toLowerCase().includes('envío a domicilio'));
+
+    const domicilioPayload = effectiveIsDomicilio
+      ? {
+          isDomicilio: true,
+          customerName: resolvedClientName,
+          customerPhone: resolvedClientPhone || '',
+          customerEmail: resolvedClientEmail || '',
+          department: resolvedClientDept,
+          municipality: resolvedClientMuni,
+          shippingAddress: resolvedClientAddress || '',
+          deliveryReference: domicilioReference.trim() || undefined,
+          domicilioStatus: 'PENDIENTE' as const,
+        }
+      : undefined;
 
     const newOrder: SaleRecord = {
       id: `ord-${Date.now()}`,
@@ -1818,6 +1904,8 @@ export default function PosPage() {
       subtotal: subtotalNeto,
       ivaTotal: ivaCalculado,
       tipoComprobante,
+      isDomicilio: effectiveIsDomicilio,
+      domicilio: domicilioPayload,
       cliente: {
         id: clientObj?.id || selectedCustomerId || undefined,
         nombre: resolvedClientName,
@@ -1826,6 +1914,8 @@ export default function PosPage() {
         correo: resolvedClientEmail,
         telefono: resolvedClientPhone,
         direccion: resolvedClientAddress,
+        departamento: resolvedClientDept,
+        municipio: resolvedClientMuni,
         actividadEconomica: resolvedClientGiro,
         categoriaContribuyente: clientObj?.categoriaContribuyente || undefined
       } as any,
@@ -1867,9 +1957,11 @@ export default function PosPage() {
           paymentStatus: 'PENDING',
           orderStatus: 'PENDING_PREPARATION',
           notes: JSON.stringify({
-            desc: 'Comanda mostrador para Bodega',
+            desc: effectiveIsDomicilio ? 'Comanda Domicilio POS para Bodega' : 'Comanda mostrador para Bodega',
             cliente: newOrder.cliente,
             tipoComprobante,
+            isDomicilio: effectiveIsDomicilio,
+            domicilio: domicilioPayload,
           }),
           cashierName: 'Vendedora Mostrador',
           customerId: clientObj?.id || (selectedCustomerId || null),
@@ -2561,6 +2653,23 @@ export default function PosPage() {
     } else {
       // Venta directa desde el mostrador
       const saleNumber = counterSaleNumber!;
+      const effectiveDirectDomicilio =
+        isOrderDomicilio ||
+        itemsToBill.some(it => it.productId === 'ENVIO-DOM' || String(it.name || '').toLowerCase().includes('envío a domicilio'));
+      const directDomicilioPayload = effectiveDirectDomicilio
+        ? {
+            isDomicilio: true,
+            customerName: clienteNombre || 'Consumidor Final',
+            customerPhone: domicilioPhone.trim() || selectedCustomerObj?.phone || '',
+            customerEmail: clienteEmail || selectedCustomerObj?.email || '',
+            department: domicilioDepartment || clienteDepartamento || 'San Salvador',
+            municipality: domicilioMunicipality || clienteMunicipio || 'San Salvador',
+            shippingAddress: domicilioAddress.trim() || clienteDireccion || '',
+            deliveryReference: domicilioReference.trim() || undefined,
+            domicilioStatus: 'PENDIENTE' as const,
+          }
+        : undefined;
+
       const newSale: SaleRecord = {
         id: `sale-${Date.now()}`,
         saleNumber,
@@ -2573,15 +2682,18 @@ export default function PosPage() {
         cashReceived: parsedCash,
         cashChange: changeAmount,
         tipoComprobante,
+        isDomicilio: effectiveDirectDomicilio,
+        domicilio: directDomicilioPayload,
         cliente: {
           nombre: clienteNombre,
           numDocumento: clienteDoc,
           nrc: clienteNrc,
           correo: clienteEmail,
+          telefono: directDomicilioPayload?.customerPhone || selectedCustomerObj?.phone || undefined,
           actividadEconomica: clienteGiro || undefined,
-          direccion: clienteDireccion || undefined,
-          departamento: clienteDepartamento || undefined,
-          municipio: clienteMunicipio || undefined,
+          direccion: directDomicilioPayload?.shippingAddress || clienteDireccion || undefined,
+          departamento: directDomicilioPayload?.department || clienteDepartamento || undefined,
+          municipio: directDomicilioPayload?.municipality || clienteMunicipio || undefined,
         },
         dteInfo: dteResponseData ? {
           codigoGeneracion: dteResponseData.codigoGeneracion,
@@ -2616,6 +2728,16 @@ export default function PosPage() {
 
     // Sincronizar venta y descuento de existencias con Supabase en tiempo real o encolar offline (REQ-POS-02)
     if (completedRecord!) {
+      const syncNotes = completedRecord.isDomicilio
+        ? JSON.stringify({
+            desc: 'Venta Domicilio POS cobrada en Caja',
+            tipoComprobante: completedRecord.tipoComprobante,
+            cliente: completedRecord.cliente,
+            isDomicilio: true,
+            domicilio: completedRecord.domicilio,
+          })
+        : completedRecord.tipoComprobante;
+
       syncSaleOnlineOrQueue({
         saleNumber: completedRecord.saleNumber,
         channel: isWebOrderBeingInvoiced ? 'ONLINE' : 'POS',
@@ -2625,7 +2747,7 @@ export default function PosPage() {
         paymentMethod: completedRecord.paymentMethod || 'CASH',
         cashReceived: completedRecord.cashReceived,
         cashChange: completedRecord.cashChange,
-        notes: completedRecord.tipoComprobante,
+        notes: syncNotes,
         tipoComprobante: completedRecord.tipoComprobante,
         codigoGeneracion: completedRecord.dteInfo?.codigoGeneracion,
         dteInfo: completedRecord.dteInfo,
@@ -2637,10 +2759,10 @@ export default function PosPage() {
           nrc: clienteNrc || completedRecord.cliente?.nrc,
           email: clienteEmail || completedRecord.cliente?.correo,
           giro: clienteGiro || completedRecord.cliente?.actividadEconomica,
-          telefono: selectedCustomerObj?.phone,
-          direccion: clienteDireccion || selectedCustomerObj?.direccion,
-          departamento: clienteDepartamento || selectedCustomerObj?.departamento || 'San Salvador',
-          municipio: clienteMunicipio || selectedCustomerObj?.municipio || 'San Salvador Centro',
+          telefono: completedRecord.domicilio?.customerPhone || selectedCustomerObj?.phone,
+          direccion: completedRecord.domicilio?.shippingAddress || clienteDireccion || selectedCustomerObj?.direccion,
+          departamento: completedRecord.domicilio?.department || clienteDepartamento || selectedCustomerObj?.departamento || 'San Salvador',
+          municipio: completedRecord.domicilio?.municipality || clienteMunicipio || selectedCustomerObj?.municipio || 'San Salvador Centro',
         },
         requiresDte: (completedRecord.tipoComprobante === '01' || completedRecord.tipoComprobante === '03') && !completedRecord.dteInfo?.codigoGeneracion,
         items: completedRecord.items.map(it => ({
@@ -2938,6 +3060,18 @@ export default function PosPage() {
                     setOrderToInvoice(null);
                     setIsCheckoutOpen(true);
                   }}
+                  isOrderDomicilio={isOrderDomicilio}
+                  setIsOrderDomicilio={setIsOrderDomicilio}
+                  domicilioPhone={domicilioPhone}
+                  setDomicilioPhone={setDomicilioPhone}
+                  domicilioDepartment={domicilioDepartment}
+                  setDomicilioDepartment={setDomicilioDepartment}
+                  domicilioMunicipality={domicilioMunicipality}
+                  setDomicilioMunicipality={setDomicilioMunicipality}
+                  domicilioAddress={domicilioAddress}
+                  setDomicilioAddress={setDomicilioAddress}
+                  domicilioReference={domicilioReference}
+                  setDomicilioReference={setDomicilioReference}
                 />
               </div>
             </div>
@@ -3065,6 +3199,18 @@ export default function PosPage() {
                         setOrderToInvoice(null);
                         setIsCheckoutOpen(true);
                       }}
+                      isOrderDomicilio={isOrderDomicilio}
+                      setIsOrderDomicilio={setIsOrderDomicilio}
+                      domicilioPhone={domicilioPhone}
+                      setDomicilioPhone={setDomicilioPhone}
+                      domicilioDepartment={domicilioDepartment}
+                      setDomicilioDepartment={setDomicilioDepartment}
+                      domicilioMunicipality={domicilioMunicipality}
+                      setDomicilioMunicipality={setDomicilioMunicipality}
+                      domicilioAddress={domicilioAddress}
+                      setDomicilioAddress={setDomicilioAddress}
+                      domicilioReference={domicilioReference}
+                      setDomicilioReference={setDomicilioReference}
                     />
                   </div>
                 </div>
@@ -3163,6 +3309,13 @@ export default function PosPage() {
             handleMarkOrderDeliveredFromPos={handleMarkOrderDeliveredFromPos}
             customers={customers}
           />
+        )}
+
+        {/* ======================================================================= */}
+        {/* PESTAÑA: DOMICILIO POS (DESPACHO Y GENERACIÓN DE GUÍA C807)             */}
+        {/* ======================================================================= */}
+        {posTab === 'domicilio' && (
+          <PosDomicilioPanel onOrderChanged={syncSalesFromServer} />
         )}
 
         {/* ======================================================================= */}

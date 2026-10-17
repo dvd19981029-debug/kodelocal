@@ -37,6 +37,7 @@ import {
   X
 } from 'lucide-react';
 import EcommerceOrdersPanel from './EcommerceOrdersPanel';
+import PosDomicilioPanel from '@/components/pos/PosDomicilioPanel';
 import { 
   SaleRecord, 
   ProductItem, 
@@ -127,7 +128,7 @@ function playNewOrderChime(orderDetails?: string) {
   }
 }
 
-type BodegaTab = 'por_preparar' | 'listos' | 'entregados' | 'inventario' | 'ingreso_compras' | 'ecommerce';
+type BodegaTab = 'por_preparar' | 'listos' | 'entregados' | 'inventario' | 'ingreso_compras' | 'ecommerce' | 'domicilio';
 
 export default function BodegaPage() {
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
@@ -391,6 +392,17 @@ export default function BodegaPage() {
 
                 const isCancelledSale = ['CANCELLED', 'CANCELADO', 'ANULADA'].includes(String(s.orderStatus || '').toUpperCase());
                 const hasProcessedDte = s.dteDocument?.estado === 'PROCESADO' && !isCancelledSale;
+                const hasEnvioItem = (s.items || []).some(
+                  (it: any) =>
+                    it.productId === 'ENVIO-DOM' ||
+                    String(it.productName || it.name || '').toLowerCase().includes('envío a domicilio')
+                );
+                const isDomicilioOrder = Boolean(
+                  pNotes?.isDomicilio ||
+                    pNotes?.domicilio?.isDomicilio ||
+                    hasEnvioItem ||
+                    (Array.isArray(s.shipments) && s.shipments.length > 0)
+                );
 
                 return {
                   id: s.id,
@@ -406,6 +418,8 @@ export default function BodegaPage() {
                   paymentMethod: s.paymentMethod || 'CASH',
                   paymentStatus: hasProcessedDte ? 'COMPLETED' : (s.paymentStatus || 'COMPLETED'),
                   notes: s.notes || undefined,
+                  isDomicilio: isDomicilioOrder,
+                  domicilio: pNotes?.domicilio || undefined,
                   status: hasProcessedDte ? 'COMPLETED' : (s.orderStatus || 'COMPLETED'),
                   vendedor: s.sellerName || s.cashierName || 'Vendedora Mostrador',
                   cliente: {
@@ -1096,6 +1110,18 @@ export default function BodegaPage() {
               )}
             </div>
           </button>
+
+          <button
+            type="button"
+            onClick={() => { setBodegaTab('domicilio'); setActiveConfrontationPurchase(null); }}
+            className={`py-2 px-1 rounded-xl text-[11px] font-black text-center flex flex-col items-center justify-center gap-1 transition-all ${
+              bodegaTab === 'domicilio'
+                ? 'clay-btn-primary !shadow-md'
+                : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            <span>Domicilio</span>
+          </button>
         </div>
       </div>
 
@@ -1253,6 +1279,24 @@ export default function BodegaPage() {
               <div className="flex items-center gap-2.5">
                 <ShoppingBag className={`w-4 h-4 ${bodegaTab === 'ecommerce' ? 'text-white' : 'text-violet-600'}`} />
                 <span>Ecommerce</span>
+              </div>
+            </button>
+
+            {/* 7. Domicilio (POS) */}
+            <button
+              onClick={() => {
+                setBodegaTab('domicilio');
+                setActiveConfrontationPurchase(null);
+              }}
+              className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all text-left ${
+                bodegaTab === 'domicilio'
+                  ? 'clay-btn-primary !shadow-[3px_4px_10px_rgba(37,99,235,0.35)]'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <Truck className={`w-4 h-4 ${bodegaTab === 'domicilio' ? 'text-white' : 'text-blue-600'}`} />
+                <span>Domicilio</span>
               </div>
             </button>
           </div>
@@ -2296,6 +2340,11 @@ export default function BodegaPage() {
           {/* TAB 6: PEDIDOS ECOMMERCE                                                */}
           {/* ======================================================================= */}
           {bodegaTab === 'ecommerce' && <EcommerceOrdersPanel />}
+
+          {/* ======================================================================= */}
+          {/* TAB 7: PEDIDOS A DOMICILIO (POS)                                        */}
+          {/* ======================================================================= */}
+          {bodegaTab === 'domicilio' && <PosDomicilioPanel onOrderChanged={fetchEcommerceOrders} />}
 
         </main>
       </div>

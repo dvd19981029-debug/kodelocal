@@ -22,6 +22,7 @@ export type PosTab =
   | 'clientes'
   | 'ventas'
   | 'bodega_ordenes'
+  | 'domicilio'
   | 'pos';
 
 export type CajaSubTab = 'listas_facturar' | 'dtes_emitidos' | 'corte_z';

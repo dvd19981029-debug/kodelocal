@@ -21,6 +21,7 @@ import {
   XCircle,
   User,
   RotateCcw,
+  Truck,
 } from 'lucide-react';
 import { CustomerRecord } from '@/lib/customers';
 import { SaleRecord } from '@/lib/store';
@@ -160,6 +161,15 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
             >
               <Calculator className="w-4 h-4" />
               <span>Cierre de Caja / Turno</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setPosTab('domicilio')}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all text-slate-300 hover:text-white hover:bg-slate-700/60"
+            >
+              <Truck className="w-4 h-4 text-blue-400" />
+              <span>Domicilio</span>
             </button>
           </div>
         </div>

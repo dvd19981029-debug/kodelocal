@@ -11,11 +11,14 @@ import {
   Minus, 
   Plus, 
   FileText, 
-  Banknote 
+  Banknote,
+  Truck,
+  Store
 } from 'lucide-react';
 import { CartItem } from '@/lib/store';
 import { getProductImage } from '@/lib/perfumeImages';
 import { CustomerRecord } from '@/lib/customers';
+import { DEPARTAMENTOS_CATALOG, getMunicipiosByDepartamento } from '@/lib/svTerritory';
 import { TipoComprobante, PosTab } from '../../types';
 
 export interface PosCartPanelProps {
@@ -33,6 +36,19 @@ export interface PosCartPanelProps {
   handleSelectCustomer: (customerId: string) => void;
   handleOpenNewCustomerModal: () => void;
   setCustName: (name: string) => void;
+  // Domicilio toggle & fields
+  isOrderDomicilio?: boolean;
+  setIsOrderDomicilio?: (val: boolean) => void;
+  domicilioPhone?: string;
+  setDomicilioPhone?: (val: string) => void;
+  domicilioDepartment?: string;
+  setDomicilioDepartment?: (val: string) => void;
+  domicilioMunicipality?: string;
+  setDomicilioMunicipality?: (val: string) => void;
+  domicilioAddress?: string;
+  setDomicilioAddress?: (val: string) => void;
+  domicilioReference?: string;
+  setDomicilioReference?: (val: string) => void;
   // Bodega order toast
   orderSentToast: { orderNumber: string } | null;
   setPosTab: (tab: PosTab) => void;
@@ -72,6 +88,18 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
   handleSelectCustomer,
   handleOpenNewCustomerModal,
   setCustName,
+  isOrderDomicilio = false,
+  setIsOrderDomicilio,
+  domicilioPhone = '',
+  setDomicilioPhone,
+  domicilioDepartment = 'San Salvador',
+  setDomicilioDepartment,
+  domicilioMunicipality = 'San Salvador',
+  setDomicilioMunicipality,
+  domicilioAddress = '',
+  setDomicilioAddress,
+  domicilioReference = '',
+  setDomicilioReference,
   orderSentToast,
   setPosTab,
   getItemUnitPrice,
@@ -311,6 +339,112 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
                       </button>
                     ))
                   )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Selector de Tipo de Entrega: Mostrador vs Domicilio */}
+          {setIsOrderDomicilio && (
+            <div className="pt-1.5 border-t border-indigo-200/60 space-y-2">
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setIsOrderDomicilio(false)}
+                  className={`py-1.5 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 border transition-all ${
+                    !isOrderDomicilio
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  <Store className="w-3.5 h-3.5" />
+                  <span>Mostrador</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsOrderDomicilio(true)}
+                  className={`py-1.5 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 border transition-all ${
+                    isOrderDomicilio
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  <Truck className="w-3.5 h-3.5" />
+                  <span>Domicilio</span>
+                </button>
+              </div>
+
+              {isOrderDomicilio && (
+                <div className="p-2 rounded-lg bg-blue-50/80 border border-blue-200/90 space-y-1.5 animate-in fade-in duration-150">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black text-blue-900 uppercase tracking-wide flex items-center gap-1">
+                      <Truck className="w-3 h-3 text-blue-600" />
+                      <span>Datos de Envío (Guía C807)</span>
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <div>
+                      <label className="text-[9.5px] font-bold text-slate-600 block mb-0.5">Teléfono *</label>
+                      <input
+                        type="text"
+                        value={domicilioPhone}
+                        onChange={(e) => setDomicilioPhone && setDomicilioPhone(e.target.value)}
+                        placeholder="7000-0000"
+                        className="w-full px-2 py-1 text-[11px] rounded-md border border-blue-200 bg-white font-mono font-bold text-slate-800"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[9.5px] font-bold text-slate-600 block mb-0.5">Departamento *</label>
+                      <select
+                        value={domicilioDepartment}
+                        onChange={(e) => {
+                          const d = e.target.value;
+                          if (setDomicilioDepartment) setDomicilioDepartment(d);
+                          const munis = getMunicipiosByDepartamento(d);
+                          if (munis.length > 0 && setDomicilioMunicipality) {
+                            setDomicilioMunicipality(munis[0].nombre);
+                          }
+                        }}
+                        className="w-full px-1.5 py-1 text-[11px] rounded-md border border-blue-200 bg-white font-bold text-slate-800"
+                      >
+                        {DEPARTAMENTOS_CATALOG.map((dep) => (
+                          <option key={dep.id} value={dep.nombre}>{dep.nombre}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[9.5px] font-bold text-slate-600 block mb-0.5">Municipio (Tradicional C807) *</label>
+                    <select
+                      value={domicilioMunicipality}
+                      onChange={(e) => setDomicilioMunicipality && setDomicilioMunicipality(e.target.value)}
+                      className="w-full px-1.5 py-1 text-[11px] rounded-md border border-blue-200 bg-white font-bold text-slate-800"
+                    >
+                      {getMunicipiosByDepartamento(domicilioDepartment).map((m) => (
+                        <option key={m.id} value={m.nombre}>{m.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[9.5px] font-bold text-slate-600 block mb-0.5">Dirección detallada de entrega *</label>
+                    <input
+                      type="text"
+                      value={domicilioAddress}
+                      onChange={(e) => setDomicilioAddress && setDomicilioAddress(e.target.value)}
+                      placeholder="Colonia, calle, pasaje, # de casa..."
+                      className="w-full px-2 py-1 text-[11px] rounded-md border border-blue-200 bg-white text-slate-800"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9.5px] font-bold text-slate-600 block mb-0.5">Referencia (Opcional)</label>
+                    <input
+                      type="text"
+                      value={domicilioReference}
+                      onChange={(e) => setDomicilioReference && setDomicilioReference(e.target.value)}
+                      placeholder="Ej. Frente a parque, portón negro..."
+                      className="w-full px-2 py-1 text-[11px] rounded-md border border-blue-200 bg-white text-slate-800"
+                    />
+                  </div>
                 </div>
               )}
             </div>

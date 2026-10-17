@@ -74,6 +74,20 @@ export interface SaleRecord {
   channel?: 'POS' | 'ONLINE';
   shippingCost?: number;
   deliveryNotes?: string;
+  isDomicilio?: boolean;
+  domicilio?: {
+    isDomicilio?: boolean;
+    customerName?: string;
+    customerPhone?: string;
+    customerEmail?: string;
+    department?: string;
+    municipality?: string;
+    shippingAddress?: string;
+    deliveryReference?: string;
+    trackingNumber?: string | null;
+    courierName?: string | null;
+    domicilioStatus?: string;
+  };
   vendedor?: string;
   cajero?: string;
   items: {

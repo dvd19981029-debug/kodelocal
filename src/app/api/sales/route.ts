@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { verifyStaffInternalToken } from '@/lib/customerAuthToken';
 import { prisma } from '@/lib/prisma';
+import { c807Client } from '@/lib/c807';
 
 export const dynamic = 'force-dynamic';
 
@@ -114,6 +115,7 @@ export async function GET(request: Request) {
           payments: true,
           dteDocument: true,
           shift: true,
+          shipments: true,
         },
         orderBy: { createdAt: 'desc' },
         take: limit,
@@ -736,7 +738,7 @@ export async function PATCH(request: Request) {
           ...(saleNumber ? [{ saleNumber }] : []),
         ],
       },
-      include: { items: true } // NECESARIO PARA RESTAURAR INVENTARIO Y FACTURAR
+      include: { items: true, customer: true, shipments: true } // NECESARIO PARA RESTAURAR INVENTARIO, FACTURAR Y GENERAR GUÍA C807
     });
 
     if (!sale) {
@@ -1000,18 +1002,175 @@ export async function PATCH(request: Request) {
 
     let updatedNotes: string | undefined = undefined;
     let parsedClientFromNotes: any = null;
+    let parsedNotesObj: any = null;
     if (sale.notes && sale.notes.trim().startsWith('{')) {
       try {
         const lastBrace = sale.notes.lastIndexOf('}');
         const jsonPart = lastBrace !== -1 ? sale.notes.slice(0, lastBrace + 1) : sale.notes;
-        const parsed = JSON.parse(jsonPart);
-        parsedClientFromNotes = parsed?.cliente || null;
-        if (tipoComprobante) parsed.tipoComprobante = tipoComprobante;
-        if (notes) parsed.statusLog = [parsed.statusLog, notes].filter(Boolean).join(' ');
-        updatedNotes = JSON.stringify(parsed);
-      } catch (_) {
-        if (notes) updatedNotes = [sale.notes, notes].filter(Boolean).join(' ');
+        parsedNotesObj = JSON.parse(jsonPart);
+        parsedClientFromNotes = parsedNotesObj?.cliente || null;
+      } catch (_) {}
+    }
+
+    if (body.isDomicilio !== undefined || body.domicilio || body.generarGuiaC807) {
+      if (!parsedNotesObj) {
+        parsedNotesObj = {
+          desc: sale.notes || 'Venta mostrador POS',
+          tipoComprobante: tipoComprobante || sale.tipoComprobante || '01',
+          cliente: body.cliente || {},
+        };
       }
+      if (body.isDomicilio !== undefined) {
+        parsedNotesObj.isDomicilio = Boolean(body.isDomicilio);
+      }
+      if (body.domicilio && typeof body.domicilio === 'object') {
+        parsedNotesObj.isDomicilio = body.domicilio.isDomicilio ?? true;
+        parsedNotesObj.domicilio = {
+          ...(parsedNotesObj.domicilio || {}),
+          ...body.domicilio,
+        };
+        parsedNotesObj.cliente = {
+          ...(parsedNotesObj.cliente || {}),
+          ...(body.domicilio.customerName ? { nombre: body.domicilio.customerName } : {}),
+          ...(body.domicilio.customerPhone ? { telefono: body.domicilio.customerPhone } : {}),
+          ...(body.domicilio.customerEmail ? { correo: body.domicilio.customerEmail } : {}),
+          ...(body.domicilio.department ? { departamento: body.domicilio.department } : {}),
+          ...(body.domicilio.municipality ? { municipio: body.domicilio.municipality } : {}),
+          ...(body.domicilio.shippingAddress ? { direccion: body.domicilio.shippingAddress } : {}),
+          ...(body.domicilio.deliveryReference !== undefined ? { referencia: body.domicilio.deliveryReference } : {}),
+        };
+        parsedClientFromNotes = parsedNotesObj.cliente;
+      }
+    }
+
+    if (body.generarGuiaC807) {
+      const authHeader = request.headers.get('authorization') || '';
+      const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : null;
+      const staffHeaderToken = request.headers.get('x-staff-token');
+      const cookieHeader = request.headers.get('cookie') || '';
+      const staffCookieMatch = cookieHeader.match(/kodelocal_staff_token=([^;]+)/);
+      const staffCookieToken = staffCookieMatch ? staffCookieMatch[1] : null;
+      const isStaff =
+        verifyStaffInternalToken(staffHeaderToken) ||
+        verifyStaffInternalToken(bearerToken) ||
+        verifyStaffInternalToken(staffCookieToken);
+
+      if (!isStaff) {
+        return NextResponse.json(
+          { success: false, error: 'No autorizado para generar guía C807.' },
+          { status: 403 }
+        );
+      }
+
+      const dom = parsedNotesObj?.domicilio || {};
+      const cli = parsedNotesObj?.cliente || {};
+      const cust = sale.customer;
+      const existingTracking = dom.trackingNumber || sale.shipments?.[0]?.trackingNumber;
+      if (existingTracking) {
+        return NextResponse.json(
+          { success: false, error: `Este pedido ya tiene guía generada: ${existingTracking}` },
+          { status: 409 }
+        );
+      }
+
+      const customerName = String(dom.customerName || cli.nombre || cust?.name || 'Cliente POS').trim();
+      const customerPhone = String(dom.customerPhone || cli.telefono || cust?.phone || '').trim();
+      const customerEmail = String(dom.customerEmail || cli.correo || cust?.email || '').trim() || undefined;
+      const department = String(dom.department || cli.departamento || cust?.department || 'San Salvador').trim();
+      const municipality = String(dom.municipality || cli.municipio || cust?.municipality || 'San Salvador').trim();
+      const shippingAddress = String(dom.shippingAddress || cli.direccion || cust?.address || '').trim();
+      const deliveryReference = String(dom.deliveryReference || cli.referencia || '').trim() || undefined;
+
+      if (!customerPhone || !shippingAddress) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Faltan datos de entrega obligatorios (Teléfono y Dirección detallada). Por favor edita los datos de entrega antes de generar la guía.',
+          },
+          { status: 400 }
+        );
+      }
+
+      const c807Res = await c807Client.generarGuia({
+        numero_pedido: sale.saleNumber,
+        cliente_nombre: customerName,
+        cliente_direccion: shippingAddress,
+        cliente_telefono: customerPhone,
+        cliente_correo: customerEmail,
+        cliente_departamento: department,
+        cliente_municipio: municipality,
+        cliente_referencia: deliveryReference,
+        tipo_pago:
+          sale.paymentStatus === 'COMPLETED'
+            ? 'TARJETA'
+            : sale.paymentMethod === 'TRANSFER'
+            ? 'TRANSFERENCIA'
+            : 'CONTRAENTREGA',
+        total: Number(sale.total || 0),
+        observaciones: `Pedido POS Aromaniak #${sale.saleNumber}`,
+      });
+
+      if (!c807Res.success || !c807Res.numero_guia) {
+        return NextResponse.json(
+          { success: false, error: c807Res.error || 'Error al generar guía en C807 Express' },
+          { status: 502 }
+        );
+      }
+
+      parsedNotesObj.isDomicilio = true;
+      parsedNotesObj.domicilio = {
+        ...dom,
+        isDomicilio: true,
+        customerName,
+        customerPhone,
+        customerEmail,
+        department,
+        municipality,
+        shippingAddress,
+        deliveryReference,
+        trackingNumber: c807Res.numero_guia,
+        courierName: 'C807 Express',
+        domicilioStatus: 'EN_RUTA',
+        generatedAt: new Date().toISOString(),
+      };
+
+      try {
+        await prisma.shipment.upsert({
+          where: { trackingNumber: c807Res.numero_guia },
+          create: {
+            trackingNumber: c807Res.numero_guia,
+            saleId: sale.id,
+            customerName,
+            phone: customerPhone,
+            address: shippingAddress,
+            department,
+            municipality,
+            carrier: 'C807 Express',
+            status: 'IN_TRANSIT',
+            orderTotal: Number(sale.total || 0),
+            deliveryCost: 2.99,
+            deliveryNotes: deliveryReference || `Pedido POS #${sale.saleNumber}`,
+          },
+          update: {
+            saleId: sale.id,
+            customerName,
+            phone: customerPhone,
+            address: shippingAddress,
+            department,
+            municipality,
+            carrier: 'C807 Express',
+            status: 'IN_TRANSIT',
+          },
+        });
+      } catch (shipErr) {
+        console.warn('No se pudo registrar Shipment adicional:', shipErr);
+      }
+    }
+
+    if (parsedNotesObj) {
+      if (tipoComprobante) parsedNotesObj.tipoComprobante = tipoComprobante;
+      if (notes) parsedNotesObj.statusLog = [parsedNotesObj.statusLog, notes].filter(Boolean).join(' ');
+      updatedNotes = JSON.stringify(parsedNotesObj);
     } else if (notes) {
       updatedNotes = [sale.notes, notes].filter(Boolean).join(' ');
     }
@@ -1070,10 +1229,15 @@ export async function PATCH(request: Request) {
         customer: true,
         items: true,
         dteDocument: true,
+        shipments: true,
       },
     });
 
-    return NextResponse.json({ success: true, sale: updated });
+    return NextResponse.json({
+      success: true,
+      sale: updated,
+      trackingNumber: parsedNotesObj?.domicilio?.trackingNumber || updated.shipments?.[0]?.trackingNumber || null,
+    });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
