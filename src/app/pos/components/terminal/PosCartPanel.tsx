@@ -117,7 +117,7 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
 }) => {
   return (
     <div className="w-full xl:w-96 flex flex-col gap-4 shrink-0">
-      <div className="clay-card p-3 sm:p-4 flex flex-col h-full xl:h-[calc(100vh-130px)] xl:sticky xl:top-20">
+      <div className="clay-card p-3 sm:p-4 flex flex-col h-auto xl:sticky xl:top-20">
         
         {/* Header del Carrito */}
         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
@@ -481,9 +481,9 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
         )}
 
         {/* Lista de productos en el carrito */}
-        <div className="flex-1 overflow-y-auto py-2 space-y-1.5 pr-0.5">
+        <div className="py-2 space-y-1.5 pr-0.5">
           {cart.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-slate-400 text-center p-3">
+            <div className="py-6 flex flex-col items-center justify-center text-slate-400 text-center p-3">
               <Droplets className="w-8 h-8 mb-1.5 opacity-30 text-indigo-400" />
               <p className="font-bold text-xs text-slate-600">Orden Vacía</p>
               <p className="text-[10px] text-slate-400 mt-0.5 max-w-[180px]">
