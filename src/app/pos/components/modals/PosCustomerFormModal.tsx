@@ -235,112 +235,125 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
           </div>
 
           {/* Nombre / Razón Social */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
-                {custTipoPersona === 'JURIDICA' ? 'Razón Social (según Tarjeta NRC) *' : 'Nombre Completo *'}
-              </label>
-              <input
-                type="text"
-                required
-                placeholder={custTipoPersona === 'JURIDICA' ? 'Ej. Distribuidora Las Fragancias S.A. de C.V.' : 'Ej. María Julia Hernández'}
-                value={custName}
-                onChange={(e) => setCustName(e.target.value)}
-                className="clay-input w-full text-xs font-bold"
-              />
-            </div>
+          {(() => {
+            const requiresFiscalFields = custTipoPersona === 'JURIDICA' || custDocumentoPreferido === '03';
+            return (
+              <>
+                <div className={`grid grid-cols-1 ${requiresFiscalFields ? 'sm:grid-cols-2' : ''} gap-3`}>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">
+                      {custTipoPersona === 'JURIDICA' ? 'Razón Social (según Tarjeta NRC) *' : 'Nombre Completo *'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder={custTipoPersona === 'JURIDICA' ? 'Ej. Distribuidora Las Fragancias S.A. de C.V.' : 'Ej. María Julia Hernández'}
+                      value={custName}
+                      onChange={(e) => setCustName(e.target.value)}
+                      className="clay-input w-full text-xs font-bold"
+                    />
+                  </div>
 
-            <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
-                Nombre Comercial (Opcional)
-              </label>
-              <input
-                type="text"
-                placeholder="Ej. Boutique Elegance"
-                value={custNombreComercial}
-                onChange={(e) => setCustNombreComercial(e.target.value)}
-                className="clay-input w-full text-xs"
-              />
-            </div>
-          </div>
+                  {requiresFiscalFields && (
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">
+                        Nombre Comercial (Opcional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Ej. Boutique Elegance"
+                        value={custNombreComercial}
+                        onChange={(e) => setCustNombreComercial(e.target.value)}
+                        className="clay-input w-full text-xs"
+                      />
+                    </div>
+                  )}
+                </div>
 
-          {/* Documentos de Identidad */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
-                Tipo de Documento *
-              </label>
-              <select
-                value={custTipoDocumento}
-                onChange={(e) => setCustTipoDocumento(e.target.value as TipoDocumentoCliente)}
-                className="clay-input w-full text-xs font-bold"
-              >
-                <option value="DUI">DUI (El Salvador)</option>
-                <option value="NIT">NIT (El Salvador)</option>
-                <option value="PASAPORTE">Pasaporte (Extranjero)</option>
-                <option value="CARNET_RESIDENCIA">Carnet de Residente</option>
-                <option value="OTRO">Otro Documento</option>
-              </select>
-            </div>
+                {/* Documentos de Identidad */}
+                <div className={`grid grid-cols-1 ${requiresFiscalFields ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-3`}>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">
+                      Tipo de Documento *
+                    </label>
+                    <select
+                      value={custTipoDocumento}
+                      onChange={(e) => setCustTipoDocumento(e.target.value as TipoDocumentoCliente)}
+                      className="clay-input w-full text-xs font-bold"
+                    >
+                      <option value="DUI">DUI (El Salvador)</option>
+                      <option value="NIT">NIT (El Salvador)</option>
+                      <option value="PASAPORTE">Pasaporte (Extranjero)</option>
+                      <option value="CARNET_RESIDENCIA">Carnet de Residente</option>
+                      <option value="OTRO">Otro Documento</option>
+                    </select>
+                  </div>
 
-            <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
-                N° de Documento ({custTipoDocumento}) {(custTipoPersona === 'JURIDICA' || custDocumentoPreferido === '03') ? '*' : '(Opcional)'}
-              </label>
-              <input
-                type="text"
-                required={custTipoPersona === 'JURIDICA' || custDocumentoPreferido === '03'}
-                placeholder={custTipoDocumento === 'DUI' ? '00000000-0 (opcional en Factura)' : '0614-000000-000-0'}
-                value={custNumDocumento}
-                onChange={(e) => setCustNumDocumento(e.target.value)}
-                className="clay-input w-full text-xs font-mono font-bold"
-              />
-            </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">
+                      N° de Documento ({custTipoDocumento}) {requiresFiscalFields ? '*' : '(Opcional)'}
+                    </label>
+                    <input
+                      type="text"
+                      required={requiresFiscalFields}
+                      placeholder={custTipoDocumento === 'DUI' ? '00000000-0 (opcional en Factura)' : '0614-000000-000-0'}
+                      value={custNumDocumento}
+                      onChange={(e) => setCustNumDocumento(e.target.value)}
+                      className="clay-input w-full text-xs font-mono font-bold"
+                    />
+                  </div>
 
-            <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
-                NRC {custTipoPersona === 'JURIDICA' ? '(Requerido CCF) *' : '(Si es Contribuyente)'}
-              </label>
-              <input
-                type="text"
-                required={custTipoPersona === 'JURIDICA'}
-                placeholder="Ej. 123456-7"
-                value={custNrc}
-                onChange={(e) => setCustNrc(e.target.value)}
-                className="clay-input w-full text-xs font-mono font-bold"
-              />
-            </div>
-          </div>
+                  {requiresFiscalFields && (
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">
+                        NRC (Requerido CCF) *
+                      </label>
+                      <input
+                        type="text"
+                        required={requiresFiscalFields}
+                        placeholder="Ej. 123456-7"
+                        value={custNrc}
+                        onChange={(e) => setCustNrc(e.target.value)}
+                        className="clay-input w-full text-xs font-mono font-bold"
+                      />
+                    </div>
+                  )}
+                </div>
 
-          {/* Giro / Actividad Económica para CCF */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="sm:col-span-2">
-              <label className="text-xs font-bold text-slate-700 block mb-1">
-                Actividad Económica / Giro (Catálogo Oficial MH CAT-019)
-              </label>
-              <GiroSearchSelect
-                value={custGiro}
-                onChange={(val) => setCustGiro(val)}
-                variant="pos"
-                placeholder="Buscar por código o giro (ej. 47722, cosméticos, ropa...)"
-              />
-            </div>
+                {/* Giro / Actividad Económica para CCF */}
+                {requiresFiscalFields && (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="sm:col-span-2">
+                      <label className="text-xs font-bold text-slate-700 block mb-1">
+                        Actividad Económica / Giro (Catálogo Oficial MH CAT-019)
+                      </label>
+                      <GiroSearchSelect
+                        value={custGiro}
+                        onChange={(val) => setCustGiro(val)}
+                        variant="pos"
+                        placeholder="Buscar por código o giro (ej. 47722, cosméticos, ropa...)"
+                      />
+                    </div>
 
-            <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
-                Categoría Contribuyente
-              </label>
-              <select
-                value={custCategoria}
-                onChange={(e) => setCustCategoria(e.target.value as CategoriaContribuyente)}
-                className="clay-input w-full text-xs font-bold"
-              >
-                <option value="OTRO">Otro / General</option>
-                <option value="MEDIANO">Mediano Contribuyente</option>
-                <option value="GRANDE">Gran Contribuyente</option>
-              </select>
-            </div>
-          </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">
+                        Categoría Contribuyente
+                      </label>
+                      <select
+                        value={custCategoria}
+                        onChange={(e) => setCustCategoria(e.target.value as CategoriaContribuyente)}
+                        className="clay-input w-full text-xs font-bold"
+                      >
+                        <option value="OTRO">Otro / General</option>
+                        <option value="MEDIANO">Mediano Contribuyente</option>
+                        <option value="GRANDE">Gran Contribuyente</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </>
+            );
+          })()}
 
           {/* Contacto */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
