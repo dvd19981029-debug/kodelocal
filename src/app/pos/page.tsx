@@ -267,7 +267,13 @@ export default function PosPage() {
             } else {
               setProducts(getStoredProducts());
             }
-            return fetch('/api/customers');
+            return getStaffToken().then(staffToken =>
+              fetch('/api/customers', {
+                headers: {
+                  ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+                },
+              })
+            );
           })
           .then(res => res?.json())
           .then(data => {
@@ -374,7 +380,12 @@ export default function PosPage() {
   const refreshCustomers = async () => {
     setIsSyncingCustomers(true);
     try {
-      const res = await fetch('/api/customers');
+      const staffToken = await getStaffToken().catch(() => null);
+      const res = await fetch('/api/customers', {
+        headers: {
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+      });
       const data = await res.json();
       if (data.success && Array.isArray(data.customers) && data.customers.length > 0) {
         setCustomers(data.customers);
@@ -1533,10 +1544,19 @@ export default function PosPage() {
     }
   };
 
-  // Autocompletar datos de cliente al seleccionarlo
-  const handleSelectCustomer = (customerId: string) => {
-    setSelectedCustomerId(customerId);
-    const found = customers.find(c => c.id === customerId);
+  const resolveTraditionalMunicipio = (dept: string, rawMuni?: string): string => {
+    const munis = getMunicipiosByDepartamento(dept);
+    const norm = (s?: string) =>
+      (s || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const target = norm(rawMuni);
+    if (target) {
+      const exact = munis.find(m => norm(m.nombre) === target);
+      if (exact) return exact.nombre;
+    }
+    return munis[0]?.nombre || 'San Salvador';
+  };
+
+  const applyCustomerToOrder = (found: CustomerRecord | null | undefined) => {
     if (found) {
       setClienteNombre(found.name);
       setClienteDoc(found.numDocumento);
@@ -1544,15 +1564,17 @@ export default function PosPage() {
       setClienteEmail(found.email || '');
       setClienteGiro(found.actividadEconomica || '');
       const dept = found.departamento || 'San Salvador';
+      const resolvedMuni = resolveTraditionalMunicipio(dept, found.municipio);
       setClienteDepartamento(dept);
-      const munis = getMunicipiosByDepartamento(dept);
-      const muniMatch = munis.find(m => m.nombre.toLowerCase() === (found.municipio || '').toLowerCase());
-      setClienteMunicipio(muniMatch ? muniMatch.nombre : (munis[0]?.nombre || 'San Salvador Centro'));
+      setClienteMunicipio(resolvedMuni);
       setClienteDireccion(found.direccion || '');
       setDomicilioPhone(found.phone || '');
       setDomicilioDepartment(dept);
-      setDomicilioMunicipality(found.municipio || 'San Salvador');
+      setDomicilioMunicipality(resolvedMuni);
       setDomicilioAddress(found.direccion || '');
+      if (found.notas) {
+        setDomicilioReference(found.notas);
+      }
       if (found.nrc || found.tipoPersona === 'JURIDICA' || found.documentoPreferido === '03') {
         setTipoComprobante('03');
       } else {
@@ -1565,19 +1587,56 @@ export default function PosPage() {
       setClienteEmail('');
       setClienteGiro('');
       setClienteDepartamento('San Salvador');
-      setClienteMunicipio('San Salvador Centro');
+      setClienteMunicipio('San Salvador');
       setClienteDireccion('');
       setDomicilioPhone('');
       setDomicilioDepartment('San Salvador');
       setDomicilioMunicipality('San Salvador');
       setDomicilioAddress('');
+      setDomicilioReference('');
       setTipoComprobante('01');
     }
   };
 
+  // Autocompletar datos de cliente al seleccionarlo
+  const handleSelectCustomer = (customerId: string, explicitCustomer?: CustomerRecord) => {
+    setSelectedCustomerId(customerId);
+    if (!customerId) {
+      applyCustomerToOrder(null);
+      return;
+    }
+    const found = explicitCustomer || customers.find(c => c.id === customerId);
+    if (found) {
+      applyCustomerToOrder(found);
+    }
+  };
+
+  // Mantener precargados los datos de Domicilio desde el cliente seleccionado en el sistema
+  useEffect(() => {
+    if (selectedCustomerObj) {
+      const dept = selectedCustomerObj.departamento || 'San Salvador';
+      const resolvedMuni = resolveTraditionalMunicipio(dept, selectedCustomerObj.municipio);
+      setClienteNombre(selectedCustomerObj.name);
+      setClienteDoc(selectedCustomerObj.numDocumento);
+      setClienteNrc(selectedCustomerObj.nrc || '');
+      setClienteEmail(selectedCustomerObj.email || '');
+      setClienteGiro(selectedCustomerObj.actividadEconomica || '');
+      setClienteDepartamento(dept);
+      setClienteMunicipio(resolvedMuni);
+      setClienteDireccion(selectedCustomerObj.direccion || '');
+      setDomicilioPhone(selectedCustomerObj.phone || '');
+      setDomicilioDepartment(dept);
+      setDomicilioMunicipality(resolvedMuni);
+      setDomicilioAddress(selectedCustomerObj.direccion || '');
+      if (selectedCustomerObj.notas) {
+        setDomicilioReference(prev => prev || selectedCustomerObj.notas || '');
+      }
+    }
+  }, [selectedCustomerObj, isOrderDomicilio]);
+
   // Iniciar venta directa desde el módulo de clientes
   const handleStartSaleForCustomer = (cust: CustomerRecord) => {
-    handleSelectCustomer(cust.id);
+    handleSelectCustomer(cust.id, cust);
     setPosTab('nueva_orden');
   };
 
@@ -1597,7 +1656,7 @@ export default function PosPage() {
     setCustPhone('');
     setCustDepartamento('San Salvador');
     const munis = getMunicipiosByDepartamento('San Salvador');
-    setCustMunicipio(munis[0]?.nombre || 'San Salvador Centro');
+    setCustMunicipio(munis[0]?.nombre || 'San Salvador');
     setCustDireccion('');
     setCustNotas('');
     setCustSpecialEssencePrice('');
@@ -1627,9 +1686,7 @@ export default function PosPage() {
     setCustPhone(cust.phone);
     const dept = cust.departamento || 'San Salvador';
     setCustDepartamento(dept);
-    const munis = getMunicipiosByDepartamento(dept);
-    const muniMatch = munis.find(m => m.nombre.toLowerCase() === (cust.municipio || '').toLowerCase());
-    setCustMunicipio(muniMatch ? muniMatch.nombre : (munis[0]?.nombre || 'San Salvador Centro'));
+    setCustMunicipio(resolveTraditionalMunicipio(dept, cust.municipio));
     setCustDireccion(cust.direccion || '');
     setCustNotas(cust.notas || '');
     setCustSpecialEssencePrice(cust.specialEssencePrice != null ? String(cust.specialEssencePrice) : '');
@@ -1705,6 +1762,11 @@ export default function PosPage() {
     };
 
     const tempOrEditId = editingCustomerId || `cli-${Date.now()}`;
+    const optimisticCustomer: CustomerRecord = {
+      id: tempOrEditId,
+      ...customerPayload,
+      createdAt: new Date().toISOString(),
+    };
 
     // Guardar en Supabase PostgreSQL
     getStaffToken()
@@ -1725,10 +1787,20 @@ export default function PosPage() {
       .then(res => res.json())
       .then(data => {
         if (data?.success && data?.customer) {
+          const serverId = data.customer.id || tempOrEditId;
+          const mergedCust: CustomerRecord = {
+            ...optimisticCustomer,
+            id: serverId,
+          };
+          setCustomers(prev => {
+            const withoutTemp = prev.filter(c => c.id !== tempOrEditId && c.id !== serverId);
+            const updated = [mergedCust, ...withoutTemp];
+            saveStoredCustomers(updated);
+            return updated;
+          });
+          setSelectedCustomerId(prev => (prev === tempOrEditId || prev === editingCustomerId ? serverId : prev));
+          applyCustomerToOrder(mergedCust);
           refreshCustomers();
-          if (!editingCustomerId && data.customer.id) {
-            setSelectedCustomerId(prev => (prev === tempOrEditId ? data.customer.id : prev));
-          }
         }
       })
       .catch(err => console.error('Error guardando cliente en Supabase:', err));
@@ -1749,20 +1821,15 @@ export default function PosPage() {
         return updated;
       });
       if (selectedCustomerId === editingCustomerId) {
-        handleSelectCustomer(editingCustomerId);
+        handleSelectCustomer(editingCustomerId, optimisticCustomer);
       }
     } else {
-      const newCust: CustomerRecord = {
-        id: tempOrEditId,
-        ...customerPayload,
-        createdAt: new Date().toISOString()
-      };
       setCustomers(prev => {
-        const updated = [newCust, ...prev];
+        const updated = [optimisticCustomer, ...prev];
         saveStoredCustomers(updated);
         return updated;
       });
-      handleSelectCustomer(newCust.id);
+      handleSelectCustomer(optimisticCustomer.id, optimisticCustomer);
     }
 
     setIsCustomerModalOpen(false);

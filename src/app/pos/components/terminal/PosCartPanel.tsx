@@ -33,7 +33,7 @@ export interface PosCartPanelProps {
   isCartCustomerDropdownOpen: boolean;
   setIsCartCustomerDropdownOpen: (isOpen: boolean) => void;
   filteredCartCustomers: CustomerRecord[];
-  handleSelectCustomer: (customerId: string) => void;
+  handleSelectCustomer: (customerId: string, explicitCustomer?: CustomerRecord) => void;
   handleOpenNewCustomerModal: () => void;
   setCustName: (name: string) => void;
   // Domicilio toggle & fields
@@ -310,7 +310,7 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
                         key={cust.id}
                         type="button"
                         onClick={() => {
-                          handleSelectCustomer(cust.id);
+                          handleSelectCustomer(cust.id, cust);
                           setCartCustomerQuery('');
                           setIsCartCustomerDropdownOpen(false);
                         }}
@@ -376,18 +376,27 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
 
               {isOrderDomicilio && (
                 <div className="p-2 rounded-lg bg-blue-50/80 border border-blue-200/90 space-y-1.5 animate-in fade-in duration-150">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-1">
                     <span className="text-[10px] font-black text-blue-900 uppercase tracking-wide flex items-center gap-1">
                       <Truck className="w-3 h-3 text-blue-600" />
                       <span>Datos de Envío (Guía C807)</span>
                     </span>
+                    {selectedCustomerObj ? (
+                      <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200 truncate max-w-[170px]">
+                        ✓ Precargado de {selectedCustomerObj.name.split(' ')[0]}
+                      </span>
+                    ) : (
+                      <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">
+                        Selecciona cliente arriba
+                      </span>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 gap-1.5">
                     <div>
                       <label className="text-[9.5px] font-bold text-slate-600 block mb-0.5">Teléfono *</label>
                       <input
                         type="text"
-                        value={domicilioPhone}
+                        value={domicilioPhone || selectedCustomerObj?.phone || ''}
                         onChange={(e) => setDomicilioPhone && setDomicilioPhone(e.target.value)}
                         placeholder="7000-0000"
                         className="w-full px-2 py-1 text-[11px] rounded-md border border-blue-200 bg-white font-mono font-bold text-slate-800"
@@ -396,7 +405,7 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
                     <div>
                       <label className="text-[9.5px] font-bold text-slate-600 block mb-0.5">Departamento *</label>
                       <select
-                        value={domicilioDepartment}
+                        value={domicilioDepartment || selectedCustomerObj?.departamento || 'San Salvador'}
                         onChange={(e) => {
                           const d = e.target.value;
                           if (setDomicilioDepartment) setDomicilioDepartment(d);
@@ -420,7 +429,7 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
                       onChange={(e) => setDomicilioMunicipality && setDomicilioMunicipality(e.target.value)}
                       className="w-full px-1.5 py-1 text-[11px] rounded-md border border-blue-200 bg-white font-bold text-slate-800"
                     >
-                      {getMunicipiosByDepartamento(domicilioDepartment).map((m) => (
+                      {getMunicipiosByDepartamento(domicilioDepartment || selectedCustomerObj?.departamento || 'San Salvador').map((m) => (
                         <option key={m.id} value={m.nombre}>{m.nombre}</option>
                       ))}
                     </select>
@@ -429,7 +438,7 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
                     <label className="text-[9.5px] font-bold text-slate-600 block mb-0.5">Dirección detallada de entrega *</label>
                     <input
                       type="text"
-                      value={domicilioAddress}
+                      value={domicilioAddress || selectedCustomerObj?.direccion || ''}
                       onChange={(e) => setDomicilioAddress && setDomicilioAddress(e.target.value)}
                       placeholder="Colonia, calle, pasaje, # de casa..."
                       className="w-full px-2 py-1 text-[11px] rounded-md border border-blue-200 bg-white text-slate-800"

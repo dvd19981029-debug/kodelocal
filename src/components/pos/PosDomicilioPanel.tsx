@@ -174,13 +174,25 @@ export function mapSaleToDomicilioOrder(s: any): PosDomicilioOrder | null {
   );
   const shippingCost = envioItem ? Number(envioItem.total || 2.99) : Number(s.shippingCost || 0);
 
-  const department = String(
+  const rawDept = String(
     dom.department || cli.departamento || cust.department || 'San Salvador'
   ).trim();
-  const defaultMuni = getMunicipiosByDepartamento(department)[0]?.nombre || 'San Salvador';
-  const municipality = String(
-    dom.municipality || cli.municipio || cust.municipality || defaultMuni
+  const normText = (v: string) =>
+    v.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  const matchedDept = DEPARTAMENTOS_CATALOG.find(
+    (d) => normText(d.nombre) === normText(rawDept)
+  );
+  const department = matchedDept?.nombre || rawDept || 'San Salvador';
+
+  const munisForDept = getMunicipiosByDepartamento(department);
+  const rawMuni = String(
+    dom.municipality || cli.municipio || cust.municipality || ''
   ).trim();
+  const exactMuni = munisForDept.find(
+    (m) => normText(m.nombre) === normText(rawMuni)
+  );
+  const municipality =
+    exactMuni?.nombre || rawMuni || munisForDept[0]?.nombre || 'San Salvador';
 
   return {
     id: s.id,
@@ -194,7 +206,7 @@ export function mapSaleToDomicilioOrder(s: any): PosDomicilioOrder | null {
     department,
     municipality,
     shippingAddress: String(dom.shippingAddress || cli.direccion || cust.address || '').trim(),
-    deliveryReference: dom.deliveryReference || cli.referencia || null,
+    deliveryReference: dom.deliveryReference || cli.referencia || cust.notes || null,
     subtotal: Number(s.subtotal || 0),
     ivaTotal: Number(s.ivaTotal || 0),
     shippingCost,
