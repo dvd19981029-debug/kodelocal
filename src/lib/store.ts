@@ -95,7 +95,8 @@ export const PERFUME_CATEGORIES = [
   "Esencias para Perfume",
   "Botes",
   "Empaque",
-  "Insumos y Materia Prima"
+  "Insumos y Materia Prima",
+  "Logística"
 ];
 
 export const INITIAL_PRODUCTS: ProductItem[] = [
@@ -1979,6 +1980,26 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "description": "Inspirado en FAHRENHEIT DIOR",
     "isAvailableOnline": true,
     "puesto": "A1",
+    "stockHalf": 0
+  },
+  {
+    "id": "ENVIO-DOM",
+    "sku": "ENVIO-DOM",
+    "barcode": "741009000001",
+    "name": "Envío a Domicilio",
+    "officialName": "Envío a Domicilio",
+    "brand": "Logística",
+    "gender": "Unisex",
+    "category": "Logística",
+    "unit": "Servicio",
+    "price": 2.99,
+    "cost": 0,
+    "stock": 999999,
+    "minStock": 0,
+    "imageUrl": "/images/insumos/envio_domicilio.svg",
+    "description": "Cargo por servicio de entrega a domicilio ($2.99).",
+    "isAvailableOnline": true,
+    "puesto": "LOG",
     "stockHalf": 0
   }
 ];

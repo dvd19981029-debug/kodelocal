@@ -183,7 +183,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
                         ? 'bg-amber-50 text-amber-800 border border-amber-200' 
                         : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                     }`}>
-                      {isOutOfStock ? ((product.category === 'Botes' || product.category === 'Botes & Envases') ? 'En camino' : 'Agotado') : isEssence ? `${fullRemaining} Onzas · ${halfRemaining} Medias` : `${availableRemaining} ${product.unit === 'Onza' ? 'Oz' : 'Un.'}`}
+                      {isOutOfStock ? ((product.category === 'Botes' || product.category === 'Botes & Envases') ? 'En camino' : 'Agotado') : (product.category === 'Logística' || product.unit === 'Servicio') ? 'Disponible' : isEssence ? `${fullRemaining} Onzas · ${halfRemaining} Medias` : `${availableRemaining} ${product.unit === 'Onza' ? 'Oz' : 'Un.'}`}
                     </span>
                     <button
                       type="button"

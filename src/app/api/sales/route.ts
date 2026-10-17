@@ -376,7 +376,7 @@ export async function POST(request: Request) {
     const rawItems = Array.isArray(items) ? items : [];
     const rawProductIds = rawItems
       .map((it: any) => String(it.productId || '').trim())
-      .filter((id: string) => id.length > 0 && id !== 'ENVIO-DOM');
+      .filter((id: string) => id.length > 0);
 
     const existingDbProducts = await prisma.product.findMany({
       where: rawProductIds.length > 0
@@ -412,11 +412,11 @@ export async function POST(request: Request) {
       const isServiceItem =
         rawId === 'ENVIO-DOM' ||
         it.tipoItem === 2 ||
-        nameLower.includes('servicio de envío');
+        nameLower.includes('servicio de envío') ||
+        nameLower.includes('envío a domicilio');
 
-      let matchedProd = !isServiceItem
-        ? byId.get(rawId) || bySku.get(rawId.toLowerCase()) || byBarcode.get(rawId.toLowerCase())
-        : undefined;
+      let matchedProd =
+        byId.get(rawId) || bySku.get(rawId.toLowerCase()) || byBarcode.get(rawId.toLowerCase());
 
       // Si aún no coincidió por ID/SKU y no es un servicio, buscar por nombre limpio en la DB
       if (!matchedProd && !isServiceItem && rawName) {

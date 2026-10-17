@@ -804,8 +804,9 @@ export default function PosPage() {
   const getItemPriceDetails = (item: CartItem) => {
     let listPrice = item.product.price;
     const cat = item.product.category || '';
-    const isEssence = cat === "Esencias para Perfume" || cat === "Esencias & Fragancias" || item.product.unit === 'Onza' || (!cat && item.product.unit !== 'Unidad');
+    const isEssence = cat === "Esencias para Perfume" || cat === "Esencias & Fragancias" || item.product.unit === 'Onza' || (!cat && item.product.unit !== 'Unidad' && item.product.unit !== 'Servicio');
     const isBottle = !isEssence && (cat === "Botes" || cat === "Botes & Envases" || cat === "Envases & Botes" || item.product.name.toLowerCase().startsWith('bote') || item.product.name.toLowerCase().includes('frasco'));
+    const isLogistics = cat === "Logística" || cat === "Logistica" || item.product.id === "ENVIO-DOM" || item.product.unit === "Servicio";
 
     if (isEssence && activeCustomer?.specialEssencePrice) {
       listPrice = Number(activeCustomer.specialEssencePrice);
@@ -826,12 +827,16 @@ export default function PosPage() {
     let finalPrice = listPrice;
     let discountAmt = 0;
 
-    const activeCategoryTier = isEssence
+    const activeCategoryTier = isLogistics
+      ? null
+      : isEssence
       ? activeCustomer?.tier
       : isBottle
       ? activeCustomer?.bottleTier
       : activeCustomer?.suppliesTier;
-    const activeCategoryCustomPct = isEssence
+    const activeCategoryCustomPct = isLogistics
+      ? null
+      : isEssence
       ? activeCustomer?.customDiscountPct
       : isBottle
       ? activeCustomer?.bottleCustomDiscountPct
@@ -1070,7 +1075,7 @@ export default function PosPage() {
     // 1. Reconstruir ítems en el carrito del Cotizador
     const restoredCart: CartItem[] = [];
     for (const it of order.items || []) {
-      if (it.productId === 'ENVIO-DOM') continue;
+      if (it.productId === 'ENVIO-DOM' && order.channel === 'ONLINE') continue;
       const cleanName = String(it.name || '')
         .replace(/\s*\(½\s*Oz\)/gi, '')
         .replace(/\s*\(1\s*Onza\)/gi, '')
@@ -1096,7 +1101,9 @@ export default function PosPage() {
         nameLower.includes('media onza') ||
         nameLower.includes('½');
       const isEssence =
-        PERFUME_CATEGORIES.includes(matchedProd.category) ||
+        matchedProd.category === 'Esencias para Perfume' ||
+        matchedProd.category === 'Esencias & Fragancias' ||
+        matchedProd.unit === 'Onza' ||
         unitLower.includes('onza') ||
         unitLower.includes('oz');
 
@@ -1962,7 +1969,6 @@ export default function PosPage() {
 
     const restoredCart: CartItem[] = [];
     for (const it of quote.items || []) {
-      if (it.productId === 'ENVIO-DOM') continue;
       const cleanName = String(it.name || '')
         .replace(/\s*\(½\s*Oz\)/gi, '')
         .replace(/\s*\(1\s*Onza\)/gi, '')
@@ -1988,7 +1994,9 @@ export default function PosPage() {
         nameLower.includes('media onza') ||
         nameLower.includes('½');
       const isEssence =
-        PERFUME_CATEGORIES.includes(matchedProd.category) ||
+        matchedProd.category === 'Esencias para Perfume' ||
+        matchedProd.category === 'Esencias & Fragancias' ||
+        matchedProd.unit === 'Onza' ||
         unitLower.includes('onza') ||
         unitLower.includes('oz');
 

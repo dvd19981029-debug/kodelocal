@@ -165,6 +165,7 @@ export default function EcommerceHomePage() {
   const filteredProducts = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     return products.filter((p) => {
+      if (p.category === 'Logística' || p.id === 'ENVIO-DOM') return false;
       // Filtro de categoría
       let matchesCategory = true;
       if (selectedCategory === 'Insumos' || selectedCategory === 'Alcohol y Materiales') {
