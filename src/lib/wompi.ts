@@ -3,20 +3,25 @@ import crypto from 'crypto';
 interface WompiTokenCache {
   token: string;
   expiresAt: number; // timestamp ms
+  appId: string;
 }
 
 let tokenCache: WompiTokenCache | null = null;
 
-const WOMPI_APP_ID = process.env.WOMPI_APP_ID;
-const WOMPI_API_SECRET = process.env.WOMPI_API_SECRET;
-const WOMPI_AUTH_URL = process.env.WOMPI_AUTH_URL || 'https://id.wompi.sv';
-const WOMPI_API_URL = process.env.WOMPI_API_URL || 'https://api.wompi.sv';
+const WOMPI_AUTH_URL = (process.env.WOMPI_AUTH_URL || 'https://id.wompi.sv').trim().replace(/^["']+|["']+$/g, '');
+const WOMPI_API_URL = (process.env.WOMPI_API_URL || 'https://api.wompi.sv').trim().replace(/^["']+|["']+$/g, '');
+
+function cleanEnvValue(val?: string): string {
+  return (val || '').trim().replace(/^["']+|["']+$/g, '').trim();
+}
 
 function ensureWompiConfig(): { appId: string; apiSecret: string } {
-  if (!WOMPI_APP_ID || !WOMPI_API_SECRET) {
+  const appId = cleanEnvValue(process.env.WOMPI_APP_ID);
+  const apiSecret = cleanEnvValue(process.env.WOMPI_API_SECRET);
+  if (!appId || !apiSecret) {
     throw new Error('Configuración de Wompi incompleta: defina WOMPI_APP_ID y WOMPI_API_SECRET en las variables de entorno (.env).');
   }
-  return { appId: WOMPI_APP_ID, apiSecret: WOMPI_API_SECRET };
+  return { appId, apiSecret };
 }
 
 /**
@@ -28,7 +33,7 @@ export async function getWompiToken(): Promise<string> {
   const now = Date.now();
 
   // Si tenemos token válido en caché con más de 2 minutos de margen, lo reutilizamos
-  if (tokenCache && tokenCache.expiresAt > now + 120 * 1000) {
+  if (tokenCache && tokenCache.appId === appId && tokenCache.expiresAt > now + 120 * 1000) {
     return tokenCache.token;
   }
 
@@ -57,6 +62,7 @@ export async function getWompiToken(): Promise<string> {
   tokenCache = {
     token: data.access_token,
     expiresAt: now + expiresInSeconds * 1000,
+    appId,
   };
 
   return tokenCache.token;
