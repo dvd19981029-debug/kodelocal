@@ -24,7 +24,7 @@ import {
   LogIn
 } from 'lucide-react';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
-import { DEPARTAMENTOS_CATALOG, MUNICIPIOS_CATALOG } from '@/lib/svTerritory';
+import { DEPARTAMENTOS_CATALOG, getMunicipiosByDepartamento } from '@/lib/svTerritory';
 import { getGuestOrders, addGuestOrderNumber, getGuestShippingProfile, saveGuestShippingProfile } from '@/lib/guestOrderStorage';
 import { GiroSearchSelect } from '@/components/common/GiroSearchSelect';
 
@@ -56,7 +56,7 @@ export default function CustomerDrawer() {
   const [documentType, setDocumentType] = useState('DUI');
   const [documentNum, setDocumentNum] = useState('');
   const [department, setDepartment] = useState('San Salvador');
-  const [municipality, setMunicipality] = useState('San Salvador Centro');
+  const [municipality, setMunicipality] = useState('San Salvador');
   const [address, setAddress] = useState('');
   const [isCreditFiscal, setIsCreditFiscal] = useState(false);
   const [businessName, setBusinessName] = useState('');
@@ -93,7 +93,7 @@ export default function CustomerDrawer() {
       setDocumentType(customer.documentType || 'DUI');
       setDocumentNum(customer.documentNum || '');
       setDepartment(customer.department || 'San Salvador');
-      setMunicipality(customer.municipality || 'San Salvador Centro');
+      setMunicipality(customer.municipality || 'San Salvador');
       setAddress(customer.address || '');
       setBusinessName(customer.businessName || '');
       setNrc(customer.nrc || '');
@@ -106,7 +106,7 @@ export default function CustomerDrawer() {
       setDocumentType(guest.documentType || 'DUI');
       setDocumentNum(guest.documentNum || '');
       setDepartment(guest.department || 'San Salvador');
-      setMunicipality(guest.municipality || 'San Salvador Centro');
+      setMunicipality(guest.municipality || 'San Salvador');
       setAddress(guest.address || '');
       setBusinessName(guest.businessName || '');
       setNrc(guest.nrc || '');
@@ -172,12 +172,7 @@ export default function CustomerDrawer() {
   const visibleOrders = orders;
 
   // Filter available municipalities by selected department
-  const selectedDeptObj = DEPARTAMENTOS_CATALOG.find(
-    (d) => d.nombre.toLowerCase() === department.toLowerCase()
-  );
-  const availableMunicipios = selectedDeptObj
-    ? MUNICIPIOS_CATALOG.filter((m) => m.departamentoId === selectedDeptObj.id)
-    : [];
+  const availableMunicipios = getMunicipiosByDepartamento(department);
 
   const handleManualOrderLookup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -777,11 +772,8 @@ export default function CustomerDrawer() {
                             onChange={(e) => {
                               const newDept = e.target.value;
                               setDepartment(newDept);
-                              const found = DEPARTAMENTOS_CATALOG.find(d => d.nombre.toLowerCase() === newDept.toLowerCase());
-                              if (found) {
-                                const newMunis = MUNICIPIOS_CATALOG.filter(m => m.departamentoId === found.id);
-                                if (newMunis.length > 0) setMunicipality(newMunis[0].nombre);
-                              }
+                              const newMunis = getMunicipiosByDepartamento(newDept);
+                              if (newMunis.length > 0) setMunicipality(newMunis[0].nombre);
                             }}
                             className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:bg-white focus:border-indigo-500 focus:outline-none transition-colors"
                           >

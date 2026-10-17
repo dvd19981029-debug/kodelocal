@@ -84,7 +84,7 @@ export class C807Client {
     try {
       // 1. Resolver identificadores territoriales oficiales requeridos por C807
       const deptoId = DEPTO_TO_ID[input.cliente_departamento?.trim()] || 11; // Default San Salvador (11)
-      const muniId = resolveC807MunicipioId(input.cliente_municipio, deptoId);
+      const muniId = resolveC807MunicipioId(input.cliente_municipio, deptoId, input.cliente_direccion);
 
       // 2. Determinar tipo de servicio y monto contra entrega
       const esContraEntrega = input.tipo_pago === 'CONTRAENTREGA';

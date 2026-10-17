@@ -50,7 +50,7 @@ export default function CheckoutPage() {
   const [telefono, setTelefono] = useState(customer?.phone || '');
   const [email, setEmail] = useState(customer?.email || '');
   const [departamento, setDepartamento] = useState(customer?.department || 'San Salvador');
-  const [municipio, setMunicipio] = useState(customer?.municipality || 'San Salvador Centro');
+  const [municipio, setMunicipio] = useState(customer?.municipality || 'San Salvador');
   const [direccion, setDireccion] = useState(customer?.address || '');
   const [referencia, setReferencia] = useState('');
 

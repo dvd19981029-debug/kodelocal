@@ -191,12 +191,85 @@ const DISTRITO_ALIASES: Record<string, { dept: string; muni: string }> = {
   'ACAJUTLA': { dept: '03', muni: '20' }
 };
 
+const MH_DEPT_TO_C807_ID: Record<string, number> = {
+  '01': 2,  // Ahuachapán
+  '02': 13, // Santa Ana
+  '03': 14, // Sonsonate
+  '04': 4,  // Chalatenango
+  '05': 6,  // La Libertad
+  '06': 11, // San Salvador
+  '07': 5,  // Cuscatlán
+  '08': 7,  // La Paz
+  '09': 3,  // Cabañas
+  '10': 12, // San Vicente
+  '11': 15, // Usulután
+  '12': 10, // San Miguel
+  '13': 9,  // Morazán
+  '14': 8,  // La Unión
+};
+
+const CABECERA_BY_C807_DEPTO: Record<number, string> = {
+  2: 'AHUACHAPAN',
+  3: 'SENSUNTEPEQUE',
+  4: 'CHALATENANGO',
+  5: 'COJUTEPEQUE',
+  6: 'SANTA TECLA',
+  7: 'ZACATECOLUCA',
+  8: 'LA UNION',
+  9: 'SAN FRANCISCO GOTERA',
+  10: 'SAN MIGUEL',
+  11: 'SAN SALVADOR',
+  12: 'SAN VICENTE',
+  13: 'SANTA ANA',
+  14: 'SONSONATE',
+  15: 'USULUTAN',
+};
+
+function normalizeMuniStr(str?: string): string {
+  return (str || '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function toTitleCaseMuni(raw: string): string {
+  const minorWords = new Set(['DE', 'DEL', 'LA', 'LAS', 'LOS', 'EL', 'Y']);
+  return raw
+    .trim()
+    .split(/\s+/)
+    .map((word, idx) => {
+      const upper = word.toUpperCase();
+      if (idx > 0 && minorWords.has(upper)) return upper.toLowerCase();
+      return upper.charAt(0) + upper.slice(1).toLowerCase();
+    })
+    .join(' ');
+}
+
 /**
- * Obtiene la lista de municipios correspondientes a un departamento
+ * Obtiene la lista de municipios (nomenclatura tradicional de 262 municipios compatible con C807 y mapeada a MH)
+ * correspondientes a un departamento.
  */
 export function getMunicipiosByDepartamento(deptIdOrName: string): MunicipioCatalogItem[] {
   const deptCode = resolveDepartamentoCode(deptIdOrName);
-  return MUNICIPIOS_CATALOG.filter(m => m.departamentoId === deptCode);
+  const c807DeptoId = MH_DEPT_TO_C807_ID[deptCode];
+  if (!c807DeptoId) {
+    return MUNICIPIOS_CATALOG.filter(m => m.departamentoId === deptCode);
+  }
+
+  const cabecera = CABECERA_BY_C807_DEPTO[c807DeptoId] || '';
+  const records = ((svMunicipiosJson as unknown) as MunicipioRecord[])
+    .filter(m => m.id_depto === c807DeptoId)
+    .slice()
+    .sort((a, b) => {
+      const aIsCab = a.nombre_municipio.toUpperCase() === cabecera;
+      const bIsCab = b.nombre_municipio.toUpperCase() === cabecera;
+      if (aIsCab && !bIsCab) return -1;
+      if (!aIsCab && bIsCab) return 1;
+      return a.nombre_municipio.localeCompare(b.nombre_municipio, 'es');
+    });
+
+  return records.map(m => ({
+    id: String(m.id_municipio),
+    departamentoId: deptCode,
+    nombre: toTitleCaseMuni(m.nombre_municipio),
+  }));
 }
 
 /**
@@ -231,15 +304,14 @@ export function resolveDepartamentoCode(deptIdOrName?: string): string {
 }
 
 /**
- * Normaliza cualquier entrada de municipio a un código válido de 2 dígitos dentro del departamento especificado.
- * Garantiza al 100% que el código pertenezca al departamento según las reglas del Ministerio de Hacienda.
+ * Normaliza cualquier entrada de municipio (sea de los 262 tradicionales o de los 44 nuevos)
+ * a un código válido de 2 dígitos dentro del departamento especificado para Hacienda DTE.
  */
 export function resolveMunicipioCode(deptCode: string, muniIdOrName?: string): string {
   const munisOfDept = MUNICIPIOS_CATALOG.filter(m => m.departamentoId === deptCode);
   if (munisOfDept.length === 0) return '00';
 
   if (!muniIdOrName) {
-    // Fallback: retornar el primer municipio del depto (o el Centro si existe)
     const centro = munisOfDept.find(m => m.nombre.toUpperCase().includes('CENTRO'));
     return (centro || munisOfDept[0]).id;
   }
@@ -247,21 +319,32 @@ export function resolveMunicipioCode(deptCode: string, muniIdOrName?: string): s
   const clean = muniIdOrName.trim();
   const pad = clean.padStart(2, '0');
 
-  // 1. Si ya es un código de 2 dígitos y existe en este departamento:
+  // 1. Si ya es un código MH de 2 dígitos y existe en este departamento:
   const matchById = munisOfDept.find(m => m.id === pad);
   if (matchById) return matchById.id;
 
-  // 2. Búsqueda por nombre exacto en los municipios del departamento
-  const cleanUpper = clean.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const cleanUpper = normalizeMuniStr(clean);
+
+  // 2. Buscar primero en el catálogo de 262 municipios tradicionales (svMunicipiosData.json)
+  const c807DeptoId = MH_DEPT_TO_C807_ID[deptCode];
+  const allKode = (svMunicipiosJson as unknown) as MunicipioRecord[];
+  const exactTraditionalInDept = allKode.find(
+    m => (!c807DeptoId || m.id_depto === c807DeptoId) && normalizeMuniStr(m.nombre_municipio) === cleanUpper
+  );
+  if (exactTraditionalInDept) {
+    return String(exactTraditionalInDept.municipio_mh).padStart(2, '0');
+  }
+
+  // 3. Búsqueda por nombre en los 44 municipios nuevos del departamento (retrocompatibilidad)
   const matchByName = munisOfDept.find(m => {
-    const norm = m.nombre.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const norm = normalizeMuniStr(m.nombre);
     return norm === cleanUpper || cleanUpper.includes(norm) || norm.includes(cleanUpper);
   });
   if (matchByName) return matchByName.id;
 
-  // 3. Revisar alias tradicionales de distritos
+  // 4. Revisar alias tradicionales de distritos
   const aliasKey = Object.keys(DISTRITO_ALIASES).find(k => 
-    k.normalize("NFD").replace(/[\u0300-\u036f]/g, "") === cleanUpper
+    normalizeMuniStr(k) === cleanUpper
   );
   if (aliasKey) {
     const alias = DISTRITO_ALIASES[aliasKey];
@@ -271,7 +354,7 @@ export function resolveMunicipioCode(deptCode: string, muniIdOrName?: string): s
     }
   }
 
-  // 4. Fallback garantizado: municipio centro o primer municipio del depto
+  // 5. Fallback garantizado: municipio centro o primer municipio del depto
   const fallback = munisOfDept.find(m => m.nombre.toUpperCase().includes('CENTRO')) || munisOfDept[0];
   return fallback.id;
 }
@@ -408,29 +491,67 @@ export function getMunicipiosByDepto(deptoIdOrName: number | string): MunicipioR
 }
 
 /**
- * Resuelve el id_municipio numérico para C807 Express a partir del nombre del municipio
+ * Resuelve el id_municipio numérico para C807 Express a partir del nombre del municipio (tradicional o MH)
  */
-export function resolveC807MunicipioId(muniName: string, idDepto?: number): number {
-  if (!muniName) return 194;
-  const clean = muniName.trim().toUpperCase();
-  const found = MUNICIPIOS_KODE.find(m => 
-    (!idDepto || m.id_depto === idDepto) && 
-    (m.nombre_municipio.toUpperCase() === clean || m.nombre_mh.toUpperCase().includes(clean))
+export function resolveC807MunicipioId(muniName: string, idDepto?: number, direccion?: string): number {
+  const clean = normalizeMuniStr(muniName);
+  if (!clean) return 194;
+
+  // 1. Coincidencia exacta con el municipio tradicional dentro del departamento
+  const exactInDept = MUNICIPIOS_KODE.find(
+    m => (!idDepto || m.id_depto === idDepto) && normalizeMuniStr(m.nombre_municipio) === clean
   );
-  return found ? found.id_municipio : 194;
+  if (exactInDept) return exactInDept.id_municipio;
+
+  // 2. Coincidencia exacta con el municipio tradicional en cualquier departamento
+  const exactAny = MUNICIPIOS_KODE.find(m => normalizeMuniStr(m.nombre_municipio) === clean);
+  if (exactAny) return exactAny.id_municipio;
+
+  // 3. Si viene un nombre de la nomenclatura nueva (ej. "La Paz Oeste", "San Salvador Centro"),
+  //    verificar primero si la dirección menciona explícitamente alguno de los distritos tradicionales de ese grupo
+  const groupMatches = MUNICIPIOS_KODE.filter(
+    m => (!idDepto || m.id_depto === idDepto) && normalizeMuniStr(m.nombre_mh).includes(clean)
+  );
+  if (groupMatches.length > 0) {
+    if (direccion) {
+      const normDir = normalizeMuniStr(direccion);
+      // Ordenar de nombre más largo a más corto para evitar falsos positivos parciales
+      const byLength = groupMatches
+        .slice()
+        .sort((a, b) => b.nombre_municipio.length - a.nombre_municipio.length);
+      const mentionedInAddress = byLength.find(m => normDir.includes(normalizeMuniStr(m.nombre_municipio)));
+      if (mentionedInAddress) return mentionedInAddress.id_municipio;
+    }
+
+    // Preferir la cabecera departamental si pertenece a este grupo (ej. San Salvador en San Salvador Centro, Santa Tecla en La Libertad Sur)
+    const deptCabecera = idDepto ? CABECERA_BY_C807_DEPTO[idDepto] : undefined;
+    if (deptCabecera) {
+      const cabMatch = groupMatches.find(m => normalizeMuniStr(m.nombre_municipio) === deptCabecera);
+      if (cabMatch) return cabMatch.id_municipio;
+    }
+
+    return groupMatches[0].id_municipio;
+  }
+
+  return 194;
 }
 
 /**
  * Resuelve el código de 2 dígitos del municipio para Factura Llama / MH (ej. "23")
  */
 export function resolveMhMunicipioCodeFromKode(muniName: string, idDepto?: number): string {
-  if (!muniName) return '23';
-  const clean = muniName.trim().toUpperCase();
-  const found = MUNICIPIOS_KODE.find(m => 
-    (!idDepto || m.id_depto === idDepto) && 
-    (m.nombre_municipio.toUpperCase() === clean || m.nombre_mh.toUpperCase().includes(clean))
+  const clean = normalizeMuniStr(muniName);
+  if (!clean) return '23';
+  const exact = MUNICIPIOS_KODE.find(
+    m => (!idDepto || m.id_depto === idDepto) && normalizeMuniStr(m.nombre_municipio) === clean
   );
-  return found ? found.municipio_mh : '23';
+  if (exact) return String(exact.municipio_mh).padStart(2, '0');
+
+  const found = MUNICIPIOS_KODE.find(
+    m => (!idDepto || m.id_depto === idDepto) && normalizeMuniStr(m.nombre_mh).includes(clean)
+  );
+  return found ? String(found.municipio_mh).padStart(2, '0') : '23';
 }
+
 
 

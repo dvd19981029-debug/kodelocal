@@ -53,7 +53,7 @@ export default function CustomerAuthModal() {
   const [activityDesc, setActivityDesc] = useState('');
   const [activityCode, setActivityCode] = useState('');
   const [department, setDepartment] = useState('San Salvador');
-  const [municipality, setMunicipality] = useState('San Salvador Centro');
+  const [municipality, setMunicipality] = useState('San Salvador');
   const [address, setAddress] = useState('');
 
   if (!isAuthModalOpen) return null;
