@@ -20,6 +20,17 @@ interface BlogPostSummary {
 
 const INITIAL_BLOG_POSTS: BlogPostSummary[] = [
   {
+    id: 'post-top-10-perfumes-sv-2026',
+    slug: 'perfumes-mas-vendidos-y-duraderos-en-el-salvador-2026-guia-equivalencias',
+    title: 'Los 10 Perfumes Más Vendidos y Duraderos en El Salvador (2026): Guía para el Calor y Equivalencias AAA+',
+    excerpt: 'Ranking actualizado 2026 de las fragancias con mayor fijación para el clima cálido de El Salvador, tabla de equivalencias AAA+ y precios desde $3.75/Oz.',
+    coverImage: '/images/blog/top-10-perfumes-el-salvador-2026.webp',
+    author: 'Equipo Aromaniak SV',
+    category: 'Perfumería Fina',
+    readingTimeMin: 6,
+    publishedAt: '2026-10-17T00:00:00.000Z',
+  },
+  {
     id: 'post-emprender-sv',
     slug: 'por-que-aromaniak-es-la-mejor-opcion-para-emprender-en-el-salvador',
     title: 'Por Qué Aromaniak es la Mejor Opción para Emprender en El Salvador',
@@ -40,17 +51,6 @@ const INITIAL_BLOG_POSTS: BlogPostSummary[] = [
     category: 'Guías',
     readingTimeMin: 3,
     publishedAt: '2026-09-16T00:00:00.000Z',
-  },
-  {
-    id: 'post-como-vender',
-    slug: 'como-vender-perfumes-desde-casa-el-salvador-e3de2e19',
-    title: 'Guía para principiantes: cómo empezar a vender perfumes desde casa en El Salvador',
-    excerpt: 'Aprende a iniciar tu negocio de perfumería fina con esencias 100% puras, fórmulas de alta fijación y entrega en todo El Salvador.',
-    coverImage: '/images/promo/banner_emprendedor.webp',
-    author: 'Equipo Aromaniak',
-    category: 'Emprendimiento',
-    readingTimeMin: 4,
-    publishedAt: '2026-09-15T00:00:00.000Z',
   },
 ];
 
