@@ -160,7 +160,7 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{
-          aspectRatio: '1024 / 448',
+          aspectRatio: '1024 / 571',
           width: '100%',
         }}
       >
