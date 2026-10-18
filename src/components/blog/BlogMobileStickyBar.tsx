@@ -7,7 +7,7 @@ import { ShoppingBag, Check, X } from 'lucide-react';
 import { ProductItem } from '@/lib/store';
 import { useEcommerceCart, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
 import { getProductImage } from '@/lib/perfumeImages';
-import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
+import { getInspiracionPerfumeName, getBottleLabelConfig } from '@/lib/perfumeNames';
 import { getProductUrl } from '@/lib/productUrl';
 import { useLiveProducts } from '@/hooks/useLiveProducts';
 
@@ -68,15 +68,36 @@ export default function BlogMobileStickyBar({ product, catalog }: BlogMobileStic
       <div className="max-w-md mx-auto flex items-center justify-between gap-2.5">
         
         {/* Imagen del producto */}
-        <Link href={getProductUrl(product)} className="shrink-0 relative block">
+        <Link href={getProductUrl(product)} className="shrink-0 relative w-10 h-10 @container rounded-xl overflow-hidden border border-slate-200 shadow-2xs block">
           <img
             src={productImage}
             alt={displayName}
             onError={(e) => {
               e.currentTarget.src = '/images/essence_bottle_blank.webp';
             }}
-            className="w-10 h-10 rounded-xl object-cover border border-slate-200 shadow-2xs"
+            className="w-full h-full object-cover object-center"
           />
+          {productImage === '/images/essence_bottle_blank.webp' && (() => {
+            const { lines, fontSize } = getBottleLabelConfig(displayName);
+            return (
+              <div className="absolute inset-0 pointer-events-none origin-center">
+                <div className="absolute flex flex-col items-center justify-center w-full -translate-y-1/2" style={{ top: '65%', left: '0%' }}>
+                  <div className="flex flex-col items-center justify-center w-[35%] max-w-[35%] text-center px-0.5">
+                    <div
+                      className="flex flex-col items-center justify-center text-[#111111] font-[800] tracking-wide leading-[1.12]"
+                      style={{ fontSize }}
+                    >
+                      {lines.map((line, idx) => (
+                        <span key={idx} className="block whitespace-nowrap">
+                          {line}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </Link>
 
         {/* Información resumida */}

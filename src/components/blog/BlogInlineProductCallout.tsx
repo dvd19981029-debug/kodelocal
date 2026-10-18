@@ -8,7 +8,7 @@ import { ProductItem, INITIAL_PRODUCTS } from '@/lib/store';
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { getProductImage } from '@/lib/perfumeImages';
-import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
+import { getInspiracionPerfumeName, getBottleLabelConfig } from '@/lib/perfumeNames';
 import { getProductUrl } from '@/lib/productUrl';
 import { PostRecommendations } from '@/lib/recommendations';
 import { useLiveProducts } from '@/hooks/useLiveProducts';
@@ -140,10 +140,10 @@ export default function BlogInlineProductCallout({
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 w-full max-w-full min-w-0">
           {/* Contenedor fila en móvil (imagen grande + datos principales) */}
           <div className="flex items-start gap-3.5 sm:gap-4 w-full sm:flex-1 min-w-0">
-            {/* Imagen del producto: Amplia, nítida, sin etiquetas que tapen el frasco */}
+            {/* Imagen del producto: Amplia, nítida, con etiqueta dinámica en el frasco */}
             <Link
               href={getProductUrl(mainProduct)}
-              className="shrink-0 w-28 h-28 sm:w-36 sm:h-36 rounded-2xl overflow-hidden bg-white border border-slate-200/80 shadow-2xs relative group block flex items-center justify-center p-1.5"
+              className="shrink-0 w-28 h-28 sm:w-36 sm:h-36 @container rounded-2xl overflow-hidden bg-white border border-slate-200/80 shadow-2xs relative group block flex items-center justify-center"
             >
               <img
                 src={productImage}
@@ -152,8 +152,30 @@ export default function BlogInlineProductCallout({
                 onError={(e) => {
                   e.currentTarget.src = '/images/essence_bottle_blank.webp';
                 }}
-                className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
               />
+              {productImage === '/images/essence_bottle_blank.webp' && (() => {
+                const { lines, fontSize } = getBottleLabelConfig(displayName);
+                return (
+                  <div className="absolute inset-0 pointer-events-none transition-transform duration-300 group-hover:scale-105 origin-center">
+                    <div className="absolute flex flex-col items-center justify-center w-full -translate-y-1/2" style={{ top: '65%', left: '0%' }}>
+                      <div className="flex flex-col items-center justify-center w-[35%] max-w-[35%] text-center px-0.5">
+                        <div
+                          className="flex flex-col items-center justify-center text-[#111111] font-[800] tracking-wide leading-[1.12]"
+                          style={{ fontSize }}
+                        >
+                          {lines.map((line, idx) => (
+                            <span key={idx} className="block whitespace-nowrap">
+                              {line}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="mt-[1.2cqw] w-[30%] h-[1.5px] bg-[#111111]/80"></div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </Link>
 
             {/* Detalles informativos con espacio adecuado y sin recortes */}
@@ -302,15 +324,37 @@ export default function BlogInlineProductCallout({
                     href={getProductUrl(ess)}
                     className="block group flex-1 cursor-pointer"
                   >
-                    <div className="relative aspect-square rounded-xl overflow-hidden bg-white mb-2 border border-slate-100 flex items-center justify-center shrink-0 p-1">
+                    <div className="relative aspect-square @container rounded-xl overflow-hidden bg-white mb-2 border border-slate-100 flex items-center justify-center shrink-0">
                       <img
                         src={essImg}
                         alt={essName}
                         onError={(e) => {
                           e.currentTarget.src = '/images/essence_bottle_blank.webp';
                         }}
-                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-200"
+                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-200"
                       />
+                      {essImg === '/images/essence_bottle_blank.webp' && (() => {
+                        const { lines, fontSize } = getBottleLabelConfig(essName);
+                        return (
+                          <div className="absolute inset-0 pointer-events-none transition-transform duration-200 group-hover:scale-105 origin-center">
+                            <div className="absolute flex flex-col items-center justify-center w-full -translate-y-1/2" style={{ top: '65%', left: '0%' }}>
+                              <div className="flex flex-col items-center justify-center w-[35%] max-w-[35%] text-center px-0.5">
+                                <div
+                                  className="flex flex-col items-center justify-center text-[#111111] font-[800] tracking-wide leading-[1.12]"
+                                  style={{ fontSize }}
+                                >
+                                  {lines.map((line, idx) => (
+                                    <span key={idx} className="block whitespace-nowrap">
+                                      {line}
+                                    </span>
+                                  ))}
+                                </div>
+                                <div className="mt-[1.2cqw] w-[30%] h-[1.5px] bg-[#111111]/80"></div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     <div className="mb-2 flex flex-col justify-start">

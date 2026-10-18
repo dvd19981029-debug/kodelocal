@@ -9,6 +9,7 @@ import ProductCard from '@/components/ecommerce/ProductCard';
 import TableOfContents from '@/components/blog/TableOfContents';
 import { PostRecommendations } from '@/lib/recommendations';
 import { getProductImage } from '@/lib/perfumeImages';
+import { getBottleLabelConfig } from '@/lib/perfumeNames';
 import { useLiveProducts } from '@/hooks/useLiveProducts';
 
 interface BlogReadingSidebarProps {
@@ -180,26 +181,49 @@ export default function BlogReadingSidebar({
               <div className="flex gap-2 overflow-x-auto scrollbar-none py-1 snap-x">
                 {finalEssences.map((e) => {
                   const isSelected = e.id === currentEssence.id;
+                  const thumbImg = getProductImage(e);
+                  const thumbName = e.officialName?.trim() || e.name;
                   return (
                     <button
                       key={e.id}
                       type="button"
                       onClick={() => setSelectedEssenceId(e.id)}
-                      className={`relative w-12 h-12 rounded-xl overflow-hidden border shrink-0 transition-all cursor-pointer ${
+                      className={`relative w-12 h-12 @container rounded-xl overflow-hidden border shrink-0 transition-all cursor-pointer ${
                         isSelected
                           ? 'ring-2 ring-[#7c3aed] border-[#7c3aed] scale-105 shadow-2xs'
                           : 'border-slate-200/80 hover:border-slate-300 opacity-75 hover:opacity-100 bg-white'
                       }`}
-                      title={e.name}
+                      title={thumbName}
                     >
                       <img
-                        src={getProductImage(e)}
-                        alt={e.name}
+                        src={thumbImg}
+                        alt={thumbName}
                         onError={(ev) => {
                           ev.currentTarget.src = '/images/essence_bottle_blank.webp';
                         }}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover object-center"
                       />
+                      {thumbImg === '/images/essence_bottle_blank.webp' && (() => {
+                        const { lines, fontSize } = getBottleLabelConfig(thumbName);
+                        return (
+                          <div className="absolute inset-0 pointer-events-none origin-center">
+                            <div className="absolute flex flex-col items-center justify-center w-full -translate-y-1/2" style={{ top: '65%', left: '0%' }}>
+                              <div className="flex flex-col items-center justify-center w-[35%] max-w-[35%] text-center px-0.5">
+                                <div
+                                  className="flex flex-col items-center justify-center text-[#111111] font-[800] tracking-wide leading-[1.12]"
+                                  style={{ fontSize }}
+                                >
+                                  {lines.map((line, idx) => (
+                                    <span key={idx} className="block whitespace-nowrap">
+                                      {line}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </button>
                   );
                 })}
