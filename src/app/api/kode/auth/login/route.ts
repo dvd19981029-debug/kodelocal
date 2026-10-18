@@ -155,7 +155,7 @@ export async function POST(request: Request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7 // 7 days
+      maxAge: 60 * 60 * 24 * 30 // 30 days
     });
 
     response.cookies.set('kode_session_ui', JSON.stringify({
@@ -166,7 +166,7 @@ export async function POST(request: Request) {
     }), {
       path: '/',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7
+      maxAge: 60 * 60 * 24 * 30 // 30 days
     });
 
     return response;

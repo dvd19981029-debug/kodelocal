@@ -46,6 +46,7 @@ export default function LoginPage() {
       if (data.success) {
         if (data.token && typeof window !== 'undefined') {
           sessionStorage.setItem('kodelocal_staff_token', data.token);
+          localStorage.setItem('kodelocal_staff_token', data.token);
         }
         if (data.user.rol === 'ADMIN') {
           router.push('/admin');
@@ -80,6 +81,7 @@ export default function LoginPage() {
       if (data.success) {
         if (data.token && typeof window !== 'undefined') {
           sessionStorage.setItem('kodelocal_staff_token', data.token);
+          localStorage.setItem('kodelocal_staff_token', data.token);
         }
         if (data.user.rol === 'ADMIN') {
           router.push('/admin');

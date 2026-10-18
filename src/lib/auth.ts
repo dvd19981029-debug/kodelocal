@@ -161,27 +161,35 @@ export function setActiveUser(user: UserAccount | null) {
     localStorage.setItem('kodelocal_active_user', JSON.stringify(user));
   } else {
     localStorage.removeItem('kodelocal_active_user');
+    localStorage.removeItem('kodelocal_staff_token');
   }
   sessionStorage.removeItem('kodelocal_staff_token');
 }
 
 let inFlightTokenPromise: Promise<string | null> | null = null;
+let lastServerCookieSyncAt = 0;
 
-export async function getStaffToken(): Promise<string | null> {
+export async function getStaffToken(forceRefresh = false): Promise<string | null> {
   if (typeof window === 'undefined') return null;
-  const cached = sessionStorage.getItem('kodelocal_staff_token');
-  if (cached) {
+
+  const cached =
+    sessionStorage.getItem('kodelocal_staff_token') ||
+    localStorage.getItem('kodelocal_staff_token');
+
+  // Si tenemos un token en caché vigente y sincronizamos las cookies hace menos de 15 minutos, usarlo directo
+  if (cached && !forceRefresh && Date.now() - lastServerCookieSyncAt < 15 * 60 * 1000) {
     try {
       const payloadB64 = cached.split('.')[0];
       if (payloadB64) {
         const base64 = payloadB64.replace(/-/g, '+').replace(/_/g, '/');
         const payload = JSON.parse(atob(base64));
-        if (payload && typeof payload.exp === 'number' && payload.exp > Date.now() + 60_000) {
+        if (payload && typeof payload.exp === 'number' && payload.exp > Date.now() + 60 * 60 * 1000) {
+          sessionStorage.setItem('kodelocal_staff_token', cached);
+          localStorage.setItem('kodelocal_staff_token', cached);
           return cached;
         }
       }
     } catch (_) {}
-    sessionStorage.removeItem('kodelocal_staff_token');
   }
 
   if (inFlightTokenPromise) {
@@ -191,22 +199,50 @@ export async function getStaffToken(): Promise<string | null> {
   inFlightTokenPromise = (async () => {
     const activeUser = getActiveUser();
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (cached) {
+        headers['x-staff-token'] = cached;
+      }
+
       const res = await fetch('/api/staff/token', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
+        credentials: 'include',
         body: JSON.stringify({ email: activeUser?.email, role: activeUser?.role || 'STAFF' }),
       });
+
+      if (res.status === 401) {
+        // Sesión inválida en el servidor: limpiar estado local para nunca dejar la pantalla en estado fantasma
+        sessionStorage.removeItem('kodelocal_staff_token');
+        localStorage.removeItem('kodelocal_staff_token');
+        localStorage.removeItem('kodelocal_active_user');
+        document.cookie = 'kode_session_ui=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+
+        const path = window.location.pathname;
+        const isOperationalPage = ['/pos', '/admin', '/bodega', '/ventas', '/inventario', '/logistica'].some(
+          (r) => path === r || path.startsWith(`${r}/`)
+        );
+        if (isOperationalPage) {
+          window.location.href = '/login';
+        }
+        return null;
+      }
+
       const data = await res.json();
       if (data.success && data.token) {
         sessionStorage.setItem('kodelocal_staff_token', data.token);
+        localStorage.setItem('kodelocal_staff_token', data.token);
+        lastServerCookieSyncAt = Date.now();
         return data.token;
       }
     } catch (err) {
+      // En caso de corte momentáneo de internet (modo offline), conservar el token en caché si existe
+      if (cached) return cached;
       console.error('Error al obtener token de staff:', err);
     } finally {
       inFlightTokenPromise = null;
     }
-    return null;
+    return cached || null;
   })();
 
   return inFlightTokenPromise;

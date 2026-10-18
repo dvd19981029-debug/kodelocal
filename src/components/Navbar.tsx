@@ -14,7 +14,7 @@ import {
   User,
   ChevronDown
 } from 'lucide-react';
-import { getActiveUser, setActiveUser, UserAccount, getStoredRoles, getStoredUsers, CustomRole } from '@/lib/auth';
+import { getActiveUser, setActiveUser, getStaffToken, UserAccount, getStoredRoles, getStoredUsers, CustomRole } from '@/lib/auth';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -25,6 +25,36 @@ export function Navbar() {
   useEffect(() => {
     setCurrentUser(getActiveUser());
     setRoles(getStoredRoles());
+  }, [pathname]);
+
+  // Renovación silenciosa de sesión (keep-alive) para que nunca expire mientras el POS/Admin está abierto
+  useEffect(() => {
+    if (pathname === '/login') return;
+    const isOperationalPage = ['/pos', '/admin', '/bodega', '/ventas', '/inventario', '/logistica'].some(
+      (r) => pathname === r || pathname.startsWith(`${r}/`)
+    );
+    if (!isOperationalPage) return;
+
+    const syncSession = () => {
+      getStaffToken(true).then(() => {
+        const refreshedUser = getActiveUser();
+        if (refreshedUser) setCurrentUser(refreshedUser);
+      }).catch(() => {});
+    };
+
+    syncSession();
+    const interval = setInterval(syncSession, 10 * 60 * 1000); // Cada 10 minutos
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        syncSession();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [pathname]);
 
   // Si estamos en la página de login, ocultamos la barra de navegación para una vista limpia

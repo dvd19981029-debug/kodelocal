@@ -78,6 +78,7 @@ export function verifyCustomerToken(token?: string | null): CustomerTokenPayload
 
 /**
  * Firma interna para peticiones de Bodega y POS desde el servidor u operaciones internas.
+ * Vigencia: 30 días (con renovación automática).
  */
 export function createStaffInternalToken(role: string = 'STAFF', email: string = 'admin@kodelocal.com', name: string = 'Administrador', id: string = 'system'): string {
   const secret = ensureAuthSecret();
@@ -87,7 +88,7 @@ export function createStaffInternalToken(role: string = 'STAFF', email: string =
     email,
     role,
     scope: 'internal_operations',
-    exp: Date.now() + 24 * 60 * 60 * 1000,
+    exp: Date.now() + 30 * 24 * 60 * 60 * 1000,
   };
 
   const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
@@ -98,6 +99,8 @@ export function createStaffInternalToken(role: string = 'STAFF', email: string =
 
   return `${payloadB64}.${signature}`;
 }
+
+const STAFF_TOKEN_GRACE_MS = 30 * 24 * 60 * 60 * 1000;
 
 export function verifyStaffInternalToken(token?: string | null): boolean {
   if (!token || typeof token !== 'string') return false;
@@ -124,7 +127,7 @@ export function verifyStaffInternalToken(token?: string | null): boolean {
       Buffer.from(payloadB64, 'base64url').toString('utf8')
     );
 
-    if (Date.now() > payload.exp) return false;
+    if (Date.now() > payload.exp + STAFF_TOKEN_GRACE_MS) return false;
     return payload.scope === 'internal_operations';
   } catch {
     return false;
@@ -144,7 +147,7 @@ export function decodeStaffToken(token?: string | null): any | null {
     if (expectedBuf.length !== receivedBuf.length) return null;
     if (!crypto.timingSafeEqual(expectedBuf, receivedBuf)) return null;
     const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8'));
-    if (Date.now() > payload.exp) return null;
+    if (Date.now() > payload.exp + STAFF_TOKEN_GRACE_MS) return null;
     if (payload.scope !== 'internal_operations') return null;
     return payload;
   } catch {

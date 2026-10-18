@@ -31,6 +31,7 @@ const PUBLIC_OPERATIONAL_API_EXCEPTIONS = [
   '/api/kode/auth/logout',
   '/api/kode/vendedoras',
   '/api/kode/c807/webhook',
+  '/api/staff/token',
 ];
 
 function base64UrlToUint8Array(base64Url: string): Uint8Array {
@@ -86,7 +87,8 @@ async function verifyStaffTokenEdge(token?: string | null): Promise<boolean> {
 
     const payloadJson = new TextDecoder().decode(base64UrlToUint8Array(payloadB64));
     const payload = JSON.parse(payloadJson);
-    if (!payload || typeof payload.exp !== 'number' || Date.now() > payload.exp) {
+    const graceMs = 30 * 24 * 60 * 60 * 1000;
+    if (!payload || typeof payload.exp !== 'number' || Date.now() > payload.exp + graceMs) {
       return false;
     }
     return payload.scope === 'internal_operations';
@@ -180,6 +182,7 @@ export async function middleware(request: NextRequest) {
     if (!isValid) {
       const loginRedirect = NextResponse.redirect(new URL('/login', request.url));
       loginRedirect.cookies.delete('kodelocal_staff_token');
+      loginRedirect.cookies.delete('kode_session_ui');
       return loginRedirect;
     }
   }
