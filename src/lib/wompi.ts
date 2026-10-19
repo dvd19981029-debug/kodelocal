@@ -196,3 +196,26 @@ export async function getWompiTransaction(transactionId: string): Promise<any> {
 
   return await res.json();
 }
+
+/**
+ * Consulta un Enlace de Pago por su idEnlace en Wompi SV para verificar si tiene transacciones aprobadas.
+ */
+export async function getWompiPaymentLinkDetails(idEnlace: number | string): Promise<any> {
+  const token = await getWompiToken();
+
+  const res = await fetch(`${WOMPI_API_URL}/EnlacePago/${idEnlace}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Error consultando EnlacePago Wompi [${res.status}]: ${errorText}`);
+  }
+
+  return await res.json();
+}
+

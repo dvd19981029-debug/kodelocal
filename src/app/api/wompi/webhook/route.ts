@@ -39,7 +39,26 @@ export async function POST(request: Request) {
     console.log(`💳 Webhook Wompi recibido: Orden=${orderNumber} Resultado=${ResultadoTransaccion} Tx=${IdTransaccion} Real=${EsProductiva}`);
 
     if (orderNumber && isApproved) {
-      // 1. Sincronizar enlace en public.wompi_enlaces si corresponde al módulo KÖDE
+      // 1A. Sincronizar enlace en public.aromaniak_wompi_enlaces (Módulo de Caja POS Aromaniak)
+      try {
+        await prisma.$executeRawUnsafe(
+          `UPDATE public.aromaniak_wompi_enlaces
+           SET estado = 'PAGADO',
+               transaccion_id = $1,
+               codigo_autorizacion = $2,
+               fecha_pago = NOW(),
+               updated_at = NOW()
+           WHERE referencia = $3 OR (id_enlace IS NOT NULL AND id_enlace = $4)`,
+          IdTransaccion ? String(IdTransaccion) : null,
+          CodigoAutorizacion ? String(CodigoAutorizacion) : null,
+          orderNumber,
+          EnlacePago?.IdEnlace ? Number(EnlacePago.IdEnlace) : null
+        );
+      } catch (aroErr) {
+        console.error('Error actualizando aromaniak_wompi_enlaces en webhook:', aroErr);
+      }
+
+      // 1B. Sincronizar enlace en public.wompi_enlaces si corresponde al módulo KÖDE
       try {
         const { queryKode } = await import('@/lib/kodeDb');
         const updateKodeRes = await queryKode(

@@ -24,6 +24,7 @@ const OPERATIONAL_API_ROUTES = [
   '/api/admin',
   '/api/kardex',
   '/api/quotes',
+  '/api/wompi/enlaces',
 ];
 
 const PUBLIC_OPERATIONAL_API_EXCEPTIONS = [

@@ -22,14 +22,16 @@ import {
   User,
   RotateCcw,
   Truck,
+  Link2,
 } from 'lucide-react';
 import { CustomerRecord } from '@/lib/customers';
 import { SaleRecord } from '@/lib/store';
 import { PosCorteZ } from './PosCorteZ';
+import { PosWompiLinksDashboard } from './PosWompiLinksDashboard';
 
 export interface PosCajaModuleProps {
-  cajaSubTab: 'listas_facturar' | 'dtes_emitidos' | 'corte_z';
-  setCajaSubTab: (tab: 'listas_facturar' | 'dtes_emitidos' | 'corte_z') => void;
+  cajaSubTab: 'listas_facturar' | 'dtes_emitidos' | 'corte_z' | 'enlaces_pago';
+  setCajaSubTab: (tab: 'listas_facturar' | 'dtes_emitidos' | 'corte_z' | 'enlaces_pago') => void;
   readyInWindowOrders: SaleRecord[];
   completedDteSales: SaleRecord[];
   pendingPreparationCount: number;
@@ -115,16 +117,16 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
               Caja, Ventanilla & Facturación DTE
             </h2>
             <p className="text-xs text-slate-300 mt-1 max-w-xl font-normal leading-relaxed">
-              Flujo centralizado: Cobra las órdenes preparadas por Bodega y emite los documentos electrónicos tributarios (Facturas y Créditos Fiscales).
+              Flujo centralizado: Cobra las órdenes preparadas por Bodega, genera enlaces de pago Wompi y emite los documentos electrónicos tributarios (Facturas y Créditos Fiscales).
             </p>
           </div>
 
           {/* Switcher de Subpestañas */}
-          <div className="flex bg-slate-800/90 backdrop-blur-md p-1.5 rounded-2xl border border-slate-700/80 shadow-inner">
+          <div className="flex flex-wrap bg-slate-800/90 backdrop-blur-md p-1.5 rounded-2xl border border-slate-700/80 shadow-inner gap-1">
             <button
               type="button"
               onClick={() => setCajaSubTab('listas_facturar')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                 cajaSubTab === 'listas_facturar'
                   ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-950/50 ring-1 ring-emerald-300'
                   : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
@@ -137,10 +139,23 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
               )}
             </button>
 
-                        <button
+            <button
+              type="button"
+              onClick={() => setCajaSubTab('enlaces_pago')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                cajaSubTab === 'enlaces_pago'
+                  ? 'bg-purple-600 text-white shadow-lg shadow-purple-950/50 ring-1 ring-purple-300'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
+              }`}
+            >
+              <Link2 className="w-4 h-4" />
+              <span>Enlaces de Pago</span>
+            </button>
+
+            <button
               type="button"
               onClick={() => setCajaSubTab('dtes_emitidos')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                 cajaSubTab === 'dtes_emitidos'
                   ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-950/50 ring-1 ring-indigo-300'
                   : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
@@ -153,7 +168,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
             <button
               type="button"
               onClick={() => setCajaSubTab('corte_z')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                 cajaSubTab === 'corte_z'
                   ? 'bg-amber-600 text-white shadow-lg shadow-amber-950/50 ring-1 ring-amber-300'
                   : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
@@ -166,7 +181,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
             <button
               type="button"
               onClick={() => setPosTab('domicilio')}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all text-slate-300 hover:text-white hover:bg-slate-700/60"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all text-slate-300 hover:text-white hover:bg-slate-700/60 cursor-pointer"
             >
               <Truck className="w-4 h-4 text-blue-400" />
               <span>Domicilio</span>
@@ -712,6 +727,10 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
       {/* SUBPESTAÑA 3: CIERRE DE CAJA */}
       {cajaSubTab === 'corte_z' && (
         <PosCorteZ />
+      )}
+      {/* SUBPESTAÑA 4: ENLACES DE PAGO WOMPI */}
+      {cajaSubTab === 'enlaces_pago' && (
+        <PosWompiLinksDashboard />
       )}
     </div>
   );

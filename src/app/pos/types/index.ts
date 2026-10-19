@@ -25,7 +25,7 @@ export type PosTab =
   | 'domicilio'
   | 'pos';
 
-export type CajaSubTab = 'listas_facturar' | 'dtes_emitidos' | 'corte_z';
+export type CajaSubTab = 'listas_facturar' | 'dtes_emitidos' | 'corte_z' | 'enlaces_pago';
 
 export type DteFilterType = 'ALL' | '01' | '03' | 'TICKET';
 
