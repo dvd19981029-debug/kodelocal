@@ -20,6 +20,7 @@ import {
   BellRing,
   X,
   FileText,
+  QrCode,
 } from 'lucide-react';
 import { getStaffToken, getActiveSessionUI } from '@/lib/auth';
 
@@ -86,8 +87,10 @@ export const PosWompiLinksDashboard: React.FC = () => {
   const [concepto, setConcepto] = useState<string>('Productos Aromaniak');
   const [generando, setGenerando] = useState(false);
 
-  // Enlace recién generado y avisos en vivo
+  // Enlace recién generado, modal QR y avisos en vivo
   const [enlaceReciente, setEnlaceReciente] = useState<AromaniakWompiEnlace | null>(null);
+  const [qrModalEnlace, setQrModalEnlace] = useState<AromaniakWompiEnlace | null>(null);
+  const [qrUseFallback, setQrUseFallback] = useState(false);
   const [copiadoId, setCopiadoId] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [paidAlerts, setPaidAlerts] = useState<AromaniakWompiEnlace[]>([]);
@@ -137,8 +140,13 @@ export const PosWompiLinksDashboard: React.FC = () => {
               const existingIds = new Set(prev.map((p) => p.id));
               return [...newlyPaid.filter((n) => !existingIds.has(n.id)), ...prev];
             });
-            // Actualizar también la tarjeta de enlace reciente si corresponde
+            // Actualizar también la tarjeta de enlace reciente o el modal QR si están abiertos
             setEnlaceReciente((prev) => {
+              if (!prev) return null;
+              const match = newlyPaid.find((n) => n.id === prev.id);
+              return match ? match : prev;
+            });
+            setQrModalEnlace((prev) => {
               if (!prev) return null;
               const match = newlyPaid.find((n) => n.id === prev.id);
               return match ? match : prev;
@@ -266,6 +274,8 @@ export const PosWompiLinksDashboard: React.FC = () => {
         statusMapRef.current.set(updated.id, updated.estado);
 
         setEnlaces((prev) => prev.map((item) => (item.id === id ? updated : item)));
+        if (qrModalEnlace?.id === id) setQrModalEnlace(updated);
+        if (enlaceReciente?.id === id) setEnlaceReciente(updated);
         if (updated.estado === 'PAGADO') {
           if (prevStatus !== 'PAGADO') {
             playPaymentApprovedSound();
@@ -287,6 +297,11 @@ export const PosWompiLinksDashboard: React.FC = () => {
     }
   };
 
+  const handleAbrirQr = (enlace: AromaniakWompiEnlace) => {
+    setQrUseFallback(false);
+    setQrModalEnlace(enlace);
+  };
+
   const handleEliminarEnlace = async (id: number) => {
     if (!confirm('¿Deseas eliminar este enlace del historial?')) return;
     try {
@@ -300,6 +315,7 @@ export const PosWompiLinksDashboard: React.FC = () => {
         showToast('Enlace eliminado', 'info');
         setEnlaces((prev) => prev.filter((item) => item.id !== id));
         if (enlaceReciente?.id === id) setEnlaceReciente(null);
+        if (qrModalEnlace?.id === id) setQrModalEnlace(null);
         fetchEnlaces(true, false);
       } else {
         showToast(data.error || 'No se pudo eliminar', 'error');
@@ -666,6 +682,15 @@ export const PosWompiLinksDashboard: React.FC = () => {
 
               <button
                 type="button"
+                onClick={() => handleAbrirQr(enlaceReciente)}
+                className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-xl flex items-center gap-1.5 cursor-pointer shadow-sm shadow-indigo-200 transition-colors"
+              >
+                <QrCode className="w-4 h-4" />
+                <span>Ver QR</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() =>
                   handleCopiarTexto(enlaceReciente.url_enlace, `reciente-${enlaceReciente.id}`)
                 }
@@ -893,6 +918,16 @@ export const PosWompiLinksDashboard: React.FC = () => {
                           <div className="flex items-center justify-end gap-1.5">
                             <button
                               type="button"
+                              onClick={() => handleAbrirQr(item)}
+                              title="Ver QR ampliado en pantalla para escanear"
+                              className="px-2.5 py-1 rounded-lg border border-indigo-200 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black cursor-pointer transition-colors flex items-center gap-1 shadow-2xs"
+                            >
+                              <QrCode className="w-3.5 h-3.5" />
+                              <span>Ver QR</span>
+                            </button>
+
+                            <button
+                              type="button"
                               onClick={() => handleCompartirWhatsApp(item)}
                               title="Enviar por WhatsApp"
                               className="p-1.5 rounded-lg border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 cursor-pointer transition-colors"
@@ -963,6 +998,105 @@ export const PosWompiLinksDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* MODAL DE QR AMPLIADO PARA ESCANEAR DIRECTO EN EL MONITOR */}
+      {qrModalEnlace && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={() => setQrModalEnlace(null)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-center space-y-4 relative animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setQrModalEnlace(null)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer transition-colors"
+              title="Cerrar"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="space-y-1">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200">
+                <QrCode className="w-3.5 h-3.5" />
+                <span>Escanea con tu cámara para pagar</span>
+              </span>
+              <h3 className="text-3xl font-black font-mono text-slate-900 pt-1">
+                ${Number(qrModalEnlace.monto).toFixed(2)}
+              </h3>
+              <p className="text-xs font-bold text-slate-600">
+                {qrModalEnlace.cliente_nombre || 'Cliente Aromaniak'} •{' '}
+                <span className="text-indigo-600">
+                  {qrModalEnlace.concepto || 'Productos Aromaniak'}
+                </span>
+              </p>
+              <p className="text-[11px] font-mono text-slate-400">
+                Ref: {qrModalEnlace.referencia}
+              </p>
+            </div>
+
+            {qrModalEnlace.estado === 'PAGADO' ? (
+              <div className="py-8 px-4 rounded-2xl bg-emerald-50 border-2 border-emerald-400 space-y-2 animate-in zoom-in-95 duration-200">
+                <CheckCircle2 className="w-16 h-16 text-emerald-600 mx-auto" />
+                <div className="text-lg font-black text-emerald-900 uppercase">
+                  ¡Pago Confirmado!
+                </div>
+                {qrModalEnlace.codigo_autorizacion && (
+                  <div className="text-xs font-mono font-bold text-emerald-800">
+                    Código de Autorización: #{qrModalEnlace.codigo_autorizacion}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-4 bg-white rounded-2xl border-2 border-indigo-100 shadow-inner inline-flex flex-col items-center justify-center">
+                <img
+                  src={
+                    !qrUseFallback && qrModalEnlace.url_qr_enlace
+                      ? qrModalEnlace.url_qr_enlace
+                      : `https://api.qrserver.com/v1/create-qr-code/?size=380x380&margin=10&data=${encodeURIComponent(
+                          qrModalEnlace.url_enlace
+                        )}`
+                  }
+                  alt={`QR de pago ${qrModalEnlace.referencia}`}
+                  onError={() => setQrUseFallback(true)}
+                  className="w-72 h-72 sm:w-80 sm:h-80 object-contain select-none"
+                />
+                <span className="text-[11px] font-semibold text-slate-500 mt-2">
+                  Pasarela segura Wompi El Salvador
+                </span>
+              </div>
+            )}
+
+            <div className="flex items-center justify-center gap-2 pt-1">
+              {qrModalEnlace.estado !== 'PAGADO' && (
+                <button
+                  type="button"
+                  onClick={() => handleVerificarEstado(qrModalEnlace.id)}
+                  disabled={verificandoId === qrModalEnlace.id}
+                  className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-sm transition-colors"
+                >
+                  <RefreshCw
+                    className={`w-3.5 h-3.5 ${
+                      verificandoId === qrModalEnlace.id ? 'animate-spin' : ''
+                    }`}
+                  />
+                  <span>Verificar Pago Ahora</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setQrModalEnlace(null)}
+                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
