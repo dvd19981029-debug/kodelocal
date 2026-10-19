@@ -293,7 +293,20 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
-    const { orderId, orderNumber, orderStatus, paymentStatus, courierName, trackingNumber, notes, restock } = body;
+    const {
+      orderId,
+      orderNumber,
+      orderStatus,
+      paymentStatus,
+      courierName,
+      trackingNumber,
+      notes,
+      restock,
+      department,
+      municipality,
+      shippingAddress,
+      deliveryReference,
+    } = body;
 
     if (!orderId && !orderNumber) {
       return NextResponse.json({ success: false, error: 'orderId o orderNumber es requerido' }, { status: 400 });
@@ -323,11 +336,19 @@ export async function PATCH(request: Request) {
       verifyStaffInternalToken(bearerToken);
     const customerPayload = verifyCustomerToken(bearerToken);
 
+    const isUpdatingDeliveryDetails = Boolean(
+      department !== undefined ||
+      municipality !== undefined ||
+      shippingAddress !== undefined ||
+      deliveryReference !== undefined
+    );
+
     // SEC-02: Control de autorización de despacho (BOLA / IDOR)
-    // Solo personal autorizado con token de staff puede modificar estado de entrega, despachar o cambiar courier
+    // Solo personal autorizado con token de staff puede modificar estado de entrega, despachar, cambiar courier o editar datos de entrega
     const isUpdatingStaffFields = Boolean(
       courierName ||
       trackingNumber ||
+      isUpdatingDeliveryDetails ||
       (orderStatus && ['PROCESANDO', 'LISTO_ENTREGA', 'EN_RUTA', 'ENTREGADO'].includes(orderStatus))
     );
     if (isUpdatingStaffFields && !isStaff) {
@@ -336,6 +357,11 @@ export async function PATCH(request: Request) {
         { status: 403 }
       );
     }
+
+    const cleanDepartment = department !== undefined ? sanitizeText(department, 50) : undefined;
+    const cleanMunicipality = municipality !== undefined ? sanitizeText(municipality, 60) : undefined;
+    const cleanShippingAddress = shippingAddress !== undefined ? sanitizeText(shippingAddress, 255) : undefined;
+    const cleanDeliveryReference = deliveryReference !== undefined ? (sanitizeText(deliveryReference, 255) || null) : undefined;
 
     // Si se intenta cancelar, validar que sea staff o sea el checkout de tarjeta pendiente del propio usuario
     const isAttemptingCancellation = orderStatus === 'CANCELADO' || paymentStatus === 'CANCELLED' || paymentStatus === 'REJECTED';
@@ -480,12 +506,12 @@ export async function PATCH(request: Request) {
       const c807Res = await c807Client.generarGuia({
         numero_pedido: order.orderNumber,
         cliente_nombre: order.customerName,
-        cliente_direccion: order.shippingAddress,
+        cliente_direccion: cleanShippingAddress || order.shippingAddress,
         cliente_telefono: order.customerPhone,
         cliente_correo: order.customerEmail || undefined,
-        cliente_departamento: order.department,
-        cliente_municipio: order.municipality,
-        cliente_referencia: order.deliveryReference || undefined,
+        cliente_departamento: cleanDepartment || order.department,
+        cliente_municipio: cleanMunicipality || order.municipality,
+        cliente_referencia: (cleanDeliveryReference !== undefined ? cleanDeliveryReference : order.deliveryReference) || undefined,
         tipo_pago:
           order.paymentStatus === 'COMPLETED'
             ? 'TARJETA'
@@ -516,6 +542,10 @@ export async function PATCH(request: Request) {
         ...(safePaymentStatus ? { paymentStatus: safePaymentStatus } : {}),
         ...(resolvedCourier ? { courierName: resolvedCourier } : {}),
         ...(resolvedTracking ? { trackingNumber: resolvedTracking } : {}),
+        ...(cleanDepartment ? { department: cleanDepartment } : {}),
+        ...(cleanMunicipality ? { municipality: cleanMunicipality } : {}),
+        ...(cleanShippingAddress ? { shippingAddress: cleanShippingAddress } : {}),
+        ...(cleanDeliveryReference !== undefined ? { deliveryReference: cleanDeliveryReference } : {}),
         ...(notes ? { notes: [order.notes, notes].filter(Boolean).join(' ') } : {}),
       },
       include: {

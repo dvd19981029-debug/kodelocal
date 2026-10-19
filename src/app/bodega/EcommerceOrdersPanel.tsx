@@ -17,8 +17,16 @@ import {
   FileText,
   Store,
   ExternalLink,
+  Pencil,
+  Check,
 } from 'lucide-react';
 import { getStaffToken } from '@/lib/auth';
+import {
+  DEPARTAMENTOS_CATALOG,
+  MUNICIPIOS_CATALOG,
+  getMunicipiosByDepartamento,
+  resolveDepartamentoCode,
+} from '@/lib/svTerritory';
 
 interface EcoItem {
   id: string;
@@ -401,13 +409,26 @@ export default function EcommerceOrdersPanel() {
   );
 }
 
-function Section({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+function Section({
+  icon,
+  title,
+  action,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 space-y-1.5">
-      <h4 className="text-[11px] font-black uppercase tracking-wide text-slate-500 flex items-center gap-1.5">
-        {icon}
-        {title}
-      </h4>
+      <div className="flex items-center justify-between gap-2">
+        <h4 className="text-[11px] font-black uppercase tracking-wide text-slate-500 flex items-center gap-1.5">
+          {icon}
+          {title}
+        </h4>
+        {action}
+      </div>
       <div className="text-xs text-slate-800 space-y-1">{children}</div>
     </div>
   );
@@ -439,6 +460,75 @@ function OrderDetailModal({
   const isCcf = o.sale?.tipoComprobante === '03' || Boolean(o.customer?.nrc);
   const [generatingGuide, setGeneratingGuide] = useState(false);
 
+  const [isEditingDelivery, setIsEditingDelivery] = useState(false);
+  const [editDepartment, setEditDepartment] = useState(o.department || 'San Salvador');
+  const [editMunicipality, setEditMunicipality] = useState(o.municipality || 'San Salvador');
+  const [editAddress, setEditAddress] = useState(o.shippingAddress || '');
+  const [editReference, setEditReference] = useState(o.deliveryReference || '');
+  const [savingDelivery, setSavingDelivery] = useState(false);
+
+  useEffect(() => {
+    setEditDepartment(o.department || 'San Salvador');
+    setEditMunicipality(o.municipality || 'San Salvador');
+    setEditAddress(o.shippingAddress || '');
+    setEditReference(o.deliveryReference || '');
+  }, [o.id, o.department, o.municipality, o.shippingAddress, o.deliveryReference]);
+
+  const departamentosList = useMemo(
+    () => DEPARTAMENTOS_CATALOG.filter((d) => d.id !== '00').map((d) => d.nombre),
+    []
+  );
+
+  const municipioOptions = useMemo(() => {
+    const deptCode = resolveDepartamentoCode(editDepartment);
+    const c807Munis = getMunicipiosByDepartamento(editDepartment).map((m) => m.nombre);
+    const mhMunis = MUNICIPIOS_CATALOG.filter((m) => m.departamentoId === deptCode).map((m) => m.nombre);
+    const unique = Array.from(new Set([...c807Munis, ...mhMunis]));
+    if (editMunicipality && !unique.includes(editMunicipality)) {
+      return [editMunicipality, ...unique];
+    }
+    return unique;
+  }, [editDepartment, editMunicipality]);
+
+  const handleSaveDelivery = async () => {
+    setSavingDelivery(true);
+    try {
+      const staffToken = await getStaffToken();
+      const res = await fetch('/api/ecommerce/orders', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({
+          orderId: o.id,
+          orderNumber: o.orderNumber,
+          department: editDepartment.trim(),
+          municipality: editMunicipality.trim(),
+          shippingAddress: editAddress.trim(),
+          deliveryReference: editReference.trim() || null,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.order) {
+        onOrderUpdated({
+          id: o.id,
+          department: data.order.department,
+          municipality: data.order.municipality,
+          shippingAddress: data.order.shippingAddress,
+          deliveryReference: data.order.deliveryReference,
+        });
+        setIsEditingDelivery(false);
+      } else {
+        alert(`Error al actualizar datos de entrega: ${data.error || 'No se pudo guardar'}`);
+      }
+    } catch (err: any) {
+      alert(`Error de conexión: ${err?.message || 'Error desconocido'}`);
+    } finally {
+      setSavingDelivery(false);
+    }
+  };
+
   const handleGenerateGuide = async () => {
     if (pickup) return;
     setGeneratingGuide(true);
@@ -453,6 +543,14 @@ function OrderDetailModal({
         body: JSON.stringify({
           orderId: o.id,
           orderNumber: o.orderNumber,
+          ...(isEditingDelivery
+            ? {
+                department: editDepartment.trim(),
+                municipality: editMunicipality.trim(),
+                shippingAddress: editAddress.trim(),
+                deliveryReference: editReference.trim() || null,
+              }
+            : {}),
           generarGuiaC807: true,
         }),
       });
@@ -460,10 +558,15 @@ function OrderDetailModal({
       if (data.success && data.order?.trackingNumber) {
         onOrderUpdated({
           id: o.id,
+          department: data.order.department || o.department,
+          municipality: data.order.municipality || o.municipality,
+          shippingAddress: data.order.shippingAddress || o.shippingAddress,
+          deliveryReference: data.order.deliveryReference ?? o.deliveryReference,
           trackingNumber: data.order.trackingNumber,
           courierName: data.order.courierName || 'C807 Express',
           orderStatus: data.order.orderStatus || 'EN_RUTA',
         });
+        setIsEditingDelivery(false);
         alert(`✅ Guía C807 generada exitosamente: ${data.order.trackingNumber}\nEl pedido fue enviado a la vista de Logística.`);
       } else {
         alert(`Error al generar guía C807: ${data.error || 'No se pudo generar la guía'}`);
@@ -542,12 +645,123 @@ function OrderDetailModal({
           <Section
             icon={pickup ? <Store className="w-3.5 h-3.5" /> : <MapPin className="w-3.5 h-3.5" />}
             title="Entrega"
+            action={
+              !isEditingDelivery ? (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingDelivery(true)}
+                  title="Editar datos de entrega"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer"
+                >
+                  <Pencil className="w-3 h-3" />
+                  <span>Editar</span>
+                </button>
+              ) : null
+            }
           >
             <Row label="Tipo de entrega" value={pickup ? 'Retiro en sucursal' : 'Envío a domicilio'} />
-            <Row label="Departamento" value={o.department} />
-            <Row label="Municipio" value={o.municipality} />
-            <Row label="Dirección" value={o.shippingAddress} />
-            <Row label="Referencia" value={o.deliveryReference} />
+            {isEditingDelivery ? (
+              <div className="space-y-2 pt-1">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+                    Departamento
+                  </label>
+                  <select
+                    value={editDepartment}
+                    onChange={(e) => {
+                      const nextDept = e.target.value;
+                      setEditDepartment(nextDept);
+                      const nextMunis = getMunicipiosByDepartamento(nextDept);
+                      if (nextMunis.length > 0) {
+                        setEditMunicipality(nextMunis[0].nombre);
+                      }
+                    }}
+                    className="w-full px-2.5 py-1.5 text-xs font-bold text-slate-800 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    {departamentosList.map((dept) => (
+                      <option key={dept} value={dept}>
+                        {dept}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+                    Municipio
+                  </label>
+                  <select
+                    value={editMunicipality}
+                    onChange={(e) => setEditMunicipality(e.target.value)}
+                    className="w-full px-2.5 py-1.5 text-xs font-bold text-slate-800 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    {municipioOptions.map((muni) => (
+                      <option key={muni} value={muni}>
+                        {muni}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+                    Dirección
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={editAddress}
+                    onChange={(e) => setEditAddress(e.target.value)}
+                    className="w-full px-2.5 py-1.5 text-xs font-bold text-slate-800 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+                    Referencia
+                  </label>
+                  <input
+                    type="text"
+                    value={editReference}
+                    onChange={(e) => setEditReference(e.target.value)}
+                    placeholder="Punto de referencia (opcional)"
+                    className="w-full px-2.5 py-1.5 text-xs font-bold text-slate-800 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    disabled={savingDelivery}
+                    onClick={() => {
+                      setEditDepartment(o.department || 'San Salvador');
+                      setEditMunicipality(o.municipality || 'San Salvador');
+                      setEditAddress(o.shippingAddress || '');
+                      setEditReference(o.deliveryReference || '');
+                      setIsEditingDelivery(false);
+                    }}
+                    className="px-2.5 py-1 text-[11px] font-bold text-slate-600 hover:bg-slate-200/70 rounded-lg transition-colors cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    disabled={savingDelivery}
+                    onClick={handleSaveDelivery}
+                    className="clay-btn-primary px-3 py-1 text-[11px] font-black inline-flex items-center gap-1 rounded-lg disabled:opacity-50 cursor-pointer"
+                  >
+                    <Check className="w-3 h-3" />
+                    <span>{savingDelivery ? 'Guardando...' : 'Guardar'}</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <Row label="Departamento" value={o.department} />
+                <Row label="Municipio" value={o.municipality} />
+                <Row label="Dirección" value={o.shippingAddress} />
+                <Row label="Referencia" value={o.deliveryReference} />
+              </>
+            )}
             <Row label="Costo de envío" value={money(o.shippingCost)} />
           </Section>
 
