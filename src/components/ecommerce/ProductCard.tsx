@@ -9,7 +9,7 @@ import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName, formatPerfumeDisplayName, getBottleLabelConfig } from '@/lib/perfumeNames';
 import { getProductUrl } from '@/lib/productUrl';
-import { isHalloweenPromoProduct, HALLOWEEN_ORIGINAL_PRICE_1OZ } from '@/lib/halloweenPromo';
+import { isHalloweenPromoProduct, getHalloweenPotionInfo, HALLOWEEN_ORIGINAL_PRICE_1OZ } from '@/lib/halloweenPromo';
 import { CobwebCornerSVG } from '@/components/ecommerce/HalloweenDecorations';
 
 interface ProductCardProps {
@@ -22,7 +22,8 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
   const { cart, addToCart, updateQuantity } = useEcommerceCart();
   const { customer } = useCustomerAuth();
   const presentations = getPresentationsForProduct(product, customer);
-  const isHalloweenPromo = isHalloweenPromoProduct(product);
+  const potionInfo = getHalloweenPotionInfo(product);
+  const isHalloweenPromo = Boolean(potionInfo);
   
   // Presentación por defecto: 'ONZA_COMPLETA' (1 Onza seleccionada primero)
   const defaultPres = product.category === 'Esencias para Perfume' 
@@ -232,13 +233,13 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
             })()}
 
 
-            {/* Badge de género limpio sobre la foto */}
-            <div className="absolute top-2 left-2 z-10 flex flex-col items-start gap-1">
+            {/* Badge de género limpio sobre la foto + Badge de Poción */}
+            <div className="absolute top-2 left-2 z-10 flex flex-col items-start gap-1 max-w-[85%]">
               {getGenderBadge(product.gender)}
-              {isHalloweenPromo && (
-                <span className="bg-gradient-to-r from-slate-950 via-[#2e1065] to-[#ea580c] text-amber-200 border border-orange-400/80 text-[8px] sm:text-[9px] font-black py-0.5 px-1.5 rounded-md shadow-md tracking-wider uppercase flex items-center gap-1">
-                  <span>🎃</span>
-                  <span>PROMO HALLOWEEN</span>
+              {potionInfo && (
+                <span className={`bg-gradient-to-r ${potionInfo.potionColorClass} text-white border border-amber-200/80 text-[8px] sm:text-[9px] font-black py-0.5 px-1.5 rounded-md shadow-md tracking-wide uppercase flex items-center gap-1`}>
+                  <span>{potionInfo.potionEmoji}</span>
+                  <span className="truncate">{potionInfo.potionTitle}</span>
                 </span>
               )}
             </div>
@@ -255,8 +256,8 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
             {/* Etiqueta flotante de descuento Halloween en esquina inferior izquierda */}
             {isHalloweenPromo && !isOutOfStock && (
               <div className="absolute bottom-2 left-2 z-10 pointer-events-none">
-                <span className="bg-[#ea580c] text-white border border-amber-200/70 text-[8px] sm:text-[9px] font-black py-0.5 px-1.5 rounded-md shadow-md flex items-center gap-0.5">
-                  <span>🦇</span>
+                <span className="bg-slate-950/90 text-amber-300 border border-orange-400/80 text-[8px] sm:text-[9px] font-black py-0.5 px-1.5 rounded-md shadow-md flex items-center gap-0.5">
+                  <span>🧪</span>
                   <span>1 Oz a $3.30</span>
                 </span>
               </div>

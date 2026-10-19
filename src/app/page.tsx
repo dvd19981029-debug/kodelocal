@@ -555,40 +555,49 @@ export default function EcommerceHomePage() {
                   <CobwebCornerSVG className="w-full h-full" flipX />
                 </div>
                 <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-slate-950/40 border border-orange-300/50 flex items-center justify-center shrink-0 shadow-inner">
+                  <Link href="/pociones-halloween" className="flex items-center gap-3 group">
+                    <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-slate-950/40 border border-orange-300/50 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform">
                       <PumpkinIconSVG className="w-8 h-8 sm:w-9 sm:h-9" />
                     </div>
                     <div>
                       <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-950/50 border border-amber-300/50 text-[10px] font-black tracking-wider uppercase text-amber-200 mb-0.5">
-                        <span>🎃 ESPECIAL DE HALLOWEEN</span>
+                        <span>🧙‍♀️ LA BRUJA AROMANIAKA</span>
                         <span>•</span>
-                        <span>10 FRAGANCIAS SELECCIONADAS 🦇</span>
+                        <span>10 POCIONES SECRETAS 🦇</span>
                       </div>
-                      <h3 className="text-sm sm:text-lg font-black text-white leading-snug">
-                        ¡Promoción de Halloween a <span className="text-amber-200 underline decoration-amber-300">$3.30 la Onza</span>!{' '}
+                      <h3 className="text-sm sm:text-lg font-black text-white leading-snug group-hover:text-amber-200 transition-colors">
+                        ¡La bruja Aromaniaka trajo pociones para ti a <span className="text-amber-200 underline decoration-amber-300">$3.30 la Onza</span>!{' '}
                         <span className="text-xs sm:text-sm font-bold text-orange-100/90">
                           (Antes <span className="line-through decoration-rose-400">$3.75</span> • Ahora <strong className="text-amber-200">$3.30</strong>)
                         </span>
                       </h3>
                     </div>
-                  </div>
+                  </Link>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOnlyHalloweenPromo((prev) => !prev);
-                      setCurrentPage(1);
-                    }}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 flex items-center gap-1.5 border ${
-                      onlyHalloweenPromo
-                        ? 'bg-white text-[#c2410c] border-white shadow-md scale-[1.02]'
-                        : 'bg-slate-950/60 hover:bg-slate-950/80 text-amber-200 border-amber-300/60 shadow-sm'
-                    }`}
-                  >
-                    <span>🎃</span>
-                    <span>{onlyHalloweenPromo ? 'Ver Todo el Catálogo' : 'Ver solo las 10 en Promo ($3.30)'}</span>
-                  </button>
+                  <div className="flex items-center gap-2 flex-wrap shrink-0">
+                    <Link
+                      href="/pociones-halloween"
+                      className="px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 flex items-center gap-1.5 bg-gradient-to-r from-amber-300 via-orange-400 to-amber-300 text-slate-950 border border-amber-100 shadow-md hover:scale-[1.03]"
+                    >
+                      <span>🧪</span>
+                      <span>Entrar al Evento de Pociones</span>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOnlyHalloweenPromo((prev) => !prev);
+                        setCurrentPage(1);
+                      }}
+                      className={`px-3 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 flex items-center gap-1.5 border ${
+                        onlyHalloweenPromo
+                          ? 'bg-white text-[#c2410c] border-white shadow-md scale-[1.02]'
+                          : 'bg-slate-950/60 hover:bg-slate-950/80 text-amber-200 border-amber-300/60 shadow-sm'
+                      }`}
+                    >
+                      <span>🎃</span>
+                      <span>{onlyHalloweenPromo ? 'Ver Todo' : 'Filtrar aquí'}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

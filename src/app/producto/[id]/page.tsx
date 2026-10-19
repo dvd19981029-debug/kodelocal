@@ -30,7 +30,7 @@ import FragranceNotesVisual from '@/components/ecommerce/FragranceNotesVisual';
 import { getInspiracionPerfumeName, formatPerfumeDisplayName, getBottleLabelConfig } from '@/lib/perfumeNames';
 import { getFragranceDescription } from '@/lib/fragranceDescriptions';
 import { resolveTargetProductId } from '@/lib/productUrl';
-import { isHalloweenPromoProduct, HALLOWEEN_ORIGINAL_PRICE_1OZ } from '@/lib/halloweenPromo';
+import { isHalloweenPromoProduct, getHalloweenPotionInfo, HALLOWEEN_ORIGINAL_PRICE_1OZ } from '@/lib/halloweenPromo';
 import { CobwebCornerSVG } from '@/components/ecommerce/HalloweenDecorations';
 
 export default function ProductDetailPage() {
@@ -245,7 +245,8 @@ export default function ProductDetailPage() {
 
   const productImage = getProductImage(product);
   const displayName = formatPerfumeDisplayName(product);
-  const isHalloweenPromo = isHalloweenPromoProduct(product);
+  const potionInfo = getHalloweenPotionInfo(product);
+  const isHalloweenPromo = Boolean(potionInfo);
 
   const handleAddToCart = () => {
     if (!product || isOutOfStock || maxSelectable <= 0 || isQuantityBlocked) return;
@@ -394,10 +395,10 @@ export default function ProductDetailPage() {
                 ) : (
                   getGenderBadge(product.gender)
                 )}
-                {isHalloweenPromo && (
-                  <span className="bg-gradient-to-r from-slate-950 via-[#2e1065] to-[#ea580c] text-amber-200 border border-orange-400 text-[10px] sm:text-xs font-black py-1 px-2.5 rounded-xl shadow-md tracking-wider uppercase flex items-center gap-1.5">
-                    <span>🎃</span>
-                    <span>PROMO ESPECIAL HALLOWEEN</span>
+                {potionInfo && (
+                  <span className={`bg-gradient-to-r ${potionInfo.potionColorClass} text-white border border-amber-200 text-[10px] sm:text-xs font-black py-1 px-2.5 rounded-xl shadow-md tracking-wider uppercase flex items-center gap-1.5`}>
+                    <span>{potionInfo.potionEmoji}</span>
+                    <span>{potionInfo.potionTitle}</span>
                     <span>🦇</span>
                   </span>
                 )}

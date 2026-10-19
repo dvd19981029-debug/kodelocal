@@ -7,6 +7,7 @@ import { ShoppingBag, User, ChevronDown } from 'lucide-react';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { useScrolled } from '@/hooks/useScrolled';
+import WitchCauldronHeaderBanner from '@/components/ecommerce/WitchCauldronHeaderBanner';
 
 export default function EcommerceHeader() {
   const pathname = usePathname();
@@ -23,10 +24,10 @@ export default function EcommerceHeader() {
   };
 
   return (
-    <header className={`sticky top-0 z-40 w-full backdrop-blur-md bg-gradient-to-r from-[#fff7ed]/95 via-[#ffedd5]/95 to-[#fff7ed]/95 border-b-2 border-orange-400/60 px-3 sm:px-6 py-2 sm:py-2.5 shadow-[0_4px_16px_rgba(234,88,12,0.12)] transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+    <header className={`sticky top-0 z-40 w-full backdrop-blur-md bg-gradient-to-r from-[#fff7ed]/95 via-[#ffedd5]/95 to-[#fff7ed]/95 border-b-2 border-orange-400/60 shadow-[0_4px_16px_rgba(234,88,12,0.12)] transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${
       isScrolled ? '-translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100 pointer-events-auto'
     }`}>
-      <div className="max-w-7xl mx-auto grid grid-cols-3 items-center relative">
+      <div className="max-w-7xl mx-auto grid grid-cols-3 items-center relative px-3 sm:px-6 py-2 sm:py-2.5">
         
         {/* ================= LADO IZQUIERDO: Botón de Usuario / Mi Cuenta ================= */}
         <div className="flex items-center justify-start gap-2">
@@ -106,6 +107,7 @@ export default function EcommerceHeader() {
         </div>
 
       </div>
+      <WitchCauldronHeaderBanner />
     </header>
   );
 }
