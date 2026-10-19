@@ -60,7 +60,7 @@ export function WitchPotionsEventSection({
   const [stirredPotionId, setStirredPotionId] = useState<string | null>(null);
   const [isStirring, setIsStirring] = useState(false);
 
-  const { cart, addToCart, updateQuantity, totalItems, subtotal, setIsCartOpen } = useEcommerceCart();
+  const { cart, addToCart, updateQuantity } = useEcommerceCart();
   const { customer } = useCustomerAuth();
 
   useEffect(() => {
@@ -129,7 +129,7 @@ export function WitchPotionsEventSection({
     );
   }
 
-  // Interacción ligera tipo Temu: "¡Revolver el Caldero de la Suerte!"
+  // Interacción ligera: "¡Revolver el Caldero de la Suerte!"
   const handleStirCauldron = () => {
     if (potionProducts.length === 0 || isStirring) return;
     setIsStirring(true);
@@ -152,162 +152,196 @@ export function WitchPotionsEventSection({
   const stirredPotionInfo = stirredProduct ? getHalloweenPotionInfo(stirredProduct) : null;
 
   return (
-    <div id="seccion-pociones-bruja" className={`space-y-5 sm:space-y-7 ${inline ? 'pb-10 pt-1' : 'pb-24 pt-1'}`}>
-      {/* Animaciones CSS puras aceleradas por GPU (transform y opacity únicamente) */}
+    <div
+      id="seccion-pociones-bruja"
+      className="relative overflow-hidden rounded-[28px] sm:rounded-[36px] bg-gradient-to-b from-[#0d041a] via-[#1a0833] to-[#110522] border-2 border-orange-500/80 shadow-[0_18px_50px_rgba(19,7,34,0.65)] p-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 text-white"
+    >
+      {/* Animaciones CSS puras aceleradas por GPU */}
       <style>{`
-        @keyframes temuPulseBadge {
+        @keyframes covenPulseBadge {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.05); }
         }
-        @keyframes temuFloatSlow {
+        @keyframes covenFloatSlow {
           0%, 100% { transform: translate3d(0, 0, 0); }
           50% { transform: translate3d(0, -6px, 0); }
         }
-        .temu-pulse-badge { animation: temuPulseBadge 2s ease-in-out infinite; will-change: transform; }
-        .temu-float-slow { animation: temuFloatSlow 3.6s ease-in-out infinite; will-change: transform; }
+        @keyframes covenGlowStar {
+          0%, 100% { opacity: 0.35; transform: scale(0.9); }
+          50% { opacity: 0.95; transform: scale(1.1); }
+        }
+        .coven-pulse-badge { animation: covenPulseBadge 2.2s ease-in-out infinite; will-change: transform; }
+        .coven-float-slow { animation: covenFloatSlow 3.6s ease-in-out infinite; will-change: transform; }
+        .coven-star-1 { animation: covenGlowStar 2.8s ease-in-out infinite; }
+        .coven-star-2 { animation: covenGlowStar 3.4s ease-in-out 1.1s infinite; }
         @media (prefers-reduced-motion: reduce) {
-          .temu-pulse-badge, .temu-float-slow { animation: none !important; }
+          .coven-pulse-badge, .coven-float-slow, .coven-star-1, .coven-star-2 { animation: none !important; }
         }
       `}</style>
 
-      {/* Barra superior de navegación de regreso */}
-      <div className="flex items-center justify-between gap-2">
+      {/* Decoración Ambiental de Aquelarre: Telarañas gigantes en las esquinas, Luna Llena y Murciélagos */}
+      <div className="absolute top-0 left-0 w-32 h-32 sm:w-52 sm:h-52 text-orange-400/25 pointer-events-none">
+        <CobwebCornerSVG className="w-full h-full" />
+      </div>
+      <div className="absolute top-0 right-0 w-32 h-32 sm:w-52 sm:h-52 text-orange-400/25 pointer-events-none">
+        <CobwebCornerSVG className="w-full h-full" flipX />
+      </div>
+      <div className="absolute bottom-0 left-0 w-28 h-28 sm:w-40 sm:h-40 text-purple-400/15 pointer-events-none rotate-90">
+        <CobwebCornerSVG className="w-full h-full" />
+      </div>
+      <div className="absolute bottom-0 right-0 w-28 h-28 sm:w-40 sm:h-40 text-purple-400/15 pointer-events-none -rotate-90">
+        <CobwebCornerSVG className="w-full h-full" />
+      </div>
+
+      {/* Luna llena mística de fondo y murciélagos */}
+      <div
+        className="pointer-events-none absolute -top-12 right-1/4 w-44 h-44 sm:w-64 sm:h-64 rounded-full opacity-20"
+        style={{
+          background: 'radial-gradient(circle, #fde047 0%, #f97316 55%, transparent 72%)',
+        }}
+      />
+      <div className="pointer-events-none absolute top-14 left-[18%] text-amber-300/50 coven-float-slow hidden sm:block">
+        <BatIllustrationSVG className="w-12 h-7" />
+      </div>
+      <div className="pointer-events-none absolute top-8 right-[15%] text-orange-300/50 coven-float-slow hidden sm:block">
+        <BatIllustrationSVG className="w-10 h-6" />
+      </div>
+      <span className="pointer-events-none absolute top-20 right-[8%] text-amber-300 text-sm coven-star-1">✦</span>
+      <span className="pointer-events-none absolute top-32 left-[8%] text-orange-300 text-xs coven-star-2">★</span>
+
+      {/* Barra superior de navegación y sello de vigencia */}
+      <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 pb-1 border-b border-purple-800/60">
         {onBackToCatalog ? (
           <button
             type="button"
             onClick={onBackToCatalog}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-orange-50 text-slate-800 border border-orange-300 font-black text-xs shadow-2xs transition-transform active:scale-95 cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-950/90 hover:bg-purple-900 text-amber-200 border border-orange-400/70 font-black text-xs shadow-sm transition-transform active:scale-95 cursor-pointer"
           >
-            <ArrowLeft className="w-4 h-4 text-orange-600" />
-            <span>Volver a Esencias</span>
+            <ArrowLeft className="w-4 h-4 text-orange-400" />
+            <span>Volver al Catálogo</span>
           </button>
         ) : (
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-orange-50 text-slate-800 border border-orange-300 font-black text-xs shadow-2xs transition-transform active:scale-95"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-950/90 hover:bg-purple-900 text-amber-200 border border-orange-400/70 font-black text-xs shadow-sm transition-transform active:scale-95"
           >
-            <ArrowLeft className="w-4 h-4 text-orange-600" />
+            <ArrowLeft className="w-4 h-4 text-orange-400" />
             <span>Volver al Catálogo</span>
           </Link>
         )}
 
-        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#1e1b4b] to-[#ea580c] text-amber-200 border border-orange-400 text-[11px] font-black shadow-xs">
-          <Flame className="w-3.5 h-3.5 text-amber-300" />
-          <span>1 OZ $3.30 • ½ OZ $1.85 • HASTA 31 OCT</span>
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#ea580c] via-[#d97706] to-[#b45309] text-white border border-amber-200/80 text-[10.5px] sm:text-xs font-black shadow-md">
+          <span>🎃</span>
+          <span>1 OZ $3.30 • ½ OZ $1.85 • HASTA 31 OCT 11:59 PM</span>
         </div>
       </div>
 
-      {/* ================= HERO ESCENARIO TEMU-HALLOWEEN: LA BRUJA AROMANIAKA ================= */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#130722] via-[#2e1065] to-[#9a3412] text-white border-2 border-orange-400 shadow-[0_12px_36px_rgba(234,88,12,0.3)] p-4 sm:p-7">
-        {/* Telarañas vectoriales en esquinas */}
-        <div className="absolute top-0 left-0 w-28 h-28 sm:w-40 sm:h-40 text-orange-400/35 pointer-events-none">
-          <CobwebCornerSVG className="w-full h-full" />
-        </div>
-        <div className="absolute top-0 right-0 w-28 h-28 sm:w-40 sm:h-40 text-orange-400/35 pointer-events-none">
-          <CobwebCornerSVG className="w-full h-full" flipX />
-        </div>
-
-        {/* Murciélagos decorativos */}
-        <div className="hidden sm:block absolute top-6 left-1/3 text-amber-300/60 pointer-events-none temu-float-slow">
-          <BatIllustrationSVG className="w-12 h-7" />
-        </div>
-        <div className="hidden sm:block absolute bottom-6 right-1/4 text-amber-300/60 pointer-events-none temu-float-slow">
-          <BatIllustrationSVG className="w-10 h-6" />
-        </div>
-
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
-          {/* Columna Izquierda: Bruja Aromaniaka preparando pociones en su caldero */}
-          <div className="lg:col-span-5 flex flex-col items-center justify-center text-center">
+      {/* ================= ALTAR PRINCIPAL DE LA BRUJA AROMANIAKA ================= */}
+      <section className="relative z-10 rounded-3xl bg-gradient-to-br from-[#1f0a3d]/95 via-[#2e1065]/90 to-[#7c2d12]/90 border-2 border-amber-400/70 shadow-[0_10px_30px_rgba(234,88,12,0.28)] p-4 sm:p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-center">
+          {/* Escena animada de la Bruja + Caldero burbujeante */}
+          <div className="lg:col-span-4 flex flex-col items-center justify-center">
             <div className="relative flex items-center justify-center">
-              <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-full bg-gradient-to-b from-orange-500/20 via-purple-600/20 to-transparent border border-orange-400/30 flex items-center justify-center">
+              <div
+                className="w-36 h-36 sm:w-44 sm:h-44 rounded-full border-2 border-amber-400/50 flex items-center justify-center shadow-[0_0_35px_rgba(249,115,22,0.35)]"
+                style={{
+                  background: 'radial-gradient(circle, rgba(249,115,22,0.28) 0%, rgba(88,28,135,0.45) 65%, rgba(19,7,34,0.85) 100%)',
+                }}
+              >
                 <AnimatedWitchCauldronSVG className="w-36 h-36 sm:w-44 sm:h-44" />
               </div>
-              <span className="absolute -bottom-1 bg-gradient-to-r from-[#facc15] via-[#f97316] to-[#ea580c] text-slate-950 font-black text-[10px] sm:text-xs px-3 py-1 rounded-full border-2 border-white shadow-md uppercase tracking-wider temu-pulse-badge">
-                🧪 10 Pociones Secretas
+              <span className="absolute -bottom-2 bg-gradient-to-r from-[#facc15] via-[#f97316] to-[#ea580c] text-slate-950 font-black text-[10px] sm:text-xs px-3.5 py-1 rounded-full border-2 border-white shadow-lg uppercase tracking-wider coven-pulse-badge">
+                🧙‍♀️ Grimorio de 10 Pociones
               </span>
             </div>
           </div>
 
-          {/* Columna Derecha: Textos del Evento + Botón Interactivo del Caldero */}
-          <div className="lg:col-span-7 text-center lg:text-left space-y-3">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/25 border border-amber-300/50 text-amber-200 text-[10.5px] sm:text-xs font-black uppercase tracking-wider">
+          {/* Textos del Aquelarre, Tarifas Encantadas y Botón del Caldero */}
+          <div className="lg:col-span-8 text-center lg:text-left space-y-3">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-950/80 border border-amber-300/60 text-amber-300 text-[10px] sm:text-xs font-black uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>ESPECIAL DE HALLOWEEN • VÁLIDO HASTA EL 31 DE OCTUBRE 11:59 PM</span>
+              <span>LABORATORIO SECRETO DE HALLOWEEN • EDICIÓN LIMITADA</span>
             </div>
 
-            <h2 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight text-white">
+            <h2 className="text-xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-tight text-white">
               ¡La bruja Aromaniaka trajo{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-300 to-yellow-200">
-                pociones para ti!
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-400 to-yellow-200">
+                pociones mágicas para ti!
               </span>
             </h2>
 
-            <p className="text-xs sm:text-sm text-orange-100/90 font-semibold max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-              Descubre las <strong>10 pociones hechizadas</strong> de perfumería fina 100% pura. Cada fragancia tiene su propio poder especial y precios exclusivos de Halloween:
+            <p className="text-xs sm:text-sm text-purple-100/90 font-medium max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+              10 elixires de perfumería fina 100% pura conjurados en nuestro caldero. Elige tu hechizo de{' '}
+              <strong className="text-amber-300">Amor, Atracción, Energía o Misterio</strong> a precio especial de brujería:
             </p>
 
-            {/* Cinta estilo Temu de Precio Antes y Ahora (1 Onza y 1/2 Onza) */}
-            <div className="inline-flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-4 bg-slate-950/65 border-2 border-amber-400/80 rounded-2xl px-4 py-2.5 shadow-lg">
-              <div className="text-left">
-                <span className="text-[10px] uppercase font-black text-amber-300 block">🎃 1 Onza Completa</span>
-                <span className="text-xs font-bold text-rose-300 line-through decoration-rose-500 mr-1.5">
-                  Antes ${HALLOWEEN_ORIGINAL_PRICE_1OZ.toFixed(2)}
-                </span>
-                <span className="text-lg sm:text-xl font-black text-amber-300 tracking-tight">
-                  ${HALLOWEEN_PROMO_PRICE_1OZ.toFixed(2)}
-                </span>
+            {/* Tarjetas gemelas de Precio Antes/Ahora (1 Onza y ½ Onza) + Oráculo del Caldero */}
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 sm:gap-3 pt-0.5">
+              <div className="bg-[#120623]/90 border-2 border-amber-400/80 rounded-2xl px-3.5 py-2 flex items-center gap-3 shadow-md">
+                <div>
+                  <span className="text-[9.5px] uppercase font-black text-amber-300 block">🎃 Frasco 1 Onza</span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-[11px] font-bold text-rose-300/90 line-through decoration-rose-500">
+                      ${HALLOWEEN_ORIGINAL_PRICE_1OZ.toFixed(2)}
+                    </span>
+                    <span className="text-lg sm:text-xl font-black text-amber-300">
+                      ${HALLOWEEN_PROMO_PRICE_1OZ.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+                <div className="h-8 w-[1.5px] bg-purple-700/70" />
+                <div>
+                  <span className="text-[9.5px] uppercase font-black text-orange-300 block">🧪 Frasco ½ Onza</span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-[11px] font-bold text-rose-300/90 line-through decoration-rose-500">
+                      ${HALLOWEEN_ORIGINAL_PRICE_HALF_OZ.toFixed(2)}
+                    </span>
+                    <span className="text-lg sm:text-xl font-black text-white">
+                      ${HALLOWEEN_PROMO_PRICE_HALF_OZ.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="h-8 w-[1.5px] bg-orange-400/40" />
-              <div className="text-left">
-                <span className="text-[10px] uppercase font-black text-orange-200 block">🧪 ½ Onza (15ml)</span>
-                <span className="text-xs font-bold text-rose-300 line-through decoration-rose-500 mr-1.5">
-                  Antes ${HALLOWEEN_ORIGINAL_PRICE_HALF_OZ.toFixed(2)}
-                </span>
-                <span className="text-lg sm:text-xl font-black text-white tracking-tight">
-                  ${HALLOWEEN_PROMO_PRICE_HALF_OZ.toFixed(2)}
-                </span>
-              </div>
-            </div>
 
-            {/* Botón Gamificado estilo Temu: Revolver el Caldero para descubrir tu poción ideal */}
-            <div className="pt-1 flex flex-wrap items-center justify-center lg:justify-start gap-2.5">
               <button
                 type="button"
                 onClick={handleStirCauldron}
                 className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#facc15] via-[#f97316] to-[#ea580c] text-slate-950 font-black text-xs sm:text-sm flex items-center gap-2 shadow-[0_6px_20px_rgba(249,115,22,0.45)] border-2 border-yellow-100 cursor-pointer hover:brightness-105 active:scale-95 transition-transform"
               >
                 <Wand2 className={`w-4 h-4 ${isStirring ? 'animate-spin' : ''}`} />
-                <span>{isStirring ? 'Revolviendo el caldero...' : '🔮 ¡Revolver el Caldero de la Suerte!'}</span>
+                <span>{isStirring ? 'Conjurando poción...' : '🔮 ¡Revolver el Caldero de la Suerte!'}</span>
               </button>
-
-              {stirredProduct && stirredPotionInfo && (
-                <div className="px-3 py-1.5 rounded-xl bg-purple-950/90 border border-amber-300 text-xs font-bold text-amber-100 flex items-center gap-1.5 animate-in fade-in duration-200">
-                  <span>{stirredPotionInfo.potionEmoji}</span>
-                  <span>
-                    Tu hechizo de hoy: <strong className="text-amber-300">{stirredPotionInfo.potionTitle}</strong> ({formatPerfumeDisplayName(stirredProduct)})
-                  </span>
-                </div>
-              )}
             </div>
+
+            {stirredProduct && stirredPotionInfo && (
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-purple-950/95 border border-amber-300 text-xs font-bold text-amber-100 animate-in fade-in duration-200">
+                <span className="text-base">{stirredPotionInfo.potionEmoji}</span>
+                <span>
+                  El caldero eligió para ti:{' '}
+                  <strong className="text-amber-300">{stirredPotionInfo.potionTitle}</strong> —{' '}
+                  <span className="text-orange-300 font-black">{formatPerfumeDisplayName(stirredProduct)}</span>
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
-      {/* ================= PESTAÑAS DE FILTRO POR PODER DE LA POCIÓN ================= */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-[#fff7ed] via-[#ffedd5] to-[#fff7ed] p-2.5 sm:p-3.5 rounded-2xl border-2 border-orange-300 shadow-xs">
+      {/* ================= BARRA DE FILTROS MÍSTICOS POR ELEMENTO ================= */}
+      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-[#1b0936]/95 p-3 sm:p-3.5 rounded-2xl border border-orange-400/50 shadow-md">
         <div className="flex items-center gap-2">
-          <PumpkinIconSVG className="w-7 h-7 shrink-0" />
+          <PumpkinIconSVG className="w-6 h-6 shrink-0" />
           <div>
-            <h2 className="text-sm sm:text-base font-black text-slate-900 leading-tight">
-              Elige tu Poción Mágica (1 Oz $3.30 • ½ Oz $1.85)
-            </h2>
-            <p className="text-[10.5px] sm:text-xs text-slate-600 font-semibold">
-              Todos los nombres originales en color naranja • Descuento aplicado directo al carrito
+            <h3 className="text-xs sm:text-sm font-black text-amber-200 uppercase tracking-wide leading-tight">
+              Estantería de Pociones Hechizadas
+            </h3>
+            <p className="text-[10px] sm:text-[11px] text-purple-200/80 font-medium">
+              Filtra por el poder del hechizo o explora las 10 fragancias mágicas
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5">
           {[
             { id: 'todas', label: '🧪 Todas (10)' },
             { id: 'amor', label: '💘 Amor y Atracción' },
@@ -320,10 +354,10 @@ export function WitchPotionsEventSection({
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveFilter(tab.id as any)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 border ${
+                className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer border text-center truncate ${
                   active
-                    ? 'bg-gradient-to-r from-[#ea580c] to-[#f97316] text-white border-orange-300 shadow-sm scale-[1.02]'
-                    : 'bg-white hover:bg-orange-50 text-slate-700 border-orange-200'
+                    ? 'bg-gradient-to-r from-[#ea580c] to-[#f97316] text-white border-amber-300 shadow-[0_0_12px_rgba(249,115,22,0.5)]'
+                    : 'bg-purple-950/75 hover:bg-purple-900/80 text-purple-100 border-purple-700/70'
                 }`}
               >
                 {tab.label}
@@ -333,8 +367,8 @@ export function WitchPotionsEventSection({
         </div>
       </div>
 
-      {/* ================= REJILLA DE LAS 10 POCIONES ESTILO EVENTO TEMU ================= */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-5">
+      {/* ================= REJILLA MULTI-COLUMNA (2 COLUMNAS EN MÓVIL, 3-5 EN ESCRITORIO) ================= */}
+      <section className="relative z-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4">
         {filteredPotions.map((product, index) => (
           <PotionEventCard
             key={product.id}
@@ -348,50 +382,16 @@ export function WitchPotionsEventSection({
           />
         ))}
       </section>
-
-      {/* ================= BARRA FLOTANTE INFERIOR ESTILO TEMU CUANDO HAY POCIONES EN EL CARRITO ================= */}
-      {totalItems > 0 && (
-        <div className="fixed bottom-3 inset-x-3 sm:inset-x-auto sm:right-6 sm:left-6 max-w-4xl mx-auto z-40">
-          <div className="rounded-2xl bg-gradient-to-r from-[#1e1b4b] via-[#3b0764] to-[#c2410c] text-white p-3 sm:p-3.5 border-2 border-amber-300 shadow-[0_10px_30px_rgba(0,0,0,0.45)] flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <span className="w-9 h-9 rounded-xl bg-orange-500/30 border border-amber-300/60 flex items-center justify-center text-lg shrink-0">
-                🧪
-              </span>
-              <div className="min-w-0">
-                <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 block">
-                  Tu Caldero de Compras ({totalItems} {totalItems === 1 ? 'producto' : 'productos'})
-                </span>
-                <p className="text-xs sm:text-sm font-black text-white truncate">
-                  Subtotal con Promo Halloween: <span className="text-amber-300">${subtotal.toFixed(2)}</span>
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => setIsCartOpen(true)}
-                className="px-3 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/30 text-xs font-black cursor-pointer"
-              >
-                Ver Carrito
-              </button>
-              <Link
-                href="/checkout"
-                className="px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-[#facc15] via-[#f97316] to-[#ea580c] text-slate-950 font-black text-xs flex items-center gap-1 shadow-md border border-yellow-200"
-              >
-                <span>Pagar Ahora</span>
-                <ArrowRight className="w-3.5 h-3.5 stroke-[3]" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
 export default function PocionesHalloweenEventPage() {
-  return <WitchPotionsEventSection inline={false} />;
+  return (
+    <div className="py-2 sm:py-4">
+      <WitchPotionsEventSection inline={false} />
+    </div>
+  );
 }
 
 function PotionEventCard({
@@ -447,35 +447,39 @@ function PotionEventCard({
   return (
     <div
       id={`potion-card-${product.id}`}
-      className={`rounded-3xl bg-gradient-to-b from-[#fff7ed] via-white to-[#ffedd5]/80 p-3 sm:p-3.5 flex flex-col justify-between relative overflow-hidden transition-transform duration-300 ${
+      className={`rounded-2xl sm:rounded-3xl bg-gradient-to-b from-[#230d42] via-[#18082e] to-[#120524] p-2.5 sm:p-3.5 flex flex-col justify-between relative overflow-hidden transition-transform duration-300 ${
         isHighlighted
-          ? 'border-[3px] border-amber-400 ring-4 ring-orange-500/50 scale-[1.02] shadow-[0_12px_30px_rgba(234,88,12,0.4)]'
-          : 'border-2 border-orange-400/90 shadow-[0_8px_22px_rgba(234,88,12,0.18)] hover:-translate-y-1'
+          ? 'border-2 sm:border-[3px] border-amber-300 ring-4 ring-orange-500/60 scale-[1.02] shadow-[0_12px_32px_rgba(249,115,22,0.5)]'
+          : 'border border-orange-400/75 hover:border-amber-300 shadow-[0_8px_24px_rgba(0,0,0,0.45)] hover:-translate-y-1'
       }`}
     >
-      {/* Cabecera de la Poción (Badge único: Poción de Amor, Poción de Energía, etc.) */}
+      {/* Parte Superior: Insignia del Hechizo + Imagen del Frasco + Nombre */}
       <div>
+        {/* Badge de la Poción (Poción de Amor, Poción de Energía, etc.) */}
         <div
-          className={`w-full rounded-2xl bg-gradient-to-r ${potionInfo.potionColorClass} text-white px-3 py-2 mb-2.5 shadow-sm border border-amber-200/60 flex items-center justify-between gap-1.5`}
+          className={`w-full rounded-xl sm:rounded-2xl bg-gradient-to-r ${potionInfo.potionColorClass} text-white px-2 sm:px-2.5 py-1.5 mb-2 shadow-sm border border-amber-200/60 flex items-center justify-between gap-1`}
         >
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="text-base sm:text-lg leading-none shrink-0">{potionInfo.potionEmoji}</span>
-            <span className="text-xs sm:text-[13px] font-black uppercase tracking-wide truncate">
+          <div className="flex items-center gap-1 min-w-0">
+            <span className="text-xs sm:text-base leading-none shrink-0">{potionInfo.potionEmoji}</span>
+            <span className="text-[9.5px] sm:text-xs font-black uppercase tracking-tight truncate">
               {potionInfo.potionTitle}
             </span>
           </div>
-          <span className="text-[9.5px] font-black bg-slate-950/45 text-amber-200 px-1.5 py-0.5 rounded-md shrink-0 border border-white/20">
+          <span className="text-[8.5px] sm:text-[9.5px] font-black bg-slate-950/50 text-amber-200 px-1.5 py-0.5 rounded-md shrink-0 border border-white/20">
             #{index + 1}
           </span>
         </div>
 
-        {/* Imagen del frasco con telaraña y etiqueta dinámica */}
+        {/* Ventana del Frasco con telaraña y halo mágico */}
         <Link
           href={getProductUrl(product)}
-          className="block relative w-full aspect-square @container rounded-2xl bg-white border border-orange-200 overflow-hidden mb-2.5 group"
+          className="block relative w-full aspect-square @container rounded-xl sm:rounded-2xl bg-white border-2 border-orange-400/80 overflow-hidden mb-2 group shadow-inner"
         >
-          <div className="absolute top-0 right-0 w-16 h-16 text-orange-600/55 pointer-events-none z-10">
+          <div className="absolute top-0 right-0 w-12 h-12 sm:w-16 sm:h-16 text-orange-600/60 pointer-events-none z-10">
             <CobwebCornerSVG className="w-full h-full" flipX />
+          </div>
+          <div className="absolute top-0 left-0 w-10 h-10 sm:w-12 sm:h-12 text-purple-900/35 pointer-events-none z-10">
+            <CobwebCornerSVG className="w-full h-full" />
           </div>
 
           <img
@@ -516,56 +520,56 @@ function PotionEventCard({
               );
             })()}
 
-          {/* Sello de ahorro estilo Temu sobre la foto */}
-          <div className="absolute bottom-2 left-2 z-10">
-            <span className="bg-slate-950/90 text-amber-300 border border-orange-400 text-[9px] font-black px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-1">
+          {/* Etiqueta flotante de Oferta Halloween */}
+          <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-center justify-between z-10 pointer-events-none">
+            <span className="bg-gradient-to-r from-[#1e1b4b]/95 to-[#7c2d12]/95 text-amber-300 border border-amber-400/80 text-[8px] sm:text-[9px] font-black px-1.5 sm:px-2 py-0.5 rounded-md shadow-sm flex items-center gap-0.5">
               <span>🎃</span>
-              <span>
-                {selectedPresentation === 'MEDIA_ONZA' ? 'Ahorras $0.05 / ½ Oz' : 'Ahorras $0.45 / Oz'}
-              </span>
+              <span>HECHIZO ACTIVO</span>
             </span>
           </div>
         </Link>
 
-        {/* Nombre comercial + Nombre del Perfume Original en color NARANJA */}
+        {/* Nombre comercial + Original en color NARANJA + Pergamino del poder */}
         <div className="space-y-1 px-0.5">
           <Link href={getProductUrl(product)} className="block">
-            <h3 className="text-base font-black text-slate-900 hover:text-orange-600 transition-colors truncate">
+            <h3 className="text-xs sm:text-[15px] font-black text-white hover:text-amber-300 transition-colors truncate leading-snug">
               {displayName}
             </h3>
           </Link>
 
-          <p className="text-xs leading-snug line-clamp-2">
-            <span className="text-slate-600 font-semibold">Inspirado en: </span>
-            <strong className="font-black text-[#ea580c]">{inspiracionPerfumeName}</strong>
+          <p className="text-[10px] sm:text-xs leading-tight line-clamp-2 min-h-[26px] sm:min-h-[30px]">
+            <span className="text-purple-200/75 font-semibold">Inspirado en: </span>
+            <strong className="font-black text-[#fb923c]">{inspiracionPerfumeName}</strong>
           </p>
 
-          {/* Descripción del hechizo / efecto de la poción */}
-          <p className="text-[10.5px] font-bold text-purple-950 bg-purple-100/70 border border-purple-200/80 rounded-xl px-2 py-1 leading-tight">
-            ✨ {potionInfo.potionEffect}
-          </p>
+          {/* Poder / Efecto de la Poción */}
+          <div className="rounded-lg sm:rounded-xl bg-purple-950/90 border border-purple-600/60 px-2 py-1">
+            <p className="text-[9.5px] sm:text-[10.5px] font-bold text-amber-200/95 leading-tight line-clamp-2">
+              ✨ {potionInfo.potionEffect}
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Bloque Inferior: Precio Antes y Ahora estilo Temu + Botón Calabaza */}
-      <div className="mt-3 pt-2.5 border-t border-orange-200/80 space-y-2">
+      {/* Parte Inferior: Precio Antes / Ahora + Selector 1 Oz / ½ Oz + Botón */}
+      <div className="mt-2.5 pt-2 border-t border-purple-800/70 space-y-1.5 sm:space-y-2">
         {/* Precio Antes y Ahora */}
-        <div className="bg-gradient-to-r from-orange-100 via-amber-50 to-orange-100 border border-orange-300 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
-          <div>
-            <span className="text-[9.5px] font-bold text-slate-500 line-through decoration-rose-500 decoration-2 block">
+        <div className="bg-gradient-to-r from-[#2e1065] via-[#3b0764] to-[#7c2d12] border border-orange-400/70 rounded-xl px-2 sm:px-2.5 py-1 sm:py-1.5 flex items-center justify-between gap-1">
+          <div className="min-w-0">
+            <span className="text-[8.5px] sm:text-[9.5px] font-bold text-rose-300 line-through decoration-rose-500 block leading-none">
               Antes ${(activeOption.originalPrice || (selectedPresentation === 'MEDIA_ONZA' ? HALLOWEEN_ORIGINAL_PRICE_HALF_OZ : HALLOWEEN_ORIGINAL_PRICE_1OZ)).toFixed(2)}
             </span>
-            <span className="text-lg font-black text-[#c2410c] leading-none">
-              Ahora ${activeOption.price.toFixed(2)}
+            <span className="text-sm sm:text-lg font-black text-amber-300 leading-tight block">
+              ${activeOption.price.toFixed(2)}
             </span>
           </div>
-          <span className="bg-[#ea580c] text-white text-[9.5px] font-black px-2 py-1 rounded-lg uppercase tracking-wider shadow-2xs">
-            {selectedPresentation === 'MEDIA_ONZA' ? '⚡ OFERTA ½ OZ' : '⚡ OFERTA 1 OZ'}
+          <span className="bg-orange-500 text-white text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider shrink-0 border border-amber-200/60">
+            {selectedPresentation === 'MEDIA_ONZA' ? '½ OZ' : '1 OZ'}
           </span>
         </div>
 
         {/* Selector rápido 1 Onza vs ½ Onza */}
-        <div className="grid grid-cols-2 gap-1 bg-orange-50 p-0.5 rounded-xl border border-orange-200">
+        <div className="grid grid-cols-2 gap-1 bg-[#110522] p-0.5 rounded-xl border border-purple-700/80">
           {presentations.map((opt) => {
             const isSelected = selectedPresentation === opt.id;
             return (
@@ -573,13 +577,13 @@ function PotionEventCard({
                 key={opt.id}
                 type="button"
                 onClick={() => setSelectedPresentation(opt.id)}
-                className={`py-1 rounded-lg text-[10.5px] font-extrabold transition-all cursor-pointer ${
+                className={`py-1 rounded-lg text-[9.5px] sm:text-[10.5px] font-extrabold transition-all cursor-pointer truncate px-0.5 ${
                   isSelected
                     ? 'bg-gradient-to-r from-[#ea580c] to-[#f97316] text-white shadow-2xs'
-                    : 'bg-white text-slate-700 hover:bg-orange-100/50'
+                    : 'text-purple-200 hover:text-white hover:bg-purple-900/50'
                 }`}
               >
-                {opt.id === 'MEDIA_ONZA' ? `½ Oz ($${opt.price.toFixed(2)})` : `🎃 1 Oz ($${opt.price.toFixed(2)})`}
+                {opt.id === 'MEDIA_ONZA' ? `½ Oz $${opt.price.toFixed(2)}` : `1 Oz $${opt.price.toFixed(2)}`}
               </button>
             );
           })}
@@ -587,24 +591,24 @@ function PotionEventCard({
 
         {/* Botón de Agregar Poción al Carrito */}
         {currentQuantity > 0 ? (
-          <div className="flex items-center justify-between gap-1 w-full bg-orange-100/90 p-1 rounded-xl border border-orange-300 h-[40px]">
+          <div className="flex items-center justify-between gap-1 w-full bg-purple-950 p-1 rounded-xl border border-orange-400 h-[34px] sm:h-[38px]">
             <button
               type="button"
               onClick={() => updateQuantity(itemId, currentQuantity - 1)}
-              className="w-8 h-full rounded-lg bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-600 font-black flex items-center justify-center shadow-2xs cursor-pointer"
+              className="w-7 sm:w-8 h-full rounded-lg bg-purple-900 hover:bg-rose-900 text-white font-black flex items-center justify-center cursor-pointer"
             >
-              <Minus className="w-3.5 h-3.5" />
+              <Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             </button>
-            <div className="text-center leading-tight">
-              <span className="text-xs font-black text-[#c2410c]">{currentQuantity} en caldero</span>
-            </div>
+            <span className="text-[10px] sm:text-xs font-black text-amber-300 truncate">
+              {currentQuantity} agregada{currentQuantity > 1 ? 's' : ''}
+            </span>
             <button
               type="button"
               onClick={handleAdd}
               disabled={isOutOfStock}
-              className="w-8 h-full rounded-lg bg-gradient-to-r from-[#ea580c] to-[#f97316] text-white font-black flex items-center justify-center shadow-2xs cursor-pointer disabled:opacity-40"
+              className="w-7 sm:w-8 h-full rounded-lg bg-gradient-to-r from-[#ea580c] to-[#f97316] text-white font-black flex items-center justify-center cursor-pointer disabled:opacity-40"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             </button>
           </div>
         ) : (
@@ -612,26 +616,26 @@ function PotionEventCard({
             type="button"
             onClick={handleAdd}
             disabled={isOutOfStock}
-            className={`w-full h-[40px] rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            className={`w-full h-[34px] sm:h-[38px] rounded-xl font-black text-[10.5px] sm:text-xs flex items-center justify-center gap-1 transition-all cursor-pointer ${
               isOutOfStock
-                ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
                 : justAdded
                 ? 'bg-emerald-600 text-white scale-[1.02]'
-                : 'bg-gradient-to-r from-[#ea580c] via-[#f97316] to-[#d97706] hover:brightness-105 text-white border border-orange-300 shadow-[0_4px_12px_rgba(234,88,12,0.35)] active:scale-95'
+                : 'bg-gradient-to-r from-[#ea580c] via-[#f97316] to-[#d97706] hover:brightness-110 text-white border border-amber-300/80 shadow-[0_4px_12px_rgba(234,88,12,0.4)] active:scale-95'
             }`}
           >
             {justAdded ? (
               <>
-                <Check className="w-4 h-4 stroke-[3]" />
-                <span>¡Poción Agregada!</span>
+                <Check className="w-3.5 h-3.5 stroke-[3]" />
+                <span>¡Agregada!</span>
               </>
             ) : isOutOfStock ? (
               <span>Agotado</span>
             ) : (
               <>
                 <span>🧪</span>
-                <ShoppingBag className="w-3.5 h-3.5" />
-                <span>¡Agregar Poción!</span>
+                <ShoppingBag className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
+                <span className="truncate">Agregar Poción</span>
               </>
             )}
           </button>
