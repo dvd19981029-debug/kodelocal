@@ -139,6 +139,30 @@ html, body {
   transform: scale(0.96);
 }
 
+/* ================= HALLOWEEN E-COMMERCE SKIN (TEMPORAL) ================= */
+.halloween-ecommerce-skin .clay-btn-primary {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 55%, #c2410c 100%);
+  color: #ffffff;
+  box-shadow: 
+    5px 7px 16px rgba(234, 88, 12, 0.38),
+    -2px -2px 8px rgba(255, 255, 255, 0.4),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.5),
+    inset -3px -3px 6px rgba(154, 52, 18, 0.4);
+  border: 1px solid rgba(253, 186, 116, 0.45);
+}
+
+.halloween-ecommerce-skin .clay-tab-active {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  color: #ffffff;
+  box-shadow: 
+    4px 6px 14px rgba(234, 88, 12, 0.35),
+    -2px -2px 6px rgba(255, 255, 255, 0.35),
+    inset 1.5px 1.5px 3px rgba(255, 255, 255, 0.5),
+    inset -2px -2px 4px rgba(154, 52, 18, 0.35);
+  border: 1px solid rgba(253, 186, 116, 0.35);
+  transform: scale(1.02);
+}
+
 /* Success Button (Emerald / Green 3D Clay) */
 .clay-btn-success {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);

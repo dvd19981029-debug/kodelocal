@@ -8,6 +8,7 @@ import { sendOrderConfirmationEmail } from '@/lib/orderEmailService';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { resolveGiroMH, formatGiroOption } from '@/lib/svGirosCat019';
 import { c807Client } from '@/lib/c807';
+import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ } from '@/lib/halloweenPromo';
 
 export const dynamic = 'force-dynamic';
 
@@ -879,15 +880,22 @@ export async function POST(request: Request) {
         const isEssence = catName === 'Esencias para Perfume' || catName === 'Esencias & Fragancias' || prod.unit === 'Onza' || !catName;
         const isBottle = !isEssence && (catName === 'Botes' || catName === 'Botes & Envases' || catName === 'Envases & Botes' || prodNameLower.includes('bote') || prodNameLower.includes('frasco'));
 
+        const isHalfOunce = presLower.includes('media') || presLower.includes('½') || presLower.includes('half');
+        const isHalloween1Oz = isEssence && !isHalfOunce && isHalloweenPromoProduct(prod);
+
+        if (isHalloween1Oz) {
+          legitimateUnitPrice = Math.min(legitimateUnitPrice, HALLOWEEN_PROMO_PRICE_1OZ);
+        }
+
         if (isEssence && dbCustomer?.specialEssencePrice) {
-          legitimateUnitPrice = Number(dbCustomer.specialEssencePrice);
-          if (presLower.includes('media') || presLower.includes('½') || presLower.includes('half')) {
-            legitimateUnitPrice = Number((legitimateUnitPrice / 2).toFixed(2));
-          }
+          const specialCandidate = isHalfOunce
+            ? Number((Number(dbCustomer.specialEssencePrice) / 2).toFixed(2))
+            : Number(dbCustomer.specialEssencePrice);
+          legitimateUnitPrice = isHalloween1Oz ? Math.min(specialCandidate, HALLOWEEN_PROMO_PRICE_1OZ) : specialCandidate;
         } else if (isBottle && dbCustomer?.specialBottlePrice) {
           legitimateUnitPrice = Number(dbCustomer.specialBottlePrice);
         } else if (isEssence) {
-          if (presLower.includes('media') || presLower.includes('½') || presLower.includes('half')) {
+          if (isHalfOunce) {
             legitimateUnitPrice = prod.priceHalfOunce != null ? Number(prod.priceHalfOunce) : Number((legitimateUnitPrice / 2).toFixed(2));
           }
         }

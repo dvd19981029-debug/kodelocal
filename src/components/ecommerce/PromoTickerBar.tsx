@@ -14,6 +14,13 @@ interface TickerMessage {
 
 const TICKER_MESSAGES: TickerMessage[] = [
   {
+    id: 'halloween-promo',
+    badge: '🎃 HALLOWEEN',
+    icon: Sparkles,
+    text: 'Especial de Halloween en esencias seleccionadas: Antes $3.75',
+    highlight: '¡Ahora a $3.30 la Onza!',
+  },
+  {
     id: 'envios',
     badge: 'ENVÍOS',
     icon: Truck,
@@ -49,7 +56,7 @@ export default function PromoTickerBar() {
   return (
     <aside
       aria-label="Avisos y Beneficios de Aromaniak SV"
-      className="w-full bg-[#4338ca] text-white border-b border-indigo-500/25 overflow-hidden relative select-none pointer-events-none sm:pointer-events-auto z-30"
+      className="w-full bg-gradient-to-r from-[#c2410c] via-[#ea580c] to-[#f97316] text-white border-b border-orange-300/35 shadow-[0_2px_12px_rgba(234,88,12,0.3)] overflow-hidden relative select-none pointer-events-none sm:pointer-events-auto z-30"
     >
       <div className="relative py-2 sm:py-2.5 overflow-hidden flex items-center">
         {/* Pista continua con animación infinita sin cortes ni espacios en blanco */}
@@ -60,9 +67,9 @@ export default function PromoTickerBar() {
               const Icon = msg.icon;
               return (
                 <div key={`track1-${msg.id}`} className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-semibold tracking-tight text-white/95">
-                  <Icon className="w-3.5 h-3.5 text-indigo-200 shrink-0 stroke-[2.2]" />
+                  <Icon className="w-3.5 h-3.5 text-amber-200 shrink-0 stroke-[2.2]" />
                   {msg.badge && (
-                    <span className="bg-white/15 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded tracking-wider uppercase border border-white/20">
+                    <span className="bg-slate-950/35 text-amber-100 text-[9px] font-extrabold px-1.5 py-0.5 rounded tracking-wider uppercase border border-amber-200/35">
                       {msg.badge}
                     </span>
                   )}
@@ -71,11 +78,11 @@ export default function PromoTickerBar() {
                     {msg.highlight && (
                       <>
                         {' • '}
-                        <strong className="font-extrabold text-white">{msg.highlight}</strong>
+                        <strong className="font-extrabold text-amber-100 underline decoration-amber-200/50 underline-offset-2">{msg.highlight}</strong>
                       </>
                     )}
                   </span>
-                  <span className="text-indigo-300/40 text-xs ml-6" aria-hidden="true">✦</span>
+                  <span className="text-amber-100/80 text-xs ml-6" aria-hidden="true">🎃 🦇 🕸️</span>
                 </div>
               );
             })}
@@ -87,9 +94,9 @@ export default function PromoTickerBar() {
               const Icon = msg.icon;
               return (
                 <div key={`track2-${msg.id}`} className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-semibold tracking-tight text-white/95">
-                  <Icon className="w-3.5 h-3.5 text-indigo-200 shrink-0 stroke-[2.2]" />
+                  <Icon className="w-3.5 h-3.5 text-amber-200 shrink-0 stroke-[2.2]" />
                   {msg.badge && (
-                    <span className="bg-white/15 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded tracking-wider uppercase border border-white/20">
+                    <span className="bg-slate-950/35 text-amber-100 text-[9px] font-extrabold px-1.5 py-0.5 rounded tracking-wider uppercase border border-amber-200/35">
                       {msg.badge}
                     </span>
                   )}
@@ -98,11 +105,11 @@ export default function PromoTickerBar() {
                     {msg.highlight && (
                       <>
                         {' • '}
-                        <strong className="font-extrabold text-white">{msg.highlight}</strong>
+                        <strong className="font-extrabold text-amber-100 underline decoration-amber-200/50 underline-offset-2">{msg.highlight}</strong>
                       </>
                     )}
                   </span>
-                  <span className="text-indigo-300/40 text-xs ml-6" aria-hidden="true">✦</span>
+                  <span className="text-amber-100/80 text-xs ml-6" aria-hidden="true">🎃 🦇 🕸️</span>
                 </div>
               );
             })}

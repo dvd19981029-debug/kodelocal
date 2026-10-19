@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useCall
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
 
 import { ProductItem } from '@/lib/store';
+import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ } from '@/lib/halloweenPromo';
 
 export type ProductPresentation = 
   | 'ONZA_COMPLETA'      // 1 Onza Completa (Precio por onza del sistema)
@@ -32,8 +33,11 @@ export function applyCustomerProductPricing(
   customer?: any
 ): { price: number; originalPrice: number } {
   const originalPrice = Number(Number(baseListPrice || 0).toFixed(2));
+  const isHalloween1Oz = presentation === 'ONZA_COMPLETA' && isHalloweenPromoProduct(product);
+
   if (!customer) {
-    return { price: originalPrice, originalPrice };
+    const publicPrice = isHalloween1Oz ? Math.min(originalPrice, HALLOWEEN_PROMO_PRICE_1OZ) : originalPrice;
+    return { price: publicPrice, originalPrice };
   }
 
   const catStr = String(product.category || '');
@@ -51,14 +55,15 @@ export function applyCustomerProductPricing(
       prodNameLower.includes('bote') ||
       prodNameLower.includes('frasco'));
 
-  let effectivePrice = originalPrice;
+  let effectivePrice = isHalloween1Oz ? Math.min(originalPrice, HALLOWEEN_PROMO_PRICE_1OZ) : originalPrice;
 
   if (isEssence && customer.specialEssencePrice != null && Number(customer.specialEssencePrice) > 0) {
     const baseSpecial = Number(customer.specialEssencePrice);
-    effectivePrice =
+    const specialCandidate =
       presentation === 'MEDIA_ONZA'
         ? Number((baseSpecial / 2).toFixed(2))
         : Number(baseSpecial.toFixed(2));
+    effectivePrice = isHalloween1Oz ? Math.min(specialCandidate, HALLOWEEN_PROMO_PRICE_1OZ) : specialCandidate;
   } else if (isBottle && customer.specialBottlePrice != null && Number(customer.specialBottlePrice) > 0) {
     effectivePrice = Number(Number(customer.specialBottlePrice).toFixed(2));
   }

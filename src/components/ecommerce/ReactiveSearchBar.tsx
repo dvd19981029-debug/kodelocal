@@ -123,15 +123,15 @@ export default function ReactiveSearchBar({
               }`}
             >
               <div
-                className={`h-11 sm:h-12 clay-card bg-[#f8fafc]/95 backdrop-blur-md rounded-2xl px-3 flex items-center gap-2.5 transition-all duration-300 ${
+                className={`h-11 sm:h-12 clay-card bg-[#fffaf5]/95 backdrop-blur-md rounded-2xl px-3 flex items-center gap-2.5 transition-all duration-300 ${
                   isScrolled
-                    ? 'border-[3px] border-slate-800/60 shadow-[0_4px_16px_rgba(0,0,0,0.06)]'
-                    : 'border border-white/90 shadow-sm'
+                    ? 'border-[2.5px] border-orange-500/80 shadow-[0_4px_16px_rgba(234,88,12,0.16)]'
+                    : 'border border-orange-300/80 shadow-sm'
                 }`}
               >
                 {/* Ícono de Búsqueda Permanente */}
-                <div className="flex items-center justify-center shrink-0 text-slate-400">
-                  <Search className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
+                <div className="flex items-center justify-center shrink-0 text-orange-500">
+                  <Search className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
                 </div>
 
                 {/* Input de Búsqueda y Botón Limpiar */}
@@ -139,7 +139,7 @@ export default function ReactiveSearchBar({
                   <input
                     ref={inputRef}
                     type="text"
-                    placeholder="Buscar perfume: Nombre del perfume..."
+                    placeholder="🎃 Buscar perfume: Nombre del perfume..."
                     value={searchQuery}
                     onChange={(e) => {
                       setSearchQuery(e.target.value);
@@ -158,7 +158,7 @@ export default function ReactiveSearchBar({
                         setCurrentPage(1);
                         inputRef.current?.focus();
                       }}
-                      className="p-1 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer shrink-0 transition-colors"
+                      className="p-1 text-slate-400 hover:text-orange-600 rounded-lg cursor-pointer shrink-0 transition-colors"
                       title="Limpiar búsqueda"
                     >
                       <X className="w-4 h-4" />
@@ -179,17 +179,17 @@ export default function ReactiveSearchBar({
               <button
                 type="button"
                 onClick={() => setIsCartOpen(true)}
-                style={{ boxShadow: 'none' }}
-                className={`clay-btn clay-btn-primary px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl flex items-center gap-1.5 sm:gap-2 relative transition-all duration-300 cursor-pointer !shadow-none !ring-0 ${
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl flex items-center gap-1.5 sm:gap-2 relative transition-all duration-300 cursor-pointer bg-gradient-to-r from-[#ea580c] via-[#f97316] to-[#d97706] text-white border border-orange-300/60 shadow-[0_4px_14px_rgba(234,88,12,0.35)] ${
                   isCartPulsing
                     ? 'scale-105 brightness-105'
                     : 'active:scale-95'
                 }`}
               >
+                <span className="text-xs leading-none select-none" aria-hidden="true">🎃</span>
                 <ShoppingBag className={`w-4 h-4 text-white transition-transform duration-300 ${isCartPulsing ? '-translate-y-0.5 scale-110' : ''}`} />
                 <span className="text-xs font-black hidden sm:inline text-white">Carrito</span>
                 {totalItems > 0 && (
-                  <span className={`px-2 h-5 rounded-full bg-purple-950/85 text-white text-[10px] sm:text-[11px] font-black flex items-center justify-center transition-all duration-300 ${
+                  <span className={`px-2 h-5 rounded-full bg-slate-950/85 text-amber-300 border border-orange-400/40 text-[10px] sm:text-[11px] font-black flex items-center justify-center transition-all duration-300 ${
                     isCartPulsing ? 'scale-115' : ''
                   }`}>
                     ${subtotal.toFixed(2)}

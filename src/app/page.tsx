@@ -30,6 +30,8 @@ import PromoBannerCarousel from '@/components/ecommerce/PromoBannerCarousel';
 import ReactiveSearchBar from '@/components/ecommerce/ReactiveSearchBar';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
+import { isHalloweenPromoProduct } from '@/lib/halloweenPromo';
+import { CobwebCornerSVG, BatIllustrationSVG, PumpkinIconSVG } from '@/components/ecommerce/HalloweenDecorations';
 
 const PerfumeKitBuilderModal = dynamic(() => import('@/components/ecommerce/PerfumeKitBuilderModal'), { ssr: false });
 const HomeBlogSection = dynamic(() => import('@/components/ecommerce/HomeBlogSection'));
@@ -84,6 +86,7 @@ export default function EcommerceHomePage() {
   const [selectedGender, setSelectedGender] = useState<'Todos' | 'Caballero' | 'Dama' | 'Unisex'>('Todos');
   const [selectedCategory, setSelectedCategory] = useState<string>('Esencias para Perfume');
   const [selectedStockFilter, setSelectedStockFilter] = useState<'Todos' | 'Disponibles' | 'Agotados'>('Todos');
+  const [onlyHalloweenPromo, setOnlyHalloweenPromo] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
   // Columnas dinámicas según el tamaño de pantalla para calcular exactamente 7 filas
   const [columns, setColumns] = useState(2);
@@ -126,6 +129,7 @@ export default function EcommerceHomePage() {
       setSearchQuery('');
       setSelectedGender('Todos');
       setSelectedStockFilter('Todos');
+      setOnlyHalloweenPromo(false);
       setCurrentPage(1);
       setInitialEssenceId(null);
       if (typeof window !== 'undefined') {
@@ -161,10 +165,10 @@ export default function EcommerceHomePage() {
     return () => window.removeEventListener('resize', updateColumns);
   }, []);
 
-  // Filtrado reactivo de productos
+  // Filtrado reactivo de productos (con prioridad para el Top 10 de la Promoción de Halloween)
   const filteredProducts = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    return products.filter((p) => {
+    const list = products.filter((p) => {
       if (p.category === 'Logística' || p.id === 'ENVIO-DOM') return false;
       // Filtro de categoría
       let matchesCategory = true;
@@ -174,6 +178,11 @@ export default function EcommerceHomePage() {
         matchesCategory = p.category === 'Botes' || p.category === 'Esencias para Perfume';
       } else if (selectedCategory !== 'Todos') {
         matchesCategory = p.category === selectedCategory;
+      }
+
+      // Filtro de Promo Halloween
+      if (onlyHalloweenPromo && selectedCategory === 'Esencias para Perfume') {
+        if (!isHalloweenPromoProduct(p)) return false;
       }
 
       // Filtro de género (solo si es categoría de esencias)
@@ -220,7 +229,16 @@ export default function EcommerceHomePage() {
 
       return matchesCategory && matchesGender && matchesStock && matchesSearch;
     });
-  }, [products, searchQuery, selectedGender, selectedCategory, selectedStockFilter]);
+
+    if (selectedCategory === 'Esencias para Perfume') {
+      return [...list].sort((a, b) => {
+        const aPromo = isHalloweenPromoProduct(a) ? 1 : 0;
+        const bPromo = isHalloweenPromoProduct(b) ? 1 : 0;
+        return bPromo - aPromo;
+      });
+    }
+    return list;
+  }, [products, searchQuery, selectedGender, selectedCategory, selectedStockFilter, onlyHalloweenPromo]);
 
   // Paginación: Exactamente 7 filas por página según el número de columnas del dispositivo
   const targetRows = 7;
@@ -526,54 +544,129 @@ export default function EcommerceHomePage() {
           </section>
         ) : (
           <>
+            {/* ================= BANNER ESPECIAL DE HALLOWEEN: TOP 10 ESENCIAS A $3.30 / OZ ================= */}
+            {selectedCategory === 'Esencias para Perfume' && (
+              <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#1e1b4b] via-[#c2410c] to-[#ea580c] text-white p-3.5 sm:p-5 border-2 border-orange-400/80 shadow-[0_8px_28px_rgba(234,88,12,0.3)]">
+                {/* Telarañas en esquinas del banner */}
+                <div className="absolute top-0 left-0 w-20 h-20 text-amber-200/45 pointer-events-none">
+                  <CobwebCornerSVG className="w-full h-full" />
+                </div>
+                <div className="absolute top-0 right-0 w-20 h-20 text-amber-200/45 pointer-events-none">
+                  <CobwebCornerSVG className="w-full h-full" flipX />
+                </div>
+                <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-slate-950/40 border border-orange-300/50 flex items-center justify-center shrink-0 shadow-inner">
+                      <PumpkinIconSVG className="w-8 h-8 sm:w-9 sm:h-9" />
+                    </div>
+                    <div>
+                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-950/50 border border-amber-300/50 text-[10px] font-black tracking-wider uppercase text-amber-200 mb-0.5">
+                        <span>🎃 ESPECIAL DE HALLOWEEN</span>
+                        <span>•</span>
+                        <span>10 FRAGANCIAS SELECCIONADAS 🦇</span>
+                      </div>
+                      <h3 className="text-sm sm:text-lg font-black text-white leading-snug">
+                        ¡Promoción de Halloween a <span className="text-amber-200 underline decoration-amber-300">$3.30 la Onza</span>!{' '}
+                        <span className="text-xs sm:text-sm font-bold text-orange-100/90">
+                          (Antes <span className="line-through decoration-rose-400">$3.75</span> • Ahora <strong className="text-amber-200">$3.30</strong>)
+                        </span>
+                      </h3>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOnlyHalloweenPromo((prev) => !prev);
+                      setCurrentPage(1);
+                    }}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 flex items-center gap-1.5 border ${
+                      onlyHalloweenPromo
+                        ? 'bg-white text-[#c2410c] border-white shadow-md scale-[1.02]'
+                        : 'bg-slate-950/60 hover:bg-slate-950/80 text-amber-200 border-amber-300/60 shadow-sm'
+                    }`}
+                  >
+                    <span>🎃</span>
+                    <span>{onlyHalloweenPromo ? 'Ver Todo el Catálogo' : 'Ver solo las 10 en Promo ($3.30)'}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Encabezado informativo del catálogo */}
             <div className="flex items-center justify-between gap-2 px-1 pt-1">
-              <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-xl font-black text-slate-900 tracking-tight">
-                  {selectedCategory === 'Esencias para Perfume' 
-                    ? (selectedGender === 'Todos' ? 'Esencias de Perfume' : `Esencias • ${selectedGender === 'Caballero' ? 'Hombre' : selectedGender}`) 
-                    : selectedCategory === 'Botes' 
-                      ? 'Botes y Frascos' 
-                      : selectedCategory === 'Insumos' || selectedCategory === 'Alcohol y Materiales'
-                        ? 'Insumos y Materiales'
-                        : selectedCategory}
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base sm:text-xl font-black text-slate-900 tracking-tight flex items-center gap-1.5">
+                  <span>🎃</span>
+                  <span>
+                    {selectedCategory === 'Esencias para Perfume' 
+                      ? (onlyHalloweenPromo
+                          ? 'Promo Halloween ($3.30 / Oz)'
+                          : selectedGender === 'Todos'
+                          ? 'Esencias de Perfume'
+                          : `Esencias • ${selectedGender === 'Caballero' ? 'Hombre' : selectedGender}`) 
+                      : selectedCategory === 'Botes' 
+                        ? 'Botes y Frascos' 
+                        : selectedCategory === 'Insumos' || selectedCategory === 'Alcohol y Materiales'
+                          ? 'Insumos y Materiales'
+                          : selectedCategory}
+                  </span>
                 </h2>
-                <span className="clay-badge text-[10px] sm:text-xs bg-purple-50 text-purple-900 border border-purple-200 px-2.5 py-0.5 rounded-lg font-black">
+                <span className="clay-badge text-[10px] sm:text-xs bg-orange-50 text-orange-900 border border-orange-200 px-2.5 py-0.5 rounded-lg font-black">
                   {filteredProducts.length} {selectedCategory === 'Esencias para Perfume' ? 'fragancias' : 'productos'}
                 </span>
               </div>
             </div>
 
-            {/* ================= FILTRO CLAYMÓRFICO: MÁS VENDIDAS / HOMBRE / DAMA / UNISEX ================= */}
+            {/* ================= FILTRO CLAYMÓRFICO: MÁS VENDIDAS / PROMO HALLOWEEN / HOMBRE / DAMA / UNISEX ================= */}
             {selectedCategory === 'Esencias para Perfume' && (
               <div className="w-full">
-                <div className="clay-tabs-track max-w-xl mx-auto">
-                  {/* Pestaña: Más Vendidas */}
+                <div className="clay-tabs-track max-w-2xl mx-auto">
+                  {/* Pestaña: Todas / Más Vendidas */}
                   <button
                     type="button"
                     onClick={() => {
+                      setOnlyHalloweenPromo(false);
                       setSelectedGender('Todos');
                       setCurrentPage(1);
                     }}
-                    className={`clay-tab-item py-1.5 sm:py-2 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
-                      selectedGender === 'Todos'
-                        ? 'clay-tab-active flex-[1.4] sm:flex-[1.5]'
+                    className={`clay-tab-item py-1.5 sm:py-2 px-2 sm:px-3.5 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
+                      selectedGender === 'Todos' && !onlyHalloweenPromo
+                        ? 'clay-tab-active flex-[1.3] sm:flex-[1.4]'
                         : 'clay-tab-inactive flex-1'
                     }`}
                   >
-                    <span className="truncate">Más Vendidas</span>
+                    <span className="truncate">Todas</span>
+                  </button>
+
+                  {/* Pestaña Especial: Promo Halloween $3.30 */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOnlyHalloweenPromo((prev) => !prev);
+                      setSelectedGender('Todos');
+                      setCurrentPage(1);
+                    }}
+                    className={`clay-tab-item py-1.5 sm:py-2 px-2 sm:px-3.5 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
+                      onlyHalloweenPromo
+                        ? 'clay-tab-active flex-[1.5] sm:flex-[1.6]'
+                        : 'clay-tab-inactive flex-[1.2] text-[#c2410c] font-black'
+                    }`}
+                  >
+                    <span className="truncate">🎃 Promo $3.30</span>
                   </button>
 
                   {/* Pestaña: Hombre */}
                   <button
                     type="button"
                     onClick={() => {
+                      setOnlyHalloweenPromo(false);
                       setSelectedGender('Caballero');
                       setCurrentPage(1);
                     }}
-                    className={`clay-tab-item py-1.5 sm:py-2 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
-                      selectedGender === 'Caballero'
-                        ? 'clay-tab-active flex-[1.4] sm:flex-[1.5]'
+                    className={`clay-tab-item py-1.5 sm:py-2 px-2 sm:px-3.5 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
+                      selectedGender === 'Caballero' && !onlyHalloweenPromo
+                        ? 'clay-tab-active flex-[1.3] sm:flex-[1.4]'
                         : 'clay-tab-inactive flex-1'
                     }`}
                   >
@@ -584,12 +677,13 @@ export default function EcommerceHomePage() {
                   <button
                     type="button"
                     onClick={() => {
+                      setOnlyHalloweenPromo(false);
                       setSelectedGender('Dama');
                       setCurrentPage(1);
                     }}
-                    className={`clay-tab-item py-1.5 sm:py-2 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
-                      selectedGender === 'Dama'
-                        ? 'clay-tab-active flex-[1.4] sm:flex-[1.5]'
+                    className={`clay-tab-item py-1.5 sm:py-2 px-2 sm:px-3.5 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
+                      selectedGender === 'Dama' && !onlyHalloweenPromo
+                        ? 'clay-tab-active flex-[1.3] sm:flex-[1.4]'
                         : 'clay-tab-inactive flex-1'
                     }`}
                   >
@@ -600,12 +694,13 @@ export default function EcommerceHomePage() {
                   <button
                     type="button"
                     onClick={() => {
+                      setOnlyHalloweenPromo(false);
                       setSelectedGender('Unisex');
                       setCurrentPage(1);
                     }}
-                    className={`clay-tab-item py-1.5 sm:py-2 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
-                      selectedGender === 'Unisex'
-                        ? 'clay-tab-active flex-[1.4] sm:flex-[1.5]'
+                    className={`clay-tab-item py-1.5 sm:py-2 px-2 sm:px-3.5 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
+                      selectedGender === 'Unisex' && !onlyHalloweenPromo
+                        ? 'clay-tab-active flex-[1.3] sm:flex-[1.4]'
                         : 'clay-tab-inactive flex-1'
                     }`}
                   >

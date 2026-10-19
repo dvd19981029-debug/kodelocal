@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import EcommerceHeader from '@/components/ecommerce/EcommerceHeader';
 import PromoTickerBar from '@/components/ecommerce/PromoTickerBar';
 import EcommerceFooter from '@/components/ecommerce/EcommerceFooter';
+import HalloweenDecorations from '@/components/ecommerce/HalloweenDecorations';
 import { EcommerceCartProvider, useEcommerceCart } from '@/context/EcommerceCartContext';
 import { CustomerAuthProvider, useCustomerAuth } from '@/context/CustomerAuthContext';
 
@@ -47,7 +48,9 @@ export default function NavigationWrapper({ children }: { children: React.ReactN
   return (
     <CustomerAuthProvider>
       <EcommerceCartProvider>
-        {!isKodeRoute && <EcommerceLazyOverlays />}
+        <div className={!isOperationalRoute && !isKodeRoute && !isLoginPage ? 'halloween-ecommerce-skin' : ''}>
+          {!isKodeRoute && <EcommerceLazyOverlays />}
+        </div>
 
       {isKodeRoute ? (
         // En KODE: Sistema totalmente independiente (marca paralela sin mezclar con Aromaniak)
@@ -65,7 +68,7 @@ export default function NavigationWrapper({ children }: { children: React.ReactN
         </>
       ) : isBlogRoute ? (
         // En el Blog: Cabecera con opciones hacia el ecommerce, sin barra de promociones
-        <div className="flex flex-col min-h-screen w-full max-w-full overflow-x-hidden">
+        <div className="flex flex-col min-h-screen w-full max-w-full overflow-x-hidden halloween-ecommerce-skin">
           <BlogHeader />
           <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 lg:p-8 min-w-0 overflow-hidden">
             {children}
@@ -74,9 +77,10 @@ export default function NavigationWrapper({ children }: { children: React.ReactN
         </div>
       ) : (
         // En la tienda pública (E-commerce) se muestra la barra de promociones en el tope superior, cabecera original y pie de Aromaniak
-        <div className="flex flex-col min-h-screen relative">
+        <div className="flex flex-col min-h-screen relative halloween-ecommerce-skin">
           {/* Parche visual para el arrastre (rubber-banding) en iOS Safari para el TickerBar */}
-          <div className="absolute top-0 left-0 w-full h-[50vh] bg-[#4338ca] -translate-y-full z-0"></div>
+          <div className="absolute top-0 left-0 w-full h-[50vh] bg-[#ea580c] -translate-y-full z-0"></div>
+          <HalloweenDecorations />
           <PromoTickerBar />
           <EcommerceHeader />
           <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 lg:p-8">

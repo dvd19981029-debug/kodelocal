@@ -30,6 +30,8 @@ import FragranceNotesVisual from '@/components/ecommerce/FragranceNotesVisual';
 import { getInspiracionPerfumeName, formatPerfumeDisplayName, getBottleLabelConfig } from '@/lib/perfumeNames';
 import { getFragranceDescription } from '@/lib/fragranceDescriptions';
 import { resolveTargetProductId } from '@/lib/productUrl';
+import { isHalloweenPromoProduct, HALLOWEEN_ORIGINAL_PRICE_1OZ } from '@/lib/halloweenPromo';
+import { CobwebCornerSVG } from '@/components/ecommerce/HalloweenDecorations';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -243,6 +245,7 @@ export default function ProductDetailPage() {
 
   const productImage = getProductImage(product);
   const displayName = formatPerfumeDisplayName(product);
+  const isHalloweenPromo = isHalloweenPromoProduct(product);
 
   const handleAddToCart = () => {
     if (!product || isOutOfStock || maxSelectable <= 0 || isQuantityBlocked) return;
@@ -320,20 +323,26 @@ export default function ProductDetailPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
       />
 
-      
-
-
       {/* ================= CONTENEDOR PRINCIPAL PRODUCTO (ESTILO KLONE SCENTS EN CLAYMORPHISM) ================= */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
         
         {/* COLUMNA IZQUIERDA: VITRINA VISUAL CLAYMORPHIC */}
         <div className="lg:col-span-6 space-y-3">
-          <div className="clay-card p-3 sm:p-5 bg-white rounded-3xl border border-white/90 relative overflow-hidden shadow-lg group">
+          <div className={`clay-card p-3 sm:p-5 bg-white rounded-3xl relative overflow-hidden shadow-lg group ${
+            isHalloweenPromo
+              ? 'border-2 border-orange-500 ring-2 ring-orange-400/40 hw-card-glow'
+              : 'border border-orange-200/80'
+          }`}>
             {/* Resplandor suave decorativo de fondo */}
-            <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-indigo-200/25 blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-amber-100/30 blur-2xl pointer-events-none" />
+            <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-orange-200/35 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-amber-100/40 blur-2xl pointer-events-none" />
 
-            <div className="relative aspect-square w-full @container rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center">
+            <div className="relative aspect-square w-full @container rounded-2xl overflow-hidden bg-slate-50 border border-orange-100 flex items-center justify-center">
+              {isHalloweenPromo && (
+                <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 text-orange-600/60 pointer-events-none z-10">
+                  <CobwebCornerSVG className="w-full h-full" flipX />
+                </div>
+              )}
               
               <img
                 src={productImage}
@@ -377,13 +386,20 @@ export default function ProductDetailPage() {
 
 
               {/* Badge de categoría / género sobre la imagen */}
-              <div className="absolute top-3 left-3 z-10">
+              <div className="absolute top-3 left-3 z-10 flex flex-col items-start gap-1.5">
                 {isBottle ? (
                   <span className="bg-white/95 backdrop-blur-xs text-slate-800 border border-slate-200 text-[11px] font-black px-2.5 py-1 rounded-xl shadow-2xs">
                     100 ML • Vidrio
                   </span>
                 ) : (
                   getGenderBadge(product.gender)
+                )}
+                {isHalloweenPromo && (
+                  <span className="bg-gradient-to-r from-slate-950 via-[#2e1065] to-[#ea580c] text-amber-200 border border-orange-400 text-[10px] sm:text-xs font-black py-1 px-2.5 rounded-xl shadow-md tracking-wider uppercase flex items-center gap-1.5">
+                    <span>🎃</span>
+                    <span>PROMO ESPECIAL HALLOWEEN</span>
+                    <span>🦇</span>
+                  </span>
                 )}
               </div>
 
@@ -403,7 +419,7 @@ export default function ProductDetailPage() {
 
               {/* Sello de pureza / calidad de frasco */}
               <div className="absolute bottom-3 left-3 z-10">
-                <span className="bg-white/90 backdrop-blur-xs text-slate-800 border border-slate-200 text-[10.5px] font-black py-1 px-2.5 rounded-lg shadow-xs flex items-center gap-1.5">
+                <span className="bg-white/90 backdrop-blur-xs text-slate-800 border border-orange-200 text-[10.5px] font-black py-1 px-2.5 rounded-lg shadow-xs flex items-center gap-1.5">
                   {isBottle ? (
                     <>
                       <Sparkles className="w-3.5 h-3.5 text-amber-500" />
@@ -411,7 +427,7 @@ export default function ProductDetailPage() {
                     </>
                   ) : isEssence ? (
                     <>
-                      <Droplets className="w-3.5 h-3.5 text-indigo-600" />
+                      <Droplets className="w-3.5 h-3.5 text-orange-600" />
                       <span>100% Esencia NO diluida</span>
                     </>
                   ) : (
@@ -426,19 +442,23 @@ export default function ProductDetailPage() {
           </div>
 
           {/* ================= SECCIÓN DE COMPRA DIRECTAMENTE ABAJO DE LA IMAGEN (PARA TODOS LOS PRODUCTOS) ================= */}
-          <div className="clay-card p-4 sm:p-6 bg-white rounded-3xl border border-slate-100 shadow-md space-y-4">
+          <div className={`clay-card p-4 sm:p-6 bg-white rounded-3xl shadow-md space-y-4 ${
+            isHalloweenPromo
+              ? 'border-2 border-orange-400 bg-gradient-to-b from-[#fff7ed] to-white'
+              : 'border border-orange-100'
+          }`}>
             
-            {/* 1. Nombre del Producto en Grande y Moradito de la misma paleta */}
+            {/* 1. Nombre del Producto en Grande */}
             <div className="space-y-1">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#7c3aed] tracking-tight leading-tight">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-tight">
                 {displayName}
               </h1>
 
-              {/* Subtítulo según la categoría */}
+              {/* Subtítulo según la categoría (Nombre original siempre en NARANJA) */}
               {isEssence && (
                 <div className="text-xs sm:text-sm text-slate-700 font-medium flex items-center gap-1.5 flex-wrap pt-0.5">
                   <span className="text-slate-600 font-semibold">Inspirado en:</span>
-                  <strong className="text-slate-950 font-black text-sm sm:text-base">
+                  <strong className="text-[#ea580c] font-black text-sm sm:text-base">
                     {getInspiracionPerfumeName(product)}
                   </strong>
                 </div>
@@ -449,7 +469,7 @@ export default function ProductDetailPage() {
                   <span className="text-slate-400">Tipo de Envase:</span>
                   <strong className="text-slate-900 font-black">Frasco de Vidrio de 100ml</strong>
                   <span className="text-slate-300">•</span>
-                  <span className="text-indigo-700 font-bold bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg text-xs">
+                  <span className="text-orange-700 font-bold bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-lg text-xs">
                     Atomizador Spray de Lujo
                   </span>
                 </div>
@@ -460,17 +480,31 @@ export default function ProductDetailPage() {
                   <span className="text-slate-400">Categoría:</span>
                   <strong className="text-slate-900 font-black">Insumos de Perfumería</strong>
                   <span className="text-slate-300">•</span>
-                  <span className="text-indigo-700 font-bold bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg text-xs">
+                  <span className="text-orange-700 font-bold bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-lg text-xs">
                     {product.unit || 'Alta Pureza'}
                   </span>
                 </div>
               )}
 
-              {/* Precio Prominente */}
-              <div className="pt-2 flex items-baseline gap-2.5">
-                <span className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                  ${(activeOption.price * quantity).toFixed(2)}
-                </span>
+              {/* Precio Prominente (con Antes y Ahora en Promo Halloween) */}
+              <div className="pt-2 flex flex-wrap items-baseline gap-2.5">
+                {isHalloweenPromo && selectedPresentation === 'ONZA_COMPLETA' ? (
+                  <div className="flex flex-wrap items-baseline gap-3 bg-gradient-to-r from-orange-100/90 to-amber-50 border border-orange-300 px-3 py-1.5 rounded-2xl">
+                    <span className="text-sm sm:text-base font-bold text-slate-500 line-through decoration-rose-500 decoration-2">
+                      Antes ${((activeOption.originalPrice || HALLOWEEN_ORIGINAL_PRICE_1OZ) * quantity).toFixed(2)}
+                    </span>
+                    <span className="text-3xl sm:text-4xl font-black text-[#c2410c] tracking-tight">
+                      Ahora ${(activeOption.price * quantity).toFixed(2)}
+                    </span>
+                    <span className="text-[11px] font-black bg-[#ea580c] text-white px-2 py-0.5 rounded-lg">
+                      🎃 Promo Halloween
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-3xl sm:text-4xl font-black text-[#c2410c] tracking-tight">
+                    ${(activeOption.price * quantity).toFixed(2)}
+                  </span>
+                )}
                 <span className="text-xs font-bold text-slate-500">
                   {activeOption?.name} {quantity > 1 ? `(${quantity} unidades)` : ''}
                 </span>
@@ -484,17 +518,17 @@ export default function ProductDetailPage() {
                   {presentations.length > 1 ? 'Elige tu presentación:' : 'Presentación:'}
                 </label>
                 {isEssence && profile && (
-                  <span className="text-[11px] font-bold text-indigo-600">
+                  <span className="text-[11px] font-bold text-orange-600">
                     Familia: {profile.family}
                   </span>
                 )}
                 {isBottle && (
-                  <span className="text-[11px] font-bold text-indigo-600">
+                  <span className="text-[11px] font-bold text-orange-600">
                     Capacidad: 100 ml (3.4 oz)
                   </span>
                 )}
                 {!isEssence && !isBottle && (
-                  <span className="text-[11px] font-bold text-indigo-600">
+                  <span className="text-[11px] font-bold text-orange-600">
                     {product.unit || 'Unidad individual'}
                   </span>
                 )}
@@ -518,18 +552,18 @@ export default function ProductDetailPage() {
                         disabled={isPresOutOfStock}
                         className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
                           isSelected
-                            ? 'clay-card bg-indigo-50/80 border-indigo-600 ring-2 ring-indigo-400/40 shadow-xs'
+                            ? 'clay-card bg-orange-50/90 border-orange-500 ring-2 ring-orange-400/40 shadow-xs'
                             : isPresOutOfStock
                             ? 'bg-slate-100/70 border-slate-200 text-slate-400 opacity-60 cursor-not-allowed'
-                            : 'bg-white border-slate-200 hover:bg-slate-50'
+                            : 'bg-white border-slate-200 hover:bg-orange-50/40'
                         }`}
                       >
                         <div className="flex items-center justify-between w-full mb-1">
                           <span className="text-xs font-black text-slate-900">
-                            {pres.name}
+                            {pres.id === 'ONZA_COMPLETA' && isHalloweenPromo ? `🎃 ${pres.name}` : pres.name}
                           </span>
                           {isSelected ? (
-                            <span className="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
+                            <span className="w-4 h-4 rounded-full bg-[#ea580c] text-white flex items-center justify-center text-[10px] font-bold">
                               ✓
                             </span>
                           ) : isPresOutOfStock ? (
@@ -538,35 +572,42 @@ export default function ProductDetailPage() {
                             </span>
                           ) : null}
                         </div>
-                        <span className="text-xs font-bold text-indigo-700">
-                          ${pres.price.toFixed(2)}
-                        </span>
+                        <div className="flex items-baseline gap-1.5">
+                          {pres.id === 'ONZA_COMPLETA' && isHalloweenPromo && pres.originalPrice && pres.originalPrice > pres.price && (
+                            <span className="text-[10px] font-bold text-slate-400 line-through decoration-rose-500">
+                              ${pres.originalPrice.toFixed(2)}
+                            </span>
+                          )}
+                          <span className="text-xs font-black text-[#c2410c]">
+                            ${pres.price.toFixed(2)}
+                          </span>
+                        </div>
                       </button>
                     );
                   })}
                 </div>
               ) : (
-                <div className="p-3 rounded-2xl bg-indigo-50/40 border border-indigo-100 flex items-center justify-between">
+                <div className="p-3 rounded-2xl bg-orange-50/50 border border-orange-200 flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-800">
                     {isBottle ? 'Frasco de Vidrio de 100ml con Atomizador y Tapa' : activeOption.name}
                   </span>
-                  <span className="text-xs font-black text-indigo-700">
+                  <span className="text-xs font-black text-[#c2410c]">
                     ${activeOption.price.toFixed(2)}
                   </span>
                 </div>
               )}
             </div>
 
-            {/* 3. Selector de Cantidad y Botón de Compra con Bloqueo Inteligente */}
+            {/* 3. Selector de Cantidad y Botón de Compra con Temática de Calabaza */}
             <div className="space-y-2.5 pt-2">
               <div className="flex items-center gap-3">
                 {/* Control de cantidad */}
-                <div className="flex items-center rounded-2xl border border-slate-200 bg-white p-1 shadow-2xs shrink-0">
+                <div className="flex items-center rounded-2xl border border-orange-200 bg-white p-1 shadow-2xs shrink-0">
                   <button
                     type="button"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     disabled={quantity <= 1}
-                    className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 hover:bg-orange-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
                     <Minus className="w-3.5 h-3.5" />
                   </button>
@@ -577,13 +618,13 @@ export default function ProductDetailPage() {
                     type="button"
                     onClick={() => setQuantity(quantity + 1)}
                     disabled={quantity >= maxSelectable}
-                    className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 hover:bg-orange-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
-                {/* Botón Principal con bloqueo de duplicidad */}
+                {/* Botón Principal con temática de calabaza */}
                 <button
                   type="button"
                   onClick={handleAddToCart}
@@ -596,8 +637,8 @@ export default function ProductDetailPage() {
                       : isQuantityBlocked
                       ? 'bg-slate-100 text-slate-600 border border-slate-300 shadow-xs cursor-not-allowed opacity-90'
                       : isAlreadyInCart
-                      ? 'clay-btn bg-gradient-to-r from-amber-600 to-amber-700 !text-white active:scale-98 shadow-amber-500/25 cursor-pointer'
-                      : 'clay-btn clay-btn-primary !text-white active:scale-98 shadow-indigo-500/25 cursor-pointer'
+                      ? 'bg-gradient-to-r from-amber-600 to-orange-700 text-white active:scale-98 shadow-orange-500/25 cursor-pointer'
+                      : 'bg-gradient-to-r from-[#ea580c] via-[#f97316] to-[#d97706] hover:brightness-105 text-white border border-orange-300/60 active:scale-98 shadow-[0_6px_18px_rgba(234,88,12,0.35)] cursor-pointer'
                   }`}
                 >
                   {justAdded ? (
@@ -612,11 +653,13 @@ export default function ProductDetailPage() {
                     </>
                   ) : isAlreadyInCart ? (
                     <>
+                      <span>🎃</span>
                       <ShoppingBag className="w-4 h-4" />
                       <span>Actualizar Carrito • ${(activeOption.price * quantity).toFixed(2)}</span>
                     </>
                   ) : (
                     <>
+                      <span>🎃</span>
                       <ShoppingBag className="w-4 h-4" />
                       <span>Agregar al Carrito • ${(activeOption.price * quantity).toFixed(2)}</span>
                     </>
