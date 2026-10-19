@@ -117,6 +117,34 @@ export interface AromaniakDashboardData {
       date: string;
     }>;
   };
+  promocionHalloween?: {
+    totalCompras: number;
+    totalUnidades: number;
+    onzasCount: number;
+    mediasOnzasCount: number;
+    totalFacturado: number;
+    totalDescuento: number;
+    topPociones: Array<{
+      potionTitle: string;
+      potionEmoji: string;
+      fragrance: string;
+      count: number;
+      revenue: number;
+    }>;
+    compradores: Array<{
+      orderNumber: string;
+      customerName: string;
+      customerPhone: string;
+      potionTitle: string;
+      potionEmoji: string;
+      fragrance: string;
+      presentation: string;
+      unitPrice: number;
+      quantity: number;
+      total: number;
+      date: string;
+    }>;
+  };
   clientesTop?: Array<{
     name: string;
     phone: string;
@@ -335,6 +363,17 @@ export default function AromaniakDashboardModule({
     formulaStandardCount: 0,
     porcentajeVentas: 0,
     topFraganciasArmadas: [],
+    compradores: [],
+  };
+
+  const promocionHalloween = data?.promocionHalloween || {
+    totalCompras: 0,
+    totalUnidades: 0,
+    onzasCount: 0,
+    mediasOnzasCount: 0,
+    totalFacturado: 0,
+    totalDescuento: 0,
+    topPociones: [],
     compradores: [],
   };
 
@@ -1300,6 +1339,157 @@ export default function AromaniakDashboardModule({
                             {c.formula.includes('PLUS') ? 'PLUS 1.5 Oz' : 'Estándar 1.0 Oz'}
                           </span>
                         </td>
+                        <td className="py-2 px-2.5 text-right font-black font-mono text-slate-900">
+                          ${c.total.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ================= BLOQUE 6.5: TRACKING PROMOCIÓN DE HALLOWEEN (POCIONES DE LA BRUJA) ================= */}
+      <div className="clay-card p-5 sm:p-6 space-y-5 border-2 border-orange-200/80 bg-gradient-to-br from-white via-orange-50/20 to-purple-50/20">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="font-extrabold text-base text-slate-800 flex items-center gap-2">
+                <span className="text-lg">🎃</span>
+                <span>Tracking: Promoción de Halloween (&quot;Pociones de la Bruja&quot;)</span>
+              </h3>
+              <span className="text-[10px] font-black uppercase bg-orange-100 text-orange-800 border border-orange-200 px-2 py-0.5 rounded">
+                $3.30 (1 Oz) · $1.85 (½ Oz)
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 font-medium">
+              Seguimiento de compras realizadas con la promoción de las 10 pociones de Halloween (vigente hasta el 31 de octubre 11:59 PM)
+            </p>
+          </div>
+          <span className="text-xs font-bold text-orange-700 bg-orange-50 border border-orange-200/70 px-2.5 py-1 rounded-lg">
+            Descuento otorgado: ${promocionHalloween.totalDescuento.toFixed(2)}
+          </span>
+        </div>
+
+        {/* KPIs de la Promoción de Halloween */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="p-3.5 rounded-2xl bg-orange-50/80 border border-orange-200">
+            <span className="text-[11px] font-bold text-orange-800 block uppercase">Compras (Órdenes)</span>
+            <span className="text-2xl font-black text-orange-900 font-mono mt-0.5 block">
+              {promocionHalloween.totalCompras}
+            </span>
+            <span className="text-[10px] text-orange-700 font-medium">Pedidos con pociones</span>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-purple-50/80 border border-purple-200">
+            <span className="text-[11px] font-bold text-purple-800 block uppercase">Pociones Vendidas</span>
+            <span className="text-2xl font-black text-purple-900 font-mono mt-0.5 block">
+              {promocionHalloween.totalUnidades}
+            </span>
+            <span className="text-[10px] text-purple-700 font-medium">
+              {promocionHalloween.onzasCount} de 1 Oz · {promocionHalloween.mediasOnzasCount} de ½ Oz
+            </span>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200">
+            <span className="text-[11px] font-bold text-emerald-700 block uppercase">Total Facturado Promo</span>
+            <span className="text-2xl font-black text-emerald-900 font-mono mt-0.5 block">
+              ${promocionHalloween.totalFacturado.toFixed(2)}
+            </span>
+            <span className="text-[10px] text-emerald-600 font-medium">Ventas de la promoción</span>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200">
+            <span className="text-[11px] font-bold text-amber-800 block uppercase">Presentación 1 Oz vs ½ Oz</span>
+            <span className="text-2xl font-black text-amber-900 font-mono mt-0.5 block">
+              {promocionHalloween.onzasCount} / {promocionHalloween.mediasOnzasCount}
+            </span>
+            <span className="text-[10px] text-amber-700 font-medium">1 Oz ($3.30) / ½ Oz ($1.85)</span>
+          </div>
+        </div>
+
+        {/* Ranking de Pociones & Detalle de Compras */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* Pociones Más Compradas */}
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+            <span className="text-xs font-black text-slate-800 uppercase tracking-wider block">
+              Pociones Más Vendidas
+            </span>
+            <div className="space-y-2">
+              {promocionHalloween.topPociones.length === 0 ? (
+                <p className="text-xs text-slate-400 italic">Aún no se registran compras de la promoción en este período.</p>
+              ) : (
+                promocionHalloween.topPociones.map((p, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-100 text-xs">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-5 h-5 rounded-full bg-orange-100 text-orange-800 font-black text-[10px] flex items-center justify-center shrink-0">
+                        {p.potionEmoji}
+                      </span>
+                      <div className="min-w-0">
+                        <span className="font-extrabold text-slate-800 block truncate">{p.fragrance}</span>
+                        <span className="text-[10px] text-orange-600 font-bold block truncate">{p.potionTitle}</span>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0 ml-2">
+                      <span className="font-mono font-bold text-slate-900 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded text-[11px] block">
+                        {p.count} unids
+                      </span>
+                      <span className="text-[10px] font-mono text-emerald-700 font-bold">${p.revenue.toFixed(2)}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Tabla de Compras de la Promoción */}
+          <div className="lg:col-span-2 p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+            <span className="text-xs font-black text-slate-800 uppercase tracking-wider block">
+              Detalle de Compras de la Promoción de Halloween
+            </span>
+
+            <div className="overflow-x-auto max-h-[220px] overflow-y-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead className="sticky top-0 bg-slate-50">
+                  <tr className="border-b border-slate-200 text-slate-400 font-bold uppercase text-[10px]">
+                    <th className="py-2 px-2.5">Orden</th>
+                    <th className="py-2 px-2.5">Cliente</th>
+                    <th className="py-2 px-2.5">Poción / Esencia</th>
+                    <th className="py-2 px-2.5">Presentación</th>
+                    <th className="py-2 px-2.5 text-center">Cant.</th>
+                    <th className="py-2 px-2.5 text-right">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {promocionHalloween.compradores.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-4 text-center text-slate-400 italic">
+                        No hay compras de la promoción de Halloween registradas en este período.
+                      </td>
+                    </tr>
+                  ) : (
+                    promocionHalloween.compradores.map((c, idx) => (
+                      <tr key={idx} className="hover:bg-white/80 transition-colors">
+                        <td className="py-2 px-2.5 font-mono font-bold text-slate-800">{c.orderNumber}</td>
+                        <td className="py-2 px-2.5">
+                          <span className="font-bold text-slate-800 block">{c.customerName}</span>
+                          <span className="text-[10px] text-slate-400 font-mono">{c.customerPhone}</span>
+                        </td>
+                        <td className="py-2 px-2.5">
+                          <span className="font-extrabold text-orange-700 block">{c.fragrance}</span>
+                          <span className="text-[10px] text-purple-700 font-bold">
+                            {c.potionEmoji} {c.potionTitle}
+                          </span>
+                        </td>
+                        <td className="py-2 px-2.5">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-orange-100 text-orange-800">
+                            {c.presentation}
+                          </span>
+                        </td>
+                        <td className="py-2 px-2.5 text-center font-mono font-bold text-slate-800">{c.quantity}</td>
                         <td className="py-2 px-2.5 text-right font-black font-mono text-slate-900">
                           ${c.total.toFixed(2)}
                         </td>

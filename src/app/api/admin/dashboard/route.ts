@@ -2,6 +2,13 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getVisitMetricsForPeriod } from '@/lib/visits';
 import { verifyStaffRequest } from '@/lib/customerAuthToken';
+import {
+  HALLOWEEN_POTIONS,
+  HALLOWEEN_PROMO_PRICE_1OZ,
+  HALLOWEEN_PROMO_PRICE_HALF_OZ,
+  HALLOWEEN_PROMO_DISCOUNT_1OZ,
+  HALLOWEEN_PROMO_DISCOUNT_HALF_OZ,
+} from '@/lib/halloweenPromo';
 
 export const dynamic = 'force-dynamic';
 
@@ -449,6 +456,141 @@ export async function GET(request: Request) {
       compradores: compradoresArmaTuPerfume.slice(0, 10),
     };
 
+    // 11.5 Tracking de Promoción de Halloween (Pociones de la Bruja: $3.30 1 Oz / $1.85 ½ Oz)
+    const productByIdMap = new Map(products.map((p) => [p.id, p]));
+    const halloweenOrderNumbers = new Set<string>();
+    let totalPocionesUnidades = 0;
+    let totalOnzasPromo = 0;
+    let totalMediasOnzasPromo = 0;
+    let totalFacturadoHalloween = 0;
+    let totalDescuentoHalloween = 0;
+    const potionRankingMap: Record<
+      string,
+      { potionTitle: string; potionEmoji: string; fragrance: string; count: number; revenue: number }
+    > = {};
+    const compradoresHalloween: Array<{
+      orderNumber: string;
+      customerName: string;
+      customerPhone: string;
+      potionTitle: string;
+      potionEmoji: string;
+      fragrance: string;
+      presentation: string;
+      unitPrice: number;
+      quantity: number;
+      total: number;
+      date: string;
+    }> = [];
+
+    const registerHalloweenItem = (
+      it: {
+        productId?: string | null;
+        productName: string;
+        presentation?: string | null;
+        unit?: string | null;
+        unitPrice?: any;
+        quantity: number;
+        total: any;
+      },
+      meta: { orderNumber: string; customerName: string; customerPhone: string; date: string }
+    ) => {
+      const nameLower = (it.productName || '').toLowerCase();
+      const presRaw = String(it.presentation || it.unit || '1 Onza');
+      const presLower = presRaw.toLowerCase();
+      if (nameLower.includes('arma tu propio perfume') || presLower.includes('arma tu propio perfume')) return;
+
+      const unitPrice = Number(it.unitPrice || 0);
+      const isPromo1Oz = Math.abs(unitPrice - HALLOWEEN_PROMO_PRICE_1OZ) < 0.01;
+      const isPromoHalfOz = Math.abs(unitPrice - HALLOWEEN_PROMO_PRICE_HALF_OZ) < 0.01;
+      if (!isPromo1Oz && !isPromoHalfOz) return;
+
+      const qty = it.quantity || 1;
+      const lineTotal = Number(it.total || unitPrice * qty);
+      halloweenOrderNumbers.add(meta.orderNumber);
+      totalPocionesUnidades += qty;
+      totalFacturadoHalloween += lineTotal;
+
+      if (isPromoHalfOz) {
+        totalMediasOnzasPromo += qty;
+        totalDescuentoHalloween += qty * HALLOWEEN_PROMO_DISCOUNT_HALF_OZ;
+      } else {
+        totalOnzasPromo += qty;
+        totalDescuentoHalloween += qty * HALLOWEEN_PROMO_DISCOUNT_1OZ;
+      }
+
+      const potionInfo = it.productId ? HALLOWEEN_POTIONS[it.productId] : undefined;
+      const prod = it.productId ? productByIdMap.get(it.productId) : undefined;
+      const fragranceName =
+        prod?.officialName ||
+        prod?.name ||
+        (it.productName || '').replace(/\s*\([^)]*\)/g, '').trim() ||
+        'Esencia Halloween';
+      const potionTitle = potionInfo?.potionTitle || 'Poción de la Bruja';
+      const potionEmoji = potionInfo?.potionEmoji || '🧪';
+      const rankKey = potionInfo?.id || fragranceName;
+
+      if (!potionRankingMap[rankKey]) {
+        potionRankingMap[rankKey] = {
+          potionTitle,
+          potionEmoji,
+          fragrance: fragranceName,
+          count: 0,
+          revenue: 0,
+        };
+      }
+      potionRankingMap[rankKey].count += qty;
+      potionRankingMap[rankKey].revenue = Number((potionRankingMap[rankKey].revenue + lineTotal).toFixed(2));
+
+      compradoresHalloween.push({
+        orderNumber: meta.orderNumber,
+        customerName: meta.customerName,
+        customerPhone: meta.customerPhone,
+        potionTitle,
+        potionEmoji,
+        fragrance: fragranceName,
+        presentation: isPromoHalfOz ? '½ Onza ($1.85)' : '1 Onza ($3.30)',
+        unitPrice,
+        quantity: qty,
+        total: Number(lineTotal.toFixed(2)),
+        date: meta.date,
+      });
+    };
+
+    validOrders.forEach((o) => {
+      o.items.forEach((it) =>
+        registerHalloweenItem(it, {
+          orderNumber: o.orderNumber,
+          customerName: o.customerName || 'Cliente Online',
+          customerPhone: o.customerPhone || 'N/A',
+          date: o.createdAt.toISOString(),
+        })
+      );
+    });
+
+    validSales.forEach((s) => {
+      s.items.forEach((it) =>
+        registerHalloweenItem(it, {
+          orderNumber: s.saleNumber,
+          customerName: s.cashierName ? `Mostrador (${s.cashierName})` : 'Mostrador Local',
+          customerPhone: 'Mostrador POS',
+          date: s.createdAt.toISOString(),
+        })
+      );
+    });
+
+    const promocionHalloween = {
+      totalCompras: halloweenOrderNumbers.size,
+      totalUnidades: totalPocionesUnidades,
+      onzasCount: totalOnzasPromo,
+      mediasOnzasCount: totalMediasOnzasPromo,
+      totalFacturado: Number(totalFacturadoHalloween.toFixed(2)),
+      totalDescuento: Number(totalDescuentoHalloween.toFixed(2)),
+      topPociones: Object.values(potionRankingMap)
+        .sort((a, b) => b.count - a.count || b.revenue - a.revenue)
+        .slice(0, 10),
+      compradores: compradoresHalloween.slice(0, 15),
+    };
+
     // 12. Clientes Más Valiosos (Ranking de Compradores)
     const customerAggMap: Record<
       string,
@@ -837,6 +979,7 @@ export async function GET(request: Request) {
       visitas: visitMetrics,
       traficoDetalle,
       armaTuPropioPerfume,
+      promocionHalloween,
       clientesTop,
       proyeccionAgotamiento,
       embudoCarritos,

@@ -75,14 +75,19 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
     { ...slides[0], id: `${slides[0].id}-clone-end` },
   ];
 
-  // Auto-slide cada 5.5 segundos siempre hacia adelante
+  // Índice real del punto indicador activo
+  const activeDotIndex = (currentIndex - 1 + slides.length) % slides.length;
+
+  // Auto-slide: el slide de la Bruja dura 10 segundos siempre (10000ms), los demás 5.5 segundos (5500ms)
   useEffect(() => {
     if (isPaused) return;
-    const interval = setInterval(() => {
+    const activeSlide = slides[activeDotIndex];
+    const durationMs = activeSlide?.action === 'bruja-halloween' ? 10000 : 5500;
+    const timer = setTimeout(() => {
       handleNext();
-    }, 5500);
-    return () => clearInterval(interval);
-  }, [isPaused, slides.length]);
+    }, durationMs);
+    return () => clearTimeout(timer);
+  }, [isPaused, activeDotIndex, slides.length, halloweenActive]);
 
   // Al llegar al clon del extremo, resetear la posición instantáneamente sin animación
   const handleTransitionEnd = () => {
@@ -112,7 +117,7 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
 
   const handleNext = () => {
     setIsTransitionEnabled(true);
-    setCurrentIndex((prev) => (prev >= slides.length + 1 ? prev : prev + 1));
+    setCurrentIndex((prev) => (prev >= slides.length + 1 ? 2 : prev + 1));
   };
 
   const goToSlide = (slideIndex: number) => {
@@ -170,9 +175,6 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
       }
     }
   };
-
-  // Índice real del punto indicador activo
-  const activeDotIndex = (currentIndex - 1 + slides.length) % slides.length;
 
   return (
     <div className="w-full flex justify-center">
