@@ -82,7 +82,15 @@ export default function ProductDetailPage() {
     const cleanDecoded = decoded.replace(/^prod-/, '').replace(/^esencia-/, '');
     const numericSku = cleanDecoded && /^\d+$/.test(cleanDecoded) ? String(parseInt(cleanDecoded, 10)) : '';
 
+    const isOnlineEligible = (p: ProductItem) => {
+      if (p.isAvailableOnline === false) return false;
+      if (p.id === 'cmvfrqz7v0003jp08y8bmrnpz' || p.id === 'ENVIO-DOM' || p.category === 'Logística') return false;
+      if (String(p.name || '').trim().toLowerCase() === '$1 alcohol') return false;
+      return true;
+    };
+
     const matchProduct = (p: ProductItem) => {
+      if (!isOnlineEligible(p)) return false;
       const pId = p.id.toLowerCase().trim();
       const pSku = String(p.sku || '').toLowerCase().trim();
       const pBarcode = String(p.barcode || '').toLowerCase().trim();
@@ -159,13 +167,20 @@ export default function ProductDetailPage() {
   // Productos relacionados (esencias con esencias, botes con botes)
   const relatedProducts = useMemo(() => {
     if (!product) return [];
+    const onlineOnly = products.filter(
+      (p) =>
+        p.id !== product.id &&
+        p.isAvailableOnline !== false &&
+        p.id !== 'cmvfrqz7v0003jp08y8bmrnpz' &&
+        String(p.name || '').trim().toLowerCase() !== '$1 alcohol'
+    );
     if (isBottle) {
-      return products
-        .filter(p => p.id !== product.id && (p.category === 'Botes' || p.category === 'Botes & Envases'))
+      return onlineOnly
+        .filter(p => p.category === 'Botes' || p.category === 'Botes & Envases')
         .slice(0, 4);
     }
-    return products
-      .filter(p => p.id !== product.id && p.category === 'Esencias para Perfume' && (p.gender === product.gender || p.gender === 'Unisex'))
+    return onlineOnly
+      .filter(p => p.category === 'Esencias para Perfume' && (p.gender === product.gender || p.gender === 'Unisex'))
       .slice(0, 4);
   }, [products, product, isBottle]);
 

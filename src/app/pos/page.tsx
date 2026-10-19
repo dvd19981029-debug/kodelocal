@@ -858,7 +858,7 @@ export default function PosPage() {
   const getItemPriceDetails = (item: CartItem) => {
     let listPrice = item.product.price;
     const cat = item.product.category || '';
-    const isEssence = cat === "Esencias para Perfume" || cat === "Esencias & Fragancias" || item.product.unit === 'Onza' || (!cat && item.product.unit !== 'Unidad' && item.product.unit !== 'Servicio');
+    const isEssence = cat === "Esencias para Perfume" || cat === "Esencias & Fragancias" || (!cat && item.product.unit === 'Onza');
     const isBottle = !isEssence && (cat === "Botes" || cat === "Botes & Envases" || cat === "Envases & Botes" || item.product.name.toLowerCase().startsWith('bote') || item.product.name.toLowerCase().includes('frasco'));
     const isLogistics = cat === "Logística" || cat === "Logistica" || item.product.id === "ENVIO-DOM" || item.product.unit === "Servicio";
 
@@ -1444,6 +1444,42 @@ export default function PosPage() {
     setDomicilioReference('');
   };
 
+  const handleOpenNewProductInPos = () => {
+    const numericSkus = products
+      .map(p => parseInt(String(p.sku || ''), 10))
+      .filter(n => !isNaN(n) && n > 0 && n < 10000);
+    const nextSku = numericSkus.length > 0 ? String(Math.max(...numericSkus) + 1) : String(products.length + 1);
+    const defaultCat =
+      selectedCategory &&
+      ['Esencias para Perfume', 'Insumos y Materia Prima', 'Botes', 'Otro'].includes(selectedCategory)
+        ? selectedCategory
+        : 'Esencias para Perfume';
+    const isEssenceDefault = defaultCat === 'Esencias para Perfume';
+
+    setEditingProductInPos({
+      id: `prod_${Date.now()}`,
+      sku: nextSku,
+      barcode: '',
+      name: '',
+      officialName: '',
+      brand: '',
+      gender: 'Unisex',
+      category: defaultCat,
+      unit: isEssenceDefault ? 'Onza' : 'Unidad',
+      price: isEssenceDefault ? 3.75 : 1.00,
+      priceHalfOunce: isEssenceDefault ? 1.90 : undefined,
+      finishedPerfumePrice: isEssenceDefault ? 15.00 : undefined,
+      cost: 0,
+      stock: 10,
+      stockHalf: 0,
+      minStock: 5,
+      imageUrl: '',
+      isAvailableOnline: true,
+      puesto: '',
+    });
+    setIsEditingProductOpen(true);
+  };
+
   const handleOpenEditProduct = (e: React.MouseEvent, product: ProductItem) => {
     e.stopPropagation();
     setEditingProductInPos({ ...product });
@@ -1453,28 +1489,42 @@ export default function PosPage() {
   const handleSaveProductFromPos = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProductInPos || !editingProductInPos.name.trim()) {
-      alert('El nombre o inspiración es requerido.');
+      alert('El nombre del producto es requerido.');
       return;
     }
 
     setIsSavingProductInPos(true);
-    const prodToSave = { ...editingProductInPos };
+    const isNewProduct = editingProductInPos.id.startsWith('prod_');
+    const isEssenceProd = (editingProductInPos.category || 'Esencias para Perfume') === 'Esencias para Perfume';
+    const prodToSave: ProductItem = {
+      ...editingProductInPos,
+      category: editingProductInPos.category || 'Esencias para Perfume',
+      unit: isEssenceProd
+        ? 'Onza'
+        : (editingProductInPos.unit && editingProductInPos.unit !== 'Onza' ? editingProductInPos.unit : 'Unidad'),
+      priceHalfOunce: isEssenceProd ? editingProductInPos.priceHalfOunce : undefined,
+      finishedPerfumePrice: isEssenceProd ? editingProductInPos.finishedPerfumePrice : undefined,
+    };
 
     // 1. Actualización optimista inmediata en estado local
     setProducts(prev => {
-      const updated = prev.map(p => (p.id === prodToSave.id || (p.sku && p.sku === prodToSave.sku)) ? { ...p, ...prodToSave } : p);
+      const updated = isNewProduct
+        ? [prodToSave, ...prev]
+        : prev.map(p => (p.id === prodToSave.id || (p.sku && p.sku === prodToSave.sku)) ? { ...p, ...prodToSave } : p);
       localStorage.setItem('kodelocal_products', JSON.stringify(updated));
       window.dispatchEvent(new Event('kodelocal_products_updated'));
       return updated;
     });
 
     // También actualizar en carrito si el producto estaba agregado
-    setCart(prev => prev.map(it => {
-      if (it.product.id === prodToSave.id || (it.product.sku && it.product.sku === prodToSave.sku)) {
-        return { ...it, product: { ...it.product, ...prodToSave } };
-      }
-      return it;
-    }));
+    if (!isNewProduct) {
+      setCart(prev => prev.map(it => {
+        if (it.product.id === prodToSave.id || (it.product.sku && it.product.sku === prodToSave.sku)) {
+          return { ...it, product: { ...it.product, ...prodToSave } };
+        }
+        return it;
+      }));
+    }
 
     setIsEditingProductOpen(false);
 
@@ -1482,22 +1532,26 @@ export default function PosPage() {
     try {
       const staffToken = await getStaffToken();
       const res = await fetch('/api/products', {
-        method: 'PATCH',
+        method: isNewProduct ? 'POST' : 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           ...(staffToken ? { 'x-staff-token': staffToken } : {}),
         },
         body: JSON.stringify({
-          id: prodToSave.id,
+          ...(isNewProduct ? {} : { id: prodToSave.id }),
           sku: prodToSave.sku,
           brand: prodToSave.brand,
           name: prodToSave.name,
           officialName: prodToSave.officialName,
+          category: prodToSave.category,
+          unit: prodToSave.unit,
+          gender: prodToSave.gender,
           price: Number(prodToSave.price),
-          priceHalfOunce: prodToSave.priceHalfOunce != null ? Number(prodToSave.priceHalfOunce) : undefined,
-          finishedPerfumePrice: prodToSave.finishedPerfumePrice != null ? Number(prodToSave.finishedPerfumePrice) : undefined,
+          priceHalfOunce: isEssenceProd && prodToSave.priceHalfOunce != null ? Number(prodToSave.priceHalfOunce) : null,
+          finishedPerfumePrice: isEssenceProd && prodToSave.finishedPerfumePrice != null ? Number(prodToSave.finishedPerfumePrice) : null,
           cost: Number(prodToSave.cost || 0),
           stock: Number(prodToSave.stock || 0),
+          stockHalf: Number(prodToSave.stockHalf || 0),
           puesto: prodToSave.puesto || '',
           imageUrl: prodToSave.imageUrl || '',
           isAvailableOnline: prodToSave.isAvailableOnline,
@@ -3092,6 +3146,7 @@ export default function PosPage() {
                 cart={cart}
                 onAddToCart={addToCart}
                 onOpenEditProduct={handleOpenEditProduct}
+                onOpenNewProduct={handleOpenNewProductInPos}
               />
 
               {/* Panel de Carrito en Pantallas de Escritorio (xl+) */}

@@ -157,6 +157,9 @@ export default function InventarioPage() {
           brand: payload.brand,
           name: payload.name,
           officialName: payload.officialName,
+          category: payload.category,
+          unit: payload.unit,
+          gender: payload.gender,
           price: payload.price,
           priceHalfOunce: payload.priceHalfOunce,
           finishedPerfumePrice: payload.finishedPerfumePrice,
@@ -557,7 +560,25 @@ export default function InventarioPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                   <div>
                     <label className="text-[11px] font-bold text-slate-700 block mb-1">Categoría</label>
-                    <input type="text" value={formData.category || ''} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className="clay-input w-full text-xs bg-slate-50" />
+                    <select
+                      value={formData.category || 'Esencias para Perfume'}
+                      onChange={(e) => {
+                        const nextCat = e.target.value;
+                        const nextIsEssence = nextCat === 'Esencias para Perfume';
+                        setFormData({
+                          ...formData,
+                          category: nextCat,
+                          unit: nextIsEssence ? 'Onza' : 'Unidad',
+                        });
+                      }}
+                      className="clay-input w-full text-xs font-bold bg-slate-50"
+                    >
+                      <option value="Esencias para Perfume">Esencias (Esencias para Perfume)</option>
+                      <option value="Insumos y Materia Prima">Insumos (Insumos y Materia Prima)</option>
+                      <option value="Botes">Botes</option>
+                      <option value="Otro">Otro</option>
+                      <option value="Empaque">Empaque</option>
+                    </select>
                   </div>
                   <div>
                     <label className="text-[11px] font-bold text-slate-700 block mb-1">Marca / Casa</label>

@@ -19,12 +19,12 @@ export default function LandingMarquee() {
         const data = await res.json();
         if (data.success && Array.isArray(data.products)) {
           const esencias = data.products
-            .filter((p: ProductItem) => p.category === 'Esencias para Perfume')
+            .filter((p: ProductItem) => p.isAvailableOnline !== false && p.id !== 'cmvfrqz7v0003jp08y8bmrnpz' && p.category === 'Esencias para Perfume')
             .map((p: ProductItem) => ({ name: p.name, image: getProductImage(p) }))
             .filter((p: MarqueeProduct) => p.image);
             
           const botes = data.products
-            .filter((p: ProductItem) => p.category === 'Botes' || p.category === 'Botes & Envases')
+            .filter((p: ProductItem) => p.isAvailableOnline !== false && (p.category === 'Botes' || p.category === 'Botes & Envases'))
             .map((p: ProductItem) => ({ name: p.name, image: getProductImage(p) }))
             .filter((p: MarqueeProduct) => p.image);
 

@@ -146,12 +146,19 @@ export default function EcommerceHomePage() {
     };
   }, []);
 
+  const isEcommerceEligible = (p: ProductItem) => {
+    if (p.isAvailableOnline === false) return false;
+    if (p.category === 'Logística' || p.id === 'ENVIO-DOM' || p.id === 'cmvfrqz7v0003jp08y8bmrnpz') return false;
+    if (String(p.name || '').trim().toLowerCase() === '$1 alcohol') return false;
+    return true;
+  };
+
   const availableEssences = useMemo(() => {
-    return products.filter((p) => p.category === 'Esencias para Perfume');
+    return products.filter((p) => p.category === 'Esencias para Perfume' && isEcommerceEligible(p));
   }, [products]);
 
   const availableBottles = useMemo(() => {
-    return products.filter((p) => p.category === 'Botes');
+    return products.filter((p) => p.category === 'Botes' && isEcommerceEligible(p));
   }, [products]);
 
   useEffect(() => {
@@ -169,7 +176,7 @@ export default function EcommerceHomePage() {
   const filteredProducts = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     const list = products.filter((p) => {
-      if (p.category === 'Logística' || p.id === 'ENVIO-DOM') return false;
+      if (!isEcommerceEligible(p)) return false;
       // Filtro de categoría
       let matchesCategory = true;
       if (selectedCategory === 'Insumos' || selectedCategory === 'Alcohol y Materiales') {

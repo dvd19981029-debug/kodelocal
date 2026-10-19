@@ -117,6 +117,9 @@ export default function PerfumeKitBuilderModal({
       : [];
 
     return source.filter((item) => {
+      if (item.isAvailableOnline === false || item.id === 'cmvfrqz7v0003jp08y8bmrnpz' || String(item.name || '').trim().toLowerCase() === '$1 alcohol') {
+        return false;
+      }
       if (essenceGenderFilter !== 'Todos') {
         const g = (item.gender || '').toLowerCase();
         if (!g.includes(essenceGenderFilter.toLowerCase())) return false;

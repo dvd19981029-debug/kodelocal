@@ -22,6 +22,7 @@ export interface PosProductGridProps {
   cart: CartItem[];
   onAddToCart: (product: ProductItem, presentation?: 'ONZA_COMPLETA' | 'MEDIA_ONZA') => void;
   onOpenEditProduct: (e: React.MouseEvent, product: ProductItem) => void;
+  onOpenNewProduct?: () => void;
 }
 
 export const PosProductGrid: React.FC<PosProductGridProps> = ({
@@ -43,6 +44,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
   cart,
   onAddToCart,
   onOpenEditProduct,
+  onOpenNewProduct,
 }) => {
   return (
     <div className="flex-1 flex flex-col gap-3.5 sm:gap-5 min-w-0">
@@ -65,7 +67,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
           />
         </div>
 
-        <form onSubmit={handleBarcodeSubmit} className="relative w-full sm:w-52" autoComplete="off">
+        <form onSubmit={handleBarcodeSubmit} className="relative w-full sm:w-44" autoComplete="off">
           <Barcode className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-indigo-500 pointer-events-none z-10" />
           <input
             type="text"
@@ -78,6 +80,17 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
             className="clay-input has-icon w-full pr-4 py-2 sm:py-2.5 text-xs sm:text-sm font-mono font-bold border-indigo-200"
           />
         </form>
+
+        {onOpenNewProduct && (
+          <button
+            type="button"
+            onClick={onOpenNewProduct}
+            className="clay-btn clay-btn-primary w-full sm:w-auto px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl flex items-center justify-center gap-1.5 shrink-0 shadow-xs"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Agregar Producto</span>
+          </button>
+        )}
       </div>
 
       {/* Filtro de Categorías */}
@@ -135,7 +148,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
       {/* Rejilla de Productos */}
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3">
         {displayedProducts.map((product) => {
-          const isEssence = product.category === 'Esencias para Perfume' || product.unit === 'Onza';
+          const isEssence = product.category === 'Esencias para Perfume';
           const cartFullForProduct = cart
             .filter((i) => i.product.id === product.id && i.presentation !== 'MEDIA_ONZA')
             .reduce((sum, i) => sum + i.quantity, 0);

@@ -19,7 +19,10 @@ export default function LandingCatalogReveal() {
       if (data.success && Array.isArray(data.products)) {
         // Solo mostramos esencias y botes para la landing
         const filtered = data.products.filter(
-          (p: ProductItem) => p.category === 'Esencias para Perfume' || p.category === 'Botes'
+          (p: ProductItem) =>
+            p.isAvailableOnline !== false &&
+            p.id !== 'cmvfrqz7v0003jp08y8bmrnpz' &&
+            (p.category === 'Esencias para Perfume' || p.category === 'Botes')
         );
         setProducts(filtered.slice(0, 24)); // Mostrar los primeros 24
       }

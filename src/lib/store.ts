@@ -107,9 +107,10 @@ export interface SaleRecord {
 
 export const PERFUME_CATEGORIES = [
   "Esencias para Perfume",
-  "Botes",
-  "Empaque",
   "Insumos y Materia Prima",
+  "Botes",
+  "Otro",
+  "Empaque",
   "Logística"
 ];
 
