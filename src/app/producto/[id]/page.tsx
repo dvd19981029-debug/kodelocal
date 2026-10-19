@@ -30,7 +30,7 @@ import FragranceNotesVisual from '@/components/ecommerce/FragranceNotesVisual';
 import { getInspiracionPerfumeName, formatPerfumeDisplayName, getBottleLabelConfig } from '@/lib/perfumeNames';
 import { getFragranceDescription } from '@/lib/fragranceDescriptions';
 import { resolveTargetProductId } from '@/lib/productUrl';
-import { isHalloweenPromoProduct, getHalloweenPotionInfo, HALLOWEEN_ORIGINAL_PRICE_1OZ } from '@/lib/halloweenPromo';
+import { isHalloweenPromoProduct, getHalloweenPotionInfo, HALLOWEEN_ORIGINAL_PRICE_1OZ, HALLOWEEN_ORIGINAL_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
 import { CobwebCornerSVG } from '@/components/ecommerce/HalloweenDecorations';
 
 export default function ProductDetailPage() {
@@ -489,10 +489,10 @@ export default function ProductDetailPage() {
 
               {/* Precio Prominente (con Antes y Ahora en Promo Halloween) */}
               <div className="pt-2 flex flex-wrap items-baseline gap-2.5">
-                {isHalloweenPromo && selectedPresentation === 'ONZA_COMPLETA' ? (
+                {isHalloweenPromo ? (
                   <div className="flex flex-wrap items-baseline gap-3 bg-gradient-to-r from-orange-100/90 to-amber-50 border border-orange-300 px-3 py-1.5 rounded-2xl">
                     <span className="text-sm sm:text-base font-bold text-slate-500 line-through decoration-rose-500 decoration-2">
-                      Antes ${((activeOption.originalPrice || HALLOWEEN_ORIGINAL_PRICE_1OZ) * quantity).toFixed(2)}
+                      Antes ${((activeOption.originalPrice || (selectedPresentation === 'MEDIA_ONZA' ? HALLOWEEN_ORIGINAL_PRICE_HALF_OZ : HALLOWEEN_ORIGINAL_PRICE_1OZ)) * quantity).toFixed(2)}
                     </span>
                     <span className="text-3xl sm:text-4xl font-black text-[#c2410c] tracking-tight">
                       Ahora ${(activeOption.price * quantity).toFixed(2)}

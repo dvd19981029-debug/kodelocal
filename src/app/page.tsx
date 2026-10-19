@@ -30,8 +30,8 @@ import PromoBannerCarousel from '@/components/ecommerce/PromoBannerCarousel';
 import ReactiveSearchBar from '@/components/ecommerce/ReactiveSearchBar';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
-import { isHalloweenPromoProduct } from '@/lib/halloweenPromo';
-import { CobwebCornerSVG, BatIllustrationSVG, PumpkinIconSVG } from '@/components/ecommerce/HalloweenDecorations';
+import { isHalloweenPromoProduct, isHalloweenSeasonActive } from '@/lib/halloweenPromo';
+import { WitchPotionsEventSection } from '@/app/pociones-halloween/page';
 
 const PerfumeKitBuilderModal = dynamic(() => import('@/components/ecommerce/PerfumeKitBuilderModal'), { ssr: false });
 const HomeBlogSection = dynamic(() => import('@/components/ecommerce/HomeBlogSection'));
@@ -230,13 +230,6 @@ export default function EcommerceHomePage() {
       return matchesCategory && matchesGender && matchesStock && matchesSearch;
     });
 
-    if (selectedCategory === 'Esencias para Perfume') {
-      return [...list].sort((a, b) => {
-        const aPromo = isHalloweenPromoProduct(a) ? 1 : 0;
-        const bPromo = isHalloweenPromoProduct(b) ? 1 : 0;
-        return bPromo - aPromo;
-      });
-    }
     return list;
   }, [products, searchQuery, selectedGender, selectedCategory, selectedStockFilter, onlyHalloweenPromo]);
 
@@ -527,10 +520,20 @@ export default function EcommerceHomePage() {
               </span>
             </button>
 
+            {selectedCategory === 'Pociones de la Bruja' && (
+              <button
+                type="button"
+                onClick={() => handleSelectCategory('Pociones de la Bruja')}
+                className="clay-tab-item clay-tab-active flex-[1.3] sm:flex-[1.4] py-2 sm:py-2.5 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300"
+              >
+                <span className="truncate">🧙‍♀️ La Bruja</span>
+              </button>
+            )}
+
           </div>
         </div>
 
-        {/* ================= VISTA CONDICIONAL: ARMA TU PERFUME (INLINE) O CATÁLOGO ================= */}
+        {/* ================= VISTA CONDICIONAL: ARMA TU PERFUME, SECCIÓN DE LA BRUJA O CATÁLOGO ================= */}
         {selectedCategory === 'Arma tu perfume' ? (
           <section id="seccion-arma-tu-perfume" className="w-full flex justify-center scroll-mt-24 space-y-4 pt-1">
             <PerfumeKitBuilderModal
@@ -542,76 +545,22 @@ export default function EcommerceHomePage() {
               initialEssenceId={initialEssenceId || undefined}
             />
           </section>
+        ) : selectedCategory === 'Pociones de la Bruja' ? (
+          <WitchPotionsEventSection
+            inline={true}
+            externalProducts={products}
+            onBackToCatalog={() => handleSelectCategory('Esencias para Perfume')}
+          />
         ) : (
           <>
-            {/* ================= BANNER ESPECIAL DE HALLOWEEN: TOP 10 ESENCIAS A $3.30 / OZ ================= */}
-            {selectedCategory === 'Esencias para Perfume' && (
-              <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#1e1b4b] via-[#c2410c] to-[#ea580c] text-white p-3.5 sm:p-5 border-2 border-orange-400/80 shadow-[0_8px_28px_rgba(234,88,12,0.3)]">
-                {/* Telarañas en esquinas del banner */}
-                <div className="absolute top-0 left-0 w-20 h-20 text-amber-200/45 pointer-events-none">
-                  <CobwebCornerSVG className="w-full h-full" />
-                </div>
-                <div className="absolute top-0 right-0 w-20 h-20 text-amber-200/45 pointer-events-none">
-                  <CobwebCornerSVG className="w-full h-full" flipX />
-                </div>
-                <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <Link href="/pociones-halloween" className="flex items-center gap-3 group">
-                    <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-slate-950/40 border border-orange-300/50 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform">
-                      <PumpkinIconSVG className="w-8 h-8 sm:w-9 sm:h-9" />
-                    </div>
-                    <div>
-                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-950/50 border border-amber-300/50 text-[10px] font-black tracking-wider uppercase text-amber-200 mb-0.5">
-                        <span>🧙‍♀️ LA BRUJA AROMANIAKA</span>
-                        <span>•</span>
-                        <span>10 POCIONES SECRETAS 🦇</span>
-                      </div>
-                      <h3 className="text-sm sm:text-lg font-black text-white leading-snug group-hover:text-amber-200 transition-colors">
-                        ¡La bruja Aromaniaka trajo pociones para ti a <span className="text-amber-200 underline decoration-amber-300">$3.30 la Onza</span>!{' '}
-                        <span className="text-xs sm:text-sm font-bold text-orange-100/90">
-                          (Antes <span className="line-through decoration-rose-400">$3.75</span> • Ahora <strong className="text-amber-200">$3.30</strong>)
-                        </span>
-                      </h3>
-                    </div>
-                  </Link>
-
-                  <div className="flex items-center gap-2 flex-wrap shrink-0">
-                    <Link
-                      href="/pociones-halloween"
-                      className="px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 flex items-center gap-1.5 bg-gradient-to-r from-amber-300 via-orange-400 to-amber-300 text-slate-950 border border-amber-100 shadow-md hover:scale-[1.03]"
-                    >
-                      <span>🧪</span>
-                      <span>Entrar al Evento de Pociones</span>
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOnlyHalloweenPromo((prev) => !prev);
-                        setCurrentPage(1);
-                      }}
-                      className={`px-3 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 flex items-center gap-1.5 border ${
-                        onlyHalloweenPromo
-                          ? 'bg-white text-[#c2410c] border-white shadow-md scale-[1.02]'
-                          : 'bg-slate-950/60 hover:bg-slate-950/80 text-amber-200 border-amber-300/60 shadow-sm'
-                      }`}
-                    >
-                      <span>🎃</span>
-                      <span>{onlyHalloweenPromo ? 'Ver Todo' : 'Filtrar aquí'}</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Encabezado informativo del catálogo */}
             <div className="flex items-center justify-between gap-2 px-1 pt-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-base sm:text-xl font-black text-slate-900 tracking-tight flex items-center gap-1.5">
-                  <span>🎃</span>
+                  {isHalloweenSeasonActive() && <span>🎃</span>}
                   <span>
                     {selectedCategory === 'Esencias para Perfume' 
-                      ? (onlyHalloweenPromo
-                          ? 'Promo Halloween ($3.30 / Oz)'
-                          : selectedGender === 'Todos'
+                      ? (selectedGender === 'Todos'
                           ? 'Esencias de Perfume'
                           : `Esencias • ${selectedGender === 'Caballero' ? 'Hombre' : selectedGender}`) 
                       : selectedCategory === 'Botes' 
@@ -627,7 +576,7 @@ export default function EcommerceHomePage() {
               </div>
             </div>
 
-            {/* ================= FILTRO CLAYMÓRFICO: MÁS VENDIDAS / PROMO HALLOWEEN / HOMBRE / DAMA / UNISEX ================= */}
+            {/* ================= FILTRO CLAYMÓRFICO: TODAS / HOMBRE / DAMA / UNISEX ================= */}
             {selectedCategory === 'Esencias para Perfume' && (
               <div className="w-full">
                 <div className="clay-tabs-track max-w-2xl mx-auto">
@@ -640,29 +589,12 @@ export default function EcommerceHomePage() {
                       setCurrentPage(1);
                     }}
                     className={`clay-tab-item py-1.5 sm:py-2 px-2 sm:px-3.5 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
-                      selectedGender === 'Todos' && !onlyHalloweenPromo
+                      selectedGender === 'Todos'
                         ? 'clay-tab-active flex-[1.3] sm:flex-[1.4]'
                         : 'clay-tab-inactive flex-1'
                     }`}
                   >
                     <span className="truncate">Todas</span>
-                  </button>
-
-                  {/* Pestaña Especial: Promo Halloween $3.30 */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOnlyHalloweenPromo((prev) => !prev);
-                      setSelectedGender('Todos');
-                      setCurrentPage(1);
-                    }}
-                    className={`clay-tab-item py-1.5 sm:py-2 px-2 sm:px-3.5 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
-                      onlyHalloweenPromo
-                        ? 'clay-tab-active flex-[1.5] sm:flex-[1.6]'
-                        : 'clay-tab-inactive flex-[1.2] text-[#c2410c] font-black'
-                    }`}
-                  >
-                    <span className="truncate">🎃 Promo $3.30</span>
                   </button>
 
                   {/* Pestaña: Hombre */}
@@ -674,7 +606,7 @@ export default function EcommerceHomePage() {
                       setCurrentPage(1);
                     }}
                     className={`clay-tab-item py-1.5 sm:py-2 px-2 sm:px-3.5 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
-                      selectedGender === 'Caballero' && !onlyHalloweenPromo
+                      selectedGender === 'Caballero'
                         ? 'clay-tab-active flex-[1.3] sm:flex-[1.4]'
                         : 'clay-tab-inactive flex-1'
                     }`}
@@ -691,7 +623,7 @@ export default function EcommerceHomePage() {
                       setCurrentPage(1);
                     }}
                     className={`clay-tab-item py-1.5 sm:py-2 px-2 sm:px-3.5 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
-                      selectedGender === 'Dama' && !onlyHalloweenPromo
+                      selectedGender === 'Dama'
                         ? 'clay-tab-active flex-[1.3] sm:flex-[1.4]'
                         : 'clay-tab-inactive flex-1'
                     }`}
@@ -708,7 +640,7 @@ export default function EcommerceHomePage() {
                       setCurrentPage(1);
                     }}
                     className={`clay-tab-item py-1.5 sm:py-2 px-2 sm:px-3.5 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
-                      selectedGender === 'Unisex' && !onlyHalloweenPromo
+                      selectedGender === 'Unisex'
                         ? 'clay-tab-active flex-[1.3] sm:flex-[1.4]'
                         : 'clay-tab-inactive flex-1'
                     }`}

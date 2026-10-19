@@ -9,7 +9,12 @@ import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName, formatPerfumeDisplayName, getBottleLabelConfig } from '@/lib/perfumeNames';
 import { getProductUrl } from '@/lib/productUrl';
-import { isHalloweenPromoProduct, getHalloweenPotionInfo, HALLOWEEN_ORIGINAL_PRICE_1OZ } from '@/lib/halloweenPromo';
+import {
+  isHalloweenPromoProduct,
+  isHalloweenSeasonActive,
+  HALLOWEEN_ORIGINAL_PRICE_1OZ,
+  HALLOWEEN_ORIGINAL_PRICE_HALF_OZ,
+} from '@/lib/halloweenPromo';
 import { CobwebCornerSVG } from '@/components/ecommerce/HalloweenDecorations';
 
 interface ProductCardProps {
@@ -22,8 +27,8 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
   const { cart, addToCart, updateQuantity } = useEcommerceCart();
   const { customer } = useCustomerAuth();
   const presentations = getPresentationsForProduct(product, customer);
-  const potionInfo = getHalloweenPotionInfo(product);
-  const isHalloweenPromo = Boolean(potionInfo);
+  const halloweenActive = isHalloweenSeasonActive();
+  const isHalloweenPromo = isHalloweenPromoProduct(product);
   
   // Presentación por defecto: 'ONZA_COMPLETA' (1 Onza seleccionada primero)
   const defaultPres = product.category === 'Esencias para Perfume' 
@@ -233,15 +238,9 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
             })()}
 
 
-            {/* Badge de género limpio sobre la foto + Badge de Poción */}
+            {/* Badge de género limpio sobre la foto */}
             <div className="absolute top-2 left-2 z-10 flex flex-col items-start gap-1 max-w-[85%]">
               {getGenderBadge(product.gender)}
-              {potionInfo && (
-                <span className={`bg-gradient-to-r ${potionInfo.potionColorClass} text-white border border-amber-200/80 text-[8px] sm:text-[9px] font-black py-0.5 px-1.5 rounded-md shadow-md tracking-wide uppercase flex items-center gap-1`}>
-                  <span>{potionInfo.potionEmoji}</span>
-                  <span className="truncate">{potionInfo.potionTitle}</span>
-                </span>
-              )}
             </div>
 
             {/* Badge Agotado / En camino en esquina superior derecha */}
@@ -257,8 +256,8 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
             {isHalloweenPromo && !isOutOfStock && (
               <div className="absolute bottom-2 left-2 z-10 pointer-events-none">
                 <span className="bg-slate-950/90 text-amber-300 border border-orange-400/80 text-[8px] sm:text-[9px] font-black py-0.5 px-1.5 rounded-md shadow-md flex items-center gap-0.5">
-                  <span>🧪</span>
-                  <span>1 Oz a $3.30</span>
+                  <span>🎃</span>
+                  <span>{selectedPresentation === 'MEDIA_ONZA' ? '½ Oz a $1.85' : '1 Oz a $3.30'}</span>
                 </span>
               </div>
             )}
@@ -293,17 +292,17 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
 
             {/* Precio en BOLD a la par de Disponibilidad (con Antes y Ahora en Promo Halloween) */}
             <div className="mt-0.5 min-h-[26px] flex flex-wrap items-baseline gap-1.5">
-              {isHalloweenPromo && selectedPresentation === 'ONZA_COMPLETA' ? (
+              {isHalloweenPromo ? (
                 <div className="flex items-baseline gap-1.5 bg-orange-100/90 border border-orange-300/90 px-1.5 py-0.5 rounded-lg">
                   <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 line-through decoration-rose-500 decoration-2">
-                    Antes ${(activeOption.originalPrice || HALLOWEEN_ORIGINAL_PRICE_1OZ).toFixed(2)}
+                    Antes ${(activeOption.originalPrice || (selectedPresentation === 'MEDIA_ONZA' ? HALLOWEEN_ORIGINAL_PRICE_HALF_OZ : HALLOWEEN_ORIGINAL_PRICE_1OZ)).toFixed(2)}
                   </span>
                   <span className="text-sm sm:text-base font-black text-[#c2410c] leading-tight tracking-tight">
                     Ahora ${activeOption.price.toFixed(2)}
                   </span>
                 </div>
               ) : (
-                <span className="text-base sm:text-xl font-bold text-[#c2410c] leading-tight tracking-tight">
+                <span className={`text-base sm:text-xl font-bold leading-tight tracking-tight ${halloweenActive ? 'text-[#c2410c]' : 'text-purple-700'}`}>
                   ${activeOption.price.toFixed(2)}
                 </span>
               )}
@@ -326,7 +325,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
               </span>
             </div>
 
-            {/* Inspirado en el perfume original (TODOS los nombres originales en color NARANJA) */}
+            {/* Inspirado en el perfume original (TODOS los nombres originales en color NARANJA durante Halloween) */}
             <div className="mt-0.5 h-8 sm:h-9 flex items-center">
               {isEssence ? (
                 <p 
@@ -334,7 +333,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                   title={`Inspirado en ${inspiracionPerfumeName}`}
                 >
                   <span className="text-slate-600 font-medium">Inspirado en </span>
-                  <span className="font-black text-[#ea580c]">
+                  <span className={`font-black ${halloweenActive ? 'text-[#ea580c]' : 'text-slate-900'}`}>
                     {inspiracionPerfumeName}
                   </span>
                 </p>

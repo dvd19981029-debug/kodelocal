@@ -3,6 +3,7 @@
 import React from 'react';
 import { Truck, Droplets, Sparkles, ShieldCheck } from 'lucide-react';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
+import { isHalloweenSeasonActive } from '@/lib/halloweenPromo';
 
 interface TickerMessage {
   id: string;
@@ -12,14 +13,7 @@ interface TickerMessage {
   highlight?: string;
 }
 
-const TICKER_MESSAGES: TickerMessage[] = [
-  {
-    id: 'halloween-promo',
-    badge: '🎃 HALLOWEEN',
-    icon: Sparkles,
-    text: 'Especial de Halloween en esencias seleccionadas: Antes $3.75',
-    highlight: '¡Ahora a $3.30 la Onza!',
-  },
+const BASE_TICKER_MESSAGES: TickerMessage[] = [
   {
     id: 'envios',
     badge: 'ENVÍOS',
@@ -47,16 +41,34 @@ const TICKER_MESSAGES: TickerMessage[] = [
 
 export default function PromoTickerBar() {
   const { isArmaTuPerfumeActive } = useEcommerceCart();
+  const halloweenActive = isHalloweenSeasonActive();
 
   // Se oculta única y exclusivamente en la sección Arma tu propio perfume
   if (isArmaTuPerfumeActive) {
     return null;
   }
 
+  const TICKER_MESSAGES: TickerMessage[] = halloweenActive
+    ? [
+        {
+          id: 'halloween-promo',
+          badge: '🎃 HALLOWEEN',
+          icon: Sparkles,
+          text: 'Especial de Halloween hasta el 31 de octubre: Pociones seleccionadas',
+          highlight: '1 Onza a $3.30 y ½ Onza a $1.85',
+        },
+        ...BASE_TICKER_MESSAGES,
+      ]
+    : BASE_TICKER_MESSAGES;
+
   return (
     <aside
       aria-label="Avisos y Beneficios de Aromaniak SV"
-      className="w-full bg-gradient-to-r from-[#c2410c] via-[#ea580c] to-[#f97316] text-white border-b border-orange-300/35 shadow-[0_2px_12px_rgba(234,88,12,0.3)] overflow-hidden relative select-none pointer-events-none sm:pointer-events-auto z-30"
+      className={`w-full text-white overflow-hidden relative select-none pointer-events-none sm:pointer-events-auto z-30 ${
+        halloweenActive
+          ? 'bg-gradient-to-r from-[#c2410c] via-[#ea580c] to-[#f97316] border-b border-orange-300/35 shadow-[0_2px_12px_rgba(234,88,12,0.3)]'
+          : 'bg-gradient-to-r from-indigo-900 via-purple-800 to-indigo-900 border-b border-purple-500/30 shadow-xs'
+      }`}
     >
       <div className="relative py-2 sm:py-2.5 overflow-hidden flex items-center">
         {/* Pista continua con animación infinita sin cortes ni espacios en blanco */}

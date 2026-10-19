@@ -33,6 +33,9 @@ import {
   getHalloweenPotionInfo,
   HALLOWEEN_ORIGINAL_PRICE_1OZ,
   HALLOWEEN_PROMO_PRICE_1OZ,
+  HALLOWEEN_ORIGINAL_PRICE_HALF_OZ,
+  HALLOWEEN_PROMO_PRICE_HALF_OZ,
+  isHalloweenSeasonActive,
 } from '@/lib/halloweenPromo';
 import { AnimatedWitchCauldronSVG } from '@/components/ecommerce/WitchCauldronHeaderBanner';
 import {
@@ -43,8 +46,16 @@ import {
 
 const POTION_ORDER = Object.keys(HALLOWEEN_POTIONS);
 
-export default function PocionesHalloweenEventPage() {
-  const [products, setProducts] = useState<ProductItem[]>(INITIAL_PRODUCTS);
+export function WitchPotionsEventSection({
+  inline = false,
+  onBackToCatalog,
+  externalProducts,
+}: {
+  inline?: boolean;
+  onBackToCatalog?: () => void;
+  externalProducts?: ProductItem[];
+}) {
+  const [products, setProducts] = useState<ProductItem[]>(externalProducts || INITIAL_PRODUCTS);
   const [activeFilter, setActiveFilter] = useState<'todas' | 'amor' | 'energia' | 'misterio'>('todas');
   const [stirredPotionId, setStirredPotionId] = useState<string | null>(null);
   const [isStirring, setIsStirring] = useState(false);
@@ -53,6 +64,10 @@ export default function PocionesHalloweenEventPage() {
   const { customer } = useCustomerAuth();
 
   useEffect(() => {
+    if (externalProducts && externalProducts.length > 0) {
+      setProducts(externalProducts);
+      return;
+    }
     let isMounted = true;
     const localProds = getStoredProducts();
     if (localProds && localProds.length > 0) {
@@ -72,7 +87,7 @@ export default function PocionesHalloweenEventPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [externalProducts]);
 
   // Obtener las 10 esencias de la promoción de Halloween en el orden oficial de pociones
   const potionProducts = useMemo(() => {
@@ -91,6 +106,28 @@ export default function PocionesHalloweenEventPage() {
       return info?.categoryTag === activeFilter;
     });
   }, [potionProducts, activeFilter]);
+
+  if (!isHalloweenSeasonActive()) {
+    return (
+      <div className="clay-card p-8 text-center max-w-xl mx-auto my-8 space-y-4">
+        <h2 className="text-xl font-black text-slate-900">La promoción de Halloween ha finalizado</h2>
+        <p className="text-sm text-slate-600">El evento estuvo disponible hasta el 31 de octubre a las 11:59 PM.</p>
+        {onBackToCatalog ? (
+          <button
+            type="button"
+            onClick={onBackToCatalog}
+            className="clay-btn-primary px-5 py-2.5 rounded-xl text-xs font-black text-white cursor-pointer"
+          >
+            Volver al Catálogo
+          </button>
+        ) : (
+          <Link href="/" className="inline-block clay-btn-primary px-5 py-2.5 rounded-xl text-xs font-black text-white">
+            Volver al Catálogo
+          </Link>
+        )}
+      </div>
+    );
+  }
 
   // Interacción ligera tipo Temu: "¡Revolver el Caldero de la Suerte!"
   const handleStirCauldron = () => {
@@ -115,7 +152,7 @@ export default function PocionesHalloweenEventPage() {
   const stirredPotionInfo = stirredProduct ? getHalloweenPotionInfo(stirredProduct) : null;
 
   return (
-    <div className="space-y-5 sm:space-y-7 pb-24 pt-1">
+    <div id="seccion-pociones-bruja" className={`space-y-5 sm:space-y-7 ${inline ? 'pb-10 pt-1' : 'pb-24 pt-1'}`}>
       {/* Animaciones CSS puras aceleradas por GPU (transform y opacity únicamente) */}
       <style>{`
         @keyframes temuPulseBadge {
@@ -135,17 +172,28 @@ export default function PocionesHalloweenEventPage() {
 
       {/* Barra superior de navegación de regreso */}
       <div className="flex items-center justify-between gap-2">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-orange-50 text-slate-800 border border-orange-300 font-black text-xs shadow-2xs transition-transform active:scale-95"
-        >
-          <ArrowLeft className="w-4 h-4 text-orange-600" />
-          <span>Volver al Catálogo</span>
-        </Link>
+        {onBackToCatalog ? (
+          <button
+            type="button"
+            onClick={onBackToCatalog}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-orange-50 text-slate-800 border border-orange-300 font-black text-xs shadow-2xs transition-transform active:scale-95 cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4 text-orange-600" />
+            <span>Volver a Esencias</span>
+          </button>
+        ) : (
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-orange-50 text-slate-800 border border-orange-300 font-black text-xs shadow-2xs transition-transform active:scale-95"
+          >
+            <ArrowLeft className="w-4 h-4 text-orange-600" />
+            <span>Volver al Catálogo</span>
+          </Link>
+        )}
 
         <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#1e1b4b] to-[#ea580c] text-amber-200 border border-orange-400 text-[11px] font-black shadow-xs">
           <Flame className="w-3.5 h-3.5 text-amber-300" />
-          <span>EVENTO HALLOWEEN • $3.30 / OZ</span>
+          <span>1 OZ $3.30 • ½ OZ $1.85 • HASTA 31 OCT</span>
         </div>
       </div>
 
@@ -184,33 +232,39 @@ export default function PocionesHalloweenEventPage() {
           <div className="lg:col-span-7 text-center lg:text-left space-y-3">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/25 border border-amber-300/50 text-amber-200 text-[10.5px] sm:text-xs font-black uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>ESPECIAL DE HALLOWEEN AROMANIAK</span>
+              <span>ESPECIAL DE HALLOWEEN • VÁLIDO HASTA EL 31 DE OCTUBRE 11:59 PM</span>
             </div>
 
-            <h1 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight text-white">
+            <h2 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight text-white">
               ¡La bruja Aromaniaka trajo{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-300 to-yellow-200">
                 pociones para ti!
               </span>
-            </h1>
+            </h2>
 
             <p className="text-xs sm:text-sm text-orange-100/90 font-semibold max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-              Descubre las <strong>10 pociones hechizadas</strong> de perfumería fina 100% pura. Cada fragancia tiene su propio poder especial y está en oferta relámpago de Halloween:
+              Descubre las <strong>10 pociones hechizadas</strong> de perfumería fina 100% pura. Cada fragancia tiene su propio poder especial y precios exclusivos de Halloween:
             </p>
 
-            {/* Cinta estilo Temu de Precio Antes y Ahora */}
-            <div className="inline-flex flex-wrap items-center justify-center lg:justify-start gap-2.5 sm:gap-4 bg-slate-950/65 border-2 border-amber-400/80 rounded-2xl px-4 py-2.5 shadow-lg">
+            {/* Cinta estilo Temu de Precio Antes y Ahora (1 Onza y 1/2 Onza) */}
+            <div className="inline-flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-4 bg-slate-950/65 border-2 border-amber-400/80 rounded-2xl px-4 py-2.5 shadow-lg">
               <div className="text-left">
-                <span className="text-[10px] uppercase font-bold text-slate-300 block">Precio Regular</span>
-                <span className="text-sm sm:text-base font-black text-rose-300 line-through decoration-rose-500 decoration-2">
-                  Antes ${HALLOWEEN_ORIGINAL_PRICE_1OZ.toFixed(2)} / Oz
+                <span className="text-[10px] uppercase font-black text-amber-300 block">🎃 1 Onza Completa</span>
+                <span className="text-xs font-bold text-rose-300 line-through decoration-rose-500 mr-1.5">
+                  Antes ${HALLOWEEN_ORIGINAL_PRICE_1OZ.toFixed(2)}
+                </span>
+                <span className="text-lg sm:text-xl font-black text-amber-300 tracking-tight">
+                  ${HALLOWEEN_PROMO_PRICE_1OZ.toFixed(2)}
                 </span>
               </div>
-              <div className="h-7 w-[1.5px] bg-orange-400/40" />
+              <div className="h-8 w-[1.5px] bg-orange-400/40" />
               <div className="text-left">
-                <span className="text-[10px] uppercase font-black text-amber-300 block">🔥 Precio Evento Halloween</span>
-                <span className="text-xl sm:text-2xl font-black text-amber-300 tracking-tight">
-                  ¡Ahora ${HALLOWEEN_PROMO_PRICE_1OZ.toFixed(2)} la Onza!
+                <span className="text-[10px] uppercase font-black text-orange-200 block">🧪 ½ Onza (15ml)</span>
+                <span className="text-xs font-bold text-rose-300 line-through decoration-rose-500 mr-1.5">
+                  Antes ${HALLOWEEN_ORIGINAL_PRICE_HALF_OZ.toFixed(2)}
+                </span>
+                <span className="text-lg sm:text-xl font-black text-white tracking-tight">
+                  ${HALLOWEEN_PROMO_PRICE_HALF_OZ.toFixed(2)}
                 </span>
               </div>
             </div>
@@ -245,7 +299,7 @@ export default function PocionesHalloweenEventPage() {
           <PumpkinIconSVG className="w-7 h-7 shrink-0" />
           <div>
             <h2 className="text-sm sm:text-base font-black text-slate-900 leading-tight">
-              Elige tu Poción Mágica ($3.30 / 1 Oz)
+              Elige tu Poción Mágica (1 Oz $3.30 • ½ Oz $1.85)
             </h2>
             <p className="text-[10.5px] sm:text-xs text-slate-600 font-semibold">
               Todos los nombres originales en color naranja • Descuento aplicado directo al carrito
@@ -334,6 +388,10 @@ export default function PocionesHalloweenEventPage() {
       )}
     </div>
   );
+}
+
+export default function PocionesHalloweenEventPage() {
+  return <WitchPotionsEventSection inline={false} />;
 }
 
 function PotionEventCard({
@@ -462,7 +520,9 @@ function PotionEventCard({
           <div className="absolute bottom-2 left-2 z-10">
             <span className="bg-slate-950/90 text-amber-300 border border-orange-400 text-[9px] font-black px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-1">
               <span>🎃</span>
-              <span>Ahorras $0.45 / Oz</span>
+              <span>
+                {selectedPresentation === 'MEDIA_ONZA' ? 'Ahorras $0.05 / ½ Oz' : 'Ahorras $0.45 / Oz'}
+              </span>
             </span>
           </div>
         </Link>
@@ -493,14 +553,14 @@ function PotionEventCard({
         <div className="bg-gradient-to-r from-orange-100 via-amber-50 to-orange-100 border border-orange-300 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
           <div>
             <span className="text-[9.5px] font-bold text-slate-500 line-through decoration-rose-500 decoration-2 block">
-              Antes ${(activeOption.originalPrice || HALLOWEEN_ORIGINAL_PRICE_1OZ).toFixed(2)}
+              Antes ${(activeOption.originalPrice || (selectedPresentation === 'MEDIA_ONZA' ? HALLOWEEN_ORIGINAL_PRICE_HALF_OZ : HALLOWEEN_ORIGINAL_PRICE_1OZ)).toFixed(2)}
             </span>
             <span className="text-lg font-black text-[#c2410c] leading-none">
               Ahora ${activeOption.price.toFixed(2)}
             </span>
           </div>
           <span className="bg-[#ea580c] text-white text-[9.5px] font-black px-2 py-1 rounded-lg uppercase tracking-wider shadow-2xs">
-            ⚡ OFERTA 1 OZ
+            {selectedPresentation === 'MEDIA_ONZA' ? '⚡ OFERTA ½ OZ' : '⚡ OFERTA 1 OZ'}
           </span>
         </div>
 

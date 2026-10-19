@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { HALLOWEEN_PROMO_ACTIVE } from '@/lib/halloweenPromo';
+import { isHalloweenSeasonActive } from '@/lib/halloweenPromo';
+import { useScrolled } from '@/hooks/useScrolled';
 
 export function CobwebCornerSVG({ className = '', flipX = false }: { className?: string; flipX?: boolean }) {
   return (
@@ -80,7 +81,9 @@ export function PumpkinIconSVG({ className = '' }: { className?: string }) {
 }
 
 export default function HalloweenDecorations() {
-  if (!HALLOWEEN_PROMO_ACTIVE) return null;
+  const isScrolled = useScrolled(85);
+
+  if (!isHalloweenSeasonActive()) return null;
 
   return (
     <div className="pointer-events-none fixed inset-0 z-30 overflow-hidden select-none" aria-hidden="true">
@@ -107,45 +110,71 @@ export default function HalloweenDecorations() {
         .hw-card-glow { animation: hwPulseGlow 3s ease-in-out infinite; }
       `}</style>
 
-      {/* Telarañas en las esquinas superiores */}
-      <div className="fixed top-7 left-0 w-28 h-28 sm:w-40 sm:h-40 text-orange-600/45">
+      {/* Telarañas en las esquinas superiores: desaparecen con animación suave al bajar al catálogo */}
+      <div
+        className={`fixed top-7 left-0 w-28 h-28 sm:w-40 sm:h-40 text-orange-600/45 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] origin-top-left ${
+          isScrolled ? 'opacity-0 -translate-x-8 -translate-y-8 scale-75' : 'opacity-100 translate-x-0 translate-y-0 scale-100'
+        }`}
+      >
         <CobwebCornerSVG className="w-full h-full" />
       </div>
-      <div className="fixed top-7 right-0 w-28 h-28 sm:w-40 sm:h-40 text-orange-600/45">
+      <div
+        className={`fixed top-7 right-0 w-28 h-28 sm:w-40 sm:h-40 text-orange-600/45 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] origin-top-right ${
+          isScrolled ? 'opacity-0 translate-x-8 -translate-y-8 scale-75' : 'opacity-100 translate-x-0 translate-y-0 scale-100'
+        }`}
+      >
         <CobwebCornerSVG className="w-full h-full" flipX />
       </div>
 
-      {/* Telarañas sutiles en esquinas inferiores (escritorio) */}
-      <div className="hidden md:block fixed bottom-0 left-0 w-28 h-28 text-orange-500/25 -scale-y-100">
-        <CobwebCornerSVG className="w-full h-full" />
+      {/* Telarañas sutiles en esquinas inferiores (escritorio): también desaparecen al hacer scroll */}
+      <div
+        className={`hidden md:block fixed bottom-0 left-0 w-28 h-28 text-orange-500/25 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] origin-bottom-left ${
+          isScrolled ? 'opacity-0 -translate-x-8 translate-y-8 scale-75' : 'opacity-100 translate-x-0 translate-y-0'
+        }`}
+      >
+        <div className="w-full h-full -scale-y-100">
+          <CobwebCornerSVG className="w-full h-full" />
+        </div>
       </div>
-      <div className="hidden md:block fixed bottom-0 right-0 w-28 h-28 text-orange-500/25 -scale-x-100 -scale-y-100">
-        <CobwebCornerSVG className="w-full h-full" />
-      </div>
-
-      {/* Murciélagos flotantes y dibujitos Halloween en los laterales */}
-      <div className="fixed top-28 left-3 sm:left-8 text-slate-900/75 hw-bat-a">
-        <BatIllustrationSVG className="w-10 h-6 sm:w-14 sm:h-8 drop-shadow-[0_2px_6px_rgba(249,115,22,0.4)]" />
-      </div>
-      <div className="fixed top-36 right-4 sm:right-10 text-slate-900/75 hw-bat-b">
-        <BatIllustrationSVG className="w-9 h-5 sm:w-12 sm:h-7 drop-shadow-[0_2px_6px_rgba(249,115,22,0.4)]" />
-      </div>
-      <div className="hidden lg:block fixed top-[46%] left-3 text-slate-900/65 hw-bat-b">
-        <BatIllustrationSVG className="w-11 h-6" />
-      </div>
-      <div className="hidden lg:block fixed top-[55%] right-4 text-slate-900/65 hw-bat-a">
-        <BatIllustrationSVG className="w-10 h-6" />
+      <div
+        className={`hidden md:block fixed bottom-0 right-0 w-28 h-28 text-orange-500/25 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] origin-bottom-right ${
+          isScrolled ? 'opacity-0 translate-x-8 translate-y-8 scale-75' : 'opacity-100 translate-x-0 translate-y-0'
+        }`}
+      >
+        <div className="w-full h-full -scale-x-100 -scale-y-100">
+          <CobwebCornerSVG className="w-full h-full" />
+        </div>
       </div>
 
-      {/* Dibujitos de calabazas y fantasmitas en los bordes */}
-      <div className="hidden sm:block fixed bottom-24 left-4 hw-pumpkin-bob opacity-85">
-        <PumpkinIconSVG className="w-9 h-9 drop-shadow-[0_4px_10px_rgba(234,88,12,0.35)]" />
-      </div>
-      <div className="hidden xl:flex fixed top-[72%] left-4 flex-col items-center gap-1 hw-pumpkin-bob opacity-75">
-        <span className="text-xl">👻</span>
-      </div>
-      <div className="hidden xl:flex fixed top-[32%] right-4 flex-col items-center gap-1 hw-pumpkin-bob opacity-80">
-        <PumpkinIconSVG className="w-8 h-8 drop-shadow-[0_4px_8px_rgba(234,88,12,0.3)]" />
+      {/* Murciélagos flotantes y dibujitos Halloween en los laterales (se desvanecen al bajar al catálogo) */}
+      <div
+        className={`transition-all duration-500 ease-out ${
+          isScrolled ? 'opacity-0 -translate-y-6' : 'opacity-100 translate-y-0'
+        }`}
+      >
+        <div className="fixed top-28 left-3 sm:left-8 text-slate-900/75 hw-bat-a">
+          <BatIllustrationSVG className="w-10 h-6 sm:w-14 sm:h-8 drop-shadow-[0_2px_6px_rgba(249,115,22,0.4)]" />
+        </div>
+        <div className="fixed top-36 right-4 sm:right-10 text-slate-900/75 hw-bat-b">
+          <BatIllustrationSVG className="w-9 h-5 sm:w-12 sm:h-7 drop-shadow-[0_2px_6px_rgba(249,115,22,0.4)]" />
+        </div>
+        <div className="hidden lg:block fixed top-[46%] left-3 text-slate-900/65 hw-bat-b">
+          <BatIllustrationSVG className="w-11 h-6" />
+        </div>
+        <div className="hidden lg:block fixed top-[55%] right-4 text-slate-900/65 hw-bat-a">
+          <BatIllustrationSVG className="w-10 h-6" />
+        </div>
+
+        {/* Dibujitos de calabazas y fantasmitas en los bordes */}
+        <div className="hidden sm:block fixed bottom-24 left-4 hw-pumpkin-bob opacity-85">
+          <PumpkinIconSVG className="w-9 h-9 drop-shadow-[0_4px_10px_rgba(234,88,12,0.35)]" />
+        </div>
+        <div className="hidden xl:flex fixed top-[72%] left-4 flex-col items-center gap-1 hw-pumpkin-bob opacity-75">
+          <span className="text-xl">👻</span>
+        </div>
+        <div className="hidden xl:flex fixed top-[32%] right-4 flex-col items-center gap-1 hw-pumpkin-bob opacity-80">
+          <PumpkinIconSVG className="w-8 h-8 drop-shadow-[0_4px_8px_rgba(234,88,12,0.3)]" />
+        </div>
       </div>
     </div>
   );

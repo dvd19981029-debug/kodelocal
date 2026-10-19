@@ -8,7 +8,7 @@ import { sendOrderConfirmationEmail } from '@/lib/orderEmailService';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { resolveGiroMH, formatGiroOption } from '@/lib/svGirosCat019';
 import { c807Client } from '@/lib/c807';
-import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ } from '@/lib/halloweenPromo';
+import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ, HALLOWEEN_PROMO_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
 
 export const dynamic = 'force-dynamic';
 
@@ -881,52 +881,51 @@ export async function POST(request: Request) {
         const isBottle = !isEssence && (catName === 'Botes' || catName === 'Botes & Envases' || catName === 'Envases & Botes' || prodNameLower.includes('bote') || prodNameLower.includes('frasco'));
 
         const isHalfOunce = presLower.includes('media') || presLower.includes('½') || presLower.includes('half');
-        const isHalloween1Oz = isEssence && !isHalfOunce && isHalloweenPromoProduct(prod);
+        const isHalloweenPromo = isEssence && isHalloweenPromoProduct(prod);
 
-        if (isHalloween1Oz) {
-          legitimateUnitPrice = Math.min(legitimateUnitPrice, HALLOWEEN_PROMO_PRICE_1OZ);
-        }
-
-        if (isEssence && dbCustomer?.specialEssencePrice) {
-          const specialCandidate = isHalfOunce
-            ? Number((Number(dbCustomer.specialEssencePrice) / 2).toFixed(2))
-            : Number(dbCustomer.specialEssencePrice);
-          legitimateUnitPrice = isHalloween1Oz ? Math.min(specialCandidate, HALLOWEEN_PROMO_PRICE_1OZ) : specialCandidate;
-        } else if (isBottle && dbCustomer?.specialBottlePrice) {
-          legitimateUnitPrice = Number(dbCustomer.specialBottlePrice);
-        } else if (isEssence) {
-          if (isHalfOunce) {
-            legitimateUnitPrice = prod.priceHalfOunce != null ? Number(prod.priceHalfOunce) : Number((legitimateUnitPrice / 2).toFixed(2));
+        if (isHalloweenPromo) {
+          legitimateUnitPrice = isHalfOunce ? HALLOWEEN_PROMO_PRICE_HALF_OZ : HALLOWEEN_PROMO_PRICE_1OZ;
+        } else {
+          if (isEssence && dbCustomer?.specialEssencePrice) {
+            legitimateUnitPrice = isHalfOunce
+              ? Number((Number(dbCustomer.specialEssencePrice) / 2).toFixed(2))
+              : Number(dbCustomer.specialEssencePrice);
+          } else if (isBottle && dbCustomer?.specialBottlePrice) {
+            legitimateUnitPrice = Number(dbCustomer.specialBottlePrice);
+          } else if (isEssence) {
+            if (isHalfOunce) {
+              legitimateUnitPrice = prod.priceHalfOunce != null ? Number(prod.priceHalfOunce) : Number((legitimateUnitPrice / 2).toFixed(2));
+            }
           }
-        }
 
-        // Aplicar descuento por nivel VIP según la categoría específica del producto (Esencias, Botes o Insumos)
-        const activeCategoryTier = isEssence
-          ? dbCustomer?.tier
-          : isBottle
-          ? dbCustomer?.bottleTier
-          : dbCustomer?.suppliesTier;
-        const activeCategoryCustomPct = isEssence
-          ? dbCustomer?.customDiscountPct
-          : isBottle
-          ? dbCustomer?.bottleCustomDiscountPct
-          : dbCustomer?.suppliesCustomDiscountPct;
+          // Aplicar descuento por nivel VIP según la categoría específica del producto (Esencias, Botes o Insumos)
+          const activeCategoryTier = isEssence
+            ? dbCustomer?.tier
+            : isBottle
+            ? dbCustomer?.bottleTier
+            : dbCustomer?.suppliesTier;
+          const activeCategoryCustomPct = isEssence
+            ? dbCustomer?.customDiscountPct
+            : isBottle
+            ? dbCustomer?.bottleCustomDiscountPct
+            : dbCustomer?.suppliesCustomDiscountPct;
 
-        if (activeCategoryTier) {
-          let appliedPct = 0;
-          if (activeCategoryTier.name === 'Personalizado' && activeCategoryCustomPct) {
-            appliedPct = Number(activeCategoryCustomPct);
-          } else if (activeCategoryTier.discountPct) {
-            appliedPct = Number(activeCategoryTier.discountPct);
-          }
-          if (appliedPct > 0) {
+          if (activeCategoryTier) {
+            let appliedPct = 0;
+            if (activeCategoryTier.name === 'Personalizado' && activeCategoryCustomPct) {
+              appliedPct = Number(activeCategoryCustomPct);
+            } else if (activeCategoryTier.discountPct) {
+              appliedPct = Number(activeCategoryTier.discountPct);
+            }
+            if (appliedPct > 0) {
+              const discountAmt = legitimateUnitPrice * (appliedPct / 100);
+              legitimateUnitPrice = Number((legitimateUnitPrice - discountAmt).toFixed(2));
+            }
+          } else if (activeCategoryCustomPct && Number(activeCategoryCustomPct) > 0) {
+            const appliedPct = Number(activeCategoryCustomPct);
             const discountAmt = legitimateUnitPrice * (appliedPct / 100);
             legitimateUnitPrice = Number((legitimateUnitPrice - discountAmt).toFixed(2));
           }
-        } else if (activeCategoryCustomPct && Number(activeCategoryCustomPct) > 0) {
-          const appliedPct = Number(activeCategoryCustomPct);
-          const discountAmt = legitimateUnitPrice * (appliedPct / 100);
-          legitimateUnitPrice = Number((legitimateUnitPrice - discountAmt).toFixed(2));
         }
 
         const lineTotal = Number((legitimateUnitPrice * qty).toFixed(2));

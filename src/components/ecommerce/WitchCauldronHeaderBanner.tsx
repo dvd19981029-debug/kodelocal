@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Sparkles, ChevronRight } from 'lucide-react';
-import { HALLOWEEN_PROMO_ACTIVE } from '@/lib/halloweenPromo';
+import { isHalloweenSeasonActive } from '@/lib/halloweenPromo';
 
 /**
  * Ilustración animada 100% SVG + CSS GPU-accelerated (solo transform y opacity)
@@ -153,7 +153,7 @@ export function AnimatedWitchCauldronSVG({ className = 'w-20 h-20 sm:w-24 sm:h-2
 export default function WitchCauldronHeaderBanner() {
   const pathname = usePathname();
 
-  if (!HALLOWEEN_PROMO_ACTIVE) return null;
+  if (!isHalloweenSeasonActive()) return null;
   // Si ya estamos dentro de la página especial de pociones, mostramos una versión compacta o la ocultamos en el header para no duplicar el hero
   if (pathname === '/pociones-halloween') return null;
 
