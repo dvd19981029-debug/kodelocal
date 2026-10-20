@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { INITIAL_PRODUCTS, ProductItem, CartItem, SaleRecord, PERFUME_CATEGORIES, getStoredProducts } from '@/lib/store';
+import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ, HALLOWEEN_PROMO_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
 import CotizacionModal, { type CotizacionNotices } from '@/components/pos/CotizacionModal';
 import CotizacionesHistoryModal from '@/components/pos/CotizacionesHistoryModal';
 import ThermalTicket from '@/components/pos/ThermalTicket';
@@ -861,6 +862,22 @@ export default function PosPage() {
     const isEssence = cat === "Esencias para Perfume" || cat === "Esencias & Fragancias" || (!cat && item.product.unit === 'Onza');
     const isBottle = !isEssence && (cat === "Botes" || cat === "Botes & Envases" || cat === "Envases & Botes" || item.product.name.toLowerCase().startsWith('bote') || item.product.name.toLowerCase().includes('frasco'));
     const isLogistics = cat === "Logística" || cat === "Logistica" || item.product.id === "ENVIO-DOM" || item.product.unit === "Servicio";
+
+    if (isEssence && isHalloweenPromoProduct(item.product)) {
+      if (item.presentation === "MEDIA_ONZA") {
+        const regularHalf = item.product.priceHalfOunce != null
+          ? Number(item.product.priceHalfOunce)
+          : Number((item.product.price / 2).toFixed(2));
+        const finalPrice = HALLOWEEN_PROMO_PRICE_HALF_OZ;
+        const discountAmt = Number(Math.max(0, regularHalf - finalPrice).toFixed(4));
+        return { listPrice: regularHalf, finalPrice, discountAmt };
+      } else {
+        const regularFull = Number(item.product.price);
+        const finalPrice = HALLOWEEN_PROMO_PRICE_1OZ;
+        const discountAmt = Number(Math.max(0, regularFull - finalPrice).toFixed(4));
+        return { listPrice: regularFull, finalPrice, discountAmt };
+      }
+    }
 
     if (isEssence && activeCustomer?.specialEssencePrice) {
       listPrice = Number(activeCustomer.specialEssencePrice);

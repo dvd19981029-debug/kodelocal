@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { CartItem } from '@/lib/store';
 import { getProductImage } from '@/lib/perfumeImages';
+import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ, HALLOWEEN_PROMO_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
 import { CustomerRecord } from '@/lib/customers';
 import { DEPARTAMENTOS_CATALOG, getMunicipiosByDepartamento } from '@/lib/svTerritory';
 import { TipoComprobante, PosTab } from '../../types';
@@ -497,10 +498,15 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
               const isEssence = cat === 'Esencias para Perfume' || cat === 'Esencias & Fragancias' || item.product.unit === 'Onza';
               const isBottle = cat === 'Botes' || cat === 'Botes & Envases' || cat === 'Envases & Botes' || item.product.name.toLowerCase().startsWith('bote') || item.product.name.toLowerCase().includes('frasco');
               const unitPrice = getItemUnitPrice(item);
-              const fullPriceVal = (isEssence && selectedCustomerObj?.specialEssencePrice) 
+              const isHalloweenPromo = isEssence && isHalloweenPromoProduct(item.product);
+              const fullPriceVal = isHalloweenPromo
+                ? HALLOWEEN_PROMO_PRICE_1OZ
+                : (isEssence && selectedCustomerObj?.specialEssencePrice) 
                 ? Number(selectedCustomerObj.specialEssencePrice) 
                 : (isBottle && selectedCustomerObj?.specialBottlePrice ? Number(selectedCustomerObj.specialBottlePrice) : item.product.price);
-              const halfPriceVal = (isEssence && selectedCustomerObj?.specialEssencePrice) 
+              const halfPriceVal = isHalloweenPromo
+                ? HALLOWEEN_PROMO_PRICE_HALF_OZ
+                : (isEssence && selectedCustomerObj?.specialEssencePrice) 
                 ? Number((Number(selectedCustomerObj.specialEssencePrice) / 2).toFixed(2)) 
                 : (item.product.priceHalfOunce != null ? Number(item.product.priceHalfOunce) : Number((item.product.price / 2).toFixed(2)));
 

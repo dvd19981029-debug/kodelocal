@@ -2,6 +2,7 @@ import React from 'react';
 import { Search, Barcode, Sparkles, Edit3, Plus } from 'lucide-react';
 import { ProductItem, CartItem } from '@/lib/store';
 import { getProductImage } from '@/lib/perfumeImages';
+import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ, HALLOWEEN_PROMO_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
 
 export interface PosProductGridProps {
   searchQuery: string;
@@ -161,9 +162,13 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
           const isOutOfStock = isEssence ? (product.stock <= 0 && stockHalfBottles <= 0) : product.stock <= 0;
           const isLowStock = product.stock > 0 && product.stock <= product.minStock;
           const availableRemaining = isEssence ? fullRemaining + halfRemaining : Math.max(0, product.stock - cartFullForProduct);
-          const halfPrice = product.priceHalfOunce != null 
-            ? Number(product.priceHalfOunce) 
-            : Number((product.price / 2).toFixed(2));
+          const isHalloweenPromo = isEssence && isHalloweenPromoProduct(product);
+          const fullPrice = isHalloweenPromo ? HALLOWEEN_PROMO_PRICE_1OZ : product.price;
+          const halfPrice = isHalloweenPromo
+            ? HALLOWEEN_PROMO_PRICE_HALF_OZ
+            : (product.priceHalfOunce != null 
+              ? Number(product.priceHalfOunce) 
+              : Number((product.price / 2).toFixed(2)));
 
           return (
             <div 
@@ -252,7 +257,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
                   <>
                     <div className="flex items-center justify-between font-mono">
                       <span className="text-[11px] font-black text-indigo-600">
-                        1 Oz: ${product.price.toFixed(2)}
+                        1 Oz: ${fullPrice.toFixed(2)}
                       </span>
                       <span className="text-[10.5px] font-bold text-violet-600">
                         ½ Oz: ${halfPrice.toFixed(2)}
