@@ -17,6 +17,10 @@ import {
   Copy,
   ExternalLink,
   Link2,
+  Calendar,
+  ChevronDown,
+  AlertCircle,
+  Edit2,
 } from 'lucide-react';
 import {
   CatalogoItem,
@@ -48,6 +52,372 @@ interface NuevoPedidoFormProps {
   showToast: (msg: string, type?: 'success' | 'error' | 'info') => void;
   initialCliente?: ClienteDirectorioItem | null;
   initialPerfume?: CatalogoItem | null;
+}
+
+interface ModalPerfumeFormProps {
+  isOpen: boolean;
+  onClose: () => void;
+  draft: PedidoItem;
+  setDraft: React.Dispatch<React.SetStateAction<PedidoItem>>;
+  onSave: () => void;
+  catalogo: CatalogoItem[];
+  idPedidoTemporal: string;
+  isEditing: boolean;
+}
+
+function ModalPerfumeForm({
+  isOpen,
+  onClose,
+  draft,
+  setDraft,
+  onSave,
+  catalogo,
+  idPedidoTemporal,
+  isEditing,
+}: ModalPerfumeFormProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [validationError, setValidationError] = useState('');
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setSearchQuery('');
+      setIsDropdownOpen(false);
+      setValidationError('');
+    }
+  }, [isOpen]);
+
+  const filteredCatalog = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return catalogo.slice(0, 60);
+    return catalogo
+      .filter((p) => {
+        if (p.activo === false) return false;
+        return (
+          p.codigo.toLowerCase().includes(q) ||
+          p.contratipo.toLowerCase().includes(q) ||
+          (p.marca_inspirada && p.marca_inspirada.toLowerCase().includes(q)) ||
+          (p.genero && p.genero.toLowerCase().includes(q))
+        );
+      })
+      .slice(0, 60);
+  }, [catalogo, searchQuery]);
+
+  const selectedLabel = draft.contratipo
+    ? `${draft.contratipo}${draft.marca ? ` - ${draft.marca}` : ''}${draft.genero ? ` - ${draft.genero}` : ''} - ${draft.codigo}`
+    : '';
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  if (!isOpen) return null;
+
+  const handleSelectPerfume = (p: CatalogoItem) => {
+    const isPlus = draft.version === 'Plus';
+    const precio = isPlus
+      ? parseFloat(p.precio_extra_shot?.toString() || '25')
+      : parseFloat(p.precio_normal?.toString() || '20');
+
+    setDraft((prev) => ({
+      ...prev,
+      catalogo_id: p.id,
+      codigo: p.codigo,
+      contratipo: p.contratipo,
+      marca: p.marca_inspirada,
+      genero: p.genero,
+      precio_unitario: precio,
+      subtotal: (prev.cantidad || 1) * precio,
+    }));
+    setValidationError('');
+    setIsDropdownOpen(false);
+    setSearchQuery('');
+  };
+
+  const handleConfirmSave = () => {
+    if (!draft.catalogo_id || !draft.contratipo) {
+      setValidationError('Por favor haz clic en "Kodigo" y selecciona un perfume de la lista.');
+      setIsDropdownOpen(true);
+      return;
+    }
+    setValidationError('');
+    onSave();
+  };
+
+  const handleChangeVersion = (ver: 'Normal' | 'Plus') => {
+    const perfume = catalogo.find((p) => p.id === draft.catalogo_id);
+    let precio = draft.precio_unitario;
+
+    if (perfume) {
+      precio =
+        ver === 'Plus'
+          ? parseFloat(perfume.precio_extra_shot?.toString() || '25')
+          : parseFloat(perfume.precio_normal?.toString() || '20');
+    } else {
+      precio = ver === 'Plus' ? 25 : 20;
+    }
+
+    setDraft((prev) => ({
+      ...prev,
+      version: ver,
+      precio_unitario: precio,
+      subtotal: (prev.cantidad || 1) * precio,
+    }));
+  };
+
+  return (
+    <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+      <div className="bg-[#18191c] rounded-3xl p-5 sm:p-6 border border-slate-800 text-slate-100 shadow-2xl max-w-md w-full space-y-4 max-h-[92vh] overflow-y-auto relative animate-in zoom-in-95 duration-200">
+        {/* Header: ID Pedido & Cerrar */}
+        <div className="flex items-start justify-between">
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 mb-1">
+              ID Pedido
+            </label>
+            <span className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-[#26272b] text-slate-200 text-xs font-mono font-bold border border-slate-700">
+              {draft.id || idPedidoTemporal}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors cursor-pointer"
+            title="Cerrar"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Fecha Registro */}
+        <div>
+          <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            Fecha Registro
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              readOnly
+              value={draft.fecha_registro || new Date().toLocaleString('es-SV')}
+              className="w-full bg-[#202125] border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 font-medium focus:outline-none cursor-default"
+            />
+            <Calendar className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+        </div>
+
+        {/* Kodigo (Buscador desplegable) */}
+        <div className="relative" ref={dropdownRef}>
+          <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            Kodigo
+          </label>
+          <div
+            className={`relative rounded-xl border transition-all ${
+              draft.catalogo_id
+                ? 'border-blue-500 ring-1 ring-blue-500 bg-[#202125]'
+                : 'border-slate-700/80 bg-[#202125]'
+            }`}
+          >
+            <input
+              type="text"
+              value={isDropdownOpen ? searchQuery : selectedLabel}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                if (!isDropdownOpen) setIsDropdownOpen(true);
+              }}
+              onFocus={() => {
+                setSearchQuery('');
+                setIsDropdownOpen(true);
+              }}
+              placeholder="Buscar perfume (ej. Bleu De Chanel, Paco Rabanne)..."
+              className="w-full bg-transparent px-3.5 py-2.5 pr-16 text-xs text-slate-100 font-medium focus:outline-none placeholder:text-slate-500"
+            />
+
+            <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+              {draft.catalogo_id && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDraft((prev) => ({
+                      ...prev,
+                      catalogo_id: '',
+                      codigo: '',
+                      contratipo: '',
+                      marca: '',
+                      genero: '',
+                      precio_unitario: prev.version === 'Plus' ? 25 : 20,
+                      subtotal: (prev.cantidad || 1) * (prev.version === 'Plus' ? 25 : 20),
+                    }));
+                    setSearchQuery('');
+                  }}
+                  className="text-slate-400 hover:text-slate-200 p-0.5 cursor-pointer"
+                  title="Limpiar selección"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="text-slate-400 hover:text-slate-200 p-0.5 cursor-pointer"
+              >
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform duration-200 ${
+                    isDropdownOpen ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Menú desplegable */}
+          {isDropdownOpen && (
+            <div className="absolute left-0 right-0 top-full mt-1.5 bg-[#202125] border border-slate-700 rounded-xl shadow-2xl z-30 max-h-56 overflow-y-auto divide-y divide-slate-800">
+              {filteredCatalog.length === 0 ? (
+                <div className="p-3 text-center text-xs text-slate-400 font-medium">
+                  No se encontraron fragancias para &quot;{searchQuery}&quot;
+                </div>
+              ) : (
+                filteredCatalog.map((p) => {
+                  const isSelected = draft.catalogo_id === p.id;
+                  const formattedOption = `${p.contratipo}${p.marca_inspirada ? ` - ${p.marca_inspirada}` : ''}${p.genero ? ` - ${p.genero}` : ''} - ${p.codigo}`;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => handleSelectPerfume(p)}
+                      className={`w-full text-left px-3.5 py-2.5 text-xs transition-colors flex items-center justify-between cursor-pointer ${
+                        isSelected
+                          ? 'bg-blue-600/20 text-blue-300 font-bold'
+                          : 'text-slate-200 hover:bg-slate-800/80'
+                      }`}
+                    >
+                      <span className="truncate pr-2">{formattedOption}</span>
+                      <span className="font-mono text-[11px] text-emerald-400 shrink-0 font-bold">
+                        ${parseFloat(p.precio_normal?.toString() || '20').toFixed(2)}
+                      </span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          )}
+          {/* Error si no seleccionó perfume */}
+          {validationError && (
+            <div className="p-2.5 rounded-xl bg-rose-500/20 border border-rose-500 text-rose-300 text-xs font-bold flex items-center gap-1.5 animate-in fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+              <span>{validationError}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Inv Fisico */}
+        <div>
+          <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            Inv Fisico
+          </label>
+          <input
+            type="number"
+            min="0"
+            value={draft.inv_fisico ?? 0}
+            onChange={(e) =>
+              setDraft((prev) => ({ ...prev, inv_fisico: Number(e.target.value) || 0 }))
+            }
+            className="w-full bg-[#202125] border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 font-medium focus:outline-none focus:border-blue-500"
+          />
+        </div>
+
+        {/* Version */}
+        <div>
+          <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            Version
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => handleChangeVersion('Normal')}
+              className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                draft.version === 'Normal'
+                  ? 'bg-[#2563eb] text-white shadow-sm border border-blue-500'
+                  : 'bg-[#202125] text-slate-300 border border-slate-700/80 hover:bg-[#282a2f]'
+              }`}
+            >
+              Normal ($20)
+            </button>
+            <button
+              type="button"
+              onClick={() => handleChangeVersion('Plus')}
+              className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                draft.version === 'Plus'
+                  ? 'bg-[#2563eb] text-white shadow-sm border border-blue-500'
+                  : 'bg-[#202125] text-slate-300 border border-slate-700/80 hover:bg-[#282a2f]'
+              }`}
+            >
+              Plus ($25)
+            </button>
+          </div>
+        </div>
+
+        {/* Estado Compra */}
+        <div>
+          <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            Estado Compra
+          </label>
+          <div className="relative">
+            <select
+              value={draft.estado_compra || 'Registrado'}
+              onChange={(e) =>
+                setDraft((prev) => ({ ...prev, estado_compra: e.target.value }))
+              }
+              className="w-full bg-[#202125] border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 font-medium appearance-none cursor-pointer focus:outline-none focus:border-blue-500 pr-9"
+            >
+              <option value="Registrado">Registrado</option>
+              <option value="Pendiente">Pendiente</option>
+              <option value="Comprado">Comprado</option>
+              <option value="No Aplica">No Aplica</option>
+            </select>
+            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+        </div>
+
+        {/* Subtotal Preview */}
+        <div className="flex items-center justify-between p-3 rounded-xl bg-[#202125] border border-slate-800 text-xs">
+          <span className="text-slate-400 font-medium">
+            Precio Unitario: <strong className="text-slate-200 font-mono">${(Number(draft.precio_unitario) || 20).toFixed(2)}</strong>
+          </span>
+          <span className="text-slate-300 font-semibold font-mono">
+            Subtotal: <strong className="text-emerald-400 font-mono">${(Number(draft.subtotal) || 20).toFixed(2)}</strong>
+          </span>
+        </div>
+
+        {/* Botones de Acción */}
+        <div className="grid grid-cols-2 gap-2 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full py-2.5 text-xs font-bold rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={handleConfirmSave}
+            className="w-full py-2.5 text-xs font-black rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition-all shadow-md shadow-blue-900/40 cursor-pointer"
+          >
+            {isEditing ? 'Guardar Cambios' : 'Añadir a la Orden'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function NuevoPedidoForm({
@@ -83,6 +453,15 @@ export function NuevoPedidoForm({
 
   // Fragancias del Pedido
   const [itemsPedido, setItemsPedido] = useState<PedidoItem[]>([]);
+  const [idPedidoTemporal] = useState(() => {
+    const d = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const day = pad(d.getDate());
+    const mon = pad(d.getMonth() + 1);
+    const yr = d.getFullYear();
+    const rand = Math.random().toString(36).substring(2, 6);
+    return `PED-${day}${mon}${yr}-${rand}`;
+  });
   const [filtroGenero, setFiltroGenero] = useState<string>('TODOS');
   const [busquedaPerfume, setBusquedaPerfume] = useState('');
 
@@ -119,18 +498,23 @@ export function NuevoPedidoForm({
       const precio = parseFloat(initialPerfume.precio_normal?.toString() || '20');
       setItemsPedido([
         {
+          id: idPedidoTemporal,
           catalogo_id: initialPerfume.id,
           codigo: initialPerfume.codigo,
           contratipo: initialPerfume.contratipo,
           marca: initialPerfume.marca_inspirada,
+          genero: initialPerfume.genero,
           version: 'Normal',
           cantidad: 1,
           precio_unitario: precio,
           subtotal: precio,
+          inv_fisico: 0,
+          estado_compra: 'Registrado',
+          fecha_registro: new Date().toLocaleString('es-SV'),
         },
       ]);
     }
-  }, [initialPerfume]);
+  }, [initialPerfume, idPedidoTemporal]);
 
   const municipiosDisponibles = useMemo(() => {
     if (!clienteDepto) return [];
@@ -188,39 +572,105 @@ export function NuevoPedidoForm({
     });
   }, [catalogo, filtroGenero, busquedaPerfume]);
 
-  // Manejo de Items del Pedido
-  const handleAgregarItem = (perfume: CatalogoItem) => {
-    const existe = itemsPedido.find(
-      (item) => item.catalogo_id === perfume.id && item.version === 'Normal'
-    );
-    if (existe) {
-      setItemsPedido(
-        itemsPedido.map((item) =>
-          item.catalogo_id === perfume.id && item.version === 'Normal'
-            ? {
-                ...item,
-                cantidad: item.cantidad + 1,
-                subtotal: (item.cantidad + 1) * item.precio_unitario,
-              }
-            : item
-        )
-      );
-    } else {
-      const precio = parseFloat(perfume.precio_normal?.toString() || '20');
-      setItemsPedido([
-        ...itemsPedido,
-        {
-          catalogo_id: perfume.id,
-          codigo: perfume.codigo,
-          contratipo: perfume.contratipo,
-          marca: perfume.marca_inspirada,
-          version: 'Normal',
-          cantidad: 1,
-          precio_unitario: precio,
-          subtotal: precio,
-        },
-      ]);
+  const getFechaRegistroActual = () => {
+    return new Date().toLocaleString('es-SV', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+    });
+  };
+
+  // Estados para Modal de Agregar / Editar Perfume
+  const [modalPerfumeOpen, setModalPerfumeOpen] = useState(false);
+  const [perfumeEnEdicionIndex, setPerfumeEnEdicionIndex] = useState<number | null>(null);
+  const [modalDraft, setModalDraft] = useState<PedidoItem>({
+    id: '',
+    catalogo_id: '',
+    codigo: '',
+    contratipo: '',
+    marca: '',
+    genero: '',
+    version: 'Normal',
+    cantidad: 1,
+    precio_unitario: 20,
+    subtotal: 20,
+    inv_fisico: 0,
+    estado_compra: 'Registrado',
+    fecha_registro: '',
+  });
+
+  const handleAbrirModalNuevo = () => {
+    setPerfumeEnEdicionIndex(null);
+    setModalDraft({
+      id: idPedidoTemporal,
+      catalogo_id: '',
+      codigo: '',
+      contratipo: '',
+      marca: '',
+      genero: '',
+      version: 'Normal',
+      cantidad: 1,
+      precio_unitario: 20,
+      subtotal: 20,
+      inv_fisico: 0,
+      estado_compra: 'Registrado',
+      fecha_registro: getFechaRegistroActual(),
+    });
+    setModalPerfumeOpen(true);
+  };
+
+  const handleAbrirModalEditar = (idx: number) => {
+    setPerfumeEnEdicionIndex(idx);
+    setModalDraft({ ...itemsPedido[idx] });
+    setModalPerfumeOpen(true);
+  };
+
+  const handleGuardarModalDraft = () => {
+    if (!modalDraft.catalogo_id || !modalDraft.contratipo) {
+      showToast('Por favor selecciona una fragancia en Kodigo', 'error');
+      return;
     }
+
+    if (perfumeEnEdicionIndex === null) {
+      setItemsPedido((prev) => [...prev, modalDraft]);
+      showToast(`Perfume "${modalDraft.contratipo}" añadido a la orden`, 'success');
+    } else {
+      setItemsPedido((prev) =>
+        prev.map((it, i) => (i === perfumeEnEdicionIndex ? modalDraft : it))
+      );
+      showToast(`Perfume "${modalDraft.contratipo}" actualizado`, 'info');
+    }
+
+    setModalPerfumeOpen(false);
+  };
+
+  const handleAgregarNuevoPerfume = (perfume?: CatalogoItem) => {
+    const fecha = getFechaRegistroActual();
+    const precio = perfume
+      ? parseFloat(perfume.precio_normal?.toString() || '20')
+      : 20;
+
+    const nuevoItem: PedidoItem = {
+      id: `${idPedidoTemporal}`,
+      catalogo_id: perfume ? perfume.id : '',
+      codigo: perfume ? perfume.codigo : '',
+      contratipo: perfume ? perfume.contratipo : '',
+      marca: perfume ? perfume.marca_inspirada : '',
+      genero: perfume ? perfume.genero : '',
+      version: 'Normal',
+      cantidad: 1,
+      precio_unitario: precio,
+      subtotal: precio,
+      inv_fisico: 0,
+      estado_compra: 'Registrado',
+      fecha_registro: fecha,
+    };
+
+    setItemsPedido((prev) => [...prev, nuevoItem]);
   };
 
   const handleCambiarCantidad = (index: number, delta: number) => {
@@ -237,32 +687,6 @@ export function NuevoPedidoForm({
         )
       );
     }
-  };
-
-  const handleCambiarVersion = (index: number, version: 'Normal' | 'Plus') => {
-    const item = itemsPedido[index];
-    const perfume = catalogo.find((p) => p.id === item.catalogo_id);
-    let nuevoPrecio = item.precio_unitario;
-
-    if (perfume) {
-      nuevoPrecio =
-        version === 'Plus'
-          ? parseFloat(perfume.precio_extra_shot?.toString() || '25')
-          : parseFloat(perfume.precio_normal?.toString() || '20');
-    }
-
-    setItemsPedido(
-      itemsPedido.map((it, i) =>
-        i === index
-          ? {
-              ...it,
-              version,
-              precio_unitario: nuevoPrecio,
-              subtotal: it.cantidad * nuevoPrecio,
-            }
-          : it
-      )
-    );
   };
 
   const handleEliminarItem = (index: number) => {
@@ -388,6 +812,11 @@ export function NuevoPedidoForm({
     }
     if (itemsPedido.length === 0) {
       showToast('Debes agregar al menos un perfume al pedido', 'error');
+      return;
+    }
+    const perfumeIncompleto = itemsPedido.some((it) => !it.catalogo_id || !it.contratipo);
+    if (perfumeIncompleto) {
+      showToast('Por favor selecciona la fragancia (Kodigo) en cada perfume del pedido', 'error');
       return;
     }
 
@@ -760,182 +1189,206 @@ export function NuevoPedidoForm({
             </div>
           </div>
 
-          {/* Tarjeta Fragancias / Perfumes del Pedido */}
+          {/* Modal de Formulario para Agregar o Editar Perfume */}
+          <ModalPerfumeForm
+            isOpen={modalPerfumeOpen}
+            onClose={() => setModalPerfumeOpen(false)}
+            draft={modalDraft}
+            setDraft={setModalDraft}
+            onSave={handleGuardarModalDraft}
+            catalogo={catalogo}
+            idPedidoTemporal={idPedidoTemporal}
+            isEditing={perfumeEnEdicionIndex !== null}
+          />
+
+          {/* Tarjeta Detalle Pedido (Resumen en Tabla Limpia y Legible) */}
           <div className="clay-card p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-extrabold text-slate-800">
-                  Fragancias del Pedido
+                <h3 className="text-sm font-extrabold text-slate-900">
+                  Detalle del Pedido
                 </h3>
+                <span className="text-xs font-black text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200">
+                  {itemsPedido.length} {itemsPedido.length === 1 ? 'perfume' : 'perfumes'}
+                </span>
                 {totalFrascos > 0 && (
-                  <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
-                    {totalFrascos} {totalFrascos === 1 ? 'frasco' : 'frascos'}
+                  <span className="text-[11px] font-bold text-slate-500">
+                    ({totalFrascos} {totalFrascos === 1 ? 'frasco total' : 'frascos totales'})
                   </span>
                 )}
               </div>
-              {totalFrascos >= 2 ? (
-                <span className="text-[10px] font-black uppercase text-emerald-700 bg-emerald-100/90 px-2.5 py-0.5 rounded-full border border-emerald-300 flex items-center gap-1 shadow-2xs">
-                  <span>🎁</span> Promo 2+: -${descuentoPromoCalculado.toFixed(2)}
-                </span>
-              ) : (
-                <span className="text-xs text-slate-500 font-mono">
-                  Subtotal: ${subtotalPedido.toFixed(2)}
-                </span>
-              )}
-            </div>
 
-            {/* Selector de Catálogo */}
-            <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2.5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-xs font-extrabold text-slate-700">Añadir del Catálogo:</span>
-                <div className="flex items-center gap-1">
-                  {['TODOS', 'CABALLERO', 'DAMA', 'UNISEX'].map((g) => (
-                    <button
-                      key={g}
-                      type="button"
-                      onClick={() => setFiltroGenero(g)}
-                      className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-all ${
-                        filtroGenero === g
-                          ? 'bg-slate-800 text-white'
-                          : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      {g}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={busquedaPerfume}
-                  onChange={(e) => setBusquedaPerfume(e.target.value)}
-                  placeholder="Filtrar por código o nombre..."
-                  className="clay-input w-full text-xs pl-8 pr-7 py-1.5"
-                />
-                {busquedaPerfume && (
-                  <button
-                    type="button"
-                    onClick={() => setBusquedaPerfume('')}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
+              <div className="flex items-center gap-2.5">
+                {totalFrascos >= 2 ? (
+                  <span className="text-[10px] font-black uppercase text-emerald-800 bg-emerald-100/90 px-2.5 py-1 rounded-full border border-emerald-300 flex items-center gap-1 shadow-2xs">
+                    <span>🎁</span> Promo 2+: -${descuentoPromoCalculado.toFixed(2)}
+                  </span>
+                ) : (
+                  <span className="text-xs text-slate-500 font-mono">
+                    Subtotal: <strong className="text-slate-900">${subtotalPedido.toFixed(2)}</strong>
+                  </span>
                 )}
-              </div>
 
-              <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pt-1">
-                {perfumesFiltrados.slice(0, 30).map((perfume) => (
-                  <button
-                    key={perfume.id}
-                    type="button"
-                    onClick={() => handleAgregarItem(perfume)}
-                    className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/60 text-xs font-bold text-slate-700 flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer group"
-                  >
-                    <span className="font-mono text-indigo-600 group-hover:text-indigo-800">
-                      #{perfume.codigo}
-                    </span>
-                    <span className="truncate max-w-[140px]">{perfume.contratipo}</span>
-                    <span className="font-mono text-[11px] text-emerald-600 font-black">
-                      ${parseFloat(perfume.precio_normal?.toString() || '20').toFixed(2)}
-                    </span>
-                    <Plus className="w-3 h-3 text-slate-400 group-hover:text-indigo-600" />
-                  </button>
-                ))}
+                <button
+                  type="button"
+                  onClick={handleAbrirModalNuevo}
+                  className="clay-btn clay-btn-primary px-3.5 py-2 text-xs font-black rounded-xl flex items-center gap-1.5 shadow-sm shadow-indigo-200 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ Agregar Perfume</span>
+                </button>
               </div>
             </div>
 
-            {/* Listado de Items en el Pedido */}
+            {/* Listado / Tabla Resumen */}
             {itemsPedido.length === 0 ? (
-              <div className="p-8 text-center bg-slate-50/60 rounded-2xl border border-dashed border-slate-300 text-slate-400 text-xs font-medium">
-                No has agregado ningún perfume al pedido todavía. Haz clic arriba para añadir fragancias.
+              <div className="p-8 text-center bg-slate-50/70 rounded-2xl border-2 border-dashed border-slate-200 space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center mx-auto text-indigo-600">
+                  <Plus className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-800">
+                    No has agregado perfumes al pedido todavía
+                  </h4>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Pulsa &quot;+ Agregar Perfume&quot; para abrir el formulario y elegir la fragancia y su versión.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAbrirModalNuevo}
+                  className="clay-btn clay-btn-primary px-4 py-2 text-xs font-black rounded-xl inline-flex items-center gap-2 shadow-sm shadow-indigo-200 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Agregar Primer Perfume</span>
+                </button>
               </div>
             ) : (
-              <div className="space-y-2">
-                {itemsPedido.map((item, idx) => (
-                  <div
-                    key={`${item.catalogo_id}-${item.version}-${idx}`}
-                    className="p-3 bg-white rounded-xl border border-slate-200/90 shadow-2xs flex flex-wrap items-center justify-between gap-3"
+              <div className="space-y-3">
+                <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-2xs bg-white">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-black text-slate-700 uppercase tracking-wider">
+                        <th className="py-3 px-3.5">Fragancia / Kodigo</th>
+                        <th className="py-3 px-3 text-center">Versión</th>
+                        <th className="py-3 px-3 text-right">Precio Unitario</th>
+                        <th className="py-3 px-3 text-center">Cantidad</th>
+                        <th className="py-3 px-3 text-right">Subtotal</th>
+                        <th className="py-3 pr-3.5 text-right">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {itemsPedido.map((item, idx) => (
+                        <tr key={`item-${idx}`} className="hover:bg-indigo-50/40 transition-colors">
+                          {/* Fragancia / Kodigo */}
+                          <td className="py-3.5 px-3.5">
+                            <div className="flex items-center gap-2.5">
+                              <span className="font-mono text-xs font-black bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-lg border border-indigo-200 shrink-0">
+                                #{item.codigo || '—'}
+                              </span>
+                              <div className="min-w-0">
+                                <span className="font-extrabold text-xs sm:text-sm text-slate-900 block truncate">
+                                  {item.contratipo || 'Sin fragancia seleccionada'}
+                                </span>
+                                {item.marca && (
+                                  <span className="text-[11px] text-slate-500 font-medium block truncate">
+                                    {item.marca} {item.genero ? `• ${item.genero}` : ''}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Version */}
+                          <td className="py-3.5 px-3 text-center whitespace-nowrap">
+                            <span
+                              className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black uppercase ${
+                                item.version === 'Plus'
+                                  ? 'bg-blue-100 text-blue-800 border border-blue-300'
+                                  : 'bg-amber-100 text-amber-900 border border-amber-300'
+                              }`}
+                            >
+                              {item.version}
+                            </span>
+                          </td>
+
+                          {/* Precio Unitario */}
+                          <td className="py-3.5 px-3 text-right font-mono font-bold text-slate-700 whitespace-nowrap text-xs sm:text-sm">
+                            ${(Number(item.precio_unitario) || 20).toFixed(2)}
+                          </td>
+
+                          {/* Cantidad con botones +/- */}
+                          <td className="py-3.5 px-3 text-center whitespace-nowrap">
+                            <div className="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 rounded-lg p-1">
+                              <button
+                                type="button"
+                                onClick={() => handleCambiarCantidad(idx, -1)}
+                                className="w-5 h-5 rounded flex items-center justify-center font-bold text-slate-600 hover:bg-white hover:text-slate-900 cursor-pointer shadow-2xs"
+                                title="Restar 1"
+                              >
+                                –
+                              </button>
+                              <span className="font-mono font-black text-xs px-1.5 text-slate-900">
+                                {item.cantidad}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleCambiarCantidad(idx, 1)}
+                                className="w-5 h-5 rounded flex items-center justify-center font-bold text-slate-600 hover:bg-white hover:text-slate-900 cursor-pointer shadow-2xs"
+                                title="Sumar 1"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </td>
+
+                          {/* Subtotal */}
+                          <td className="py-3.5 px-3 text-right font-mono font-black text-emerald-600 whitespace-nowrap text-sm">
+                            ${(Number(item.subtotal) || 20).toFixed(2)}
+                          </td>
+
+                          {/* Acciones */}
+                          <td className="py-3.5 pr-3.5 text-right whitespace-nowrap">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleAbrirModalEditar(idx)}
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 transition-colors cursor-pointer"
+                                title="Editar perfume"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleEliminarItem(idx)}
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-colors cursor-pointer"
+                                title="Eliminar de la orden"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Footer de la tabla */}
+                <div className="flex items-center justify-between pt-2 px-1 text-xs text-slate-500">
+                  <span className="font-medium">
+                    Total frascos en pedido:{' '}
+                    <strong className="text-slate-900 font-mono font-black">{totalFrascos}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleAbrirModalNuevo}
+                    className="text-xs font-black text-indigo-600 hover:text-indigo-800 flex items-center gap-1.5 cursor-pointer py-1.5 px-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-colors"
                   >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="font-mono font-bold text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200">
-                        #{item.codigo}
-                      </span>
-                      <div className="min-w-0">
-                        <span className="font-extrabold text-xs text-slate-900 block truncate max-w-[200px]">
-                          {item.contratipo}
-                        </span>
-                        {item.marca && (
-                          <span className="text-[10px] text-slate-400 block">{item.marca}</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2.5">
-                      {/* Selector de Versión Normal / Plus */}
-                      <div className="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-50">
-                        <button
-                          type="button"
-                          onClick={() => handleCambiarVersion(idx, 'Normal')}
-                          className={`px-2 py-0.5 text-[10px] font-black rounded-md transition-all cursor-pointer ${
-                            item.version === 'Normal'
-                              ? 'bg-amber-400 text-amber-950 shadow-2xs'
-                              : 'text-slate-600 hover:text-slate-900'
-                          }`}
-                        >
-                          Normal ($20)
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleCambiarVersion(idx, 'Plus')}
-                          className={`px-2 py-0.5 text-[10px] font-black rounded-md transition-all cursor-pointer ${
-                            item.version === 'Plus'
-                              ? 'bg-blue-600 text-white shadow-2xs'
-                              : 'text-slate-600 hover:text-slate-900'
-                          }`}
-                        >
-                          Plus ($25)
-                        </button>
-                      </div>
-
-                      {/* Contador de Cantidad */}
-                      <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5 border border-slate-200">
-                        <button
-                          type="button"
-                          onClick={() => handleCambiarCantidad(idx, -1)}
-                          className="w-5 h-5 rounded flex items-center justify-center font-bold text-slate-600 hover:bg-white cursor-pointer"
-                        >
-                          -
-                        </button>
-                        <span className="font-mono font-bold text-xs px-1.5">{item.cantidad}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleCambiarCantidad(idx, 1)}
-                          className="w-5 h-5 rounded flex items-center justify-center font-bold text-slate-600 hover:bg-white cursor-pointer"
-                        >
-                          +
-                        </button>
-                      </div>
-
-                      {/* Subtotal Item */}
-                      <span className="font-mono font-black text-xs text-slate-900 min-w-[55px] text-right">
-                        ${item.subtotal.toFixed(2)}
-                      </span>
-
-                      {/* Botón Eliminar */}
-                      <button
-                        type="button"
-                        onClick={() => handleEliminarItem(idx)}
-                        className="text-slate-400 hover:text-rose-600 p-1 rounded hover:bg-rose-50 cursor-pointer transition-colors"
-                        title="Quitar del pedido"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>+ Agregar Otro Perfume</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>

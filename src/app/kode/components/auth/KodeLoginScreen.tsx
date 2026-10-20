@@ -62,7 +62,11 @@ export const KodeLoginScreen: React.FC<KodeLoginScreenProps> = ({
     e.preventDefault();
     setError('');
 
-    const identifier = mode === 'SELECT' ? selectedVendedoraId : manualUser.trim();
+    const selectedMember = teamList.find((m) => m.id === selectedVendedoraId);
+    const identifier =
+      mode === 'SELECT'
+        ? (selectedMember?.email || selectedVendedoraId)
+        : manualUser.trim();
     if (!identifier) {
       setError('Por favor selecciona tu usuario o ingresa tu correo');
       return;

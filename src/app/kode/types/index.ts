@@ -25,6 +25,7 @@ export interface PedidoItem {
   codigo: string;
   contratipo: string;
   marca?: string;
+  genero?: string;
   version: 'Normal' | 'Plus' | 'NORMAL' | 'EXTRA_SHOT' | string;
   cantidad: number;
   precio_unitario: number;
@@ -32,6 +33,9 @@ export interface PedidoItem {
   insumo_comprado?: boolean;
   comprado_por?: string;
   usuario?: string;
+  inv_fisico?: number;
+  estado_compra?: string;
+  fecha_registro?: string;
 }
 
 export interface ClienteItem {
