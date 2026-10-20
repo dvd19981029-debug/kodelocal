@@ -27,7 +27,7 @@ import { getProductImage } from '@/lib/perfumeImages';
 import { getFragranceProfile, getFragranceAccordBars } from '@/lib/fragranceProfiles';
 import ProductCard from '@/components/ecommerce/ProductCard';
 import FragranceNotesVisual from '@/components/ecommerce/FragranceNotesVisual';
-import { getInspiracionPerfumeName, formatPerfumeDisplayName, getBottleLabelConfig } from '@/lib/perfumeNames';
+import { getInspiracionPerfumeName, formatPerfumeDisplayName, getBottleLabelConfig, isIncomingEssence } from '@/lib/perfumeNames';
 import { getFragranceDescription } from '@/lib/fragranceDescriptions';
 import { resolveTargetProductId } from '@/lib/productUrl';
 import { isHalloweenPromoProduct, getHalloweenPotionInfo, HALLOWEEN_ORIGINAL_PRICE_1OZ, HALLOWEEN_ORIGINAL_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
@@ -114,6 +114,7 @@ export default function ProductDetailPage() {
 
   const isEssence = product?.category === 'Esencias para Perfume';
   const isBottle = product?.category === 'Botes' || product?.category === 'Botes & Envases';
+  const isIncoming = isBottle || (isEssence && isIncomingEssence(product));
 
   const presentations = useMemo(() => {
     if (!product) return [];
@@ -421,7 +422,7 @@ export default function ProductDetailPage() {
               <div className="absolute top-3 right-3 z-10">
                 {isOutOfStock ? (
                   <span className="bg-slate-900 text-white text-xs font-black py-1 px-3 rounded-lg shadow-md uppercase tracking-wider">
-                    {isBottle ? 'En camino' : 'Agotado'}
+                    {isIncoming ? 'En camino' : 'Agotado'}
                   </span>
                 ) : (
                   <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-xs font-black py-1 px-3 rounded-lg shadow-md flex items-center gap-1">
@@ -582,7 +583,7 @@ export default function ProductDetailPage() {
                             </span>
                           ) : isPresOutOfStock ? (
                             <span className="text-[9px] font-bold text-slate-400">
-                              Agotado
+                              {isIncoming ? 'En camino' : 'Agotado'}
                             </span>
                           ) : null}
                         </div>
@@ -670,6 +671,8 @@ export default function ProductDetailPage() {
                       <ShoppingBag className="w-4 h-4" />
                       <span>Actualizar Carrito • ${(activeOption.price * quantity).toFixed(2)}</span>
                     </>
+                  ) : isOutOfStock || maxSelectable <= 0 ? (
+                    <span>{isIncoming ? 'En camino' : 'Agotado'}</span>
                   ) : (
                     <>
                       <ShoppingBag className="w-4 h-4" />
@@ -685,7 +688,7 @@ export default function ProductDetailPage() {
                   <span className={`w-2 h-2 rounded-full shrink-0 ${availableRemaining === 0 ? 'bg-slate-400' : isBelowMinAlert ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500 animate-pulse'}`} />
                   <span>
                     {availableRemaining === 0 
-                      ? (cartQuantity > 0 ? 'Has reservado todo el inventario disponible' : 'Temporalmente agotado') 
+                      ? (cartQuantity > 0 ? 'Has reservado todo el inventario disponible' : (isIncoming ? 'Próximo ingreso a bodega (En camino)' : 'Temporalmente agotado')) 
                       : <>En existencia para entregas a domicilio a todo El Salvador o retiro en local</>}
                   </span>
                 </span>
@@ -694,7 +697,7 @@ export default function ProductDetailPage() {
                     cartQuantity > 0 ? (
                       <span className="text-indigo-600 font-bold">En tu carrito</span>
                     ) : (
-                      <span className="text-slate-400 font-bold">Sin existencias</span>
+                      <span className="text-slate-400 font-bold">{isIncoming ? 'En camino' : 'Sin existencias'}</span>
                     )
                   ) : isBelowMinAlert ? (
                     <strong className="text-amber-700 font-black">

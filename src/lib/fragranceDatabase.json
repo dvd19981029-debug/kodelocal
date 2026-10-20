@@ -167,6 +167,801 @@
     ],
     "source": "fragrantica"
   },
+  "62": {
+    "kodigo": "62",
+    "contratipo": "Bella Amour F",
+    "marca": "Givenchy",
+    "genero": "Dama",
+    "officialName": "Amarige",
+    "brand": "Givenchy",
+    "family": "Floral",
+    "accords": [
+      "floral blanco",
+      "floral",
+      "dulce",
+      "afrutado",
+      "amaderado",
+      "atalcado",
+      "tuberosa"
+    ],
+    "topNotes": [
+      "Flor de azahar",
+      "Durazno",
+      "Ciruela",
+      "Neroli",
+      "Palo de rosa",
+      "Mandarina",
+      "Violeta"
+    ],
+    "heartNotes": [
+      "Tuberosa",
+      "Mimosa",
+      "Gardenia",
+      "Ylang-ylang",
+      "Jazmín",
+      "Acacia",
+      "Clavel",
+      "Grosellas negras",
+      "Rosa",
+      "Orquídea"
+    ],
+    "baseNotes": [
+      "Sándalo",
+      "Vainilla",
+      "Ámbar",
+      "Haba tonka",
+      "Almizcle",
+      "Cedro"
+    ],
+    "source": "fragrantica"
+  },
+  "63": {
+    "kodigo": "63",
+    "contratipo": "Celeste Star F",
+    "marca": "Thierry Mugler",
+    "genero": "Dama",
+    "officialName": "Angel",
+    "brand": "Thierry Mugler",
+    "family": "Ámbar Vainilla",
+    "accords": [
+      "dulce",
+      "pachulí",
+      "cálido especiado",
+      "afrutado",
+      "caramelo",
+      "cacao",
+      "avainillado",
+      "miel"
+    ],
+    "topNotes": [
+      "Algodón de azúcar",
+      "Coco",
+      "Grosellas negras",
+      "Melón",
+      "Jazmín",
+      "Bergamota",
+      "Piña",
+      "Mandarina"
+    ],
+    "heartNotes": [
+      "Miel",
+      "Frutos rojos",
+      "Zarzamora",
+      "Ciruela",
+      "Durazno",
+      "Jazmín",
+      "Orquídea",
+      "Rosa",
+      "Lirio de los valles",
+      "Nuez moscada"
+    ],
+    "baseNotes": [
+      "Pachulí",
+      "Chocolate",
+      "Caramelo",
+      "Vainilla",
+      "Haba tonka",
+      "Ámbar",
+      "Almizcle",
+      "Sándalo"
+    ],
+    "source": "fragrantica"
+  },
+  "64": {
+    "kodigo": "64",
+    "contratipo": "Golden Muse F",
+    "marca": "Billie Eilish",
+    "genero": "Dama",
+    "officialName": "Eilish",
+    "brand": "Billie Eilish",
+    "family": "Ámbar Vainilla",
+    "accords": [
+      "avainillado",
+      "dulce",
+      "cacao",
+      "cálido especiado",
+      "ámbar",
+      "atalcado",
+      "almizclado"
+    ],
+    "topNotes": [
+      "Azúcar",
+      "Frutos rojos",
+      "Mandarina"
+    ],
+    "heartNotes": [
+      "Vainilla",
+      "Cacao",
+      "Notas especiadas",
+      "Rosa"
+    ],
+    "baseNotes": [
+      "Haba tonka",
+      "Ámbar",
+      "Almizcle",
+      "Notas amaderadas"
+    ],
+    "source": "fragrantica"
+  },
+  "65": {
+    "kodigo": "65",
+    "contratipo": "Midnight Trick H",
+    "marca": "Jesús del Pozo",
+    "genero": "Caballero",
+    "officialName": "Halloween Man",
+    "brand": "Jesús del Pozo",
+    "family": "Ámbar Amaderada",
+    "accords": [
+      "cálido especiado",
+      "canela",
+      "avainillado",
+      "aromático",
+      "dulce",
+      "lavanda",
+      "cuero",
+      "afrutado"
+    ],
+    "topNotes": [
+      "Martini de manzana",
+      "Hojas de violeta",
+      "Albahaca",
+      "Mandarina"
+    ],
+    "heartNotes": [
+      "Canela",
+      "Lavanda",
+      "Jengibre",
+      "Flor de azahar"
+    ],
+    "baseNotes": [
+      "Vainilla",
+      "Ámbar",
+      "Cuero",
+      "Almizcle"
+    ],
+    "source": "fragrantica"
+  },
+  "66": {
+    "kodigo": "66",
+    "contratipo": "Nicho Lavanda U",
+    "marca": "Le Labo",
+    "genero": "Unisex",
+    "officialName": "Lavande 31",
+    "brand": "Le Labo",
+    "family": "Aromática Fougère",
+    "accords": [
+      "lavanda",
+      "cítrico",
+      "almizclado",
+      "floral blanco",
+      "aromático",
+      "fresco especiado",
+      "ámbar"
+    ],
+    "topNotes": [
+      "Bergamota",
+      "Neroli"
+    ],
+    "heartNotes": [
+      "Lavanda"
+    ],
+    "baseNotes": [
+      "Almizcle",
+      "Haba tonka",
+      "Ámbar"
+    ],
+    "source": "fragrantica"
+  },
+  "67": {
+    "kodigo": "67",
+    "contratipo": "Milano Chic F",
+    "marca": "Prada",
+    "genero": "Dama",
+    "officialName": "Paradoxe",
+    "brand": "Prada",
+    "family": "Ámbar Floral",
+    "accords": [
+      "floral blanco",
+      "cítrico",
+      "dulce",
+      "ámbar",
+      "avainillado",
+      "afrutado",
+      "almizclado"
+    ],
+    "topNotes": [
+      "Pera",
+      "Mandarina",
+      "Bergamota"
+    ],
+    "heartNotes": [
+      "Flor de azahar",
+      "Neroli",
+      "Jazmín Sambac"
+    ],
+    "baseNotes": [
+      "Vainilla Bourbon",
+      "Ámbar",
+      "Almizcle blanco",
+      "Benjuí"
+    ],
+    "source": "fragrantica"
+  },
+  "68": {
+    "kodigo": "68",
+    "contratipo": "American Girl F",
+    "marca": "Tommy Hilfiger",
+    "genero": "Dama",
+    "officialName": "Tommy Girl",
+    "brand": "Tommy Hilfiger",
+    "family": "Floral Frutal",
+    "accords": [
+      "cítrico",
+      "floral",
+      "floral blanco",
+      "verde",
+      "fresco",
+      "afrutado",
+      "aromático"
+    ],
+    "topNotes": [
+      "Manzano en flor",
+      "Camelia",
+      "Mandarina",
+      "Grosellas negras"
+    ],
+    "heartNotes": [
+      "Limón",
+      "Madreselva",
+      "Pomelo",
+      "Rosa",
+      "Lirio",
+      "Menta",
+      "Violeta"
+    ],
+    "baseNotes": [
+      "Magnolia",
+      "Jazmín",
+      "Cedro",
+      "Sándalo",
+      "Cuero"
+    ],
+    "source": "fragrantica"
+  },
+  "69": {
+    "kodigo": "69",
+    "contratipo": "Scarlet Luxe U",
+    "marca": "Hermès",
+    "genero": "Unisex",
+    "officialName": "Eau de Rhubarbe Écarlate",
+    "brand": "Hermès",
+    "family": "Aromática Frutal",
+    "accords": [
+      "afrutado",
+      "verde",
+      "dulce",
+      "almizclado",
+      "aromático",
+      "fresco"
+    ],
+    "topNotes": [
+      "Ruibarbo"
+    ],
+    "heartNotes": [
+      "Frutos rojos"
+    ],
+    "baseNotes": [
+      "Almizcle blanco"
+    ],
+    "source": "fragrantica"
+  },
+  "70": {
+    "kodigo": "70",
+    "contratipo": "Blossom Dream F",
+    "marca": "Calvin Klein",
+    "genero": "Dama",
+    "officialName": "Endless Euphoria",
+    "brand": "Calvin Klein",
+    "family": "Floral Frutal",
+    "accords": [
+      "floral",
+      "cítrico",
+      "rosas",
+      "amaderado",
+      "fresco",
+      "violeta",
+      "almizclado"
+    ],
+    "topNotes": [
+      "Flor del cerezo",
+      "Mandarina",
+      "Bergamota"
+    ],
+    "heartNotes": [
+      "Rosa",
+      "Violeta",
+      "Lila"
+    ],
+    "baseNotes": [
+      "Bambú",
+      "Almizcle",
+      "Sándalo"
+    ],
+    "source": "fragrantica"
+  },
+  "71": {
+    "kodigo": "71",
+    "contratipo": "Choco Royalty U",
+    "marca": "Bharara",
+    "genero": "Unisex",
+    "officialName": "Bharara Chocolate",
+    "brand": "Bharara",
+    "family": "Ámbar Vainilla Gourmand",
+    "accords": [
+      "cacao",
+      "dulce",
+      "avainillado",
+      "cálido especiado",
+      "ámbar",
+      "amaderado",
+      "caramelo"
+    ],
+    "topNotes": [
+      "Chocolate",
+      "Cacao",
+      "Bergamota",
+      "Canela"
+    ],
+    "heartNotes": [
+      "Caramelo",
+      "Avellana",
+      "Leche",
+      "Jazmín"
+    ],
+    "baseNotes": [
+      "Vainilla",
+      "Haba tonka",
+      "Ámbar",
+      "Sándalo",
+      "Almizcle"
+    ],
+    "source": "fragrantica"
+  },
+  "72": {
+    "kodigo": "72",
+    "contratipo": "Blue Wave H",
+    "marca": "Davidoff",
+    "genero": "Caballero",
+    "officialName": "Cool Water",
+    "brand": "Davidoff",
+    "family": "Aromática Acuática",
+    "accords": [
+      "aromático",
+      "marino",
+      "verde",
+      "fresco especiado",
+      "lavanda",
+      "amaderado"
+    ],
+    "topNotes": [
+      "Agua de mar",
+      "Lavanda",
+      "Menta",
+      "Notas verdes",
+      "Romero",
+      "Calone",
+      "Cilantro"
+    ],
+    "heartNotes": [
+      "Sándalo",
+      "Neroli",
+      "Geranio",
+      "Jazmín"
+    ],
+    "baseNotes": [
+      "Almizcle",
+      "Musgo de roble",
+      "Cedro",
+      "Tabaco",
+      "Ámbar gris"
+    ],
+    "source": "fragrantica"
+  },
+  "73": {
+    "kodigo": "73",
+    "contratipo": "Vikingo Noir H",
+    "marca": "Guy Laroche",
+    "genero": "Caballero",
+    "officialName": "Drakkar Noir",
+    "brand": "Guy Laroche",
+    "family": "Aromática Fougère",
+    "accords": [
+      "aromático",
+      "amaderado",
+      "fresco especiado",
+      "lavanda",
+      "cítrico",
+      "verde",
+      "cuero"
+    ],
+    "topNotes": [
+      "Lavanda",
+      "Limón",
+      "Bergamota",
+      "Romero",
+      "Menta",
+      "Verbena",
+      "Albahaca"
+    ],
+    "heartNotes": [
+      "Enebro",
+      "Cilantro",
+      "Canela",
+      "Clavel",
+      "Jazmín"
+    ],
+    "baseNotes": [
+      "Musgo de roble",
+      "Cuero",
+      "Agujas de pino",
+      "Sándalo",
+      "Vetiver",
+      "Pachulí",
+      "Cedro",
+      "Ámbar"
+    ],
+    "source": "fragrantica"
+  },
+  "74": {
+    "kodigo": "74",
+    "contratipo": "Inmortal H",
+    "marca": "Calvin Klein",
+    "genero": "Caballero",
+    "officialName": "Eternity",
+    "brand": "Calvin Klein",
+    "family": "Aromática Fougère",
+    "accords": [
+      "aromático",
+      "fresco especiado",
+      "verde",
+      "cítrico",
+      "lavanda",
+      "amaderado",
+      "floral"
+    ],
+    "topNotes": [
+      "Lavanda",
+      "Limón",
+      "Bergamota",
+      "Mandarina"
+    ],
+    "heartNotes": [
+      "Salvia",
+      "Enebro",
+      "Albahaca",
+      "Geranio",
+      "Cilantro",
+      "Jazmín",
+      "Flor de azahar",
+      "Lirio de los valles"
+    ],
+    "baseNotes": [
+      "Sándalo",
+      "Vetiver",
+      "Almizcle",
+      "Palo de rosa",
+      "Ámbar"
+    ],
+    "source": "fragrantica"
+  },
+  "75": {
+    "kodigo": "75",
+    "contratipo": "Nippon Majeure H",
+    "marca": "Issey Miyake",
+    "genero": "Caballero",
+    "officialName": "L'Eau Super Majeure d'Issey",
+    "brand": "Issey Miyake",
+    "family": "Amaderada Acuática",
+    "accords": [
+      "amaderado",
+      "marino",
+      "aromático",
+      "salado",
+      "ámbar",
+      "ahumado",
+      "cuero"
+    ],
+    "topNotes": [
+      "Salvia",
+      "Romero",
+      "Cítricos"
+    ],
+    "heartNotes": [
+      "Sal de mar",
+      "Notas marinas",
+      "Cashmeran",
+      "Pachulí",
+      "Maderas oscuras"
+    ],
+    "baseNotes": [
+      "Humo",
+      "Amberwood",
+      "Cuero",
+      "Haba tonka",
+      "Vainilla de Madagascar"
+    ],
+    "source": "fragrantica"
+  },
+  "76": {
+    "kodigo": "76",
+    "contratipo": "Titan Blanc H",
+    "marca": "Montblanc",
+    "genero": "Caballero",
+    "officialName": "Legend",
+    "brand": "Montblanc",
+    "family": "Aromática Fougère",
+    "accords": [
+      "afrutado",
+      "dulce",
+      "aromático",
+      "lavanda",
+      "amaderado",
+      "fresco especiado",
+      "cítrico"
+    ],
+    "topNotes": [
+      "Lavanda",
+      "Piña",
+      "Bergamota",
+      "Verbena"
+    ],
+    "heartNotes": [
+      "Manzana roja",
+      "Frutos rojos",
+      "Musgo de roble",
+      "Geranio",
+      "Rosa"
+    ],
+    "baseNotes": [
+      "Haba tonka",
+      "Sándalo"
+    ],
+    "source": "fragrantica"
+  },
+  "77": {
+    "kodigo": "77",
+    "contratipo": "Sultán Imperial U",
+    "marca": "Lattafa",
+    "genero": "Unisex",
+    "officialName": "Oud for Glory",
+    "brand": "Lattafa",
+    "family": "Ámbar Amaderada",
+    "accords": [
+      "oud",
+      "cálido especiado",
+      "fresco especiado",
+      "amaderado",
+      "lavanda",
+      "almizclado",
+      "pachulí"
+    ],
+    "topNotes": [
+      "Azafrán",
+      "Nuez moscada",
+      "Lavanda"
+    ],
+    "heartNotes": [
+      "Madera de oud",
+      "Pachulí"
+    ],
+    "baseNotes": [
+      "Madera de oud",
+      "Pachulí",
+      "Almizcle"
+    ],
+    "source": "fragrantica"
+  },
+  "78": {
+    "kodigo": "78",
+    "contratipo": "Cyberbot H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "officialName": "Phantom Parfum",
+    "brand": "Paco Rabanne",
+    "family": "Aromática Especiada",
+    "accords": [
+      "avainillado",
+      "aromático",
+      "cálido especiado",
+      "lavanda",
+      "amaderado",
+      "cítrico",
+      "balsámico"
+    ],
+    "topNotes": [
+      "Cardamomo",
+      "Bergamota",
+      "Ruibarbo",
+      "Limón"
+    ],
+    "heartNotes": [
+      "Lavanda",
+      "Pachulí",
+      "Cedro",
+      "Geranio"
+    ],
+    "baseNotes": [
+      "Vainilla",
+      "Bálsamo de Tolú",
+      "Vetiver de Haití"
+    ],
+    "source": "fragrantica"
+  },
+  "79": {
+    "kodigo": "79",
+    "contratipo": "Varsity Blue H",
+    "marca": "Ralph Lauren",
+    "genero": "Caballero",
+    "officialName": "Polo Sport",
+    "brand": "Ralph Lauren",
+    "family": "Aromática Verde",
+    "accords": [
+      "aromático",
+      "verde",
+      "cítrico",
+      "fresco especiado",
+      "aldehídico",
+      "marino",
+      "amaderado"
+    ],
+    "topNotes": [
+      "Menta",
+      "Aldehídos",
+      "Lavanda",
+      "Bergamota",
+      "Mandarina",
+      "Limón",
+      "Neroli"
+    ],
+    "heartNotes": [
+      "Notas marinas",
+      "Jengibre",
+      "Jazmín",
+      "Geranio",
+      "Rosa",
+      "Ciclamen",
+      "Palo de rosa"
+    ],
+    "baseNotes": [
+      "Almizcle",
+      "Sándalo",
+      "Cedro",
+      "Madera de gaiac",
+      "Ámbar"
+    ],
+    "source": "fragrantica"
+  },
+  "80": {
+    "kodigo": "80",
+    "contratipo": "Cumbre de Plata H",
+    "marca": "Creed",
+    "genero": "Caballero",
+    "officialName": "Silver Mountain Water",
+    "brand": "Creed",
+    "family": "Aromática",
+    "accords": [
+      "verde",
+      "cítrico",
+      "afrutado",
+      "almizclado",
+      "amaderado",
+      "fresco",
+      "ozónico"
+    ],
+    "topNotes": [
+      "Bergamota",
+      "Mandarina"
+    ],
+    "heartNotes": [
+      "Té verde",
+      "Grosellas negras"
+    ],
+    "baseNotes": [
+      "Almizcle",
+      "Petit grain",
+      "Sándalo",
+      "Notas verdes"
+    ],
+    "source": "fragrantica"
+  },
+  "81": {
+    "kodigo": "81",
+    "contratipo": "Cuero Toscano U",
+    "marca": "Tom Ford",
+    "genero": "Unisex",
+    "officialName": "Tuscan Leather",
+    "brand": "Tom Ford",
+    "family": "Cuero",
+    "accords": [
+      "cuero",
+      "afrutado",
+      "ahumado",
+      "dulce",
+      "cálido especiado",
+      "ámbar",
+      "amaderado"
+    ],
+    "topNotes": [
+      "Frambuesa",
+      "Azafrán",
+      "Tomillo"
+    ],
+    "heartNotes": [
+      "Olíbano",
+      "Jazmín"
+    ],
+    "baseNotes": [
+      "Cuero",
+      "Gamuza",
+      "Notas amaderadas",
+      "Ámbar"
+    ],
+    "source": "fragrantica"
+  },
+  "82": {
+    "kodigo": "82",
+    "contratipo": "Euroboy Coral H",
+    "marca": "Valentino",
+    "genero": "Caballero",
+    "officialName": "Born in Roma Coral Fantasy",
+    "brand": "Valentino",
+    "family": "Amaderada Aromática",
+    "accords": [
+      "afrutado",
+      "aromático",
+      "tabaco",
+      "cálido especiado",
+      "dulce",
+      "lavanda",
+      "fresco"
+    ],
+    "topNotes": [
+      "Manzana roja",
+      "Cardamomo",
+      "Bergamota"
+    ],
+    "heartNotes": [
+      "Lavanda",
+      "Geranio",
+      "Salvia"
+    ],
+    "baseNotes": [
+      "Tabaco",
+      "Pachulí",
+      "Vetiver de Haití"
+    ],
+    "source": "fragrantica"
+  },
   "100": {
     "kodigo": "100",
     "contratipo": "1 Million Elixir H",

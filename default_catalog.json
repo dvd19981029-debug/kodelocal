@@ -233,5 +233,110 @@
     "id_proveedor": "APAE-3605",
     "name": "PRINCESS VERA WANG",
     "price_per_kg": 30.11
+  },
+  {
+    "id_proveedor": "APAE 3568",
+    "name": "AMARIGE BY GIVENCHY TYPE",
+    "price_per_kg": 67.21
+  },
+  {
+    "id_proveedor": "APAE 3602",
+    "name": "ANGEL BY THIERRY MUGLER",
+    "price_per_kg": 91.3
+  },
+  {
+    "id_proveedor": "NP-3926",
+    "name": "EILISH BILLIE EILISH",
+    "price_per_kg": 72.74
+  },
+  {
+    "id_proveedor": "APAE 2137",
+    "name": "HALLOWEEN MAN TYPE",
+    "price_per_kg": 27.36
+  },
+  {
+    "id_proveedor": "APAE 4233",
+    "name": "LAVANDE 31 LE LABO TYPE",
+    "price_per_kg": 196.07
+  },
+  {
+    "id_proveedor": "APAE 4665",
+    "name": "PRADA PARADOXE TYPE",
+    "price_per_kg": 71.2
+  },
+  {
+    "id_proveedor": "APAE-1951",
+    "name": "TOMMY GIRL",
+    "price_per_kg": 54.84
+  },
+  {
+    "id_proveedor": "APAE 5329",
+    "name": "EAU DE RHUBARBE ECARLATE HERMES",
+    "price_per_kg": 88.21
+  },
+  {
+    "id_proveedor": "APAE 3570",
+    "name": "ENDLESS EUPHORIA BY CALVIN KLEIN",
+    "price_per_kg": 61.35
+  },
+  {
+    "id_proveedor": "APAE5330",
+    "name": "BHARARA CHOCOLATE",
+    "price_per_kg": 53.21
+  },
+  {
+    "id_proveedor": "APAE-2314",
+    "name": "COOL WATER MEN",
+    "price_per_kg": 46.09
+  },
+  {
+    "id_proveedor": "APAE-1550",
+    "name": "DRAKKAR NOIR",
+    "price_per_kg": 41.74
+  },
+  {
+    "id_proveedor": "APAE-1605",
+    "name": "ETERNITY MEN",
+    "price_per_kg": 47.09
+  },
+  {
+    "id_proveedor": "APAE 5215",
+    "name": "L'EAU SUPER MAJEURE D'ISSEY MIYAKE",
+    "price_per_kg": 36.5
+  },
+  {
+    "id_proveedor": "APAE-3390",
+    "name": "MONTBLANC LEGEND FOR MEN",
+    "price_per_kg": 63.96
+  },
+  {
+    "id_proveedor": "APAE 4211",
+    "name": "OUD FOR GLORY LATTAFA",
+    "price_per_kg": 70.16
+  },
+  {
+    "id_proveedor": "APAE 4819",
+    "name": "PHANTOM PARFUM PACO RABANNE TYPE",
+    "price_per_kg": 149.5
+  },
+  {
+    "id_proveedor": "APAE-2838",
+    "name": "POLO SPORT",
+    "price_per_kg": 39.36
+  },
+  {
+    "id_proveedor": "APAE-3839",
+    "name": "SILVER MOUNTAIN WATER CREED",
+    "price_per_kg": 125.76
+  },
+  {
+    "id_proveedor": "APAE 4817",
+    "name": "TUSCAN LEATHER BY TOM FORD",
+    "price_per_kg": 127.38
+  },
+  {
+    "id_proveedor": "NP 129026",
+    "name": "VALENTINO BORN IN ROMA CORAL FANTASY",
+    "price_per_kg": 54.93
   }
 ]

@@ -7,7 +7,7 @@ import { ProductItem, INITIAL_PRODUCTS } from '@/lib/store';
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { getProductImage } from '@/lib/perfumeImages';
-import { getInspiracionPerfumeName, formatPerfumeDisplayName, getBottleLabelConfig } from '@/lib/perfumeNames';
+import { getInspiracionPerfumeName, formatPerfumeDisplayName, getBottleLabelConfig, isIncomingEssence } from '@/lib/perfumeNames';
 import { getProductUrl } from '@/lib/productUrl';
 import {
   isHalloweenPromoProduct,
@@ -117,6 +117,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
   };
 
   const isBottle = product.category === 'Botes' || product.category === 'Botes & Envases';
+  const isIncoming = isBottle || (isEssence && isIncomingEssence(product));
 
   const getGenderBadge = (gender?: string) => {
     if (isBottle) {
@@ -247,7 +248,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
             {isOutOfStock && (
               <div className="absolute top-2 right-2 z-10">
                 <span className="bg-slate-900 text-white text-[8px] sm:text-[9px] font-black py-0.5 px-2 rounded-md shadow-md tracking-wider uppercase">
-                  {isBottle ? 'En camino' : 'Agotado'}
+                  {isIncoming ? 'En camino' : 'Agotado'}
                 </span>
               </div>
             )}
@@ -313,7 +314,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                   : 'text-emerald-700 font-bold'
               }`}>
                 {availableUnits === 0
-                  ? (isBottle ? 'En camino' : 'Sin existencias')
+                  ? (isIncoming ? 'En camino' : 'Sin existencias')
                   : isBelowMinAlert
                   ? isEssence
                     ? selectedPresentation === 'MEDIA_ONZA'
@@ -393,7 +394,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                 disabled
                 className="w-full h-[38px] sm:h-[40px] text-[9.5px] sm:text-xs font-black rounded-xl bg-slate-100 text-slate-400 cursor-not-allowed text-center flex items-center justify-center"
               >
-                {isBottle ? 'En camino' : 'Agotado'}
+                {isIncoming ? 'En camino' : 'Agotado'}
               </button>
             ) : currentQuantity > 0 ? (
               /* YA ESTÁ EN EL CARRITO: Misma altura fija de 38px/40px */
@@ -449,7 +450,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                     <span>¡Agregado!</span>
                   </>
                 ) : !canAddMore ? (
-                  <span>Sin existencias</span>
+                  <span>{isIncoming ? 'En camino' : 'Sin existencias'}</span>
                 ) : (
                   <>
                     <ShoppingBag className="w-3.5 h-3.5" />

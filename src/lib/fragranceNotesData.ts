@@ -113,21 +113,24 @@ const NOTE_RULES: Array<{ pattern: RegExp; file: string }> = [
   { pattern: /c[íi]tric/i, file: 'limon' },
 
   // Frutas
-  { pattern: /manzana\s*verde/i, file: 'manzana-verde' },
-  { pattern: /manzana/i, file: 'manzana' },
+  { pattern: /manzana\s*verde|martini\s*de\s*manzana/i, file: 'manzana-verde' },
+  { pattern: /manzana\s*roja|manzana/i, file: 'manzana' },
   { pattern: /pera/i, file: 'pera' },
   { pattern: /pi[ñn]a/i, file: 'pina' },
   { pattern: /ciruela/i, file: 'ciruela' },
   { pattern: /coco/i, file: 'coco' },
   { pattern: /cereza/i, file: 'cereza' },
+  { pattern: /frutos\s*rojos|fresa|zarzamora|mora|ar[áa]ndano/i, file: 'frutos-rojos' },
   { pattern: /frambuesa/i, file: 'frambuesa' },
   { pattern: /grosella/i, file: 'grosella' },
-  { pattern: /melocot[óo]n|durazno/i, file: 'melocoton' },
+  { pattern: /melocot[óo]n|durazno|albaricoque|chabacano/i, file: 'melocoton' },
+  { pattern: /mel[óo]n|pepino|papaya|guayaba|mango/i, file: 'melon' },
+  { pattern: /ruibarbo/i, file: 'ruibarbo' },
   { pattern: /granada/i, file: 'granada' },
   { pattern: /maracuy[áa]/i, file: 'maracuya' },
   { pattern: /lichi/i, file: 'lichi' },
   { pattern: /higo/i, file: 'higo' },
-  { pattern: /fruto/i, file: 'frambuesa' },
+  { pattern: /frut/i, file: 'frutos-rojos' },
 
   // Aromáticas y Hierbas
   { pattern: /lavanda/i, file: 'lavanda' },
@@ -138,11 +141,13 @@ const NOTE_RULES: Array<{ pattern: RegExp; file: string }> = [
   { pattern: /tomillo/i, file: 'tomillo' },
   { pattern: /enebro/i, file: 'enebro' },
   { pattern: /cipr[ée]s/i, file: 'cipres' },
-  { pattern: /hinojo|alcaravea/i, file: 'anis' },
+  { pattern: /pino|abeto/i, file: 'pino-abeto' },
+  { pattern: /t[ée](\s*verde)?/i, file: 'te-verde' },
+  { pattern: /bamb[úu]/i, file: 'bambu' },
+  { pattern: /verbena|artemisia|ajenjo|g[áa]lbano|manzanilla/i, file: 'verbena' },
+  { pattern: /hinojo|alcaravea|apio/i, file: 'anis' },
   { pattern: /absenta/i, file: 'menta' },
-  { pattern: /bamb[úu]/i, file: 'notas-verdes' },
-  { pattern: /cannabis/i, file: 'notas-verdes' },
-  { pattern: /lentisco/i, file: 'notas-verdes' },
+  { pattern: /cannabis|lentisco|cactus|laurel/i, file: 'notas-verdes' },
   { pattern: /davana/i, file: 'melocoton' },
 
   // Especias
@@ -156,25 +161,31 @@ const NOTE_RULES: Array<{ pattern: RegExp; file: string }> = [
   { pattern: /nuez\s*moscada/i, file: 'nuez-moscada' },
   { pattern: /an[íi]s|regaliz/i, file: 'anis' },
   { pattern: /clavo/i, file: 'clavo' },
-  { pattern: /cilantro/i, file: 'cilantro' },
+  { pattern: /cilantro|coriandro/i, file: 'cilantro' },
   { pattern: /especia/i, file: 'canela' },
 
   // Flores
-  { pattern: /rosa\s*blanca/i, file: 'rosa-blanca' },
+  { pattern: /flor\s*del?\s*cerezo|manzano\s*en\s*flor|flor\s*del?\s*durazn/i, file: 'flor-cerezo' },
+  { pattern: /camelia/i, file: 'camelia' },
+  { pattern: /lirio\s*de\s*los\s*valles|azucena|lirio/i, file: 'lirio-valles' },
+  { pattern: /clavel/i, file: 'clavel' },
+  { pattern: /mimosa|acacia|retama/i, file: 'mimosa' },
+  { pattern: /lila|fresia|ciclamen|jacinto|heliotropo|boronia|hedione|hedeona/i, file: 'lila' },
+  { pattern: /rosa\s*blanca|flor\s*de\s*las\s*nieves|flor\s*del?\s*algod/i, file: 'rosa-blanca' },
   { pattern: /rosa/i, file: 'rosa' },
-  { pattern: /jazm[íi]n/i, file: 'jazmin' },
+  { pattern: /jazm[íi]n|madreselva|tiar[ée]/i, file: 'jazmin' },
   { pattern: /azahar|neroli/i, file: 'flor-azahar' },
   { pattern: /tuberosa|nardo/i, file: 'tuberosa' },
   { pattern: /iris/i, file: 'iris' },
-  { pattern: /violeta/i, file: 'violeta' },
+  { pattern: /violeta|flor\s*de\s*lino/i, file: 'violeta' },
   { pattern: /geranio/i, file: 'geranio' },
   { pattern: /gardenia/i, file: 'gardenia' },
   { pattern: /peon[íi]a/i, file: 'peonia' },
   { pattern: /orqu[íi]dea/i, file: 'orquidea' },
-  { pattern: /ylang/i, file: 'ylang-ylang' },
+  { pattern: /ylang|tagetes/i, file: 'ylang-ylang' },
   { pattern: /magnolia/i, file: 'magnolia' },
-  { pattern: /loto/i, file: 'flor-loto' },
-  { pattern: /campanilla|mimosa|osmanto/i, file: 'jazmin' },
+  { pattern: /loto|nen[úu]far/i, file: 'flor-loto' },
+  { pattern: /campanilla|osmanto|espino|tr[ée]bol/i, file: 'jazmin' },
   { pattern: /floral/i, file: 'rosa' },
 
   // Maderas
@@ -186,14 +197,15 @@ const NOTE_RULES: Array<{ pattern: RegExp; file: string }> = [
   { pattern: /cachemira|cashmeran/i, file: 'cachemira' },
   { pattern: /abedul/i, file: 'abedul' },
   { pattern: /musgo/i, file: 'musgo-roble' },
-  { pattern: /caoba|palo\s*de\s*rosa/i, file: 'cedro' },
+  { pattern: /caoba|palo\s*de\s*rosa|olivo|papiro/i, file: 'cedro' },
   { pattern: /madera/i, file: 'maderas' },
 
   // Resinas y Bálsamos
   { pattern: /[áa]mbar/i, file: 'ambar' },
   { pattern: /pachul[íi]/i, file: 'pachuli' },
-  { pattern: /incienso|ol[íi]bano/i, file: 'incienso' },
-  { pattern: /benju[íi]/i, file: 'benjui' },
+  { pattern: /humo|ahumad/i, file: 'humo' },
+  { pattern: /incienso|ol[íi]bano|elem[íi]|opop[óo]naco/i, file: 'incienso' },
+  { pattern: /benju[íi]|tol[úu]/i, file: 'benjui' },
   { pattern: /l[áa]dano/i, file: 'ladano' },
   { pattern: /mirra/i, file: 'mirra' },
   { pattern: /b[áa]lsamo|resina/i, file: 'incienso' },
@@ -203,32 +215,36 @@ const NOTE_RULES: Array<{ pattern: RegExp; file: string }> = [
 
   // Gourmand
   { pattern: /vainilla/i, file: 'vainilla' },
-  { pattern: /tonka/i, file: 'haba-tonka' },
+  { pattern: /tonka|cumarina/i, file: 'haba-tonka' },
   { pattern: /caf[ée]/i, file: 'cafe' },
   { pattern: /cacao/i, file: 'cacao' },
   { pattern: /chocolate/i, file: 'chocolate' },
-  { pattern: /miel/i, file: 'miel' },
-  { pattern: /caramelo/i, file: 'caramelo' },
+  { pattern: /leche|lact[óo]nic/i, file: 'leche' },
+  { pattern: /miel|cera\s*de\s*abeja/i, file: 'miel' },
+  { pattern: /caramelo|acorde\s*goloso/i, file: 'caramelo' },
   { pattern: /almendra/i, file: 'almendra' },
-  { pattern: /avellana|pralin[ée]/i, file: 'avellana' },
+  { pattern: /avellana|pralin[ée]|casta[ñn]a/i, file: 'avellana' },
   { pattern: /crema\s*batida/i, file: 'crema-batida' },
   { pattern: /algod[óo]n\s*(de\s*)?az[úu]car/i, file: 'algodon-azucar' },
+  { pattern: /az[úu]car/i, file: 'azucar' },
 
   // Cuero y Tabaco
+  { pattern: /gamuza/i, file: 'gamuza' },
   { pattern: /cuero/i, file: 'cuero' },
   { pattern: /tabaco/i, file: 'tabaco' },
-  { pattern: /almizcle|ambreta/i, file: 'almizcle' },
+  { pattern: /almizcle|ambreta|algalia/i, file: 'almizcle' },
 
   // Acuático, Fresco y Especial
-  { pattern: /marina|mar|aquozone|calone/i, file: 'notas-marinas' },
+  { pattern: /sal\s*de\s*mar|\bsal\b/i, file: 'sal-marina' },
+  { pattern: /marina|mar|aquozone|calone|acu[áa]tic|algas/i, file: 'notas-marinas' },
   { pattern: /mineral/i, file: 'notas-minerales' },
   { pattern: /oz[óo]nic/i, file: 'notas-ozonicas' },
   { pattern: /verde/i, file: 'notas-verdes' },
-  { pattern: /helad|vodka|ginebra/i, file: 'ginebra-helada' },
+  { pattern: /helad|vodka|ginebra|ron|licor|champ[áa]n/i, file: 'ginebra-helada' },
   { pattern: /aldeh[íi]d/i, file: 'aldehidos' }
 ];
 
-export const NOTES_VERSION = '20260909_v3';
+export const NOTES_VERSION = '20261020_v4';
 const DEFAULT_NOTE_PATH = '/notes/maderas.jpg';
 
 /**

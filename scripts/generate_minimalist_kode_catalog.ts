@@ -84,7 +84,8 @@ async function generateMinimalistCatalog() {
     const idxB = BEST_SELLER_ORDER.indexOf(b.sku);
     const orderA = idxA === -1 ? 999 : idxA;
     const orderB = idxB === -1 ? 999 : idxB;
-    return orderA - orderB;
+    if (orderA !== orderB) return orderA - orderB;
+    return Number(a.sku) - Number(b.sku);
   });
 
   const items = allFragrances.map(p => {
@@ -131,7 +132,8 @@ async function generateMinimalistCatalog() {
       topNotes: prof?.topNotes || [],
       heartNotes: prof?.heartNotes || [],
       baseNotes: prof?.baseNotes || [],
-      description: cleanDesc
+      description: cleanDesc,
+      isIncoming: Number(p.stock || 0) <= 0
     };
   });
 
@@ -428,7 +430,7 @@ async function generateMinimalistCatalog() {
             <span class="brand-logo">K O D E</span>
             <span class="brand-tagline">Colección Oficial de Fragancias</span>
           </div>
-          <div class="header-status">61 Fragancias Oficiales</div>
+          <div class="header-status">${items.length} Fragancias Oficiales</div>
         </div>
 
         <div class="${isLastPage ? 'grid-last' : 'grid'}">
@@ -443,7 +445,10 @@ async function generateMinimalistCatalog() {
                 <div>
                   <div class="card-top">
                     <span class="kodigo-badge">KÓDIGO #${item.rawSku}</span>
-                    <span class="gender-tag">${item.gender}</span>
+                    <div style="display:flex;gap:4px;align-items:center;">
+                      ${item.isIncoming ? `<span style="background:#000;color:#fff;font-size:7px;font-weight:900;padding:1px 5px;letter-spacing:0.6px;text-transform:uppercase;">EN CAMINO</span>` : ''}
+                      <span class="gender-tag">${item.gender}</span>
+                    </div>
                   </div>
                   <div class="perfume-name"><span class="inspiration-prefix">Inspiración:</span>${item.originalName}</div>
                   <div class="family-tag">${item.family}</div>
@@ -515,8 +520,10 @@ async function generateMinimalistCatalog() {
   fs.copyFileSync(pdfPath, downloadsPath);
   console.log('Copied to', downloadsPath);
 
-  const artifactPath = '/Users/luis/.gemini/antigravity/brain/df42a998-2501-42cc-9c0f-81717543349b/catalogo-kode.pdf';
-  fs.copyFileSync(pdfPath, artifactPath);
+  const artifactPath = '/Users/luis/.gemini/antigravity/brain/83c36dfc-5c6a-4bfc-b06a-3fd7c5fac554/catalogo-kode.pdf';
+  if (fs.existsSync(path.dirname(artifactPath))) {
+    fs.copyFileSync(pdfPath, artifactPath);
+  }
 
   await prisma.$disconnect();
 }

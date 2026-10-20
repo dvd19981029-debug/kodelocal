@@ -65,22 +65,60 @@ export const INSPIRACION_PERFUME_MAP: Record<string, string> = {
   '58': 'Good Girl M',
   '59': 'Toy Boy H',
   '60': 'Baccarat Rouge 540 U',
-  '61': 'Fahrenheit H'
+  '61': 'Fahrenheit H',
+  '62': 'Amarige F',
+  '63': 'Angel F',
+  '64': 'Eilish F',
+  '65': 'Halloween Man H',
+  '66': 'Lavande 31 U',
+  '67': 'Paradoxe F',
+  '68': 'Tommy Girl F',
+  '69': 'Eau de Rhubarbe Écarlate U',
+  '70': 'Endless Euphoria F',
+  '71': 'Bharara Chocolate U',
+  '72': 'Cool Water H',
+  '73': 'Drakkar Noir H',
+  '74': 'Eternity H',
+  '75': "L'Eau Super Majeure d'Issey H",
+  '76': 'Legend H',
+  '77': 'Oud for Glory U',
+  '78': 'Phantom Parfum H',
+  '79': 'Polo Sport H',
+  '80': 'Silver Mountain Water H',
+  '81': 'Tuscan Leather U',
+  '82': 'Born in Roma Coral Fantasy H'
 };
+
+export const INCOMING_ESSENCE_SKUS = new Set([
+  '62', '63', '64', '65', '66', '67', '68', '69', '70', '71',
+  '72', '73', '74', '75', '76', '77', '78', '79', '80', '81', '82'
+]);
+
+export function isIncomingEssence(product: { id?: string | null; sku?: string | null; category?: string | null } | null | undefined): boolean {
+  if (!product) return false;
+  const sku = String(product.sku || '').trim();
+  if (sku && INCOMING_ESSENCE_SKUS.has(sku)) return true;
+  const id = String(product.id || '').trim().toLowerCase();
+  const match = id.match(/^esencia-(?:apae-)?0*(\d+)$/);
+  if (match && INCOMING_ESSENCE_SKUS.has(match[1])) return true;
+  return false;
+}
 
 // Alias de retrocompatibilidad
 export const ORIGINAL_PERFUME_MAP = INSPIRACION_PERFUME_MAP;
 
 const FAMOUS_BRANDS = [
-  'DOLCE & GABBANA', 'DOLCE &amp; GABBANA', 'D&G',
+  'MAISON FRANCIS KURKDJIAN', 'DOLCE & GABBANA', 'DOLCE &amp; GABBANA', 'D&G',
   'JEAN PAUL GAULTIER', 'CAROLINA HERRERA', 'GIORGIO ARMANI',
   'YVES SAINT LAURENT', 'RALPH LAUREN', 'TOMMY HILFIGER',
-  'ELIZABETH ARDEN', 'PACO RABANNE', 'ISSEY MIYAKE', 'LOUIS VUITTON',
+  'ELIZABETH ARDEN', 'THIERRY MUGLER', 'JESÚS DEL POZO', 'JESUS DEL POZO',
+  'PACO RABANNE', 'ISSEY MIYAKE', 'LOUIS VUITTON', 'BILLIE EILISH',
   'VIKTOR & ROLF', 'VIKTOR &amp; ROLF', 'CALVIN KLEIN', 'PERRY ELLIS',
-  'VERA WANG', 'TOM FORD', 'VALENTINO', 'LANCOME', 'LANCÔME',
-  'BURBERRY', 'VICTORINOX', 'LACOSTE', 'LATTAFA', 'CHANEL',
-  'XERJOFF', 'LE LABO', 'CREED', 'VERSACE', 'ARMAF', 'AFNAN',
-  'DKNY', 'DIOR', 'HUGO BOSS', 'BOSS'
+  'GUY LAROCHE', 'VERA WANG', 'TOM FORD', 'VALENTINO', 'LANCOME', 'LANCÔME',
+  'MONTBLANC', 'MONT BLANC', 'BURBERRY', 'VICTORINOX', 'GIVENCHY', 'DAVIDOFF',
+  'LACOSTE', 'LATTAFA', 'BHARARA', 'BVLGARI', 'MOSCHINO', 'CHANEL',
+  'XERJOFF', 'LE LABO', 'HERMÈS', 'HERMES', 'MUGLER', 'CREED', 'VERSACE',
+  'ARMAF', 'AFNAN', 'PRADA', 'DKNY', 'DIOR', 'HUGO BOSS', 'BOSS'
 ];
 
 /**
@@ -365,6 +403,28 @@ export const OFFICIAL_TO_ORIGINAL_MAP: Record<string, { originalName: string; br
   'BLACK BEAR': { originalName: 'Toy Boy H', brand: 'Moschino', sku: '59' },
   'CRISTAL ROUGE': { originalName: 'Baccarat Rouge 540 U', brand: 'Maison Francis Kurkdjian', sku: '60' },
   'KELVIN': { originalName: 'Fahrenheit H', brand: 'Dior', sku: '61' },
+  'BELLA AMOUR': { originalName: 'Amarige F', brand: 'Givenchy', sku: '62' },
+  'CELESTE STAR': { originalName: 'Angel F', brand: 'Thierry Mugler', sku: '63' },
+  'GOLDEN MUSE': { originalName: 'Eilish F', brand: 'Billie Eilish', sku: '64' },
+  'MIDNIGHT TRICK': { originalName: 'Halloween Man H', brand: 'Jesús del Pozo', sku: '65' },
+  'NICHO LAVANDA': { originalName: 'Lavande 31 U', brand: 'Le Labo', sku: '66' },
+  'MILANO CHIC': { originalName: 'Paradoxe F', brand: 'Prada', sku: '67' },
+  'AMERICAN GIRL': { originalName: 'Tommy Girl F', brand: 'Tommy Hilfiger', sku: '68' },
+  'SCARLET LUXE': { originalName: 'Eau de Rhubarbe Écarlate U', brand: 'Hermès', sku: '69' },
+  'BLOSSOM DREAM': { originalName: 'Endless Euphoria F', brand: 'Calvin Klein', sku: '70' },
+  'CHOCO ROYALTY': { originalName: 'Bharara Chocolate U', brand: 'Bharara', sku: '71' },
+  'BLUE WAVE': { originalName: 'Cool Water H', brand: 'Davidoff', sku: '72' },
+  'VIKINGO NOIR': { originalName: 'Drakkar Noir H', brand: 'Guy Laroche', sku: '73' },
+  'INMORTAL': { originalName: 'Eternity H', brand: 'Calvin Klein', sku: '74' },
+  'NIPPON MAJEURE': { originalName: "L'Eau Super Majeure d'Issey H", brand: 'Issey Miyake', sku: '75' },
+  'TITAN BLANC': { originalName: 'Legend H', brand: 'Montblanc', sku: '76' },
+  'SULTAN IMPERIAL': { originalName: 'Oud for Glory U', brand: 'Lattafa', sku: '77' },
+  'SULTÁN IMPERIAL': { originalName: 'Oud for Glory U', brand: 'Lattafa', sku: '77' },
+  'CYBERBOT': { originalName: 'Phantom Parfum H', brand: 'Paco Rabanne', sku: '78' },
+  'VARSITY BLUE': { originalName: 'Polo Sport H', brand: 'Ralph Lauren', sku: '79' },
+  'CUMBRE DE PLATA': { originalName: 'Silver Mountain Water H', brand: 'Creed', sku: '80' },
+  'CUERO TOSCANO': { originalName: 'Tuscan Leather U', brand: 'Tom Ford', sku: '81' },
+  'EUROBOY CORAL': { originalName: 'Born in Roma Coral Fantasy H', brand: 'Valentino', sku: '82' },
 };
 
 // Generar variaciones con sufijos H / F / M / U para match instantáneo

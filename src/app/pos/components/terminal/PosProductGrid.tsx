@@ -2,6 +2,7 @@ import React from 'react';
 import { Search, Barcode, Sparkles, Edit3, Plus } from 'lucide-react';
 import { ProductItem, CartItem } from '@/lib/store';
 import { getProductImage } from '@/lib/perfumeImages';
+import { isIncomingEssence } from '@/lib/perfumeNames';
 import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ, HALLOWEEN_PROMO_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
 
 export interface PosProductGridProps {
@@ -204,7 +205,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
                         ? 'bg-amber-50 text-amber-800 border border-amber-200' 
                         : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                     }`}>
-                      {isOutOfStock ? ((product.category === 'Botes' || product.category === 'Botes & Envases') ? 'En camino' : 'Agotado') : (product.category === 'Logística' || product.unit === 'Servicio') ? 'Disponible' : isEssence ? `${fullRemaining} Onzas · ${halfRemaining} Medias` : `${availableRemaining} ${product.unit === 'Onza' ? 'Oz' : 'Un.'}`}
+                      {isOutOfStock ? ((product.category === 'Botes' || product.category === 'Botes & Envases' || isIncomingEssence(product)) ? 'En camino' : 'Agotado') : (product.category === 'Logística' || product.unit === 'Servicio') ? 'Disponible' : isEssence ? `${fullRemaining} Onzas · ${halfRemaining} Medias` : `${availableRemaining} ${product.unit === 'Onza' ? 'Oz' : 'Un.'}`}
                     </span>
                     <button
                       type="button"

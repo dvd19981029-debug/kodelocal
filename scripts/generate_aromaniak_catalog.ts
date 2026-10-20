@@ -99,7 +99,8 @@ async function generateAromaniakCatalog() {
     const idxB = BEST_SELLER_ORDER.indexOf(b.sku);
     const orderA = idxA === -1 ? 999 : idxA;
     const orderB = idxB === -1 ? 999 : idxB;
-    return orderA - orderB;
+    if (orderA !== orderB) return orderA - orderB;
+    return Number(a.sku) - Number(b.sku);
   });
 
   // Base64 del logo de Aromaniak
@@ -185,7 +186,8 @@ async function generateAromaniakCatalog() {
       heartNotes: prof?.heartNotes || [],
       baseNotes: prof?.baseNotes || [],
       description: cleanDesc,
-      bottleUri
+      bottleUri,
+      isIncoming: Number(p.stock || 0) <= 0
     };
   });
 
@@ -547,8 +549,8 @@ async function generateAromaniakCatalog() {
             </div>
           </div>
           <div class="header-status-badge">
-            <div class="header-status-title">61 Contratipos Oficiales</div>
-            <div class="header-status-sub">Disponibilidad Inmediata en Tienda</div>
+            <div class="header-status-title">${items.length} Contratipos Oficiales</div>
+            <div class="header-status-sub">Disponibilidad en Tienda y Próximos Ingresos</div>
           </div>
         </div>
 
@@ -570,7 +572,10 @@ async function generateAromaniakCatalog() {
                 <div>
                   <div class="card-top">
                     <span class="code-badge">${item.skuCode}</span>
-                    <span class="gender-tag ${genderClass}">${item.gender}</span>
+                    <div style="display:flex;gap:4px;align-items:center;">
+                      ${item.isIncoming ? `<span style="background:#f59e0b;color:#fff;font-size:7px;font-weight:900;padding:1px 5px;border-radius:2px;letter-spacing:0.6px;text-transform:uppercase;">EN CAMINO</span>` : ''}
+                      <span class="gender-tag ${genderClass}">${item.gender}</span>
+                    </div>
                   </div>
                   <div class="contratipo-name">${item.contratipo}</div>
                   <div class="inspiration-line">
@@ -645,8 +650,10 @@ async function generateAromaniakCatalog() {
   fs.copyFileSync(pdfPath, downloadsPath);
   console.log('Copied to', downloadsPath);
 
-  const artifactPath = '/Users/luis/.gemini/antigravity/brain/df42a998-2501-42cc-9c0f-81717543349b/catalogo-aromaniak.pdf';
-  fs.copyFileSync(pdfPath, artifactPath);
+  const artifactPath = '/Users/luis/.gemini/antigravity/brain/83c36dfc-5c6a-4bfc-b06a-3fd7c5fac554/catalogo-aromaniak.pdf';
+  if (fs.existsSync(path.dirname(artifactPath))) {
+    fs.copyFileSync(pdfPath, artifactPath);
+  }
 
   await prisma.$disconnect();
 }
