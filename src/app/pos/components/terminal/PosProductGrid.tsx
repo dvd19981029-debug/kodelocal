@@ -149,7 +149,10 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
       {/* Rejilla de Productos */}
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3">
         {displayedProducts.map((product) => {
-          const isEssence = product.category === 'Esencias para Perfume';
+          const isEssence =
+            product.category === 'Esencias para Perfume' ||
+            product.category === 'Esencias & Fragancias' ||
+            product.unit === 'Onza';
           const cartFullForProduct = cart
             .filter((i) => i.product.id === product.id && i.presentation !== 'MEDIA_ONZA')
             .reduce((sum, i) => sum + i.quantity, 0);

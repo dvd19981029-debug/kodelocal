@@ -36,6 +36,7 @@ import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { saveGuestOrder, saveGuestShippingProfile, getGuestShippingProfile } from '@/lib/guestOrderStorage';
 import { GiroSearchSelect } from '@/components/common/GiroSearchSelect';
+import { isHalloweenPromoProduct } from '@/lib/halloweenPromo';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -1460,6 +1461,18 @@ export default function CheckoutPage() {
                 </div>
 
                 {discountTotal > 0 && (() => {
+                  let halloweenPromoDiscount = 0;
+                  let vipDiscount = 0;
+                  for (const it of cart) {
+                    const orig = it.originalUnitPrice ?? it.unitPrice;
+                    const itemDisc = Number((Math.max(0, orig - it.unitPrice) * it.quantity).toFixed(2));
+                    if (!it.kitDetails && isHalloweenPromoProduct(it.product)) {
+                      halloweenPromoDiscount = Number((halloweenPromoDiscount + itemDisc).toFixed(2));
+                    } else {
+                      vipDiscount = Number((vipDiscount + itemDisc).toFixed(2));
+                    }
+                  }
+
                   const activeTierLabels: string[] = [];
                   const fmtTier = (label: string, t: any, cPct: any) => {
                     if (t?.name === 'Personalizado' && cPct) return `${label}: ${cPct}%`;
@@ -1475,10 +1488,20 @@ export default function CheckoutPage() {
                   if (supLbl) activeTierLabels.push(supLbl);
                   const discountLabel = activeTierLabels.length > 0 ? activeTierLabels.join(' • ') : 'Tarifa Preferencial';
                   return (
-                    <div className="flex items-center justify-between text-indigo-700 font-bold mb-1">
-                      <span>Descuento VIP ({discountLabel}):</span>
-                      <span>-${discountTotal.toFixed(2)}</span>
-                    </div>
+                    <>
+                      {halloweenPromoDiscount > 0 && (
+                        <div className="flex items-center justify-between text-[#ea580c] font-bold mb-1">
+                          <span>Descuento Promo Halloween (Precio fijo):</span>
+                          <span>-${halloweenPromoDiscount.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {vipDiscount > 0 && (
+                        <div className="flex items-center justify-between text-indigo-700 font-bold mb-1">
+                          <span>Descuento VIP ({discountLabel}):</span>
+                          <span>-${vipDiscount.toFixed(2)}</span>
+                        </div>
+                      )}
+                    </>
                   );
                 })()}
                 {discountTotal > 0 && (
@@ -1512,16 +1535,28 @@ export default function CheckoutPage() {
                   <span className="text-indigo-700 text-lg font-black">${totalConEnvio.toFixed(2)}</span>
                 </div>
 
-                {discountTotal > 0 && (
-                  <div className="mt-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs text-emerald-800">
-                    <span className="font-bold">
-                      Total ahorrado con tu nivel {customer?.tier?.name || customer?.bottleTier?.name || customer?.suppliesTier?.name || 'Preferencial'}:
-                    </span>
-                    <span className="font-black text-emerald-700">
-                      ${discountTotal.toFixed(2)}
-                    </span>
-                  </div>
-                )}
+                {discountTotal > 0 && (() => {
+                  const hasHalloweenItems = cart.some(it => !it.kitDetails && isHalloweenPromoProduct(it.product));
+                  const hasVipItems = cart.some(it => {
+                    const orig = it.originalUnitPrice ?? it.unitPrice;
+                    return orig > it.unitPrice && (it.kitDetails || !isHalloweenPromoProduct(it.product));
+                  });
+                  const savingsLabel = hasHalloweenItems && hasVipItems
+                    ? 'Total ahorrado (Promo Halloween + Nivel VIP):'
+                    : hasHalloweenItems
+                    ? 'Total ahorrado con Promo Halloween:'
+                    : `Total ahorrado con tu nivel ${customer?.tier?.name || customer?.bottleTier?.name || customer?.suppliesTier?.name || 'Preferencial'}:`;
+                  return (
+                    <div className="mt-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs text-emerald-800">
+                      <span className="font-bold">
+                        {savingsLabel}
+                      </span>
+                      <span className="font-black text-emerald-700">
+                        ${discountTotal.toFixed(2)}
+                      </span>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Botón de Confirmación */}

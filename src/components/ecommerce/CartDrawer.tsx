@@ -6,6 +6,7 @@ import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, ArrowLeft, ShieldCheck
 import { useEcommerceCart, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName, formatPerfumeDisplayName } from '@/lib/perfumeNames';
+import { isHalloweenPromoProduct } from '@/lib/halloweenPromo';
 
 export default function CartDrawer() {
   const { 
@@ -319,12 +320,35 @@ export default function CartDrawer() {
                     ${rawSubtotal.toFixed(2)}
                   </span>
                 </div>
-                {discountTotal > 0 && (
-                  <div className="flex items-center justify-between text-[#ea580c] font-bold">
-                    <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> Ahorro Promo / VIP:</span>
-                    <span>-${discountTotal.toFixed(2)}</span>
-                  </div>
-                )}
+                {discountTotal > 0 && (() => {
+                  let halloweenDiscount = 0;
+                  let vipDiscount = 0;
+                  for (const it of cart) {
+                    const orig = it.originalUnitPrice ?? it.unitPrice;
+                    const itemDisc = Number((Math.max(0, orig - it.unitPrice) * it.quantity).toFixed(2));
+                    if (!it.kitDetails && isHalloweenPromoProduct(it.product)) {
+                      halloweenDiscount = Number((halloweenDiscount + itemDisc).toFixed(2));
+                    } else {
+                      vipDiscount = Number((vipDiscount + itemDisc).toFixed(2));
+                    }
+                  }
+                  return (
+                    <>
+                      {halloweenDiscount > 0 && (
+                        <div className="flex items-center justify-between text-[#ea580c] font-bold">
+                          <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> Ahorro Promo Halloween:</span>
+                          <span>-${halloweenDiscount.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {vipDiscount > 0 && (
+                        <div className="flex items-center justify-between text-indigo-700 font-bold">
+                          <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> Ahorro Nivel VIP:</span>
+                          <span>-${vipDiscount.toFixed(2)}</span>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
                 <div className="flex items-center justify-between text-[11px] text-slate-500">
                   <span>Envío a todo el país:</span>
                   <span className="text-emerald-700 font-bold">Calculado al pagar o Retiro Gratis</span>

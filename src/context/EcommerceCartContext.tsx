@@ -42,14 +42,13 @@ export function applyCustomerProductPricing(
   const isHalloweenPromo = isHalloweenPromoProduct(product);
 
   // Para los 10 perfumes de la promoción de Halloween (vigente hasta el 31 de oct 11:59 PM):
-  // 1 Onza fija en $3.30 (Antes $3.75) y ½ Onza fija en $1.85 (Antes $1.90)
-  if (isHalloweenPromo) {
-    if (presentation === 'ONZA_COMPLETA') {
-      return { price: HALLOWEEN_PROMO_PRICE_1OZ, originalPrice: HALLOWEEN_ORIGINAL_PRICE_1OZ };
-    }
+  // 1 Onza fija en $3.30 (Antes $3.75) y ½ Onza fija en $1.85 (Antes $1.90).
+  // No se suma ni acumula con descuento VIP ni precios especiales de cliente.
+  if (isHalloweenPromo && presentation !== 'KIT_PREPARADO' && presentation !== 'KIT_PREPARADO_PLUS') {
     if (presentation === 'MEDIA_ONZA') {
       return { price: HALLOWEEN_PROMO_PRICE_HALF_OZ, originalPrice: HALLOWEEN_ORIGINAL_PRICE_HALF_OZ };
     }
+    return { price: HALLOWEEN_PROMO_PRICE_1OZ, originalPrice: HALLOWEEN_ORIGINAL_PRICE_1OZ };
   }
 
   if (!customer) {
@@ -115,7 +114,11 @@ export function applyCustomerProductPricing(
 }
 
 export function getPresentationsForProduct(product: ProductItem, customer?: any): PresentationOption[] {
-  if (product.category === 'Esencias para Perfume') {
+  const isEssence =
+    product.category === 'Esencias para Perfume' ||
+    product.category === 'Esencias & Fragancias' ||
+    product.unit === 'Onza';
+  if (isEssence) {
     const onzaBase = Number((product.price || 3.75).toFixed(2));
     const mediaOnzaBase = product.priceHalfOunce != null && Number(product.priceHalfOunce) > 0
       ? Number(Number(product.priceHalfOunce).toFixed(2)) 

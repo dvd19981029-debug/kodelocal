@@ -22,6 +22,8 @@ export interface HalloweenPotionInfo {
   id: string;
   sku: string;
   numericSku: string;
+  name: string;
+  officialName: string;
   potionTitle: string;
   potionEmoji: string;
   potionEffect: string;
@@ -38,6 +40,8 @@ export const HALLOWEEN_POTIONS: Record<string, HalloweenPotionInfo> = {
     id: 'esencia-apae-040',
     sku: 'APAE-040',
     numericSku: '40',
+    name: 'Yara F',
+    officialName: 'Dubai F',
     potionTitle: 'Poción de Amor',
     potionEmoji: '💘',
     potionEffect: 'Dulzura envolvente que enamora al primer instante',
@@ -48,6 +52,8 @@ export const HALLOWEEN_POTIONS: Record<string, HalloweenPotionInfo> = {
     id: 'esencia-apae-028',
     sku: 'APAE-028',
     numericSku: '28',
+    name: 'Bad Boy H',
+    officialName: 'Irresistible H',
     potionTitle: 'Poción de Atracción',
     potionEmoji: '🔥',
     potionEffect: 'Fuerza seductora e irresistible donde quiera que vayas',
@@ -58,6 +64,8 @@ export const HALLOWEEN_POTIONS: Record<string, HalloweenPotionInfo> = {
     id: 'esencia-apae-036',
     sku: 'APAE-036',
     numericSku: '36',
+    name: 'Blanc L.12.12 H',
+    officialName: 'Basic White H',
     potionTitle: 'Poción de Energía',
     potionEmoji: '⚡',
     potionEffect: 'Frescura limpia y vitalidad para dominar todo el día',
@@ -68,6 +76,8 @@ export const HALLOWEEN_POTIONS: Record<string, HalloweenPotionInfo> = {
     id: 'esencia-apae-059',
     sku: 'APAE-059',
     numericSku: '59',
+    name: 'Toy Boy H',
+    officialName: 'Black Bear H',
     potionTitle: 'Poción de Magnetismo',
     potionEmoji: '🧲',
     potionEffect: 'Toque especiado y audaz que roba todas las miradas',
@@ -78,6 +88,8 @@ export const HALLOWEEN_POTIONS: Record<string, HalloweenPotionInfo> = {
     id: 'esencia-apae-038',
     sku: 'APAE-038',
     numericSku: '38',
+    name: 'Polo Black H',
+    officialName: 'Night Sky H',
     potionTitle: 'Poción de Misterio Nocturno',
     potionEmoji: '🌙',
     potionEffect: 'Elegancia oscura y enigmática para conquistar la noche',
@@ -88,6 +100,8 @@ export const HALLOWEEN_POTIONS: Record<string, HalloweenPotionInfo> = {
     id: 'esencia-apae-043',
     sku: 'APAE-043',
     numericSku: '43',
+    name: 'Black Opium F',
+    officialName: 'Adictiva F',
     potionTitle: 'Poción de Hechizo Nocturno',
     potionEmoji: '🔮',
     potionEffect: 'Adicción hipnótica de café, vainilla y flores blancas',
@@ -98,6 +112,8 @@ export const HALLOWEEN_POTIONS: Record<string, HalloweenPotionInfo> = {
     id: 'esencia-apae-034',
     sku: 'APAE-034',
     numericSku: '34',
+    name: '212 VIP F',
+    officialName: 'Wife Material F',
     potionTitle: 'Poción de Éxito y Glamour',
     potionEmoji: '👑',
     potionEffect: 'Aura VIP dorada para brillar en cada celebración',
@@ -108,6 +124,8 @@ export const HALLOWEEN_POTIONS: Record<string, HalloweenPotionInfo> = {
     id: 'esencia-apae-022',
     sku: 'APAE-022',
     numericSku: '22',
+    name: 'Chance F',
+    officialName: 'New York Lady F',
     potionTitle: 'Poción de Buena Fortuna',
     potionEmoji: '🍀',
     potionEffect: 'Giro inesperado de suerte, sofisticación y destino',
@@ -118,6 +136,8 @@ export const HALLOWEEN_POTIONS: Record<string, HalloweenPotionInfo> = {
     id: 'esencia-apae-047',
     sku: 'APAE-047',
     numericSku: '47',
+    name: 'Green Tea F',
+    officialName: 'England Forest F',
     potionTitle: 'Poción de Paz y Armonía',
     potionEmoji: '🌿',
     potionEffect: 'Renovación botánica que recarga el espíritu al instante',
@@ -128,6 +148,8 @@ export const HALLOWEEN_POTIONS: Record<string, HalloweenPotionInfo> = {
     id: 'esencia-apae-039',
     sku: 'APAE-039',
     numericSku: '39',
+    name: 'Ralph F',
+    officialName: 'CowBoy Girl F',
     potionTitle: 'Poción de Encanto y Alegría',
     potionEmoji: '✨',
     potionEffect: 'Chispa frutal y radiante que ilumina cualquier lugar',
@@ -139,28 +161,47 @@ export const HALLOWEEN_POTIONS: Record<string, HalloweenPotionInfo> = {
 export const HALLOWEEN_TOP10_PRODUCT_IDS = new Set<string>(Object.keys(HALLOWEEN_POTIONS));
 
 export const HALLOWEEN_TOP10_SKUS = new Set<string>(
-  Object.values(HALLOWEEN_POTIONS).flatMap((p) => [p.sku, p.numericSku])
+  Object.values(HALLOWEEN_POTIONS).flatMap((p) => [p.sku, p.numericSku, `0${p.numericSku}`])
 );
 
 export function getHalloweenPotionInfo(
-  product?: { id?: string | null; sku?: string | null } | null
+  product?: { id?: string | null; sku?: string | null; name?: string | null; officialName?: string | null } | null
 ): HalloweenPotionInfo | null {
   if (!isHalloweenSeasonActive() || !product) return null;
-  if (product.id && HALLOWEEN_POTIONS[product.id]) {
-    return HALLOWEEN_POTIONS[product.id];
+  if (product.id) {
+    const cleanId = String(product.id)
+      .trim()
+      .replace(/-(ONZA_COMPLETA|MEDIA_ONZA|1_OZ|2_OZ|UNIDAD)$/i, '');
+    if (HALLOWEEN_POTIONS[cleanId]) {
+      return HALLOWEEN_POTIONS[cleanId];
+    }
   }
   if (product.sku) {
-    const skuClean = String(product.sku).trim().toUpperCase();
+    const skuClean = String(product.sku).trim().toUpperCase().replace(/^#/, '');
+    const numericClean = skuClean.replace(/^APAE-0*/i, '').replace(/^0+/, '');
     const found = Object.values(HALLOWEEN_POTIONS).find(
-      (p) => p.sku === skuClean || p.numericSku === skuClean
+      (p) => p.sku === skuClean || p.numericSku === skuClean || p.numericSku === numericClean
     );
     if (found) return found;
+  }
+  const prodOfficial = String(product.officialName || '').trim().toLowerCase();
+  const prodName = String(product.name || '').trim().toLowerCase();
+  if (prodOfficial || prodName) {
+    const foundByName = Object.values(HALLOWEEN_POTIONS).find((p) => {
+      const targetOff = p.officialName.toLowerCase();
+      const targetName = p.name.toLowerCase();
+      return (
+        (prodOfficial && (prodOfficial === targetOff || prodOfficial === targetName)) ||
+        (prodName && (prodName === targetName || prodName === targetOff))
+      );
+    });
+    if (foundByName) return foundByName;
   }
   return null;
 }
 
 export function isHalloweenPromoProduct(
-  product?: { id?: string | null; sku?: string | null } | null
+  product?: { id?: string | null; sku?: string | null; name?: string | null; officialName?: string | null } | null
 ): boolean {
   return getHalloweenPotionInfo(product) !== null;
 }
