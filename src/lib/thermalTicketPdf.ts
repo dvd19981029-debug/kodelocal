@@ -39,28 +39,26 @@ function renderTicketToDoc(doc: any, ticket: SaleRecord): number {
   doc.setFont('courier', 'bold');
   doc.setFontSize(12);
   doc.text('AROMANIAK SV', centerX, y, { align: 'center' });
-  y += 4.2;
-
-  doc.setFont('courier', 'normal');
-  doc.setFontSize(7.5);
-  doc.text('VENTA DE PERFUMERIA Y FRAGANCIAS', centerX, y, { align: 'center' });
-  y += 3.3;
-
-  doc.setFontSize(7);
-  doc.text('CENTRO COMERCIAL EL ROSAL, CALLE EL PROGRESO', centerX, y, { align: 'center' });
-  y += 3;
-
-  doc.text('SAN SALVADOR, EL SALVADOR', centerX, y, { align: 'center' });
-  y += 3.2;
+  y += 3.8;
 
   doc.setFont('courier', 'bold');
   doc.setFontSize(7.5);
-  doc.text('AROMANIAK S.A. DE C.V.', centerX, y, { align: 'center' });
+  doc.text('GRUPO KODE, S.A.S. DE C.V.', centerX, y, { align: 'center' });
   y += 3.2;
 
   doc.setFont('courier', 'normal');
+  doc.setFontSize(7);
+  doc.text('NIT: 0623-290726-106-9   NRC: 390357-8', centerX, y, { align: 'center' });
+  y += 3.1;
+
   doc.setFontSize(6.5);
-  doc.text('GIRO: VENTA AL POR MENOR DE PERFUMERIA Y COSMETICOS', centerX, y, { align: 'center' });
+  doc.text('GIRO: VENTA AL POR MENOR DE ARTICULOS DE BAZAR', centerX, y, { align: 'center' });
+  y += 3.0;
+
+  doc.text('CL. LAS VIOLETAS Y 39 AV. NORTE #33, URB. UNIVERSITARIA', centerX, y, { align: 'center' });
+  y += 2.9;
+
+  doc.text('NIVEL 3, SAN SALVADOR CENTRO, SAN SALVADOR', centerX, y, { align: 'center' });
   y += 3.5;
 
   drawDashedDivider(y);

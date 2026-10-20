@@ -45,13 +45,11 @@ export default function ThermalTicket({ ticket }: ThermalTicketProps) {
             {/* 1. ENCABEZADO DEL EMISOR */}
             <div style={{ textAlign: 'center', marginBottom: '4px' }}>
               <div style={{ fontWeight: 'bold', fontSize: '13px', letterSpacing: '0.5px' }}>AROMANIAK SV</div>
-              <div style={{ fontSize: '9px', marginTop: '2px' }}>VENTA DE PERFUMERÍA Y FRAGANCIAS</div>
-              <div style={{ fontSize: '9px' }}>COLONIA ESCALÓN, CALLE PRINCIPAL #123</div>
-              <div style={{ fontSize: '9px' }}>MUNICIPIO Y DEPARTAMENTO DE</div>
-              <div style={{ fontSize: '9px' }}>SAN SALVADOR, EL SALVADOR</div>
-              <div style={{ fontSize: '9px', marginTop: '1px' }}>Iva DL 245678-9 Nit: 0614-120590-101-2</div>
-              <div style={{ fontSize: '9px', fontWeight: 'bold' }}>AROMANIAK S.A. DE C.V.</div>
-              <div style={{ fontSize: '8.5px', marginTop: '1px' }}>GIRO: VENTA AL POR MENOR DE PERFUMERÍA Y COSMÉTICOS</div>
+              <div style={{ fontSize: '9px', fontWeight: 'bold', marginTop: '2px' }}>GRUPO KODE, S.A.S. DE C.V.</div>
+              <div style={{ fontSize: '9px', marginTop: '1px' }}>NIT: 0623-290726-106-9 • NRC: 390357-8</div>
+              <div style={{ fontSize: '8.5px', marginTop: '1px' }}>GIRO: VENTA AL POR MENOR DE ARTÍCULOS DE BAZAR</div>
+              <div style={{ fontSize: '8.5px', marginTop: '1px' }}>CL. LAS VIOLETAS Y 39 AV. NORTE #33, URB. UNIVERSITARIA</div>
+              <div style={{ fontSize: '8.5px' }}>NIVEL 3, SAN SALVADOR CENTRO, SAN SALVADOR</div>
             </div>
 
             <div style={{ borderTop: '1px dashed #000', margin: '3px 0' }} />
