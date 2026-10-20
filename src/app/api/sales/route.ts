@@ -1148,7 +1148,7 @@ export async function PATCH(request: Request) {
             carrier: 'C807 Express',
             status: 'IN_TRANSIT',
             orderTotal: Number(sale.total || 0),
-            deliveryCost: 2.99,
+            deliveryCost: 2.90,
             deliveryNotes: deliveryReference || `Pedido POS #${sale.saleNumber}`,
           },
           update: {

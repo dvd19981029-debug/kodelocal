@@ -200,8 +200,8 @@ export default function CheckoutPage() {
     }
   }, [completedOrder]);
 
-  // Cálculo del costo de envío: $0 si retira en local; $2.99 SS/La Libertad o $5.00 otros
-  const shippingCost = metodoEntrega === 'RETIRO' ? 0 : (departamento === 'San Salvador' || departamento === 'La Libertad' ? 2.99 : 5.00);
+  // Cálculo del costo de envío: $0 si retira en local; $2.90 envío a domicilio
+  const shippingCost = metodoEntrega === 'RETIRO' ? 0 : 2.90;
   const totalConEnvio = Number((subtotal + (cart.length > 0 ? shippingCost : 0)).toFixed(2));
 
   const handleSubmitOrder = async (e: React.FormEvent) => {

@@ -172,7 +172,7 @@ export function mapSaleToDomicilioOrder(s: any): PosDomicilioOrder | null {
       it.productId === 'ENVIO-DOM' ||
       String(it.productName || it.name || '').toLowerCase().includes('envío a domicilio')
   );
-  const shippingCost = envioItem ? Number(envioItem.total || 2.99) : Number(s.shippingCost || 0);
+  const shippingCost = envioItem ? Number(envioItem.total || 2.90) : Number(s.shippingCost || 0);
 
   const rawDept = String(
     dom.department || cli.departamento || cust.department || 'San Salvador'
