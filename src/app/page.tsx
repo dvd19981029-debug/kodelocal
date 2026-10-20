@@ -533,7 +533,7 @@ export default function EcommerceHomePage() {
                 onClick={() => handleSelectCategory('Pociones de la Bruja')}
                 className="clay-tab-item clay-tab-active flex-[1.3] sm:flex-[1.4] py-2 sm:py-2.5 px-2.5 sm:px-4 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300"
               >
-                <span className="truncate">🧙‍♀️ La Bruja</span>
+                <span className="truncate">La Bruja</span>
               </button>
             )}
 
@@ -564,7 +564,6 @@ export default function EcommerceHomePage() {
             <div className="flex items-center justify-between gap-2 px-1 pt-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-base sm:text-xl font-black text-slate-900 tracking-tight flex items-center gap-1.5">
-                  {isHalloweenSeasonActive() && <span>🎃</span>}
                   <span>
                     {selectedCategory === 'Esencias para Perfume' 
                       ? (selectedGender === 'Todos'

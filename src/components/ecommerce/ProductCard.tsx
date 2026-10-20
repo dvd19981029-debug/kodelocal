@@ -256,7 +256,6 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
             {isHalloweenPromo && !isOutOfStock && (
               <div className="absolute bottom-2 left-2 z-10 pointer-events-none">
                 <span className="bg-slate-950/90 text-amber-300 border border-orange-400/80 text-[8px] sm:text-[9px] font-black py-0.5 px-1.5 rounded-md shadow-md flex items-center gap-0.5">
-                  <span>🎃</span>
                   <span>{selectedPresentation === 'MEDIA_ONZA' ? '½ Oz a $1.85' : '1 Oz a $3.30'}</span>
                 </span>
               </div>
@@ -374,7 +373,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                       }`}
                     >
                       <span className="text-[10.5px] sm:text-[11.5px] leading-tight font-extrabold">
-                        {opt.id === 'MEDIA_ONZA' ? '½ Onza' : isHalloweenPromo ? '🎃 1 Onza' : '1 Onza'}
+                        {opt.id === 'MEDIA_ONZA' ? '½ Onza' : '1 Onza'}
                       </span>
                     </button>
                   );
@@ -453,7 +452,6 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                   <span>Sin existencias</span>
                 ) : (
                   <>
-                    <span className="text-xs leading-none" aria-hidden="true">🎃</span>
                     <ShoppingBag className="w-3.5 h-3.5" />
                     <span>Agregar al carrito</span>
                   </>

@@ -321,7 +321,7 @@ export default function CartDrawer() {
                 </div>
                 {discountTotal > 0 && (
                   <div className="flex items-center justify-between text-[#ea580c] font-bold">
-                    <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> 🎃 Ahorro Promo / VIP:</span>
+                    <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> Ahorro Promo / VIP:</span>
                     <span>-${discountTotal.toFixed(2)}</span>
                   </div>
                 )}
@@ -341,7 +341,7 @@ export default function CartDrawer() {
                 onClick={() => setIsCartOpen(false)}
                 className="w-full py-3 text-xs sm:text-sm font-black rounded-xl flex items-center justify-center gap-2 bg-gradient-to-r from-[#ea580c] via-[#f97316] to-[#d97706] text-white border border-orange-300/60 shadow-[0_4px_16px_rgba(234,88,12,0.4)] tracking-wide cursor-pointer active:scale-95"
               >
-                <span>🎃 Proceder a pago seguro</span>
+                <span>Proceder a pago seguro</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
 

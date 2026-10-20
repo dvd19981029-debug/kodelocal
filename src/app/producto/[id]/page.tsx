@@ -412,9 +412,7 @@ export default function ProductDetailPage() {
                 )}
                 {potionInfo && (
                   <span className={`bg-gradient-to-r ${potionInfo.potionColorClass} text-white border border-amber-200 text-[10px] sm:text-xs font-black py-1 px-2.5 rounded-xl shadow-md tracking-wider uppercase flex items-center gap-1.5`}>
-                    <span>{potionInfo.potionEmoji}</span>
                     <span>{potionInfo.potionTitle}</span>
-                    <span>🦇</span>
                   </span>
                 )}
               </div>
@@ -513,7 +511,7 @@ export default function ProductDetailPage() {
                       Ahora ${(activeOption.price * quantity).toFixed(2)}
                     </span>
                     <span className="text-[11px] font-black bg-[#ea580c] text-white px-2 py-0.5 rounded-lg">
-                      🎃 Promo Halloween
+                      Promo Halloween
                     </span>
                   </div>
                 ) : (
@@ -576,7 +574,7 @@ export default function ProductDetailPage() {
                       >
                         <div className="flex items-center justify-between w-full mb-1">
                           <span className="text-xs font-black text-slate-900">
-                            {pres.id === 'ONZA_COMPLETA' && isHalloweenPromo ? `🎃 ${pres.name}` : pres.name}
+                            {pres.name}
                           </span>
                           {isSelected ? (
                             <span className="w-4 h-4 rounded-full bg-[#ea580c] text-white flex items-center justify-center text-[10px] font-bold">
@@ -669,13 +667,11 @@ export default function ProductDetailPage() {
                     </>
                   ) : isAlreadyInCart ? (
                     <>
-                      <span>🎃</span>
                       <ShoppingBag className="w-4 h-4" />
                       <span>Actualizar Carrito • ${(activeOption.price * quantity).toFixed(2)}</span>
                     </>
                   ) : (
                     <>
-                      <span>🎃</span>
                       <ShoppingBag className="w-4 h-4" />
                       <span>Agregar al Carrito • ${(activeOption.price * quantity).toFixed(2)}</span>
                     </>

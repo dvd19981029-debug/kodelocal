@@ -322,7 +322,6 @@ export function WitchPotionsEventSection({
         )}
 
         <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#ea580c] via-[#d97706] to-[#b45309] text-white border border-amber-200/80 text-[10.5px] sm:text-xs font-black shadow-md">
-          <span>🎃</span>
           <span>1 OZ $3.30 • ½ OZ $1.85 • HASTA 31 OCT 11:59 PM</span>
         </div>
       </div>
@@ -342,7 +341,7 @@ export function WitchPotionsEventSection({
                 <AnimatedWitchCauldronSVG className="w-36 h-36 sm:w-44 sm:h-44" />
               </div>
               <span className="absolute -bottom-2 bg-gradient-to-r from-[#facc15] via-[#f97316] to-[#ea580c] text-slate-950 font-black text-[10px] sm:text-xs px-3.5 py-1 rounded-full border-2 border-white shadow-lg uppercase tracking-wider coven-pulse-badge">
-                🧙‍♀️ Grimorio de 10 Pociones
+                Grimorio de 10 Pociones
               </span>
             </div>
           </div>
@@ -370,7 +369,7 @@ export function WitchPotionsEventSection({
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 sm:gap-3 pt-0.5">
               <div className="bg-[#120623]/90 border-2 border-amber-400/80 rounded-2xl px-3.5 py-2 flex items-center gap-3 shadow-md">
                 <div>
-                  <span className="text-[9.5px] uppercase font-black text-amber-300 block">🎃 Frasco 1 Onza</span>
+                  <span className="text-[9.5px] uppercase font-black text-amber-300 block">Frasco 1 Onza</span>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-[11px] font-bold text-rose-300/90 line-through decoration-rose-500">
                       ${HALLOWEEN_ORIGINAL_PRICE_1OZ.toFixed(2)}
@@ -382,7 +381,7 @@ export function WitchPotionsEventSection({
                 </div>
                 <div className="h-8 w-[1.5px] bg-purple-700/70" />
                 <div>
-                  <span className="text-[9.5px] uppercase font-black text-orange-300 block">🧪 Frasco ½ Onza</span>
+                  <span className="text-[9.5px] uppercase font-black text-orange-300 block">Frasco ½ Onza</span>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-[11px] font-bold text-rose-300/90 line-through decoration-rose-500">
                       ${HALLOWEEN_ORIGINAL_PRICE_HALF_OZ.toFixed(2)}
@@ -404,7 +403,7 @@ export function WitchPotionsEventSection({
                 <span>
                   {cauldronStage === 'mixing' || cauldronStage === 'exploding'
                     ? 'Mezclando el Caldero...'
-                    : '🔮 ¡Revolver el Caldero de la Suerte!'}
+                    : '¡Revolver el Caldero de la Suerte!'}
                 </span>
               </button>
             </div>
@@ -412,19 +411,15 @@ export function WitchPotionsEventSection({
             {stirredComboProducts.length === 3 && cauldronStage === 'idle' && (
               <div className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-2 rounded-2xl bg-purple-950/95 border border-amber-300 text-xs font-bold text-amber-100">
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span>🔮 Último Combo Conjurado (3 Categorías):</span>
-                  {stirredComboProducts.map((p) => {
-                    const info = getHalloweenPotionInfo(p);
-                    return (
-                      <span
-                        key={p.id}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#230d42] border border-orange-400/60 text-amber-200 font-black text-[11px]"
-                      >
-                        <span>{info?.potionEmoji}</span>
-                        <span>{formatPerfumeDisplayName(p)}</span>
-                      </span>
-                    );
-                  })}
+                  <span>Último Combo Conjurado (3 Categorías):</span>
+                  {stirredComboProducts.map((p) => (
+                    <span
+                      key={p.id}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#230d42] border border-orange-400/60 text-amber-200 font-black text-[11px]"
+                    >
+                      <span>{formatPerfumeDisplayName(p)}</span>
+                    </span>
+                  ))}
                   <span className="text-amber-300 font-black ml-1">
                     • Total Combo: ${comboTotalPromo.toFixed(2)}
                   </span>
@@ -458,10 +453,10 @@ export function WitchPotionsEventSection({
 
         <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5">
           {[
-            { id: 'todas', label: '🧪 Todas (10)' },
-            { id: 'amor', label: '💘 Amor y Atracción' },
-            { id: 'energia', label: '⚡ Energía y Éxito' },
-            { id: 'misterio', label: '🌙 Misterio y Noche' },
+            { id: 'todas', label: 'Todas (10)' },
+            { id: 'amor', label: 'Amor y Atracción' },
+            { id: 'energia', label: 'Energía y Éxito' },
+            { id: 'misterio', label: 'Misterio y Noche' },
           ].map((tab) => {
             const active = activeFilter === tab.id;
             return (
@@ -512,12 +507,12 @@ export function WitchPotionsEventSection({
               className="relative flex flex-col items-center justify-center text-center max-w-md w-full p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-[#1e093b] via-[#140529] to-[#0c031a] border-2 border-amber-400 shadow-[0_0_60px_rgba(249,115,22,0.55)]"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Íconos orbitando hacia el caldero */}
+              {/* Orbes mágicos orbitando hacia el caldero */}
               <div className="relative w-52 h-52 sm:w-60 sm:h-60 flex items-center justify-center">
                 <div className="absolute inset-0 rounded-full border-2 border-dashed border-amber-400/40 cauldron-swirl-orbit pointer-events-none">
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-2xl">💘</span>
-                  <span className="absolute bottom-3 -left-2 text-2xl">⚡</span>
-                  <span className="absolute bottom-3 -right-2 text-2xl">🌙</span>
+                  <span className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-pink-500 shadow-[0_0_10px_#ec4899]" />
+                  <span className="absolute bottom-3 -left-1 w-4 h-4 rounded-full bg-amber-400 shadow-[0_0_10px_#facc15]" />
+                  <span className="absolute bottom-3 -right-1 w-4 h-4 rounded-full bg-purple-500 shadow-[0_0_10px_#a855f7]" />
                 </div>
 
                 {/* SVG del Caldero Mezclándose con Cucharón Mágico */}
@@ -605,15 +600,18 @@ export function WitchPotionsEventSection({
                   <circle cx="88" cy="48" r="5" fill="#4ade80" />
                   <circle cx="115" cy="46" r="5.5" fill="#fb923c" />
 
-                  {/* Símbolo en la panza del caldero */}
-                  <text x="100" y="130" textAnchor="middle" fontSize="26">
-                    🔮
-                  </text>
+                  {/* Emblema vectorial en la panza del caldero */}
+                  <polygon
+                    points="100,108 106,120 118,122 109,130 111,142 100,136 89,142 91,130 82,122 94,120"
+                    fill="#facc15"
+                    stroke="#ea580c"
+                    strokeWidth="1.5"
+                  />
                 </svg>
               </div>
 
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-300 text-amber-300 text-[11px] font-black uppercase tracking-wider mb-2">
-                🧙‍♀️ Alquimia en Proceso
+                Alquimia en Proceso
               </span>
               <h3 className="text-xl sm:text-2xl font-black text-white leading-tight">
                 ¡Mezclando el Caldero de la Suerte!
@@ -652,22 +650,22 @@ export function WitchPotionsEventSection({
                   style={{ animationDelay: '0.08s' }}
                 />
 
-                {/* Núcleo explosivo con partículas mágicas */}
-                <div className="relative z-10 flex flex-col items-center justify-center">
-                  <div className="text-6xl sm:text-7xl leading-none">💥</div>
-                  <div className="flex items-center gap-3 mt-2 text-3xl sm:text-4xl">
-                    <span>💘</span>
-                    <span>⚡</span>
-                    <span>🌙</span>
-                  </div>
-                </div>
+                {/* Núcleo explosivo vectorial */}
+                <svg viewBox="0 0 120 120" className="relative z-10 w-28 h-28 sm:w-36 sm:h-36">
+                  <polygon
+                    points="60,6 73,40 110,28 84,56 114,80 76,78 78,114 56,84 24,106 38,70 6,58 42,46 28,14 56,36"
+                    fill="#fef08a"
+                    stroke="#ea580c"
+                    strokeWidth="3"
+                  />
+                </svg>
               </div>
 
               <h3 className="relative z-10 text-2xl sm:text-4xl font-black text-amber-300 uppercase tracking-wide drop-shadow-[0_4px_20px_rgba(249,115,22,0.9)]">
-                ¡BOOM MÁGICO!
+                ¡COMBO CONJURADO!
               </h3>
               <p className="relative z-10 text-sm sm:text-base font-black text-white mt-1">
-                ¡Tu Combo de 3 Esencias de la Suerte ha nacido!
+                ¡Tu Trío de 3 Esencias de la Suerte está listo!
               </p>
             </div>
           )}
@@ -691,8 +689,7 @@ export function WitchPotionsEventSection({
               {/* Encabezado del Combo Conjurado */}
               <div className="text-center max-w-2xl mx-auto space-y-1.5 pr-6 sm:pr-0">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-[#ea580c] via-[#f97316] to-[#d97706] text-white text-[10px] sm:text-xs font-black uppercase tracking-wider border border-amber-200 shadow-sm">
-                  <span>💥</span>
-                  <span>COMBO MÁGICO DE 3 CATEGORÍAS • PROMO HALLOWEEN</span>
+                  <span>COMBO DE 3 CATEGORÍAS • PROMO HALLOWEEN</span>
                 </div>
                 <h3 className="text-lg sm:text-2xl lg:text-3xl font-black text-white leading-tight">
                   ¡El Caldero conjuró tu{' '}
@@ -718,7 +715,7 @@ export function WitchPotionsEventSection({
                       : 'bg-purple-950/80 text-purple-200 border-purple-700 hover:bg-purple-900'
                   }`}
                 >
-                  🎃 Combo en 1 Onza (${HALLOWEEN_PROMO_PRICE_1OZ.toFixed(2)} c/u)
+                  Combo en 1 Onza (${HALLOWEEN_PROMO_PRICE_1OZ.toFixed(2)} c/u)
                 </button>
                 <button
                   type="button"
@@ -729,7 +726,7 @@ export function WitchPotionsEventSection({
                       : 'bg-purple-950/80 text-purple-200 border-purple-700 hover:bg-purple-900'
                   }`}
                 >
-                  🧪 Combo en ½ Onza (${HALLOWEEN_PROMO_PRICE_HALF_OZ.toFixed(2)} c/u)
+                  Combo en ½ Onza (${HALLOWEEN_PROMO_PRICE_HALF_OZ.toFixed(2)} c/u)
                 </button>
               </div>
 
@@ -742,10 +739,10 @@ export function WitchPotionsEventSection({
                   const pImg = getProductImage(prod);
                   const categoryLabel =
                     pInfo.categoryTag === 'amor'
-                      ? '💘 Categoría: Amor y Atracción'
+                      ? 'Categoría: Amor y Atracción'
                       : pInfo.categoryTag === 'energia'
-                      ? '⚡ Categoría: Energía y Éxito'
-                      : '🌙 Categoría: Misterio y Noche';
+                      ? 'Categoría: Energía y Éxito'
+                      : 'Categoría: Misterio y Noche';
 
                   return (
                     <div
@@ -762,7 +759,6 @@ export function WitchPotionsEventSection({
                         <div
                           className={`w-full rounded-xl bg-gradient-to-r ${pInfo.potionColorClass} text-white px-2.5 py-1 mb-2 border border-amber-200/60 flex items-center justify-center gap-1`}
                         >
-                          <span className="text-sm leading-none">{pInfo.potionEmoji}</span>
                           <span className="text-[10.5px] font-black uppercase tracking-tight truncate">
                             {pInfo.potionTitle}
                           </span>
@@ -826,7 +822,7 @@ export function WitchPotionsEventSection({
                   </div>
                   <div className="flex items-baseline justify-center sm:justify-start gap-2 mt-1">
                     <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-200">
-                      🎃 TOTAL DEL COMBO (3 ESENCIAS):
+                      TOTAL DEL COMBO (3 ESENCIAS):
                     </span>
                     <span className="text-2xl sm:text-3xl font-black text-amber-300 drop-shadow-[0_2px_10px_rgba(250,204,21,0.45)]">
                       ${comboTotalPromo.toFixed(2)}
@@ -950,12 +946,9 @@ function PotionEventCard({
         <div
           className={`w-full rounded-xl sm:rounded-2xl bg-gradient-to-r ${potionInfo.potionColorClass} text-white px-2 sm:px-2.5 py-1.5 mb-2 shadow-sm border border-amber-200/60 flex items-center justify-between gap-1`}
         >
-          <div className="flex items-center gap-1 min-w-0">
-            <span className="text-xs sm:text-base leading-none shrink-0">{potionInfo.potionEmoji}</span>
-            <span className="text-[9.5px] sm:text-xs font-black uppercase tracking-tight truncate">
-              {potionInfo.potionTitle}
-            </span>
-          </div>
+          <span className="text-[9.5px] sm:text-xs font-black uppercase tracking-tight truncate">
+            {potionInfo.potionTitle}
+          </span>
           <span className="text-[8.5px] sm:text-[9.5px] font-black bg-slate-950/50 text-amber-200 px-1.5 py-0.5 rounded-md shrink-0 border border-white/20">
             #{index + 1}
           </span>
@@ -1013,9 +1006,8 @@ function PotionEventCard({
 
           {/* Etiqueta flotante de Oferta Halloween */}
           <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-center justify-between z-10 pointer-events-none">
-            <span className="bg-gradient-to-r from-[#1e1b4b]/95 to-[#7c2d12]/95 text-amber-300 border border-amber-400/80 text-[8px] sm:text-[9px] font-black px-1.5 sm:px-2 py-0.5 rounded-md shadow-sm flex items-center gap-0.5">
-              <span>🎃</span>
-              <span>HECHIZO ACTIVO</span>
+            <span className="bg-gradient-to-r from-[#1e1b4b]/95 to-[#7c2d12]/95 text-amber-300 border border-amber-400/80 text-[8px] sm:text-[9px] font-black px-1.5 sm:px-2 py-0.5 rounded-md shadow-sm">
+              HECHIZO ACTIVO
             </span>
           </div>
         </Link>
@@ -1036,7 +1028,7 @@ function PotionEventCard({
           {/* Poder / Efecto de la Poción */}
           <div className="rounded-lg sm:rounded-xl bg-purple-950/90 border border-purple-600/60 px-2 py-1">
             <p className="text-[9.5px] sm:text-[10.5px] font-bold text-amber-200/95 leading-tight line-clamp-2">
-              ✨ {potionInfo.potionEffect}
+              {potionInfo.potionEffect}
             </p>
           </div>
         </div>
@@ -1124,7 +1116,6 @@ function PotionEventCard({
               <span>Agotado</span>
             ) : (
               <>
-                <span>🧪</span>
                 <ShoppingBag className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
                 <span className="truncate">Agregar Poción</span>
               </>

@@ -68,21 +68,18 @@ export default function EcommerceHeader() {
               }`}
             >
               <User className={`w-3.5 h-3.5 shrink-0 ${halloweenActive ? 'text-orange-600' : 'text-purple-600'}`} />
-              <span className="hidden sm:inline font-black">{halloweenActive ? '🎃 Mi Cuenta' : 'Mi Cuenta'}</span>
+              <span className="hidden sm:inline font-black">Mi Cuenta</span>
             </button>
           )}
         </div>
 
-        {/* ================= CENTRO: Logo oficial de Aromaniak con detalle Halloween ================= */}
+        {/* ================= CENTRO: Logo oficial de Aromaniak ================= */}
         <div className="flex items-center justify-center">
           <Link 
             href="/" 
             onClick={handleLogoClick}
             className="inline-flex items-center justify-center gap-1.5 group transition-transform active:scale-95 py-0.5 cursor-pointer relative"
           >
-            {halloweenActive && (
-              <span className="hidden sm:inline-block text-lg select-none -rotate-12 group-hover:rotate-0 transition-transform" aria-hidden="true">🕸️</span>
-            )}
             <img
               src="/images/logo.png"
               alt="Aromaniak"
@@ -90,9 +87,6 @@ export default function EcommerceHeader() {
               decoding="async"
               className="h-11 sm:h-14 md:h-16 w-auto object-contain drop-shadow-sm group-hover:scale-105 transition-transform"
             />
-            {halloweenActive && (
-              <span className="hidden sm:inline-block text-lg select-none rotate-12 group-hover:rotate-0 transition-transform" aria-hidden="true">🎃</span>
-            )}
           </Link>
         </div>
 
@@ -110,7 +104,6 @@ export default function EcommerceHeader() {
                 : 'shadow-[2px_4px_12px_rgba(234,88,12,0.35)] hover:brightness-105 active:scale-95'
             }`}
           >
-            {halloweenActive && <span className="text-xs leading-none select-none" aria-hidden="true">🎃</span>}
             <ShoppingBag className={`w-4 h-4 text-white transition-transform duration-300 ${isCartPulsing ? '-translate-y-0.5 scale-110' : ''}`} />
             <span className="text-xs font-black hidden sm:inline text-white">Carrito</span>
             {totalItems > 0 && (

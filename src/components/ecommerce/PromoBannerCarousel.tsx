@@ -280,7 +280,7 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
                     {/* Columna Izquierda: Textos de la Bruja Aromaniaka */}
                     <div className="relative z-10 flex-1 min-w-0 pr-2 sm:pr-4 space-y-1.5 sm:space-y-3">
                       <div className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-orange-500/30 border border-amber-300/60 text-amber-200 text-[8.5px] sm:text-xs font-black uppercase tracking-wider">
-                        <span>🧪 EVENTO HALLOWEEN • HASTA EL 31 DE OCTUBRE</span>
+                        <span>EVENTO HALLOWEEN • HASTA EL 31 DE OCTUBRE</span>
                       </div>
 
                       <h2 className="text-sm sm:text-2xl md:text-3xl font-black leading-[1.12] tracking-tight text-white drop-shadow-sm">
@@ -291,9 +291,9 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
                       </h2>
 
                       <div className="hidden xs:flex flex-wrap items-center gap-1 sm:gap-1.5 text-[9px] sm:text-xs font-extrabold text-orange-100/95">
-                        <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-slate-950/45 border border-white/15">💘 Poción de Amor</span>
-                        <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-slate-950/45 border border-white/15">🔥 Poción de Atracción</span>
-                        <span className="hidden md:inline-block px-2 py-0.5 rounded-md bg-slate-950/45 border border-white/15">⚡ Poción de Energía</span>
+                        <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-slate-950/45 border border-white/15">Poción de Amor</span>
+                        <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-slate-950/45 border border-white/15">Poción de Atracción</span>
+                        <span className="hidden md:inline-block px-2 py-0.5 rounded-md bg-slate-950/45 border border-white/15">Poción de Energía</span>
                       </div>
 
                       {/* Precios de las Pociones: 1 Oz $3.30 y 1/2 Oz $1.85 */}
@@ -590,16 +590,13 @@ function WitchFlightTransitionOverlay() {
           <path d="M148 70 L182 76" stroke="#fde68a" strokeWidth="5" strokeLinecap="round" />
           <circle cx="192" cy="74" r="11" fill="#ec4899" stroke="#fef08a" strokeWidth="2.5" />
           <rect x="189" y="59" width="6" height="5" rx="1.5" fill="#fde047" />
-          <text x="192" y="78" textAnchor="middle" fontSize="11">🧪</text>
         </svg>
       </div>
 
       {/* Cartel inferior flotante durante el vuelo */}
       <div className="absolute bottom-10 sm:bottom-14 left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-2xl bg-[#140529]/95 border-2 border-amber-400 text-center shadow-lg">
         <p className="text-xs sm:text-base font-black text-amber-300 uppercase tracking-wider flex items-center gap-2 whitespace-nowrap">
-          <span>🧙‍♀️</span>
           <span>¡Abriendo el Laboratorio de la Bruja Aromaniaka!</span>
-          <span>🦇</span>
         </p>
       </div>
     </div>

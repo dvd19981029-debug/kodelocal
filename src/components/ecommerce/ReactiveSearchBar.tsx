@@ -139,7 +139,7 @@ export default function ReactiveSearchBar({
                   <input
                     ref={inputRef}
                     type="text"
-                    placeholder="🎃 Buscar perfume: Nombre del perfume..."
+                    placeholder="Buscar perfume: Nombre del perfume..."
                     value={searchQuery}
                     onChange={(e) => {
                       setSearchQuery(e.target.value);
@@ -185,7 +185,6 @@ export default function ReactiveSearchBar({
                     : 'active:scale-95'
                 }`}
               >
-                <span className="text-xs leading-none select-none" aria-hidden="true">🎃</span>
                 <ShoppingBag className={`w-4 h-4 text-white transition-transform duration-300 ${isCartPulsing ? '-translate-y-0.5 scale-110' : ''}`} />
                 <span className="text-xs font-black hidden sm:inline text-white">Carrito</span>
                 {totalItems > 0 && (

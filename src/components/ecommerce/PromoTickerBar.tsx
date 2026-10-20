@@ -52,7 +52,7 @@ export default function PromoTickerBar() {
     ? [
         {
           id: 'halloween-promo',
-          badge: '🎃 HALLOWEEN',
+          badge: 'HALLOWEEN',
           icon: Sparkles,
           text: 'Especial de Halloween hasta el 31 de octubre: Pociones seleccionadas',
           highlight: '1 Onza a $3.30 y ½ Onza a $1.85',
@@ -94,7 +94,6 @@ export default function PromoTickerBar() {
                       </>
                     )}
                   </span>
-                  <span className="text-amber-100/80 text-xs ml-6" aria-hidden="true">🎃 🦇 🕸️</span>
                 </div>
               );
             })}
@@ -121,7 +120,6 @@ export default function PromoTickerBar() {
                       </>
                     )}
                   </span>
-                  <span className="text-amber-100/80 text-xs ml-6" aria-hidden="true">🎃 🦇 🕸️</span>
                 </div>
               );
             })}
