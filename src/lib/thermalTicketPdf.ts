@@ -20,7 +20,7 @@ function renderTicketToDoc(doc: any, ticket: SaleRecord): number {
   // se dejan 100% en blanco (bytes 0x00 NUL). Como jsPDF dibuja el texto hacia arriba desde
   // la línea base (y), iniciamos en y = 42mm para que incluso la parte superior de las letras
   // de "AROMANIAK SV" quede después de los 32mm y el Bloque 0 no tenga ni un solo píxel negro.
-  let y = 42;
+  let y = 10;
 
   const drawDashedDivider = (currentY: number) => {
     doc.setFont('courier', 'normal');
@@ -460,7 +460,7 @@ function renderDispatchOrderToDoc(doc: any, ticket: SaleRecord, products?: Produ
   const centerX = 35.5;
 
   // Mismo margen superior seguro de 42mm para impresora térmica POS-80
-  let y = 42;
+  let y = 10;
 
   const drawDashedDivider = (currentY: number) => {
     doc.setFont('courier', 'normal');
