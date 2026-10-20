@@ -146,14 +146,14 @@ export async function downloadQuotePdf(data: QuotePdfData): Promise<void> {
   doc.text('EMITIDA POR', M + 4, boxY + 6);
   doc.text('COTIZADO A', M + colW + 10, boxY + 6);
 
-  doc.setFontSize(10);
+  doc.setFontSize(9.5);
   doc.setTextColor(...INK);
-  doc.text('Aromaniak SV', M + 4, boxY + 12);
+  doc.text('Aromaniak SV · Grupo Kode, S.A.S. de C.V.', M + 4, boxY + 12);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
+  doc.setFontSize(7.8);
   doc.setTextColor(...MUTED);
   const companyLines = doc.splitTextToSize(
-    'Distribuidora de esencias de perfumería fina\nCentro Comercial El Rosal, Calle El Progreso\nSan Salvador, El Salvador\nNIT: 0614-120590-101-2 · NRC: 245678-9\nTel: +503 2245-8800 · aromaniaksv.com',
+    'Giro: Venta al por menor de artículos de bazar\nCl. Las Violetas y 39 Av. Norte #33, Urb. Universitaria, Nivel 3\nSan Salvador Centro, San Salvador\nNIT: 0623-290726-106-9 · NRC: 390357-8 · aromaniaksv.com',
     colW - 8
   );
   doc.text(companyLines, M + 4, boxY + 17);

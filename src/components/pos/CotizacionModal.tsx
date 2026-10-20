@@ -159,9 +159,9 @@ export default function CotizacionModal({ isOpen, onClose, sale, notices }: Coti
                 className="h-12 w-auto object-contain"
               />
               <div className="text-[10px] text-slate-500 mt-2 space-y-0.5 font-medium">
-                <p>Distribuidora de esencias de perfumería fina</p>
-                <p>Centro Comercial El Rosal, Calle El Progreso, San Salvador</p>
-                <p>NIT: 0614-120590-101-2 • NRC: 245678-9 • Tel: +503 2245-8800</p>
+                <p className="font-bold text-slate-700">GRUPO KODE, S.A.S. DE C.V. · Aromaniak SV</p>
+                <p>Cl. Las Violetas y 39 Av. Norte #33, Urb. Universitaria, Nivel 3, San Salvador</p>
+                <p>NIT: 0623-290726-106-9 • NRC: 390357-8 • Giro: Venta al por menor de artículos de bazar</p>
               </div>
             </div>
 
