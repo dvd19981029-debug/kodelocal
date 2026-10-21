@@ -507,9 +507,9 @@ async function main() {
 
       const supplyTitle =
         p.id === 'alcohol-perfumero-fijador-1l'
-          ? 'ALCOHOL CON FIJADOR 1L'
+          ? 'ALCOHOL PERFUMERO CON FIJADOR 1L'
           : p.id === 'alcohol-perfumero-fijador-medio-litro'
-          ? 'ALCOHOL CON FIJADOR ½L'
+          ? 'ALCOHOL PERFUMERO CON FIJADOR ½L'
           : (p.officialName || p.name).toUpperCase();
 
       const overlaySvg = createCatalogOverlaySvg({
