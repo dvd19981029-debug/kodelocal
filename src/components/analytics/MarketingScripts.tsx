@@ -27,7 +27,7 @@ export function trackMarketingEvent(eventName: string, params: Record<string, an
 
 export default function MarketingScripts() {
   const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
-  const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+  const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID || '2210958782798088';
 
   useEffect(() => {
     try {
