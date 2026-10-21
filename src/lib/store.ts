@@ -129,13 +129,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 90,
+    "stock": 55,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_1.webp?v=aroma_official_v4",
     "description": "Inspirado en SAUVAGE DIOR",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 28
+    "stockHalf": 23
   },
   {
     "id": "esencia-apae-010",
@@ -151,13 +151,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 4,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_10.webp?v=aroma_official_v4",
     "description": "Inspirado en SANTAL 33 LE LABO",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 12
   },
   {
     "id": "esencia-apae-011",
@@ -173,13 +173,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 37,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_11.webp?v=aroma_official_v4",
     "description": "Inspirado en VALENTINO BORN IN ROMA INTENSE",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 24
   },
   {
     "id": "esencia-apae-012",
@@ -195,13 +195,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 36,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_12.webp?v=aroma_official_v4",
     "description": "Inspirado en ERBA PURA XERJOFF",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 12
   },
   {
     "id": "esencia-apae-013",
@@ -217,13 +217,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 46,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_13.webp?v=aroma_official_v4",
     "description": "Inspirado en COCO MADEMOISELLE CHANEL",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 12
   },
   {
     "id": "esencia-apae-014",
@@ -239,13 +239,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 26,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_14.webp?v=aroma_official_v4",
     "description": "Inspirado en DOLCE & GABBANA LIGHT BLUE MEN",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 9
   },
   {
     "id": "esencia-apae-015",
@@ -261,13 +261,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 49,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_15.webp?v=aroma_official_v4",
     "description": "Inspirado en BOSS BOTTLED",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 29
   },
   {
     "id": "esencia-apae-016",
@@ -283,13 +283,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 50,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_16.webp?v=aroma_official_v4",
     "description": "Inspirado en INVICTUS TYPE FINE INSPIRATION",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 17
   },
   {
     "id": "esencia-apae-017",
@@ -305,13 +305,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 55,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_17.webp?v=aroma_official_v4",
     "description": "Inspirado en BURBERRY HER",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 15
   },
   {
     "id": "esencia-apae-018",
@@ -327,13 +327,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 48,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_18.webp?v=aroma_official_v4",
     "description": "Inspirado en 212 VIP ROSE / VIP WOMAN",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 28
   },
   {
     "id": "esencia-apae-019",
@@ -349,13 +349,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 16,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_19.webp?v=aroma_official_v4",
     "description": "Inspirado en POLO BLUE Z 1",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 8
   },
   {
     "id": "esencia-apae-002",
@@ -371,13 +371,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 108,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_2.webp?v=aroma_official_v4",
     "description": "Inspirado en BLEU DE CHANEL",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 27
   },
   {
     "id": "esencia-apae-020",
@@ -393,13 +393,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 58,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_20.webp?v=aroma_official_v4",
     "description": "Inspirado en ONE MILLION",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 17
   },
   {
     "id": "esencia-apae-021",
@@ -415,13 +415,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 54,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_21.webp?v=aroma_official_v4",
     "description": "Inspirado en COCO CHANEL",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 15
   },
   {
     "id": "esencia-apae-022",
@@ -437,13 +437,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 27,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_22.webp?v=aroma_official_v4",
     "description": "Inspirado en CHANCE CHANEL",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 14
   },
   {
     "id": "esencia-apae-023",
@@ -459,13 +459,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 55,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_23.webp?v=aroma_official_v4",
     "description": "Inspirado en 9PM TYPE AFNAN",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 24
   },
   {
     "id": "esencia-apae-024",
@@ -481,13 +481,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 25,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_24.webp?v=aroma_official_v4",
     "description": "Inspirado en LE MALE JEAN PAUL GAULTIER",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 14
   },
   {
     "id": "esencia-apae-025",
@@ -503,13 +503,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 21,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_25.webp?v=aroma_official_v4",
     "description": "Inspirado en J'ADORE DIOR TYPE B",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 13
   },
   {
     "id": "esencia-apae-026",
@@ -525,13 +525,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 28,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_26.webp?v=aroma_official_v4",
     "description": "Inspirado en TOMMY FOR MEN",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 14
   },
   {
     "id": "esencia-apae-027",
@@ -547,13 +547,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 48,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_27.webp?v=aroma_official_v4",
     "description": "Inspirado en CHANEL NO. 5",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 23
   },
   {
     "id": "esencia-apae-028",
@@ -569,13 +569,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 29,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_28.webp?v=aroma_official_v4",
     "description": "Inspirado en BAD BOY CAROLINA HERRERA",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 14
   },
   {
     "id": "esencia-apae-029",
@@ -591,13 +591,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 54,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_29.webp?v=aroma_official_v4",
     "description": "Inspirado en BE DELICIOUS DKNY",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 22
   },
   {
     "id": "esencia-apae-003",
@@ -613,13 +613,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 33,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_3.webp?v=aroma_official_v4",
     "description": "Inspirado en ACQUA DI GIO",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 17
   },
   {
     "id": "esencia-apae-030",
@@ -635,13 +635,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 51,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_30.webp?v=aroma_official_v4",
     "description": "Inspirado en OH CHERRY (LOST CHERRY)",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 17
   },
   {
     "id": "esencia-apae-031",
@@ -657,13 +657,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 17,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_31.webp?v=aroma_official_v4",
     "description": "Inspirado en SCANDAL JEAN PAUL GAULTIER TYPE",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 10
   },
   {
     "id": "esencia-apae-032",
@@ -679,13 +679,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 26,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_32.webp?v=aroma_official_v4",
     "description": "Inspirado en VALENTINO DONNA TYPE",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 9
   },
   {
     "id": "esencia-apae-033",
@@ -701,13 +701,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 20,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_33.webp?v=aroma_official_v4",
     "description": "Inspirado en L'IMMENSITE LOUIS VUITTON",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 11
   },
   {
     "id": "esencia-apae-034",
@@ -723,13 +723,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 27,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_34.webp?v=aroma_official_v4",
     "description": "Inspirado en 212 VIP CAROLINA HERRERA",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 7
   },
   {
     "id": "esencia-apae-035",
@@ -745,13 +745,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 25,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_35.webp?v=aroma_official_v4",
     "description": "Inspirado en SWISS ARMY",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 12
   },
   {
     "id": "esencia-apae-036",
@@ -767,13 +767,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 30,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_36.webp?v=aroma_official_v4",
     "description": "Inspirado en LACOSTE BLANC L1212",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 14
   },
   {
     "id": "esencia-apae-037",
@@ -789,13 +789,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 27,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_37.webp?v=aroma_official_v4",
     "description": "Inspirado en ACQUA DI GIO WOMAN TYPE",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 10
   },
   {
     "id": "esencia-apae-038",
@@ -811,13 +811,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 29,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_38.webp?v=aroma_official_v4",
     "description": "Inspirado en POLO BLACK",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 10
   },
   {
     "id": "esencia-apae-039",
@@ -833,13 +833,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 29,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_39.webp?v=aroma_official_v4",
     "description": "Inspirado en RALPH BY RALPH LAUREN",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 10
   },
   {
     "id": "esencia-apae-004",
@@ -855,7 +855,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 26,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_4.webp?v=aroma_official_v4",
     "description": "Inspirado en CLUB DE NUIT INTENSE ARMAF MEN",
@@ -877,13 +877,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 23,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_40.webp?v=aroma_official_v4",
     "description": "Inspirado en YARA TYPE",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 6
   },
   {
     "id": "esencia-apae-041",
@@ -899,13 +899,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 24,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_41.webp?v=aroma_official_v4",
     "description": "Inspirado en YARA TOUS LATTAFA M",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 6
   },
   {
     "id": "esencia-apae-042",
@@ -921,13 +921,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 27,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_42.webp?v=aroma_official_v4",
     "description": "Inspirado en FLOWERBOMB VIKTOR & ROLF",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 8
   },
   {
     "id": "esencia-apae-043",
@@ -943,13 +943,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 27,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_43.webp?v=aroma_official_v4",
     "description": "Inspirado en BLACK OPIUM",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 10
   },
   {
     "id": "esencia-apae-044",
@@ -965,13 +965,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 27,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_44.webp?v=aroma_official_v4",
     "description": "Inspirado en DIOR HOMME SPORT",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 7
   },
   {
     "id": "esencia-apae-045",
@@ -987,13 +987,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 18,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_45.webp?v=aroma_official_v4",
     "description": "Inspirado en CK ONE Z",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 5
   },
   {
     "id": "esencia-apae-046",
@@ -1009,13 +1009,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 28,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_46.webp?v=aroma_official_v4",
     "description": "Inspirado en PERRY ELLIS 360 RED",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 8
   },
   {
     "id": "esencia-apae-047",
@@ -1031,13 +1031,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 29,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_47.webp?v=aroma_official_v4",
     "description": "Inspirado en GREEN TEA ELIZABETH ARDEN",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 10
   },
   {
     "id": "esencia-apae-048",
@@ -1053,13 +1053,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 27,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_48.webp?v=aroma_official_v4",
     "description": "Inspirado en PRINCESS VERA WANG",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 10
   },
   {
     "id": "esencia-apae-049",
@@ -1075,13 +1075,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 64,
+    "stock": 63,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_49.webp?v=aroma_official_v4",
     "description": "Inspirado en SAUVAGE ELIXIR DIOR",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 23
+    "stockHalf": 13
   },
   {
     "id": "esencia-apae-005",
@@ -1097,13 +1097,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 42,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_5.webp?v=aroma_official_v4",
     "description": "Inspirado en AVENTUS CREED",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 19
   },
   {
     "id": "esencia-apae-006",
@@ -1119,13 +1119,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 39,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_6.webp?v=aroma_official_v4",
     "description": "Inspirado en LA VIE EST BELLE",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 8
   },
   {
     "id": "esencia-apae-007",
@@ -1141,13 +1141,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 15,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_7.webp?v=aroma_official_v4",
     "description": "Inspirado en ODYSSEY MANDARIN SKY ARMAF MEN",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 6
   },
   {
     "id": "esencia-apae-008",
@@ -1163,13 +1163,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 48,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_8.webp?v=aroma_official_v4",
     "description": "Inspirado en EROS VERSACE",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 21
   },
   {
     "id": "esencia-apae-009",
@@ -1185,13 +1185,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 50,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_9.webp?v=aroma_official_v4",
     "description": "Inspirado en L'EAU D'ISSEY MEN",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 15
   },
   {
     "id": "bote-100ml-acanalado-blanco",
@@ -1203,7 +1203,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Dama",
     "category": "Botes",
     "unit": "Unidad",
-    "price": 3,
+    "price": 1.5,
     "cost": 0.47,
     "stock": 0,
     "minStock": 10,
@@ -1223,7 +1223,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Unisex",
     "category": "Botes",
     "unit": "Unidad",
-    "price": 3,
+    "price": 1.5,
     "cost": 0.47,
     "stock": 0,
     "minStock": 10,
@@ -1243,7 +1243,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Dama",
     "category": "Botes",
     "unit": "Unidad",
-    "price": 3.25,
+    "price": 1.5,
     "cost": 0.52,
     "stock": 0,
     "minStock": 25,
@@ -1263,7 +1263,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Unisex",
     "category": "Botes",
     "unit": "Unidad",
-    "price": 2.5,
+    "price": 1.5,
     "cost": 0.4,
     "stock": 0,
     "minStock": 100,
@@ -1283,7 +1283,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Unisex",
     "category": "Botes",
     "unit": "Unidad",
-    "price": 2.75,
+    "price": 1.5,
     "cost": 0.45,
     "stock": 0,
     "minStock": 25,
@@ -1303,7 +1303,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Caballero",
     "category": "Botes",
     "unit": "Unidad",
-    "price": 3.25,
+    "price": 1.5,
     "cost": 0.56,
     "stock": 0,
     "minStock": 25,
@@ -1323,7 +1323,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Unisex",
     "category": "Botes",
     "unit": "Unidad",
-    "price": 2.75,
+    "price": 1.5,
     "cost": 0.43,
     "stock": 0,
     "minStock": 25,
@@ -1343,7 +1343,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Unisex",
     "category": "Botes",
     "unit": "Unidad",
-    "price": 3.5,
+    "price": 1.5,
     "cost": 0.55,
     "stock": 0,
     "minStock": 15,
@@ -1363,7 +1363,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Unisex",
     "category": "Botes",
     "unit": "Unidad",
-    "price": 3.5,
+    "price": 1.5,
     "cost": 0.55,
     "stock": 0,
     "minStock": 15,
@@ -1403,7 +1403,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Unisex",
     "category": "Botes",
     "unit": "Unidad",
-    "price": 3.5,
+    "price": 1.5,
     "cost": 0.57,
     "stock": 0,
     "minStock": 20,
@@ -1423,7 +1423,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Unisex",
     "category": "Botes",
     "unit": "Unidad",
-    "price": 3.5,
+    "price": 1.5,
     "cost": 0.57,
     "stock": 0,
     "minStock": 20,
@@ -1443,7 +1443,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Dama",
     "category": "Botes",
     "unit": "Unidad",
-    "price": 3.5,
+    "price": 1.5,
     "cost": 0.66,
     "stock": 0,
     "minStock": 15,
@@ -1463,7 +1463,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Unisex",
     "category": "Botes",
     "unit": "Unidad",
-    "price": 3.5,
+    "price": 1.5,
     "cost": 0.66,
     "stock": 0,
     "minStock": 15,
@@ -1483,7 +1483,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Unisex",
     "category": "Botes",
     "unit": "Unidad",
-    "price": 3.25,
+    "price": 1.5,
     "cost": 0.54,
     "stock": 0,
     "minStock": 25,
@@ -1503,7 +1503,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Unisex",
     "category": "Botes",
     "unit": "Unidad",
-    "price": 3.75,
+    "price": 1.5,
     "cost": 0.68,
     "stock": 0,
     "minStock": 15,
@@ -1523,7 +1523,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Unisex",
     "category": "Botes",
     "unit": "Unidad",
-    "price": 3.25,
+    "price": 1.5,
     "cost": 0.48,
     "stock": 0,
     "minStock": 15,
@@ -1543,7 +1543,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Unisex",
     "category": "Botes",
     "unit": "Unidad",
-    "price": 3.25,
+    "price": 1.5,
     "cost": 0.52,
     "stock": 0,
     "minStock": 20,
@@ -1563,7 +1563,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Caballero",
     "category": "Botes",
     "unit": "Unidad",
-    "price": 3.25,
+    "price": 1.5,
     "cost": 0.56,
     "stock": 0,
     "minStock": 40,
@@ -1583,15 +1583,16 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Unisex",
     "category": "Botes",
     "unit": "Unidad",
-    "price": 1.5,
+    "price": 1.45,
     "cost": 0.55,
-    "stock": 1000,
+    "stock": 1895,
     "minStock": 25,
     "imageUrl": "/images/botes/bote_100ml_rey_luis.jpg",
     "description": "Frasco cilíndrico de vidrio transparente 100ml estilo Louis Vuitton con cuello translúcido y tapa escalonada negra.",
     "isAvailableOnline": true,
     "puesto": "B6",
-    "stockHalf": 0
+    "stockHalf": 0,
+    "priceHalfOunce": 0.72
   },
   {
     "id": "bote-100ml-miss",
@@ -1605,7 +1606,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 1.45,
     "cost": 0.55,
-    "stock": 50,
+    "stock": 7,
     "minStock": 15,
     "imageUrl": "/images/botes/bote_100ml_miss.jpg",
     "description": "Frasco rectangular de vidrio cristalino 100ml con cuello dorado de rosca y tapa facetada transparente de lujo.",
@@ -1625,7 +1626,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 1.45,
     "cost": 0.55,
-    "stock": 20,
+    "stock": 47,
     "minStock": 10,
     "imageUrl": "/images/botes/bote_100ml_goliat.jpg",
     "description": "Frasco de vidrio pesado 100ml con base gruesa, hombros redondeados, cuello de rosca y tapa cilíndrica negra brillante.",
@@ -1645,7 +1646,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 1.45,
     "cost": 0.55,
-    "stock": 50,
+    "stock": 78,
     "minStock": 15,
     "imageUrl": "/images/botes/bote_100ml_wolf.jpg",
     "description": "Frasco cilíndrico de vidrio transparente 100ml tipo campana con aro en la base, cierre de rosca y tapa metálica plateada cromada.",
@@ -1665,7 +1666,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 1.45,
     "cost": 0.55,
-    "stock": 20,
+    "stock": 56,
     "minStock": 10,
     "imageUrl": "/images/botes/bote_100ml_golf_club.jpg",
     "description": "Frasco rectangular contorneado de vidrio transparente 100ml con hombros redondeados, cierre de rosca y tapa metálica plateada cromada.",
@@ -1685,7 +1686,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Litro",
     "price": 3.8,
     "cost": 1.1,
-    "stock": 30,
+    "stock": 19,
     "minStock": 10,
     "imageUrl": "/images/insumos/alcohol_perfumero_fijador_1l.jpg?v=2",
     "description": "Alcohol especial para perfumería con fijador (1 Litro)",
@@ -1705,7 +1706,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "½ Litro",
     "price": 2.3,
     "cost": 1.1,
-    "stock": 14,
+    "stock": 16,
     "minStock": 5,
     "imageUrl": "/images/insumos/alcohol_perfumero_fijador_medio_litro.jpg?v=2",
     "description": "Alcohol especial para perfumería con fijador (Medio Litro)",
@@ -1725,7 +1726,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 0.5,
     "cost": 0.2,
-    "stock": 100,
+    "stock": 72,
     "minStock": 20,
     "imageUrl": "/images/insumos/caja_carton_generica.jpg",
     "description": "Caja de cartón genérica lista para sellar con el logo de tu marca para hacer envíos",
@@ -1747,13 +1748,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 17,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_50.webp?v=aroma_official_v4",
     "description": "Inspirado en VALENTINO BORN IN ROMA UOMO",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 4
   },
   {
     "id": "esencia-apae-051",
@@ -1769,13 +1770,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 16,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_51.webp?v=aroma_official_v4",
     "description": "Inspirado en ACQUA DI GIO PROFONDO ARMANI",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 7
   },
   {
     "id": "esencia-apae-052",
@@ -1791,13 +1792,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 15,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_52.webp?v=aroma_official_v4",
     "description": "Inspirado en LE MALE ELIXIR JEAN PAUL GAULTIER",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 7
   },
   {
     "id": "esencia-apae-053",
@@ -1813,13 +1814,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 25,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_53.webp?v=aroma_official_v4",
     "description": "Inspirado en STRONGER WITH YOU ARMANI",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 6
   },
   {
     "id": "esencia-apae-054",
@@ -1835,13 +1836,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 17,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_54.webp?v=aroma_official_v4",
     "description": "Inspirado en 212 MEN CAROLINA HERRERA",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 11
   },
   {
     "id": "esencia-apae-055",
@@ -1857,13 +1858,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 28,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_55.webp?v=aroma_official_v4",
     "description": "Inspirado en BVLGARI MAN IN BLACK",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 9
   },
   {
     "id": "esencia-apae-056",
@@ -1879,13 +1880,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 24,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_56.webp?v=aroma_official_v4",
     "description": "Inspirado en ACQUA DI GIO PROFUMO ARMANI",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 12
   },
   {
     "id": "esencia-apae-057",
@@ -1901,13 +1902,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 8,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_57.webp?v=aroma_official_v4",
     "description": "Inspirado en LA BOMBA CAROLINA HERRERA",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 9
   },
   {
     "id": "esencia-apae-058",
@@ -1923,13 +1924,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 24,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_58.webp?v=aroma_official_v4",
     "description": "Inspirado en GOOD GIRL CAROLINA HERRERA",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 8
   },
   {
     "id": "esencia-apae-059",
@@ -1945,13 +1946,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 30,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_59.webp?v=aroma_official_v4",
     "description": "Inspirado en TOY BOY MOSCHINO",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 10
   },
   {
     "id": "esencia-apae-060",
@@ -1967,13 +1968,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 16,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_60.webp?v=aroma_official_v4",
     "description": "Inspirado en BACCARAT ROUGE 540 MFK",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 1
   },
   {
     "id": "esencia-apae-061",
@@ -1989,13 +1990,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.9,
-    "stock": 0,
+    "stock": 54,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_61.webp?v=aroma_official_v4",
     "description": "Inspirado en FAHRENHEIT DIOR",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 28
   },
   {
     "id": "esencia-apae-062",
@@ -2469,7 +2470,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Unisex",
     "category": "Logística",
     "unit": "Servicio",
-    "price": 2.90,
+    "price": 2.9,
     "cost": 0,
     "stock": 999999,
     "minStock": 0,
@@ -2477,7 +2478,8 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "description": "Cargo por servicio de entrega a domicilio ($2.90).",
     "isAvailableOnline": true,
     "puesto": "LOG",
-    "stockHalf": 0
+    "stockHalf": 0,
+    "priceHalfOunce": 1.45
   }
 ];
 

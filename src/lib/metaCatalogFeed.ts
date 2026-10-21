@@ -179,39 +179,35 @@ export function buildMetaCatalogRows(
     const isBottle = p.category === 'Botes' || p.category === 'Botes & Envases';
     const isDiscontinued = p.isActive === false || p.isAvailableOnline === false;
 
-    const fullOzStock = Math.max(0, Number(p.stock || 0));
-    const halfOzStock = Math.max(0, Number(p.stockHalf || 0));
-    const totalStock = isEssence ? fullOzStock + halfOzStock : fullOzStock;
+    const fullOzStock = Math.max(0, Math.floor(Number(p.stock || 0)));
+    const halfOzStock = Math.max(0, Math.floor(Number(p.stockHalf || 0)));
+    // En la web (ProductCard.tsx), un producto está en stock si y solo si p.stock > 0 (unidades de la presentación principal: 1 Onza / 1 Unidad)
+    const unitStock = fullOzStock;
 
-    // Un producto sin stock se considera "En Camino" si está en la lista de próximos ingresos o es un bote en reposición
-    const isIncoming = totalStock <= 0 && (isBottle || (isEssence && isIncomingEssence(p)));
+    // Un producto sin stock se considera "En Camino" en etiquetas internas si es un próximo ingreso o bote en reposición,
+    // pero para Meta SIEMPRE debe reportarse 'out of stock' con 0 unidades mientras su stock real sea 0.
+    const isIncoming = unitStock <= 0 && (isBottle || (isEssence && isIncomingEssence(p)));
 
-    // Estado de disponibilidad dinámico para Meta Commerce Manager:
-    // - Si se desactiva o descontinúa en POS/Bodega -> 'discontinued'
-    // - Si tiene stock > 0 -> 'in stock'
-    // - Si tiene stock 0 y es un producto regular que se agotó en tienda -> 'out of stock'
-    // - Si tiene stock 0 pero está marcado "En Camino" -> 'in stock' (o 'out of stock' si ?stock=strict)
-    let availability: MetaCatalogRow['availability'] = 'in stock';
-    let fbQuantity = totalStock;
-    let stockLabel = 'Disponible en Tienda';
+    // Estado de disponibilidad 100% fiel a la base de datos en tiempo real:
+    // - Si se desactiva o descontinúa en POS/Bodega -> 'discontinued' (0 unidades)
+    // - Si tiene stock > 0 -> 'in stock' (unidades exactas en bodega)
+    // - Si tiene stock <= 0 (incluyendo "En Camino") -> 'out of stock' (0 unidades)
+    let availability: MetaCatalogRow['availability'] = 'out of stock';
+    let fbQuantity = 0;
+    let stockLabel = 'Agotado';
 
     if (isDiscontinued) {
       availability = 'discontinued';
       fbQuantity = 0;
       stockLabel = 'Descontinuado';
-    } else if (totalStock > 0) {
+    } else if (unitStock > 0) {
       availability = 'in stock';
-      fbQuantity = totalStock;
+      fbQuantity = unitStock;
       stockLabel = 'Disponible en Tienda';
-    } else if (isIncoming) {
-      availability = strictStock ? 'out of stock' : 'in stock';
-      fbQuantity = strictStock ? 0 : 15;
-      stockLabel = 'En Camino';
     } else {
-      // Producto regular que se quedó sin inventario en tienda -> se marca agotado automáticamente
       availability = 'out of stock';
       fbQuantity = 0;
-      stockLabel = 'Agotado';
+      stockLabel = isIncoming ? 'En Camino (Sin Stock)' : 'Agotado';
     }
 
     const productUrl = `${SITE_URL}${getProductUrl(p)}`;
@@ -325,10 +321,15 @@ export function buildMetaCatalogRows(
         custom_label_4: collectionLabel,
       });
     } else if (isBottle) {
-      const bottleName = (p.officialName || p.name || 'Frasco de Cristal 100ml').trim();
+      const rawBottleName = (p.officialName || p.name || 'Frasco de Cristal 100ml')
+        .replace(/\b100\s*m(l)?\b/gi, '')
+        .replace(/\bRosca\b/gi, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+      const bottleName = rawBottleName.startsWith('Bote') ? rawBottleName : `Bote ${rawBottleName}`;
       const livePrice = Number(p.price || 1.45);
-      const title = `${bottleName.startsWith('Bote') ? bottleName : `Bote ${bottleName}`} 100ml en Vidrio con Atomizador | Aromaniak`;
-      const desc = `${p.description || `${bottleName} de cristal grueso de 100ml con válvula atomizadora spray y cierre de rosca.`} Ideal para preparar tus perfumes con esencias puras Aromaniak o emprender tu propia marca de perfumería en El Salvador. Precio: $${livePrice.toFixed(2)} USD. Tienda en C.C. El Rosal, San Salvador y envíos a todo El Salvador por $2.90.`;
+      const title = `${bottleName} 100ml en Vidrio con Atomizador (Unidad) | Aromaniak`;
+      const desc = `${p.description || `${bottleName} de cristal grueso de 100ml con válvula atomizadora spray y cierre de rosca.`} Ideal para preparar tus perfumes con esencias puras Aromaniak o emprender tu propia marca de perfumería en El Salvador. Precio por unidad: $${livePrice.toFixed(2)} USD. Tienda en C.C. El Rosal, San Salvador y envíos a todo El Salvador por $2.90.`;
 
       rows.push({
         id: p.id,
@@ -352,7 +353,7 @@ export function buildMetaCatalogRows(
         custom_label_1: 'Envases e Insumos',
         custom_label_2: stockLabel,
         custom_label_3: 'Frasco 100ml Rosca',
-        custom_label_4: totalStock > 0 ? 'Best Seller' : 'En Camino',
+        custom_label_4: unitStock > 0 ? 'Best Seller' : 'Agotado',
       });
     } else {
       const insumoName = (p.officialName || p.name).trim();
