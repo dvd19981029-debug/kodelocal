@@ -11,11 +11,9 @@ import { getInspiracionPerfumeName, formatPerfumeDisplayName, getBottleLabelConf
 import { getProductUrl } from '@/lib/productUrl';
 import {
   isHalloweenPromoProduct,
-  isHalloweenSeasonActive,
   HALLOWEEN_ORIGINAL_PRICE_1OZ,
   HALLOWEEN_ORIGINAL_PRICE_HALF_OZ,
 } from '@/lib/halloweenPromo';
-import { CobwebCornerSVG } from '@/components/ecommerce/HalloweenDecorations';
 
 interface ProductCardProps {
   product: ProductItem;
@@ -27,7 +25,6 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
   const { cart, addToCart, updateQuantity } = useEcommerceCart();
   const { customer } = useCustomerAuth();
   const presentations = getPresentationsForProduct(product, customer);
-  const halloweenActive = isHalloweenSeasonActive();
   const isHalloweenPromo = isHalloweenPromoProduct(product);
   
   // Presentación por defecto: 'ONZA_COMPLETA' (1 Onza seleccionada primero)
@@ -169,10 +166,6 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
     <>
       <div className={`h-full flex flex-col justify-between transition-all duration-300 group relative ${
         isOutOfStock ? 'opacity-85' : ''
-      } ${
-        isHalloweenPromo
-          ? 'p-1.5 sm:p-2 rounded-2xl bg-gradient-to-b from-[#fff7ed] via-[#ffedd5]/60 to-[#fff7ed] border-2 border-orange-500/85 hw-card-glow'
-          : ''
       }`}>
         
         {/* Sección Superior: Imagen y Datos del Producto */}
@@ -183,22 +176,13 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
             className={`block relative w-full aspect-square @container clay-card overflow-hidden mb-2 sm:mb-2.5 flex items-center justify-center cursor-pointer transition-all duration-300 shrink-0 ${
               isOutOfStock 
                 ? 'opacity-85 border-slate-200/90 bg-[#f8fafc]' 
-                : isHalloweenPromo
-                ? '!border-orange-400/90 ring-2 ring-orange-400/45 shadow-[0_6px_20px_rgba(234,88,12,0.22)] hover:scale-[1.02]'
                 : isCardPulsing
-                ? 'scale-[1.02] ring-3 ring-orange-500/70 shadow-[0_6px_20px_rgba(234,88,12,0.25)]'
+                ? 'scale-[1.02] ring-3 ring-purple-500/70 shadow-[0_6px_20px_rgba(124,58,237,0.22)]'
                 : currentQuantity > 0
-                ? 'ring-1.5 ring-orange-400/60 shadow-[0_4px_14px_rgba(234,88,12,0.12)]'
-                : 'hover:scale-[1.015] hover:shadow-[4px_8px_16px_rgba(234,88,12,0.15)]'
+                ? 'ring-1.5 ring-purple-400/60 shadow-[0_4px_14px_rgba(124,58,237,0.1)]'
+                : 'hover:scale-[1.015] hover:shadow-[4px_8px_16px_rgba(88,28,135,0.15)]'
             }`}
           >
-            {/* Telaraña decorativa en tarjetas con Promo Halloween */}
-            {isHalloweenPromo && (
-              <div className="absolute top-0 right-0 w-16 h-16 sm:w-20 sm:h-20 text-orange-600/65 pointer-events-none z-10">
-                <CobwebCornerSVG className="w-full h-full" flipX />
-              </div>
-            )}
-            
             <img
               src={productImage}
               alt={displayName}
@@ -253,10 +237,10 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
               </div>
             )}
 
-            {/* Etiqueta flotante de descuento Halloween en esquina inferior izquierda */}
+            {/* Etiqueta flotante de descuento en esquina inferior izquierda */}
             {isHalloweenPromo && !isOutOfStock && (
               <div className="absolute bottom-2 left-2 z-10 pointer-events-none">
-                <span className="bg-slate-950/90 text-amber-300 border border-orange-400/80 text-[8px] sm:text-[9px] font-black py-0.5 px-1.5 rounded-md shadow-md flex items-center gap-0.5">
+                <span className="bg-purple-700/95 text-white border border-purple-400/60 text-[8px] sm:text-[9px] font-black py-0.5 px-1.5 rounded-md shadow-md flex items-center gap-0.5">
                   <span>{selectedPresentation === 'MEDIA_ONZA' ? '½ Oz a $1.85' : '1 Oz a $3.30'}</span>
                 </span>
               </div>
@@ -284,25 +268,25 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
             {/* Nombre Oficial de la Fragancia (Contratipo) */}
             <div className="h-6 sm:h-7 flex items-center">
               <Link href={getProductUrl(product)} className="block group/title w-full">
-                <h3 className="font-bold text-base sm:text-lg text-slate-900 line-clamp-1 leading-snug group-hover/title:text-orange-600 transition-colors" title={displayName}>
+                <h3 className="font-bold text-base sm:text-lg text-slate-900 line-clamp-1 leading-snug group-hover/title:text-purple-700 transition-colors" title={displayName}>
                   {displayName}
                 </h3>
               </Link>
             </div>
 
-            {/* Precio en BOLD a la par de Disponibilidad (con Antes y Ahora en Promo Halloween) */}
+            {/* Precio en BOLD a la par de Disponibilidad */}
             <div className="mt-0.5 min-h-[26px] flex flex-wrap items-baseline gap-1.5">
               {isHalloweenPromo ? (
-                <div className="flex items-baseline gap-1.5 bg-orange-100/90 border border-orange-300/90 px-1.5 py-0.5 rounded-lg">
+                <div className="flex items-baseline gap-1.5 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded-lg">
                   <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 line-through decoration-rose-500 decoration-2">
                     Antes ${(activeOption.originalPrice || (selectedPresentation === 'MEDIA_ONZA' ? HALLOWEEN_ORIGINAL_PRICE_HALF_OZ : HALLOWEEN_ORIGINAL_PRICE_1OZ)).toFixed(2)}
                   </span>
-                  <span className="text-sm sm:text-base font-black text-[#c2410c] leading-tight tracking-tight">
+                  <span className="text-sm sm:text-base font-black text-purple-700 leading-tight tracking-tight">
                     Ahora ${activeOption.price.toFixed(2)}
                   </span>
                 </div>
               ) : (
-                <span className={`text-base sm:text-xl font-bold leading-tight tracking-tight ${halloweenActive ? 'text-[#c2410c]' : 'text-purple-700'}`}>
+                <span className="text-base sm:text-xl font-bold text-purple-700 leading-tight tracking-tight">
                   ${activeOption.price.toFixed(2)}
                 </span>
               )}
@@ -325,7 +309,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
               </span>
             </div>
 
-            {/* Inspirado en el perfume original (TODOS los nombres originales en color NARANJA durante Halloween) */}
+            {/* Inspirado en el perfume original */}
             <div className="mt-0.5 h-8 sm:h-9 flex items-center">
               {isEssence ? (
                 <p 
@@ -333,7 +317,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                   title={`Inspirado en ${inspiracionPerfumeName}`}
                 >
                   <span className="text-slate-600 font-medium">Inspirado en </span>
-                  <span className={`font-black ${halloweenActive ? 'text-[#ea580c]' : 'text-slate-900'}`}>
+                  <span className="text-slate-900 font-bold">
                     {inspiracionPerfumeName}
                   </span>
                 </p>
@@ -346,12 +330,12 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
           </div>
         </div>
 
-        {/* Sección Inferior: Selector de Presentación y Botón con temática de calabaza */}
+        {/* Sección Inferior: Selector de Presentación y Botón */}
         <div className="mt-auto pt-2 flex flex-col justify-end">
           {/* Selector de Presentación con altura fija uniforme (34px) */}
           <div className="h-[34px] sm:h-[36px] flex items-center mb-1.5">
             {presentations.length > 1 ? (
-              <div className="w-full grid grid-cols-2 gap-1 p-0.5 bg-orange-50/90 rounded-xl border border-orange-200/80 shadow-2xs h-full">
+              <div className="w-full grid grid-cols-2 gap-1 p-0.5 bg-slate-100/90 rounded-xl border border-slate-200/70 shadow-2xs h-full">
                 {presentations.map((opt) => {
                   const isSelected = selectedPresentation === opt.id;
                   
@@ -367,10 +351,10 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                       onClick={() => setSelectedPresentation(opt.id)}
                       className={`h-full rounded-lg text-center transition-all cursor-pointer select-none flex items-center justify-center px-1 relative ${
                         isSelected
-                          ? 'bg-gradient-to-r from-[#ea580c] to-[#f97316] text-white shadow-xs font-black scale-[1.02]'
+                          ? 'bg-[#7c3aed] text-white shadow-xs font-black scale-[1.02]'
                           : isOptOutOfStock
                           ? 'bg-white/50 text-slate-400 opacity-60 hover:bg-white/80 font-medium'
-                          : 'bg-white hover:bg-orange-100/60 text-slate-700 border border-orange-200/70 shadow-2xs font-bold'
+                          : 'bg-white hover:bg-purple-50 text-slate-600 border border-slate-200/80 shadow-2xs font-bold'
                       }`}
                     >
                       <span className="text-[10.5px] sm:text-[11.5px] leading-tight font-extrabold">
@@ -381,13 +365,13 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                 })}
               </div>
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-orange-50/60 rounded-xl border border-orange-200/60 px-2 text-center text-[10px] sm:text-[11px] font-bold text-slate-600">
+              <div className="w-full h-full flex items-center justify-center bg-slate-50/70 rounded-xl border border-slate-100 px-2 text-center text-[10px] sm:text-[11px] font-bold text-slate-500">
                 <span className="truncate">{presentations[0]?.description || 'Presentación única'}</span>
               </div>
             )}
           </div>
 
-          {/* Botón de Agregar al Carrito con temática de Calabaza Halloween */}
+          {/* Botón de Agregar al Carrito */}
           <div>
             {isOutOfStock ? (
               <button
@@ -399,7 +383,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
             ) : currentQuantity > 0 ? (
               /* YA ESTÁ EN EL CARRITO: Misma altura fija de 38px/40px */
               <div className={`transition-all duration-300 ${isCardPulsing ? 'scale-[1.02]' : ''}`}>
-                <div className="flex items-center justify-between gap-1 w-full bg-orange-50/90 p-0.5 rounded-xl border border-orange-200/80 shadow-2xs h-[38px] sm:h-[40px]">
+                <div className="flex items-center justify-between gap-1 w-full bg-slate-100/90 p-0.5 rounded-xl border border-slate-200/80 shadow-2xs h-[38px] sm:h-[40px]">
                   <button
                     onClick={handleDecrement}
                     className="w-8 h-full rounded-lg bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-600 font-black text-xs flex items-center justify-center transition-all shadow-xs active:scale-90 cursor-pointer"
@@ -410,7 +394,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                   </button>
 
                   <div className="flex-1 text-center font-black text-xs sm:text-sm text-slate-900 leading-tight">
-                    <span className="text-[#ea580c] font-extrabold">{currentQuantity}</span>
+                    <span className="text-purple-700 font-extrabold">{currentQuantity}</span>
                     <span className="text-[8px] sm:text-[9px] text-slate-500 font-medium block">
                       {selectedPresentation === 'MEDIA_ONZA' ? '½ oz' : selectedPresentation === 'ONZA_COMPLETA' ? '1 oz' : 'en carrito'}
                     </span>
@@ -421,7 +405,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                     disabled={!canAddMore}
                     className={`w-8 h-full rounded-lg font-black text-xs flex items-center justify-center transition-all shadow-xs ${
                       canAddMore
-                        ? 'bg-gradient-to-r from-[#ea580c] to-[#f97316] hover:brightness-105 text-white active:scale-90 cursor-pointer'
+                        ? 'bg-[#7c3aed] hover:bg-[#6d28d9] text-white active:scale-90 cursor-pointer'
                         : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                     }`}
                     title={canAddMore ? "Aumentar una unidad" : "Máximo disponible en inventario"}
@@ -440,8 +424,8 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                   !canAddMore
                     ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
                     : justAdded 
-                    ? 'bg-gradient-to-r from-[#c2410c] to-[#ea580c] text-white shadow-md scale-[1.02]' 
-                    : 'bg-gradient-to-r from-[#ea580c] via-[#f97316] to-[#d97706] hover:brightness-105 text-white border border-orange-300/60 shadow-[0_3px_10px_rgba(234,88,12,0.3)] active:scale-95 cursor-pointer'
+                    ? 'bg-[#6d28d9] text-white shadow-md scale-[1.02]' 
+                    : 'bg-[#7c3aed] hover:bg-[#6d28d9] text-white shadow-xs active:scale-95 cursor-pointer'
                 }`}
               >
                 {justAdded ? (

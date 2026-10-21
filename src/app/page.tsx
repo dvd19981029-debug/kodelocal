@@ -576,7 +576,7 @@ export default function EcommerceHomePage() {
                           : selectedCategory}
                   </span>
                 </h2>
-                <span className="clay-badge text-[10px] sm:text-xs bg-orange-50 text-orange-900 border border-orange-200 px-2.5 py-0.5 rounded-lg font-black">
+                <span className="clay-badge text-[10px] sm:text-xs bg-purple-50 text-purple-900 border border-purple-200 px-2.5 py-0.5 rounded-lg font-black">
                   {filteredProducts.length} {selectedCategory === 'Esencias para Perfume' ? 'fragancias' : 'productos'}
                 </span>
               </div>

@@ -166,7 +166,7 @@ export default function CartDrawer() {
                               {item.product.category === 'Esencias para Perfume' ? (
                                 <>
                                   <span className="text-slate-600 font-medium">Inspirado en </span>
-                                  <span className="text-[#ea580c] font-black text-[11.5px]">{getInspiracionPerfumeName(item.product)}</span>
+                                  <span className="text-slate-950 font-black text-[11.5px]">{getInspiracionPerfumeName(item.product)}</span>
                                 </>
                               ) : (
                                 <span className="text-slate-500 font-medium">{item.product.unit || 'Unidad'}</span>
@@ -281,7 +281,7 @@ export default function CartDrawer() {
                               ${(item.originalUnitPrice * item.quantity).toFixed(2)}
                             </span>
                           )}
-                          <span className="text-xs sm:text-sm font-black text-[#c2410c]">
+                          <span className="text-xs sm:text-sm font-black text-slate-900">
                             ${item.totalPrice.toFixed(2)}
                           </span>
                         </div>
@@ -336,8 +336,8 @@ export default function CartDrawer() {
                   return (
                     <>
                       {halloweenDiscount > 0 && (
-                        <div className="flex items-center justify-between text-[#ea580c] font-bold">
-                          <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> Ahorro Promo Halloween:</span>
+                        <div className="flex items-center justify-between text-purple-700 font-bold">
+                          <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> Ahorro Promo Especial:</span>
                           <span>-${halloweenDiscount.toFixed(2)}</span>
                         </div>
                       )}
@@ -356,7 +356,7 @@ export default function CartDrawer() {
                 </div>
                 <div className="flex items-center justify-between text-sm font-extrabold text-slate-900 pt-1.5 border-t border-slate-200/70">
                   <span>Total estimado:</span>
-                  <span className="font-black text-[#c2410c] text-base">${subtotal.toFixed(2)}</span>
+                  <span className="font-black text-indigo-700 text-base">${subtotal.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -366,7 +366,7 @@ export default function CartDrawer() {
                 onClick={() => {
                   setIsCartOpen(false);
                 }}
-                className="w-full py-3 text-xs sm:text-sm font-black rounded-xl flex items-center justify-center gap-2 bg-gradient-to-r from-[#ea580c] via-[#f97316] to-[#d97706] text-white border border-orange-300/60 shadow-[0_4px_16px_rgba(234,88,12,0.4)] tracking-wide cursor-pointer active:scale-95"
+                className="clay-btn clay-btn-primary w-full py-3 text-xs sm:text-sm font-black rounded-xl flex items-center justify-center gap-2 !shadow-[0_4px_16px_rgba(99,102,241,0.4)] tracking-wide cursor-pointer active:scale-95"
               >
                 <span>Proceder a pago seguro</span>
                 <ArrowRight className="w-4 h-4" />

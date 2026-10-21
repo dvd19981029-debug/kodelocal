@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { isHalloweenSeasonActive } from '@/lib/halloweenPromo';
 import { AnimatedWitchCauldronSVG } from '@/components/ecommerce/WitchCauldronHeaderBanner';
-import { CobwebCornerSVG, BatIllustrationSVG } from '@/components/ecommerce/HalloweenDecorations';
 
 interface PromoSlide {
   id: string;
@@ -24,7 +23,6 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
   const [currentIndex, setCurrentIndex] = useState(1);
   const [isTransitionEnabled, setIsTransitionEnabled] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
-  const [isWitchTransitioning, setIsWitchTransitioning] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
@@ -149,23 +147,11 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
 
   const handleSlideClick = (action: PromoSlide['action']) => {
     if (action === 'bruja-halloween') {
-      if (isWitchTransitioning) return;
-      setIsWitchTransitioning(true);
-      setIsPaused(true);
-
-      // Cambiar a la pestaña de la bruja a mitad del vuelo para que al despejarse los murciélagos ya esté lista
-      setTimeout(() => {
-        if (onFilterCategory) {
-          onFilterCategory('Pociones de la Bruja');
-        } else {
-          window.location.href = '/pociones-halloween';
-        }
-      }, 680);
-
-      setTimeout(() => {
-        setIsWitchTransitioning(false);
-        setIsPaused(false);
-      }, 1350);
+      if (onFilterCategory) {
+        onFilterCategory('Pociones de la Bruja');
+      } else {
+        window.location.href = '/pociones-halloween';
+      }
     } else if (action === 'emprendedor') {
       window.open(
         'https://wa.me/50360437496?text=' +
@@ -266,17 +252,6 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
               >
                 {slide.customRender ? (
                   <div className="w-full h-full relative overflow-hidden bg-gradient-to-br from-[#120722] via-[#3b0764] to-[#c2410c] flex items-center justify-between px-3.5 sm:px-8 md:px-11 py-3 sm:py-6 text-white">
-                    {/* Telarañas en esquinas del slide */}
-                    <div className="absolute top-0 left-0 w-20 h-20 sm:w-36 sm:h-36 text-orange-400/35 pointer-events-none">
-                      <CobwebCornerSVG className="w-full h-full" />
-                    </div>
-                    <div className="absolute top-0 right-0 w-20 h-20 sm:w-36 sm:h-36 text-orange-400/35 pointer-events-none">
-                      <CobwebCornerSVG className="w-full h-full" flipX />
-                    </div>
-                    <div className="hidden sm:block absolute top-4 left-[42%] text-amber-300/60 pointer-events-none">
-                      <BatIllustrationSVG className="w-11 h-6" />
-                    </div>
-
                     {/* Columna Izquierda: Textos de la Bruja Aromaniaka */}
                     <div className="relative z-10 flex-1 min-w-0 pr-2 sm:pr-4 space-y-1.5 sm:space-y-3">
                       <div className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-orange-500/30 border border-amber-300/60 text-amber-200 text-[8.5px] sm:text-xs font-black uppercase tracking-wider">
@@ -392,213 +367,6 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
         ))}
       </div>
     </div>
-
-    {/* Transición ultra-ligera (GPU transform + opacity, 0 impacto en carga inicial):
-        Bruja volando en escoba + bandada de murciélagos que dan paso a las Pociones de la Bruja */}
-    {isWitchTransitioning && <WitchFlightTransitionOverlay />}
   </div>
-  );
-}
-
-const BAT_SWARM_CONFIG = [
-  { top: '12%', delay: '0ms', duration: '980ms', size: 'w-14 h-8 sm:w-20 sm:h-11', dir: 'ltr', color: 'text-slate-950' },
-  { top: '22%', delay: '60ms', duration: '1020ms', size: 'w-12 h-7 sm:w-16 sm:h-9', dir: 'rtl', color: 'text-orange-400' },
-  { top: '30%', delay: '30ms', duration: '940ms', size: 'w-16 h-9 sm:w-24 sm:h-13', dir: 'ltr', color: 'text-purple-950' },
-  { top: '38%', delay: '110ms', duration: '1000ms', size: 'w-11 h-6 sm:w-16 sm:h-9', dir: 'rtl', color: 'text-amber-300' },
-  { top: '46%', delay: '20ms', duration: '960ms', size: 'w-16 h-9 sm:w-22 sm:h-12', dir: 'ltr', color: 'text-slate-950' },
-  { top: '54%', delay: '90ms', duration: '1040ms', size: 'w-14 h-8 sm:w-20 sm:h-11', dir: 'rtl', color: 'text-orange-500' },
-  { top: '62%', delay: '45ms', duration: '950ms', size: 'w-12 h-7 sm:w-18 sm:h-10', dir: 'ltr', color: 'text-purple-950' },
-  { top: '70%', delay: '130ms', duration: '990ms', size: 'w-15 h-8 sm:w-22 sm:h-12', dir: 'rtl', color: 'text-slate-950' },
-  { top: '78%', delay: '75ms', duration: '970ms', size: 'w-12 h-7 sm:w-16 sm:h-9', dir: 'ltr', color: 'text-amber-400' },
-  { top: '86%', delay: '15ms', duration: '1010ms', size: 'w-14 h-8 sm:w-20 sm:h-11', dir: 'rtl', color: 'text-slate-950' },
-  { top: '18%', delay: '150ms', duration: '950ms', size: 'w-10 h-6 sm:w-14 sm:h-8', dir: 'ltr', color: 'text-orange-300' },
-  { top: '66%', delay: '160ms', duration: '940ms', size: 'w-14 h-8 sm:w-18 sm:h-10', dir: 'ltr', color: 'text-amber-300' },
-];
-
-function WitchFlightTransitionOverlay() {
-  return (
-    <div
-      className="fixed inset-0 z-[9999] pointer-events-none overflow-hidden flex items-center justify-center hw-flight-curtain"
-      aria-hidden="true"
-    >
-      <style>{`
-        @keyframes hwFlightCurtain {
-          0% { opacity: 0; }
-          15% { opacity: 1; }
-          78% { opacity: 1; }
-          100% { opacity: 0; }
-        }
-        @keyframes hwWitchBroomAcross {
-          0% { transform: translate3d(-68vw, 22vh, 0) rotate(-10deg) scale(0.82); opacity: 0; }
-          12% { opacity: 1; }
-          50% { transform: translate3d(0vw, -2vh, 0) rotate(-6deg) scale(1.08); opacity: 1; }
-          88% { opacity: 1; }
-          100% { transform: translate3d(68vw, -24vh, 0) rotate(-14deg) scale(1.15); opacity: 0; }
-        }
-        @keyframes hwBatFlyLtr {
-          0% { transform: translate3d(-62vw, 10vh, 0) scale(0.75) rotate(-8deg); opacity: 0; }
-          15% { opacity: 1; }
-          85% { opacity: 1; }
-          100% { transform: translate3d(62vw, -12vh, 0) scale(1.15) rotate(8deg); opacity: 0; }
-        }
-        @keyframes hwBatFlyRtl {
-          0% { transform: translate3d(62vw, 8vh, 0) scale(0.75) rotate(8deg); opacity: 0; }
-          15% { opacity: 1; }
-          85% { opacity: 1; }
-          100% { transform: translate3d(-62vw, -12vh, 0) scale(1.15) rotate(-8deg); opacity: 0; }
-        }
-        @keyframes hwBatWingFlap {
-          0%, 100% { transform: scaleY(1); }
-          50% { transform: scaleY(0.58); }
-        }
-        .hw-flight-curtain {
-          background: radial-gradient(circle at 50% 42%, rgba(88, 28, 135, 0.94) 0%, rgba(18, 7, 34, 0.97) 70%);
-          animation: hwFlightCurtain 1350ms ease-in-out forwards;
-          will-change: opacity;
-        }
-        .hw-witch-broom-fly {
-          animation: hwWitchBroomAcross 1220ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
-          will-change: transform, opacity;
-        }
-        .hw-bat-ltr {
-          animation-name: hwBatFlyLtr;
-          animation-timing-function: cubic-bezier(0.25, 0.8, 0.25, 1);
-          animation-fill-mode: forwards;
-          will-change: transform, opacity;
-        }
-        .hw-bat-rtl {
-          animation-name: hwBatFlyRtl;
-          animation-timing-function: cubic-bezier(0.25, 0.8, 0.25, 1);
-          animation-fill-mode: forwards;
-          will-change: transform, opacity;
-        }
-        .hw-bat-flap {
-          animation: hwBatWingFlap 180ms ease-in-out infinite;
-          will-change: transform;
-        }
-      `}</style>
-
-      {/* Luna llena gigante de Halloween en el centro */}
-      <div
-        className="w-52 h-52 sm:w-72 sm:h-72 rounded-full flex items-center justify-center"
-        style={{
-          background: 'radial-gradient(circle, #fef08a 0%, #facc15 48%, #f97316 82%, transparent 100%)',
-        }}
-      />
-
-      {/* Bandada de murciélagos animados cruzando y abriendo paso */}
-      {BAT_SWARM_CONFIG.map((bat, idx) => (
-        <div
-          key={idx}
-          className={`absolute left-1/2 -translate-x-1/2 ${bat.dir === 'ltr' ? 'hw-bat-ltr' : 'hw-bat-rtl'} ${bat.color}`}
-          style={{
-            top: bat.top,
-            animationDelay: bat.delay,
-            animationDuration: bat.duration,
-          }}
-        >
-          <div className={`hw-bat-flap ${bat.size}`}>
-            <BatIllustrationSVG className="w-full h-full" />
-          </div>
-        </div>
-      ))}
-
-      {/* La Bruja Aromaniaka volando en su escoba mágica */}
-      <div className="relative z-10 hw-witch-broom-fly flex flex-col items-center">
-        <svg
-          viewBox="0 0 260 180"
-          className="w-60 h-40 sm:w-80 sm:h-56 overflow-visible"
-          aria-hidden="true"
-        >
-          {/* Estela mágica de estrellas y chispas detrás de la escoba */}
-          <circle cx="24" cy="126" r="5" fill="#fde047" />
-          <circle cx="44" cy="116" r="3.5" fill="#fb923c" />
-          <circle cx="14" cy="112" r="4" fill="#c084fc" />
-          <text x="6" y="138" fontSize="16" fill="#fde047">✦</text>
-          <text x="34" y="134" fontSize="14" fill="#fb923c">★</text>
-
-          {/* Escoba mágica: cerdas doradas a la izquierda y palo de madera */}
-          <path
-            d="M28 118 L68 104 L72 126 L26 134 C20 129 20 122 28 118 Z"
-            fill="#f59e0b"
-            stroke="#fde047"
-            strokeWidth="2"
-          />
-          <path d="M32 122 L64 111 M30 128 L66 119" stroke="#78350f" strokeWidth="2" strokeLinecap="round" />
-          <rect x="65" y="103" width="6" height="24" rx="3" fill="#dc2626" />
-          {/* Palo de la escoba */}
-          <path
-            d="M68 115 L228 88"
-            stroke="#92400e"
-            strokeWidth="7"
-            strokeLinecap="round"
-          />
-          <path
-            d="M68 113 L228 86"
-            stroke="#fcd34d"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
-
-          {/* Capa púrpura ondeando al viento */}
-          <path
-            d="M118 68 C88 74 72 95 62 110 C88 112 112 108 138 102 Z"
-            fill="#4c1d95"
-            stroke="#a855f7"
-            strokeWidth="2"
-          />
-
-          {/* Vestido y torso de la bruja sentada en la escoba */}
-          <path
-            d="M122 66 L152 66 L164 106 L114 108 Z"
-            fill="#1e1b4b"
-            stroke="#f97316"
-            strokeWidth="2"
-          />
-          {/* Botitas puntiagudas */}
-          <path d="M150 105 L162 122 L175 117 L166 113 L158 103 Z" fill="#0f172a" stroke="#facc15" strokeWidth="1.5" />
-
-          {/* Cabello morado/naranja al viento */}
-          <path
-            d="M126 45 C104 46 92 58 84 70 C102 68 116 64 130 58 Z"
-            fill="#ea580c"
-          />
-
-          {/* Rostro alegre de la bruja */}
-          <circle cx="142" cy="50" r="14" fill="#fde68a" stroke="#f59e0b" strokeWidth="1.5" />
-          <circle cx="147" cy="48" r="2.2" fill="#1e1b4b" />
-          <path d="M142 54 Q147 58 152 54" fill="none" stroke="#be123c" strokeWidth="2" strokeLinecap="round" />
-
-          {/* Sombrero puntiagudo clásico de bruja con hebilla dorada */}
-          <path
-            d="M112 42 Q142 34 172 42 Q142 48 112 42 Z"
-            fill="#1e1b4b"
-            stroke="#f97316"
-            strokeWidth="2"
-          />
-          <path
-            d="M125 40 L138 6 L160 12 L156 40 Z"
-            fill="#1e1b4b"
-            stroke="#f97316"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
-          <rect x="128" y="33" width="26" height="6" rx="2" fill="#ea580c" />
-          <rect x="137" y="32" width="8" height="8" rx="1.5" fill="#facc15" />
-
-          {/* Brazo sosteniendo una poción brillante en la punta de la escoba */}
-          <path d="M148 70 L182 76" stroke="#fde68a" strokeWidth="5" strokeLinecap="round" />
-          <circle cx="192" cy="74" r="11" fill="#ec4899" stroke="#fef08a" strokeWidth="2.5" />
-          <rect x="189" y="59" width="6" height="5" rx="1.5" fill="#fde047" />
-        </svg>
-      </div>
-
-      {/* Cartel inferior flotante durante el vuelo */}
-      <div className="absolute bottom-10 sm:bottom-14 left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-2xl bg-[#140529]/95 border-2 border-amber-400 text-center shadow-lg">
-        <p className="text-xs sm:text-base font-black text-amber-300 uppercase tracking-wider flex items-center gap-2 whitespace-nowrap">
-          <span>¡Abriendo el Laboratorio de la Bruja Aromaniaka!</span>
-        </p>
-      </div>
-    </div>
   );
 }

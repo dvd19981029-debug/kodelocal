@@ -41,8 +41,6 @@ import {
 } from '@/lib/halloweenPromo';
 import { AnimatedWitchCauldronSVG } from '@/components/ecommerce/WitchCauldronHeaderBanner';
 import {
-  CobwebCornerSVG,
-  BatIllustrationSVG,
   PumpkinIconSVG,
 } from '@/components/ecommerce/HalloweenDecorations';
 
@@ -270,33 +268,13 @@ export function WitchPotionsEventSection({
         }
       `}</style>
 
-      {/* Decoración Ambiental de Aquelarre: Telarañas gigantes en las esquinas, Luna Llena y Murciélagos */}
-      <div className="absolute top-0 left-0 w-32 h-32 sm:w-52 sm:h-52 text-orange-400/25 pointer-events-none">
-        <CobwebCornerSVG className="w-full h-full" />
-      </div>
-      <div className="absolute top-0 right-0 w-32 h-32 sm:w-52 sm:h-52 text-orange-400/25 pointer-events-none">
-        <CobwebCornerSVG className="w-full h-full" flipX />
-      </div>
-      <div className="absolute bottom-0 left-0 w-28 h-28 sm:w-40 sm:h-40 text-purple-400/15 pointer-events-none rotate-90">
-        <CobwebCornerSVG className="w-full h-full" />
-      </div>
-      <div className="absolute bottom-0 right-0 w-28 h-28 sm:w-40 sm:h-40 text-purple-400/15 pointer-events-none -rotate-90">
-        <CobwebCornerSVG className="w-full h-full" />
-      </div>
-
-      {/* Luna llena mística de fondo y murciélagos */}
+      {/* Luna llena mística de fondo */}
       <div
         className="pointer-events-none absolute -top-12 right-1/4 w-44 h-44 sm:w-64 sm:h-64 rounded-full opacity-20"
         style={{
           background: 'radial-gradient(circle, #fde047 0%, #f97316 55%, transparent 72%)',
         }}
       />
-      <div className="pointer-events-none absolute top-14 left-[18%] text-amber-300/50 coven-float-slow hidden sm:block">
-        <BatIllustrationSVG className="w-12 h-7" />
-      </div>
-      <div className="pointer-events-none absolute top-8 right-[15%] text-orange-300/50 coven-float-slow hidden sm:block">
-        <BatIllustrationSVG className="w-10 h-6" />
-      </div>
       <span className="pointer-events-none absolute top-20 right-[8%] text-amber-300 text-sm coven-star-1">✦</span>
       <span className="pointer-events-none absolute top-32 left-[8%] text-orange-300 text-xs coven-star-2">★</span>
 
@@ -954,18 +932,11 @@ function PotionEventCard({
           </span>
         </div>
 
-        {/* Ventana del Frasco con telaraña y halo mágico */}
+        {/* Ventana del Frasco */}
         <Link
           href={getProductUrl(product)}
           className="block relative w-full aspect-square @container rounded-xl sm:rounded-2xl bg-white border-2 border-orange-400/80 overflow-hidden mb-2 group shadow-inner"
         >
-          <div className="absolute top-0 right-0 w-12 h-12 sm:w-16 sm:h-16 text-orange-600/60 pointer-events-none z-10">
-            <CobwebCornerSVG className="w-full h-full" flipX />
-          </div>
-          <div className="absolute top-0 left-0 w-10 h-10 sm:w-12 sm:h-12 text-purple-900/35 pointer-events-none z-10">
-            <CobwebCornerSVG className="w-full h-full" />
-          </div>
-
           <img
             src={productImage}
             alt={displayName}

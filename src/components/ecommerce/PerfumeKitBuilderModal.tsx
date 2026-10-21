@@ -426,7 +426,7 @@ export default function PerfumeKitBuilderModal({
                             </div>
                             <p className="text-[10.5px] text-slate-600 font-medium truncate mt-1 bg-slate-50 px-1.5 py-0.5 rounded-md border border-slate-100" title={`Inspirado en ${getInspiracionPerfumeName(essence)}`}>
                               <span className="text-slate-600 font-medium">Inspirado en: </span>
-                              <strong className="text-[#ea580c] font-black">
+                              <strong className="text-slate-950 font-black">
                                 {getInspiracionPerfumeName(essence)}
                               </strong>
                             </p>
@@ -447,7 +447,7 @@ export default function PerfumeKitBuilderModal({
                                 : 'Disponible'}
                             </span>
                             {isChosen && (
-                              <span className="w-5 h-5 rounded-full bg-gradient-to-br from-[#ea580c] to-[#f97316] text-white flex items-center justify-center font-bold text-[10px] shadow-xs">
+                              <span className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center font-bold text-[10px] shadow-xs">
                                 ✓
                               </span>
                             )}
@@ -461,9 +461,9 @@ export default function PerfumeKitBuilderModal({
 
               {/* Indicador de esencia seleccionada con diseño Clay */}
               {selectedEssence && (
-                <div className="p-2.5 sm:p-3 rounded-2xl clay-card bg-orange-50/80 border border-orange-200/80 text-slate-900 flex items-center justify-between shrink-0 shadow-xs max-w-2xl mx-auto w-full">
+                <div className="p-2.5 sm:p-3 rounded-2xl clay-card bg-purple-50/80 border border-purple-200/80 text-purple-950 flex items-center justify-between shrink-0 shadow-xs max-w-2xl mx-auto w-full">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-orange-200 shadow-2xs shrink-0 flex items-center justify-center p-0.5">
+                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-purple-200 shadow-2xs shrink-0 flex items-center justify-center p-0.5">
                       <img
                         src={getProductImage(selectedEssence)}
                         alt={formatPerfumeDisplayName(selectedEssence)}
@@ -471,12 +471,12 @@ export default function PerfumeKitBuilderModal({
                       />
                     </div>
                     <div className="min-w-0">
-                      <span className="text-[9px] text-orange-700 font-bold uppercase tracking-wider block">Esencia elegida:</span>
-                      <strong className="text-xs sm:text-sm font-black text-slate-900 truncate block">
+                      <span className="text-[9px] text-purple-700 font-bold uppercase tracking-wider block">Esencia elegida:</span>
+                      <strong className="text-xs sm:text-sm font-black text-purple-950 truncate block">
                         {formatPerfumeDisplayName(selectedEssence)}
                       </strong>
                       <span className="text-[11px] text-slate-700 font-medium truncate block">
-                        Inspirado en: <strong className="text-[#ea580c] font-black">{getInspiracionPerfumeName(selectedEssence)}</strong>
+                        Inspirado en: <strong className="text-slate-950 font-black">{getInspiracionPerfumeName(selectedEssence)}</strong>
                       </span>
                     </div>
                   </div>

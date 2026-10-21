@@ -16,26 +16,29 @@ interface TickerMessage {
 const BASE_TICKER_MESSAGES: TickerMessage[] = [
   {
     id: 'envios',
-    badge: 'ENVÍOS',
+    badge: 'ENVÍOS $2.90',
     icon: Truck,
-    text: 'Entregas a domicilio en los 14 departamentos de El Salvador o retiro en tienda',
+    text: '¡ENVÍOS RÁPIDOS A LOS 14 DEPARTAMENTOS DE EL SALVADOR O RETIRO EN TIENDA!',
   },
   {
     id: 'calidad',
+    badge: '100% PURAS',
     icon: Droplets,
-    text: 'Esencias concentradas de perfumería fina',
-    highlight: 'Venta por onza y media onza',
+    text: 'ESENCIAS CONCENTRADAS DE PERFUMERÍA FINA SIN DILUIR',
+    highlight: 'VENTA POR ONZA ($3.75) Y MEDIA ONZA ($1.90)',
   },
   {
     id: 'insumos',
+    badge: 'MAYOREO Y DETALLE',
     icon: Sparkles,
-    text: 'Envases de vidrio, atomizadores y materias primas',
-    highlight: 'Venta al por mayor y detalle',
+    text: 'FRASCOS DE CRISTAL, ALCOHOL PERFUMERO CON FIJADOR Y MATERIAS PRIMAS',
+    highlight: '¡ARMA TU PERFUME DE 100ML DESDE $11.00!',
   },
   {
     id: 'seguridad',
+    badge: 'COMPRA SEGURA',
     icon: ShieldCheck,
-    text: 'Compra 100% protegida y pago seguro con tarjeta o transferencia bancaria',
+    text: 'PAGO 100% PROTEGIDO CON TARJETA, TRANSFERENCIA O EN TIENDA FÍSICA',
   },
 ];
 
@@ -52,10 +55,10 @@ export default function PromoTickerBar() {
     ? [
         {
           id: 'halloween-promo',
-          badge: 'HALLOWEEN',
+          badge: '🎃 HALLOWEEN',
           icon: Sparkles,
-          text: 'Especial de Halloween hasta el 31 de octubre: Pociones seleccionadas',
-          highlight: '1 Onza a $3.30 y ½ Onza a $1.85',
+          text: '¡ESPECIAL DE HALLOWEEN! 10 POCIONES SELECCIONADAS EN OFERTA',
+          highlight: '1 ONZA A $3.30 Y ½ ONZA A $1.85',
         },
         ...BASE_TICKER_MESSAGES,
       ]
@@ -64,65 +67,67 @@ export default function PromoTickerBar() {
   return (
     <aside
       aria-label="Avisos y Beneficios de Aromaniak SV"
-      className={`w-full text-white overflow-hidden relative select-none pointer-events-none sm:pointer-events-auto z-30 ${
-        halloweenActive
-          ? 'bg-gradient-to-r from-[#c2410c] via-[#ea580c] to-[#f97316] border-b border-orange-300/35 shadow-[0_2px_12px_rgba(234,88,12,0.3)]'
-          : 'bg-gradient-to-r from-indigo-900 via-purple-800 to-indigo-900 border-b border-purple-500/30 shadow-xs'
-      }`}
+      className="w-full bg-[#ea580c] text-white border-b border-[#c2410c] shadow-xs overflow-hidden relative select-none pointer-events-none sm:pointer-events-auto z-30"
     >
       <div className="relative py-2 sm:py-2.5 overflow-hidden flex items-center">
         {/* Pista continua con animación infinita sin cortes ni espacios en blanco */}
         <div className="ticker-track flex items-center whitespace-nowrap hover:[animation-play-state:paused]">
           {/* Primer bloque */}
-          <div className="flex items-center gap-8 px-4 shrink-0">
-            {TICKER_MESSAGES.map((msg) => {
-              const Icon = msg.icon;
-              return (
-                <div key={`track1-${msg.id}`} className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-semibold tracking-tight text-white/95">
-                  <Icon className="w-3.5 h-3.5 text-amber-200 shrink-0 stroke-[2.2]" />
-                  {msg.badge && (
-                    <span className="bg-slate-950/35 text-amber-100 text-[9px] font-extrabold px-1.5 py-0.5 rounded tracking-wider uppercase border border-amber-200/35">
-                      {msg.badge}
-                    </span>
-                  )}
-                  <span>
-                    {msg.text}
-                    {msg.highlight && (
-                      <>
-                        {' • '}
-                        <strong className="font-extrabold text-amber-100 underline decoration-amber-200/50 underline-offset-2">{msg.highlight}</strong>
-                      </>
-                    )}
+          <div className="flex items-center gap-6 px-4 shrink-0">
+            {TICKER_MESSAGES.map((msg) => (
+              <div
+                key={`track1-${msg.id}`}
+                className="inline-flex items-center gap-2.5 text-xs sm:text-[13px] font-black uppercase tracking-wide text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.28)]"
+              >
+                <span className="text-sm sm:text-base leading-none" aria-hidden="true">🎃</span>
+                {msg.badge && (
+                  <span className="bg-slate-950/90 text-amber-300 text-[10px] sm:text-[11px] font-black px-2 py-0.5 rounded-md tracking-wider uppercase border border-amber-300/60 shadow-2xs">
+                    {msg.badge}
                   </span>
-                </div>
-              );
-            })}
+                )}
+                <span>
+                  {msg.text}
+                  {msg.highlight && (
+                    <>
+                      {' — '}
+                      <strong className="font-black text-yellow-200 underline decoration-yellow-200/80 decoration-2 underline-offset-2">
+                        {msg.highlight}
+                      </strong>
+                    </>
+                  )}
+                </span>
+                <span className="text-sm sm:text-base leading-none" aria-hidden="true">🎃</span>
+              </div>
+            ))}
           </div>
 
           {/* Bloque duplicado idéntico para efecto infinito 100% continuo */}
-          <div className="flex items-center gap-8 px-4 shrink-0" aria-hidden="true">
-            {TICKER_MESSAGES.map((msg) => {
-              const Icon = msg.icon;
-              return (
-                <div key={`track2-${msg.id}`} className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-semibold tracking-tight text-white/95">
-                  <Icon className="w-3.5 h-3.5 text-amber-200 shrink-0 stroke-[2.2]" />
-                  {msg.badge && (
-                    <span className="bg-slate-950/35 text-amber-100 text-[9px] font-extrabold px-1.5 py-0.5 rounded tracking-wider uppercase border border-amber-200/35">
-                      {msg.badge}
-                    </span>
-                  )}
-                  <span>
-                    {msg.text}
-                    {msg.highlight && (
-                      <>
-                        {' • '}
-                        <strong className="font-extrabold text-amber-100 underline decoration-amber-200/50 underline-offset-2">{msg.highlight}</strong>
-                      </>
-                    )}
+          <div className="flex items-center gap-6 px-4 shrink-0" aria-hidden="true">
+            {TICKER_MESSAGES.map((msg) => (
+              <div
+                key={`track2-${msg.id}`}
+                className="inline-flex items-center gap-2.5 text-xs sm:text-[13px] font-black uppercase tracking-wide text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.28)]"
+              >
+                <span className="text-sm sm:text-base leading-none" aria-hidden="true">🎃</span>
+                {msg.badge && (
+                  <span className="bg-slate-950/90 text-amber-300 text-[10px] sm:text-[11px] font-black px-2 py-0.5 rounded-md tracking-wider uppercase border border-amber-300/60 shadow-2xs">
+                    {msg.badge}
                   </span>
-                </div>
-              );
-            })}
+                )}
+                <span>
+                  {msg.text}
+                  {msg.highlight && (
+                    <>
+                      {' — '}
+                      <strong className="font-black text-yellow-200 underline decoration-yellow-200/80 decoration-2 underline-offset-2">
+                        {msg.highlight}
+                      </strong>
+                    </>
+                  )}
+                </span>
+                <span className="text-sm sm:text-base leading-none" aria-hidden="true">🎃</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
