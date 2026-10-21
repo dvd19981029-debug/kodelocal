@@ -4,7 +4,6 @@ import sharp from 'sharp';
 import { prisma } from '../src/lib/prisma';
 import { INITIAL_PRODUCTS, ProductItem } from '../src/lib/store';
 import { getInspiracionPerfumeName } from '../src/lib/perfumeNames';
-import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ } from '../src/lib/halloweenPromo';
 
 const OUT_DIR = path.join(process.cwd(), 'public', 'images', 'meta');
 
@@ -27,23 +26,38 @@ function escapeXml(unsafe: string): string {
   });
 }
 
-function createStarburstPoints(
+/**
+ * Genera un sello/escarapela estrellado suave y moderno (ondas redondeadas con curvas Bézier,
+ * sin picos dentados bruscos) para el badge de precio en la esquina superior derecha.
+ */
+function createSmoothScallopSealPath(
   cx: number,
   cy: number,
-  numPoints: number,
-  outerR: number,
-  innerR: number
+  lobes: number,
+  innerR: number,
+  outerR: number
 ): string {
-  const pts: string[] = [];
-  const totalVertices = numPoints * 2;
-  for (let i = 0; i < totalVertices; i++) {
-    const angle = (Math.PI * 2 * i) / totalVertices - Math.PI / 2;
-    const r = i % 2 === 0 ? outerR : innerR;
-    const x = cx + r * Math.cos(angle);
-    const y = cy + r * Math.sin(angle);
-    pts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+  const step = (Math.PI * 2) / lobes;
+  let d = '';
+  for (let i = 0; i < lobes; i++) {
+    const a1 = i * step - Math.PI / 2;
+    const aMid = (i + 0.5) * step - Math.PI / 2;
+    const a2 = (i + 1) * step - Math.PI / 2;
+
+    const x1 = cx + innerR * Math.cos(a1);
+    const y1 = cy + innerR * Math.sin(a1);
+    const xCtrl = cx + outerR * Math.cos(aMid);
+    const yCtrl = cy + outerR * Math.sin(aMid);
+    const x2 = cx + innerR * Math.cos(a2);
+    const y2 = cy + innerR * Math.sin(a2);
+
+    if (i === 0) {
+      d += `M ${x1.toFixed(2)} ${y1.toFixed(2)} `;
+    }
+    d += `Q ${xCtrl.toFixed(2)} ${yCtrl.toFixed(2)} ${x2.toFixed(2)} ${y2.toFixed(2)} `;
   }
-  return pts.join(' ');
+  d += 'Z';
+  return d;
 }
 
 function layoutLabelText(name: string) {
@@ -120,51 +134,110 @@ export function createBottleLabelSvg(contratipo: string): Buffer {
   `);
 }
 
-export function resolveCleanOriginalPerfumeName(p: {
+const EXACT_ORIGINAL_WITH_BRAND: Record<string, string> = {
+  '1': 'SAUVAGE DIOR',
+  '2': 'BLEU DE CHANEL',
+  '3': 'ACQUA DI GIÒ GIORGIO ARMANI',
+  '4': 'CLUB DE NUIT INTENSE ARMAF',
+  '5': 'AVENTUS CREED',
+  '6': 'LA VIDA ES BELLA LANCÔME',
+  '7': 'ODYSSEY MANDARIN SKY ARMAF',
+  '8': 'EROS VERSACE',
+  '9': "L'EAU D'ISSEY ISSEY MIYAKE",
+  '10': 'SANTAL 33 LE LABO',
+  '11': 'BORN IN ROMA INTENSE VALENTINO',
+  '12': 'ERBA PURA XERJOFF',
+  '13': 'COCO MADEMOISELLE CHANEL',
+  '14': 'LIGHT BLUE DOLCE & GABBANA',
+  '15': 'BOSS BOTTLED HUGO BOSS',
+  '16': 'INVICTUS PACO RABANNE',
+  '17': 'BURBERRY HER',
+  '18': '212 VIP ROSÉ CAROLINA HERRERA',
+  '19': 'POLO BLUE RALPH LAUREN',
+  '20': 'ONE MILLION PACO RABANNE',
+  '21': 'COCO CHANEL',
+  '22': 'CHANCE CHANEL',
+  '23': '9PM AFNAN',
+  '24': 'LE MALE JEAN PAUL GAULTIER',
+  '25': "J'ADORE DIOR",
+  '26': 'TOMMY HILFIGER',
+  '27': 'CHANEL N° 5',
+  '28': 'BAD BOY CAROLINA HERRERA',
+  '29': 'BE DELICIOUS DKNY',
+  '30': 'LOST CHERRY TOM FORD',
+  '31': 'SCANDAL JEAN PAUL GAULTIER',
+  '32': 'BORN IN ROMA DONNA VALENTINO',
+  '33': "L'IMMENSITÉ LOUIS VUITTON",
+  '34': '212 VIP CAROLINA HERRERA',
+  '35': 'SWISS ARMY VICTORINOX',
+  '36': 'BLANC L.12.12 LACOSTE',
+  '37': 'ACQUA DI GIÒ GIORGIO ARMANI',
+  '38': 'POLO BLACK RALPH LAUREN',
+  '39': 'RALPH LAUREN',
+  '40': 'YARA LATTAFA',
+  '41': 'YARA TOUS LATTAFA',
+  '42': 'FLOWERBOMB VIKTOR & ROLF',
+  '43': 'BLACK OPIUM YVES SAINT LAURENT',
+  '44': 'DIOR HOMME SPORT',
+  '45': 'CK ONE CALVIN KLEIN',
+  '46': '360 RED PERRY ELLIS',
+  '47': 'GREEN TEA ELIZABETH ARDEN',
+  '48': 'PRINCESS VERA WANG',
+  '49': 'SAUVAGE ELIXIR DIOR',
+  '50': 'BORN IN ROMA UOMO VALENTINO',
+  '51': 'ACQUA DI GIÒ PROFONDO ARMANI',
+  '52': 'LE MALE ELIXIR JEAN PAUL GAULTIER',
+  '53': 'STRONGER WITH YOU ARMANI',
+  '54': '212 MEN CAROLINA HERRERA',
+  '55': 'MAN IN BLACK BVLGARI',
+  '56': 'ACQUA DI GIÒ PROFUMO ARMANI',
+  '57': 'LA BOMBA CAROLINA HERRERA',
+  '58': 'GOOD GIRL CAROLINA HERRERA',
+  '59': 'TOY BOY MOSCHINO',
+  '60': 'BACCARAT ROUGE 540 MFK',
+  '61': 'FAHRENHEIT DIOR',
+  '62': 'AMARIGE GIVENCHY',
+  '63': 'ANGEL THIERRY MUGLER',
+  '64': 'EILISH BILLIE EILISH',
+  '65': 'HALLOWEEN MAN JESÚS DEL POZO',
+  '66': 'LAVANDE 31 LE LABO',
+  '67': 'PARADOXE PRADA',
+  '68': 'TOMMY GIRL TOMMY HILFIGER',
+  '69': 'EAU DE RHUBARBE ÉCARLATE HERMÈS',
+  '70': 'ENDLESS EUPHORIA CALVIN KLEIN',
+  '71': 'BHARARA CHOCOLATE',
+  '72': 'COOL WATER DAVIDOFF',
+  '73': 'DRAKKAR NOIR GUY LAROCHE',
+  '74': 'ETERNITY CALVIN KLEIN',
+  '75': "L'EAU SUPER MAJEURE D'ISSEY MIYAKE",
+  '76': 'LEGEND MONTBLANC',
+  '77': 'OUD FOR GLORY LATTAFA',
+  '78': 'PHANTOM PARFUM PACO RABANNE',
+  '79': 'POLO SPORT RALPH LAUREN',
+  '80': 'SILVER MOUNTAIN WATER CREED',
+  '81': 'TUSCAN LEATHER TOM FORD',
+  '82': 'BORN IN ROMA CORAL FANTASY VALENTINO',
+};
+
+export function resolveCleanOriginalPerfumeWithBrand(p: {
   sku?: string;
   name?: string;
-  officialName?: string;
+  brand?: string;
 }): string {
   const skuStr = String(p.sku || '').trim();
-  const customOverrides: Record<string, string> = {
-    '2': 'BLEU DE CHANEL',
-    '3': 'ACQUA DI GIÒ',
-    '6': 'LA VIDA ES BELLA',
-    '9': "L'EAU D'ISSEY",
-    '15': 'HUGO BOSS BOTTLED',
-    '19': 'POLO BLUE',
-    '21': 'COCO CHANEL',
-    '22': 'CHANEL CHANCE',
-    '26': 'TOMMY HILFIGER',
-    '27': 'CHANEL N° 5',
-    '32': 'BORN IN ROMA DONNA',
-    '37': 'ACQUA DI GIÒ DAMA',
-    '38': 'POLO BLACK',
-    '39': 'RALPH LAUREN',
-    '44': 'DIOR HOMME SPORT',
-    '48': 'VERA WANG PRINCESS',
-    '51': 'ACQUA DI GIÒ PROFONDO',
-    '56': 'ACQUA DI GIÒ PROFUMO',
-    '57': 'LA BOMBA',
-    '58': 'GOOD GIRL',
-    '68': 'TOMMY GIRL',
-    '75': "L'EAU SUPER MAJEURE",
-    '76': 'MONTBLANC LEGEND',
-    '79': 'POLO SPORT',
-  };
-
-  if (customOverrides[skuStr]) {
-    return customOverrides[skuStr];
+  if (EXACT_ORIGINAL_WITH_BRAND[skuStr]) {
+    return EXACT_ORIGINAL_WITH_BRAND[skuStr];
   }
 
-  const raw = getInspiracionPerfumeName(p as any) || p.name || '';
-  return raw
+  const rawName = (getInspiracionPerfumeName(p as any) || p.name || '')
     .replace(/\s+[HFMU]$/i, '')
     .replace(/\s+M\s+F$/i, '')
-    .replace(/\bCHNL°\s*5\b/gi, 'CHANEL N° 5')
-    .replace(/\s{2,}/g, ' ')
-    .trim()
-    .toUpperCase();
+    .trim();
+  const brand = (p.brand || '').trim();
+  if (brand && !rawName.toLowerCase().includes(brand.toLowerCase())) {
+    return `${rawName} ${brand}`.toUpperCase();
+  }
+  return rawName.toUpperCase();
 }
 
 export function createCatalogOverlaySvg(opts: {
@@ -173,22 +246,24 @@ export function createCatalogOverlaySvg(opts: {
   ribbonSmall: string;
   ribbonLarge: string;
 }): Buffer {
-  const cx = 842;
-  const cy = 152;
-  const outerStar = createStarburstPoints(cx, cy, 20, 114, 94);
-  const innerStar = createStarburstPoints(cx, cy, 20, 106, 87);
+  // Badge compacto y elegante en esquina superior derecha
+  const cx = 868;
+  const cy = 122;
+  const outerSeal = createSmoothScallopSealPath(cx, cy, 14, 76, 91);
+  const innerSeal = createSmoothScallopSealPath(cx, cy, 14, 71, 85);
 
   const cleanLarge = escapeXml(opts.ribbonLarge.toUpperCase().trim());
   const cleanSmall = escapeXml(opts.ribbonSmall.toUpperCase().trim());
   const len = cleanLarge.length;
 
-  let largeFontSize = 54;
-  if (len > 26) largeFontSize = 33;
-  else if (len > 22) largeFontSize = 38;
-  else if (len > 18) largeFontSize = 43;
-  else if (len > 14) largeFontSize = 48;
+  let largeFontSize = 50;
+  if (len > 33) largeFontSize = 27;
+  else if (len > 29) largeFontSize = 31;
+  else if (len > 25) largeFontSize = 35;
+  else if (len > 21) largeFontSize = 39;
+  else if (len > 17) largeFontSize = 44;
 
-  const priceFontSize = opts.priceStr.length >= 6 ? 38 : 44;
+  const priceFontSize = opts.priceStr.length >= 6 ? 31 : 35;
 
   return Buffer.from(`
     <svg width="1000" height="1000" xmlns="http://www.w3.org/2000/svg">
@@ -198,28 +273,29 @@ export function createCatalogOverlaySvg(opts: {
           <stop offset="50%" stop-color="#5B21B6" />
           <stop offset="100%" stop-color="#4C1D95" />
         </linearGradient>
-        <linearGradient id="greenStarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#22C55E" />
-          <stop offset="100%" stop-color="#15803D" />
+        <linearGradient id="greenSealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#10B981" />
+          <stop offset="100%" stop-color="#059669" />
         </linearGradient>
-        <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#000000" flood-opacity="0.24" />
+        <filter id="badgeShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#064E3B" flood-opacity="0.22" />
         </filter>
       </defs>
 
-      <!-- Pelotita estrellada verde de precio en esquina superior derecha -->
-      <g filter="url(#dropShadow)">
-        <polygon points="${outerStar}" fill="#FFFFFF" />
-        <polygon points="${innerStar}" fill="url(#greenStarGrad)" />
+      <!-- Sello verde suave y moderno en esquina superior derecha -->
+      <g filter="url(#badgeShadow)">
+        <path d="${outerSeal}" fill="#FFFFFF" />
+        <path d="${innerSeal}" fill="url(#greenSealGrad)" />
+        <circle cx="${cx}" cy="${cy}" r="63" fill="none" stroke="#6EE7B7" stroke-width="1.5" stroke-opacity="0.6" />
       </g>
-      <text x="${cx}" y="${cy + 5}" font-family="Arial, Helvetica, sans-serif" font-size="${priceFontSize}" font-weight="900" text-anchor="middle" fill="#FFFFFF" letter-spacing="-0.5">${escapeXml(opts.priceStr)}</text>
-      <text x="${cx}" y="${cy + 34}" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="800" text-anchor="middle" fill="#DCFCE7" letter-spacing="1.5">${escapeXml(opts.unitLabel)}</text>
+      <text x="${cx}" y="${cy + 3}" font-family="Arial, Helvetica, sans-serif" font-size="${priceFontSize}" font-weight="900" text-anchor="middle" fill="#FFFFFF" letter-spacing="-0.5">${escapeXml(opts.priceStr)}</text>
+      <text x="${cx}" y="${cy + 27}" font-family="Arial, Helvetica, sans-serif" font-size="14.5" font-weight="800" text-anchor="middle" fill="#D1FAE5" letter-spacing="1.2">${escapeXml(opts.unitLabel)}</text>
 
       <!-- Cinta morada inferior -->
       <rect x="0" y="842" width="1000" height="158" fill="url(#purpleGrad)" />
       <rect x="0" y="842" width="1000" height="5" fill="#A78BFA" />
-      <text x="500" y="888" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="800" text-anchor="middle" fill="#DDD6FE" letter-spacing="4">${cleanSmall}</text>
-      <text x="500" y="954" font-family="Arial, Helvetica, sans-serif" font-size="${largeFontSize}" font-weight="900" text-anchor="middle" fill="#FFFFFF" letter-spacing="1.2">${cleanLarge}</text>
+      <text x="500" y="886" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="800" text-anchor="middle" fill="#DDD6FE" letter-spacing="4">${cleanSmall}</text>
+      <text x="500" y="950" font-family="Arial, Helvetica, sans-serif" font-size="${largeFontSize}" font-weight="900" text-anchor="middle" fill="#FFFFFF" letter-spacing="1">${cleanLarge}</text>
     </svg>
   `);
 }
@@ -333,15 +409,14 @@ async function main() {
         .resize(710, 842, { fit: 'contain', background: { r: 255, g: 255, b: 255 } })
         .toBuffer();
 
-      const isPromo = isHalloweenPromoProduct(p);
-      const activePrice = isPromo ? HALLOWEEN_PROMO_PRICE_1OZ : Number(p.price || 3.75);
-      const originalPerfume = resolveCleanOriginalPerfumeName(p);
+      const unitPrice = Number(p.price || 3.75);
+      const originalPerfumeWithBrand = resolveCleanOriginalPerfumeWithBrand(p);
 
       const overlaySvg = createCatalogOverlaySvg({
-        priceStr: `$${activePrice.toFixed(2)}`,
+        priceStr: `$${unitPrice.toFixed(2)}`,
         unitLabel: '1 ONZA',
         ribbonSmall: 'INSPIRADO EN',
-        ribbonLarge: originalPerfume,
+        ribbonLarge: originalPerfumeWithBrand,
       });
 
       await sharp({
@@ -360,7 +435,11 @@ async function main() {
         .toFile(outPath);
     } else if (isBottle) {
       const init = initMap.get(p.id);
-      const rawImgPath = (p.imageUrl || init?.imageUrl || '/images/botes/bote_100ml_degrade_azul_noche.jpg')
+      const rawImgPath = (
+        p.imageUrl ||
+        init?.imageUrl ||
+        '/images/botes/bote_100ml_degrade_azul_noche.jpg'
+      )
         .split('?')[0]
         .replace(/^\//, '');
       const fullImgPath = path.join(process.cwd(), 'public', rawImgPath);
