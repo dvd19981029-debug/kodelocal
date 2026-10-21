@@ -89,6 +89,91 @@ export const INSPIRACION_PERFUME_MAP: Record<string, string> = {
   '82': 'Born in Roma Coral Fantasy H'
 };
 
+export const INSPIRACION_BRAND_MAP: Record<string, string> = {
+  '1': 'Dior',
+  '2': 'Chanel',
+  '3': 'Giorgio Armani',
+  '4': 'Armaf',
+  '5': 'Creed',
+  '6': 'Lancôme',
+  '7': 'Armaf',
+  '8': 'Versace',
+  '9': 'Issey Miyake',
+  '10': 'Le Labo',
+  '11': 'Valentino',
+  '12': 'Xerjoff',
+  '13': 'Chanel',
+  '14': 'Dolce & Gabbana',
+  '15': 'Hugo Boss',
+  '16': 'Paco Rabanne',
+  '17': 'Burberry',
+  '18': 'Carolina Herrera',
+  '19': 'Ralph Lauren',
+  '20': 'Paco Rabanne',
+  '21': 'Chanel',
+  '22': 'Chanel',
+  '23': 'Afnan',
+  '24': 'Jean Paul Gaultier',
+  '25': 'Dior',
+  '26': 'Tommy Hilfiger',
+  '27': 'Chanel',
+  '28': 'Carolina Herrera',
+  '29': 'DKNY',
+  '30': 'Tom Ford',
+  '31': 'Jean Paul Gaultier',
+  '32': 'Valentino',
+  '33': 'Louis Vuitton',
+  '34': 'Carolina Herrera',
+  '35': 'Victorinox',
+  '36': 'Lacoste',
+  '37': 'Giorgio Armani',
+  '38': 'Ralph Lauren',
+  '39': 'Ralph Lauren',
+  '40': 'Lattafa',
+  '41': 'Lattafa',
+  '42': 'Viktor & Rolf',
+  '43': 'Yves Saint Laurent',
+  '44': 'Dior',
+  '45': 'Calvin Klein',
+  '46': 'Perry Ellis',
+  '47': 'Elizabeth Arden',
+  '48': 'Vera Wang',
+  '49': 'Dior',
+  '50': 'Valentino',
+  '51': 'Giorgio Armani',
+  '52': 'Jean Paul Gaultier',
+  '53': 'Giorgio Armani',
+  '54': 'Carolina Herrera',
+  '55': 'Bvlgari',
+  '56': 'Giorgio Armani',
+  '57': 'Carolina Herrera',
+  '58': 'Carolina Herrera',
+  '59': 'Moschino',
+  '60': 'Maison Francis Kurkdjian',
+  '61': 'Dior',
+  '62': 'Givenchy',
+  '63': 'Thierry Mugler',
+  '64': 'Billie Eilish',
+  '65': 'Jesús del Pozo',
+  '66': 'Le Labo',
+  '67': 'Prada',
+  '68': 'Tommy Hilfiger',
+  '69': 'Hermès',
+  '70': 'Calvin Klein',
+  '71': 'Bharara',
+  '72': 'Davidoff',
+  '73': 'Guy Laroche',
+  '74': 'Calvin Klein',
+  '75': 'Issey Miyake',
+  '76': 'Montblanc',
+  '77': 'Lattafa',
+  '78': 'Paco Rabanne',
+  '79': 'Ralph Lauren',
+  '80': 'Creed',
+  '81': 'Tom Ford',
+  '82': 'Valentino'
+};
+
 export const INCOMING_ESSENCE_SKUS = new Set([
   '62', '63', '64', '65', '66', '67', '68', '69', '70', '71',
   '72', '73', '74', '75', '76', '77', '78', '79', '80', '81', '82'
@@ -190,10 +275,20 @@ export function formatPerfumeDisplayName(product: { officialName?: string | null
 }
 
 /**
- * Devuelve el nombre de inspiración (contratipo) SIN la marca y con el sufijo H o F correspondiente.
+ * Devuelve el nombre de inspiración con el sufijo H o F correspondiente y la marca de la casa perfumera
+ * (ej. "La Bomba F Carolina Herrera", "Sauvage H Dior").
  */
-export function getInspiracionPerfumeName(product: { sku?: string | null; description?: string | null; name?: string | null; brand?: string | null; officialName?: string | null; gender?: string | null } | null | undefined): string {
+export function getInspiracionPerfumeName(product: { id?: string | null; sku?: string | null; description?: string | null; name?: string | null; brand?: string | null; officialName?: string | null; gender?: string | null } | null | undefined): string {
   if (!product) return '';
+
+  const rawSku = String(product.sku || '').trim();
+  const idMatch = String(product.id || '').trim().toLowerCase().match(/^esencia-(?:apae-)?0*(\d+)$/);
+  const sku = rawSku || (idMatch ? idMatch[1] : '');
+
+  // Resolver la marca del perfume original
+  const rawBrand = (product.brand || '').replace(/&amp;/g, '&').trim();
+  const isGenericBrand = !rawBrand || /^(aromaniak|aromaniak sv|gen[eé]rico|apae|apaesa)$/i.test(rawBrand);
+  const brand = (!isGenericBrand ? rawBrand : '') || (sku && INSPIRACION_BRAND_MAP[sku] ? INSPIRACION_BRAND_MAP[sku] : '');
 
   let inspiracion = '';
 
@@ -207,11 +302,8 @@ export function getInspiracionPerfumeName(product: { sku?: string | null; descri
   }
 
   // 2. Mapeo directo por SKU si existe
-  if (!inspiracion) {
-    const sku = String(product.sku || '').trim();
-    if (sku && INSPIRACION_PERFUME_MAP[sku]) {
-      inspiracion = INSPIRACION_PERFUME_MAP[sku];
-    }
+  if (!inspiracion && sku && INSPIRACION_PERFUME_MAP[sku]) {
+    inspiracion = INSPIRACION_PERFUME_MAP[sku];
   }
 
   // 3. Si product.name está definido (incluso si no hay officialName), usar product.name
@@ -263,8 +355,21 @@ export function getInspiracionPerfumeName(product: { sku?: string | null; descri
     }
   }
 
-  // Garantizar sufijo de género H / F
-  return formatWithGenderSuffix(inspiracion, product.gender);
+  // Si el nombre ya traía la marca al final, separarla para que la letra H/F quede antes de la marca
+  if (brand) {
+    const escapedBrand = brand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    inspiracion = inspiracion.replace(new RegExp('\\s+' + escapedBrand + '(?:\\s+[HhFfMmUu])*$', 'i'), '').trim();
+  }
+
+  // Garantizar sufijo de género H / F justo después del nombre del perfume
+  const baseWithGender = formatWithGenderSuffix(inspiracion, product.gender);
+  if (!baseWithGender) return '';
+
+  if (brand && !baseWithGender.toLowerCase().includes(brand.toLowerCase())) {
+    return `${baseWithGender} ${brand}`;
+  }
+
+  return baseWithGender;
 }
 
 // Alias de retrocompatibilidad
