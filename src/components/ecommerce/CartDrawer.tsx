@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, ArrowLeft, ShieldCheck, AlertTriangle, Tag } from 'lucide-react';
 import { useEcommerceCart, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
+import { trackMetaInitiateCheckout } from '@/components/analytics/MarketingScripts';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName, formatPerfumeDisplayName } from '@/lib/perfumeNames';
 import { isHalloweenPromoProduct } from '@/lib/halloweenPromo';
@@ -362,7 +363,9 @@ export default function CartDrawer() {
               {/* Botón Principal: Proceder a pago seguro */}
               <Link
                 href="/checkout"
-                onClick={() => setIsCartOpen(false)}
+                onClick={() => {
+                  setIsCartOpen(false);
+                }}
                 className="w-full py-3 text-xs sm:text-sm font-black rounded-xl flex items-center justify-center gap-2 bg-gradient-to-r from-[#ea580c] via-[#f97316] to-[#d97706] text-white border border-orange-300/60 shadow-[0_4px_16px_rgba(234,88,12,0.4)] tracking-wide cursor-pointer active:scale-95"
               >
                 <span>Proceder a pago seguro</span>

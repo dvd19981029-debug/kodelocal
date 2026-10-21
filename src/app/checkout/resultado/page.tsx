@@ -16,6 +16,7 @@ import {
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { addGuestOrderNumber } from '@/lib/guestOrderStorage';
+import { trackMetaPurchase } from '@/components/analytics/MarketingScripts';
 
 function CheckoutResultadoContent() {
   const searchParams = useSearchParams();
@@ -64,6 +65,22 @@ function CheckoutResultadoContent() {
           total: monto ? Number(monto) : undefined,
           paymentMethod: 'CARD',
           paymentStatus: 'COMPLETED',
+        });
+
+        // Registrar evento estándar Meta Pixel Purchase al aprobarse el cobro con tarjeta en Wompi
+        let fallbackTotal = monto ? Number(monto) : 0;
+        if (!fallbackTotal) {
+          try {
+            const savedPending = sessionStorage.getItem(`aromaniak_pending_meta_order_${identificador}`);
+            if (savedPending) {
+              const parsed = JSON.parse(savedPending);
+              if (parsed.totalValue) fallbackTotal = Number(parsed.totalValue);
+            }
+          } catch (_) {}
+        }
+        trackMetaPurchase({
+          orderNumber: identificador,
+          totalValue: fallbackTotal,
         });
 
         // Notificar al servidor el éxito del pago

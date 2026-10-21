@@ -170,11 +170,14 @@ export default function ProductDetailPage() {
     if (!product || typeof window === 'undefined') return;
     const fbq = (window as any).fbq;
     if (typeof fbq === 'function') {
+      const priceVal = Number((activeOption?.price || product.price || 3.75).toFixed(2));
       fbq('track', 'ViewContent', {
         content_ids: [product.id],
+        contents: [{ id: product.id, quantity: 1, item_price: priceVal }],
         content_name: formatPerfumeDisplayName(product),
+        content_category: product.category || 'Perfumería',
         content_type: 'product',
-        value: Number((activeOption?.price || product.price || 3.75).toFixed(2)),
+        value: priceVal,
         currency: 'USD',
       });
     }
@@ -288,16 +291,6 @@ export default function ProductDetailPage() {
     } else {
       // Agrega por primera vez la cantidad seleccionada
       addToCart(product, selectedPresentation, quantity);
-    }
-
-    if (typeof window !== 'undefined' && typeof (window as any).fbq === 'function') {
-      (window as any).fbq('track', 'AddToCart', {
-        content_ids: [product.id],
-        content_name: displayName,
-        content_type: 'product',
-        value: Number((activeOption.price * quantity).toFixed(2)),
-        currency: 'USD',
-      });
     }
 
     setJustAdded(true);

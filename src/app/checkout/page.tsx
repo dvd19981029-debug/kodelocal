@@ -29,6 +29,12 @@ import {
 } from 'lucide-react';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
+import {
+  trackMetaInitiateCheckout,
+  trackMetaAddPaymentInfo,
+  trackMetaPurchase,
+  resolveMetaCatalogId,
+} from '@/components/analytics/MarketingScripts';
 import { DEPARTAMENTOS_SV, CustomerRecord, getStoredCustomers, saveStoredCustomers } from '@/lib/customers';
 import { DEPARTAMENTOS_CATALOG, getMunicipiosByDepartamento } from '@/lib/svTerritory';
 import { SaleRecord } from '@/lib/store';
@@ -131,6 +137,15 @@ export default function CheckoutPage() {
       });
     } catch (_) {}
   }, []);
+
+  // Disparar evento estándar Meta Pixel InitiateCheckout al entrar a /checkout con productos en el carrito
+  const hasTrackedInitCheckout = React.useRef(false);
+  React.useEffect(() => {
+    if (!hasTrackedInitCheckout.current && cart.length > 0 && subtotal > 0) {
+      hasTrackedInitCheckout.current = true;
+      trackMetaInitiateCheckout(cart, subtotal);
+    }
+  }, [cart, subtotal]);
 
   // Método de pago: Tarjeta de Crédito/Débito o Transferencia Bancaria
   const [metodoPago, setMetodoPago] = useState<'CARD' | 'TRANSFER'>('CARD');
@@ -452,8 +467,30 @@ export default function CheckoutPage() {
       });
 
       // Guardar pedido detallado en localStorage del dispositivo para modo invitado
+      const finalOrderNumber = orderData.order?.orderNumber || orderNumber;
+      const metaItems = cart.map((it) => ({
+        productId: resolveMetaCatalogId(it),
+        quantity: it.quantity,
+        price: it.unitPrice,
+      }));
+
+      // Registrar evento estándar Meta Pixel AddPaymentInfo al confirmar el método de pago
+      trackMetaAddPaymentInfo(cart, totalConEnvio, metodoPago);
+
+      // Guardar temporalmente los ítems de Meta en sessionStorage para que /checkout/resultado registre Purchase al volver de Wompi
+      try {
+        sessionStorage.setItem(
+          `aromaniak_pending_meta_order_${finalOrderNumber}`,
+          JSON.stringify({
+            orderNumber: finalOrderNumber,
+            totalValue: totalConEnvio,
+            items: metaItems,
+          })
+        );
+      } catch (_) {}
+
       saveGuestOrder({
-        orderNumber: orderData.order?.orderNumber || orderNumber,
+        orderNumber: finalOrderNumber,
         createdAt: now,
         total: totalConEnvio,
         subtotal: subtotal,
@@ -531,6 +568,13 @@ export default function CheckoutPage() {
         }, 2500);
         return;
       }
+
+      // Registrar evento estándar Meta Pixel Purchase para pedidos confirmados por Transferencia Bancaria
+      trackMetaPurchase({
+        orderNumber: finalOrderNumber,
+        totalValue: totalConEnvio,
+        items: metaItems,
+      });
 
       // Limpiar carrito del cliente para pedidos por transferencia
       clearCart();
@@ -1137,7 +1181,10 @@ export default function CheckoutPage() {
                 {/* Botón Tarjeta */}
                 <button
                   type="button"
-                  onClick={() => setMetodoPago('CARD')}
+                  onClick={() => {
+                    setMetodoPago('CARD');
+                    trackMetaAddPaymentInfo(cart, totalConEnvio, 'CARD');
+                  }}
                   className={`relative p-3.5 sm:p-4 rounded-2xl text-left flex flex-col justify-between gap-2.5 cursor-pointer select-none transition-all duration-300 ease-out active:scale-[0.97] ${
                     metodoPago === 'CARD'
                       ? 'bg-gradient-to-br from-indigo-50/90 via-white to-purple-50/70 border-2 border-indigo-500 shadow-[5px_7px_18px_rgba(99,102,241,0.25),-4px_-4px_12px_rgba(255,255,255,0.95),inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),inset_-2px_-2px_5px_rgba(99,102,241,0.15)] scale-[1.01]'
@@ -1178,7 +1225,10 @@ export default function CheckoutPage() {
                 {/* Botón Transferencia Bancaria */}
                 <button
                   type="button"
-                  onClick={() => setMetodoPago('TRANSFER')}
+                  onClick={() => {
+                    setMetodoPago('TRANSFER');
+                    trackMetaAddPaymentInfo(cart, totalConEnvio, 'TRANSFER');
+                  }}
                   className={`relative p-3.5 sm:p-4 rounded-2xl text-left flex flex-col justify-between gap-2.5 cursor-pointer select-none transition-all duration-300 ease-out active:scale-[0.97] ${
                     metodoPago === 'TRANSFER'
                       ? 'bg-gradient-to-br from-indigo-50/90 via-white to-purple-50/70 border-2 border-indigo-500 shadow-[5px_7px_18px_rgba(99,102,241,0.25),-4px_-4px_12px_rgba(255,255,255,0.95),inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),inset_-2px_-2px_5px_rgba(99,102,241,0.15)] scale-[1.01]'

@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useCall
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
 
 import { ProductItem } from '@/lib/store';
+import { trackMetaAddToCart } from '@/components/analytics/MarketingScripts';
 import {
   isHalloweenPromoProduct,
   HALLOWEEN_PROMO_PRICE_1OZ,
@@ -541,6 +542,14 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
       return updatedCart;
     });
 
+    trackMetaAddToCart({
+      productId: product.id,
+      productName: product.officialName || product.name,
+      category: product.category,
+      unitPrice,
+      quantity,
+    });
+
     triggerCartPulse();
   }, [customer, triggerCartPulse]);
 
@@ -651,6 +660,14 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
       ];
     });
 
+    trackMetaAddToCart({
+      productId: essence.id,
+      productName: `Arma tu propio perfume: ${essence.officialName || essence.name}`,
+      category: 'Arma tu propio perfume',
+      unitPrice,
+      quantity,
+    });
+
     triggerCartPulse();
   }, [kitConfig, customer, triggerCartPulse]);
 
@@ -702,6 +719,14 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
             return prev; // Bloquear aumento más allá del stock
           }
         }
+
+        trackMetaAddToCart({
+          productId: current.kitDetails?.essenceId || prod.id,
+          productName: prod.officialName || prod.name,
+          category: prod.category,
+          unitPrice: current.unitPrice,
+          quantity: quantity - current.quantity,
+        });
 
         triggerCartPulse();
       }
