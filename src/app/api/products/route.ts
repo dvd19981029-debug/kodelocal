@@ -1,11 +1,102 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import fs from 'fs';
+import { exec } from 'child_process';
 import { prisma } from '@/lib/prisma';
 import { INITIAL_PRODUCTS } from '@/lib/store';
 import { formatWithGenderSuffix } from '@/lib/perfumeNames';
 import { verifyStaffInternalToken, verifyStaffRequest } from '@/lib/customerAuthToken';
 import { checkRateLimit } from '@/lib/rateLimit';
+
+function syncEssenceCatalogAndPushToGitHub(product: {
+  sku?: string | null;
+  name: string;
+  officialName?: string | null;
+  brand?: string | null;
+  gender?: string | null;
+}) {
+  try {
+    const labelsDir = '/Users/luis/.gemini/antigravity/scratch/sistema-etiquetas-esencias';
+    const labelsCatalogPath = `${labelsDir}/apaesa_catalog.json`;
+    const labelsHtmlPath = `${labelsDir}/index.html`;
+
+    if (!fs.existsSync(labelsCatalogPath)) return;
+
+    const raw = fs.readFileSync(labelsCatalogPath, 'utf8');
+    const cat = JSON.parse(raw);
+    const cleanName = product.name.replace(/(?:\s+[FHMUD])+$/i, '').trim().toUpperCase();
+    const cleanOfficial = (product.officialName || product.name).replace(/(?:\s+[FHMUD])+$/i, '').trim().toUpperCase();
+    const gUpper = String(product.gender || '').trim().toLowerCase();
+    const normGen = gUpper.includes('dama') || gUpper.includes('mujer') || gUpper === 'f'
+      ? 'F'
+      : gUpper.includes('caballero') || gUpper.includes('hombre') || gUpper === 'h'
+      ? 'H'
+      : 'U';
+
+    let found = false;
+    for (let i = 0; i < cat.length; i++) {
+      if (
+        (cat[i].sku && String(cat[i].sku) === String(product.sku)) ||
+        (cat[i].inspirado && cat[i].inspirado.toUpperCase() === cleanName) ||
+        (cat[i].contratipo && cat[i].contratipo.toUpperCase() === cleanOfficial)
+      ) {
+        cat[i].contratipo = cleanOfficial;
+        cat[i].inspirado = cleanName;
+        cat[i].genero = normGen;
+        if (product.brand) cat[i].marca = product.brand;
+        if (product.sku) cat[i].sku = String(product.sku);
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      cat.push({
+        contratipo: cleanOfficial,
+        inspirado: cleanName,
+        genero: normGen,
+        original: product.brand ? `${cleanName} ${product.brand.toUpperCase()}` : cleanName,
+        marca: product.brand || '',
+        sku: String(product.sku || ''),
+      });
+    }
+
+    const catJsonStr = JSON.stringify(cat, null, 2);
+    fs.writeFileSync(labelsCatalogPath, catJsonStr, 'utf8');
+
+    if (fs.existsSync(labelsHtmlPath)) {
+      let html = fs.readFileSync(labelsHtmlPath, 'utf8');
+      html = html.replace(
+        /\/\/ Catálogo completo de las \d+ esencias de APAESA \(Grupo Kode\)\s*const defaultCatalog = \[[\s\S]*?\];/,
+        `// Catálogo completo de las ${cat.length} esencias de APAESA (Grupo Kode)\n    const defaultCatalog = ${catJsonStr};`
+      );
+      html = html.replace(/Catálogo APAESA \(\d+\)/g, `Catálogo APAESA (${cat.length})`);
+      html = html.replace(/id="catalog-count-badge">\d+</g, `id="catalog-count-badge">${cat.length}<`);
+      fs.writeFileSync(labelsHtmlPath, html, 'utf8');
+    }
+
+    // Subir automáticamente a GitHub en segundo plano para mantener sincronizadas todas las máquinas
+    const safeSku = String(product.sku || cleanName).replace(/[^a-zA-Z0-9_-]/g, '');
+    const kodelocalDir = '/Users/luis/.gemini/antigravity/scratch/kodelocal';
+    exec(
+      `git -C "${labelsDir}" add apaesa_catalog.json index.html && git -C "${labelsDir}" commit -m "Auto-sync catálogo etiquetas SKU ${safeSku}" && git -C "${labelsDir}" push origin main`,
+      (err) => {
+        if (err && !String(err.message).includes('nothing to commit')) {
+          console.error('Aviso git push etiquetas:', err.message);
+        }
+      }
+    );
+    exec(
+      `cd "${kodelocalDir}" && npx tsx scripts/generate_aromaniak_catalog.ts && npx tsx scripts/generate_minimalist_kode_catalog.ts && git add public/catalogo-aromaniak.pdf public/catalogo-kode.pdf && git commit -m "Auto-sync catálogos PDF SKU ${safeSku}" && git push origin main`,
+      (err) => {
+        if (err && !String(err.message).includes('nothing to commit')) {
+          console.error('Aviso git push kodelocal:', err.message);
+        }
+      }
+    );
+  } catch (syncErr) {
+    console.error('Error sincronizando con catálogo de etiquetas:', syncErr);
+  }
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -352,46 +443,9 @@ export async function PATCH(request: Request) {
       },
     });
 
-    // Sincronización inmediata con el sistema de etiquetas si es una esencia
+    // Sincronización inmediata con el sistema de etiquetas y GitHub si es una esencia
     if (updated.category?.name === 'Esencias para Perfume') {
-      try {
-        const labelsCatalogPath = '/Users/luis/.gemini/antigravity/scratch/sistema-etiquetas-esencias/apaesa_catalog.json';
-        if (fs.existsSync(labelsCatalogPath)) {
-          const raw = fs.readFileSync(labelsCatalogPath, 'utf8');
-          const cat = JSON.parse(raw);
-          const cleanName = updated.name.replace(/(?:\s+[FHMU])+$/i, '').trim().toUpperCase();
-          const cleanOfficial = (updated.officialName || updated.name).replace(/(?:\s+[FHMU])+$/i, '').trim().toUpperCase();
-          const normGen = updated.gender === 'Dama' ? 'F' : updated.gender === 'Caballero' ? 'H' : 'U';
-
-          let found = false;
-          for (let i = 0; i < cat.length; i++) {
-            if ((cat[i].sku && String(cat[i].sku) === String(updated.sku)) ||
-                (cat[i].inspirado && cat[i].inspirado.toUpperCase() === cleanName) ||
-                (cat[i].contratipo && cat[i].contratipo.toUpperCase() === cleanOfficial)) {
-              cat[i].contratipo = cleanOfficial;
-              cat[i].inspirado = cleanName;
-              cat[i].genero = normGen;
-              if (updated.brand) cat[i].marca = updated.brand;
-              if (updated.sku) cat[i].sku = String(updated.sku);
-              found = true;
-              break;
-            }
-          }
-          if (!found) {
-            cat.push({
-              contratipo: cleanOfficial,
-              inspirado: cleanName,
-              genero: normGen,
-              original: cleanName,
-              marca: updated.brand || '',
-              sku: String(updated.sku || ''),
-            });
-          }
-          fs.writeFileSync(labelsCatalogPath, JSON.stringify(cat, null, 2), 'utf8');
-        }
-      } catch (syncErr) {
-        console.error('Error sincronizando con catálogo de etiquetas:', syncErr);
-      }
+      syncEssenceCatalogAndPushToGitHub(updated);
     }
 
     // Si hubo cambio de inventario manual, registrar en Kardex
@@ -542,6 +596,10 @@ export async function POST(request: Request) {
         category: true,
       },
     });
+
+    if (isEssence) {
+      syncEssenceCatalogAndPushToGitHub(created);
+    }
 
     const formattedCreated = {
       id: created.id,

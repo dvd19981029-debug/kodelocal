@@ -91,9 +91,8 @@ async function generateMinimalistCatalog() {
   const items = allFragrances.map(p => {
     const prof = getFragranceProfile(p as any);
     const desc = getFragranceDescription(p as any, prof);
-    let insp = getInspiracionPerfumeName(p);
 
-    let cleanOriginal = insp.replace(/\s+[HFMU]$/, '').trim();
+    let cleanOriginal = (p.name || '').replace(/(?:\s+[HFMUD])+$/i, '').trim();
     if (cleanOriginal.toLowerCase() === 'la vida es bella') cleanOriginal = 'La Vie Est Belle';
     if (cleanOriginal === 'CHNL° 5' || cleanOriginal === 'N° 5') cleanOriginal = 'Chanel N° 5';
     if (cleanOriginal === 'Donna') cleanOriginal = 'Born In Roma Donna';

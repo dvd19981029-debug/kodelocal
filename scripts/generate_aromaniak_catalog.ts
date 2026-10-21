@@ -119,9 +119,7 @@ async function generateAromaniakCatalog() {
     const ap = apaesaMap[p.sku] || {} as any;
     const prof = getFragranceProfile(p as any);
     const desc = getFragranceDescription(p as any, prof);
-    let insp = getInspiracionPerfumeName(p);
-
-    let cleanOriginal = insp.replace(/\s+[HFMU]$/, '').trim();
+    let cleanOriginal = (p.name || '').replace(/(?:\s+[HFMUD])+$/i, '').trim();
     if (cleanOriginal.toLowerCase() === 'la vida es bella') cleanOriginal = 'La Vie Est Belle';
     if (cleanOriginal === 'CHNL° 5' || cleanOriginal === 'N° 5') cleanOriginal = 'Chanel N° 5';
     if (cleanOriginal === 'Donna') cleanOriginal = 'Born In Roma Donna';
@@ -129,7 +127,7 @@ async function generateAromaniakCatalog() {
     if (cleanOriginal === 'Princess') cleanOriginal = 'Vera Wang Princess';
     if (cleanOriginal === 'Good Girl M' || cleanOriginal === 'Good Girl') cleanOriginal = 'Good Girl';
 
-    const contratipoName = ap.contratipo || p.officialName?.replace(/\s+[HFMU]$/, '') || cleanOriginal;
+    const contratipoName = ap.contratipo || p.officialName?.replace(/(?:\s+[HFMUD])+$/i, '') || cleanOriginal;
     const brandName = ap.marca || p.brand || '';
 
     let family = prof?.family || 'Fragancia Fina';
