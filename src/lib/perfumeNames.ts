@@ -10,7 +10,7 @@ export const INSPIRACION_PERFUME_MAP: Record<string, string> = {
   '3': 'Acqua Di Gio H',
   '4': 'Club De Nuit Intense H',
   '5': 'Aventus H',
-  '6': 'La Vie Est Belle F',
+  '6': 'La Vida es Bella F',
   '7': 'Odyssey Mandarin Sky H',
   '8': 'Eros H',
   '9': "L'Eau d'Issey H",
@@ -36,7 +36,7 @@ export const INSPIRACION_PERFUME_MAP: Record<string, string> = {
   '29': 'Be Delicious F',
   '30': 'Lost Cherry',
   '31': 'Scandal H',
-  '32': 'Donna F',
+  '32': 'Born in Roma Donna F',
   '33': "L'Immensité H",
   '34': '212 VIP F',
   '35': 'Swiss Army H',
@@ -61,31 +61,31 @@ export const INSPIRACION_PERFUME_MAP: Record<string, string> = {
   '54': '212 Men H',
   '55': 'Man In Black H',
   '56': 'Acqua Di Gio Profumo H',
-  '57': 'La Bomba M',
-  '58': 'Good Girl M',
+  '57': 'La Bomba F',
+  '58': 'Good Girl F',
   '59': 'Toy Boy H',
-  '60': 'Baccarat Rouge 540 U',
+  '60': 'Baccarat Rouge 540',
   '61': 'Fahrenheit H',
   '62': 'Amarige F',
   '63': 'Angel F',
   '64': 'Eilish F',
   '65': 'Halloween Man H',
-  '66': 'Lavande 31 U',
+  '66': 'Lavande 31',
   '67': 'Paradoxe F',
   '68': 'Tommy Girl F',
-  '69': 'Eau de Rhubarbe Écarlate U',
+  '69': 'Eau de Rhubarbe Écarlate',
   '70': 'Endless Euphoria F',
-  '71': 'Bharara Chocolate U',
+  '71': 'Bharara Chocolate',
   '72': 'Cool Water H',
   '73': 'Drakkar Noir H',
   '74': 'Eternity H',
   '75': "L'Eau Super Majeure d'Issey H",
   '76': 'Legend H',
-  '77': 'Oud for Glory U',
+  '77': 'Oud for Glory',
   '78': 'Phantom Parfum H',
   '79': 'Polo Sport H',
   '80': 'Silver Mountain Water H',
-  '81': 'Tuscan Leather U',
+  '81': 'Tuscan Leather',
   '82': 'Born in Roma Coral Fantasy H'
 };
 
@@ -144,7 +144,8 @@ function toTitleCase(str: string): string {
 }
 
 /**
- * Formatea un nombre agregando el sufijo ' H' para Caballero o ' F' para Dama.
+ * Formatea un nombre agregando el sufijo ' H' para Hombre/Caballero o ' F' para Mujer/Dama.
+ * Elimina cualquier sufijo redundante previo ('M', 'U', 'M F', 'F F', 'H H', etc.).
  * Las fragancias Unisex no llevan sufijo.
  */
 export function formatWithGenderSuffix(name: string | null | undefined, gender: string | null | undefined): string {
@@ -152,19 +153,29 @@ export function formatWithGenderSuffix(name: string | null | undefined, gender: 
   const trimmed = name.trim();
   if (!trimmed) return '';
 
-  // Si ya termina en ' H' o ' F' (con espacio antes), normalizar a mayúscula
-  if (/\s+[HhFf]$/.test(trimmed)) {
-    return trimmed.replace(/\s+([HhFf])$/, (_, letter) => ` ${letter.toUpperCase()}`);
-  }
+  // Limpiar cualquier combinación de sufijos de género al final (ej. "M", "U", "M F", "F F", "H H")
+  const base = trimmed.replace(/(?:\s+[HhFfMmUu])+$/, '').trim();
+  if (!base) return '';
 
   const g = (gender || '').trim().toLowerCase();
-  if (g.includes('caballero') || g.includes('hombre')) {
-    return `${trimmed} H`;
+  if (g.includes('caballero') || g.includes('hombre') || g === 'h' || g === 'male') {
+    return `${base} H`;
   }
-  if (g.includes('dama') || g.includes('mujer')) {
-    return `${trimmed} F`;
+  if (g.includes('dama') || g.includes('mujer') || g === 'f' || g === 'female') {
+    return `${base} F`;
   }
-  return trimmed;
+
+  // Si no se proporcionó género explícito pero el texto traía sufijo, normalizar M/F -> F y H -> H
+  if (!g) {
+    const match = trimmed.match(/\s+([HhFfMm])$/);
+    if (match) {
+      const letter = match[1].toUpperCase();
+      if (letter === 'H') return `${base} H`;
+      if (letter === 'F' || letter === 'M') return `${base} F`;
+    }
+  }
+
+  return base;
 }
 
 /**
@@ -270,7 +281,7 @@ export interface BottleLabelConfig {
  * - Escala dinámicamente la tipografía según la longitud y líneas
  */
 export function getBottleLabelConfig(name: string): BottleLabelConfig {
-  const clean = (name || '').toUpperCase().replace(/\s+[HFU]$/i, '').trim();
+  const clean = (name || '').toUpperCase().replace(/(?:\s+[HFMU])+$/i, '').trim();
   if (!clean) return { lines: [''], fontSize: '3.4cqw' };
 
   const words = clean.split(/\s+/).filter(Boolean);
@@ -347,7 +358,7 @@ export const OFFICIAL_TO_ORIGINAL_MAP: Record<string, { originalName: string; br
   'DAVID OCEAN': { originalName: 'Acqua Di Gio H', brand: 'Giorgio Armani', sku: '3' },
   'VIDEOCLUB': { originalName: 'Club De Nuit Intense H', brand: 'Armaf', sku: '4' },
   'EXPLORADOR': { originalName: 'Aventus H', brand: 'Creed', sku: '5' },
-  'ELLA ES LINDA': { originalName: 'La Vie Est Belle F', brand: 'Lancôme', sku: '6' },
+  'ELLA ES LINDA': { originalName: 'La Vida es Bella F', brand: 'Lancôme', sku: '6' },
   'CITRIC HEAVEN': { originalName: 'Odyssey Mandarin Sky H', brand: 'Armaf', sku: '7' },
   'ATREVIDO': { originalName: 'Eros H', brand: 'Versace', sku: '8' },
   'NIPPON': { originalName: "L'Eau d'Issey H", brand: 'Issey Miyake', sku: '9' },
@@ -373,7 +384,7 @@ export const OFFICIAL_TO_ORIGINAL_MAP: Record<string, { originalName: string; br
   'CHARLI APPLE': { originalName: 'Be Delicious F', brand: 'DKNY', sku: '29' },
   'MON CHERRY': { originalName: 'Lost Cherry', brand: 'Tom Ford', sku: '30' },
   'PARTYBOY': { originalName: 'Scandal H', brand: 'Jean Paul Gaultier', sku: '31' },
-  'EURO GIRL': { originalName: 'Donna F', brand: 'Valentino', sku: '32' },
+  'EURO GIRL': { originalName: 'Born in Roma Donna F', brand: 'Valentino', sku: '32' },
   'KING LUIS': { originalName: "L'Immensité H", brand: 'Louis Vuitton', sku: '33' },
   'WIFE MATERIAL': { originalName: '212 VIP F', brand: 'Carolina Herrera', sku: '34' },
   'EURO SAMURAI': { originalName: 'Swiss Army H', brand: 'Victorinox', sku: '35' },
@@ -398,32 +409,32 @@ export const OFFICIAL_TO_ORIGINAL_MAP: Record<string, { originalName: string; br
   'MANHATTAN': { originalName: '212 Men H', brand: 'Carolina Herrera', sku: '54' },
   'BLACK VOLCANO': { originalName: 'Man In Black H', brand: 'Bvlgari', sku: '55' },
   'BLACK OCEAN': { originalName: 'Acqua Di Gio Profumo H', brand: 'Giorgio Armani', sku: '56' },
-  'SWEET BOMB': { originalName: 'La Bomba M', brand: 'Viktor & Rolf', sku: '57' },
-  'FEMME FATALE': { originalName: 'Good Girl M', brand: 'Carolina Herrera', sku: '58' },
+  'SWEET BOMB': { originalName: 'La Bomba F', brand: 'Carolina Herrera', sku: '57' },
+  'FEMME FATALE': { originalName: 'Good Girl F', brand: 'Carolina Herrera', sku: '58' },
   'BLACK BEAR': { originalName: 'Toy Boy H', brand: 'Moschino', sku: '59' },
-  'CRISTAL ROUGE': { originalName: 'Baccarat Rouge 540 U', brand: 'Maison Francis Kurkdjian', sku: '60' },
+  'CRISTAL ROUGE': { originalName: 'Baccarat Rouge 540', brand: 'Maison Francis Kurkdjian', sku: '60' },
   'KELVIN': { originalName: 'Fahrenheit H', brand: 'Dior', sku: '61' },
   'BELLA AMOUR': { originalName: 'Amarige F', brand: 'Givenchy', sku: '62' },
   'CELESTE STAR': { originalName: 'Angel F', brand: 'Thierry Mugler', sku: '63' },
   'GOLDEN MUSE': { originalName: 'Eilish F', brand: 'Billie Eilish', sku: '64' },
   'MIDNIGHT TRICK': { originalName: 'Halloween Man H', brand: 'Jesús del Pozo', sku: '65' },
-  'NICHO LAVANDA': { originalName: 'Lavande 31 U', brand: 'Le Labo', sku: '66' },
+  'NICHO LAVANDA': { originalName: 'Lavande 31', brand: 'Le Labo', sku: '66' },
   'MILANO CHIC': { originalName: 'Paradoxe F', brand: 'Prada', sku: '67' },
   'AMERICAN GIRL': { originalName: 'Tommy Girl F', brand: 'Tommy Hilfiger', sku: '68' },
-  'SCARLET LUXE': { originalName: 'Eau de Rhubarbe Écarlate U', brand: 'Hermès', sku: '69' },
+  'SCARLET LUXE': { originalName: 'Eau de Rhubarbe Écarlate', brand: 'Hermès', sku: '69' },
   'BLOSSOM DREAM': { originalName: 'Endless Euphoria F', brand: 'Calvin Klein', sku: '70' },
-  'CHOCO ROYALTY': { originalName: 'Bharara Chocolate U', brand: 'Bharara', sku: '71' },
+  'CHOCO ROYALTY': { originalName: 'Bharara Chocolate', brand: 'Bharara', sku: '71' },
   'BLUE WAVE': { originalName: 'Cool Water H', brand: 'Davidoff', sku: '72' },
   'VIKINGO NOIR': { originalName: 'Drakkar Noir H', brand: 'Guy Laroche', sku: '73' },
   'INMORTAL': { originalName: 'Eternity H', brand: 'Calvin Klein', sku: '74' },
   'NIPPON MAJEURE': { originalName: "L'Eau Super Majeure d'Issey H", brand: 'Issey Miyake', sku: '75' },
   'TITAN BLANC': { originalName: 'Legend H', brand: 'Montblanc', sku: '76' },
-  'SULTAN IMPERIAL': { originalName: 'Oud for Glory U', brand: 'Lattafa', sku: '77' },
-  'SULTÁN IMPERIAL': { originalName: 'Oud for Glory U', brand: 'Lattafa', sku: '77' },
+  'SULTAN IMPERIAL': { originalName: 'Oud for Glory', brand: 'Lattafa', sku: '77' },
+  'SULTÁN IMPERIAL': { originalName: 'Oud for Glory', brand: 'Lattafa', sku: '77' },
   'CYBERBOT': { originalName: 'Phantom Parfum H', brand: 'Paco Rabanne', sku: '78' },
   'VARSITY BLUE': { originalName: 'Polo Sport H', brand: 'Ralph Lauren', sku: '79' },
   'CUMBRE DE PLATA': { originalName: 'Silver Mountain Water H', brand: 'Creed', sku: '80' },
-  'CUERO TOSCANO': { originalName: 'Tuscan Leather U', brand: 'Tom Ford', sku: '81' },
+  'CUERO TOSCANO': { originalName: 'Tuscan Leather', brand: 'Tom Ford', sku: '81' },
   'EUROBOY CORAL': { originalName: 'Born in Roma Coral Fantasy H', brand: 'Valentino', sku: '82' },
 };
 

@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import fs from 'fs';
 import { prisma } from '@/lib/prisma';
 import { INITIAL_PRODUCTS } from '@/lib/store';
+import { formatWithGenderSuffix } from '@/lib/perfumeNames';
 import { verifyStaffInternalToken, verifyStaffRequest } from '@/lib/customerAuthToken';
 import { checkRateLimit } from '@/lib/rateLimit';
 
@@ -124,14 +125,17 @@ export async function GET(request: Request) {
     const formatted = dbProducts.map((p) => {
       const catName = p.category?.name || 'Esencias para Perfume';
       const isEssence = catName === 'Esencias para Perfume';
+      const genderVal = p.gender || 'Unisex';
+      const rawName = p.name || '';
+      const rawOfficial = (p as any).officialName || '';
       return {
         id: p.id,
         sku: p.sku || '',
         barcode: p.barcode || '',
-        name: p.name,
-        officialName: (p as any).officialName || '',
-        brand: catName === 'Botes' ? '' : (p.brand || ''),
-        gender: p.gender || 'Unisex',
+        name: isEssence ? formatWithGenderSuffix(rawName, genderVal) : rawName,
+        officialName: isEssence && rawOfficial ? formatWithGenderSuffix(rawOfficial, genderVal) : rawOfficial,
+        brand: catName === 'Botes' ? '' : (p.brand || '').replace(/&amp;/g, '&'),
+        gender: genderVal,
         category: catName,
         unit: p.unit || (isEssence ? 'Onza' : 'Unidad'),
         price: Number(p.price),
@@ -355,9 +359,9 @@ export async function PATCH(request: Request) {
         if (fs.existsSync(labelsCatalogPath)) {
           const raw = fs.readFileSync(labelsCatalogPath, 'utf8');
           const cat = JSON.parse(raw);
-          const cleanName = updated.name.replace(/\s+[FHU]$/i, '').trim().toUpperCase();
-          const cleanOfficial = (updated.officialName || updated.name).replace(/\s+[FHU]$/i, '').trim().toUpperCase();
-          const normGen = updated.gender === 'Dama' ? 'M' : updated.gender === 'Caballero' ? 'H' : 'U';
+          const cleanName = updated.name.replace(/(?:\s+[FHMU])+$/i, '').trim().toUpperCase();
+          const cleanOfficial = (updated.officialName || updated.name).replace(/(?:\s+[FHMU])+$/i, '').trim().toUpperCase();
+          const normGen = updated.gender === 'Dama' ? 'F' : updated.gender === 'Caballero' ? 'H' : 'U';
 
           let found = false;
           for (let i = 0; i < cat.length; i++) {
