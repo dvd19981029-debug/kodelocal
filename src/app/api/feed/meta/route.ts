@@ -60,7 +60,7 @@ export async function GET(request: Request) {
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
         'Content-Disposition': 'inline; filename="catalogo-meta-aromaniak.csv"',
-        'Cache-Control': 'public, max-age=300, s-maxage=300',
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
       },
     });
   } catch (err) {
