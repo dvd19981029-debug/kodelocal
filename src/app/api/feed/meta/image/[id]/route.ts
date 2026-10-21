@@ -121,14 +121,12 @@ export async function GET(
 
     const initProduct = INITIAL_PRODUCTS.find((p) => p.id === cleanId);
 
-    // Si existe imagen estática pre-generada y el nombre/imagen no fue modificado respecto al catálogo base, servir de inmediato
+    // Si existe imagen estática pre-generada y el nombre no fue modificado respecto al catálogo base, servir de inmediato
     if (fs.existsSync(staticMetaPath)) {
       const dbName = (dbProduct?.officialName || dbProduct?.name || '').trim();
       const initName = (initProduct?.officialName || initProduct?.name || '').trim();
-      const dbImg = (dbProduct?.imageUrl || '').trim();
-      const initImg = (initProduct?.imageUrl || '').trim();
 
-      if (!dbProduct || (dbName === initName && (!dbImg || dbImg === initImg))) {
+      if (!dbProduct || dbName === initName) {
         const fileBuf = fs.readFileSync(staticMetaPath);
         return new NextResponse(fileBuf, {
           status: 200,
