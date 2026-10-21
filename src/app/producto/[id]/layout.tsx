@@ -104,9 +104,7 @@ export async function generateMetadata({
     : `${displayName} - Insumos para elaboración de perfumería fina en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.`;
 
   const canonical = `https://aromaniaksv.com${getProductUrl(product)}`;
-  const imageUrl = product.imageUrl
-    ? (product.imageUrl.startsWith('http') ? product.imageUrl : `https://aromaniaksv.com${product.imageUrl}`)
-    : 'https://aromaniaksv.com/images/logo.png';
+  const imageUrl = `https://aromaniaksv.com/images/meta/${encodeURIComponent(product.id)}.jpg?v=5`;
 
   return {
     title,
@@ -124,8 +122,8 @@ export async function generateMetadata({
       images: [
         {
           url: imageUrl,
-          width: 600,
-          height: 600,
+          width: 1000,
+          height: 1000,
           alt: `${displayName} - Aromaniak SV`,
         },
       ],
@@ -171,7 +169,7 @@ export default async function ProductLayout({
     description: isBottle
       ? `${displayName} con atomizador para elaboración y envasado de perfumes. Entregas a domicilio a todo El Salvador o retiro en local.`
       : `Esencia concentrada ${displayName} para elaboración de perfumería fina en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.`,
-    image: product.imageUrl ? (product.imageUrl.startsWith('http') ? product.imageUrl : `https://aromaniaksv.com${product.imageUrl}`) : 'https://aromaniaksv.com/images/logo.png',
+    image: `https://aromaniaksv.com/images/meta/${encodeURIComponent(product.id)}.jpg?v=5`,
     brand: {
       '@type': 'Brand',
       name: 'Aromaniak',

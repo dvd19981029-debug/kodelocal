@@ -4,6 +4,7 @@ import path from 'path';
 import sharp from 'sharp';
 import { prisma } from '@/lib/prisma';
 import { INITIAL_PRODUCTS } from '@/lib/store';
+import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,6 +25,91 @@ function escapeXml(unsafe: string): string {
         return c;
     }
   });
+}
+
+function createSmoothScallopSealPath(
+  cx: number,
+  cy: number,
+  lobes: number,
+  innerR: number,
+  outerR: number
+): string {
+  const step = (Math.PI * 2) / lobes;
+  let d = '';
+  for (let i = 0; i < lobes; i++) {
+    const a1 = i * step - Math.PI / 2;
+    const aMid = (i + 0.5) * step - Math.PI / 2;
+    const a2 = (i + 1) * step - Math.PI / 2;
+
+    const x1 = cx + innerR * Math.cos(a1);
+    const y1 = cy + innerR * Math.sin(a1);
+    const xCtrl = cx + outerR * Math.cos(aMid);
+    const yCtrl = cy + outerR * Math.sin(aMid);
+    const x2 = cx + innerR * Math.cos(a2);
+    const y2 = cy + innerR * Math.sin(a2);
+
+    if (i === 0) {
+      d += `M ${x1.toFixed(2)} ${y1.toFixed(2)} `;
+    }
+    d += `Q ${xCtrl.toFixed(2)} ${yCtrl.toFixed(2)} ${x2.toFixed(2)} ${y2.toFixed(2)} `;
+  }
+  d += 'Z';
+  return d;
+}
+
+function createCatalogOverlaySvg(opts: {
+  priceStr: string;
+  unitLabel: string;
+  ribbonSmall: string;
+  ribbonLarge: string;
+}): Buffer {
+  const cx = 868;
+  const cy = 122;
+  const outerSeal = createSmoothScallopSealPath(cx, cy, 14, 76, 91);
+  const innerSeal = createSmoothScallopSealPath(cx, cy, 14, 71, 85);
+
+  const cleanLarge = escapeXml(opts.ribbonLarge.toUpperCase().trim());
+  const cleanSmall = escapeXml(opts.ribbonSmall.toUpperCase().trim());
+  const len = cleanLarge.length;
+
+  let largeFontSize = 50;
+  if (len > 33) largeFontSize = 27;
+  else if (len > 29) largeFontSize = 31;
+  else if (len > 25) largeFontSize = 35;
+  else if (len > 21) largeFontSize = 39;
+  else if (len > 17) largeFontSize = 44;
+
+  const priceFontSize = opts.priceStr.length >= 6 ? 31 : 35;
+
+  return Buffer.from(`
+    <svg width="1000" height="1000" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#6D28D9" />
+          <stop offset="50%" stop-color="#5B21B6" />
+          <stop offset="100%" stop-color="#4C1D95" />
+        </linearGradient>
+        <linearGradient id="greenSealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#10B981" />
+          <stop offset="100%" stop-color="#059669" />
+        </linearGradient>
+        <filter id="badgeShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#064E3B" flood-opacity="0.22" />
+        </filter>
+      </defs>
+      <g filter="url(#badgeShadow)">
+        <path d="${outerSeal}" fill="#FFFFFF" />
+        <path d="${innerSeal}" fill="url(#greenSealGrad)" />
+        <circle cx="${cx}" cy="${cy}" r="63" fill="none" stroke="#6EE7B7" stroke-width="1.5" stroke-opacity="0.6" />
+      </g>
+      <text x="${cx}" y="${cy + 3}" font-family="Arial, Helvetica, sans-serif" font-size="${priceFontSize}" font-weight="900" text-anchor="middle" fill="#FFFFFF" letter-spacing="-0.5">${escapeXml(opts.priceStr)}</text>
+      <text x="${cx}" y="${cy + 27}" font-family="Arial, Helvetica, sans-serif" font-size="14.5" font-weight="800" text-anchor="middle" fill="#D1FAE5" letter-spacing="1.2">${escapeXml(opts.unitLabel)}</text>
+      <rect x="0" y="842" width="1000" height="158" fill="url(#purpleGrad)" />
+      <rect x="0" y="842" width="1000" height="5" fill="#A78BFA" />
+      <text x="500" y="886" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="800" text-anchor="middle" fill="#DDD6FE" letter-spacing="4">${cleanSmall}</text>
+      <text x="500" y="950" font-family="Arial, Helvetica, sans-serif" font-size="${largeFontSize}" font-weight="900" text-anchor="middle" fill="#FFFFFF" letter-spacing="1">${cleanLarge}</text>
+    </svg>
+  `);
 }
 
 function layoutLabelText(name: string) {
@@ -121,21 +207,16 @@ export async function GET(
 
     const initProduct = INITIAL_PRODUCTS.find((p) => p.id === cleanId);
 
-    // Si existe imagen estática pre-generada y el nombre no fue modificado respecto al catálogo base, servir de inmediato
+    // Si existe imagen estática pre-generada en public/images/meta/{id}.jpg, servir de inmediato (contiene nombre, precio y cinta morada renderizados)
     if (fs.existsSync(staticMetaPath)) {
-      const dbName = (dbProduct?.officialName || dbProduct?.name || '').trim();
-      const initName = (initProduct?.officialName || initProduct?.name || '').trim();
-
-      if (!dbProduct || dbName === initName) {
-        const fileBuf = fs.readFileSync(staticMetaPath);
-        return new NextResponse(fileBuf, {
-          status: 200,
-          headers: {
-            'Content-Type': 'image/jpeg',
-            'Cache-Control': 'public, max-age=3600, s-maxage=3600',
-          },
-        });
-      }
+      const fileBuf = fs.readFileSync(staticMetaPath);
+      return new NextResponse(fileBuf, {
+        status: 200,
+        headers: {
+          'Content-Type': 'image/jpeg',
+          'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+        },
+      });
     }
 
     const catName = dbProduct?.category?.name || initProduct?.category || 'Esencias para Perfume';
@@ -177,7 +258,7 @@ export async function GET(
       }
     }
 
-    // 2. Si es una Esencia (nueva o con nombre actualizado en POS), estampar dinámicamente la etiqueta sobre el frasco oficial
+    // 2. Si es una Esencia nueva agregada desde POS, estampar etiqueta + sello verde + cinta morada
     if (isEssence) {
       const blankBottlePath = path.join(process.cwd(), 'public', 'images', 'essence_bottle_blank.webp');
       const labelTitle = dbProduct?.officialName || dbProduct?.name || initProduct?.officialName || initProduct?.name || 'AROMANIAK';
@@ -187,9 +268,35 @@ export async function GET(
         .composite([{ input: svgOverlay, top: 0, left: 0 }])
         .toBuffer();
 
-      const squareJpg = await sharp(labeledBottle)
-        .resize(1000, 1000, { fit: 'contain', background: { r: 254, g: 254, b: 254 } })
-        .jpeg({ quality: 88, mozjpeg: true })
+      const croppedBottle = await sharp(labeledBottle)
+        .extract({ left: 0, top: 60, width: 768, height: 910 })
+        .resize(710, 842, { fit: 'contain', background: { r: 255, g: 255, b: 255 } })
+        .toBuffer();
+
+      const unitPrice = Number(dbProduct?.price ?? initProduct?.price ?? 3.75);
+      const rawInsp = (getInspiracionPerfumeName((dbProduct || initProduct) as any) || dbProduct?.name || '')
+        .replace(/\s+[HFMU]$/i, '')
+        .trim();
+      const brand = (dbProduct?.brand || initProduct?.brand || '').trim();
+      const ribbonLarge = brand && !rawInsp.toLowerCase().includes(brand.toLowerCase())
+        ? `${rawInsp} ${brand}`.toUpperCase()
+        : rawInsp.toUpperCase();
+
+      const catalogOverlay = createCatalogOverlaySvg({
+        priceStr: `$${unitPrice.toFixed(2)}`,
+        unitLabel: '1 ONZA',
+        ribbonSmall: 'INSPIRADO EN',
+        ribbonLarge: ribbonLarge || labelTitle.toUpperCase(),
+      });
+
+      const squareJpg = await sharp({
+        create: { width: 1000, height: 1000, channels: 3, background: { r: 255, g: 255, b: 255 } },
+      })
+        .composite([
+          { input: croppedBottle, top: 0, left: 145 },
+          { input: catalogOverlay, top: 0, left: 0 },
+        ])
+        .jpeg({ quality: 92, mozjpeg: true })
         .toBuffer();
 
       return new NextResponse(new Uint8Array(squareJpg), {

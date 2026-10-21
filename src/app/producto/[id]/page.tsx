@@ -328,7 +328,7 @@ export default function ProductDetailPage() {
     "sku": product.id,
     "name": displayName,
     "image": [
-      `https://aromaniaksv.com/api/feed/meta/image/${encodeURIComponent(product.id)}.jpg`
+      `https://aromaniaksv.com/images/meta/${encodeURIComponent(product.id)}.jpg?v=5`
     ],
     "description": product.description || `Insumo de perfumería fina Aromaniak: ${displayName}.`,
     "brand": {

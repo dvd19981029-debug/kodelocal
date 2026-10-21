@@ -65,17 +65,10 @@ function escapeCsvField(val: string | number | undefined | null): string {
  * - Si es un producto NUEVO creado desde el POS/Bodega o si se le editó el nombre/foto, usa el generador dinámico en tiempo real /api/feed/meta/image/{id}.jpg
  */
 function resolveMetaImageUrl(p: ProductItem): string {
-  const init = INITIAL_PRODUCT_MAP.get(p.id);
-  if (!init) {
-    return `${SITE_URL}/api/feed/meta/image/${encodeURIComponent(p.id)}.jpg?v=4`;
+  if (INITIAL_PRODUCT_MAP.has(p.id)) {
+    return `${SITE_URL}/images/meta/${p.id}.jpg?v=5`;
   }
-  const currentName = (p.officialName || p.name || '').trim();
-  const initName = (init.officialName || init.name || '').trim();
-
-  if (currentName !== initName) {
-    return `${SITE_URL}/api/feed/meta/image/${encodeURIComponent(p.id)}.jpg?v=4`;
-  }
-  return `${SITE_URL}/images/meta/${p.id}.jpg?v=4`;
+  return `${SITE_URL}/api/feed/meta/image/${encodeURIComponent(p.id)}.jpg?v=5`;
 }
 
 export interface MetaCatalogProductInput extends ProductItem {
@@ -159,7 +152,7 @@ export function buildMetaCatalogRows(
     sale_price: '',
     sale_price_effective_date: '',
     link: `${SITE_URL}/?categoria=Arma+tu+perfume#seccion-arma-tu-perfume`,
-    image_link: `${SITE_URL}/images/meta/arma-tu-perfume-100ml.jpg?v=4`,
+    image_link: `${SITE_URL}/images/meta/arma-tu-perfume-100ml.jpg?v=5`,
     brand: 'Aromaniak',
     google_product_category: 'Health & Beauty > Personal Care > Cosmetics > Perfume & Cologne',
     fb_product_category: 'health & beauty > beauty > fragrance',
