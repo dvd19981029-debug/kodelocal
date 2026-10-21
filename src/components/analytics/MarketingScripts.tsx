@@ -27,6 +27,74 @@ const META_STANDARD_EVENTS = new Set([
   'FindLocation',
 ]);
 
+export function ensureMetaPixelInitialized(): any {
+  if (typeof window === 'undefined') return null;
+  const f = window as any;
+  if (typeof f.fbq === 'function') {
+    return f.fbq;
+  }
+
+  const n: any = (f.fbq = function () {
+    if (n.callMethod) {
+      n.callMethod.apply(n, arguments);
+    } else {
+      n.queue.push(arguments);
+    }
+  });
+
+  let _cm: any = null;
+  try {
+    Object.defineProperty(n, 'callMethod', {
+      configurable: true,
+      get: function () {
+        return _cm;
+      },
+      set: function (fn) {
+        if (typeof fn !== 'function') {
+          _cm = fn;
+          return;
+        }
+        _cm = function (this: any) {
+          const a = Array.prototype.slice.call(arguments);
+          const ev = String(a[1] || a[2] || '').toLowerCase();
+          if (
+            ev === 'subscribe' ||
+            ev === 'subscribed' ||
+            ev === 'subscribedbuttonclick'
+          ) {
+            return;
+          }
+          return fn.apply(this, a);
+        };
+      },
+    });
+  } catch (_) {}
+
+  if (!f._fbq) f._fbq = n;
+  n.push = n;
+  n.loaded = true;
+  n.version = '2.0';
+  n.queue = [];
+
+  if (!document.getElementById('aromaniak-fbevents-sdk')) {
+    const t = document.createElement('script');
+    t.id = 'aromaniak-fbevents-sdk';
+    t.async = true;
+    t.src = 'https://connect.facebook.net/en_US/fbevents.js';
+    const s = document.getElementsByTagName('script')[0];
+    if (s && s.parentNode) {
+      s.parentNode.insertBefore(t, s);
+    } else if (document.head) {
+      document.head.appendChild(t);
+    }
+  }
+
+  n('set', 'autoConfig', false, META_PIXEL_ID);
+  n('init', META_PIXEL_ID);
+  n('track', 'PageView');
+  return n;
+}
+
 export function trackMarketingEvent(
   eventName: string,
   params: Record<string, any> = {}
@@ -42,8 +110,8 @@ export function trackMarketingEvent(
     });
   }
 
-  // 2. Meta Pixel (Facebook / Instagram)
-  const fbq = (window as any).fbq;
+  // 2. Meta Pixel (Facebook / Instagram) - garantiza cola inicializada incluso en montaje temprano
+  const fbq = ensureMetaPixelInitialized();
   if (typeof fbq === 'function') {
     if (META_STANDARD_EVENTS.has(eventName)) {
       fbq('track', eventName, params);

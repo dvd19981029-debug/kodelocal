@@ -32,6 +32,7 @@ import { getFragranceDescription } from '@/lib/fragranceDescriptions';
 import { resolveTargetProductId } from '@/lib/productUrl';
 import { isHalloweenPromoProduct, getHalloweenPotionInfo, HALLOWEEN_ORIGINAL_PRICE_1OZ, HALLOWEEN_ORIGINAL_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
 import { CobwebCornerSVG } from '@/components/ecommerce/HalloweenDecorations';
+import { trackMarketingEvent } from '@/components/analytics/MarketingScripts';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -168,19 +169,16 @@ export default function ProductDetailPage() {
   // Evento estándar Meta Pixel ViewContent para sincronización en tiempo real de microdatos del catálogo
   useEffect(() => {
     if (!product || typeof window === 'undefined') return;
-    const fbq = (window as any).fbq;
-    if (typeof fbq === 'function') {
-      const priceVal = Number((activeOption?.price || product.price || 3.75).toFixed(2));
-      fbq('track', 'ViewContent', {
-        content_ids: [product.id],
-        contents: [{ id: product.id, quantity: 1, item_price: priceVal }],
-        content_name: formatPerfumeDisplayName(product),
-        content_category: product.category || 'Perfumería',
-        content_type: 'product',
-        value: priceVal,
-        currency: 'USD',
-      });
-    }
+    const priceVal = Number((activeOption?.price || product.price || 3.75).toFixed(2));
+    trackMarketingEvent('ViewContent', {
+      content_ids: [product.id],
+      contents: [{ id: product.id, quantity: 1, item_price: priceVal }],
+      content_name: formatPerfumeDisplayName(product),
+      content_category: product.category || 'Perfumería',
+      content_type: 'product',
+      value: priceVal,
+      currency: 'USD',
+    });
   }, [product?.id]);
 
   // Productos relacionados (esencias con esencias, botes con botes)

@@ -20,14 +20,16 @@ export async function GET(request: Request) {
         include: { category: true },
         orderBy: { sku: 'asc' },
       }),
-      prisma.systemConfig.findFirst().catch(() => null),
+      (prisma as any).systemConfig
+        ? (prisma as any).systemConfig.findFirst().catch(() => null)
+        : Promise.resolve(null),
     ]);
 
     const initialMap = new Map(INITIAL_PRODUCTS.map((p) => [p.id, p]));
 
     let products: MetaCatalogProductInput[] = INITIAL_PRODUCTS;
     if (dbProducts.length > 0) {
-      products = dbProducts.map((p) => {
+      products = dbProducts.map((p: any) => {
         const init = initialMap.get(p.id);
         return {
           id: p.id,
