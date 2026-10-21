@@ -6,7 +6,7 @@ import { getProductUrl } from '@/lib/productUrl';
 import {
   isHalloweenPromoProduct,
   HALLOWEEN_PROMO_PRICE_1OZ,
-  HALLOWEEN_ORIGINAL_PRICE_1OZ,
+  HALLOWEEN_PROMO_PRICE_HALF_OZ,
 } from '@/lib/halloweenPromo';
 
 const SITE_URL = 'https://aromaniaksv.com';
@@ -16,6 +16,8 @@ const BEST_SELLER_SKUS = new Set([
   '12', '13', '16', '18', '20', '23', '28', '30', '32', '33',
   '40', '43', '49', '50', '52', '53', '58', '60', '61'
 ]);
+
+const INITIAL_PRODUCT_MAP = new Map(INITIAL_PRODUCTS.map((p) => [p.id, p]));
 
 /**
  * Limpia referencias de casas comerciales registradas para cumplir al 100%
@@ -57,11 +59,37 @@ function escapeCsvField(val: string | number | undefined | null): string {
   return `"${s}"`;
 }
 
+/**
+ * Resuelve la URL de imagen 1000x1000 .jpg para Meta:
+ * - Si es uno de los 110 productos pre-generados y no cambió su nombre/imagen en POS, usa el archivo estático /images/meta/{id}.jpg
+ * - Si es un producto NUEVO creado desde el POS/Bodega o si se le editó el nombre/foto, usa el generador dinámico en tiempo real /api/feed/meta/image/{id}.jpg
+ */
+function resolveMetaImageUrl(p: ProductItem): string {
+  const init = INITIAL_PRODUCT_MAP.get(p.id);
+  if (!init) {
+    return `${SITE_URL}/api/feed/meta/image/${encodeURIComponent(p.id)}.jpg`;
+  }
+  const currentName = (p.officialName || p.name || '').trim();
+  const initName = (init.officialName || init.name || '').trim();
+  const currentImg = (p.imageUrl || '').trim();
+  const initImg = (init.imageUrl || '').trim();
+
+  if (currentName !== initName || (currentImg && currentImg !== initImg)) {
+    return `${SITE_URL}/api/feed/meta/image/${encodeURIComponent(p.id)}.jpg`;
+  }
+  return `${SITE_URL}/images/meta/${p.id}.jpg`;
+}
+
+export interface MetaCatalogProductInput extends ProductItem {
+  isActive?: boolean;
+}
+
 export interface MetaCatalogRow {
   id: string;
   title: string;
   description: string;
-  availability: 'in stock' | 'out of stock';
+  availability: 'in stock' | 'out of stock' | 'available for order' | 'discontinued';
+  quantity_to_sell_on_facebook: number;
   condition: 'new';
   price: string;
   sale_price: string;
@@ -81,23 +109,29 @@ export interface MetaCatalogRow {
 }
 
 export function buildMetaCatalogRows(
-  products: ProductItem[] = INITIAL_PRODUCTS,
-  options?: { strictStock?: boolean }
+  products: MetaCatalogProductInput[] = INITIAL_PRODUCTS,
+  options?: {
+    strictStock?: boolean;
+    kitStandardPrice?: number;
+    kitPlusPrice?: number;
+  }
 ): MetaCatalogRow[] {
   const strictStock = options?.strictStock === true;
+  const kitStandardPrice = Number(options?.kitStandardPrice || 11.0);
+  const kitPlusPrice = Number(options?.kitPlusPrice || 14.0);
   const rows: MetaCatalogRow[] = [];
 
-  // Filtrar productos online (excluyendo recargo interno de alcohol y envío a domicilio)
-  const validProducts = products.filter(
+  // Filtrar ítems internos de sistema ($1 Alcohol y Envío a Domicilio)
+  const catalogProducts = products.filter(
     (p) =>
-      p.isAvailableOnline !== false &&
       p.id !== 'ENVIO-DOM' &&
       p.id !== 'cmvfrqz7v0003jp08y8bmrnpz' &&
-      String(p.name || '').trim().toLowerCase() !== '$1 alcohol'
+      String(p.name || '').trim().toLowerCase() !== '$1 alcohol' &&
+      p.category !== 'Logística'
   );
 
-  // Ordenar: Esencias primero (por SKU numérico 1..82), luego Botes, luego Insumos
-  validProducts.sort((a, b) => {
+  // Ordenar: Esencias primero (por SKU numérico), luego Botes, luego Insumos
+  catalogProducts.sort((a, b) => {
     const catOrder = (cat: string) => {
       if (cat === 'Esencias para Perfume') return 1;
       if (cat === 'Botes' || cat === 'Botes & Envases') return 2;
@@ -106,7 +140,12 @@ export function buildMetaCatalogRows(
     const ca = catOrder(a.category);
     const cb = catOrder(b.category);
     if (ca !== cb) return ca - cb;
-    if (ca === 1) return Number(a.sku || 999) - Number(b.sku || 999);
+    if (ca === 1) {
+      const na = Number(a.sku);
+      const nb = Number(b.sku);
+      if (!isNaN(na) && !isNaN(nb)) return na - nb;
+      return String(a.sku || '').localeCompare(String(b.sku || ''));
+    }
     return (b.stock || 0) - (a.stock || 0);
   });
 
@@ -114,11 +153,11 @@ export function buildMetaCatalogRows(
   rows.push({
     id: 'arma-tu-perfume-100ml',
     title: 'Arma tu Perfume de 100ml Listo para Usar (Alta Fijación) | Aromaniak',
-    description:
-      'Personaliza tu propio perfume de 100ml en Aromaniak SV. Elige tu aroma favorito entre más de 80 fragancias de alta gama y selecciona tu frasco de cristal de 100ml con atomizador spray. Preparado con Esencia 100% Pura AAA+ y Alcohol Perfumero con Fijador para una duración superior en el clima de El Salvador. Fórmula Estándar $11.00 USD | Fórmula Plus $14.00 USD. Tienda física en C.C. El Rosal, San Salvador y envíos a todo El Salvador por $2.90.',
+    description: `Personaliza tu propio perfume de 100ml en Aromaniak SV. Elige tu aroma favorito entre más de 80 fragancias de alta gama y selecciona tu frasco de cristal de 100ml con atomizador spray. Preparado con Esencia 100% Pura AAA+ y Alcohol Perfumero con Fijador para una duración superior en el clima de El Salvador. Fórmula Estándar $${kitStandardPrice.toFixed(2)} USD | Fórmula Plus $${kitPlusPrice.toFixed(2)} USD. Tienda física en C.C. El Rosal, San Salvador y envíos a todo El Salvador por $2.90.`,
     availability: 'in stock',
+    quantity_to_sell_on_facebook: 100,
     condition: 'new',
-    price: '11.00 USD',
+    price: `${kitStandardPrice.toFixed(2)} USD`,
     sale_price: '',
     sale_price_effective_date: '',
     link: `${SITE_URL}/?categoria=Arma+tu+perfume#seccion-arma-tu-perfume`,
@@ -135,18 +174,48 @@ export function buildMetaCatalogRows(
     custom_label_4: 'Best Seller',
   });
 
-  for (const p of validProducts) {
+  for (const p of catalogProducts) {
     const isEssence = p.category === 'Esencias para Perfume';
     const isBottle = p.category === 'Botes' || p.category === 'Botes & Envases';
-    const totalStock = (Number(p.stock) || 0) + (Number(p.stockHalf) || 0);
-    const isIncoming = isBottle ? totalStock <= 0 : isIncomingEssence(p) || totalStock <= 0;
+    const isDiscontinued = p.isActive === false || p.isAvailableOnline === false;
 
-    const availability: 'in stock' | 'out of stock' =
-      strictStock && totalStock <= 0 ? 'out of stock' : 'in stock';
+    const fullOzStock = Math.max(0, Number(p.stock || 0));
+    const halfOzStock = Math.max(0, Number(p.stockHalf || 0));
+    const totalStock = isEssence ? fullOzStock + halfOzStock : fullOzStock;
 
-    const stockLabel = totalStock > 0 ? 'Disponible en Tienda' : 'En Camino';
+    // Un producto sin stock se considera "En Camino" si está en la lista de próximos ingresos o es un bote en reposición
+    const isIncoming = totalStock <= 0 && (isBottle || (isEssence && isIncomingEssence(p)));
+
+    // Estado de disponibilidad dinámico para Meta Commerce Manager:
+    // - Si se desactiva o descontinúa en POS/Bodega -> 'discontinued'
+    // - Si tiene stock > 0 -> 'in stock'
+    // - Si tiene stock 0 y es un producto regular que se agotó en tienda -> 'out of stock'
+    // - Si tiene stock 0 pero está marcado "En Camino" -> 'in stock' (o 'out of stock' si ?stock=strict)
+    let availability: MetaCatalogRow['availability'] = 'in stock';
+    let fbQuantity = totalStock;
+    let stockLabel = 'Disponible en Tienda';
+
+    if (isDiscontinued) {
+      availability = 'discontinued';
+      fbQuantity = 0;
+      stockLabel = 'Descontinuado';
+    } else if (totalStock > 0) {
+      availability = 'in stock';
+      fbQuantity = totalStock;
+      stockLabel = 'Disponible en Tienda';
+    } else if (isIncoming) {
+      availability = strictStock ? 'out of stock' : 'in stock';
+      fbQuantity = strictStock ? 0 : 15;
+      stockLabel = 'En Camino';
+    } else {
+      // Producto regular que se quedó sin inventario en tienda -> se marca agotado automáticamente
+      availability = 'out of stock';
+      fbQuantity = 0;
+      stockLabel = 'Agotado';
+    }
+
     const productUrl = `${SITE_URL}${getProductUrl(p)}`;
-    const imageLink = `${SITE_URL}/images/meta/${p.id}.jpg`;
+    const imageLink = resolveMetaImageUrl(p);
 
     if (isEssence) {
       const displayName = formatPerfumeDisplayName(p)
@@ -194,9 +263,16 @@ export function buildMetaCatalogRows(
         .join(' | ');
 
       const isPromo = isHalloweenPromoProduct(p);
-      const basePrice = isPromo ? HALLOWEEN_ORIGINAL_PRICE_1OZ : Number(p.price || 3.75);
+      const liveFullPrice = Number(p.price || 3.75);
+      const liveHalfPrice =
+        p.priceHalfOunce != null ? Number(p.priceHalfOunce) : Number((liveFullPrice / 2).toFixed(2));
+
+      const basePrice = liveFullPrice;
       const salePrice = isPromo ? `${HALLOWEEN_PROMO_PRICE_1OZ.toFixed(2)} USD` : '';
       const saleDate = isPromo ? '2026-10-15T00:00:00-06:00/2026-10-31T23:59:59-06:00' : '';
+
+      const effective1OzPrice = isPromo ? HALLOWEEN_PROMO_PRICE_1OZ : basePrice;
+      const effectiveHalfPrice = isPromo ? HALLOWEEN_PROMO_PRICE_HALF_OZ : liveHalfPrice;
 
       const title = sanitizeMetaText(
         `${displayName} - Esencia Pura 1 Oz (Inspiración ${cleanInsp}) | Aromaniak`
@@ -207,13 +283,17 @@ export function buildMetaCatalogRows(
         `Inspirada en ${cleanInsp} (${genderLabelEs} • Familia ${familyClean}).`,
         notesSummary ? `Pirámide olfativa: ${notesSummary}.` : '',
         cleanDesc,
-        `Presentaciones disponibles: 1 Onza ($${(isPromo ? HALLOWEEN_PROMO_PRICE_1OZ : basePrice).toFixed(2)}), Media Onza ($${isPromo ? '1.85' : '1.90'}) o en Perfume Preparado de 100ml listo para usar ($11.00).`,
-        isIncoming ? `Estado actual: Próximo ingreso a bodega (En camino).` : `Disponible en tienda física C.C. El Rosal (San Salvador) y envíos a todo El Salvador por $2.90.`,
+        `Presentaciones disponibles: 1 Onza ($${effective1OzPrice.toFixed(2)}), Media Onza ($${effectiveHalfPrice.toFixed(2)}) o en Perfume Preparado de 100ml listo para usar ($${kitStandardPrice.toFixed(2)}).`,
+        isIncoming
+          ? `Estado actual: Próximo ingreso a bodega (En camino).`
+          : `Disponible en tienda física C.C. El Rosal (San Salvador) y envíos a todo El Salvador por $2.90.`,
       ]
         .filter(Boolean)
         .join(' ');
 
-      const collectionLabel = isPromo
+      const collectionLabel = isDiscontinued
+        ? 'Descontinuado'
+        : isPromo
         ? 'Promo Halloween $3.30'
         : isIncoming
         ? 'Nuevos Ingresos En Camino'
@@ -226,6 +306,7 @@ export function buildMetaCatalogRows(
         title,
         description: fullDescription,
         availability,
+        quantity_to_sell_on_facebook: fbQuantity,
         condition: 'new',
         price: `${basePrice.toFixed(2)} USD`,
         sale_price: salePrice,
@@ -245,16 +326,18 @@ export function buildMetaCatalogRows(
       });
     } else if (isBottle) {
       const bottleName = (p.officialName || p.name || 'Frasco de Cristal 100ml').trim();
+      const livePrice = Number(p.price || 1.45);
       const title = `${bottleName.startsWith('Bote') ? bottleName : `Bote ${bottleName}`} 100ml en Vidrio con Atomizador | Aromaniak`;
-      const desc = `${p.description || `${bottleName} de cristal grueso de 100ml con válvula atomizadora spray y cierre de rosca.`} Ideal para preparar tus perfumes con esencias puras Aromaniak o emprender tu propia marca de perfumería en El Salvador. Precio: $${Number(p.price).toFixed(2)} USD. Tienda en C.C. El Rosal, San Salvador y envíos a todo El Salvador por $2.90.`;
+      const desc = `${p.description || `${bottleName} de cristal grueso de 100ml con válvula atomizadora spray y cierre de rosca.`} Ideal para preparar tus perfumes con esencias puras Aromaniak o emprender tu propia marca de perfumería en El Salvador. Precio: $${livePrice.toFixed(2)} USD. Tienda en C.C. El Rosal, San Salvador y envíos a todo El Salvador por $2.90.`;
 
       rows.push({
         id: p.id,
         title,
         description: desc,
         availability,
+        quantity_to_sell_on_facebook: fbQuantity,
         condition: 'new',
-        price: `${Number(p.price || 1.45).toFixed(2)} USD`,
+        price: `${livePrice.toFixed(2)} USD`,
         sale_price: '',
         sale_price_effective_date: '',
         link: productUrl,
@@ -272,18 +355,19 @@ export function buildMetaCatalogRows(
         custom_label_4: totalStock > 0 ? 'Best Seller' : 'En Camino',
       });
     } else {
-      // Insumos (Alcohol Perfumero 1L, Medio Litro, Caja Genérica)
       const insumoName = (p.officialName || p.name).trim();
+      const livePrice = Number(p.price || 1.0);
       const title = `${insumoName} - Insumo de Perfumería Fina | Aromaniak`;
-      const desc = `${p.description || insumoName} Insumo de grado perfumería fina ideal para formular perfumes de alta fijación y larga duración con esencias puras Aromaniak. Disponible en tienda física C.C. El Rosal, San Salvador y envíos a todo El Salvador por $2.90.`;
+      const desc = `${p.description || insumoName} Insumo de grado perfumería fina ideal para formular perfumes de alta fijación y larga duración con esencias puras Aromaniak. Precio: $${livePrice.toFixed(2)} USD. Disponible en tienda física C.C. El Rosal, San Salvador y envíos a todo El Salvador por $2.90.`;
 
       rows.push({
         id: p.id,
         title,
         description: desc,
         availability,
+        quantity_to_sell_on_facebook: fbQuantity,
         condition: 'new',
-        price: `${Number(p.price).toFixed(2)} USD`,
+        price: `${livePrice.toFixed(2)} USD`,
         sale_price: '',
         sale_price_effective_date: '',
         link: productUrl,
@@ -311,6 +395,7 @@ export function serializeMetaCatalogCsv(rows: MetaCatalogRow[]): string {
     'title',
     'description',
     'availability',
+    'quantity_to_sell_on_facebook',
     'condition',
     'price',
     'sale_price',

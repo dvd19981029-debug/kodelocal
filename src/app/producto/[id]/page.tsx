@@ -165,6 +165,21 @@ export default function ProductDetailPage() {
     }
   }, [product?.id, selectedPresentation]);
 
+  // Evento estándar Meta Pixel ViewContent para sincronización en tiempo real de microdatos del catálogo
+  useEffect(() => {
+    if (!product || typeof window === 'undefined') return;
+    const fbq = (window as any).fbq;
+    if (typeof fbq === 'function') {
+      fbq('track', 'ViewContent', {
+        content_ids: [product.id],
+        content_name: formatPerfumeDisplayName(product),
+        content_type: 'product',
+        value: Number((activeOption?.price || product.price || 3.75).toFixed(2)),
+        currency: 'USD',
+      });
+    }
+  }, [product?.id]);
+
   // Productos relacionados (esencias con esencias, botes con botes)
   const relatedProducts = useMemo(() => {
     if (!product) return [];
@@ -275,6 +290,16 @@ export default function ProductDetailPage() {
       addToCart(product, selectedPresentation, quantity);
     }
 
+    if (typeof window !== 'undefined' && typeof (window as any).fbq === 'function') {
+      (window as any).fbq('track', 'AddToCart', {
+        content_ids: [product.id],
+        content_name: displayName,
+        content_type: 'product',
+        value: Number((activeOption.price * quantity).toFixed(2)),
+        currency: 'USD',
+      });
+    }
+
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1400);
   };
@@ -308,12 +333,13 @@ export default function ProductDetailPage() {
   const productSchema = {
     "@context": "https://schema.org/",
     "@type": "Product",
+    "productID": product.id,
+    "sku": product.id,
     "name": displayName,
     "image": [
-      `https://aromaniaksv.com${productImage}`
+      `https://aromaniaksv.com/api/feed/meta/image/${encodeURIComponent(product.id)}.jpg`
     ],
     "description": product.description || `Insumo de perfumería fina Aromaniak: ${displayName}.`,
-    "sku": product.sku || product.id,
     "brand": {
       "@type": "Brand",
       "name": "Aromaniak"
