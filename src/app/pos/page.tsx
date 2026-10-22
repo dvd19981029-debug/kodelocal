@@ -2777,6 +2777,10 @@ export default function PosPage() {
               saleNumber: orderToInvoice.saleNumber,
               orderStatus: 'COMPLETED',
               paymentStatus: 'COMPLETED',
+              paymentMethod,
+              cashReceived: parsedCash,
+              cashChange: changeAmount,
+              cashierName: getActiveSessionUI().name,
               customerId: resolvedCheckoutCustomerId || selectedCustomerId || (orderToInvoice.cliente as any)?.id || null,
               cliente: {
                 nombre: clienteNombre,

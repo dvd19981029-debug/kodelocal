@@ -362,6 +362,37 @@ export async function POST(request: Request) {
           });
         }
 
+        if (isIncomingCompleted && wasAlreadyCompleted && !isCancelled && paymentMethod) {
+          await prisma.sale.update({
+            where: { id: existingSale.id },
+            data: {
+              paymentMethod,
+              ...(tipoComprobante ? { tipoComprobante } : {}),
+              ...(cashReceived !== undefined ? { cashReceived: cashReceived ? Number(cashReceived) : null } : {}),
+              ...(cashChange !== undefined ? { cashChange: cashChange ? Number(cashChange) : null } : {}),
+              ...(cashierName ? { cashierName } : {}),
+            },
+          });
+          if (!existingSale.payments || existingSale.payments.length === 0) {
+            await prisma.salePayment.create({
+              data: {
+                saleId: existingSale.id,
+                amount: Number(total || existingSale.total || 0),
+                paymentMethod,
+                reference: paymentReference || null,
+                notes: cashReceived ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}` : null,
+                cashierName: cashierName || existingSale.cashierName || 'Caja 1',
+                shiftId: existingSale.shiftId || null,
+              },
+            });
+          } else {
+            await prisma.salePayment.updateMany({
+              where: { saleId: existingSale.id },
+              data: { paymentMethod },
+            });
+          }
+        }
+
         return NextResponse.json({
           success: true,
           alreadyExists: true,
@@ -725,7 +756,19 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
-    const { id, saleNumber, orderStatus, paymentStatus, notes, tipoComprobante, customerId } = body;
+    const {
+      id,
+      saleNumber,
+      orderStatus,
+      paymentStatus,
+      paymentMethod,
+      cashReceived,
+      cashChange,
+      cashierName,
+      notes,
+      tipoComprobante,
+      customerId,
+    } = body;
 
     if (!id && !saleNumber) {
       return NextResponse.json({ success: false, error: 'id o saleNumber es requerido' }, { status: 400 });
@@ -1221,6 +1264,10 @@ export async function PATCH(request: Request) {
       data: {
         ...(orderStatus ? { orderStatus } : {}),
         ...(paymentStatus ? { paymentStatus } : {}),
+        ...(paymentMethod ? { paymentMethod } : {}),
+        ...(cashReceived !== undefined ? { cashReceived: cashReceived ? Number(cashReceived) : null } : {}),
+        ...(cashChange !== undefined ? { cashChange: cashChange ? Number(cashChange) : null } : {}),
+        ...(cashierName ? { cashierName } : {}),
         ...(tipoComprobante ? { tipoComprobante } : {}),
         ...(resolvedCustomerId !== undefined ? { customerId: resolvedCustomerId } : {}),
         ...(updatedNotes !== undefined ? { notes: updatedNotes } : {}),
@@ -1230,8 +1277,31 @@ export async function PATCH(request: Request) {
         items: true,
         dteDocument: true,
         shipments: true,
+        payments: true,
       },
     });
+
+    if ((paymentStatus === 'COMPLETED' || orderStatus === 'COMPLETED') && paymentMethod) {
+      if (!updated.payments || updated.payments.length === 0) {
+        await prisma.salePayment.create({
+          data: {
+            saleId: updated.id,
+            amount: Number(updated.total || 0),
+            paymentMethod,
+            notes: cashReceived
+              ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}`
+              : null,
+            cashierName: cashierName || updated.cashierName || 'Caja 1',
+            shiftId: updated.shiftId || null,
+          },
+        });
+      } else {
+        await prisma.salePayment.updateMany({
+          where: { saleId: updated.id },
+          data: { paymentMethod },
+        });
+      }
+    }
 
     return NextResponse.json({
       success: true,
