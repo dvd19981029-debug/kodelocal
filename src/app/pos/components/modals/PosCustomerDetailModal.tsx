@@ -158,10 +158,15 @@ export const PosCustomerDetailModal: React.FC<PosCustomerDetailModalProps> = ({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
           <div className="p-3 rounded-xl bg-indigo-50/70 border border-indigo-100">
             <p className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider">Precio Esencias</p>
-            <p className="text-sm font-black text-indigo-950 mt-0.5">
-              {customer.specialEssencePrice != null
-                ? `$${Number(customer.specialEssencePrice).toFixed(2)} / oz`
-                : 'Estándar ($3.25)'}
+            <p className="text-xs font-black text-indigo-950 mt-0.5 leading-snug">
+              1 Oz: {customer.specialEssencePrice != null
+                ? `$${Number(customer.specialEssencePrice).toFixed(2)}`
+                : 'Estándar ($3.75)'}
+              <span className="block text-[11px] font-bold text-indigo-700 mt-0.5">
+                ½ Oz: {customer.specialHalfEssencePrice != null
+                  ? `$${Number(customer.specialHalfEssencePrice).toFixed(2)}`
+                  : 'Estándar ($1.90)'}
+              </span>
             </p>
           </div>
 

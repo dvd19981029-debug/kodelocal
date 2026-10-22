@@ -20,6 +20,8 @@ export interface PosProductGridProps {
   filteredProductsCount: number;
   activeEssencePrice: number;
   activeEssenceHalfPrice: number;
+  customEssencePrice?: number | null;
+  customEssenceHalfPrice?: number | null;
   activeBottlePrice?: number | null;
   cart: CartItem[];
   onAddToCart: (product: ProductItem, presentation?: 'ONZA_COMPLETA' | 'MEDIA_ONZA') => void;
@@ -42,6 +44,8 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
   filteredProductsCount,
   activeEssencePrice,
   activeEssenceHalfPrice,
+  customEssencePrice,
+  customEssenceHalfPrice,
   activeBottlePrice,
   cart,
   onAddToCart,
@@ -167,12 +171,16 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
           const isLowStock = product.stock > 0 && product.stock <= product.minStock;
           const availableRemaining = isEssence ? fullRemaining + halfRemaining : Math.max(0, product.stock - cartFullForProduct);
           const isHalloweenPromo = isEssence && isHalloweenPromoProduct(product);
-          const fullPrice = isHalloweenPromo ? HALLOWEEN_PROMO_PRICE_1OZ : product.price;
+          const fullPrice = isHalloweenPromo
+            ? HALLOWEEN_PROMO_PRICE_1OZ
+            : (customEssencePrice != null ? customEssencePrice : product.price);
           const halfPrice = isHalloweenPromo
             ? HALLOWEEN_PROMO_PRICE_HALF_OZ
-            : (product.priceHalfOunce != null 
-              ? Number(product.priceHalfOunce) 
-              : Number((product.price / 2).toFixed(2)));
+            : (customEssenceHalfPrice != null
+              ? customEssenceHalfPrice
+              : (product.priceHalfOunce != null 
+                ? Number(product.priceHalfOunce) 
+                : Number((product.price / 2).toFixed(2))));
 
           return (
             <div 

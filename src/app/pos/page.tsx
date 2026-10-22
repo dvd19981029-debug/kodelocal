@@ -148,6 +148,7 @@ export default function PosPage() {
   const [custDireccion, setCustDireccion] = useState('');
   const [custNotas, setCustNotas] = useState('');
   const [custSpecialEssencePrice, setCustSpecialEssencePrice] = useState('');
+  const [custSpecialHalfEssencePrice, setCustSpecialHalfEssencePrice] = useState('');
   const [custSpecialBottlePrice, setCustSpecialBottlePrice] = useState('');
   const [custTierId, setCustTierId] = useState("");
   const [custCustomDiscountPct, setCustCustomDiscountPct] = useState<string>("");
@@ -845,13 +846,13 @@ export default function PosPage() {
 
   const activeEssencePrice = activeCustomer?.specialEssencePrice 
     ? Number(activeCustomer.specialEssencePrice) 
-    : (sampleEssence?.price ?? 3.25);
+    : (sampleEssence?.price ?? 3.75);
     
-  const activeEssenceHalfPrice = activeCustomer?.specialEssencePrice
-    ? Number((Number(activeCustomer.specialEssencePrice) / 2).toFixed(2))
+  const activeEssenceHalfPrice = activeCustomer?.specialHalfEssencePrice
+    ? Number(activeCustomer.specialHalfEssencePrice)
     : (sampleEssence?.priceHalfOunce != null 
       ? Number(sampleEssence.priceHalfOunce) 
-      : Number((activeEssencePrice / 2).toFixed(2))); 
+      : 1.90); 
   const activeBottlePrice = activeCustomer?.specialBottlePrice ? Number(activeCustomer.specialBottlePrice) : null;
 
 
@@ -879,19 +880,19 @@ export default function PosPage() {
       }
     }
 
-    if (isEssence && activeCustomer?.specialEssencePrice) {
-      listPrice = Number(activeCustomer.specialEssencePrice);
-    } else if (isBottle && activeCustomer?.specialBottlePrice) {
-      listPrice = Number(activeCustomer.specialBottlePrice);
-    }
-
     if (item.presentation === "MEDIA_ONZA") {
-      if (isEssence && activeCustomer?.specialEssencePrice) {
-        listPrice = Number((activeCustomer.specialEssencePrice / 2).toFixed(2));
+      if (isEssence && activeCustomer?.specialHalfEssencePrice != null && Number(activeCustomer.specialHalfEssencePrice) > 0) {
+        listPrice = Number(activeCustomer.specialHalfEssencePrice);
       } else if (item.product.priceHalfOunce != null) {
         listPrice = Number(item.product.priceHalfOunce);
       } else {
         listPrice = Number((listPrice / 2).toFixed(2));
+      }
+    } else {
+      if (isEssence && activeCustomer?.specialEssencePrice != null && Number(activeCustomer.specialEssencePrice) > 0) {
+        listPrice = Number(activeCustomer.specialEssencePrice);
+      } else if (isBottle && activeCustomer?.specialBottlePrice != null && Number(activeCustomer.specialBottlePrice) > 0) {
+        listPrice = Number(activeCustomer.specialBottlePrice);
       }
     }
 
@@ -1731,6 +1732,7 @@ export default function PosPage() {
     setCustDireccion('');
     setCustNotas('');
     setCustSpecialEssencePrice('');
+    setCustSpecialHalfEssencePrice('');
     setCustSpecialBottlePrice('');
     setCustTierId('');
     setCustCustomDiscountPct('');
@@ -1761,6 +1763,7 @@ export default function PosPage() {
     setCustDireccion(cust.direccion || '');
     setCustNotas(cust.notas || '');
     setCustSpecialEssencePrice(cust.specialEssencePrice != null ? String(cust.specialEssencePrice) : '');
+    setCustSpecialHalfEssencePrice(cust.specialHalfEssencePrice != null ? String(cust.specialHalfEssencePrice) : '');
     setCustSpecialBottlePrice(cust.specialBottlePrice != null ? String(cust.specialBottlePrice) : '');
     setCustTierId(cust.tierId || '');
     setCustCustomDiscountPct(cust.customDiscountPct != null ? String(cust.customDiscountPct) : '');
@@ -1805,6 +1808,7 @@ export default function PosPage() {
       direccion: custDireccion.trim() || undefined,
       notas: custNotas.trim() || undefined,
       specialEssencePrice: custSpecialEssencePrice ? parseFloat(custSpecialEssencePrice) : null,
+      specialHalfEssencePrice: custSpecialHalfEssencePrice ? parseFloat(custSpecialHalfEssencePrice) : null,
       specialBottlePrice: custSpecialBottlePrice ? parseFloat(custSpecialBottlePrice) : null,
       tierId: custTierId || null,
       tier: matchedTier ? {
@@ -3159,6 +3163,8 @@ export default function PosPage() {
                 filteredProductsCount={filteredProducts.length}
                 activeEssencePrice={activeEssencePrice}
                 activeEssenceHalfPrice={activeEssenceHalfPrice}
+                customEssencePrice={activeCustomer?.specialEssencePrice != null && Number(activeCustomer.specialEssencePrice) > 0 ? Number(activeCustomer.specialEssencePrice) : null}
+                customEssenceHalfPrice={activeCustomer?.specialHalfEssencePrice != null && Number(activeCustomer.specialHalfEssencePrice) > 0 ? Number(activeCustomer.specialHalfEssencePrice) : null}
                 activeBottlePrice={activeBottlePrice}
                 cart={cart}
                 onAddToCart={addToCart}
@@ -3526,6 +3532,8 @@ export default function PosPage() {
         setCustSuppliesCustomDiscountPct={setCustSuppliesCustomDiscountPct}
         custSpecialEssencePrice={custSpecialEssencePrice}
         setCustSpecialEssencePrice={setCustSpecialEssencePrice}
+        custSpecialHalfEssencePrice={custSpecialHalfEssencePrice}
+        setCustSpecialHalfEssencePrice={setCustSpecialHalfEssencePrice}
         custSpecialBottlePrice={custSpecialBottlePrice}
         setCustSpecialBottlePrice={setCustSpecialBottlePrice}
 

@@ -73,12 +73,14 @@ export function applyCustomerProductPricing(
 
   let effectivePrice = originalPrice;
 
-  if (isEssence && customer.specialEssencePrice != null && Number(customer.specialEssencePrice) > 0) {
-    const baseSpecial = Number(customer.specialEssencePrice);
-    effectivePrice =
-      presentation === 'MEDIA_ONZA'
-        ? Number((baseSpecial / 2).toFixed(2))
-        : Number(baseSpecial.toFixed(2));
+  if (isEssence) {
+    if (presentation === 'MEDIA_ONZA') {
+      if (customer.specialHalfEssencePrice != null && Number(customer.specialHalfEssencePrice) > 0) {
+        effectivePrice = Number(Number(customer.specialHalfEssencePrice).toFixed(2));
+      }
+    } else if (customer.specialEssencePrice != null && Number(customer.specialEssencePrice) > 0) {
+      effectivePrice = Number(Number(customer.specialEssencePrice).toFixed(2));
+    }
   } else if (isBottle && customer.specialBottlePrice != null && Number(customer.specialBottlePrice) > 0) {
     effectivePrice = Number(Number(customer.specialBottlePrice).toFixed(2));
   }
@@ -413,6 +415,7 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
   }, [
     customer?.id,
     customer?.specialEssencePrice,
+    customer?.specialHalfEssencePrice,
     customer?.specialBottlePrice,
     customer?.tierId,
     customer?.tier?.discountPct,

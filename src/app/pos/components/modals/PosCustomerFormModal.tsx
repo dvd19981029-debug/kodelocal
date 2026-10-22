@@ -66,6 +66,8 @@ export interface PosCustomerFormModalProps {
   setCustSuppliesCustomDiscountPct?: (val: string) => void;
   custSpecialEssencePrice?: string;
   setCustSpecialEssencePrice?: (val: string) => void;
+  custSpecialHalfEssencePrice?: string;
+  setCustSpecialHalfEssencePrice?: (val: string) => void;
   custSpecialBottlePrice?: string;
   setCustSpecialBottlePrice?: (val: string) => void;
 
@@ -120,6 +122,8 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
   setCustSuppliesCustomDiscountPct,
   custSpecialEssencePrice = '',
   setCustSpecialEssencePrice,
+  custSpecialHalfEssencePrice = '',
+  setCustSpecialHalfEssencePrice,
   custSpecialBottlePrice = '',
   setCustSpecialBottlePrice,
 
@@ -530,10 +534,10 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
                 Se aplicarán automáticamente tanto en ventas de mostrador (POS) como al cotizar o iniciar sesión en el ecommerce.
               </p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Precio Fijo Esencias ($ / Onza)
+                  Precio Fijo 1 Onza ($ / 1 Oz)
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">$</span>
@@ -541,9 +545,27 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
                     type="number"
                     min="0"
                     step="0.01"
-                    placeholder="Ej. 2.75 (vacío = estándar)"
+                    placeholder="Ej. 3.50 (vacío = estándar)"
                     value={custSpecialEssencePrice}
                     onChange={(e) => setCustSpecialEssencePrice && setCustSpecialEssencePrice(e.target.value)}
+                    className="clay-input w-full pl-7 text-xs font-mono font-bold"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  Precio Fijo ½ Onza ($ / ½ Oz)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="Ej. 1.75 (vacío = estándar)"
+                    value={custSpecialHalfEssencePrice}
+                    onChange={(e) => setCustSpecialHalfEssencePrice && setCustSpecialHalfEssencePrice(e.target.value)}
                     className="clay-input w-full pl-7 text-xs font-mono font-bold"
                   />
                 </div>

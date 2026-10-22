@@ -176,6 +176,7 @@ export async function GET(
         address: customer.address || '',
         notes: customer.notes || '',
         specialEssencePrice: customer.specialEssencePrice ? Number(customer.specialEssencePrice) : null,
+        specialHalfEssencePrice: (customer as any).specialHalfEssencePrice ? Number((customer as any).specialHalfEssencePrice) : null,
         specialBottlePrice: customer.specialBottlePrice ? Number(customer.specialBottlePrice) : null,
         tierId: customer.tierId || null,
         tier: customer.tier || null,

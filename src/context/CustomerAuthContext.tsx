@@ -30,6 +30,7 @@ export interface CustomerUser {
   suppliesTier?: any | null;
   suppliesCustomDiscountPct?: number | null;
   specialEssencePrice?: number | null;
+  specialHalfEssencePrice?: number | null;
   specialBottlePrice?: number | null;
   tradeName?: string | null;
   taxCategory?: string | null;

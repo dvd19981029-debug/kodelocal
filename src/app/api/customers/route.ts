@@ -41,6 +41,7 @@ export async function GET(request: Request) {
         direccion: c.address || '',
         notas: c.notes || '',
         specialEssencePrice: c.specialEssencePrice ? Number(c.specialEssencePrice) : null,
+        specialHalfEssencePrice: (c as any).specialHalfEssencePrice ? Number((c as any).specialHalfEssencePrice) : null,
         specialBottlePrice: c.specialBottlePrice ? Number(c.specialBottlePrice) : null,
         tierId: c.tierId || null,
         customDiscountPct: c.customDiscountPct || null,
@@ -118,6 +119,7 @@ export async function POST(request: Request) {
       direccion,
       notas,
       specialEssencePrice,
+      specialHalfEssencePrice,
       specialBottlePrice,
       tierId,
       customDiscountPct,
@@ -175,6 +177,9 @@ export async function POST(request: Request) {
     }
     if (specialEssencePrice !== undefined) {
       data.specialEssencePrice = (specialEssencePrice !== null && specialEssencePrice !== '') ? Number(specialEssencePrice) : null;
+    }
+    if (specialHalfEssencePrice !== undefined) {
+      data.specialHalfEssencePrice = (specialHalfEssencePrice !== null && specialHalfEssencePrice !== '') ? Number(specialHalfEssencePrice) : null;
     }
     if (specialBottlePrice !== undefined) {
       data.specialBottlePrice = (specialBottlePrice !== null && specialBottlePrice !== '') ? Number(specialBottlePrice) : null;

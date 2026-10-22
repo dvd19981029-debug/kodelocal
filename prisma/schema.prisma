@@ -105,8 +105,9 @@ model Customer {
   suppliesTier              CustomerTier? @relation("CustomerSuppliesTier", fields: [suppliesTierId], references: [id], onDelete: SetNull)
   suppliesCustomDiscountPct Float?
 
-  specialEssencePrice Decimal?          @db.Decimal(10, 2)
-  specialBottlePrice  Decimal?          @db.Decimal(10, 2)
+  specialEssencePrice     Decimal?          @db.Decimal(10, 2)
+  specialHalfEssencePrice Decimal?          @db.Decimal(10, 2)
+  specialBottlePrice      Decimal?          @db.Decimal(10, 2)
   taxCategory         String?           @default("OTRO")
   tradeName           String?
   addresses           CustomerAddress[]

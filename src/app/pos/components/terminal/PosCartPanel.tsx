@@ -506,9 +506,9 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
                 : (isBottle && selectedCustomerObj?.specialBottlePrice ? Number(selectedCustomerObj.specialBottlePrice) : item.product.price);
               const halfPriceVal = isHalloweenPromo
                 ? HALLOWEEN_PROMO_PRICE_HALF_OZ
-                : (isEssence && selectedCustomerObj?.specialEssencePrice) 
-                ? Number((Number(selectedCustomerObj.specialEssencePrice) / 2).toFixed(2)) 
-                : (item.product.priceHalfOunce != null ? Number(item.product.priceHalfOunce) : Number((item.product.price / 2).toFixed(2)));
+                : (isEssence && selectedCustomerObj?.specialHalfEssencePrice) 
+                ? Number(selectedCustomerObj.specialHalfEssencePrice) 
+                : (item.product.priceHalfOunce != null ? Number(item.product.priceHalfOunce) : 1.90);
 
               return (
                 <div 

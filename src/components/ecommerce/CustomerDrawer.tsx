@@ -666,7 +666,7 @@ export default function CustomerDrawer() {
                     )}
 
                     {/* Precios Preferenciales Asignados */}
-                    {customer && (customer.specialEssencePrice != null || customer.specialBottlePrice != null) && (
+                    {customer && (customer.specialEssencePrice != null || customer.specialHalfEssencePrice != null || customer.specialBottlePrice != null) && (
                       <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 border border-emerald-500/30 rounded-2xl p-4 shadow-2xs space-y-2.5">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-black text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
@@ -680,12 +680,20 @@ export default function CustomerDrawer() {
                         <p className="text-[11px] text-slate-600 leading-snug">
                           Cuentas con precios preferenciales exclusivos vinculados a tu cuenta. Se aplican automáticamente al agregar al carrito y en tus compras en tienda física:
                         </p>
-                        <div className="grid grid-cols-2 gap-2 pt-0.5">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-0.5">
                           {customer.specialEssencePrice != null && (
                             <div className="bg-white/90 backdrop-blur-xs p-2.5 rounded-xl border border-emerald-200/60 shadow-2xs text-center">
-                              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Esencias / Oz</div>
+                              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Esencias / 1 Oz</div>
                               <div className="text-sm font-black text-emerald-700 font-mono">
                                 ${Number(customer.specialEssencePrice).toFixed(2)}
+                              </div>
+                            </div>
+                          )}
+                          {customer.specialHalfEssencePrice != null && (
+                            <div className="bg-white/90 backdrop-blur-xs p-2.5 rounded-xl border border-emerald-200/60 shadow-2xs text-center">
+                              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Esencias / ½ Oz</div>
+                              <div className="text-sm font-black text-emerald-700 font-mono">
+                                ${Number(customer.specialHalfEssencePrice).toFixed(2)}
                               </div>
                             </div>
                           )}

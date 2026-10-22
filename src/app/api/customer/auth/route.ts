@@ -36,6 +36,7 @@ function formatAuthCustomerResponse(customer: any, authProvider: 'google' | 'cre
     suppliesTier: customer.suppliesTier || null,
     suppliesCustomDiscountPct: customer.suppliesCustomDiscountPct || null,
     specialEssencePrice: customer.specialEssencePrice ? Number(customer.specialEssencePrice) : null,
+    specialHalfEssencePrice: (customer as any).specialHalfEssencePrice ? Number((customer as any).specialHalfEssencePrice) : null,
     specialBottlePrice: customer.specialBottlePrice ? Number(customer.specialBottlePrice) : null,
     tradeName: customer.tradeName || customer.businessName || '',
     taxCategory: customer.taxCategory || 'OTRO',

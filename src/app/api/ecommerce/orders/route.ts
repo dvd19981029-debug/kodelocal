@@ -916,16 +916,18 @@ export async function POST(request: Request) {
         if (isHalloweenPromo) {
           legitimateUnitPrice = isHalfOunce ? HALLOWEEN_PROMO_PRICE_HALF_OZ : HALLOWEEN_PROMO_PRICE_1OZ;
         } else {
-          if (isEssence && dbCustomer?.specialEssencePrice) {
-            legitimateUnitPrice = isHalfOunce
-              ? Number((Number(dbCustomer.specialEssencePrice) / 2).toFixed(2))
-              : Number(dbCustomer.specialEssencePrice);
+          if (isEssence) {
+            if (isHalfOunce) {
+              if ((dbCustomer as any)?.specialHalfEssencePrice) {
+                legitimateUnitPrice = Number((dbCustomer as any).specialHalfEssencePrice);
+              } else {
+                legitimateUnitPrice = prod.priceHalfOunce != null ? Number(prod.priceHalfOunce) : 1.90;
+              }
+            } else if (dbCustomer?.specialEssencePrice) {
+              legitimateUnitPrice = Number(dbCustomer.specialEssencePrice);
+            }
           } else if (isBottle && dbCustomer?.specialBottlePrice) {
             legitimateUnitPrice = Number(dbCustomer.specialBottlePrice);
-          } else if (isEssence) {
-            if (isHalfOunce) {
-              legitimateUnitPrice = prod.priceHalfOunce != null ? Number(prod.priceHalfOunce) : Number((legitimateUnitPrice / 2).toFixed(2));
-            }
           }
 
           // Aplicar descuento por nivel VIP según la categoría específica del producto (Esencias, Botes o Insumos)

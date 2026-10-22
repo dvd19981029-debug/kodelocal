@@ -246,7 +246,6 @@ export const PosQuickEditProductModal: React.FC<PosQuickEditProductModalProps> =
                       setEditingProduct({
                         ...editingProduct,
                         price: newPrice,
-                        priceHalfOunce: Number((newPrice / 2).toFixed(2))
                       });
                     }}
                     className="clay-input w-full text-xs font-bold font-mono"

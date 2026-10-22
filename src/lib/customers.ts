@@ -30,6 +30,7 @@ export interface CustomerRecord {
   direccion?: string;
   notas?: string;
   specialEssencePrice?: number | null;
+  specialHalfEssencePrice?: number | null;
   specialBottlePrice?: number | null;
   tierId?: string | null;
   customDiscountPct?: number | null;

@@ -165,11 +165,16 @@ export const PosCustomerModule: React.FC<PosCustomerModuleProps> = React.memo(({
                             {cust.nombreComercial}
                           </span>
                         )}
-                        {(cust.specialEssencePrice != null || cust.specialBottlePrice != null) && (
+                        {(cust.specialEssencePrice != null || cust.specialHalfEssencePrice != null || cust.specialBottlePrice != null) && (
                           <div className="flex items-center gap-1 mt-0.5 flex-wrap">
                             {cust.specialEssencePrice != null && (
                               <span className="text-[9px] font-bold text-indigo-700 bg-indigo-50 px-1 py-0.2 rounded border border-indigo-100">
-                                Esencia: ${Number(cust.specialEssencePrice).toFixed(2)}/oz
+                                1 Oz: ${Number(cust.specialEssencePrice).toFixed(2)}
+                              </span>
+                            )}
+                            {cust.specialHalfEssencePrice != null && (
+                              <span className="text-[9px] font-bold text-violet-700 bg-violet-50 px-1 py-0.2 rounded border border-violet-100">
+                                ½ Oz: ${Number(cust.specialHalfEssencePrice).toFixed(2)}
                               </span>
                             )}
                             {cust.specialBottlePrice != null && (
