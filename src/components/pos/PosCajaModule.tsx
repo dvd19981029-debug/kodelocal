@@ -197,172 +197,115 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
     });
   }, [onlyCashToday, todayCashSales, todayInvoicedSales, todaySearch, customers]);
 
-  const activeFolderLabel =
-    cajaSubTab === 'listas_facturar'
-      ? `Órdenes Listas (${readyInWindowOrders.length})`
-      : cajaSubTab === 'ventas_dia'
-      ? `Ventas del Día (${todayInvoicedSales.length})`
-      : cajaSubTab === 'enlaces_pago'
-      ? 'Enlaces de Pago'
-      : cajaSubTab === 'dtes_emitidos'
-      ? `DTEs Emitidos (${completedDteSales.length})`
-      : cajaSubTab === 'corte_z'
-      ? 'Cierre de Caja / Turno'
-      : 'Domicilio';
-
-  const folderTabs = [
-    {
-      id: 'listas_facturar' as const,
-      label: `Órdenes Listas (${readyInWindowOrders.length})`,
-      icon: CheckCheck,
-      tabActiveClasses: 'border-t-emerald-500 border-x-emerald-500/60 text-emerald-950',
-      containerBorderClass: 'border-emerald-500/60',
-      headerStripClass: 'from-emerald-500/15 via-emerald-500/5 to-transparent border-emerald-200/80 text-emerald-900',
-      badgeClass: 'bg-emerald-600 text-white',
-      activeIconColor: 'text-emerald-600',
-      inactiveIconColor: 'text-emerald-400',
-      hasAlert: readyInWindowOrders.length > 0,
-    },
-    {
-      id: 'ventas_dia' as const,
-      label: `Ventas del Día (${todayInvoicedSales.length})`,
-      icon: Banknote,
-      tabActiveClasses: 'border-t-teal-500 border-x-teal-500/60 text-teal-950',
-      containerBorderClass: 'border-teal-500/60',
-      headerStripClass: 'from-teal-500/15 via-teal-500/5 to-transparent border-teal-200/80 text-teal-900',
-      badgeClass: 'bg-teal-600 text-white',
-      activeIconColor: 'text-teal-600',
-      inactiveIconColor: 'text-teal-400',
-      hasAlert: false,
-    },
-    {
-      id: 'enlaces_pago' as const,
-      label: 'Enlaces de Pago',
-      icon: Link2,
-      tabActiveClasses: 'border-t-purple-500 border-x-purple-500/60 text-purple-950',
-      containerBorderClass: 'border-purple-500/60',
-      headerStripClass: 'from-purple-500/15 via-purple-500/5 to-transparent border-purple-200/80 text-purple-900',
-      badgeClass: 'bg-purple-600 text-white',
-      activeIconColor: 'text-purple-600',
-      inactiveIconColor: 'text-purple-400',
-      hasAlert: false,
-    },
-    {
-      id: 'dtes_emitidos' as const,
-      label: `DTEs Emitidos (${completedDteSales.length})`,
-      icon: FileCheck,
-      tabActiveClasses: 'border-t-indigo-600 border-x-indigo-500/60 text-indigo-950',
-      containerBorderClass: 'border-indigo-500/60',
-      headerStripClass: 'from-indigo-500/15 via-indigo-500/5 to-transparent border-indigo-200/80 text-indigo-900',
-      badgeClass: 'bg-indigo-600 text-white',
-      activeIconColor: 'text-indigo-600',
-      inactiveIconColor: 'text-indigo-400',
-      hasAlert: false,
-    },
-    {
-      id: 'corte_z' as const,
-      label: 'Cierre de Caja / Turno',
-      icon: Calculator,
-      tabActiveClasses: 'border-t-amber-500 border-x-amber-500/60 text-amber-950',
-      containerBorderClass: 'border-amber-500/60',
-      headerStripClass: 'from-amber-500/15 via-amber-500/5 to-transparent border-amber-200/80 text-amber-900',
-      badgeClass: 'bg-amber-600 text-white',
-      activeIconColor: 'text-amber-600',
-      inactiveIconColor: 'text-amber-400',
-      hasAlert: false,
-    },
-    {
-      id: 'domicilio' as const,
-      label: 'Domicilio',
-      icon: Truck,
-      tabActiveClasses: 'border-t-blue-500 border-x-blue-500/60 text-blue-950',
-      containerBorderClass: 'border-blue-500/60',
-      headerStripClass: 'from-blue-500/15 via-blue-500/5 to-transparent border-blue-200/80 text-blue-900',
-      badgeClass: 'bg-blue-600 text-white',
-      activeIconColor: 'text-blue-600',
-      inactiveIconColor: 'text-blue-400',
-      hasAlert: false,
-    },
-  ];
-
-  const currentFolder = folderTabs.find((t) => t.id === cajaSubTab) || folderTabs[0];
-
   return (
-    <div className="animate-in fade-in">
-      {/* ===================================================================== */}
-      {/* SISTEMA DE EXPEDIENTE UNIFICADO (PESTAÑAS + CONTENEDOR CONECTADO)     */}
-      {/* ===================================================================== */}
-      <div className="rounded-3xl shadow-xl bg-[#f8fafc]">
-        {/* Cabecera Superior Oscura con Pestañas de Expediente en la Base */}
-        <div
-          className="pt-4 px-4 sm:px-5 pb-0 text-white relative rounded-t-3xl"
-          style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)' }}
-        >
-          {/* Fila Superior Limpia */}
-          <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 pb-3.5">
-            <div className="flex flex-wrap items-center gap-2.5">
+    <div className="space-y-6 animate-in fade-in">
+      {/* Encabezado y Selector de Subpestañas (Estilo Mecanic OS) */}
+      <div
+        className="clay-card-dark p-5 text-white relative overflow-hidden shadow-xl"
+        style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)' }}
+      >
+        <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 opacity-10 pointer-events-none">
+          <ReceiptText className="w-64 h-64 text-indigo-200" />
+        </div>
+
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
               <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-black uppercase tracking-wider backdrop-blur-sm">
                 🏛️ Módulo de Caja & DTE
               </span>
-              <h2 className="text-lg md:text-xl font-black text-white tracking-tight">
-                Caja, Ventanilla & Facturación DTE
-              </h2>
+              <span className="text-xs text-indigo-200 font-medium">Facturación Electrónica El Salvador</span>
             </div>
+            <h2 className="text-xl md:text-2xl font-black text-white tracking-tight">
+              Caja, Ventanilla & Facturación DTE
+            </h2>
           </div>
 
-          {/* Riel de Pestañas de Expediente (La pestaña activa se fusiona con el contenedor inferior) */}
-          <div
-            role="tablist"
-            aria-label="Carpetas del módulo de Caja y Facturación"
-            className="relative z-20 flex flex-wrap items-end gap-1.5 pt-1"
-          >
-            {folderTabs.map((tab) => {
-              const isActive = cajaSubTab === tab.id;
-              const IconComponent = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  onClick={() => setCajaSubTab(tab.id)}
-                  className={`group relative flex items-center gap-2 px-4 text-xs font-black transition-all cursor-pointer whitespace-nowrap select-none rounded-t-2xl ${
-                    isActive
-                      ? `bg-[#f8fafc] ${tab.tabActiveClasses} pt-2.5 pb-3.5 -mb-[2px] z-30 border-t-4 border-x-2 border-b-0 shadow-[0_-6px_16px_rgba(15,23,42,0.35)]`
-                      : 'bg-slate-900/70 text-slate-300 border border-b-0 border-slate-700/80 py-2 mb-0 hover:bg-slate-800/90 hover:text-white opacity-85 hover:opacity-100'
-                  }`}
-                >
-                  {isActive ? (
-                    <FolderOpen className={`w-4 h-4 shrink-0 ${tab.activeIconColor}`} />
-                  ) : (
-                    <Folder className="w-3.5 h-3.5 shrink-0 text-slate-400 group-hover:text-slate-200" />
-                  )}
+          {/* Switcher de Subpestañas */}
+          <div className="flex flex-wrap bg-slate-800/90 backdrop-blur-md p-1.5 rounded-2xl border border-slate-700/80 shadow-inner gap-1">
+            <button
+              type="button"
+              onClick={() => setCajaSubTab('listas_facturar')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                cajaSubTab === 'listas_facturar'
+                  ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-950/50 ring-1 ring-emerald-300'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
+              }`}
+            >
+              <CheckCheck className="w-4 h-4" />
+              <span>Órdenes Listas ({readyInWindowOrders.length})</span>
+              {readyInWindowOrders.length > 0 && (
+                <span className="w-2 h-2 rounded-full bg-amber-300 animate-ping" />
+              )}
+            </button>
 
-                  <IconComponent
-                    className={`w-3.5 h-3.5 shrink-0 ${
-                      isActive ? tab.activeIconColor : tab.inactiveIconColor
-                    }`}
-                  />
+            <button
+              type="button"
+              onClick={() => setCajaSubTab('ventas_dia')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                cajaSubTab === 'ventas_dia'
+                  ? 'bg-teal-600 text-white shadow-lg shadow-teal-950/50 ring-1 ring-teal-300'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
+              }`}
+            >
+              <Banknote className="w-4 h-4" />
+              <span>Ventas del Día ({todayInvoicedSales.length})</span>
+            </button>
 
-                  <span>{tab.label}</span>
+            <button
+              type="button"
+              onClick={() => setCajaSubTab('enlaces_pago')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                cajaSubTab === 'enlaces_pago'
+                  ? 'bg-purple-600 text-white shadow-lg shadow-purple-950/50 ring-1 ring-purple-300'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
+              }`}
+            >
+              <Link2 className="w-4 h-4" />
+              <span>Enlaces de Pago</span>
+            </button>
 
-                  {tab.hasAlert && (
-                    <span
-                      className={`w-2 h-2 rounded-full ${
-                        isActive ? 'bg-emerald-500 animate-ping' : 'bg-amber-400 animate-ping'
-                      }`}
-                    />
-                  )}
-                </button>
-              );
-            })}
+            <button
+              type="button"
+              onClick={() => setCajaSubTab('dtes_emitidos')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                cajaSubTab === 'dtes_emitidos'
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-950/50 ring-1 ring-indigo-300'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
+              }`}
+            >
+              <FileCheck className="w-4 h-4" />
+              <span>DTEs Emitidos ({completedDteSales.length})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setCajaSubTab('corte_z')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                cajaSubTab === 'corte_z'
+                  ? 'bg-amber-600 text-white shadow-lg shadow-amber-950/50 ring-1 ring-amber-300'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
+              }`}
+            >
+              <Calculator className="w-4 h-4" />
+              <span>Cierre de Caja / Turno</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setCajaSubTab('domicilio')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                cajaSubTab === 'domicilio'
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-950/50 ring-1 ring-blue-300'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
+              }`}
+            >
+              <Truck className="w-4 h-4 text-blue-400" />
+              <span>Domicilio</span>
+            </button>
           </div>
         </div>
-
-        {/* Cuerpo del Expediente Conectado Directamente al Botón Activo */}
-        <div
-          className={`relative z-10 bg-[#f8fafc] border-t-2 border-x-2 border-b-2 ${currentFolder.containerBorderClass} rounded-b-3xl p-4 sm:p-5 space-y-4`}
-        >
+      </div>
 
       {/* SUBPESTAÑA 1: ÓRDENES LISTAS PARA FACTURAR */}
       {cajaSubTab === 'listas_facturar' && (
@@ -1242,8 +1185,6 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
       {cajaSubTab === 'domicilio' && (
         <PosDomicilioPanel onOrderChanged={onOrderChanged} />
       )}
-        </div>
-      </div>
     </div>
   );
 });

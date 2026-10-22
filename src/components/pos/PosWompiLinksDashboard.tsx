@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   CreditCard,
   Link2,
@@ -1000,9 +1001,9 @@ export const PosWompiLinksDashboard: React.FC = () => {
       </div>
 
       {/* MODAL DE QR AMPLIADO PARA ESCANEAR DIRECTO EN EL MONITOR */}
-      {qrModalEnlace && (
+      {qrModalEnlace && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          className="fixed inset-0 z-[9999] bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150"
           onClick={() => setQrModalEnlace(null)}
         >
           <div
@@ -1095,7 +1096,8 @@ export const PosWompiLinksDashboard: React.FC = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
