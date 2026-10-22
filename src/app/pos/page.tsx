@@ -3393,6 +3393,7 @@ export default function PosPage() {
             handleTransmitDte={handleTransmitDte}
             isTransmittingDteId={isTransmittingDteId}
             customers={customers}
+            onOrderChanged={syncSalesFromServer}
           />
         )}
 

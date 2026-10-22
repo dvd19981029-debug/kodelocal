@@ -23,15 +23,18 @@ import {
   RotateCcw,
   Truck,
   Link2,
+  Folder,
+  FolderOpen,
 } from 'lucide-react';
 import { CustomerRecord } from '@/lib/customers';
 import { SaleRecord } from '@/lib/store';
 import { PosCorteZ } from './PosCorteZ';
 import { PosWompiLinksDashboard } from './PosWompiLinksDashboard';
+import PosDomicilioPanel from './PosDomicilioPanel';
 
 export interface PosCajaModuleProps {
-  cajaSubTab: 'listas_facturar' | 'dtes_emitidos' | 'corte_z' | 'enlaces_pago';
-  setCajaSubTab: (tab: 'listas_facturar' | 'dtes_emitidos' | 'corte_z' | 'enlaces_pago') => void;
+  cajaSubTab: 'listas_facturar' | 'dtes_emitidos' | 'corte_z' | 'enlaces_pago' | 'domicilio';
+  setCajaSubTab: (tab: 'listas_facturar' | 'dtes_emitidos' | 'corte_z' | 'enlaces_pago' | 'domicilio') => void;
   readyInWindowOrders: SaleRecord[];
   completedDteSales: SaleRecord[];
   pendingPreparationCount: number;
@@ -54,6 +57,7 @@ export interface PosCajaModuleProps {
   handleTransmitDte?: (sale: SaleRecord) => Promise<void>;
   isTransmittingDteId?: string | null;
   customers?: CustomerRecord[];
+  onOrderChanged?: () => void;
 }
 
 export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
@@ -81,6 +85,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
   handleTransmitDte,
   isTransmittingDteId,
   customers,
+  onOrderChanged,
 }) => {
   const resolveCustomerName = (order: SaleRecord) => {
     if (order.cliente?.nombre && order.cliente.nombre.trim() !== '' && order.cliente.nombre.toLowerCase().trim() !== 'consumidor final') {
@@ -94,99 +99,147 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
     return order.cliente?.nombre || 'Consumidor Final';
   };
 
+  const activeFolderLabel =
+    cajaSubTab === 'listas_facturar'
+      ? `Órdenes Listas (${readyInWindowOrders.length})`
+      : cajaSubTab === 'enlaces_pago'
+      ? 'Enlaces de Pago'
+      : cajaSubTab === 'dtes_emitidos'
+      ? `DTEs Emitidos (${completedDteSales.length})`
+      : cajaSubTab === 'corte_z'
+      ? 'Cierre de Caja / Turno'
+      : 'Domicilio';
+
+  const folderTabs = [
+    {
+      id: 'listas_facturar' as const,
+      label: `Órdenes Listas (${readyInWindowOrders.length})`,
+      icon: CheckCheck,
+      accentBar: 'bg-emerald-500',
+      activeIconColor: 'text-emerald-600',
+      inactiveIconColor: 'text-emerald-400',
+      hasAlert: readyInWindowOrders.length > 0,
+    },
+    {
+      id: 'enlaces_pago' as const,
+      label: 'Enlaces de Pago',
+      icon: Link2,
+      accentBar: 'bg-purple-500',
+      activeIconColor: 'text-purple-600',
+      inactiveIconColor: 'text-purple-400',
+      hasAlert: false,
+    },
+    {
+      id: 'dtes_emitidos' as const,
+      label: `DTEs Emitidos (${completedDteSales.length})`,
+      icon: FileCheck,
+      accentBar: 'bg-indigo-600',
+      activeIconColor: 'text-indigo-600',
+      inactiveIconColor: 'text-indigo-400',
+      hasAlert: false,
+    },
+    {
+      id: 'corte_z' as const,
+      label: 'Cierre de Caja / Turno',
+      icon: Calculator,
+      accentBar: 'bg-amber-500',
+      activeIconColor: 'text-amber-600',
+      inactiveIconColor: 'text-amber-400',
+      hasAlert: false,
+    },
+    {
+      id: 'domicilio' as const,
+      label: 'Domicilio',
+      icon: Truck,
+      accentBar: 'bg-blue-500',
+      activeIconColor: 'text-blue-600',
+      inactiveIconColor: 'text-blue-400',
+      hasAlert: false,
+    },
+  ];
+
   return (
-    <div className="space-y-6 animate-in fade-in">
-      {/* Encabezado y Selector de Subpestañas (Estilo Mecanic OS) */}
+    <div className="space-y-5 animate-in fade-in">
+      {/* Encabezado Limpio con Pestañas Tipo Carpeta */}
       <div
-        className="clay-card-dark p-5 text-white relative overflow-hidden shadow-xl"
+        className="clay-card-dark pt-4 px-5 pb-0 text-white relative overflow-hidden shadow-xl"
         style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)' }}
       >
         <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 opacity-10 pointer-events-none">
-          <ReceiptText className="w-64 h-64 text-indigo-200" />
+          <ReceiptText className="w-52 h-52 text-indigo-200" />
         </div>
 
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-black uppercase tracking-wider backdrop-blur-sm">
-                🏛️ Módulo de Caja & DTE
-              </span>
-              <span className="text-xs text-indigo-200 font-medium">Facturación Electrónica El Salvador</span>
-            </div>
-            <h2 className="text-xl md:text-2xl font-black text-white tracking-tight">
+        {/* Fila Superior: Título Limpio + Indicador de Carpeta Activa */}
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3.5">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-black uppercase tracking-wider backdrop-blur-sm">
+              🏛️ Módulo de Caja & DTE
+            </span>
+            <h2 className="text-lg md:text-xl font-black text-white tracking-tight">
               Caja, Ventanilla & Facturación DTE
             </h2>
-            <p className="text-xs text-slate-300 mt-1 max-w-xl font-normal leading-relaxed">
-              Flujo centralizado: Cobra las órdenes preparadas por Bodega, genera enlaces de pago Wompi y emite los documentos electrónicos tributarios (Facturas y Créditos Fiscales).
-            </p>
           </div>
 
-          {/* Switcher de Subpestañas */}
-          <div className="flex flex-wrap bg-slate-800/90 backdrop-blur-md p-1.5 rounded-2xl border border-slate-700/80 shadow-inner gap-1">
-            <button
-              type="button"
-              onClick={() => setCajaSubTab('listas_facturar')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                cajaSubTab === 'listas_facturar'
-                  ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-950/50 ring-1 ring-emerald-300'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
-              }`}
-            >
-              <CheckCheck className="w-4 h-4" />
-              <span>Órdenes Listas ({readyInWindowOrders.length})</span>
-              {readyInWindowOrders.length > 0 && (
-                <span className="w-2 h-2 rounded-full bg-amber-300 animate-ping" />
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setCajaSubTab('enlaces_pago')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                cajaSubTab === 'enlaces_pago'
-                  ? 'bg-purple-600 text-white shadow-lg shadow-purple-950/50 ring-1 ring-purple-300'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
-              }`}
-            >
-              <Link2 className="w-4 h-4" />
-              <span>Enlaces de Pago</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setCajaSubTab('dtes_emitidos')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                cajaSubTab === 'dtes_emitidos'
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-950/50 ring-1 ring-indigo-300'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
-              }`}
-            >
-              <FileCheck className="w-4 h-4" />
-              <span>DTEs Emitidos ({completedDteSales.length})</span>
-            </button>
-            
-            <button
-              type="button"
-              onClick={() => setCajaSubTab('corte_z')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                cajaSubTab === 'corte_z'
-                  ? 'bg-amber-600 text-white shadow-lg shadow-amber-950/50 ring-1 ring-amber-300'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
-              }`}
-            >
-              <Calculator className="w-4 h-4" />
-              <span>Cierre de Caja / Turno</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setPosTab('domicilio')}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all text-slate-300 hover:text-white hover:bg-slate-700/60 cursor-pointer"
-            >
-              <Truck className="w-4 h-4 text-blue-400" />
-              <span>Domicilio</span>
-            </button>
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900/70 border border-slate-700/80 text-[11px] font-bold text-indigo-200 self-start sm:self-auto">
+            <FolderOpen className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span className="text-slate-400">Vista actual:</span>
+            <span className="text-white font-black">{activeFolderLabel}</span>
           </div>
+        </div>
+
+        {/* Barra de Pestañas Identificadoras de Carpeta */}
+        <div
+          role="tablist"
+          aria-label="Carpetas del módulo de Caja y Facturación"
+          className="relative z-10 flex items-end gap-1.5 overflow-x-auto no-scrollbar pt-1 border-t border-slate-700/60"
+        >
+          {folderTabs.map((tab) => {
+            const isActive = cajaSubTab === tab.id;
+            const IconComponent = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setCajaSubTab(tab.id)}
+                className={`group relative flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap select-none border-t border-x ${
+                  isActive
+                    ? 'bg-white text-slate-900 border-white shadow-[0_-4px_14px_rgba(15,23,42,0.35)] z-10 translate-y-[1px]'
+                    : 'bg-slate-900/65 text-slate-300 border-slate-700/80 hover:bg-slate-800/90 hover:text-white opacity-85 hover:opacity-100'
+                }`}
+              >
+                {/* Franja superior de color estilo pestaña de archivador */}
+                <span
+                  className={`absolute inset-x-0 top-0 h-1 rounded-t-xl transition-opacity ${tab.accentBar} ${
+                    isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'
+                  }`}
+                />
+
+                {isActive ? (
+                  <FolderOpen className={`w-4 h-4 shrink-0 ${tab.activeIconColor}`} />
+                ) : (
+                  <Folder className="w-3.5 h-3.5 shrink-0 text-slate-400 group-hover:text-slate-200" />
+                )}
+
+                <IconComponent
+                  className={`w-3.5 h-3.5 shrink-0 ${
+                    isActive ? tab.activeIconColor : tab.inactiveIconColor
+                  }`}
+                />
+
+                <span>{tab.label}</span>
+
+                {tab.hasAlert && (
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      isActive ? 'bg-emerald-500 animate-ping' : 'bg-amber-400 animate-ping'
+                    }`}
+                  />
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -731,6 +784,10 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
       {/* SUBPESTAÑA 4: ENLACES DE PAGO WOMPI */}
       {cajaSubTab === 'enlaces_pago' && (
         <PosWompiLinksDashboard />
+      )}
+      {/* SUBPESTAÑA 5: DOMICILIO POS */}
+      {cajaSubTab === 'domicilio' && (
+        <PosDomicilioPanel onOrderChanged={onOrderChanged} />
       )}
     </div>
   );
