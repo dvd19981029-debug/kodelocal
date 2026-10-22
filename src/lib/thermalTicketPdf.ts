@@ -739,3 +739,552 @@ export async function printDispatchTicketPdf(ticket: SaleRecord, products?: Prod
   }
 }
 
+function parseSaleTicketDate(sale: SaleRecord): Date {
+  const raw = sale.invoicedAt || sale.dteInfo?.fhProcesamiento || sale.createdAt;
+  if (!raw) return new Date();
+  const svMatch = String(raw).trim().match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}:\d{2}:\d{2}))?/);
+  if (svMatch) {
+    const [, dd, mm, yyyy, t] = svMatch;
+    const d = new Date(`${yyyy}-${mm}-${dd}T${t || '00:00:00'}-06:00`);
+    if (!isNaN(d.getTime())) return d;
+  }
+  const d = new Date(raw);
+  return !isNaN(d.getTime()) ? d : new Date();
+}
+
+function renderDailyCashSalesToDoc(
+  doc: any,
+  cashSales: SaleRecord[],
+  options?: { dateLabel?: string; cashier?: string }
+): number {
+  const leftM = 3;
+  const rightM = 68;
+  const centerX = 35.5;
+  let y = 42;
+
+  const drawDashedDivider = (currentY: number) => {
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(7.5);
+    doc.text('------------------------------------------', centerX, currentY, { align: 'center' });
+  };
+
+  const drawSolidDivider = (currentY: number, width = 0.25) => {
+    doc.setLineWidth(width);
+    doc.setDrawColor(0, 0, 0);
+    doc.line(leftM, currentY, rightM, currentY);
+  };
+
+  const now = new Date();
+  const dateLabel =
+    options?.dateLabel ||
+    now.toLocaleDateString('es-SV', {
+      timeZone: 'America/El_Salvador',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  const timeLabel = now
+    .toLocaleTimeString('es-SV', {
+      timeZone: 'America/El_Salvador',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    })
+    .toLowerCase();
+
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(11);
+  doc.text('AROMANIAK SV', centerX, y, { align: 'center' });
+  y += 3.8;
+
+  doc.setFontSize(8.5);
+  doc.text('VENTAS EN EFECTIVO DE HOY', centerX, y, { align: 'center' });
+  y += 3.4;
+
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(7);
+  doc.text('REPORTE DE ARQUEO DE EFECTIVO (80MM)', centerX, y, { align: 'center' });
+  y += 3.2;
+
+  drawSolidDivider(y, 0.35);
+  y += 3.5;
+
+  doc.setFontSize(7.2);
+  doc.text(`Fecha Corte: ${cleanPdfText(dateLabel)}`, leftM, y);
+  doc.text(`Hora: ${cleanPdfText(timeLabel)}`, rightM, y, { align: 'right' });
+  y += 3.2;
+
+  doc.text(`Cajero/Resp: ${cleanPdfText((options?.cashier || 'Caja Principal').slice(0, 22))}`, leftM, y);
+  y += 3.2;
+
+  doc.setFont('courier', 'bold');
+  doc.text(`Facturas en Efectivo: ${cashSales.length}`, leftM, y);
+  y += 3.4;
+
+  drawDashedDivider(y);
+  y += 3.5;
+
+  // Cabecera de tabla
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(6.8);
+  doc.text('HORA', leftM, y);
+  doc.text('DOC / CLIENTE', leftM + 12, y);
+  doc.text('MONTO', rightM, y, { align: 'right' });
+  y += 2.2;
+
+  drawSolidDivider(y);
+  y += 3.2;
+
+  let totalCash = 0;
+  let totalSubtotal = 0;
+  let totalIva = 0;
+  let countFC = 0;
+  let totalFC = 0;
+  let countCCF = 0;
+  let totalCCF = 0;
+  let countTicket = 0;
+  let totalTicket = 0;
+
+  for (const s of cashSales) {
+    const dt = parseSaleTicketDate(s);
+    const hr = dt
+      .toLocaleTimeString('es-SV', {
+        timeZone: 'America/El_Salvador',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      })
+      .slice(0, 5);
+    const tipoStr = s.tipoComprobante === '03' ? 'CCF' : s.tipoComprobante === '01' ? 'FC' : 'TK';
+    const refNum = s.dteInfo?.numeroControl
+      ? s.dteInfo.numeroControl.slice(-8)
+      : `#${s.saleNumber || s.id.slice(-5)}`;
+    const clientName = cleanPdfText(s.cliente?.nombre || 'Consumidor Final').toUpperCase();
+    const amount = Number(s.total || 0);
+    const sub = Number(s.subtotal || amount / 1.13);
+    const iva = Number(s.ivaTotal != null ? s.ivaTotal : amount - sub);
+
+    totalCash += amount;
+    totalSubtotal += sub;
+    totalIva += iva;
+
+    if (s.tipoComprobante === '03') {
+      countCCF += 1;
+      totalCCF += amount;
+    } else if (s.tipoComprobante === '01') {
+      countFC += 1;
+      totalFC += amount;
+    } else {
+      countTicket += 1;
+      totalTicket += amount;
+    }
+
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(6.8);
+    doc.text(hr, leftM, y);
+    doc.text(`${tipoStr} ${cleanPdfText(refNum)}`, leftM + 12, y);
+    doc.text(`$${amount.toFixed(2)}`, rightM, y, { align: 'right' });
+    y += 2.9;
+
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(6.5);
+    const splitClient = doc.splitTextToSize(clientName, 44);
+    doc.text(splitClient[0] || 'CONSUMIDOR FINAL', leftM + 12, y);
+    y += 2.9;
+
+    if (s.items && s.items.length > 0) {
+      const itemsSummary = s.items
+        .map((it) => `${it.quantity}x ${cleanPdfText(it.name).slice(0, 16)}`)
+        .join(', ');
+      const splitItems = doc.splitTextToSize(itemsSummary, 44);
+      doc.setFontSize(6.0);
+      doc.text(splitItems[0], leftM + 12, y);
+      y += 2.8;
+    }
+
+    y += 0.6;
+  }
+
+  drawDashedDivider(y);
+  y += 3.5;
+
+  // Desglose por tipo de comprobante en efectivo
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(7.2);
+  doc.text('DESGLOSE DE EFECTIVO POR DOCUMENTO:', leftM, y);
+  y += 3.1;
+
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(7);
+  doc.text(`Facturas (01) [${countFC}]:`, leftM, y);
+  doc.text(`$${totalFC.toFixed(2)}`, rightM, y, { align: 'right' });
+  y += 3.0;
+
+  doc.text(`Credito Fiscal (03) [${countCCF}]:`, leftM, y);
+  doc.text(`$${totalCCF.toFixed(2)}`, rightM, y, { align: 'right' });
+  y += 3.0;
+
+  if (countTicket > 0) {
+    doc.text(`Tickets Internos [${countTicket}]:`, leftM, y);
+    doc.text(`$${totalTicket.toFixed(2)}`, rightM, y, { align: 'right' });
+    y += 3.0;
+  }
+
+  y += 0.5;
+  drawSolidDivider(y, 0.3);
+  y += 3.4;
+
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(7.2);
+  doc.text('SUBTOTAL NETO EFECTIVO:', leftM, y);
+  doc.text(`$${totalSubtotal.toFixed(2)}`, rightM, y, { align: 'right' });
+  y += 3.0;
+
+  doc.text('IVA (13%) EFECTIVO:', leftM, y);
+  doc.text(`$${totalIva.toFixed(2)}`, rightM, y, { align: 'right' });
+  y += 3.6;
+
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(9.2);
+  doc.text('EFECTIVO DE HOY (+CAJA):', leftM, y);
+  doc.text(`$${totalCash.toFixed(2)}`, rightM, y, { align: 'right' });
+  y += 4.2;
+
+  drawSolidDivider(y, 0.35);
+  y += 3.8;
+
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(6.6);
+  doc.text('Monto exacto ingresado en efectivo por ventas', centerX, y, { align: 'center' });
+  y += 2.8;
+  doc.text('facturadas hoy que debe sumarse al fondo de caja.', centerX, y, { align: 'center' });
+  y += 6.0;
+
+  doc.text('Firma Cajero: ________________________', leftM, y);
+  y += 4;
+
+  return Math.ceil(y + 6);
+}
+
+function renderDailySummaryByPaymentToDoc(
+  doc: any,
+  dailySales: SaleRecord[],
+  options?: { dateLabel?: string; cashier?: string }
+): number {
+  const leftM = 3;
+  const rightM = 68;
+  const centerX = 35.5;
+  let y = 42;
+
+  const drawDashedDivider = (currentY: number) => {
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(7.5);
+    doc.text('------------------------------------------', centerX, currentY, { align: 'center' });
+  };
+
+  const drawSolidDivider = (currentY: number, width = 0.25) => {
+    doc.setLineWidth(width);
+    doc.setDrawColor(0, 0, 0);
+    doc.line(leftM, currentY, rightM, currentY);
+  };
+
+  const now = new Date();
+  const dateLabel =
+    options?.dateLabel ||
+    now.toLocaleDateString('es-SV', {
+      timeZone: 'America/El_Salvador',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  const timeLabel = now
+    .toLocaleTimeString('es-SV', {
+      timeZone: 'America/El_Salvador',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    })
+    .toLowerCase();
+
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(11);
+  doc.text('AROMANIAK SV', centerX, y, { align: 'center' });
+  y += 3.8;
+
+  doc.setFontSize(8.5);
+  doc.text('VENTA DEL DIA RESUMIDA', centerX, y, { align: 'center' });
+  y += 3.4;
+
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(7);
+  doc.text('DESGLOSE POR FORMA DE PAGO Y COMPROBANTE', centerX, y, { align: 'center' });
+  y += 3.2;
+
+  drawSolidDivider(y, 0.35);
+  y += 3.5;
+
+  doc.setFontSize(7.2);
+  doc.text(`Fecha: ${cleanPdfText(dateLabel)}`, leftM, y);
+  doc.text(`Hora: ${cleanPdfText(timeLabel)}`, rightM, y, { align: 'right' });
+  y += 3.2;
+
+  doc.text(`Cajero/Resp: ${cleanPdfText((options?.cashier || 'Caja Principal').slice(0, 22))}`, leftM, y);
+  y += 3.2;
+
+  doc.setFont('courier', 'bold');
+  doc.text(`Total Facturaciones Hoy: ${dailySales.length}`, leftM, y);
+  y += 3.4;
+
+  drawDashedDivider(y);
+  y += 3.5;
+
+  // Cálculos por forma de pago
+  const byMethod = {
+    CASH: { label: 'EFECTIVO', count: 0, total: 0 },
+    CARD: { label: 'TARJETA / POS / WOMPI', count: 0, total: 0 },
+    TRANSFER: { label: 'TRANSFERENCIA BANCARIA', count: 0, total: 0 },
+    BITCOIN: { label: 'BITCOIN / CRIPTO', count: 0, total: 0 },
+  };
+
+  const byDoc = {
+    '01': { label: 'FACTURA CONSUMIDOR FINAL (01)', count: 0, total: 0 },
+    '03': { label: 'CREDITO FISCAL - CCF (03)', count: 0, total: 0 },
+    TICKET: { label: 'TICKET DE VENTA', count: 0, total: 0 },
+  };
+
+  let grandTotal = 0;
+  let grandSubtotal = 0;
+  let grandIva = 0;
+
+  for (const s of dailySales) {
+    const amt = Number(s.total || 0);
+    const sub = Number(s.subtotal || amt / 1.13);
+    const iva = Number(s.ivaTotal != null ? s.ivaTotal : amt - sub);
+
+    grandTotal += amt;
+    grandSubtotal += sub;
+    grandIva += iva;
+
+    const mKey = (s.paymentMethod || 'CASH') as keyof typeof byMethod;
+    if (byMethod[mKey]) {
+      byMethod[mKey].count += 1;
+      byMethod[mKey].total += amt;
+    } else {
+      byMethod.CASH.count += 1;
+      byMethod.CASH.total += amt;
+    }
+
+    const dKey = (s.tipoComprobante || '01') as keyof typeof byDoc;
+    if (byDoc[dKey]) {
+      byDoc[dKey].count += 1;
+      byDoc[dKey].total += amt;
+    } else {
+      byDoc['01'].count += 1;
+      byDoc['01'].total += amt;
+    }
+  }
+
+  // SECCIÓN 1: MONTO POR FORMA DE PAGO
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(7.6);
+  doc.text('1. MONTO POR FORMA DE PAGO:', leftM, y);
+  y += 2.5;
+  drawSolidDivider(y);
+  y += 3.3;
+
+  for (const key of ['CASH', 'CARD', 'TRANSFER', 'BITCOIN'] as const) {
+    const row = byMethod[key];
+    doc.setFont('courier', key === 'CASH' ? 'bold' : 'normal');
+    doc.setFontSize(7.1);
+    doc.text(`${row.label} (${row.count}):`, leftM, y);
+    doc.text(`$${row.total.toFixed(2)}`, rightM, y, { align: 'right' });
+    y += 3.2;
+  }
+
+  y += 0.8;
+  drawDashedDivider(y);
+  y += 3.5;
+
+  // SECCIÓN 2: MONTO POR TIPO DE COMPROBANTE
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(7.6);
+  doc.text('2. MONTO POR TIPO DE DOCUMENTO:', leftM, y);
+  y += 2.5;
+  drawSolidDivider(y);
+  y += 3.3;
+
+  for (const key of ['01', '03', 'TICKET'] as const) {
+    const row = byDoc[key];
+    if (key === 'TICKET' && row.count === 0) continue;
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(7.0);
+    doc.text(`${row.label} (${row.count}):`, leftM, y);
+    doc.text(`$${row.total.toFixed(2)}`, rightM, y, { align: 'right' });
+    y += 3.2;
+  }
+
+  y += 0.8;
+  drawDashedDivider(y);
+  y += 3.5;
+
+  // SECCIÓN 3: DETALLE RESUMIDO DE OPERACIONES DEL DÍA
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(7.4);
+  doc.text('3. DETALLE DE FACTURACIONES DE HOY:', leftM, y);
+  y += 2.4;
+  drawSolidDivider(y);
+  y += 3.2;
+
+  doc.setFontSize(6.6);
+  doc.text('HORA', leftM, y);
+  doc.text('CLIENTE', leftM + 10, y);
+  doc.text('PAGO', rightM - 15, y, { align: 'right' });
+  doc.text('TOTAL', rightM, y, { align: 'right' });
+  y += 2.8;
+
+  for (const s of dailySales) {
+    const dt = parseSaleTicketDate(s);
+    const hr = dt
+      .toLocaleTimeString('es-SV', {
+        timeZone: 'America/El_Salvador',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      })
+      .slice(0, 5);
+    const cli = cleanPdfText(s.cliente?.nombre || 'Consumidor Final')
+      .toUpperCase()
+      .slice(0, 17);
+    const mShort =
+      s.paymentMethod === 'CASH'
+        ? 'EFEC'
+        : s.paymentMethod === 'CARD'
+        ? 'TARJ'
+        : s.paymentMethod === 'TRANSFER'
+        ? 'TRAN'
+        : 'BTC';
+    const amt = Number(s.total || 0);
+
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(6.5);
+    doc.text(hr, leftM, y);
+    doc.text(cli, leftM + 10, y);
+    doc.text(mShort, rightM - 15, y, { align: 'right' });
+    doc.text(`$${amt.toFixed(2)}`, rightM, y, { align: 'right' });
+    y += 2.9;
+  }
+
+  y += 0.8;
+  drawSolidDivider(y, 0.35);
+  y += 3.5;
+
+  // TOTALES GENERALES DEL DÍA
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(7.2);
+  doc.text('SUBTOTAL NETO DEL DIA:', leftM, y);
+  doc.text(`$${grandSubtotal.toFixed(2)}`, rightM, y, { align: 'right' });
+  y += 3.0;
+
+  doc.text('IVA (13%) DEL DIA:', leftM, y);
+  doc.text(`$${grandIva.toFixed(2)}`, rightM, y, { align: 'right' });
+  y += 3.5;
+
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(8.2);
+  doc.text('EFECTIVO EN CAJA HOY:', leftM, y);
+  doc.text(`$${byMethod.CASH.total.toFixed(2)}`, rightM, y, { align: 'right' });
+  y += 3.6;
+
+  doc.setFontSize(9.5);
+  doc.text('VENTA TOTAL DEL DIA:', leftM, y);
+  doc.text(`$${grandTotal.toFixed(2)}`, rightM, y, { align: 'right' });
+  y += 4.5;
+
+  drawSolidDivider(y, 0.35);
+  y += 5.5;
+
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(7.0);
+  doc.text('Firma Responsable: _____________________', leftM, y);
+  y += 4;
+
+  return Math.ceil(y + 6);
+}
+
+async function print80mmDocHelper(doc: any): Promise<void> {
+  const blob = doc.output('blob');
+  const blobUrl = URL.createObjectURL(blob);
+
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'fixed';
+  iframe.style.right = '0';
+  iframe.style.bottom = '0';
+  iframe.style.width = '0';
+  iframe.style.height = '0';
+  iframe.style.border = '0';
+  iframe.src = blobUrl;
+
+  document.body.appendChild(iframe);
+
+  iframe.onload = () => {
+    setTimeout(() => {
+      try {
+        iframe.focus();
+        iframe.contentWindow?.print();
+      } catch {
+        window.open(blobUrl, '_blank');
+      } finally {
+        setTimeout(() => {
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+          }
+          URL.revokeObjectURL(blobUrl);
+        }, 60000);
+      }
+    }, 300);
+  };
+}
+
+export async function printDailyCashSalesTicketPdf(
+  cashSales: SaleRecord[],
+  options?: { dateLabel?: string; cashier?: string }
+): Promise<void> {
+  const { jsPDF } = await import('jspdf');
+  const measureDoc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: [72, 400],
+  });
+  const exactHeight = Math.max(95, renderDailyCashSalesToDoc(measureDoc, cashSales, options));
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: [72, exactHeight],
+  });
+  renderDailyCashSalesToDoc(doc, cashSales, options);
+  await print80mmDocHelper(doc);
+}
+
+export async function printDailySummaryByPaymentTicketPdf(
+  dailySales: SaleRecord[],
+  options?: { dateLabel?: string; cashier?: string }
+): Promise<void> {
+  const { jsPDF } = await import('jspdf');
+  const measureDoc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: [72, 400],
+  });
+  const exactHeight = Math.max(95, renderDailySummaryByPaymentToDoc(measureDoc, dailySales, options));
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: [72, exactHeight],
+  });
+  renderDailySummaryByPaymentToDoc(doc, dailySales, options);
+  await print80mmDocHelper(doc);
+}
+
+
