@@ -63,10 +63,10 @@ function createCatalogOverlaySvg(opts: {
   ribbonSmall: string;
   ribbonLarge: string;
 }): Buffer {
-  const cx = 868;
-  const cy = 122;
-  const outerSeal = createSmoothScallopSealPath(cx, cy, 14, 76, 91);
-  const innerSeal = createSmoothScallopSealPath(cx, cy, 14, 71, 85);
+  const cx = 876;
+  const cy = 262;
+  const outerSeal = createSmoothScallopSealPath(cx, cy, 14, 64, 76);
+  const innerSeal = createSmoothScallopSealPath(cx, cy, 14, 59, 71);
 
   const cleanLarge = escapeXml(opts.ribbonLarge.toUpperCase().trim());
   const cleanSmall = escapeXml(opts.ribbonSmall.toUpperCase().trim());
@@ -79,7 +79,7 @@ function createCatalogOverlaySvg(opts: {
   else if (len > 21) largeFontSize = 39;
   else if (len > 17) largeFontSize = 44;
 
-  const priceFontSize = opts.priceStr.length >= 6 ? 31 : 35;
+  const priceFontSize = opts.priceStr.length >= 6 ? 26 : 30;
 
   return Buffer.from(`
     <svg width="1000" height="1000" xmlns="http://www.w3.org/2000/svg">
@@ -94,20 +94,20 @@ function createCatalogOverlaySvg(opts: {
           <stop offset="100%" stop-color="#059669" />
         </linearGradient>
         <filter id="badgeShadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#064E3B" flood-opacity="0.22" />
+          <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#064E3B" flood-opacity="0.18" />
         </filter>
       </defs>
+      <rect x="0" y="0" width="1000" height="158" fill="url(#purpleGrad)" />
+      <rect x="0" y="153" width="1000" height="5" fill="#A78BFA" />
+      <text x="500" y="48" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="800" text-anchor="middle" fill="#DDD6FE" letter-spacing="4">${cleanSmall}</text>
+      <text x="500" y="114" font-family="Arial, Helvetica, sans-serif" font-size="${largeFontSize}" font-weight="900" text-anchor="middle" fill="#FFFFFF" letter-spacing="1">${cleanLarge}</text>
       <g filter="url(#badgeShadow)">
         <path d="${outerSeal}" fill="#FFFFFF" />
         <path d="${innerSeal}" fill="url(#greenSealGrad)" />
-        <circle cx="${cx}" cy="${cy}" r="63" fill="none" stroke="#6EE7B7" stroke-width="1.5" stroke-opacity="0.6" />
+        <circle cx="${cx}" cy="${cy}" r="53" fill="none" stroke="#6EE7B7" stroke-width="1.5" stroke-opacity="0.6" />
       </g>
-      <text x="${cx}" y="${cy + 3}" font-family="Arial, Helvetica, sans-serif" font-size="${priceFontSize}" font-weight="900" text-anchor="middle" fill="#FFFFFF" letter-spacing="-0.5">${escapeXml(opts.priceStr)}</text>
-      <text x="${cx}" y="${cy + 27}" font-family="Arial, Helvetica, sans-serif" font-size="14.5" font-weight="800" text-anchor="middle" fill="#D1FAE5" letter-spacing="1.2">${escapeXml(opts.unitLabel)}</text>
-      <rect x="0" y="842" width="1000" height="158" fill="url(#purpleGrad)" />
-      <rect x="0" y="842" width="1000" height="5" fill="#A78BFA" />
-      <text x="500" y="886" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="800" text-anchor="middle" fill="#DDD6FE" letter-spacing="4">${cleanSmall}</text>
-      <text x="500" y="950" font-family="Arial, Helvetica, sans-serif" font-size="${largeFontSize}" font-weight="900" text-anchor="middle" fill="#FFFFFF" letter-spacing="1">${cleanLarge}</text>
+      <text x="${cx}" y="${cy + 2}" font-family="Arial, Helvetica, sans-serif" font-size="${priceFontSize}" font-weight="900" text-anchor="middle" fill="#FFFFFF" letter-spacing="-0.5">${escapeXml(opts.priceStr)}</text>
+      <text x="${cx}" y="${cy + 23}" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="800" text-anchor="middle" fill="#D1FAE5" letter-spacing="1.1">${escapeXml(opts.unitLabel)}</text>
     </svg>
   `);
 }
@@ -293,7 +293,7 @@ export async function GET(
         create: { width: 1000, height: 1000, channels: 3, background: { r: 255, g: 255, b: 255 } },
       })
         .composite([
-          { input: croppedBottle, top: 0, left: 145 },
+          { input: croppedBottle, top: 158, left: 145 },
           { input: catalogOverlay, top: 0, left: 0 },
         ])
         .jpeg({ quality: 92, mozjpeg: true })

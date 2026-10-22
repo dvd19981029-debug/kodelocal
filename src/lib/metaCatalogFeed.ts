@@ -66,9 +66,9 @@ function escapeCsvField(val: string | number | undefined | null): string {
  */
 function resolveMetaImageUrl(p: ProductItem): string {
   if (INITIAL_PRODUCT_MAP.has(p.id)) {
-    return `${SITE_URL}/images/meta/${p.id}.jpg?v=5`;
+    return `${SITE_URL}/images/meta/${p.id}.jpg?v=6`;
   }
-  return `${SITE_URL}/api/feed/meta/image/${encodeURIComponent(p.id)}.jpg?v=5`;
+  return `${SITE_URL}/api/feed/meta/image/${encodeURIComponent(p.id)}.jpg?v=6`;
 }
 
 export interface MetaCatalogProductInput extends ProductItem {
@@ -152,7 +152,7 @@ export function buildMetaCatalogRows(
     sale_price: '',
     sale_price_effective_date: '',
     link: `${SITE_URL}/?categoria=Arma+tu+perfume#seccion-arma-tu-perfume`,
-    image_link: `${SITE_URL}/images/meta/arma-tu-perfume-100ml.jpg?v=5`,
+    image_link: `${SITE_URL}/images/meta/arma-tu-perfume-100ml.jpg?v=6`,
     brand: 'Aromaniak',
     google_product_category: 'Health & Beauty > Personal Care > Cosmetics > Perfume & Cologne',
     fb_product_category: 'health & beauty > beauty > fragrance',
