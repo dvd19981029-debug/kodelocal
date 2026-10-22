@@ -115,7 +115,10 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
       id: 'listas_facturar' as const,
       label: `Órdenes Listas (${readyInWindowOrders.length})`,
       icon: CheckCheck,
-      accentBar: 'bg-emerald-500',
+      tabActiveClasses: 'border-t-emerald-500 border-x-emerald-500/60 text-emerald-950',
+      containerBorderClass: 'border-emerald-500/60',
+      headerStripClass: 'from-emerald-500/15 via-emerald-500/5 to-transparent border-emerald-200/80 text-emerald-900',
+      badgeClass: 'bg-emerald-600 text-white',
       activeIconColor: 'text-emerald-600',
       inactiveIconColor: 'text-emerald-400',
       hasAlert: readyInWindowOrders.length > 0,
@@ -124,7 +127,10 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
       id: 'enlaces_pago' as const,
       label: 'Enlaces de Pago',
       icon: Link2,
-      accentBar: 'bg-purple-500',
+      tabActiveClasses: 'border-t-purple-500 border-x-purple-500/60 text-purple-950',
+      containerBorderClass: 'border-purple-500/60',
+      headerStripClass: 'from-purple-500/15 via-purple-500/5 to-transparent border-purple-200/80 text-purple-900',
+      badgeClass: 'bg-purple-600 text-white',
       activeIconColor: 'text-purple-600',
       inactiveIconColor: 'text-purple-400',
       hasAlert: false,
@@ -133,7 +139,10 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
       id: 'dtes_emitidos' as const,
       label: `DTEs Emitidos (${completedDteSales.length})`,
       icon: FileCheck,
-      accentBar: 'bg-indigo-600',
+      tabActiveClasses: 'border-t-indigo-600 border-x-indigo-500/60 text-indigo-950',
+      containerBorderClass: 'border-indigo-500/60',
+      headerStripClass: 'from-indigo-500/15 via-indigo-500/5 to-transparent border-indigo-200/80 text-indigo-900',
+      badgeClass: 'bg-indigo-600 text-white',
       activeIconColor: 'text-indigo-600',
       inactiveIconColor: 'text-indigo-400',
       hasAlert: false,
@@ -142,7 +151,10 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
       id: 'corte_z' as const,
       label: 'Cierre de Caja / Turno',
       icon: Calculator,
-      accentBar: 'bg-amber-500',
+      tabActiveClasses: 'border-t-amber-500 border-x-amber-500/60 text-amber-950',
+      containerBorderClass: 'border-amber-500/60',
+      headerStripClass: 'from-amber-500/15 via-amber-500/5 to-transparent border-amber-200/80 text-amber-900',
+      badgeClass: 'bg-amber-600 text-white',
       activeIconColor: 'text-amber-600',
       inactiveIconColor: 'text-amber-400',
       hasAlert: false,
@@ -151,97 +163,94 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
       id: 'domicilio' as const,
       label: 'Domicilio',
       icon: Truck,
-      accentBar: 'bg-blue-500',
+      tabActiveClasses: 'border-t-blue-500 border-x-blue-500/60 text-blue-950',
+      containerBorderClass: 'border-blue-500/60',
+      headerStripClass: 'from-blue-500/15 via-blue-500/5 to-transparent border-blue-200/80 text-blue-900',
+      badgeClass: 'bg-blue-600 text-white',
       activeIconColor: 'text-blue-600',
       inactiveIconColor: 'text-blue-400',
       hasAlert: false,
     },
   ];
 
+  const currentFolder = folderTabs.find((t) => t.id === cajaSubTab) || folderTabs[0];
+
   return (
-    <div className="space-y-5 animate-in fade-in">
-      {/* Encabezado Limpio con Pestañas Tipo Carpeta */}
-      <div
-        className="clay-card-dark pt-4 px-5 pb-0 text-white relative overflow-hidden shadow-xl"
-        style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)' }}
-      >
-        <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 opacity-10 pointer-events-none">
-          <ReceiptText className="w-52 h-52 text-indigo-200" />
-        </div>
-
-        {/* Fila Superior: Título Limpio + Indicador de Carpeta Activa */}
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3.5">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-black uppercase tracking-wider backdrop-blur-sm">
-              🏛️ Módulo de Caja & DTE
-            </span>
-            <h2 className="text-lg md:text-xl font-black text-white tracking-tight">
-              Caja, Ventanilla & Facturación DTE
-            </h2>
-          </div>
-
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900/70 border border-slate-700/80 text-[11px] font-bold text-indigo-200 self-start sm:self-auto">
-            <FolderOpen className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="text-slate-400">Vista actual:</span>
-            <span className="text-white font-black">{activeFolderLabel}</span>
-          </div>
-        </div>
-
-        {/* Barra de Pestañas Identificadoras de Carpeta */}
+    <div className="animate-in fade-in">
+      {/* ===================================================================== */}
+      {/* SISTEMA DE EXPEDIENTE UNIFICADO (PESTAÑAS + CONTENEDOR CONECTADO)     */}
+      {/* ===================================================================== */}
+      <div className="rounded-3xl shadow-xl bg-[#f8fafc]">
+        {/* Cabecera Superior Oscura con Pestañas de Expediente en la Base */}
         <div
-          role="tablist"
-          aria-label="Carpetas del módulo de Caja y Facturación"
-          className="relative z-10 flex items-end gap-1.5 overflow-x-auto no-scrollbar pt-1 border-t border-slate-700/60"
+          className="pt-4 px-4 sm:px-5 pb-0 text-white relative rounded-t-3xl"
+          style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)' }}
         >
-          {folderTabs.map((tab) => {
-            const isActive = cajaSubTab === tab.id;
-            const IconComponent = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                onClick={() => setCajaSubTab(tab.id)}
-                className={`group relative flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap select-none border-t border-x ${
-                  isActive
-                    ? 'bg-white text-slate-900 border-white shadow-[0_-4px_14px_rgba(15,23,42,0.35)] z-10 translate-y-[1px]'
-                    : 'bg-slate-900/65 text-slate-300 border-slate-700/80 hover:bg-slate-800/90 hover:text-white opacity-85 hover:opacity-100'
-                }`}
-              >
-                {/* Franja superior de color estilo pestaña de archivador */}
-                <span
-                  className={`absolute inset-x-0 top-0 h-1 rounded-t-xl transition-opacity ${tab.accentBar} ${
-                    isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'
+          {/* Fila Superior Limpia */}
+          <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 pb-3.5">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-black uppercase tracking-wider backdrop-blur-sm">
+                🏛️ Módulo de Caja & DTE
+              </span>
+              <h2 className="text-lg md:text-xl font-black text-white tracking-tight">
+                Caja, Ventanilla & Facturación DTE
+              </h2>
+            </div>
+          </div>
+
+          {/* Riel de Pestañas de Expediente (La pestaña activa se fusiona con el contenedor inferior) */}
+          <div
+            role="tablist"
+            aria-label="Carpetas del módulo de Caja y Facturación"
+            className="relative z-20 flex flex-wrap items-end gap-1.5 pt-1"
+          >
+            {folderTabs.map((tab) => {
+              const isActive = cajaSubTab === tab.id;
+              const IconComponent = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => setCajaSubTab(tab.id)}
+                  className={`group relative flex items-center gap-2 px-4 text-xs font-black transition-all cursor-pointer whitespace-nowrap select-none rounded-t-2xl ${
+                    isActive
+                      ? `bg-[#f8fafc] ${tab.tabActiveClasses} pt-2.5 pb-3.5 -mb-[2px] z-30 border-t-4 border-x-2 border-b-0 shadow-[0_-6px_16px_rgba(15,23,42,0.35)]`
+                      : 'bg-slate-900/70 text-slate-300 border border-b-0 border-slate-700/80 py-2 mb-0 hover:bg-slate-800/90 hover:text-white opacity-85 hover:opacity-100'
                   }`}
-                />
+                >
+                  {isActive ? (
+                    <FolderOpen className={`w-4 h-4 shrink-0 ${tab.activeIconColor}`} />
+                  ) : (
+                    <Folder className="w-3.5 h-3.5 shrink-0 text-slate-400 group-hover:text-slate-200" />
+                  )}
 
-                {isActive ? (
-                  <FolderOpen className={`w-4 h-4 shrink-0 ${tab.activeIconColor}`} />
-                ) : (
-                  <Folder className="w-3.5 h-3.5 shrink-0 text-slate-400 group-hover:text-slate-200" />
-                )}
-
-                <IconComponent
-                  className={`w-3.5 h-3.5 shrink-0 ${
-                    isActive ? tab.activeIconColor : tab.inactiveIconColor
-                  }`}
-                />
-
-                <span>{tab.label}</span>
-
-                {tab.hasAlert && (
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      isActive ? 'bg-emerald-500 animate-ping' : 'bg-amber-400 animate-ping'
+                  <IconComponent
+                    className={`w-3.5 h-3.5 shrink-0 ${
+                      isActive ? tab.activeIconColor : tab.inactiveIconColor
                     }`}
                   />
-                )}
-              </button>
-            );
-          })}
+
+                  <span>{tab.label}</span>
+
+                  {tab.hasAlert && (
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        isActive ? 'bg-emerald-500 animate-ping' : 'bg-amber-400 animate-ping'
+                      }`}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+
+        {/* Cuerpo del Expediente Conectado Directamente al Botón Activo */}
+        <div
+          className={`relative z-10 bg-[#f8fafc] border-t-2 border-x-2 border-b-2 ${currentFolder.containerBorderClass} rounded-b-3xl p-4 sm:p-5 space-y-4`}
+        >
 
       {/* SUBPESTAÑA 1: ÓRDENES LISTAS PARA FACTURAR */}
       {cajaSubTab === 'listas_facturar' && (
@@ -789,6 +798,8 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
       {cajaSubTab === 'domicilio' && (
         <PosDomicilioPanel onOrderChanged={onOrderChanged} />
       )}
+        </div>
+      </div>
     </div>
   );
 });
