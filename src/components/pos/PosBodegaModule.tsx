@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Box, 
   Clock, 
@@ -11,11 +11,12 @@ import {
   Eye,
   X,
   User,
+  ZoomIn,
   RotateCcw
 } from 'lucide-react';
 import { CustomerRecord } from '@/lib/customers';
 import { SaleRecord, ProductItem } from '@/lib/store';
-import { getOriginalFragranceInfo, parseKitOrderItem } from '@/lib/perfumeNames';
+import { getOriginalFragranceInfo, parseKitOrderItem, resolveBottleImageInfo } from '@/lib/perfumeNames';
 
 export interface PosBodegaModuleProps {
   sales: SaleRecord[];
@@ -54,6 +55,8 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
   handleMarkOrderDeliveredFromPos,
   customers,
 }) => {
+  const [zoomedBottle, setZoomedBottle] = useState<{ imageUrl: string; name: string; puesto?: string } | null>(null);
+
   const resolveCustomerName = (order: SaleRecord) => {
     if (order.cliente?.nombre && order.cliente.nombre.trim() !== '' && order.cliente.nombre.toLowerCase().trim() !== 'consumidor final') {
       return order.cliente.nombre;
@@ -352,9 +355,28 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                               <span className="px-2 py-0.5 rounded bg-white border border-purple-200 text-purple-800">
                                 {kitInfo.isPlus ? '🔥 1.5 Oz PLUS (1 Oz + ½ Oz)' : '💧 1 Oz Estándar'}
                               </span>
-                              <span className="px-2 py-0.5 rounded bg-white border border-purple-200 text-slate-800">
-                                🍾 {kitInfo.bottleName} (📍 {kitInfo.bottlePuesto})
-                              </span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  kitInfo.bottleImageUrl &&
+                                  setZoomedBottle({
+                                    imageUrl: kitInfo.bottleImageUrl,
+                                    name: kitInfo.bottleName,
+                                    puesto: kitInfo.bottlePuesto,
+                                  })
+                                }
+                                title="Click para ver imagen del bote en mayor tamaño"
+                                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-white border border-purple-200 text-slate-800 hover:border-purple-400 cursor-zoom-in transition-all"
+                              >
+                                {kitInfo.bottleImageUrl && (
+                                  <img
+                                    src={kitInfo.bottleImageUrl}
+                                    alt={kitInfo.bottleName}
+                                    className="w-5 h-5 object-contain rounded"
+                                  />
+                                )}
+                                <span>🍾 {kitInfo.bottleName} (📍 {kitInfo.bottlePuesto})</span>
+                              </button>
                               <span className="px-2 py-0.5 rounded bg-white border border-purple-200 text-emerald-800">
                                 {kitInfo.hasLabel ? '🏷️ Con Etiqueta' : '🚫 Sin Etiqueta'}
                               </span>
@@ -362,22 +384,49 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                           </div>
                         );
                       }
+                      const bottleInfo = resolveBottleImageInfo(it, products);
+                      const resolvedPuesto = it.puesto || products.find(p => p.id === it.productId)?.puesto || bottleInfo?.puesto || 'A1';
                       return (
                         <div key={idx} className="p-2 rounded-xl bg-white border border-slate-200 text-xs flex justify-between items-center gap-2">
-                          <div className="truncate min-w-0 flex-1">
-                            <span className="font-bold text-slate-800 block truncate">{it.name}</span>
-                            {origInfo?.originalName && (
-                              <span className="text-[10px] text-slate-500 font-medium block truncate mt-0.5">
-                                Original: <strong className="text-slate-900 font-black">{origInfo.originalName}</strong>
-                                {origInfo.brand && <span className="text-slate-400"> ({origInfo.brand})</span>}
-                              </span>
+                          <div className="flex items-center gap-2.5 truncate min-w-0 flex-1">
+                            {bottleInfo && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setZoomedBottle({
+                                    imageUrl: bottleInfo.imageUrl,
+                                    name: bottleInfo.bottleName,
+                                    puesto: resolvedPuesto,
+                                  })
+                                }
+                                title="Click para ver imagen del bote en mayor tamaño"
+                                className="relative w-11 h-11 rounded-lg border border-indigo-200 bg-white p-0.5 shrink-0 shadow-2xs hover:ring-2 hover:ring-indigo-500 transition-all cursor-zoom-in group"
+                              >
+                                <img
+                                  src={bottleInfo.imageUrl}
+                                  alt={bottleInfo.bottleName}
+                                  className="w-full h-full object-contain rounded"
+                                />
+                                <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-2xs">
+                                  <ZoomIn className="w-2 h-2" />
+                                </span>
+                              </button>
                             )}
-                            <span className="text-[10px] text-slate-400 font-mono font-bold block mt-0.5">
-                              Cant: <strong className="text-indigo-700">{it.quantity} {/^\d/.test(String(it.unit || '').trim()) ? `× ${it.unit}` : (it.unit || 'Oz')}</strong>
-                            </span>
+                            <div className="truncate min-w-0 flex-1">
+                              <span className="font-bold text-slate-800 block truncate">{it.name}</span>
+                              {origInfo?.originalName && (
+                                <span className="text-[10px] text-slate-500 font-medium block truncate mt-0.5">
+                                  Original: <strong className="text-slate-900 font-black">{origInfo.originalName}</strong>
+                                  {origInfo.brand && <span className="text-slate-400"> ({origInfo.brand})</span>}
+                                </span>
+                              )}
+                              <span className="text-[10px] text-slate-400 font-mono font-bold block mt-0.5">
+                                Cant: <strong className="text-indigo-700">{it.quantity} {/^\d/.test(String(it.unit || '').trim()) ? `× ${it.unit}` : (it.unit || 'Oz')}</strong>
+                              </span>
+                            </div>
                           </div>
                           <span className="clay-badge text-[9.5px] font-mono font-black text-amber-950 bg-amber-100 px-2 py-0.5 border border-amber-300 shrink-0">
-                            📍 Puesto: {it.puesto || products.find(p => p.id === it.productId)?.puesto || 'A1'}
+                            📍 Puesto: {resolvedPuesto}
                           </span>
                         </div>
                       );
@@ -470,6 +519,65 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {zoomedBottle && (
+        <div
+          onClick={() => setZoomedBottle(null)}
+          className="fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="clay-card bg-white max-w-md w-full rounded-2xl overflow-hidden shadow-2xl border border-slate-200"
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
+              <div className="min-w-0 pr-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 block">
+                  Vista Ampliada de Frasco / Bote
+                </span>
+                <h3 className="font-black text-sm text-slate-900 truncate">
+                  {zoomedBottle.name}
+                </h3>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {zoomedBottle.puesto && (
+                  <span className="clay-badge text-xs font-mono font-black px-2.5 py-1 bg-amber-100 text-amber-950 border border-amber-300">
+                    📍 Puesto: {zoomedBottle.puesto}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setZoomedBottle(null)}
+                  className="p-1.5 rounded-xl bg-slate-200/80 hover:bg-rose-100 text-slate-700 hover:text-rose-700 transition-colors cursor-pointer"
+                  title="Cerrar vista ampliada"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 bg-white flex flex-col items-center justify-center">
+              <img
+                src={zoomedBottle.imageUrl}
+                alt={zoomedBottle.name}
+                className="w-full max-h-[65vh] object-contain rounded-xl"
+              />
+            </div>
+
+            <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500">
+                Verifica el diseño y tapa del bote
+              </span>
+              <button
+                type="button"
+                onClick={() => setZoomedBottle(null)}
+                className="clay-btn clay-btn-primary px-4 py-1.5 text-xs font-black rounded-xl cursor-pointer"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

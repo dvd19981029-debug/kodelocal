@@ -1,4 +1,5 @@
 // src/lib/perfumeNames.ts
+import { MOCK_100ML_BOTTLES } from './bottles';
 
 /**
  * Mapeo exacto del nombre de INSPIRACIÓN (contratipo) para cada esencia del catálogo
@@ -672,6 +673,111 @@ export function getOriginalFragranceInfo(
   return null;
 }
 
+export interface BottleImageInfo {
+  imageUrl: string;
+  bottleName: string;
+  puesto: string;
+}
+
+/**
+ * Resuelve la imagen real del bote (/images/botes/...) y su nombre/puesto
+ * para cualquier ítem de comanda de bote o selección de frasco de 100ml.
+ * Retorna null si el ítem NO es un bote.
+ */
+export function resolveBottleImageInfo(
+  item: any,
+  allProducts?: any[]
+): BottleImageInfo | null {
+  if (!item) return null;
+
+  const rawId = String(item.productId || item.id || item.bottleId || '').trim();
+  const rawSku = String(item.productSku || item.sku || '').trim();
+  const rawName = String(
+    item.productName || item.name || item.bottleName || (typeof item === 'string' ? item : '') || ''
+  ).trim();
+  const cleanName = rawName.replace(/\s*\([^)]*\)\s*$/g, '').trim();
+  const rawOrig = String(item.originalName || item.inspiredBy || '').trim();
+  const rawUnit = String(item.unit || item.presentation || '').trim();
+
+  // Si es una esencia pura por onza, no es un bote independiente
+  if (
+    rawId.startsWith('esencia-') ||
+    (/onza|\boz\b/i.test(rawUnit) && !/arma tu propio perfume|kit_preparado/i.test(`${rawName} ${rawUnit}`))
+  ) {
+    return null;
+  }
+
+  const isBottleCandidate = (p: any) =>
+    Boolean(
+      p &&
+        (String(p.category || '').toLowerCase() === 'botes' ||
+          String(p.id || '').toLowerCase().startsWith('bote-') ||
+          String(p.sku || '').toUpperCase().startsWith('BOT-') ||
+          String(p.imageUrl || '').includes('/images/botes/'))
+    );
+
+  const candidates: any[] = [
+    ...(item.product && isBottleCandidate(item.product) ? [item.product] : []),
+    ...(Array.isArray(allProducts) ? allProducts.filter(isBottleCandidate) : []),
+    ...MOCK_100ML_BOTTLES,
+  ];
+
+  const lowerClean = cleanName.toLowerCase();
+  const lowerRaw = rawName.toLowerCase();
+  const lowerOrig = rawOrig.toLowerCase();
+
+  let matched = candidates.find(
+    (p) =>
+      (rawId && p.id === rawId) ||
+      (rawSku && p.sku && String(p.sku).toLowerCase() === rawSku.toLowerCase())
+  );
+
+  if (!matched && (lowerClean || lowerOrig)) {
+    matched = candidates.find((p) => {
+      const pName = String(p.name || '').trim().toLowerCase();
+      const pOff = String(p.officialName || '').trim().toLowerCase();
+      return (
+        (lowerClean && (pName === lowerClean || pOff === lowerClean)) ||
+        (lowerRaw && (pName === lowerRaw || pOff === lowerRaw)) ||
+        (lowerOrig && (pName === lowerOrig || pOff === lowerOrig))
+      );
+    });
+  }
+
+  // Fallback si el nombre menciona explícitamente "bote" o uno de los modelos y coincide parcialmente
+  if (!matched && (/\bbote\b|\bfrasco\b/i.test(cleanName) || /\bbote\b|\bfrasco\b/i.test(rawOrig))) {
+    matched = candidates.find((p) => {
+      const pName = String(p.name || '').trim().toLowerCase();
+      const pOff = String(p.officialName || '').trim().toLowerCase();
+      return (
+        (pOff && (lowerClean.includes(pOff) || lowerOrig.includes(pOff))) ||
+        (pName && (lowerClean.includes(pName) || pName.includes(lowerClean)))
+      );
+    });
+  }
+
+  if (!matched) return null;
+
+  // Buscar la imagen primero en el candidato o en MOCK_100ML_BOTTLES
+  const fallbackMock = MOCK_100ML_BOTTLES.find(
+    (m) =>
+      m.id === matched.id ||
+      m.sku === matched.sku ||
+      m.name.toLowerCase() === String(matched.name || '').toLowerCase() ||
+      (m.officialName &&
+        m.officialName.toLowerCase() === String(matched.officialName || matched.name || '').toLowerCase())
+  );
+
+  const imageUrl = matched.imageUrl || fallbackMock?.imageUrl;
+  if (!imageUrl) return null;
+
+  return {
+    imageUrl,
+    bottleName: matched.name || fallbackMock?.name || matched.officialName || cleanName || 'Bote 100ml',
+    puesto: item.puesto || matched.puesto || fallbackMock?.puesto || 'B6',
+  };
+}
+
 export interface ParsedKitOrderItem {
   isKit: true;
   fragranceName: string;
@@ -682,6 +788,7 @@ export interface ParsedKitOrderItem {
   concentrationTitle: string;
   bottleName: string;
   bottlePuesto: string;
+  bottleImageUrl?: string;
   hasLabel: boolean;
   labelTitle: string;
 }
@@ -795,7 +902,17 @@ export function parseKitOrderItem(
       )
     : null;
 
-  const bottlePuesto = explicitBottlePuesto || bottleProd?.puesto || 'B6';
+  const resolvedBottleImg = resolveBottleImageInfo(
+    {
+      productId: kitDetails?.bottleId || bottleProd?.id,
+      name: bottleName,
+      product: bottleProd,
+    },
+    allProducts
+  );
+
+  const bottlePuesto = explicitBottlePuesto || bottleProd?.puesto || resolvedBottleImg?.puesto || 'B6';
+  const bottleImageUrl = resolvedBottleImg?.imageUrl || '/images/botes/bote_100ml_rey_luis.jpg';
 
   // 5. Selección de Etiqueta
   const hasLabel =
@@ -816,6 +933,7 @@ export function parseKitOrderItem(
     concentrationTitle,
     bottleName,
     bottlePuesto,
+    bottleImageUrl,
     hasLabel,
     labelTitle,
   };
