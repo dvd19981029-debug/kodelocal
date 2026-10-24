@@ -26,6 +26,10 @@ import {
   Folder,
   FolderOpen,
   CreditCard,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Filter,
 } from 'lucide-react';
 import { CustomerRecord } from '@/lib/customers';
 import { SaleRecord } from '@/lib/store';
@@ -108,6 +112,19 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
 
   const [onlyCashToday, setOnlyCashToday] = useState(false);
   const [todaySearch, setTodaySearch] = useState('');
+  const [todaySortField, setTodaySortField] = useState<'HORA' | 'CLIENTE' | 'ORDEN' | 'ITEMS' | 'FORMA_PAGO' | 'MONTO'>('HORA');
+  const [todaySortDir, setTodaySortDir] = useState<'asc' | 'desc'>('desc');
+  const [todayPaymentFilter, setTodayPaymentFilter] = useState<'ALL' | 'CASH' | 'CARD_POS' | 'TRANSFER' | 'WOMPI' | 'CONTRA_ENTREGA'>('ALL');
+  const [todayDocFilter, setTodayDocFilter] = useState<'ALL' | '01' | '03' | 'TICKET'>('ALL');
+
+  const toggleTodaySort = (field: 'HORA' | 'CLIENTE' | 'ORDEN' | 'ITEMS' | 'FORMA_PAGO' | 'MONTO') => {
+    if (todaySortField === field) {
+      setTodaySortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setTodaySortField(field);
+      setTodaySortDir(field === 'CLIENTE' ? 'asc' : 'desc');
+    }
+  };
 
   const parseSaleDateObj = (sale: SaleRecord): Date => {
     const raw = sale.invoicedAt || sale.dteInfo?.fhProcesamiento || sale.createdAt;
@@ -217,11 +234,28 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
     };
   }, [todayInvoicedSales]);
 
+  const resolvePaymentCategory = (s: SaleRecord): 'CASH' | 'CARD_POS' | 'TRANSFER' | 'WOMPI' | 'CONTRA_ENTREGA' => {
+    const pm = s.paymentMethod || 'CASH';
+    if (pm === 'CASH') return 'CASH';
+    if (isEcommerceWompiSale(s)) return 'WOMPI';
+    if (pm === 'CARD') return 'CARD_POS';
+    if (pm === 'TRANSFER') return 'TRANSFER';
+    return 'CONTRA_ENTREGA';
+  };
+
   const displayedTodaySales = useMemo(() => {
-    const base = onlyCashToday ? todayCashSales : todayInvoicedSales;
+    const activePaymentFilter = onlyCashToday ? 'CASH' : todayPaymentFilter;
     const q = todaySearch.trim().toLowerCase();
-    if (!q) return base;
-    return base.filter((s) => {
+
+    const filtered = todayInvoicedSales.filter((s) => {
+      if (activePaymentFilter !== 'ALL' && resolvePaymentCategory(s) !== activePaymentFilter) {
+        return false;
+      }
+      if (todayDocFilter !== 'ALL') {
+        const docType = s.tipoComprobante === '03' ? '03' : s.tipoComprobante === '01' ? '01' : 'TICKET';
+        if (docType !== todayDocFilter) return false;
+      }
+      if (!q) return true;
       const cName = resolveCustomerName(s).toLowerCase();
       return (
         cName.includes(q) ||
@@ -229,7 +263,41 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
         (s.dteInfo?.numeroControl && s.dteInfo.numeroControl.toLowerCase().includes(q))
       );
     });
-  }, [onlyCashToday, todayCashSales, todayInvoicedSales, todaySearch, customers]);
+
+    const dir = todaySortDir === 'asc' ? 1 : -1;
+    return [...filtered].sort((a, b) => {
+      if (todaySortField === 'HORA') {
+        return (parseSaleDateObj(a).getTime() - parseSaleDateObj(b).getTime()) * dir;
+      }
+      if (todaySortField === 'CLIENTE') {
+        return resolveCustomerName(a).localeCompare(resolveCustomerName(b), 'es', { sensitivity: 'base' }) * dir;
+      }
+      if (todaySortField === 'ORDEN') {
+        return String(a.saleNumber || '').localeCompare(String(b.saleNumber || ''), undefined, { numeric: true }) * dir;
+      }
+      if (todaySortField === 'ITEMS') {
+        const countA = (a.items || []).reduce((sum, it) => sum + (Number(it.quantity) || 1), 0);
+        const countB = (b.items || []).reduce((sum, it) => sum + (Number(it.quantity) || 1), 0);
+        return (countA - countB) * dir;
+      }
+      if (todaySortField === 'FORMA_PAGO') {
+        return resolvePaymentCategory(a).localeCompare(resolvePaymentCategory(b)) * dir;
+      }
+      if (todaySortField === 'MONTO') {
+        return (Number(a.total || 0) - Number(b.total || 0)) * dir;
+      }
+      return 0;
+    });
+  }, [
+    onlyCashToday,
+    todayPaymentFilter,
+    todayDocFilter,
+    todayInvoicedSales,
+    todaySearch,
+    todaySortField,
+    todaySortDir,
+    customers,
+  ]);
 
   return (
     <div className="space-y-6 animate-in fade-in">
@@ -616,9 +684,12 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={() => setOnlyCashToday(false)}
+                onClick={() => {
+                  setOnlyCashToday(false);
+                  setTodayPaymentFilter('ALL');
+                }}
                 className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer border ${
-                  !onlyCashToday
+                  !onlyCashToday && todayPaymentFilter === 'ALL'
                     ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
                     : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
                 }`}
@@ -629,9 +700,13 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
 
               <button
                 type="button"
-                onClick={() => setOnlyCashToday((prev) => !prev)}
+                onClick={() => {
+                  const nextCash = !(onlyCashToday || todayPaymentFilter === 'CASH');
+                  setOnlyCashToday(nextCash);
+                  setTodayPaymentFilter(nextCash ? 'CASH' : 'ALL');
+                }}
                 className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer border ${
-                  onlyCashToday
+                  onlyCashToday || todayPaymentFilter === 'CASH'
                     ? 'bg-emerald-600 text-white border-emerald-600 shadow-md ring-2 ring-emerald-300'
                     : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
                 }`}
@@ -693,9 +768,14 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
           {/* Tarjetas de Resumen del Día y Efectivo en Caja */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
             <div
-              onClick={() => setOnlyCashToday(true)}
+              onClick={() => {
+                setOnlyCashToday(false);
+                setTodayPaymentFilter((prev) => (prev === 'CASH' ? 'ALL' : 'CASH'));
+              }}
               className={`clay-card p-4 border-l-4 border-emerald-500 cursor-pointer transition-all ${
-                onlyCashToday ? 'bg-emerald-50/70 ring-2 ring-emerald-400' : 'bg-white hover:bg-emerald-50/30'
+                onlyCashToday || todayPaymentFilter === 'CASH'
+                  ? 'bg-emerald-50/70 ring-2 ring-emerald-400'
+                  : 'bg-white hover:bg-emerald-50/30'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -712,7 +792,17 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
               </span>
             </div>
 
-            <div className="clay-card p-4 border-l-4 border-indigo-500 bg-white">
+            <div
+              onClick={() => {
+                setOnlyCashToday(false);
+                setTodayPaymentFilter((prev) => (prev === 'CARD_POS' ? 'ALL' : 'CARD_POS'));
+              }}
+              className={`clay-card p-4 border-l-4 border-indigo-500 cursor-pointer transition-all ${
+                todayPaymentFilter === 'CARD_POS'
+                  ? 'bg-indigo-50/70 ring-2 ring-indigo-400'
+                  : 'bg-white hover:bg-indigo-50/30'
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                   Tarjeta POS (Mostrador)
@@ -727,7 +817,17 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
               </span>
             </div>
 
-            <div className="clay-card p-4 border-l-4 border-purple-500 bg-white">
+            <div
+              onClick={() => {
+                setOnlyCashToday(false);
+                setTodayPaymentFilter((prev) => (prev === 'TRANSFER' ? 'ALL' : 'TRANSFER'));
+              }}
+              className={`clay-card p-4 border-l-4 border-purple-500 cursor-pointer transition-all ${
+                todayPaymentFilter === 'TRANSFER'
+                  ? 'bg-purple-50/70 ring-2 ring-purple-400'
+                  : 'bg-white hover:bg-purple-50/30'
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                   Transferencias
@@ -742,7 +842,17 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
               </span>
             </div>
 
-            <div className="clay-card p-4 border-l-4 border-violet-500 bg-white">
+            <div
+              onClick={() => {
+                setOnlyCashToday(false);
+                setTodayPaymentFilter((prev) => (prev === 'WOMPI' ? 'ALL' : 'WOMPI'));
+              }}
+              className={`clay-card p-4 border-l-4 border-violet-500 cursor-pointer transition-all ${
+                todayPaymentFilter === 'WOMPI'
+                  ? 'bg-violet-50/70 ring-2 ring-violet-400'
+                  : 'bg-white hover:bg-violet-50/30'
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                   Wompi / Ecommerce
@@ -757,7 +867,17 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
               </span>
             </div>
 
-            <div className="clay-card p-4 border-l-4 border-blue-500 bg-white">
+            <div
+              onClick={() => {
+                setOnlyCashToday(false);
+                setTodayPaymentFilter((prev) => (prev === 'CONTRA_ENTREGA' ? 'ALL' : 'CONTRA_ENTREGA'));
+              }}
+              className={`clay-card p-4 border-l-4 border-blue-500 cursor-pointer transition-all ${
+                todayPaymentFilter === 'CONTRA_ENTREGA'
+                  ? 'bg-blue-50/70 ring-2 ring-blue-400'
+                  : 'bg-white hover:bg-blue-50/30'
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                   Contra Entrega
@@ -773,7 +893,11 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
             </div>
 
             <div
-              onClick={() => setOnlyCashToday(false)}
+              onClick={() => {
+                setOnlyCashToday(false);
+                setTodayPaymentFilter('ALL');
+                setTodayDocFilter('ALL');
+              }}
               className="clay-card p-4 border-l-4 border-slate-800 bg-white cursor-pointer hover:bg-slate-50 transition-all"
             >
               <div className="flex items-center justify-between">
@@ -794,16 +918,16 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
           {/* Tabla de Facturaciones de Hoy */}
           <div className="clay-card p-4 sm:p-5 bg-white space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-sm font-black text-slate-800 flex items-center gap-2">
                   <Banknote className="w-4 h-4 text-teal-600" />
                   <span>
-                    {onlyCashToday
+                    {onlyCashToday || todayPaymentFilter === 'CASH'
                       ? `Facturaciones en Efectivo de Hoy (${displayedTodaySales.length})`
                       : `Facturaciones de Hoy (${displayedTodaySales.length})`}
                   </span>
                 </h3>
-                {onlyCashToday && (
+                {(onlyCashToday || todayPaymentFilter === 'CASH') && (
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">
                     Debe haber +${todayMetrics.cashTotal.toFixed(2)} en caja por estas ventas
                   </span>
@@ -826,12 +950,162 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50/80 text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
-                    <th className="py-2.5 px-3">Hora</th>
-                    <th className="py-2.5 px-3">Cliente</th>
-                    <th className="py-2.5 px-3">Comprobante / Orden</th>
-                    <th className="py-2.5 px-3">Detalle de Venta</th>
-                    <th className="py-2.5 px-3">Forma de Pago</th>
-                    <th className="py-2.5 px-3 text-right">Monto ($)</th>
+                    <th className="py-2.5 px-3">
+                      <button
+                        type="button"
+                        onClick={() => toggleTodaySort('HORA')}
+                        className="inline-flex items-center gap-1 uppercase font-bold hover:text-slate-900 cursor-pointer transition-colors"
+                        title="Ordenar por Hora"
+                      >
+                        <span>Hora</span>
+                        {todaySortField === 'HORA' ? (
+                          todaySortDir === 'asc' ? (
+                            <ArrowUp className="w-3.5 h-3.5 text-indigo-600" />
+                          ) : (
+                            <ArrowDown className="w-3.5 h-3.5 text-indigo-600" />
+                          )
+                        ) : (
+                          <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                        )}
+                      </button>
+                    </th>
+                    <th className="py-2.5 px-3">
+                      <button
+                        type="button"
+                        onClick={() => toggleTodaySort('CLIENTE')}
+                        className="inline-flex items-center gap-1 uppercase font-bold hover:text-slate-900 cursor-pointer transition-colors"
+                        title="Ordenar por Cliente (A-Z / Z-A)"
+                      >
+                        <span>Cliente</span>
+                        {todaySortField === 'CLIENTE' ? (
+                          todaySortDir === 'asc' ? (
+                            <ArrowUp className="w-3.5 h-3.5 text-indigo-600" />
+                          ) : (
+                            <ArrowDown className="w-3.5 h-3.5 text-indigo-600" />
+                          )
+                        ) : (
+                          <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                        )}
+                      </button>
+                    </th>
+                    <th className="py-2.5 px-3">
+                      <div className="inline-flex items-center gap-1.5 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => toggleTodaySort('ORDEN')}
+                          className="inline-flex items-center gap-1 uppercase font-bold hover:text-slate-900 cursor-pointer transition-colors"
+                          title="Ordenar por N° de Orden"
+                        >
+                          <span>Comprobante / Orden</span>
+                          {todaySortField === 'ORDEN' ? (
+                            todaySortDir === 'asc' ? (
+                              <ArrowUp className="w-3.5 h-3.5 text-indigo-600" />
+                            ) : (
+                              <ArrowDown className="w-3.5 h-3.5 text-indigo-600" />
+                            )
+                          ) : (
+                            <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                          )}
+                        </button>
+                        <div className="inline-flex items-center gap-0.5 bg-white border border-slate-200 rounded-md px-1.5 py-0.5">
+                          <Filter className={`w-2.5 h-2.5 ${todayDocFilter !== 'ALL' ? 'text-indigo-600' : 'text-slate-400'}`} />
+                          <select
+                            value={todayDocFilter}
+                            onChange={(e) => setTodayDocFilter(e.target.value as any)}
+                            className="bg-transparent text-[9.5px] font-black text-slate-700 focus:outline-none cursor-pointer"
+                            title="Filtrar por Tipo de Comprobante"
+                          >
+                            <option value="ALL">Todos</option>
+                            <option value="01">Factura (01)</option>
+                            <option value="03">CCF (03)</option>
+                            <option value="TICKET">Ticket</option>
+                          </select>
+                        </div>
+                      </div>
+                    </th>
+                    <th className="py-2.5 px-3">
+                      <button
+                        type="button"
+                        onClick={() => toggleTodaySort('ITEMS')}
+                        className="inline-flex items-center gap-1 uppercase font-bold hover:text-slate-900 cursor-pointer transition-colors"
+                        title="Ordenar por cantidad de unidades"
+                      >
+                        <span>Detalle de Venta</span>
+                        {todaySortField === 'ITEMS' ? (
+                          todaySortDir === 'asc' ? (
+                            <ArrowUp className="w-3.5 h-3.5 text-indigo-600" />
+                          ) : (
+                            <ArrowDown className="w-3.5 h-3.5 text-indigo-600" />
+                          )
+                        ) : (
+                          <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                        )}
+                      </button>
+                    </th>
+                    <th className="py-2.5 px-3">
+                      <div className="inline-flex items-center gap-1.5 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => toggleTodaySort('FORMA_PAGO')}
+                          className="inline-flex items-center gap-1 uppercase font-bold hover:text-slate-900 cursor-pointer transition-colors"
+                          title="Ordenar por Forma de Pago"
+                        >
+                          <span>Forma de Pago</span>
+                          {todaySortField === 'FORMA_PAGO' ? (
+                            todaySortDir === 'asc' ? (
+                              <ArrowUp className="w-3.5 h-3.5 text-indigo-600" />
+                            ) : (
+                              <ArrowDown className="w-3.5 h-3.5 text-indigo-600" />
+                            )
+                          ) : (
+                            <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                          )}
+                        </button>
+                        <div className="inline-flex items-center gap-0.5 bg-white border border-slate-200 rounded-md px-1.5 py-0.5">
+                          <Filter
+                            className={`w-2.5 h-2.5 ${
+                              onlyCashToday || todayPaymentFilter !== 'ALL' ? 'text-indigo-600' : 'text-slate-400'
+                            }`}
+                          />
+                          <select
+                            value={onlyCashToday ? 'CASH' : todayPaymentFilter}
+                            onChange={(e) => {
+                              const val = e.target.value as any;
+                              setOnlyCashToday(val === 'CASH');
+                              setTodayPaymentFilter(val);
+                            }}
+                            className="bg-transparent text-[9.5px] font-black text-slate-700 focus:outline-none cursor-pointer"
+                            title="Filtrar por Forma de Pago"
+                          >
+                            <option value="ALL">Todas</option>
+                            <option value="CASH">Efectivo</option>
+                            <option value="CARD_POS">Tarjeta POS</option>
+                            <option value="TRANSFER">Transferencia</option>
+                            <option value="WOMPI">Wompi / Ecommerce</option>
+                            <option value="CONTRA_ENTREGA">Contra Entrega</option>
+                          </select>
+                        </div>
+                      </div>
+                    </th>
+                    <th className="py-2.5 px-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => toggleTodaySort('MONTO')}
+                        className="inline-flex items-center justify-end gap-1 uppercase font-bold hover:text-slate-900 cursor-pointer transition-colors ml-auto"
+                        title="Ordenar por Monto ($)"
+                      >
+                        <span>Monto ($)</span>
+                        {todaySortField === 'MONTO' ? (
+                          todaySortDir === 'asc' ? (
+                            <ArrowUp className="w-3.5 h-3.5 text-indigo-600" />
+                          ) : (
+                            <ArrowDown className="w-3.5 h-3.5 text-indigo-600" />
+                          )
+                        ) : (
+                          <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                        )}
+                      </button>
+                    </th>
                     <th className="py-2.5 px-3 text-center">Acciones</th>
                   </tr>
                 </thead>
