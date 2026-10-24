@@ -140,6 +140,13 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
     return todayInvoicedSales.filter((s) => (s.paymentMethod || 'CASH') === 'CASH');
   }, [todayInvoicedSales]);
 
+  const isEcommerceWompiSale = (s: SaleRecord) => {
+    if (s.paymentMethod === 'WOMPI') return true;
+    const isOnlineOrder =
+      s.channel === 'ONLINE' || String(s.saleNumber || '').toUpperCase().startsWith('WEB-');
+    return isOnlineOrder && s.paymentMethod === 'CARD';
+  };
+
   const todayMetrics = useMemo(() => {
     let total = 0;
     let cashTotal = 0;
@@ -162,15 +169,15 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
       if (pm === 'CASH') {
         cashTotal += amt;
         cashCount += 1;
+      } else if (isEcommerceWompiSale(s)) {
+        wompiTotal += amt;
+        wompiCount += 1;
       } else if (pm === 'CARD') {
         cardTotal += amt;
         cardCount += 1;
       } else if (pm === 'TRANSFER') {
         transferTotal += amt;
         transferCount += 1;
-      } else if (pm === 'WOMPI') {
-        wompiTotal += amt;
-        wompiCount += 1;
       } else if (pm === 'CONTRA_ENTREGA') {
         contraEntregaTotal += amt;
         contraEntregaCount += 1;
@@ -681,7 +688,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
             <div className="clay-card p-4 border-l-4 border-indigo-500 bg-white">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                  Tarjeta / POS
+                  Tarjeta POS (Mostrador)
                 </span>
                 <CreditCard className="w-4 h-4 text-indigo-600" />
               </div>
@@ -689,7 +696,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                 ${todayMetrics.cardTotal.toFixed(2)}
               </div>
               <span className="text-[10.5px] text-slate-500 font-semibold block mt-0.5">
-                {todayMetrics.cardCount} {todayMetrics.cardCount === 1 ? 'transacción' : 'transacciones'}
+                {todayMetrics.cardCount} {todayMetrics.cardCount === 1 ? 'cobro en mostrador' : 'cobros en mostrador'}
               </span>
             </div>
 
@@ -711,7 +718,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
             <div className="clay-card p-4 border-l-4 border-violet-500 bg-white">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                  Wompi
+                  Wompi / Ecommerce
                 </span>
                 <Link2 className="w-4 h-4 text-violet-600" />
               </div>
@@ -719,7 +726,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                 ${todayMetrics.wompiTotal.toFixed(2)}
               </div>
               <span className="text-[10.5px] text-slate-500 font-semibold block mt-0.5">
-                {todayMetrics.wompiCount} {todayMetrics.wompiCount === 1 ? 'enlace' : 'enlaces'}
+                {todayMetrics.wompiCount} {todayMetrics.wompiCount === 1 ? 'pago web / enlace' : 'pagos web / enlaces'}
               </span>
             </div>
 
@@ -893,12 +900,12 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                               className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-black border ${
                                 isCash
                                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  : isEcommerceWompiSale(sale)
+                                  ? 'bg-violet-50 text-violet-700 border-violet-200'
                                   : sale.paymentMethod === 'CARD'
                                   ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
                                   : sale.paymentMethod === 'TRANSFER'
                                   ? 'bg-purple-50 text-purple-700 border-purple-200'
-                                  : sale.paymentMethod === 'WOMPI'
-                                  ? 'bg-violet-50 text-violet-700 border-violet-200'
                                   : sale.paymentMethod === 'CONTRA_ENTREGA'
                                   ? 'bg-blue-50 text-blue-700 border-blue-200'
                                   : 'bg-amber-50 text-amber-700 border-amber-200'
@@ -906,12 +913,12 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                             >
                               {isCash
                                 ? 'Efectivo'
+                                : isEcommerceWompiSale(sale)
+                                ? 'Wompi / Ecommerce'
                                 : sale.paymentMethod === 'CARD'
-                                ? 'Tarjeta'
+                                ? 'Tarjeta POS'
                                 : sale.paymentMethod === 'TRANSFER'
                                 ? 'Transferencia'
-                                : sale.paymentMethod === 'WOMPI'
-                                ? 'Wompi'
                                 : sale.paymentMethod === 'CONTRA_ENTREGA'
                                 ? 'Contra Entrega'
                                 : 'Bitcoin'}
@@ -1139,12 +1146,12 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                         <td className="py-2.5 px-3 text-slate-600 font-bold text-[11px]">
                           {sale.paymentMethod === 'CASH'
                             ? 'Efectivo'
+                            : isEcommerceWompiSale(sale)
+                            ? 'Wompi / Ecommerce'
                             : sale.paymentMethod === 'CARD'
-                            ? 'Tarjeta'
+                            ? 'Tarjeta POS'
                             : sale.paymentMethod === 'TRANSFER'
                             ? 'Transferencia'
-                            : sale.paymentMethod === 'WOMPI'
-                            ? 'Wompi'
                             : sale.paymentMethod === 'CONTRA_ENTREGA'
                             ? 'Contra Entrega'
                             : 'Bitcoin'}

@@ -1044,12 +1044,12 @@ function renderDailySummaryByPaymentToDoc(
   drawDashedDivider(y);
   y += 3.5;
 
-  // Cálculos por forma de pago
+  // Cálculos por forma de pago (separando Tarjeta POS Mostrador vs Wompi / Ecommerce)
   const byMethod = {
     CASH: { label: 'EFECTIVO', count: 0, total: 0 },
-    CARD: { label: 'TARJETA / POS', count: 0, total: 0 },
+    CARD: { label: 'TARJETA POS (MOSTRADOR)', count: 0, total: 0 },
     TRANSFER: { label: 'TRANSFERENCIA BANCARIA', count: 0, total: 0 },
-    WOMPI: { label: 'WOMPI (ENLACE)', count: 0, total: 0 },
+    WOMPI: { label: 'WOMPI / ECOMMERCE', count: 0, total: 0 },
     CONTRA_ENTREGA: { label: 'CONTRA ENTREGA', count: 0, total: 0 },
     BITCOIN: { label: 'BITCOIN / CRIPTO', count: 0, total: 0 },
   };
@@ -1064,6 +1064,13 @@ function renderDailySummaryByPaymentToDoc(
   let grandSubtotal = 0;
   let grandIva = 0;
 
+  const isWompiOrEcomCard = (s: SaleRecord) => {
+    if (s.paymentMethod === 'WOMPI') return true;
+    const isOnline =
+      s.channel === 'ONLINE' || String(s.saleNumber || '').toUpperCase().startsWith('WEB-');
+    return isOnline && s.paymentMethod === 'CARD';
+  };
+
   for (const s of dailySales) {
     const amt = Number(s.total || 0);
     const sub = Number(s.subtotal || amt / 1.13);
@@ -1073,7 +1080,7 @@ function renderDailySummaryByPaymentToDoc(
     grandSubtotal += sub;
     grandIva += iva;
 
-    const mKey = (s.paymentMethod || 'CASH') as keyof typeof byMethod;
+    const mKey = (isWompiOrEcomCard(s) ? 'WOMPI' : s.paymentMethod || 'CASH') as keyof typeof byMethod;
     if (byMethod[mKey]) {
       byMethod[mKey].count += 1;
       byMethod[mKey].total += amt;
@@ -1167,12 +1174,12 @@ function renderDailySummaryByPaymentToDoc(
     const mShort =
       s.paymentMethod === 'CASH'
         ? 'EFEC'
+        : isWompiOrEcomCard(s)
+        ? 'WOMP'
         : s.paymentMethod === 'CARD'
-        ? 'TARJ'
+        ? 'TPOS'
         : s.paymentMethod === 'TRANSFER'
         ? 'TRAN'
-        : s.paymentMethod === 'WOMPI'
-        ? 'WOMP'
         : s.paymentMethod === 'CONTRA_ENTREGA'
         ? 'C.EN'
         : 'BTC';

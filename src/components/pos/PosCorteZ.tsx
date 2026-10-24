@@ -132,9 +132,14 @@ export const PosCorteZ: React.FC = () => {
     );
   }
 
-  // Cálculos en vivo
+  // Cálculos en vivo (separando Tarjeta POS de mostrador vs Wompi / Ecommerce)
   const totalesVentas = (activeShift.sales || []).reduce((acc: any, s: any) => {
-    acc[s.paymentMethod] = (acc[s.paymentMethod] || 0) + Number(s.total);
+    const isOnlineCard =
+      s.paymentMethod === 'WOMPI' ||
+      ((s.channel === 'ONLINE' || String(s.saleNumber || '').toUpperCase().startsWith('WEB-')) &&
+        s.paymentMethod === 'CARD');
+    const key = isOnlineCard ? 'WOMPI' : s.paymentMethod;
+    acc[key] = (acc[key] || 0) + Number(s.total);
     acc.total += Number(s.total);
     return acc;
   }, { CASH: 0, CARD: 0, TRANSFER: 0, WOMPI: 0, CONTRA_ENTREGA: 0, BITCOIN: 0, total: 0 });
@@ -170,9 +175,9 @@ export const PosCorteZ: React.FC = () => {
             <h4 className="text-xs font-bold text-slate-600 mb-2 border-b pb-1">Ventas del Turno</h4>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between"><span className="text-slate-500">Efectivo</span><span className="font-mono font-bold">${totalesVentas.CASH.toFixed(2)}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">Tarjeta</span><span className="font-mono font-bold">${totalesVentas.CARD.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">Tarjeta POS (Mostrador)</span><span className="font-mono font-bold">${totalesVentas.CARD.toFixed(2)}</span></div>
               <div className="flex justify-between"><span className="text-slate-500">Transferencia</span><span className="font-mono font-bold">${totalesVentas.TRANSFER.toFixed(2)}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">Wompi</span><span className="font-mono font-bold">${totalesVentas.WOMPI.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">Wompi / Ecommerce</span><span className="font-mono font-bold">${totalesVentas.WOMPI.toFixed(2)}</span></div>
               <div className="flex justify-between"><span className="text-slate-500">Contra Entrega</span><span className="font-mono font-bold">${totalesVentas.CONTRA_ENTREGA.toFixed(2)}</span></div>
               <div className="flex justify-between border-t pt-1 mt-1"><span className="font-bold">Total Vendido</span><span className="font-mono font-black text-indigo-700">${totalesVentas.total.toFixed(2)}</span></div>
             </div>
