@@ -52,6 +52,8 @@ export interface PosDomicilioOrder {
   total: number;
   paymentMethod: string;
   paymentStatus: string;
+  c807PaymentMode: 'CONTRA_ENTREGA' | 'TARJETA' | 'TRANSFERENCIA';
+  c807ServiceType: 'CCE' | 'SER';
   bodegaStatus: string;
   domicilioStatus: 'PENDIENTE_GUIA' | 'EN_RUTA' | 'ENTREGADO' | 'CANCELADO';
   trackingNumber?: string | null;
@@ -196,6 +198,29 @@ export function mapSaleToDomicilioOrder(s: any): PosDomicilioOrder | null {
   const municipality =
     exactMuni?.nombre || rawMuni || munisForDept[0]?.nombre || 'San Salvador';
 
+  const rawMethod = String(s.paymentMethod || 'CASH').toUpperCase();
+  const explicitC807Mode = String(dom.c807PaymentMode || '').toUpperCase();
+  const explicitC807Service = String(dom.c807ServiceType || '').toUpperCase();
+
+  let c807PaymentMode: 'CONTRA_ENTREGA' | 'TARJETA' | 'TRANSFERENCIA' = 'CONTRA_ENTREGA';
+  if (explicitC807Mode === 'TARJETA' || explicitC807Mode === 'YA_PAGADO_TARJETA') {
+    c807PaymentMode = 'TARJETA';
+  } else if (explicitC807Mode === 'TRANSFERENCIA' || explicitC807Mode === 'YA_PAGADO_TRANSFERENCIA') {
+    c807PaymentMode = 'TRANSFERENCIA';
+  } else if (explicitC807Mode === 'CONTRA_ENTREGA' || explicitC807Mode === 'CONTRAENTREGA' || explicitC807Service === 'CCE') {
+    c807PaymentMode = 'CONTRA_ENTREGA';
+  } else if (explicitC807Service === 'SER') {
+    c807PaymentMode = rawMethod === 'CARD' ? 'TARJETA' : 'TRANSFERENCIA';
+  } else if (rawMethod === 'CARD' || rawMethod === 'WOMPI') {
+    c807PaymentMode = 'TARJETA';
+  } else if (rawMethod === 'TRANSFER') {
+    c807PaymentMode = 'TRANSFERENCIA';
+  } else {
+    c807PaymentMode = 'CONTRA_ENTREGA';
+  }
+
+  const c807ServiceType: 'CCE' | 'SER' = c807PaymentMode === 'CONTRA_ENTREGA' ? 'CCE' : 'SER';
+
   return {
     id: s.id,
     saleNumber: s.saleNumber || s.orderNumber,
@@ -215,6 +240,8 @@ export function mapSaleToDomicilioOrder(s: any): PosDomicilioOrder | null {
     total: Number(s.total || 0),
     paymentMethod: s.paymentMethod || 'CASH',
     paymentStatus: s.dteDocument?.estado === 'PROCESADO' ? 'COMPLETED' : (s.paymentStatus || 'PENDING'),
+    c807PaymentMode,
+    c807ServiceType,
     bodegaStatus: s.orderStatus || s.status || 'PENDING_PREPARATION',
     domicilioStatus,
     trackingNumber,
@@ -415,14 +442,16 @@ export default function PosDomicilioPanel({ onOrderChanged }: { onOrderChanged?:
                   </td>
                   <td className="py-2.5 px-3 text-slate-600">
                     <div>{PAYMENT_LABELS[o.paymentMethod] || o.paymentMethod}</div>
-                    <div className="text-[11px] font-bold flex items-center gap-1.5 mt-0.5">
-                      <span
-                        className={
-                          o.paymentStatus === 'COMPLETED' ? 'text-emerald-700' : 'text-amber-700'
-                        }
-                      >
-                        {PAYMENT_STATUS_LABELS[o.paymentStatus] || o.paymentStatus}
-                      </span>
+                    <div className="text-[11px] font-bold flex items-center gap-1.5 mt-0.5 flex-wrap">
+                      {o.c807ServiceType === 'CCE' ? (
+                        <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300 text-[9.5px] font-black">
+                          💵 C807 Contra Entrega (CCE · {money(o.total)})
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300 text-[9.5px] font-black">
+                          ✅ C807 Regular (SER · Sin cobro)
+                        </span>
+                      )}
                       <span className="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 text-[10px]">
                         {o.tipoComprobante === '03' ? 'CCF (03)' : 'FC (01)'}
                       </span>
@@ -529,6 +558,9 @@ function PosDomicilioDetailModal({
   const [editMuni, setEditMuni] = useState(o.municipality || 'San Salvador');
   const [editAddress, setEditAddress] = useState(o.shippingAddress);
   const [editRef, setEditRef] = useState(o.deliveryReference || '');
+  const [editC807Mode, setEditC807Mode] = useState<'CONTRA_ENTREGA' | 'TARJETA' | 'TRANSFERENCIA'>(
+    o.c807PaymentMode || 'CONTRA_ENTREGA'
+  );
 
   const [isEditingGuide, setIsEditingGuide] = useState(false);
   const [manualGuide, setManualGuide] = useState(o.trackingNumber || '');
@@ -595,6 +627,13 @@ function PosDomicilioDetailModal({
     setSavingDelivery(true);
     try {
       const staffToken = await getStaffToken();
+      const resolvedServiceType: 'CCE' | 'SER' = editC807Mode === 'CONTRA_ENTREGA' ? 'CCE' : 'SER';
+      const resolvedPayMethod =
+        editC807Mode === 'TARJETA'
+          ? 'CARD'
+          : editC807Mode === 'TRANSFERENCIA'
+          ? 'TRANSFER'
+          : 'CONTRA_ENTREGA';
       const res = await fetch('/api/sales', {
         method: 'PATCH',
         headers: {
@@ -604,6 +643,7 @@ function PosDomicilioDetailModal({
         body: JSON.stringify({
           id: o.id,
           saleNumber: o.saleNumber,
+          paymentMethod: resolvedPayMethod,
           isDomicilio: true,
           domicilio: {
             isDomicilio: true,
@@ -614,6 +654,8 @@ function PosDomicilioDetailModal({
             municipality: editMuni,
             shippingAddress: editAddress.trim(),
             deliveryReference: editRef.trim() || undefined,
+            c807PaymentMode: editC807Mode,
+            c807ServiceType: resolvedServiceType,
           },
         }),
       });
@@ -630,6 +672,9 @@ function PosDomicilioDetailModal({
         municipality: editMuni,
         shippingAddress: editAddress.trim(),
         deliveryReference: editRef.trim() || null,
+        paymentMethod: resolvedPayMethod,
+        c807PaymentMode: editC807Mode,
+        c807ServiceType: resolvedServiceType,
       });
       setIsEditingDelivery(false);
       return true;
@@ -657,6 +702,13 @@ function PosDomicilioDetailModal({
 
     setGeneratingGuide(true);
     try {
+      const resolvedServiceType: 'CCE' | 'SER' = editC807Mode === 'CONTRA_ENTREGA' ? 'CCE' : 'SER';
+      const resolvedPayMethod =
+        editC807Mode === 'TARJETA'
+          ? 'CARD'
+          : editC807Mode === 'TRANSFERENCIA'
+          ? 'TRANSFER'
+          : 'CONTRA_ENTREGA';
       const staffToken = await getStaffToken();
       const res = await fetch('/api/sales', {
         method: 'PATCH',
@@ -667,6 +719,7 @@ function PosDomicilioDetailModal({
         body: JSON.stringify({
           id: o.id,
           saleNumber: o.saleNumber,
+          paymentMethod: resolvedPayMethod,
           isDomicilio: true,
           domicilio: {
             isDomicilio: true,
@@ -677,6 +730,8 @@ function PosDomicilioDetailModal({
             municipality: finalMuni,
             shippingAddress: finalAddress,
             deliveryReference: finalRef || undefined,
+            c807PaymentMode: editC807Mode,
+            c807ServiceType: resolvedServiceType,
           },
           generarGuiaC807: true,
         }),
@@ -691,6 +746,9 @@ function PosDomicilioDetailModal({
           municipality: finalMuni,
           shippingAddress: finalAddress,
           deliveryReference: finalRef || null,
+          paymentMethod: resolvedPayMethod,
+          c807PaymentMode: editC807Mode,
+          c807ServiceType: resolvedServiceType,
           trackingNumber: data.trackingNumber,
           courierName: 'C807 Express',
           domicilioStatus: 'EN_RUTA',
@@ -1014,6 +1072,66 @@ function PosDomicilioDetailModal({
                   </span>
                 }
               />
+            )}
+
+            {!o.trackingNumber && !isEditingGuide && (
+              <div className="pt-2 mt-2 border-t border-slate-200 space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-wide text-slate-600 block">
+                  Modalidad de Cobro para Guía C807:
+                </label>
+                <div className="grid grid-cols-1 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setEditC807Mode('CONTRA_ENTREGA')}
+                    className={`w-full px-3 py-1.5 rounded-lg text-xs font-bold flex items-center justify-between border transition-all cursor-pointer ${
+                      editC807Mode === 'CONTRA_ENTREGA'
+                        ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span>💵 Contra Entrega en Efectivo (CCE)</span>
+                    <span className={`font-mono font-black text-[11px] px-2 py-0.5 rounded ${
+                      editC807Mode === 'CONTRA_ENTREGA' ? 'bg-amber-700/60 text-white' : 'bg-amber-100 text-amber-900'
+                    }`}>
+                      Cobrar {money(o.total)}
+                    </span>
+                  </button>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setEditC807Mode('TARJETA')}
+                      className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-left border transition-all cursor-pointer ${
+                        editC807Mode === 'TARJETA'
+                          ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div>💳 Ya Pagó · Tarjeta</div>
+                      <div className={`text-[10px] font-mono font-black ${
+                        editC807Mode === 'TARJETA' ? 'text-emerald-100' : 'text-emerald-700'
+                      }`}>
+                        Regular (SER) • $0.00
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditC807Mode('TRANSFERENCIA')}
+                      className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-left border transition-all cursor-pointer ${
+                        editC807Mode === 'TRANSFERENCIA'
+                          ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div>🏦 Ya Pagó · Transferencia</div>
+                      <div className={`text-[10px] font-mono font-black ${
+                        editC807Mode === 'TRANSFERENCIA' ? 'text-emerald-100' : 'text-emerald-700'
+                      }`}>
+                        Regular (SER) • $0.00
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
 
             <div className="pt-2 mt-2 border-t border-slate-200 flex flex-wrap items-center gap-2">

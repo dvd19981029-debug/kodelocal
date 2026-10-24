@@ -200,6 +200,7 @@ export default function PosPage() {
   const [domicilioMunicipality, setDomicilioMunicipality] = useState('San Salvador');
   const [domicilioAddress, setDomicilioAddress] = useState('');
   const [domicilioReference, setDomicilioReference] = useState('');
+  const [domicilioPaymentMode, setDomicilioPaymentMode] = useState<'CONTRA_ENTREGA' | 'TARJETA' | 'TRANSFERENCIA'>('CONTRA_ENTREGA');
 
   // Buscador interactivo de clientes en Carrito (Combobox)
   const [cartCustomerQuery, setCartCustomerQuery] = useState('');
@@ -1461,6 +1462,7 @@ export default function PosPage() {
     setEditingQuote(null);
     setIsOrderDomicilio(false);
     setDomicilioReference('');
+    setDomicilioPaymentMode('CONTRA_ENTREGA');
   };
 
   const handleOpenNewProductInPos = () => {
@@ -2035,8 +2037,19 @@ export default function PosPage() {
           shippingAddress: resolvedClientAddress || '',
           deliveryReference: domicilioReference.trim() || undefined,
           domicilioStatus: 'PENDIENTE' as const,
+          c807PaymentMode: domicilioPaymentMode,
+          c807ServiceType: (domicilioPaymentMode === 'CONTRA_ENTREGA' ? 'CCE' : 'SER') as 'CCE' | 'SER',
         }
       : undefined;
+
+    const resolvedDomicilioPaymentMethod: 'CASH' | 'CARD' | 'TRANSFER' | 'CONTRA_ENTREGA' =
+      effectiveIsDomicilio
+        ? domicilioPaymentMode === 'TARJETA'
+          ? 'CARD'
+          : domicilioPaymentMode === 'TRANSFERENCIA'
+          ? 'TRANSFER'
+          : 'CONTRA_ENTREGA'
+        : 'CASH';
 
     const newOrder: SaleRecord = {
       id: `ord-${Date.now()}`,
@@ -2047,6 +2060,7 @@ export default function PosPage() {
       subtotal: subtotalNeto,
       ivaTotal: ivaCalculado,
       tipoComprobante,
+      paymentMethod: resolvedDomicilioPaymentMethod,
       isDomicilio: effectiveIsDomicilio,
       domicilio: domicilioPayload,
       cliente: {
@@ -2096,7 +2110,7 @@ export default function PosPage() {
           ivaTotal: ivaCalculado,
           total: cartSubtotal,
           tipoComprobante,
-          paymentMethod: 'CASH',
+          paymentMethod: resolvedDomicilioPaymentMethod,
           paymentStatus: 'PENDING',
           orderStatus: 'PENDING_PREPARATION',
           notes: JSON.stringify({
@@ -2803,6 +2817,14 @@ export default function PosPage() {
       const effectiveDirectDomicilio =
         isOrderDomicilio ||
         itemsToBill.some(it => it.productId === 'ENVIO-DOM' || String(it.name || '').toLowerCase().includes('envío a domicilio'));
+      const effectiveC807Mode: 'CONTRA_ENTREGA' | 'TARJETA' | 'TRANSFERENCIA' =
+        paymentMethod === 'CARD'
+          ? 'TARJETA'
+          : paymentMethod === 'TRANSFER'
+          ? 'TRANSFERENCIA'
+          : paymentMethod === 'CONTRA_ENTREGA'
+          ? 'CONTRA_ENTREGA'
+          : domicilioPaymentMode;
       const directDomicilioPayload = effectiveDirectDomicilio
         ? {
             isDomicilio: true,
@@ -2814,6 +2836,8 @@ export default function PosPage() {
             shippingAddress: domicilioAddress.trim() || clienteDireccion || '',
             deliveryReference: domicilioReference.trim() || undefined,
             domicilioStatus: 'PENDIENTE' as const,
+            c807PaymentMode: effectiveC807Mode,
+            c807ServiceType: (effectiveC807Mode === 'CONTRA_ENTREGA' ? 'CCE' : 'SER') as 'CCE' | 'SER',
           }
         : undefined;
 
@@ -3208,6 +3232,15 @@ export default function PosPage() {
                   onOpenQuoteHistory={() => setPosTab('prefacturas')}
                   onOpenCheckout={() => {
                     setOrderToInvoice(null);
+                    if (isOrderDomicilio) {
+                      setPaymentMethod(
+                        domicilioPaymentMode === 'TARJETA'
+                          ? 'CARD'
+                          : domicilioPaymentMode === 'TRANSFERENCIA'
+                          ? 'TRANSFER'
+                          : 'CONTRA_ENTREGA'
+                      );
+                    }
                     setIsCheckoutOpen(true);
                   }}
                   isOrderDomicilio={isOrderDomicilio}
@@ -3222,6 +3255,8 @@ export default function PosPage() {
                   setDomicilioAddress={setDomicilioAddress}
                   domicilioReference={domicilioReference}
                   setDomicilioReference={setDomicilioReference}
+                  domicilioPaymentMode={domicilioPaymentMode}
+                  setDomicilioPaymentMode={setDomicilioPaymentMode}
                 />
               </div>
             </div>
@@ -3347,6 +3382,15 @@ export default function PosPage() {
                       onOpenCheckout={() => {
                         setIsMobileCartOpen(false);
                         setOrderToInvoice(null);
+                        if (isOrderDomicilio) {
+                          setPaymentMethod(
+                            domicilioPaymentMode === 'TARJETA'
+                              ? 'CARD'
+                              : domicilioPaymentMode === 'TRANSFERENCIA'
+                              ? 'TRANSFER'
+                              : 'CONTRA_ENTREGA'
+                          );
+                        }
                         setIsCheckoutOpen(true);
                       }}
                       isOrderDomicilio={isOrderDomicilio}
@@ -3361,6 +3405,8 @@ export default function PosPage() {
                       setDomicilioAddress={setDomicilioAddress}
                       domicilioReference={domicilioReference}
                       setDomicilioReference={setDomicilioReference}
+                      domicilioPaymentMode={domicilioPaymentMode}
+                      setDomicilioPaymentMode={setDomicilioPaymentMode}
                     />
                   </div>
                 </div>

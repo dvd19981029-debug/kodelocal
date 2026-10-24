@@ -566,6 +566,23 @@ export async function PATCH(request: Request) {
           { status: 409 }
         );
       }
+      const rawPaymentMode = String(body.c807PaymentMode || '').toUpperCase().trim();
+      const effOrderPaymentMethod = String(order.paymentMethod || '').toUpperCase().trim();
+      let resolvedTipoPagoC807: 'CONTRAENTREGA' | 'TARJETA' | 'TRANSFERENCIA' = 'CONTRAENTREGA';
+      if (rawPaymentMode === 'TARJETA' || rawPaymentMode === 'YA_PAGADO_TARJETA') {
+        resolvedTipoPagoC807 = 'TARJETA';
+      } else if (rawPaymentMode === 'TRANSFERENCIA' || rawPaymentMode === 'YA_PAGADO_TRANSFERENCIA') {
+        resolvedTipoPagoC807 = 'TRANSFERENCIA';
+      } else if (rawPaymentMode === 'CONTRA_ENTREGA' || rawPaymentMode === 'CONTRAENTREGA') {
+        resolvedTipoPagoC807 = 'CONTRAENTREGA';
+      } else if (effOrderPaymentMethod === 'CARD' || effOrderPaymentMethod === 'WOMPI' || effOrderPaymentMethod === 'TARJETA') {
+        resolvedTipoPagoC807 = 'TARJETA';
+      } else if (effOrderPaymentMethod === 'TRANSFER' || effOrderPaymentMethod === 'TRANSFERENCIA') {
+        resolvedTipoPagoC807 = 'TRANSFERENCIA';
+      } else {
+        resolvedTipoPagoC807 = 'CONTRAENTREGA';
+      }
+
       const c807Res = await c807Client.generarGuia({
         numero_pedido: order.orderNumber,
         cliente_nombre: order.customerName,
@@ -575,12 +592,7 @@ export async function PATCH(request: Request) {
         cliente_departamento: cleanDepartment || order.department,
         cliente_municipio: cleanMunicipality || order.municipality,
         cliente_referencia: (cleanDeliveryReference !== undefined ? cleanDeliveryReference : order.deliveryReference) || undefined,
-        tipo_pago:
-          order.paymentStatus === 'COMPLETED'
-            ? 'TARJETA'
-            : order.paymentMethod === 'TRANSFER'
-            ? 'TRANSFERENCIA'
-            : 'CONTRAENTREGA',
+        tipo_pago: resolvedTipoPagoC807,
         total: Number(order.total || 0),
         observaciones: `Pedido Aromaniak #${order.orderNumber}`,
       });

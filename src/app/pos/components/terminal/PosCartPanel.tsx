@@ -50,6 +50,8 @@ export interface PosCartPanelProps {
   setDomicilioAddress?: (val: string) => void;
   domicilioReference?: string;
   setDomicilioReference?: (val: string) => void;
+  domicilioPaymentMode?: 'CONTRA_ENTREGA' | 'TARJETA' | 'TRANSFERENCIA';
+  setDomicilioPaymentMode?: (val: 'CONTRA_ENTREGA' | 'TARJETA' | 'TRANSFERENCIA') => void;
   // Bodega order toast
   orderSentToast: { orderNumber: string } | null;
   setPosTab: (tab: PosTab) => void;
@@ -101,6 +103,8 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
   setDomicilioAddress,
   domicilioReference = '',
   setDomicilioReference,
+  domicilioPaymentMode = 'CONTRA_ENTREGA',
+  setDomicilioPaymentMode,
   orderSentToast,
   setPosTab,
   getItemUnitPrice,
@@ -454,6 +458,67 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
                       placeholder="Ej. Frente a parque, portón negro..."
                       className="w-full px-2 py-1 text-[11px] rounded-md border border-blue-200 bg-white text-slate-800"
                     />
+                  </div>
+                  <div className="pt-1 border-t border-blue-200/70">
+                    <label className="text-[9.5px] font-black text-blue-950 uppercase tracking-wide block mb-1">
+                      Tipo de Servicio / Cobro en Guía C807 *
+                    </label>
+                    <div className="grid grid-cols-1 gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setDomicilioPaymentMode && setDomicilioPaymentMode('CONTRA_ENTREGA')}
+                        className={`w-full px-2.5 py-1.5 rounded-md text-[10.5px] font-bold text-left flex items-center justify-between border transition-all ${
+                          domicilioPaymentMode === 'CONTRA_ENTREGA'
+                            ? 'bg-amber-500 text-white border-amber-600 shadow-2xs'
+                            : 'bg-white text-slate-700 border-blue-200 hover:bg-blue-50/50'
+                        }`}
+                      >
+                        <span>💵 Contra Entrega en Efectivo</span>
+                        <span className={`text-[9px] font-mono font-black px-1.5 py-0.5 rounded ${
+                          domicilioPaymentMode === 'CONTRA_ENTREGA'
+                            ? 'bg-amber-700/60 text-white'
+                            : 'bg-amber-100 text-amber-900'
+                        }`}>
+                          CCE • Cobrar ${cartSubtotal.toFixed(2)}
+                        </span>
+                      </button>
+
+                      <div className="grid grid-cols-2 gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setDomicilioPaymentMode && setDomicilioPaymentMode('TARJETA')}
+                          className={`px-2 py-1.5 rounded-md text-[10px] font-bold text-left flex flex-col justify-between border transition-all ${
+                            domicilioPaymentMode === 'TARJETA'
+                              ? 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
+                              : 'bg-white text-slate-700 border-blue-200 hover:bg-blue-50/50'
+                          }`}
+                        >
+                          <span>💳 Ya Pagó (Tarjeta)</span>
+                          <span className={`text-[8.5px] font-mono font-black mt-0.5 ${
+                            domicilioPaymentMode === 'TARJETA' ? 'text-emerald-100' : 'text-emerald-700'
+                          }`}>
+                            Regular (SER) • $0.00
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setDomicilioPaymentMode && setDomicilioPaymentMode('TRANSFERENCIA')}
+                          className={`px-2 py-1.5 rounded-md text-[10px] font-bold text-left flex flex-col justify-between border transition-all ${
+                            domicilioPaymentMode === 'TRANSFERENCIA'
+                              ? 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
+                              : 'bg-white text-slate-700 border-blue-200 hover:bg-blue-50/50'
+                          }`}
+                        >
+                          <span>🏦 Ya Pagó (Transfer.)</span>
+                          <span className={`text-[8.5px] font-mono font-black mt-0.5 ${
+                            domicilioPaymentMode === 'TRANSFERENCIA' ? 'text-emerald-100' : 'text-emerald-700'
+                          }`}>
+                            Regular (SER) • $0.00
+                          </span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

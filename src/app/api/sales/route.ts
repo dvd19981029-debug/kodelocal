@@ -1129,6 +1129,20 @@ export async function PATCH(request: Request) {
       } catch (_) {}
     }
 
+    if (parsedNotesObj?.domicilio && paymentMethod && !body.domicilio?.c807PaymentMode) {
+      const pmUpper = String(paymentMethod).toUpperCase().trim();
+      if (pmUpper === 'CARD' || pmUpper === 'WOMPI') {
+        parsedNotesObj.domicilio.c807PaymentMode = 'TARJETA';
+        parsedNotesObj.domicilio.c807ServiceType = 'SER';
+      } else if (pmUpper === 'TRANSFER') {
+        parsedNotesObj.domicilio.c807PaymentMode = 'TRANSFERENCIA';
+        parsedNotesObj.domicilio.c807ServiceType = 'SER';
+      } else if (pmUpper === 'CONTRA_ENTREGA' || pmUpper === 'CONTRAENTREGA') {
+        parsedNotesObj.domicilio.c807PaymentMode = 'CONTRA_ENTREGA';
+        parsedNotesObj.domicilio.c807ServiceType = 'CCE';
+      }
+    }
+
     if (body.isDomicilio !== undefined || body.domicilio || body.generarGuiaC807) {
       if (!parsedNotesObj) {
         parsedNotesObj = {
@@ -1267,6 +1281,56 @@ export async function PATCH(request: Request) {
         );
       }
 
+      const rawPaymentMode = String(
+        body.domicilio?.c807PaymentMode ||
+        dom.c807PaymentMode ||
+        ''
+      ).toUpperCase().trim();
+      const rawServiceType = String(
+        body.domicilio?.c807ServiceType ||
+        dom.c807ServiceType ||
+        ''
+      ).toUpperCase().trim();
+      const effPaymentMethod = String(paymentMethod || sale.paymentMethod || '').toUpperCase().trim();
+
+      let resolvedTipoPagoC807: 'CONTRAENTREGA' | 'TARJETA' | 'TRANSFERENCIA' = 'CONTRAENTREGA';
+      let resolvedPaymentMode: 'CONTRA_ENTREGA' | 'TARJETA' | 'TRANSFERENCIA' = 'CONTRA_ENTREGA';
+      let resolvedServiceType: 'CCE' | 'SER' = 'CCE';
+
+      if (rawPaymentMode === 'TARJETA' || rawPaymentMode === 'YA_PAGADO_TARJETA') {
+        resolvedTipoPagoC807 = 'TARJETA';
+        resolvedPaymentMode = 'TARJETA';
+        resolvedServiceType = 'SER';
+      } else if (rawPaymentMode === 'TRANSFERENCIA' || rawPaymentMode === 'YA_PAGADO_TRANSFERENCIA') {
+        resolvedTipoPagoC807 = 'TRANSFERENCIA';
+        resolvedPaymentMode = 'TRANSFERENCIA';
+        resolvedServiceType = 'SER';
+      } else if (rawPaymentMode === 'CONTRA_ENTREGA' || rawPaymentMode === 'CONTRAENTREGA') {
+        resolvedTipoPagoC807 = 'CONTRAENTREGA';
+        resolvedPaymentMode = 'CONTRA_ENTREGA';
+        resolvedServiceType = 'CCE';
+      } else if (rawServiceType === 'SER') {
+        resolvedTipoPagoC807 = effPaymentMethod === 'CARD' || effPaymentMethod === 'WOMPI' ? 'TARJETA' : 'TRANSFERENCIA';
+        resolvedPaymentMode = resolvedTipoPagoC807 === 'TARJETA' ? 'TARJETA' : 'TRANSFERENCIA';
+        resolvedServiceType = 'SER';
+      } else if (rawServiceType === 'CCE') {
+        resolvedTipoPagoC807 = 'CONTRAENTREGA';
+        resolvedPaymentMode = 'CONTRA_ENTREGA';
+        resolvedServiceType = 'CCE';
+      } else if (effPaymentMethod === 'CARD' || effPaymentMethod === 'WOMPI') {
+        resolvedTipoPagoC807 = 'TARJETA';
+        resolvedPaymentMode = 'TARJETA';
+        resolvedServiceType = 'SER';
+      } else if (effPaymentMethod === 'TRANSFER') {
+        resolvedTipoPagoC807 = 'TRANSFERENCIA';
+        resolvedPaymentMode = 'TRANSFERENCIA';
+        resolvedServiceType = 'SER';
+      } else {
+        resolvedTipoPagoC807 = 'CONTRAENTREGA';
+        resolvedPaymentMode = 'CONTRA_ENTREGA';
+        resolvedServiceType = 'CCE';
+      }
+
       const c807Res = await c807Client.generarGuia({
         numero_pedido: sale.saleNumber,
         cliente_nombre: customerName,
@@ -1276,12 +1340,7 @@ export async function PATCH(request: Request) {
         cliente_departamento: department,
         cliente_municipio: municipality,
         cliente_referencia: deliveryReference,
-        tipo_pago:
-          sale.paymentStatus === 'COMPLETED'
-            ? 'TARJETA'
-            : sale.paymentMethod === 'TRANSFER'
-            ? 'TRANSFERENCIA'
-            : 'CONTRAENTREGA',
+        tipo_pago: resolvedTipoPagoC807,
         total: Number(sale.total || 0),
         observaciones: `Pedido POS Aromaniak #${sale.saleNumber}`,
       });
@@ -1304,6 +1363,8 @@ export async function PATCH(request: Request) {
         municipality,
         shippingAddress,
         deliveryReference,
+        c807PaymentMode: resolvedPaymentMode,
+        c807ServiceType: resolvedServiceType,
         trackingNumber: c807Res.numero_guia,
         courierName: 'C807 Express',
         domicilioStatus: 'EN_RUTA',

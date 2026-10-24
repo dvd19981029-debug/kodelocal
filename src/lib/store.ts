@@ -87,6 +87,8 @@ export interface SaleRecord {
     trackingNumber?: string | null;
     courierName?: string | null;
     domicilioStatus?: string;
+    c807PaymentMode?: 'CONTRA_ENTREGA' | 'TARJETA' | 'TRANSFERENCIA';
+    c807ServiceType?: 'CCE' | 'SER';
   };
   vendedor?: string;
   cajero?: string;
