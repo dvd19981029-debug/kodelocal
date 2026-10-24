@@ -193,7 +193,17 @@ export default function ThermalTicket({ ticket }: ThermalTicketProps) {
 
               {/* FORMA DE PAGO */}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3px' }}>
-                <span>{currentTicket.paymentMethod === 'CARD' ? 'TARJETA (WOMPI)' : currentTicket.paymentMethod === 'TRANSFER' ? 'TRANSFERENCIA' : 'EFECTIVO'}:</span>
+                <span>
+                  {currentTicket.paymentMethod === 'CARD'
+                    ? 'TARJETA'
+                    : currentTicket.paymentMethod === 'TRANSFER'
+                    ? 'TRANSFERENCIA'
+                    : currentTicket.paymentMethod === 'WOMPI'
+                    ? 'WOMPI'
+                    : currentTicket.paymentMethod === 'CONTRA_ENTREGA'
+                    ? 'CONTRA ENTREGA'
+                    : 'EFECTIVO'}:
+                </span>
                 <span style={{ fontFamily: 'monospace' }}>{total}</span>
               </div>
 

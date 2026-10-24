@@ -260,9 +260,13 @@ function renderTicketToDoc(doc: any, ticket: SaleRecord): number {
 
   // Forma de pago
   const payLabel = ticket.paymentMethod === 'CARD'
-    ? 'TARJETA (WOMPI)'
+    ? 'TARJETA'
     : ticket.paymentMethod === 'TRANSFER'
     ? 'TRANSFERENCIA'
+    : ticket.paymentMethod === 'WOMPI'
+    ? 'WOMPI'
+    : ticket.paymentMethod === 'CONTRA_ENTREGA'
+    ? 'CONTRA ENTREGA'
     : 'EFECTIVO';
 
   doc.setFont('courier', 'normal');
@@ -1043,8 +1047,10 @@ function renderDailySummaryByPaymentToDoc(
   // Cálculos por forma de pago
   const byMethod = {
     CASH: { label: 'EFECTIVO', count: 0, total: 0 },
-    CARD: { label: 'TARJETA / POS / WOMPI', count: 0, total: 0 },
+    CARD: { label: 'TARJETA / POS', count: 0, total: 0 },
     TRANSFER: { label: 'TRANSFERENCIA BANCARIA', count: 0, total: 0 },
+    WOMPI: { label: 'WOMPI (ENLACE)', count: 0, total: 0 },
+    CONTRA_ENTREGA: { label: 'CONTRA ENTREGA', count: 0, total: 0 },
     BITCOIN: { label: 'BITCOIN / CRIPTO', count: 0, total: 0 },
   };
 
@@ -1094,8 +1100,9 @@ function renderDailySummaryByPaymentToDoc(
   drawSolidDivider(y);
   y += 3.3;
 
-  for (const key of ['CASH', 'CARD', 'TRANSFER', 'BITCOIN'] as const) {
+  for (const key of ['CASH', 'CARD', 'TRANSFER', 'WOMPI', 'CONTRA_ENTREGA', 'BITCOIN'] as const) {
     const row = byMethod[key];
+    if (key === 'BITCOIN' && row.count === 0) continue;
     doc.setFont('courier', key === 'CASH' ? 'bold' : 'normal');
     doc.setFontSize(7.1);
     doc.text(`${row.label} (${row.count}):`, leftM, y);
@@ -1164,6 +1171,10 @@ function renderDailySummaryByPaymentToDoc(
         ? 'TARJ'
         : s.paymentMethod === 'TRANSFER'
         ? 'TRAN'
+        : s.paymentMethod === 'WOMPI'
+        ? 'WOMP'
+        : s.paymentMethod === 'CONTRA_ENTREGA'
+        ? 'C.EN'
         : 'BTC';
     const amt = Number(s.total || 0);
 

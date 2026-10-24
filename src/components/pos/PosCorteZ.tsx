@@ -137,7 +137,7 @@ export const PosCorteZ: React.FC = () => {
     acc[s.paymentMethod] = (acc[s.paymentMethod] || 0) + Number(s.total);
     acc.total += Number(s.total);
     return acc;
-  }, { CASH: 0, CARD: 0, TRANSFER: 0, BITCOIN: 0, total: 0 });
+  }, { CASH: 0, CARD: 0, TRANSFER: 0, WOMPI: 0, CONTRA_ENTREGA: 0, BITCOIN: 0, total: 0 });
 
   const egresosCaja = (activeShift.movements || []).filter((m: any) => m.type === 'EGRESO').reduce((sum: number, m: any) => sum + Number(m.amount), 0);
   const esperadoEnCaja = Number(activeShift.initialAmount) + totalesVentas.CASH - egresosCaja;
@@ -171,7 +171,9 @@ export const PosCorteZ: React.FC = () => {
             <div className="space-y-1 text-sm">
               <div className="flex justify-between"><span className="text-slate-500">Efectivo</span><span className="font-mono font-bold">${totalesVentas.CASH.toFixed(2)}</span></div>
               <div className="flex justify-between"><span className="text-slate-500">Tarjeta</span><span className="font-mono font-bold">${totalesVentas.CARD.toFixed(2)}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">Transf. / Link</span><span className="font-mono font-bold">${totalesVentas.TRANSFER.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">Transferencia</span><span className="font-mono font-bold">${totalesVentas.TRANSFER.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">Wompi</span><span className="font-mono font-bold">${totalesVentas.WOMPI.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">Contra Entrega</span><span className="font-mono font-bold">${totalesVentas.CONTRA_ENTREGA.toFixed(2)}</span></div>
               <div className="flex justify-between border-t pt-1 mt-1"><span className="font-bold">Total Vendido</span><span className="font-mono font-black text-indigo-700">${totalesVentas.total.toFixed(2)}</span></div>
             </div>
           </div>

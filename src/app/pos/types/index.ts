@@ -29,7 +29,7 @@ export type CajaSubTab = 'listas_facturar' | 'ventas_dia' | 'dtes_emitidos' | 'c
 
 export type DteFilterType = 'ALL' | '01' | '03' | 'TICKET';
 
-export type PaymentMethod = 'CASH' | 'CARD' | 'TRANSFER' | 'BITCOIN';
+export type PaymentMethod = 'CASH' | 'CARD' | 'TRANSFER' | 'WOMPI' | 'CONTRA_ENTREGA' | 'BITCOIN';
 
 export type TipoComprobante = 'TICKET' | '01' | '03';
 

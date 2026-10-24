@@ -65,9 +65,11 @@ export interface PosDomicilioOrder {
 }
 
 const PAYMENT_LABELS: Record<string, string> = {
-  CASH: 'Efectivo / Contraentrega',
-  CARD: 'Tarjeta (POS / Wompi)',
+  CASH: 'Efectivo',
+  CARD: 'Tarjeta (POS)',
   TRANSFER: 'Transferencia bancaria',
+  WOMPI: 'Wompi',
+  CONTRA_ENTREGA: 'Contra Entrega',
   BITCOIN: 'Bitcoin',
   OTHER: 'Otro',
 };

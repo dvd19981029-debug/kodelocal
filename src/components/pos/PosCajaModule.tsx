@@ -145,10 +145,14 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
     let cashTotal = 0;
     let cardTotal = 0;
     let transferTotal = 0;
+    let wompiTotal = 0;
+    let contraEntregaTotal = 0;
     let bitcoinTotal = 0;
     let cashCount = 0;
     let cardCount = 0;
     let transferCount = 0;
+    let wompiCount = 0;
+    let contraEntregaCount = 0;
     let bitcoinCount = 0;
 
     for (const s of todayInvoicedSales) {
@@ -164,6 +168,12 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
       } else if (pm === 'TRANSFER') {
         transferTotal += amt;
         transferCount += 1;
+      } else if (pm === 'WOMPI') {
+        wompiTotal += amt;
+        wompiCount += 1;
+      } else if (pm === 'CONTRA_ENTREGA') {
+        contraEntregaTotal += amt;
+        contraEntregaCount += 1;
       } else {
         bitcoinTotal += amt;
         bitcoinCount += 1;
@@ -175,10 +185,14 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
       cashTotal,
       cardTotal,
       transferTotal,
+      wompiTotal,
+      contraEntregaTotal,
       bitcoinTotal,
       cashCount,
       cardCount,
       transferCount,
+      wompiCount,
+      contraEntregaCount,
       bitcoinCount,
     };
   }, [todayInvoicedSales]);
@@ -643,7 +657,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
           </div>
 
           {/* Tarjetas de Resumen del Día y Efectivo en Caja */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
             <div
               onClick={() => setOnlyCashToday(true)}
               className={`clay-card p-4 border-l-4 border-emerald-500 cursor-pointer transition-all ${
@@ -656,18 +670,18 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                 </span>
                 <Banknote className="w-4 h-4 text-emerald-600" />
               </div>
-              <div className="text-2xl font-black text-emerald-700 font-mono mt-1">
+              <div className="text-xl font-black text-emerald-700 font-mono mt-1">
                 +${todayMetrics.cashTotal.toFixed(2)}
               </div>
               <span className="text-[10.5px] text-emerald-800 font-bold block mt-0.5">
-                {todayMetrics.cashCount} {todayMetrics.cashCount === 1 ? 'venta cobrada' : 'ventas cobradas'} en efectivo hoy
+                {todayMetrics.cashCount} {todayMetrics.cashCount === 1 ? 'venta' : 'ventas'} en efectivo
               </span>
             </div>
 
             <div className="clay-card p-4 border-l-4 border-indigo-500 bg-white">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                  Tarjeta / POS / Wompi
+                  Tarjeta / POS
                 </span>
                 <CreditCard className="w-4 h-4 text-indigo-600" />
               </div>
@@ -675,14 +689,14 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                 ${todayMetrics.cardTotal.toFixed(2)}
               </div>
               <span className="text-[10.5px] text-slate-500 font-semibold block mt-0.5">
-                {todayMetrics.cardCount} {todayMetrics.cardCount === 1 ? 'transacción' : 'transacciones'} con tarjeta
+                {todayMetrics.cardCount} {todayMetrics.cardCount === 1 ? 'transacción' : 'transacciones'}
               </span>
             </div>
 
             <div className="clay-card p-4 border-l-4 border-purple-500 bg-white">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                  Transferencias Hoy
+                  Transferencias
                 </span>
                 <Send className="w-4 h-4 text-purple-600" />
               </div>
@@ -691,7 +705,36 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
               </div>
               <span className="text-[10.5px] text-slate-500 font-semibold block mt-0.5">
                 {todayMetrics.transferCount} {todayMetrics.transferCount === 1 ? 'transferencia' : 'transferencias'}
-                {todayMetrics.bitcoinCount > 0 ? ` • BTC: $${todayMetrics.bitcoinTotal.toFixed(2)}` : ''}
+              </span>
+            </div>
+
+            <div className="clay-card p-4 border-l-4 border-violet-500 bg-white">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  Wompi
+                </span>
+                <Link2 className="w-4 h-4 text-violet-600" />
+              </div>
+              <div className="text-xl font-black text-violet-700 font-mono mt-1">
+                ${todayMetrics.wompiTotal.toFixed(2)}
+              </div>
+              <span className="text-[10.5px] text-slate-500 font-semibold block mt-0.5">
+                {todayMetrics.wompiCount} {todayMetrics.wompiCount === 1 ? 'enlace' : 'enlaces'}
+              </span>
+            </div>
+
+            <div className="clay-card p-4 border-l-4 border-blue-500 bg-white">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  Contra Entrega
+                </span>
+                <Truck className="w-4 h-4 text-blue-600" />
+              </div>
+              <div className="text-xl font-black text-blue-700 font-mono mt-1">
+                ${todayMetrics.contraEntregaTotal.toFixed(2)}
+              </div>
+              <span className="text-[10.5px] text-slate-500 font-semibold block mt-0.5">
+                {todayMetrics.contraEntregaCount} {todayMetrics.contraEntregaCount === 1 ? 'envío' : 'envíos'}
               </span>
             </div>
 
@@ -705,11 +748,11 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                 </span>
                 <ReceiptText className="w-4 h-4 text-slate-700" />
               </div>
-              <div className="text-2xl font-black text-slate-900 font-mono mt-1">
+              <div className="text-xl font-black text-slate-900 font-mono mt-1">
                 ${todayMetrics.total.toFixed(2)}
               </div>
               <span className="text-[10.5px] text-slate-500 font-bold block mt-0.5">
-                {todayInvoicedSales.length} facturaciones emitidas hoy
+                {todayInvoicedSales.length} facturaciones hoy
               </span>
             </div>
           </div>
@@ -854,6 +897,10 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                                   ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
                                   : sale.paymentMethod === 'TRANSFER'
                                   ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                  : sale.paymentMethod === 'WOMPI'
+                                  ? 'bg-violet-50 text-violet-700 border-violet-200'
+                                  : sale.paymentMethod === 'CONTRA_ENTREGA'
+                                  ? 'bg-blue-50 text-blue-700 border-blue-200'
                                   : 'bg-amber-50 text-amber-700 border-amber-200'
                               }`}
                             >
@@ -863,6 +910,10 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                                 ? 'Tarjeta'
                                 : sale.paymentMethod === 'TRANSFER'
                                 ? 'Transferencia'
+                                : sale.paymentMethod === 'WOMPI'
+                                ? 'Wompi'
+                                : sale.paymentMethod === 'CONTRA_ENTREGA'
+                                ? 'Contra Entrega'
                                 : 'Bitcoin'}
                             </span>
                           </td>
@@ -1086,7 +1137,17 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                           )}
                         </td>
                         <td className="py-2.5 px-3 text-slate-600 font-bold text-[11px]">
-                          {sale.paymentMethod === 'CASH' ? 'Efectivo' : sale.paymentMethod === 'CARD' ? 'Tarjeta' : sale.paymentMethod === 'TRANSFER' ? 'Transferencia' : 'Bitcoin'}
+                          {sale.paymentMethod === 'CASH'
+                            ? 'Efectivo'
+                            : sale.paymentMethod === 'CARD'
+                            ? 'Tarjeta'
+                            : sale.paymentMethod === 'TRANSFER'
+                            ? 'Transferencia'
+                            : sale.paymentMethod === 'WOMPI'
+                            ? 'Wompi'
+                            : sale.paymentMethod === 'CONTRA_ENTREGA'
+                            ? 'Contra Entrega'
+                            : 'Bitcoin'}
                         </td>
                         <td className="py-2.5 px-3 text-right font-mono font-black text-xs text-indigo-700">
                           ${sale.total.toFixed(2)}

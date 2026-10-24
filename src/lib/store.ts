@@ -40,7 +40,7 @@ export interface SaleRecord {
   total: number;
   subtotal: number;
   ivaTotal: number;
-  paymentMethod?: 'CASH' | 'CARD' | 'TRANSFER' | 'BITCOIN';
+  paymentMethod?: 'CASH' | 'CARD' | 'TRANSFER' | 'WOMPI' | 'CONTRA_ENTREGA' | 'BITCOIN';
   paymentStatus?: string;
   notes?: string;
   cashReceived?: number;

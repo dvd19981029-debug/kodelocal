@@ -1229,7 +1229,7 @@ export default function ComprasModule({
                             <input
                               type="number"
                               min="0"
-                              step="0.01"
+                              step="any"
                               required
                               placeholder="0.00"
                               value={item.costPrice === 0 ? '' : item.costPrice}
@@ -1646,7 +1646,7 @@ export default function ComprasModule({
                   <span className="font-black text-slate-400 text-base">$</span>
                   <input
                     type="number"
-                    step="0.01"
+                    step="any"
                     min="0.01"
                     max={activeAbonoPurchase.saldoPendiente}
                     required
@@ -1944,7 +1944,7 @@ export default function ComprasModule({
                   <label className="text-xs font-bold text-slate-700 block mb-1">Costo Unitario ($)</label>
                   <input
                     type="number"
-                    step="0.01"
+                    step="any"
                     min="0"
                     required
                     value={quickProdCost}
@@ -1956,7 +1956,7 @@ export default function ComprasModule({
                   <label className="text-xs font-bold text-slate-700 block mb-1">Precio Venta ($ PVP)</label>
                   <input
                     type="number"
-                    step="0.01"
+                    step="any"
                     min="0"
                     required
                     value={quickProdPrice}

@@ -254,7 +254,17 @@ export const PosSalesModule: React.FC<PosSalesModuleProps> = React.memo(({
                         ) : null}
                       </td>
                       <td className="py-2.5 px-3 text-slate-600 font-bold text-[11px]">
-                        {sale.paymentMethod === 'CASH' ? 'Efectivo' : sale.paymentMethod === 'CARD' ? 'Tarjeta' : 'Transferencia'}
+                        {sale.paymentMethod === 'CASH'
+                          ? 'Efectivo'
+                          : sale.paymentMethod === 'CARD'
+                          ? 'Tarjeta'
+                          : sale.paymentMethod === 'TRANSFER'
+                          ? 'Transferencia'
+                          : sale.paymentMethod === 'WOMPI'
+                          ? 'Wompi'
+                          : sale.paymentMethod === 'CONTRA_ENTREGA'
+                          ? 'Contra Entrega'
+                          : sale.paymentMethod}
                       </td>
                       <td className="py-2.5 px-3 text-right font-mono font-black text-xs text-indigo-700">
                         ${sale.total.toFixed(2)}
