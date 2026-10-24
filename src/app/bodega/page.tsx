@@ -424,18 +424,21 @@ export default function BodegaPage() {
                   paymentMethod: s.paymentMethod || 'CASH',
                   paymentStatus: hasProcessedDte ? 'COMPLETED' : (s.paymentStatus || 'COMPLETED'),
                   notes: s.notes || undefined,
+                  deliveryNotes: isDomicilioOrder && pNotes?.domicilio?.shippingAddress
+                    ? `Entrega: ${pNotes.domicilio.shippingAddress}, ${pNotes.domicilio.municipality || ''}, ${pNotes.domicilio.department || ''}${pNotes.domicilio.deliveryReference ? ` (Ref: ${pNotes.domicilio.deliveryReference})` : ''}`
+                    : undefined,
                   isDomicilio: isDomicilioOrder,
                   domicilio: pNotes?.domicilio || undefined,
                   status: hasProcessedDte ? 'COMPLETED' : (s.orderStatus || 'COMPLETED'),
                   vendedor: s.sellerName || s.cashierName || 'Vendedora Mostrador',
                   cliente: {
                     id: s.customerId || s.customer?.id || pNotes?.cliente?.id,
-                    nombre: s.customer?.name || pNotes?.cliente?.nombre || 'Consumidor Final',
+                    nombre: s.customer?.name || pNotes?.cliente?.nombre || pNotes?.domicilio?.customerName || 'Consumidor Final',
                     numDocumento: s.customer?.documentNum || pNotes?.cliente?.numDocumento || undefined,
                     nrc: s.customer?.nrc || pNotes?.cliente?.nrc || undefined,
-                    telefono: s.customer?.phone || pNotes?.cliente?.telefono || undefined,
-                    correo: s.customer?.email || pNotes?.cliente?.correo || undefined,
-                    direccion: s.customer?.address || pNotes?.cliente?.direccion || undefined,
+                    telefono: s.customer?.phone || pNotes?.cliente?.telefono || pNotes?.domicilio?.customerPhone || undefined,
+                    correo: s.customer?.email || pNotes?.cliente?.correo || pNotes?.domicilio?.customerEmail || undefined,
+                    direccion: s.customer?.address || pNotes?.cliente?.direccion || pNotes?.domicilio?.shippingAddress || undefined,
                   },
                   items: (s.items || []).map((it: any) => {
                     const prod = it.product || products.find((p: any) => p.id === it.productId || p.sku === it.productId);
@@ -561,6 +564,17 @@ export default function BodegaPage() {
   const handleToggleItemCheck = (orderId: string, itemIdx: number) => {
     const key = `${orderId}-${itemIdx}`;
     setCheckedItems(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  // Calcula el total real a cancelar por el cliente
+  const resolveOrderTotal = (order: SaleRecord): number => {
+    const explicit = Number(order.total || 0);
+    if (explicit > 0) return explicit;
+    const itemsSum = (order.items || []).reduce(
+      (acc, it) => acc + (Number(it.total) || Number(it.price || 0) * Number(it.quantity || 1)),
+      0
+    );
+    return itemsSum + Number(order.shippingCost || 0);
   };
 
   // Cancelar pedido desde bodega
@@ -1414,10 +1428,15 @@ export default function BodegaPage() {
                               )}
                             </div>
 
-                            <div className="text-right">
-                              <span className="text-[9px] font-bold text-slate-400 uppercase">Volumen</span>
-                              <span className="text-xs font-black text-slate-800 block font-mono">
-                                {order.items.reduce((a, b) => a + b.quantity, 0)} {order.items.some(i => i.unit === 'Onza') ? 'Oz' : 'Un.'}
+                            <div className="text-right shrink-0">
+                              <span className="text-[9.5px] font-black text-emerald-700 uppercase tracking-wider block">
+                                Total a Cancelar
+                              </span>
+                              <span className="text-base font-black text-emerald-800 bg-emerald-50 border border-emerald-300 px-2.5 py-0.5 rounded-lg inline-block font-mono shadow-2xs mt-0.5">
+                                ${resolveOrderTotal(order).toFixed(2)}
+                              </span>
+                              <span className="text-[10px] font-bold text-slate-400 block font-mono mt-0.5">
+                                Vol: {order.items.reduce((a, b) => a + b.quantity, 0)} {order.items.some(i => i.unit === 'Onza') ? 'Oz' : 'Un.'}
                               </span>
                             </div>
                           </div>
@@ -1623,6 +1642,18 @@ export default function BodegaPage() {
                               );
                             })}
                           </div>
+
+                          {/* Barra de Resumen de Total a Cancelar y Cliente */}
+                          <div className="mb-3 px-3 py-2 rounded-xl bg-emerald-50/80 border border-emerald-200 flex items-center justify-between gap-2 text-xs">
+                            <div className="truncate min-w-0">
+                              <span className="text-slate-500 font-semibold">Cliente: </span>
+                              <strong className="font-black text-slate-900">{order.cliente?.nombre || 'Consumidor Final'}</strong>
+                            </div>
+                            <div className="text-right shrink-0 font-mono">
+                              <span className="text-[10.5px] font-bold text-emerald-800 uppercase mr-1.5">Total a cancelar:</span>
+                              <strong className="text-sm font-black text-emerald-900">${resolveOrderTotal(order).toFixed(2)}</strong>
+                            </div>
+                          </div>
                         </div>
 
                         {/* Botones de Acción */}
@@ -1763,10 +1794,15 @@ export default function BodegaPage() {
                             )}
                           </div>
 
-                          <div className="text-right">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase">Ítems</span>
-                            <span className="text-xs font-black text-slate-800 block font-mono">
-                              {order.items.reduce((a, b) => a + b.quantity, 0)} {order.items.some(i => i.unit === 'Onza') ? 'Oz' : 'Un.'}
+                          <div className="text-right shrink-0">
+                            <span className="text-[9.5px] font-black text-emerald-700 uppercase tracking-wider block">
+                              Total a Cancelar
+                            </span>
+                            <span className="text-base font-black text-emerald-800 bg-emerald-50 border border-emerald-300 px-2.5 py-0.5 rounded-lg inline-block font-mono shadow-2xs mt-0.5">
+                              ${resolveOrderTotal(order).toFixed(2)}
+                            </span>
+                            <span className="text-[10px] font-bold text-slate-400 block font-mono mt-0.5">
+                              Ítems: {order.items.reduce((a, b) => a + b.quantity, 0)} {order.items.some(i => i.unit === 'Onza') ? 'Oz' : 'Un.'}
                             </span>
                           </div>
                         </div>
@@ -1869,6 +1905,17 @@ export default function BodegaPage() {
                             );
                           })}
                         </div>
+
+                        <div className="mb-3 px-3 py-2 rounded-xl bg-emerald-50/80 border border-emerald-200 flex items-center justify-between gap-2 text-xs">
+                          <div className="truncate min-w-0">
+                            <span className="text-slate-500 font-semibold">Cliente: </span>
+                            <strong className="font-black text-slate-900">{order.cliente?.nombre || 'Consumidor Final'}</strong>
+                          </div>
+                          <div className="text-right shrink-0 font-mono">
+                            <span className="text-[10.5px] font-bold text-emerald-800 uppercase mr-1.5">Total a cancelar:</span>
+                            <strong className="text-sm font-black text-emerald-900">${resolveOrderTotal(order).toFixed(2)}</strong>
+                          </div>
+                        </div>
                       </div>
 
                       <div className="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-end gap-1.5">
@@ -1956,13 +2003,14 @@ export default function BodegaPage() {
                         <th className="py-3 px-4">Cliente</th>
                         <th className="py-3 px-4">Vendedor</th>
                         <th className="py-3 px-4 text-center">Volumen Despachado</th>
+                        <th className="py-3 px-4 text-right">Total Cancelado</th>
                         <th className="py-3 px-4 text-center">Estado</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {filteredOrders.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="py-10 text-center text-slate-400 font-medium">
+                          <td colSpan={7} className="py-10 text-center text-slate-400 font-medium">
                             No se han registrado entregas todavía.
                           </td>
                         </tr>
@@ -1983,6 +2031,9 @@ export default function BodegaPage() {
                             </td>
                             <td className="py-2.5 px-4 text-center font-mono font-black text-slate-700">
                               {order.items.reduce((a, b) => a + b.quantity, 0)} {order.items.some(i => i.unit === 'Onza') ? 'Oz' : 'Un.'}
+                            </td>
+                            <td className="py-2.5 px-4 text-right font-mono font-black text-emerald-700">
+                              ${resolveOrderTotal(order).toFixed(2)}
                             </td>
                             <td className="py-2.5 px-4 text-center">
                               <span className="clay-badge text-[10px] font-black px-2.5 py-0.5 bg-emerald-100 text-emerald-800">

@@ -508,9 +508,38 @@ function renderDispatchOrderToDoc(doc: any, ticket: SaleRecord, products?: Produ
     hour12: true,
   }).toLowerCase();
 
+  const items = ticket.items || [];
+  const itemsSubtotal = items.reduce(
+    (acc, it) => acc + (Number(it.total) || Number(it.price || 0) * Number(it.quantity || 1)),
+    0
+  );
+  const shippingAmount = Number(ticket.shippingCost || 0);
+  const resolvedTotal = Number(ticket.total || 0) > 0 ? Number(ticket.total) : itemsSubtotal + shippingAmount;
+
+  const customerName = cleanPdfText(ticket.cliente?.nombre || 'Consumidor Final');
+  const customerPhone = cleanPdfText(ticket.cliente?.telefono || '');
+  const customerDoc = cleanPdfText(ticket.cliente?.numDocumento || ticket.cliente?.nrc || '');
+  const docTypeLabel =
+    (ticket.tipoComprobante || (ticket.cliente?.nrc ? '03' : '01')) === '03'
+      ? 'Credito Fiscal (CCF)'
+      : ticket.tipoComprobante === 'TICKET'
+      ? 'Ticket'
+      : 'Factura (FC)';
+  const paymentMethodLabel =
+    ticket.paymentMethod === 'CASH'
+      ? 'Efectivo'
+      : ticket.paymentMethod === 'CARD'
+      ? 'Tarjeta'
+      : ticket.paymentMethod === 'TRANSFER'
+      ? 'Transferencia'
+      : ticket.paymentMethod === 'CONTRA_ENTREGA'
+      ? 'Contra Entrega'
+      : cleanPdfText(ticket.paymentMethod || 'Efectivo');
+
   doc.setFont('courier', 'bold');
   doc.setFontSize(9.5);
   doc.text(`ORDEN: #${cleanPdfText(ticket.saleNumber || ticket.id)}`, leftM, y);
+  doc.text(`$${resolvedTotal.toFixed(2)}`, rightM, y, { align: 'right' });
   y += 3.8;
 
   doc.setFont('courier', 'normal');
@@ -520,14 +549,29 @@ function renderDispatchOrderToDoc(doc: any, ticket: SaleRecord, products?: Produ
 
   const origenLabel = cleanPdfText(ticket.vendedor || ticket.cajero || 'Caja 1');
   doc.text(`Origen: ${origenLabel.slice(0, 32)}`, leftM, y);
-  y += 3.5;
+  y += 3.3;
 
-  const customerName = cleanPdfText(ticket.cliente?.nombre || 'Consumidor Final');
+  doc.text(`Comprobante: ${docTypeLabel} | Pago: ${paymentMethodLabel}`, leftM, y);
+  y += 3.6;
+
   doc.setFont('courier', 'bold');
-  doc.setFontSize(8);
-  const splitClient = doc.splitTextToSize(`Cliente: ${customerName}`, 64);
+  doc.setFontSize(8.8);
+  const splitClient = doc.splitTextToSize(`CLIENTE: ${customerName.toUpperCase()}`, 64);
   for (const line of splitClient) {
     doc.text(line, leftM, y);
+    y += 3.5;
+  }
+
+  if (customerPhone || customerDoc) {
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(7.5);
+    const extraClientInfo = [
+      customerPhone ? `Tel: ${customerPhone}` : '',
+      customerDoc ? `Doc/NRC: ${customerDoc}` : '',
+    ]
+      .filter(Boolean)
+      .join('  |  ');
+    doc.text(extraClientInfo, leftM, y);
     y += 3.3;
   }
 
@@ -541,12 +585,17 @@ function renderDispatchOrderToDoc(doc: any, ticket: SaleRecord, products?: Produ
     }
   }
 
-  y += 1;
+  y += 0.8;
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(9.2);
+  doc.text('TOTAL A CANCELAR:', leftM, y);
+  doc.text(`$${resolvedTotal.toFixed(2)}`, rightM, y, { align: 'right' });
+  y += 2.2;
+
   drawSolidDivider(y, 0.35);
   y += 3.8;
 
   // ================= 3. DETALLE DE PRODUCTOS Y ESTANTES =================
-  const items = ticket.items || [];
   doc.setFont('courier', 'bold');
   doc.setFontSize(8);
   doc.text(`PRODUCTOS A PREPARAR (${items.length}):`, leftM, y);
@@ -644,6 +693,17 @@ function renderDispatchOrderToDoc(doc: any, ticket: SaleRecord, products?: Produ
     doc.text(`ESTANTE: ${shelfLocation}`, rightM, y, { align: 'right' });
     y += 3.2;
 
+    const lineUnitPrice = Number(it.price || 0);
+    const lineSubtotal = Number(it.total) || lineUnitPrice * Number(it.quantity || 1);
+    if (lineSubtotal > 0 || lineUnitPrice > 0) {
+      doc.setFont('courier', 'normal');
+      doc.setFontSize(7.5);
+      doc.text(`P.Unit: $${lineUnitPrice.toFixed(2)}`, leftM + 2, y);
+      doc.setFont('courier', 'bold');
+      doc.text(`Subtotal: $${lineSubtotal.toFixed(2)}`, rightM, y, { align: 'right' });
+      y += 3.1;
+    }
+
     drawDashedDivider(y);
     y += 3.8;
   }
@@ -651,10 +711,42 @@ function renderDispatchOrderToDoc(doc: any, ticket: SaleRecord, products?: Produ
   // ================= 4. RESUMEN Y CONTROL DE DESPACHO =================
   const totalUnidades = items.reduce((acc, it) => acc + (Number(it.quantity) || 1), 0);
   doc.setFont('courier', 'bold');
-  doc.setFontSize(8.2);
+  doc.setFontSize(8.0);
   doc.text(`TOTAL LINEAS: ${items.length}`, leftM, y);
   doc.text(`VOLUMEN TOTAL: ${totalUnidades}`, rightM, y, { align: 'right' });
-  y += 5;
+  y += 3.5;
+
+  drawSolidDivider(y, 0.35);
+  y += 3.8;
+
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(8.2);
+  const splitFooterClient = doc.splitTextToSize(`CLIENTE: ${customerName.toUpperCase()}`, 64);
+  for (const line of splitFooterClient) {
+    doc.text(line, leftM, y);
+    y += 3.4;
+  }
+
+  if (shippingAmount > 0) {
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(7.6);
+    doc.text('SUBTOTAL PRODUCTOS:', leftM, y);
+    doc.text(`$${itemsSubtotal.toFixed(2)}`, rightM, y, { align: 'right' });
+    y += 3.1;
+
+    doc.text('ENVIO A DOMICILIO:', leftM, y);
+    doc.text(`$${shippingAmount.toFixed(2)}`, rightM, y, { align: 'right' });
+    y += 3.3;
+  }
+
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(10.2);
+  doc.text('TOTAL A CANCELAR:', leftM, y);
+  doc.text(`$${resolvedTotal.toFixed(2)}`, rightM, y, { align: 'right' });
+  y += 2.5;
+
+  drawSolidDivider(y, 0.4);
+  y += 4.5;
 
   doc.setFont('courier', 'normal');
   doc.setFontSize(7.5);
