@@ -1083,6 +1083,56 @@ export async function PATCH(request: Request) {
           ...(body.domicilio.deliveryReference !== undefined ? { referencia: body.domicilio.deliveryReference } : {}),
         };
         parsedClientFromNotes = parsedNotesObj.cliente;
+
+        const manualTracking = String(body.domicilio.trackingNumber || '').trim();
+        if (manualTracking && !body.generarGuiaC807) {
+          const dom = parsedNotesObj.domicilio || {};
+          const cli = parsedNotesObj.cliente || {};
+          const cust = sale.customer;
+          const customerName = String(dom.customerName || cli.nombre || cust?.name || 'Cliente POS').trim();
+          const customerPhone = String(dom.customerPhone || cli.telefono || cust?.phone || '').trim();
+          const department = String(dom.department || cli.departamento || cust?.department || 'San Salvador').trim();
+          const municipality = String(dom.municipality || cli.municipio || cust?.municipality || 'San Salvador').trim();
+          const shippingAddress = String(dom.shippingAddress || cli.direccion || cust?.address || '').trim();
+          const deliveryReference = String(dom.deliveryReference || cli.referencia || '').trim() || undefined;
+
+          parsedNotesObj.domicilio.trackingNumber = manualTracking;
+          parsedNotesObj.domicilio.courierName = dom.courierName || 'C807 Express';
+          if (!parsedNotesObj.domicilio.domicilioStatus || parsedNotesObj.domicilio.domicilioStatus === 'PENDIENTE_GUIA') {
+            parsedNotesObj.domicilio.domicilioStatus = 'EN_RUTA';
+          }
+
+          try {
+            await prisma.shipment.upsert({
+              where: { trackingNumber: manualTracking },
+              create: {
+                trackingNumber: manualTracking,
+                saleId: sale.id,
+                customerName,
+                phone: customerPhone,
+                address: shippingAddress,
+                department,
+                municipality,
+                carrier: dom.courierName || 'C807 Express',
+                status: 'IN_TRANSIT',
+                orderTotal: Number(sale.total || 0),
+                deliveryCost: 2.90,
+                deliveryNotes: deliveryReference || `Pedido POS #${sale.saleNumber}`,
+              },
+              update: {
+                saleId: sale.id,
+                customerName,
+                phone: customerPhone,
+                address: shippingAddress,
+                department,
+                municipality,
+                carrier: dom.courierName || 'C807 Express',
+              },
+            });
+          } catch (shipErr) {
+            console.warn('No se pudo registrar Shipment manual:', shipErr);
+          }
+        }
       }
     }
 

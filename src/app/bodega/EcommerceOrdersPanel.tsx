@@ -467,6 +467,52 @@ function OrderDetailModal({
   const [editReference, setEditReference] = useState(o.deliveryReference || '');
   const [savingDelivery, setSavingDelivery] = useState(false);
 
+  const [isEditingGuide, setIsEditingGuide] = useState(false);
+  const [manualGuide, setManualGuide] = useState(o.trackingNumber || '');
+  const [savingManualGuide, setSavingManualGuide] = useState(false);
+
+  const handleSaveManualGuide = async () => {
+    const cleanGuide = manualGuide.trim();
+    if (!cleanGuide) {
+      alert('Por favor pega o ingresa el N° de guía.');
+      return;
+    }
+    setSavingManualGuide(true);
+    try {
+      const staffToken = await getStaffToken();
+      const res = await fetch('/api/ecommerce/orders', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({
+          orderId: o.id,
+          orderNumber: o.orderNumber,
+          trackingNumber: cleanGuide,
+          courierName: o.courierName || 'C807 Express',
+          orderStatus: o.orderStatus === 'ENTREGADO' ? 'ENTREGADO' : 'EN_RUTA',
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        onOrderUpdated({
+          id: o.id,
+          trackingNumber: cleanGuide,
+          courierName: o.courierName || 'C807 Express',
+          orderStatus: o.orderStatus === 'ENTREGADO' ? 'ENTREGADO' : 'EN_RUTA',
+        });
+        setIsEditingGuide(false);
+      } else {
+        alert(data.error || 'No se pudo guardar el N° de guía');
+      }
+    } catch (err: any) {
+      alert(`Error al guardar la guía: ${err?.message || 'Error de conexión'}`);
+    } finally {
+      setSavingManualGuide(false);
+    }
+  };
+
   useEffect(() => {
     setEditDepartment(o.department || 'San Salvador');
     setEditMunicipality(o.municipality || 'San Salvador');
@@ -777,10 +823,80 @@ function OrderDetailModal({
             <Row label="N° de control" value={dte?.controlNumber} />
           </Section>
 
-          <Section icon={<Truck className="w-3.5 h-3.5" />} title="Seguimiento">
+          <Section
+            icon={<Truck className="w-3.5 h-3.5" />}
+            title="Seguimiento"
+            action={
+              !pickup && isRealOrder(o) ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setManualGuide(o.trackingNumber || '');
+                    setIsEditingGuide((prev) => !prev);
+                  }}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer"
+                  title="Pegar o editar N° de guía manualmente"
+                >
+                  <Pencil className="w-3 h-3" />
+                  <span>{isEditingGuide ? 'Cancelar' : 'Editar guía'}</span>
+                </button>
+              ) : null
+            }
+          >
             <Row label="Estado" value={ORDER_STATUS_LABELS[o.orderStatus] || o.orderStatus} />
-            <Row label="Mensajero / courier" value={o.courierName} />
-            <Row label="N° de guía" value={o.trackingNumber} />
+            <Row label="Mensajero / courier" value={o.courierName || (!pickup ? 'C807 Express' : undefined)} />
+            {isEditingGuide ? (
+              <div className="pt-1 space-y-2">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-600 block mb-0.5">
+                    N° de guía C807 (Pegar manualmente)
+                  </label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="text"
+                      value={manualGuide}
+                      onChange={(e) => setManualGuide(e.target.value)}
+                      placeholder="Ej. SV12000334..."
+                      autoFocus
+                      className="flex-1 px-2.5 py-1.5 text-xs rounded-lg border border-indigo-300 bg-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <button
+                      type="button"
+                      disabled={savingManualGuide}
+                      onClick={handleSaveManualGuide}
+                      className="clay-btn-primary px-3 py-1.5 text-xs font-black rounded-lg inline-flex items-center gap-1 cursor-pointer shrink-0"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>{savingManualGuide ? 'Guardando...' : 'Guardar'}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <Row
+                label="N° de guía"
+                value={
+                  !pickup && isRealOrder(o) ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      <span>{o.trackingNumber || 'Pendiente de generar'}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setManualGuide(o.trackingNumber || '');
+                          setIsEditingGuide(true);
+                        }}
+                        className="p-0.5 rounded hover:bg-indigo-50 text-indigo-600 transition-colors cursor-pointer"
+                        title="Pegar o editar guía manualmente"
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ) : (
+                    o.trackingNumber
+                  )
+                }
+              />
+            )}
             <Row label="WhatsApp notificado" value={o.whatsappNotified ? 'Sí' : 'No'} />
             {!pickup && isRealOrder(o) && (
               <div className="pt-2 mt-2 border-t border-slate-200 flex flex-wrap items-center gap-2">
@@ -805,15 +921,17 @@ function OrderDetailModal({
                   </>
                 ) : (
                   <>
-                    <button
-                      type="button"
-                      disabled={generatingGuide}
-                      onClick={handleGenerateGuide}
-                      className="clay-btn-primary px-3.5 py-2 text-xs font-black inline-flex items-center gap-1.5 rounded-xl disabled:opacity-50"
-                    >
-                      <Truck className="w-3.5 h-3.5" />
-                      <span>{generatingGuide ? 'Generando Guía C807...' : 'Generar Guía C807 y Enviar a Logística'}</span>
-                    </button>
+                    {!isEditingGuide && (
+                      <button
+                        type="button"
+                        disabled={generatingGuide}
+                        onClick={handleGenerateGuide}
+                        className="clay-btn-primary px-3.5 py-2 text-xs font-black inline-flex items-center gap-1.5 rounded-xl disabled:opacity-50"
+                      >
+                        <Truck className="w-3.5 h-3.5" />
+                        <span>{generatingGuide ? 'Generando Guía C807...' : 'Generar Guía C807 y Enviar a Logística'}</span>
+                      </button>
+                    )}
                     <Link
                       href="/logistica"
                       className="clay-btn clay-btn-light px-2.5 py-2 text-[11px] font-bold text-slate-700 inline-flex items-center gap-1 rounded-xl"
