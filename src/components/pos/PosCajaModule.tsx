@@ -32,6 +32,7 @@ import { SaleRecord } from '@/lib/store';
 import { getActiveSessionUI } from '@/lib/auth';
 import {
   printDailyCashSalesTicketPdf,
+  printDailyCardSalesTicketPdf,
   printDailySummaryByPaymentTicketPdf,
 } from '@/lib/thermalTicketPdf';
 import { PosCorteZ } from './PosCorteZ';
@@ -146,6 +147,18 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
       s.channel === 'ONLINE' || String(s.saleNumber || '').toUpperCase().startsWith('WEB-');
     return isOnlineOrder && s.paymentMethod === 'CARD';
   };
+
+  const todayCardSales = useMemo(() => {
+    return todayInvoicedSales
+      .filter((s) => s.paymentMethod === 'CARD' && !isEcommerceWompiSale(s))
+      .map((s) => ({
+        ...s,
+        cliente: {
+          ...s.cliente,
+          nombre: resolveCustomerName(s),
+        },
+      }));
+  }, [todayInvoicedSales, customers]);
 
   const todayMetrics = useMemo(() => {
     let total = 0;
@@ -645,6 +658,20 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>Imprimir 80mm: Ventas en Efectivo</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  printDailyCardSalesTicketPdf(todayCardSales, {
+                    cashier: getActiveSessionUI().name || 'Caja Principal',
+                  })
+                }
+                className="clay-btn flex-1 lg:flex-none px-3.5 py-2 text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer shadow-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-colors"
+                title="Imprimir corte de 80mm solo con las transacciones en Tarjeta POS (Hora, Cliente y Monto)"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Imprimir 80mm: Corte Tarjeta</span>
               </button>
 
               <button

@@ -1305,4 +1305,161 @@ export async function printDailySummaryByPaymentTicketPdf(
   await print80mmDocHelper(doc);
 }
 
+function renderDailyCardSalesToDoc(
+  doc: any,
+  cardSales: SaleRecord[],
+  options?: { dateLabel?: string; cashier?: string }
+): number {
+  const leftM = 3;
+  const rightM = 68;
+  const centerX = 35.5;
+  let y = 42;
+
+  const drawDashedDivider = (currentY: number) => {
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(7.5);
+    doc.text('------------------------------------------', centerX, currentY, { align: 'center' });
+  };
+
+  const drawSolidDivider = (currentY: number, width = 0.25) => {
+    doc.setLineWidth(width);
+    doc.setDrawColor(0, 0, 0);
+    doc.line(leftM, currentY, rightM, currentY);
+  };
+
+  const now = new Date();
+  const dateLabel =
+    options?.dateLabel ||
+    now.toLocaleDateString('es-SV', {
+      timeZone: 'America/El_Salvador',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  const timeLabel = now
+    .toLocaleTimeString('es-SV', {
+      timeZone: 'America/El_Salvador',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    })
+    .toLowerCase();
+
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(11);
+  doc.text('AROMANIAK SV', centerX, y, { align: 'center' });
+  y += 3.8;
+
+  doc.setFontSize(8.5);
+  doc.text('CORTE DE TRANSACCIONES EN TARJETA', centerX, y, { align: 'center' });
+  y += 3.4;
+
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(7);
+  doc.text(`Fecha: ${cleanPdfText(dateLabel)}`, leftM, y);
+  doc.text(`Hora: ${cleanPdfText(timeLabel)}`, rightM, y, { align: 'right' });
+  y += 3.2;
+
+  doc.text(`Cajero/Resp: ${cleanPdfText((options?.cashier || 'Caja Principal').slice(0, 22))}`, leftM, y);
+  y += 3.2;
+
+  doc.setFont('courier', 'bold');
+  doc.text(`Transacciones en Tarjeta: ${cardSales.length}`, leftM, y);
+  y += 3.4;
+
+  drawDashedDivider(y);
+  y += 3.5;
+
+  // Encabezado de tabla: HORA | CLIENTE | MONTO
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(7.0);
+  doc.text('HORA', leftM, y);
+  doc.text('CLIENTE', leftM + 12, y);
+  doc.text('MONTO', rightM, y, { align: 'right' });
+  y += 2.6;
+  drawSolidDivider(y);
+  y += 3.4;
+
+  let totalCard = 0;
+
+  if (cardSales.length === 0) {
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(7);
+    doc.text('Sin transacciones en tarjeta registradas hoy.', centerX, y, { align: 'center' });
+    y += 4.5;
+  } else {
+    for (const s of cardSales) {
+      const dt = parseSaleTicketDate(s);
+      const hr = dt
+        .toLocaleTimeString('es-SV', {
+          timeZone: 'America/El_Salvador',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+        })
+        .slice(0, 5);
+
+      const clientName = cleanPdfText(s.cliente?.nombre || 'Consumidor Final').toUpperCase();
+      const amount = Number(s.total || 0);
+      totalCard += amount;
+
+      doc.setFont('courier', 'bold');
+      doc.setFontSize(7.0);
+      doc.text(hr, leftM, y);
+      doc.text(`$${amount.toFixed(2)}`, rightM, y, { align: 'right' });
+
+      doc.setFont('courier', 'normal');
+      doc.setFontSize(6.8);
+      const splitClient = doc.splitTextToSize(clientName, 40);
+      doc.text(splitClient[0] || 'CONSUMIDOR FINAL', leftM + 12, y);
+      y += 3.2;
+      if (splitClient.length > 1) {
+        doc.text(splitClient[1], leftM + 12, y);
+        y += 2.9;
+      }
+    }
+  }
+
+  y += 0.8;
+  drawSolidDivider(y, 0.35);
+  y += 3.8;
+
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(9.0);
+  doc.text('TOTAL TARJETA HOY:', leftM, y);
+  doc.text(`$${totalCard.toFixed(2)}`, rightM, y, { align: 'right' });
+  y += 4.5;
+
+  drawDashedDivider(y);
+  y += 5.5;
+
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(6.6);
+  doc.text('Firma Cajero: ________________________', leftM, y);
+  y += 4;
+
+  return Math.ceil(y + 6);
+}
+
+export async function printDailyCardSalesTicketPdf(
+  cardSales: SaleRecord[],
+  options?: { dateLabel?: string; cashier?: string }
+): Promise<void> {
+  const { jsPDF } = await import('jspdf');
+  const measureDoc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: [72, 400],
+  });
+  const exactHeight = Math.max(85, renderDailyCardSalesToDoc(measureDoc, cardSales, options));
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: [72, exactHeight],
+  });
+  renderDailyCardSalesToDoc(doc, cardSales, options);
+  await print80mmDocHelper(doc);
+}
+
 
