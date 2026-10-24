@@ -338,11 +338,21 @@ export async function POST(request: Request) {
                   if (!prod) continue;
 
                   const unitLower = String(it.unit || '').toLowerCase();
+                  const isNonEssenceOrLitro =
+                    nameLower.includes('litro') ||
+                    unitLower.includes('litro') ||
+                    nameLower.includes('alcohol') ||
+                    (prod.unit && String(prod.unit).toLowerCase() !== 'onza' && String(prod.unit).toLowerCase() !== 'oz');
                   const isHalfOz =
-                    unitLower.includes('media') ||
-                    unitLower.includes('½') ||
-                    nameLower.includes('media onza') ||
-                    nameLower.includes('½');
+                    !isNonEssenceOrLitro &&
+                    (unitLower.includes('media onza') ||
+                      unitLower.includes('½ onza') ||
+                      unitLower.includes('½ oz') ||
+                      unitLower === 'media' ||
+                      unitLower === '½' ||
+                      nameLower.includes('media onza') ||
+                      nameLower.includes('½ onza') ||
+                      nameLower.includes('½ oz'));
                   const qty = Math.max(1, Number(it.quantity || 1));
 
                   if (isHalfOz) {
@@ -547,12 +557,22 @@ export async function POST(request: Request) {
 
       const unitLower = String(it.unit || '').toLowerCase();
       const presUpper = String(it.presentation || '').toUpperCase();
+      const isNonEssenceOrLitro =
+        nameLower.includes('litro') ||
+        unitLower.includes('litro') ||
+        nameLower.includes('alcohol') ||
+        (matchedProd?.unit && String(matchedProd.unit).toLowerCase() !== 'onza' && String(matchedProd.unit).toLowerCase() !== 'oz');
       const isHalfOz =
-        presUpper === 'MEDIA_ONZA' ||
-        unitLower.includes('media') ||
-        unitLower.includes('½') ||
-        nameLower.includes('media onza') ||
-        nameLower.includes('½');
+        !isNonEssenceOrLitro &&
+        (presUpper === 'MEDIA_ONZA' ||
+          unitLower.includes('media onza') ||
+          unitLower.includes('½ onza') ||
+          unitLower.includes('½ oz') ||
+          unitLower === 'media' ||
+          unitLower === '½' ||
+          nameLower.includes('media onza') ||
+          nameLower.includes('½ onza') ||
+          nameLower.includes('½ oz'));
 
       const finalProductId = matchedProd ? matchedProd.id : (fallbackProduct?.id || 'esencia-apae-001');
       const skipStockDeduction = isServiceItem || !matchedProd;
@@ -564,8 +584,8 @@ export async function POST(request: Request) {
         unitPrice: Number(it.unitPrice || it.price || 0),
         ivaRate: 0.13,
         total: Number(it.total || 0),
-        presentation: isHalfOz ? 'MEDIA_ONZA' : (it.presentation || 'ONZA_COMPLETA'),
-        unit: isServiceItem ? 'Servicio' : isHalfOz ? '½ Onza' : (it.unit || 'Onza'),
+        presentation: isHalfOz ? 'MEDIA_ONZA' : (isNonEssenceOrLitro ? 'UNIDAD' : (it.presentation || 'ONZA_COMPLETA')),
+        unit: isServiceItem ? 'Servicio' : isHalfOz ? '½ Onza' : (it.unit || matchedProd?.unit || 'Onza'),
         puesto: it.puesto || matchedProd?.puesto || null,
         isHalfOz,
         skipStockDeduction,
@@ -943,11 +963,21 @@ export async function PATCH(request: Request) {
                 if (!prod) continue;
 
                 const unitLower = String(it.unit || '').toLowerCase();
+                const isNonEssenceOrLitro =
+                  nameLower.includes('litro') ||
+                  unitLower.includes('litro') ||
+                  nameLower.includes('alcohol') ||
+                  (prod.unit && String(prod.unit).toLowerCase() !== 'onza' && String(prod.unit).toLowerCase() !== 'oz');
                 const isHalfOz =
-                  unitLower.includes('media') ||
-                  unitLower.includes('½') ||
-                  nameLower.includes('media onza') ||
-                  nameLower.includes('½');
+                  !isNonEssenceOrLitro &&
+                  (unitLower.includes('media onza') ||
+                    unitLower.includes('½ onza') ||
+                    unitLower.includes('½ oz') ||
+                    unitLower === 'media' ||
+                    unitLower === '½' ||
+                    nameLower.includes('media onza') ||
+                    nameLower.includes('½ onza') ||
+                    nameLower.includes('½ oz'));
                 const qty = Math.max(1, Number(it.quantity || 1));
 
                 if (isHalfOz) {
@@ -1070,11 +1100,20 @@ export async function PATCH(request: Request) {
 
             const qty = Math.max(1, it.quantity || 1);
             const presLower = String(it.unit || '').toLowerCase();
+            const isNonEssenceOrLitro =
+              nameLower.includes('litro') ||
+              presLower.includes('litro') ||
+              nameLower.includes('alcohol');
             const isHalfRestore =
-              presLower.includes('media') ||
-              presLower.includes('½') ||
-              nameLower.includes('media onza') ||
-              nameLower.includes('½');
+              !isNonEssenceOrLitro &&
+              (presLower.includes('media onza') ||
+                presLower.includes('½ onza') ||
+                presLower.includes('½ oz') ||
+                presLower === 'media' ||
+                presLower === '½' ||
+                nameLower.includes('media onza') ||
+                nameLower.includes('½ onza') ||
+                nameLower.includes('½ oz'));
 
             let updatedRows: Array<{ stock: number; stockHalf: number }> = [];
             if (isHalfRestore) {

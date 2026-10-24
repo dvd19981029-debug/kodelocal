@@ -259,8 +259,11 @@ export function mapSaleToDomicilioOrder(s: any): PosDomicilioOrder | null {
       productId: it.productId || '',
       productName: it.productName || it.name || 'Producto',
       presentation:
-        it.unit ||
-        (String(it.productName || it.name || '').includes('½') ? '½ Onza' : '1 Onza'),
+        it.unit && !(String(it.productName || it.name || '').toLowerCase().includes('litro') && it.unit === '½ Onza')
+          ? it.unit
+          : (String(it.productName || it.name || '').toLowerCase().includes('½ oz') || String(it.productName || it.name || '').toLowerCase().includes('media onza')
+              ? '½ Onza'
+              : 'Unidad'),
       unitPrice: Number(it.unitPrice ?? it.price ?? 0),
       quantity: Number(it.quantity || 1),
       total: Number(it.total || 0),

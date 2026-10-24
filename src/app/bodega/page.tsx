@@ -453,7 +453,12 @@ export default function BodegaPage() {
                       quantity: it.quantity,
                       price: Number(it.unitPrice || 0),
                       total: Number(it.total || 0),
-                      unit: it.unit || (String(it.productName || '').includes('½') ? '½ Onza' : 'Onza'),
+                      unit:
+                        it.unit && !(String(it.productName || it.name || '').toLowerCase().includes('litro') && it.unit === '½ Onza')
+                          ? it.unit
+                          : (String(it.productName || it.name || '').toLowerCase().includes('½ oz') || String(it.productName || it.name || '').toLowerCase().includes('media onza')
+                              ? '½ Onza'
+                              : (prod?.unit || 'Unidad')),
                       puesto: it.puesto || prod?.puesto || 'A1',
                       originalName: origInfo?.originalName || undefined,
                       inspiredBy: origInfo?.originalName || undefined,

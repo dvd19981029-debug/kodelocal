@@ -11,10 +11,15 @@ export const posHelpers = {
   calculateStockDeduct(items: { productId?: string; presentation?: string; unit?: string; name?: string; quantity: number }[], productId: string): number {
     const matching = items.filter(i => i.productId === productId);
     return matching.reduce((sum, ci) => {
+      const nameLower = String(ci.name || '').toLowerCase();
+      const isLitroOrAlcohol = nameLower.includes('litro') || nameLower.includes('alcohol');
       const isHalf =
-        (ci as any).presentation === 'MEDIA_ONZA' ||
-        ci.unit === '½ Onza' ||
-        String(ci.name).includes('½');
+        !isLitroOrAlcohol &&
+        ((ci as any).presentation === 'MEDIA_ONZA' ||
+          ci.unit === '½ Onza' ||
+          nameLower.includes('½ oz') ||
+          nameLower.includes('½ onza') ||
+          nameLower.includes('media onza'));
       return sum + (isHalf ? Math.ceil(ci.quantity * 0.5) : ci.quantity);
     }, 0);
   },

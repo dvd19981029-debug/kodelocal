@@ -886,8 +886,8 @@ export default function PosPage() {
       }
     }
 
-    if (item.presentation === "MEDIA_ONZA") {
-      if (isEssence && activeCustomer?.specialHalfEssencePrice != null && Number(activeCustomer.specialHalfEssencePrice) > 0) {
+    if (isEssence && item.presentation === "MEDIA_ONZA") {
+      if (activeCustomer?.specialHalfEssencePrice != null && Number(activeCustomer.specialHalfEssencePrice) > 0) {
         listPrice = Number(activeCustomer.specialHalfEssencePrice);
       } else if (item.product.priceHalfOunce != null) {
         listPrice = Number(item.product.priceHalfOunce);
@@ -941,7 +941,9 @@ export default function PosPage() {
   const getItemUnitPrice = (item: CartItem): number => getItemPriceDetails(item).finalPrice;
 
   const formatCartItem = (i: CartItem) => {
-    const isHalfOz = i.presentation === 'MEDIA_ONZA';
+    const cat = i.product.category || '';
+    const isEssence = cat === 'Esencias para Perfume' || cat === 'Esencias & Fragancias' || (!cat && i.product.unit === 'Onza');
+    const isHalfOz = isEssence && i.presentation === 'MEDIA_ONZA';
     const details = getItemPriceDetails(i);
     const displayName = i.product.officialName && i.product.officialName !== i.product.name
       ? `${i.product.officialName} (${i.product.name})`
@@ -955,7 +957,7 @@ export default function PosPage() {
       discountAmt: details.discountAmt,
       total: Number((i.quantity * details.finalPrice).toFixed(2)),
       unit: isHalfOz ? '½ Onza' : (i.product.unit || 'Unidad'),
-      presentation: i.presentation || 'ONZA_COMPLETA',
+      presentation: isHalfOz ? 'MEDIA_ONZA' : (isEssence ? 'ONZA_COMPLETA' : 'UNIDAD'),
       puesto: i.product.puesto
     };
   };
@@ -1172,18 +1174,32 @@ export default function PosPage() {
 
       const unitLower = String(it.unit || '').toLowerCase();
       const nameLower = String(it.name || '').toLowerCase();
-      const isHalf =
-        (it as any).presentation === 'MEDIA_ONZA' ||
-        unitLower.includes('media') ||
-        unitLower.includes('½') ||
-        nameLower.includes('media onza') ||
-        nameLower.includes('½');
+      const isNonEssenceOrLitro =
+        nameLower.includes('litro') ||
+        unitLower.includes('litro') ||
+        nameLower.includes('alcohol') ||
+        matchedProd.category === 'Insumos y Materia Prima' ||
+        matchedProd.category === 'Botes' ||
+        matchedProd.category === 'Logística' ||
+        matchedProd.category === 'Otro';
       const isEssence =
-        matchedProd.category === 'Esencias para Perfume' ||
-        matchedProd.category === 'Esencias & Fragancias' ||
-        matchedProd.unit === 'Onza' ||
-        unitLower.includes('onza') ||
-        unitLower.includes('oz');
+        !isNonEssenceOrLitro &&
+        (matchedProd.category === 'Esencias para Perfume' ||
+          matchedProd.category === 'Esencias & Fragancias' ||
+          matchedProd.unit === 'Onza' ||
+          unitLower.includes('onza') ||
+          unitLower.includes('oz'));
+      const isHalf =
+        isEssence &&
+        ((it as any).presentation === 'MEDIA_ONZA' ||
+          unitLower.includes('media onza') ||
+          unitLower.includes('½ onza') ||
+          unitLower.includes('½ oz') ||
+          unitLower === 'media' ||
+          unitLower === '½' ||
+          nameLower.includes('media onza') ||
+          nameLower.includes('½ onza') ||
+          nameLower.includes('½ oz'));
 
       const presentation: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD' = isHalf
         ? 'MEDIA_ONZA'
@@ -1338,7 +1354,12 @@ export default function PosPage() {
     product: ProductItem, 
     presentation: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD' = 'ONZA_COMPLETA'
   ) => {
-    const isHalfPres = presentation === 'MEDIA_ONZA';
+    const cat = product.category || '';
+    const isEssence = cat === 'Esencias para Perfume' || cat === 'Esencias & Fragancias' || (!cat && product.unit === 'Onza');
+    const resolvedPresentation: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD' = isEssence
+      ? (presentation === 'MEDIA_ONZA' ? 'MEDIA_ONZA' : 'ONZA_COMPLETA')
+      : 'UNIDAD';
+    const isHalfPres = resolvedPresentation === 'MEDIA_ONZA';
     const availableForPres = isHalfPres ? (product.stockHalf || 0) : product.stock;
     if (availableForPres <= 0) {
       alert(isHalfPres ? '¡Sin frascos de ½ onza!' : '¡Producto sin existencias!');
@@ -1350,7 +1371,7 @@ export default function PosPage() {
     setCart(prev => {
       const existing = prev.find(item => 
         item.product.id === product.id && 
-        (item.presentation || 'ONZA_COMPLETA') === presentation
+        (item.presentation || 'ONZA_COMPLETA') === resolvedPresentation
       );
       // Frascos de esta misma presentación ya en el carrito
       const currentBottles = prev
@@ -1364,12 +1385,12 @@ export default function PosPage() {
 
       if (existing) {
         return prev.map(item =>
-          (item.product.id === product.id && (item.presentation || 'ONZA_COMPLETA') === presentation)
+          (item.product.id === product.id && (item.presentation || 'ONZA_COMPLETA') === resolvedPresentation)
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       }
-      return [...prev, { product, quantity: 1, presentation }];
+      return [...prev, { product, quantity: 1, presentation: resolvedPresentation }];
     });
   };
 
@@ -2244,18 +2265,32 @@ export default function PosPage() {
 
       const unitLower = String(it.unit || '').toLowerCase();
       const nameLower = String(it.name || '').toLowerCase();
-      const isHalf =
-        it.presentation === 'MEDIA_ONZA' ||
-        unitLower.includes('media') ||
-        unitLower.includes('½') ||
-        nameLower.includes('media onza') ||
-        nameLower.includes('½');
+      const isNonEssenceOrLitro =
+        nameLower.includes('litro') ||
+        unitLower.includes('litro') ||
+        nameLower.includes('alcohol') ||
+        matchedProd.category === 'Insumos y Materia Prima' ||
+        matchedProd.category === 'Botes' ||
+        matchedProd.category === 'Logística' ||
+        matchedProd.category === 'Otro';
       const isEssence =
-        matchedProd.category === 'Esencias para Perfume' ||
-        matchedProd.category === 'Esencias & Fragancias' ||
-        matchedProd.unit === 'Onza' ||
-        unitLower.includes('onza') ||
-        unitLower.includes('oz');
+        !isNonEssenceOrLitro &&
+        (matchedProd.category === 'Esencias para Perfume' ||
+          matchedProd.category === 'Esencias & Fragancias' ||
+          matchedProd.unit === 'Onza' ||
+          unitLower.includes('onza') ||
+          unitLower.includes('oz'));
+      const isHalf =
+        isEssence &&
+        (it.presentation === 'MEDIA_ONZA' ||
+          unitLower.includes('media onza') ||
+          unitLower.includes('½ onza') ||
+          unitLower.includes('½ oz') ||
+          unitLower === 'media' ||
+          unitLower === '½' ||
+          nameLower.includes('media onza') ||
+          nameLower.includes('½ onza') ||
+          nameLower.includes('½ oz'));
 
       const presentation: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD' = isHalf
         ? 'MEDIA_ONZA'
@@ -2658,15 +2693,27 @@ export default function PosPage() {
           if (matchingItems.length > 0) {
             let fullDeduct = 0;
             let halfDeduct = 0;
+            const prodCat = prod.category || '';
+            const isEssenceProd =
+              prodCat === 'Esencias para Perfume' ||
+              prodCat === 'Esencias & Fragancias' ||
+              (!prodCat && prod.unit === 'Onza');
             matchingItems.forEach(ci => {
               const unitLower = String(ci.unit || '').toLowerCase();
               const nameLower = String(ci.name || '').toLowerCase();
               const isHalf =
-                (ci as any).presentation === 'MEDIA_ONZA' ||
-                unitLower.includes('media') ||
-                unitLower.includes('½') ||
-                nameLower.includes('media onza') ||
-                nameLower.includes('½');
+                isEssenceProd &&
+                !nameLower.includes('litro') &&
+                !unitLower.includes('litro') &&
+                ((ci as any).presentation === 'MEDIA_ONZA' ||
+                  unitLower.includes('media onza') ||
+                  unitLower.includes('½ onza') ||
+                  unitLower.includes('½ oz') ||
+                  unitLower === 'media' ||
+                  unitLower === '½' ||
+                  nameLower.includes('media onza') ||
+                  nameLower.includes('½ onza') ||
+                  nameLower.includes('½ oz'));
               if (isHalf) halfDeduct += ci.quantity; else fullDeduct += ci.quantity;
             });
             return {
