@@ -43,7 +43,7 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const period = (searchParams.get('period') || 'mes') as 'hoy' | '7d' | 'mes' | 'anio' | 'todo';
+    const period = (searchParams.get('period') || 'hoy') as 'hoy' | '7d' | 'mes' | 'anio' | 'todo';
     const dateCondition = getPeriodFilter(period);
 
     const whereDate = dateCondition ? { createdAt: dateCondition } : {};

@@ -265,7 +265,7 @@ export default function AromaniakDashboardModule({
   activeEssencePrice = 3.25,
   activeEssenceCost = 1.95,
 }: AromaniakDashboardModuleProps) {
-  const [period, setPeriod] = useState<DashboardPeriod>('mes');
+  const [period, setPeriod] = useState<DashboardPeriod>('hoy');
   const [data, setData] = useState<AromaniakDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string>('');
