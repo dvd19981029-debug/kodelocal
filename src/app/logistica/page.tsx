@@ -250,15 +250,27 @@ export default function LogisticaPage() {
                     #{shipment.orderNumber}
                   </span>
                   {shipment.trackingNumber && (
-                    <a
-                      href={`https://c807xpress.com/tracking/?guia=${encodeURIComponent(shipment.trackingNumber)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-mono text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200 inline-flex items-center gap-1"
-                    >
-                      <span>Guía: {shipment.trackingNumber}</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
+                    <>
+                      <a
+                        href={`/api/c807/pdf?guia=${encodeURIComponent(shipment.trackingNumber)}&download=1`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[11px] font-black text-white bg-emerald-600 hover:bg-emerald-700 px-2.5 py-1 rounded-lg inline-flex items-center gap-1 transition-colors"
+                        title="Descargar PDF oficial de la guía C807"
+                      >
+                        <FileText className="w-3 h-3" />
+                        <span>PDF Guía</span>
+                      </a>
+                      <a
+                        href={`https://c807xpress.com/tracking/?guia=${encodeURIComponent(shipment.trackingNumber)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200 inline-flex items-center gap-1"
+                      >
+                        <span>Guía: {shipment.trackingNumber}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </>
                   )}
                 </div>
                 <span className={`clay-badge text-[11px] py-0.5 px-2.5 ${

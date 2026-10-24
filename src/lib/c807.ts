@@ -329,6 +329,72 @@ export class C807Client {
   }
 
   /**
+   * Obtiene el PDF oficial de la guía/viñeta directamente desde C807 Express
+   */
+  async obtenerPdfGuia(numeroGuia: string): Promise<{
+    success: boolean;
+    pdfBuffer?: Buffer;
+    error?: string;
+  }> {
+    const cleanGuia = String(numeroGuia || '').trim();
+    if (!cleanGuia) {
+      return { success: false, error: 'Número de guía requerido' };
+    }
+
+    try {
+      const token = await this.obtenerToken();
+      const pdfUrl = process.env.C807_GET_PDF_URL || 'https://app.c807.com/guia.php/api/get_pdf';
+
+      const response = await fetch(pdfUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ guias: [cleanGuia] }),
+        cache: 'no-store',
+      });
+
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/pdf')) {
+        const arrBuf = await response.arrayBuffer();
+        return { success: true, pdfBuffer: Buffer.from(arrBuf) };
+      }
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data) {
+        const errMsg =
+          data?.errores?.[0]?.mensaje ||
+          data?.message ||
+          data?.error ||
+          `No se pudo obtener el PDF de la guía ${cleanGuia} en C807 (${response.status})`;
+        return { success: false, error: errMsg };
+      }
+
+      const base64Pdf =
+        data.pdf ||
+        data.data?.pdf ||
+        this.buscarValorPorClaves(data, ['pdf', 'archivo', 'documento', 'base64']);
+
+      if (!base64Pdf || typeof base64Pdf !== 'string') {
+        const errMsg =
+          data?.errores?.[0]?.mensaje ||
+          'C807 no devolvió el PDF para este número de guía';
+        return { success: false, error: errMsg };
+      }
+
+      const cleanB64 = base64Pdf.replace(/^data:application\/pdf;base64,/i, '').trim();
+      const pdfBuffer = Buffer.from(cleanB64, 'base64');
+      return { success: true, pdfBuffer };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err?.message || 'Error de conexión al descargar PDF desde C807',
+      };
+    }
+  }
+
+  /**
    * Envía un mensaje de alerta a Telegram
    */
   async enviarNotificacionTelegram(mensaje: string): Promise<boolean> {
