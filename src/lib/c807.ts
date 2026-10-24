@@ -222,6 +222,113 @@ export class C807Client {
   }
 
   /**
+   * Consulta en tiempo real el estado actual de una guía directamente en C807 Xpress
+   */
+  async consultarEstadoGuia(numeroGuia: string): Promise<{
+    found: boolean;
+    guia: string;
+    estatus: string;
+    codigo: string;
+    esEntregado: boolean;
+    esEnRuta: boolean;
+    fechaEntrega: string | null;
+    destinatario?: string | null;
+  }> {
+    const cleanGuia = String(numeroGuia || '').trim();
+    if (!cleanGuia) {
+      return {
+        found: false,
+        guia: '',
+        estatus: 'Pendiente de guía',
+        codigo: '',
+        esEntregado: false,
+        esEnRuta: false,
+        fechaEntrega: null,
+      };
+    }
+
+    try {
+      const formBody = new URLSearchParams({ guia_xpress: cleanGuia }).toString();
+      const res = await fetch('https://c807xpress.com/api-xpress-gacela/guia.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        },
+        body: formBody,
+        cache: 'no-store',
+      });
+
+      if (!res.ok) {
+        return {
+          found: false,
+          guia: cleanGuia,
+          estatus: 'Guía registrada',
+          codigo: '',
+          esEntregado: false,
+          esEnRuta: true,
+          fechaEntrega: null,
+        };
+      }
+
+      const data = await res.json();
+      const guiaInfo = data?.status?.guia;
+      const bitacora = Array.isArray(data?.status?.bitacora) ? data.status.bitacora : [];
+      const latestEvent = bitacora[0] || null;
+
+      if (!guiaInfo || (!guiaInfo.guia && bitacora.length === 0)) {
+        return {
+          found: false,
+          guia: cleanGuia,
+          estatus: 'Guía registrada',
+          codigo: '',
+          esEntregado: false,
+          esEnRuta: true,
+          fechaEntrega: null,
+        };
+      }
+
+      const codigo = String(guiaInfo.estatus_codigo || latestEvent?.codigo || '').trim();
+      const estatus = String(
+        guiaInfo.estatus ||
+          latestEvent?.estatus ||
+          (codigo === '15' ? 'Llegó a su destino' : codigo === '13' ? 'Recogido en origen' : 'Creado en sistema')
+      ).trim();
+      const estatusLower = estatus.toLowerCase();
+
+      const esEntregado =
+        codigo === '15' ||
+        estatusLower.includes('llegó a su destino') ||
+        estatusLower.includes('llego a su destino') ||
+        estatusLower.includes('entregad') ||
+        Boolean(guiaInfo.entrega);
+
+      const esEnRuta = !esEntregado;
+
+      return {
+        found: true,
+        guia: String(guiaInfo.guia || cleanGuia),
+        estatus,
+        codigo,
+        esEntregado,
+        esEnRuta,
+        fechaEntrega: guiaInfo.entrega || (esEntregado ? latestEvent?.fecha || null : null),
+        destinatario: guiaInfo.destinatario || null,
+      };
+    } catch (err) {
+      console.warn(`[C807 Live Status Check] No se pudo consultar guía ${cleanGuia}:`, err);
+      return {
+        found: false,
+        guia: cleanGuia,
+        estatus: 'Guía registrada',
+        codigo: '',
+        esEntregado: false,
+        esEnRuta: true,
+        fechaEntrega: null,
+      };
+    }
+  }
+
+  /**
    * Envía un mensaje de alerta a Telegram
    */
   async enviarNotificacionTelegram(mensaje: string): Promise<boolean> {

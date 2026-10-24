@@ -577,7 +577,7 @@ function PosDomicilioDetailModal({
         id: o.id,
         trackingNumber: cleanGuide,
         courierName: o.courierName || 'C807 Express',
-        domicilioStatus: o.domicilioStatus === 'ENTREGADO' ? 'ENTREGADO' : 'EN_RUTA',
+        domicilioStatus: data.domicilioStatus || (o.domicilioStatus === 'ENTREGADO' ? 'ENTREGADO' : 'EN_RUTA'),
       });
       setIsEditingGuide(false);
     } catch (err: any) {

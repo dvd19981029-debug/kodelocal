@@ -164,6 +164,40 @@ export async function GET(request: Request) {
       orderBy: { createdAt: 'desc' },
     });
 
+    // Sincronizar en tiempo real con C807 cualquier pedido Ecommerce con guía activa
+    try {
+      const activeWithGuide = orders
+        .filter(
+          (o) =>
+            Boolean(o.trackingNumber && o.trackingNumber.trim()) &&
+            o.orderStatus !== 'ENTREGADO' &&
+            o.orderStatus !== 'CANCELADO'
+        )
+        .slice(0, 15);
+
+      if (activeWithGuide.length > 0) {
+        await Promise.all(
+          activeWithGuide.map(async (o) => {
+            const trackNum = String(o.trackingNumber || '').trim();
+            if (!trackNum) return;
+            const c807Live = await c807Client.consultarEstadoGuia(trackNum);
+            if (!c807Live.found) return;
+
+            const nextOrderStatus = c807Live.esEntregado ? 'ENTREGADO' : 'EN_RUTA';
+            if (o.orderStatus !== nextOrderStatus) {
+              o.orderStatus = nextOrderStatus as any;
+              await prisma.ecommerceOrder.update({
+                where: { id: o.id },
+                data: { orderStatus: nextOrderStatus as any },
+              });
+            }
+          })
+        );
+      }
+    } catch (syncErr) {
+      console.warn('Error sincronizando estados C807 en GET /api/ecommerce/orders:', syncErr);
+    }
+
     const formatted = orders.map((o) => ({
       id: o.id,
       orderNumber: o.orderNumber,
@@ -530,6 +564,13 @@ export async function PATCH(request: Request) {
       resolvedTracking = c807Res.numero_guia;
       resolvedCourier = 'C807 Express';
       resolvedOrderStatus = 'EN_RUTA';
+    } else if (resolvedTracking && String(resolvedTracking).trim() && !isCancelling) {
+      // Si se pegó o actualizó una guía manualmente, validar el estado en vivo en C807 Xpress
+      const cleanManualTrack = String(resolvedTracking).trim();
+      resolvedTracking = cleanManualTrack;
+      resolvedCourier = resolvedCourier || order.courierName || 'C807 Express';
+      const c807Live = await c807Client.consultarEstadoGuia(cleanManualTrack);
+      resolvedOrderStatus = c807Live.esEntregado ? 'ENTREGADO' : 'EN_RUTA';
     }
 
     const safePaymentStatus = (paymentStatus === 'REJECTED' || paymentStatus === 'CANCELLED' || isCancelling) ? 'CANCELLED' : paymentStatus;

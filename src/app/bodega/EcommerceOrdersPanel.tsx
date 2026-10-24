@@ -500,7 +500,7 @@ function OrderDetailModal({
           id: o.id,
           trackingNumber: cleanGuide,
           courierName: o.courierName || 'C807 Express',
-          orderStatus: o.orderStatus === 'ENTREGADO' ? 'ENTREGADO' : 'EN_RUTA',
+          orderStatus: data.order?.orderStatus || (o.orderStatus === 'ENTREGADO' ? 'ENTREGADO' : 'EN_RUTA'),
         });
         setIsEditingGuide(false);
       } else {

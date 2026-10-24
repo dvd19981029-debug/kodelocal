@@ -124,6 +124,80 @@ export async function GET(request: Request) {
       prisma.sale.count({ where }),
     ]);
 
+    // Sincronizar en tiempo real con C807 cualquier pedido POS Domicilio activo con guía en tránsito
+    try {
+      const inTransitSales = sales
+        .filter((s) => {
+          let domTrack = s.shipments?.[0]?.trackingNumber || '';
+          let domStat = s.shipments?.[0]?.status === 'DELIVERED' ? 'ENTREGADO' : '';
+          if (s.notes && s.notes.trim().startsWith('{')) {
+            try {
+              const lastBrace = s.notes.lastIndexOf('}');
+              const parsed = JSON.parse(lastBrace !== -1 ? s.notes.slice(0, lastBrace + 1) : s.notes);
+              if (parsed?.domicilio?.trackingNumber) domTrack = parsed.domicilio.trackingNumber;
+              if (parsed?.domicilio?.domicilioStatus) domStat = parsed.domicilio.domicilioStatus;
+            } catch (_) {}
+          }
+          return Boolean(domTrack) && domStat !== 'ENTREGADO' && domStat !== 'CANCELADO';
+        })
+        .slice(0, 15);
+
+      if (inTransitSales.length > 0) {
+        await Promise.all(
+          inTransitSales.map(async (s) => {
+            let parsed: any = null;
+            if (s.notes && s.notes.trim().startsWith('{')) {
+              try {
+                const lastBrace = s.notes.lastIndexOf('}');
+                parsed = JSON.parse(lastBrace !== -1 ? s.notes.slice(0, lastBrace + 1) : s.notes);
+              } catch (_) {}
+            }
+            const trackNum = String(parsed?.domicilio?.trackingNumber || s.shipments?.[0]?.trackingNumber || '').trim();
+            if (!trackNum) return;
+
+            const c807Live = await c807Client.consultarEstadoGuia(trackNum);
+            if (!c807Live.found) return;
+
+            const nextDomStatus = c807Live.esEntregado ? 'ENTREGADO' : 'EN_RUTA';
+            const prevDomStatus = parsed?.domicilio?.domicilioStatus || 'EN_RUTA';
+            const prevWebhookStatus = parsed?.domicilio?.lastWebhookStatus || '';
+
+            if (nextDomStatus !== prevDomStatus || c807Live.estatus !== prevWebhookStatus) {
+              if (parsed) {
+                parsed.domicilio = {
+                  ...(parsed.domicilio || {}),
+                  trackingNumber: trackNum,
+                  domicilioStatus: nextDomStatus,
+                  lastWebhookStatus: c807Live.estatus,
+                };
+                const newNotes = JSON.stringify(parsed);
+                s.notes = newNotes;
+                await prisma.sale.update({
+                  where: { id: s.id },
+                  data: { notes: newNotes },
+                });
+              }
+              if (s.shipments?.[0]) {
+                const nextShipStatus = c807Live.esEntregado ? 'DELIVERED' : 'IN_TRANSIT';
+                if (s.shipments[0].status !== nextShipStatus) {
+                  s.shipments[0].status = nextShipStatus as any;
+                  await prisma.shipment.update({
+                    where: { id: s.shipments[0].id },
+                    data: {
+                      status: nextShipStatus,
+                      ...(c807Live.esEntregado ? { deliveredAt: new Date() } : {}),
+                    },
+                  });
+                }
+              }
+            }
+          })
+        );
+      }
+    } catch (syncErr) {
+      console.warn('Error sincronizando estados C807 en GET /api/sales:', syncErr);
+    }
+
     return NextResponse.json({
       success: true,
       sales,
@@ -1096,10 +1170,16 @@ export async function PATCH(request: Request) {
           const shippingAddress = String(dom.shippingAddress || cli.direccion || cust?.address || '').trim();
           const deliveryReference = String(dom.deliveryReference || cli.referencia || '').trim() || undefined;
 
+          // Validar estado actual en vivo directamente con C807 Xpress al momento de pegar la guía
+          const c807Live = await c807Client.consultarEstadoGuia(manualTracking);
+          const resolvedDomStatus = c807Live.esEntregado ? 'ENTREGADO' : 'EN_RUTA';
+          const resolvedShipStatus = c807Live.esEntregado ? 'DELIVERED' : 'IN_TRANSIT';
+
           parsedNotesObj.domicilio.trackingNumber = manualTracking;
           parsedNotesObj.domicilio.courierName = dom.courierName || 'C807 Express';
-          if (!parsedNotesObj.domicilio.domicilioStatus || parsedNotesObj.domicilio.domicilioStatus === 'PENDIENTE_GUIA') {
-            parsedNotesObj.domicilio.domicilioStatus = 'EN_RUTA';
+          parsedNotesObj.domicilio.domicilioStatus = resolvedDomStatus;
+          if (c807Live.found && c807Live.estatus) {
+            parsedNotesObj.domicilio.lastWebhookStatus = c807Live.estatus;
           }
 
           try {
@@ -1114,7 +1194,8 @@ export async function PATCH(request: Request) {
                 department,
                 municipality,
                 carrier: dom.courierName || 'C807 Express',
-                status: 'IN_TRANSIT',
+                status: resolvedShipStatus,
+                ...(c807Live.esEntregado ? { deliveredAt: new Date() } : {}),
                 orderTotal: Number(sale.total || 0),
                 deliveryCost: 2.90,
                 deliveryNotes: deliveryReference || `Pedido POS #${sale.saleNumber}`,
@@ -1127,6 +1208,8 @@ export async function PATCH(request: Request) {
                 department,
                 municipality,
                 carrier: dom.courierName || 'C807 Express',
+                status: resolvedShipStatus,
+                ...(c807Live.esEntregado ? { deliveredAt: new Date() } : {}),
               },
             });
           } catch (shipErr) {
@@ -1357,6 +1440,7 @@ export async function PATCH(request: Request) {
       success: true,
       sale: updated,
       trackingNumber: parsedNotesObj?.domicilio?.trackingNumber || updated.shipments?.[0]?.trackingNumber || null,
+      domicilioStatus: parsedNotesObj?.domicilio?.domicilioStatus || (updated.shipments?.[0]?.status === 'DELIVERED' ? 'ENTREGADO' : 'EN_RUTA'),
     });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
