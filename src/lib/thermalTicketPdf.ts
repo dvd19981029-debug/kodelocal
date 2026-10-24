@@ -1,7 +1,7 @@
 // src/lib/thermalTicketPdf.ts
 // Generador profesional de Ticket Térmico en PDF continuo de 80mm usando jsPDF
 
-import { SaleRecord, ProductItem } from './store';
+import { SaleRecord, ProductItem, getOrderPaymentDisplayInfo } from './store';
 import { getOriginalFragranceInfo, parseKitOrderItem } from './perfumeNames';
 
 export interface ThermalTicketOptions {
@@ -525,16 +525,9 @@ function renderDispatchOrderToDoc(doc: any, ticket: SaleRecord, products?: Produ
       : ticket.tipoComprobante === 'TICKET'
       ? 'Ticket'
       : 'Factura (FC)';
-  const paymentMethodLabel =
-    ticket.paymentMethod === 'CASH'
-      ? 'Efectivo'
-      : ticket.paymentMethod === 'CARD'
-      ? 'Tarjeta'
-      : ticket.paymentMethod === 'TRANSFER'
-      ? 'Transferencia'
-      : ticket.paymentMethod === 'CONTRA_ENTREGA'
-      ? 'Contra Entrega'
-      : cleanPdfText(ticket.paymentMethod || 'Efectivo');
+  const paymentInfo = getOrderPaymentDisplayInfo(ticket);
+  const paymentMethodLabel = cleanPdfText(paymentInfo.methodLabel);
+  const paymentStatusClean = cleanPdfText(paymentInfo.statusLabel);
 
   doc.setFont('courier', 'bold');
   doc.setFontSize(9.5);
@@ -551,8 +544,16 @@ function renderDispatchOrderToDoc(doc: any, ticket: SaleRecord, products?: Produ
   doc.text(`Origen: ${origenLabel.slice(0, 32)}`, leftM, y);
   y += 3.3;
 
-  doc.text(`Comprobante: ${docTypeLabel} | Pago: ${paymentMethodLabel}`, leftM, y);
-  y += 3.6;
+  doc.text(`Comprobante: ${docTypeLabel}`, leftM, y);
+  y += 3.3;
+
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(8.2);
+  const splitPayStatus = doc.splitTextToSize(`PAGO: ${paymentStatusClean}`, 64);
+  for (const line of splitPayStatus) {
+    doc.text(line, leftM, y);
+    y += 3.4;
+  }
 
   doc.setFont('courier', 'bold');
   doc.setFontSize(8.8);
@@ -588,7 +589,7 @@ function renderDispatchOrderToDoc(doc: any, ticket: SaleRecord, products?: Produ
   y += 0.8;
   doc.setFont('courier', 'bold');
   doc.setFontSize(9.2);
-  doc.text('TOTAL A CANCELAR:', leftM, y);
+  doc.text(paymentInfo.isPaid ? 'TOTAL PAGADO:' : 'TOTAL A CANCELAR:', leftM, y);
   doc.text(`$${resolvedTotal.toFixed(2)}`, rightM, y, { align: 'right' });
   y += 2.2;
 
@@ -740,8 +741,16 @@ function renderDispatchOrderToDoc(doc: any, ticket: SaleRecord, products?: Produ
   }
 
   doc.setFont('courier', 'bold');
+  doc.setFontSize(8.0);
+  const splitFooterPay = doc.splitTextToSize(`ESTADO PAGO: ${paymentStatusClean} (${paymentMethodLabel})`, 64);
+  for (const line of splitFooterPay) {
+    doc.text(line, leftM, y);
+    y += 3.3;
+  }
+
+  doc.setFont('courier', 'bold');
   doc.setFontSize(10.2);
-  doc.text('TOTAL A CANCELAR:', leftM, y);
+  doc.text(paymentInfo.isPaid ? 'TOTAL PAGADO:' : 'TOTAL A CANCELAR:', leftM, y);
   doc.text(`$${resolvedTotal.toFixed(2)}`, rightM, y, { align: 'right' });
   y += 2.5;
 

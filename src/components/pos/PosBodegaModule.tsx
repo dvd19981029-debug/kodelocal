@@ -15,7 +15,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { CustomerRecord } from '@/lib/customers';
-import { SaleRecord, ProductItem } from '@/lib/store';
+import { SaleRecord, ProductItem, getOrderPaymentDisplayInfo } from '@/lib/store';
 import { getOriginalFragranceInfo, parseKitOrderItem, resolveBottleImageInfo } from '@/lib/perfumeNames';
 
 export interface PosBodegaModuleProps {
@@ -235,6 +235,7 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
             const isPending = order.status === 'PENDING_PREPARATION' || !order.status;
             const isReady = order.status === 'READY_AT_WINDOW';
             const isCompleted = order.status === 'COMPLETED';
+            const paymentInfo = getOrderPaymentDisplayInfo(order);
 
             return (
               <div 
@@ -277,16 +278,45 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                         }`}>
                           {isReady ? '✅ ¡LISTO EN VENTANILLA!' : isPending ? '⏳ En Preparación' : '📦 Entregado'}
                         </span>
+                        <span className={`clay-badge text-[10px] font-black py-0.5 px-2.5 ${
+                          paymentInfo.isPaid
+                            ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                            : paymentInfo.tone === 'orange'
+                            ? 'bg-orange-100 text-orange-950 border border-orange-300'
+                            : 'bg-amber-100 text-amber-950 border border-amber-300'
+                        }`}>
+                          {paymentInfo.badgeText}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2 text-[10.5px] text-slate-400 mt-1 font-medium">
                         <span>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         <span>•</span>
                         <span>Cliente: <strong className="text-slate-800 font-black">{resolveCustomerName(order)}</strong></span>
                       </div>
+                      <div
+                        className={`mt-1.5 px-2.5 py-1.5 rounded-lg border text-[10.5px] font-black flex flex-wrap items-center justify-between gap-2 ${
+                          paymentInfo.isPaid
+                            ? 'bg-emerald-50/90 text-emerald-900 border-emerald-300'
+                            : paymentInfo.tone === 'orange'
+                            ? 'bg-orange-50/90 text-orange-950 border-orange-300'
+                            : 'bg-amber-50/90 text-amber-950 border-amber-300'
+                        }`}
+                      >
+                        <span>{paymentInfo.detailText}</span>
+                        <span className="shrink-0 font-mono px-2 py-0.5 rounded bg-white border border-slate-200/80 text-slate-900 shadow-2xs">
+                          {paymentInfo.isPaid
+                            ? `Pagado: $${order.total.toFixed(2)}`
+                            : `Por cobrar: $${order.total.toFixed(2)}`}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="text-right">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase block">Total</span>
+                    <div className="text-right shrink-0">
+                      <span className={`text-[9px] font-black uppercase block ${
+                        paymentInfo.isPaid ? 'text-emerald-700' : 'text-amber-700'
+                      }`}>
+                        {paymentInfo.isPaid ? 'Ya Pagó' : 'Por Cancelar'}
+                      </span>
                       <span className="text-sm font-black text-slate-800 font-mono">
                         ${order.total.toFixed(2)}
                       </span>

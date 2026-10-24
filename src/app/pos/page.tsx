@@ -630,7 +630,9 @@ export default function PosPage() {
                 ivaTotal: Number(s.ivaTotal || 0),
                 shippingCost: Number(s.shippingCost || 0),
                 paymentMethod: s.paymentMethod || 'CASH',
-                paymentStatus: hasProcessedDte ? 'COMPLETED' : (s.paymentStatus || 'COMPLETED'),
+                paymentStatus: hasProcessedDte
+                  ? 'COMPLETED'
+                  : (s.paymentStatus || (s.orderStatus === 'PENDING_PREPARATION' || s.orderStatus === 'READY_AT_WINDOW' ? 'PENDING' : 'COMPLETED')),
                 status: hasProcessedDte ? 'COMPLETED' : (s.orderStatus || 'COMPLETED'),
                 tipoComprobante: resolvedTipo,
                 cajero: s.cashierName || getActiveSessionUI().name,
@@ -648,6 +650,8 @@ export default function PosPage() {
                   trackingNumber: parsedDomicilio?.trackingNumber || firstShipment?.trackingNumber || undefined,
                   courierName: parsedDomicilio?.courierName || firstShipment?.carrier || undefined,
                   domicilioStatus: parsedDomicilio?.domicilioStatus || (firstShipment?.trackingNumber ? 'EN_RUTA' : 'PENDIENTE'),
+                  c807PaymentMode: parsedDomicilio?.c807PaymentMode || undefined,
+                  c807ServiceType: parsedDomicilio?.c807ServiceType || undefined,
                 } : undefined,
                 cliente: {
                   id: s.customerId || s.customer?.id || parsedClient?.id,
@@ -2061,6 +2065,10 @@ export default function PosPage() {
       ivaTotal: ivaCalculado,
       tipoComprobante,
       paymentMethod: resolvedDomicilioPaymentMethod,
+      paymentStatus:
+        effectiveIsDomicilio && (domicilioPaymentMode === 'TARJETA' || domicilioPaymentMode === 'TRANSFERENCIA')
+          ? 'COMPLETED'
+          : 'PENDING',
       isDomicilio: effectiveIsDomicilio,
       domicilio: domicilioPayload,
       cliente: {
@@ -2387,6 +2395,8 @@ export default function PosPage() {
       subtotal: quote.subtotal,
       ivaTotal: quote.ivaTotal,
       tipoComprobante: tipo,
+      paymentMethod: 'CASH',
+      paymentStatus: 'PENDING',
       cliente: cliente as any,
       status: 'PENDING_PREPARATION',
       vendedor: 'Vendedora Mostrador',

@@ -107,6 +107,176 @@ export interface SaleRecord {
   }[];
 }
 
+export interface OrderPaymentDisplayInfo {
+  isPaid: boolean;
+  badgeText: string;
+  detailText: string;
+  methodLabel: string;
+  statusLabel: string;
+  tone: 'emerald' | 'amber' | 'blue' | 'orange';
+}
+
+export function getOrderPaymentDisplayInfo(order: SaleRecord): OrderPaymentDisplayInfo {
+  const isOnline =
+    order.channel === 'ONLINE' || String(order.saleNumber || order.orderNumber || '').startsWith('WEB-');
+  const isPickup =
+    /retiro/i.test(order.deliveryNotes || '') ||
+    /retiro/i.test(order.notes || '') ||
+    (isOnline && Number(order.shippingCost ?? 1) === 0 && !order.isDomicilio);
+
+  const pm = String(order.paymentMethod || '').toUpperCase().trim();
+  const ps = String(order.paymentStatus || '').toUpperCase().trim();
+  const c807Mode = String(order.domicilio?.c807PaymentMode || '').toUpperCase().trim();
+  const c807Service = String(order.domicilio?.c807ServiceType || '').toUpperCase().trim();
+
+  // 1. Pedidos de Tienda Online (WEB-...)
+  if (isOnline) {
+    if (pm === 'CARD' || pm === 'WOMPI' || pm === 'TARJETA') {
+      const cardPaid = ps === 'COMPLETED' || !ps;
+      if (cardPaid) {
+        return {
+          isPaid: true,
+          badgeText: '💳 ✅ Ya Pagó • Tarjeta (Wompi)',
+          detailText: isPickup
+            ? '💳 ✅ YA PAGÓ CON TARJETA (Wompi Online) • Solo entregar acá en el Local (No cobrar)'
+            : '💳 ✅ YA PAGÓ CON TARJETA (Wompi Online) • Envío sin cobro contra entrega',
+          methodLabel: 'Tarjeta (Wompi Online)',
+          statusLabel: 'YA PAGÓ (TARJETA ONLINE)',
+          tone: 'emerald',
+        };
+      }
+      return {
+        isPaid: false,
+        badgeText: '⏳ Tarjeta Pendiente (Wompi)',
+        detailText: '⏳ PAGO CON TARJETA PENDIENTE DE CONFIRMAR • Verificar en Caja antes de entregar',
+        methodLabel: 'Tarjeta (Pendiente)',
+        statusLabel: 'PENDIENTE DE PAGO',
+        tone: 'amber',
+      };
+    }
+
+    if (pm === 'TRANSFER' || pm === 'TRANSFERENCIA') {
+      if (ps === 'COMPLETED') {
+        return {
+          isPaid: true,
+          badgeText: '🏦 ✅ Ya Pagó • Transferencia',
+          detailText: isPickup
+            ? '🏦 ✅ YA PAGÓ POR TRANSFERENCIA VERIFICADA • Solo entregar acá en el Local (No cobrar)'
+            : '🏦 ✅ YA PAGÓ POR TRANSFERENCIA VERIFICADA • Envío sin cobro contra entrega',
+          methodLabel: 'Transferencia Bancaria (Verificada)',
+          statusLabel: 'YA PAGÓ (TRANSFERENCIA)',
+          tone: 'emerald',
+        };
+      }
+      return {
+        isPaid: false,
+        badgeText: isPickup
+          ? '🏦 Transferencia / Verificar o Paga en Local'
+          : '🏦 Transferencia (Pendiente verificar)',
+        detailText: isPickup
+          ? '🏦 SELECCIONÓ TRANSFERENCIA BANCARIA • Verificar comprobante o cobrar acá en el Local al retirar'
+          : '🏦 SELECCIONÓ TRANSFERENCIA BANCARIA • Pendiente verificar comprobante en Caja antes de enviar',
+        methodLabel: isPickup ? 'Transferencia o Pago en Local' : 'Transferencia Bancaria (Por verificar)',
+        statusLabel: isPickup ? 'VERIFICAR TRANSFERENCIA O PAGA EN LOCAL' : 'PENDIENTE VERIFICAR TRANSFERENCIA',
+        tone: 'amber',
+      };
+    }
+
+    // Efectivo / Contra Entrega en pedido Web
+    if (ps === 'COMPLETED') {
+      return {
+        isPaid: true,
+        badgeText: '💵 ✅ Ya Pagó • Efectivo',
+        detailText: '💵 ✅ YA PAGÓ EN EFECTIVO • Cobrado en Caja',
+        methodLabel: 'Efectivo',
+        statusLabel: 'YA PAGÓ (EFECTIVO)',
+        tone: 'emerald',
+      };
+    }
+    return {
+      isPaid: false,
+      badgeText: isPickup ? '🏪 Va a pagar acá en el Local' : '💵 Pago Contra Entrega',
+      detailText: isPickup
+        ? '🏪 PENDIENTE DE PAGO • El cliente va a pagar acá en el Local al retirar'
+        : '💵 PAGO CONTRA ENTREGA • Se cobrará en efectivo al entregar el pedido',
+      methodLabel: isPickup ? 'Pago en Local' : 'Contra Entrega (Efectivo)',
+      statusLabel: isPickup ? 'VA A PAGAR EN EL LOCAL' : 'PAGO CONTRA ENTREGA',
+      tone: 'orange',
+    };
+  }
+
+  // 2. Pedidos a Domicilio ingresados en POS (C807)
+  if (order.isDomicilio || order.domicilio?.isDomicilio) {
+    if (c807Mode === 'TARJETA' || pm === 'CARD' || pm === 'WOMPI' || pm === 'TARJETA') {
+      return {
+        isPaid: true,
+        badgeText: '💳 ✅ Ya Pagó • Tarjeta (C807 Regular)',
+        detailText: '💳 ✅ YA PAGÓ CON TARJETA • Servicio Regular C807 (Sin cobrar contra entrega)',
+        methodLabel: 'Tarjeta (Servicio Regular C807)',
+        statusLabel: 'YA PAGÓ (TARJETA)',
+        tone: 'emerald',
+      };
+    }
+    if (c807Mode === 'TRANSFERENCIA' || pm === 'TRANSFER' || pm === 'TRANSFERENCIA' || c807Service === 'SER') {
+      return {
+        isPaid: true,
+        badgeText: '🏦 ✅ Ya Pagó • Transferencia (C807 Regular)',
+        detailText: '🏦 ✅ YA PAGÓ POR TRANSFERENCIA • Servicio Regular C807 (Sin cobrar contra entrega)',
+        methodLabel: 'Transferencia (Servicio Regular C807)',
+        statusLabel: 'YA PAGÓ (TRANSFERENCIA)',
+        tone: 'emerald',
+      };
+    }
+    return {
+      isPaid: false,
+      badgeText: '💵 Contra Entrega en Efectivo (C807)',
+      detailText: '💵 PAGO CONTRA ENTREGA EN EFECTIVO • C807 cobrará el total al entregar al cliente',
+      methodLabel: 'Contra Entrega en Efectivo (C807 CCE)',
+      statusLabel: 'PAGO CONTRA ENTREGA (EFECTIVO)',
+      tone: 'orange',
+    };
+  }
+
+  // 3. Pedidos de Mostrador / Tienda Física (POS)
+  const isCompletedOrPaid =
+    ps === 'COMPLETED' ||
+    order.status === 'COMPLETED' ||
+    Boolean(order.dteInfo?.codigoGeneracion);
+
+  if (isCompletedOrPaid) {
+    const methodStr =
+      pm === 'CARD' || pm === 'TARJETA' || pm === 'WOMPI'
+        ? 'Tarjeta (POS)'
+        : pm === 'TRANSFER' || pm === 'TRANSFERENCIA'
+        ? 'Transferencia Bancaria'
+        : 'Efectivo';
+    const icon =
+      pm === 'CARD' || pm === 'TARJETA' || pm === 'WOMPI'
+        ? '💳'
+        : pm === 'TRANSFER' || pm === 'TRANSFERENCIA'
+        ? '🏦'
+        : '💵';
+    return {
+      isPaid: true,
+      badgeText: `${icon} ✅ Ya Pagó en Local • ${methodStr}`,
+      detailText: `${icon} ✅ YA PAGÓ ACÁ EN EL LOCAL • Cobrado en Caja vía ${methodStr}`,
+      methodLabel: `${methodStr} (En Local)`,
+      statusLabel: `YA PAGÓ EN LOCAL (${methodStr.toUpperCase()})`,
+      tone: 'emerald',
+    };
+  }
+
+  // Comanda enviada a Bodega desde Cotizador / Prefactura pendiente de pasar a pagar a Caja
+  return {
+    isPaid: false,
+    badgeText: '🏪 Va a pagar acá en el Local (Caja)',
+    detailText: '🏪 PENDIENTE DE PAGO EN CAJA • El cliente va a pagar acá en el Local al retirar en ventanilla',
+    methodLabel: 'Pago en Local (Caja)',
+    statusLabel: 'VA A PAGAR EN EL LOCAL (CAJA)',
+    tone: 'amber',
+  };
+}
+
 export const PERFUME_CATEGORIES = [
   "Esencias para Perfume",
   "Insumos y Materia Prima",

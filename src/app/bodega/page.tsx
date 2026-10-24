@@ -45,7 +45,8 @@ import {
   PERFUME_CATEGORIES, 
   DATA_VERSION,
   getStoredProducts, 
-  saveStoredProducts 
+  saveStoredProducts,
+  getOrderPaymentDisplayInfo
 } from '@/lib/store';
 import { 
   PurchaseRecord, 
@@ -294,7 +295,8 @@ export default function BodegaPage() {
           ivaTotal: 0,
           shippingCost: Number(o.shippingCost || 0),
           paymentMethod: o.paymentMethod || 'CARD',
-          paymentStatus: o.paymentStatus || 'COMPLETED',
+          paymentStatus: o.paymentStatus || 'PENDING',
+          tipoComprobante: o.sale?.tipoComprobante || (o.notes?.includes('Doc: 03') || o.customer?.nrc ? '03' : o.notes?.includes('Doc: TICKET') ? 'TICKET' : '01'),
           notes: o.notes || undefined,
           deliveryNotes: o.deliveryReference ? `Entrega: ${o.shippingAddress} (Ref: ${o.deliveryReference})` : `Entrega: ${o.shippingAddress}`,
           status: o.orderStatus === 'NUEVO' || o.orderStatus === 'EN_PREPARACION'
@@ -422,7 +424,9 @@ export default function BodegaPage() {
                   shippingCost: 0,
                   tipoComprobante: resolvedTipo,
                   paymentMethod: s.paymentMethod || 'CASH',
-                  paymentStatus: hasProcessedDte ? 'COMPLETED' : (s.paymentStatus || 'COMPLETED'),
+                  paymentStatus: hasProcessedDte
+                    ? 'COMPLETED'
+                    : (s.paymentStatus || (s.orderStatus === 'PENDING_PREPARATION' || s.orderStatus === 'READY_AT_WINDOW' ? 'PENDING' : 'COMPLETED')),
                   notes: s.notes || undefined,
                   deliveryNotes: isDomicilioOrder && pNotes?.domicilio?.shippingAddress
                     ? `Entrega: ${pNotes.domicilio.shippingAddress}, ${pNotes.domicilio.municipality || ''}, ${pNotes.domicilio.department || ''}${pNotes.domicilio.deliveryReference ? ` (Ref: ${pNotes.domicilio.deliveryReference})` : ''}`
@@ -1380,6 +1384,7 @@ export default function BodegaPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {filteredOrders.map((order) => {
                     const allItemsChecked = order.items.every((_, idx) => checkedItems[`${order.id}-${idx}`]);
+                    const paymentInfo = getOrderPaymentDisplayInfo(order);
 
                     return (
                       <div 
@@ -1415,6 +1420,15 @@ export default function BodegaPage() {
                                     🌐 Tienda Online
                                   </span>
                                 )}
+                                <span className={`clay-badge text-[10px] font-black py-0.5 px-2.5 ${
+                                  paymentInfo.isPaid
+                                    ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                                    : paymentInfo.tone === 'orange'
+                                    ? 'bg-orange-100 text-orange-950 border border-orange-300'
+                                    : 'bg-amber-100 text-amber-950 border border-amber-300'
+                                }`}>
+                                  {paymentInfo.badgeText}
+                                </span>
                               </div>
                               <div className="flex items-center gap-2 text-[10.5px] text-slate-400 mt-1 font-medium">
                                 <span>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -1426,13 +1440,35 @@ export default function BodegaPage() {
                                   📍 {order.deliveryNotes}
                                 </p>
                               )}
+                              <div
+                                className={`mt-1.5 px-2.5 py-1.5 rounded-lg border text-[10.5px] font-black flex flex-wrap items-center justify-between gap-2 ${
+                                  paymentInfo.isPaid
+                                    ? 'bg-emerald-50/90 text-emerald-900 border-emerald-300'
+                                    : paymentInfo.tone === 'orange'
+                                    ? 'bg-orange-50/90 text-orange-950 border-orange-300'
+                                    : 'bg-amber-50/90 text-amber-950 border-amber-300'
+                                }`}
+                              >
+                                <span>{paymentInfo.detailText}</span>
+                                <span className="shrink-0 font-mono px-2 py-0.5 rounded bg-white border border-slate-200/80 text-slate-900 shadow-2xs">
+                                  {paymentInfo.isPaid
+                                    ? `Pagado: $${resolveOrderTotal(order).toFixed(2)}`
+                                    : `Por cobrar: $${resolveOrderTotal(order).toFixed(2)}`}
+                                </span>
+                              </div>
                             </div>
 
                             <div className="text-right shrink-0">
-                              <span className="text-[9.5px] font-black text-emerald-700 uppercase tracking-wider block">
-                                Total a Cancelar
+                              <span className={`text-[9.5px] font-black uppercase tracking-wider block ${
+                                paymentInfo.isPaid ? 'text-emerald-700' : 'text-amber-700'
+                              }`}>
+                                {paymentInfo.isPaid ? 'Ya Pagó' : 'Total a Cancelar'}
                               </span>
-                              <span className="text-base font-black text-emerald-800 bg-emerald-50 border border-emerald-300 px-2.5 py-0.5 rounded-lg inline-block font-mono shadow-2xs mt-0.5">
+                              <span className={`text-base font-black px-2.5 py-0.5 rounded-lg inline-block font-mono shadow-2xs mt-0.5 ${
+                                paymentInfo.isPaid
+                                  ? 'text-emerald-800 bg-emerald-50 border border-emerald-300'
+                                  : 'text-amber-950 bg-amber-50 border border-amber-300'
+                              }`}>
                                 ${resolveOrderTotal(order).toFixed(2)}
                               </span>
                               <span className="text-[10px] font-bold text-slate-400 block font-mono mt-0.5">
@@ -1644,14 +1680,28 @@ export default function BodegaPage() {
                           </div>
 
                           {/* Barra de Resumen de Total a Cancelar y Cliente */}
-                          <div className="mb-3 px-3 py-2 rounded-xl bg-emerald-50/80 border border-emerald-200 flex items-center justify-between gap-2 text-xs">
+                          <div
+                            className={`mb-3 px-3 py-2 rounded-xl border flex items-center justify-between gap-2 text-xs ${
+                              paymentInfo.isPaid
+                                ? 'bg-emerald-50/80 border-emerald-200'
+                                : 'bg-amber-50/80 border-amber-200'
+                            }`}
+                          >
                             <div className="truncate min-w-0">
                               <span className="text-slate-500 font-semibold">Cliente: </span>
                               <strong className="font-black text-slate-900">{order.cliente?.nombre || 'Consumidor Final'}</strong>
+                              <span className="mx-1.5 text-slate-300">•</span>
+                              <span className={`font-black text-[10.5px] ${paymentInfo.isPaid ? 'text-emerald-800' : 'text-amber-900'}`}>
+                                {paymentInfo.badgeText}
+                              </span>
                             </div>
                             <div className="text-right shrink-0 font-mono">
-                              <span className="text-[10.5px] font-bold text-emerald-800 uppercase mr-1.5">Total a cancelar:</span>
-                              <strong className="text-sm font-black text-emerald-900">${resolveOrderTotal(order).toFixed(2)}</strong>
+                              <span className={`text-[10.5px] font-bold uppercase mr-1.5 ${paymentInfo.isPaid ? 'text-emerald-800' : 'text-amber-900'}`}>
+                                {paymentInfo.isPaid ? 'Total pagado:' : 'Total a cancelar:'}
+                              </span>
+                              <strong className={`text-sm font-black ${paymentInfo.isPaid ? 'text-emerald-900' : 'text-amber-950'}`}>
+                                ${resolveOrderTotal(order).toFixed(2)}
+                              </strong>
                             </div>
                           </div>
                         </div>
@@ -1750,7 +1800,9 @@ export default function BodegaPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {filteredOrders.map((order) => (
+                  {filteredOrders.map((order) => {
+                    const paymentInfo = getOrderPaymentDisplayInfo(order);
+                    return (
                     <div 
                       key={order.id} 
                       className="clay-card p-4 flex flex-col justify-between border-l-4 border-emerald-500 hover:shadow-md transition-all"
@@ -1783,6 +1835,15 @@ export default function BodegaPage() {
                                   🌐 Tienda Online
                                 </span>
                               )}
+                              <span className={`clay-badge text-[10px] font-black py-0.5 px-2.5 ${
+                                paymentInfo.isPaid
+                                  ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                                  : paymentInfo.tone === 'orange'
+                                  ? 'bg-orange-100 text-orange-950 border border-orange-300'
+                                  : 'bg-amber-100 text-amber-950 border border-amber-300'
+                              }`}>
+                                {paymentInfo.badgeText}
+                              </span>
                             </div>
                             <span className="text-[10.5px] text-slate-400 font-medium block mt-1">
                               Cliente: <strong className="text-slate-800 font-black">{order.cliente?.nombre || 'Consumidor Final'}</strong>
@@ -1792,13 +1853,35 @@ export default function BodegaPage() {
                                 📍 {order.deliveryNotes}
                               </p>
                             )}
+                            <div
+                              className={`mt-1.5 px-2.5 py-1.5 rounded-lg border text-[10.5px] font-black flex flex-wrap items-center justify-between gap-2 ${
+                                paymentInfo.isPaid
+                                  ? 'bg-emerald-50/90 text-emerald-900 border-emerald-300'
+                                  : paymentInfo.tone === 'orange'
+                                  ? 'bg-orange-50/90 text-orange-950 border-orange-300'
+                                  : 'bg-amber-50/90 text-amber-950 border-amber-300'
+                              }`}
+                            >
+                              <span>{paymentInfo.detailText}</span>
+                              <span className="shrink-0 font-mono px-2 py-0.5 rounded bg-white border border-slate-200/80 text-slate-900 shadow-2xs">
+                                {paymentInfo.isPaid
+                                  ? `Pagado: $${resolveOrderTotal(order).toFixed(2)}`
+                                  : `Por cobrar: $${resolveOrderTotal(order).toFixed(2)}`}
+                              </span>
+                            </div>
                           </div>
 
                           <div className="text-right shrink-0">
-                            <span className="text-[9.5px] font-black text-emerald-700 uppercase tracking-wider block">
-                              Total a Cancelar
+                            <span className={`text-[9.5px] font-black uppercase tracking-wider block ${
+                              paymentInfo.isPaid ? 'text-emerald-700' : 'text-amber-700'
+                            }`}>
+                              {paymentInfo.isPaid ? 'Ya Pagó' : 'Total a Cancelar'}
                             </span>
-                            <span className="text-base font-black text-emerald-800 bg-emerald-50 border border-emerald-300 px-2.5 py-0.5 rounded-lg inline-block font-mono shadow-2xs mt-0.5">
+                            <span className={`text-base font-black px-2.5 py-0.5 rounded-lg inline-block font-mono shadow-2xs mt-0.5 ${
+                              paymentInfo.isPaid
+                                ? 'text-emerald-800 bg-emerald-50 border border-emerald-300'
+                                : 'text-amber-950 bg-amber-50 border border-amber-300'
+                            }`}>
                               ${resolveOrderTotal(order).toFixed(2)}
                             </span>
                             <span className="text-[10px] font-bold text-slate-400 block font-mono mt-0.5">
@@ -1906,14 +1989,28 @@ export default function BodegaPage() {
                           })}
                         </div>
 
-                        <div className="mb-3 px-3 py-2 rounded-xl bg-emerald-50/80 border border-emerald-200 flex items-center justify-between gap-2 text-xs">
+                        <div
+                          className={`mb-3 px-3 py-2 rounded-xl border flex items-center justify-between gap-2 text-xs ${
+                            paymentInfo.isPaid
+                              ? 'bg-emerald-50/80 border-emerald-200'
+                              : 'bg-amber-50/80 border-amber-200'
+                          }`}
+                        >
                           <div className="truncate min-w-0">
                             <span className="text-slate-500 font-semibold">Cliente: </span>
                             <strong className="font-black text-slate-900">{order.cliente?.nombre || 'Consumidor Final'}</strong>
+                            <span className="mx-1.5 text-slate-300">•</span>
+                            <span className={`font-black text-[10.5px] ${paymentInfo.isPaid ? 'text-emerald-800' : 'text-amber-900'}`}>
+                              {paymentInfo.badgeText}
+                            </span>
                           </div>
                           <div className="text-right shrink-0 font-mono">
-                            <span className="text-[10.5px] font-bold text-emerald-800 uppercase mr-1.5">Total a cancelar:</span>
-                            <strong className="text-sm font-black text-emerald-900">${resolveOrderTotal(order).toFixed(2)}</strong>
+                            <span className={`text-[10.5px] font-bold uppercase mr-1.5 ${paymentInfo.isPaid ? 'text-emerald-800' : 'text-amber-900'}`}>
+                              {paymentInfo.isPaid ? 'Total pagado:' : 'Total a cancelar:'}
+                            </span>
+                            <strong className={`text-sm font-black ${paymentInfo.isPaid ? 'text-emerald-900' : 'text-amber-950'}`}>
+                              ${resolveOrderTotal(order).toFixed(2)}
+                            </strong>
                           </div>
                         </div>
                       </div>
@@ -1957,7 +2054,8 @@ export default function BodegaPage() {
                         )}
                       </div>
                     </div>
-                  ))}
+                  );
+                  })}
                 </div>
               )}
             </div>
@@ -2015,7 +2113,9 @@ export default function BodegaPage() {
                           </td>
                         </tr>
                       ) : (
-                        filteredOrders.map(order => (
+                        filteredOrders.map(order => {
+                          const paymentInfo = getOrderPaymentDisplayInfo(order);
+                          return (
                           <tr key={order.id} className="hover:bg-slate-50/60 transition-colors">
                             <td className="py-2.5 px-4 font-mono text-slate-500 font-bold">
                               {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -2032,8 +2132,13 @@ export default function BodegaPage() {
                             <td className="py-2.5 px-4 text-center font-mono font-black text-slate-700">
                               {order.items.reduce((a, b) => a + b.quantity, 0)} {order.items.some(i => i.unit === 'Onza') ? 'Oz' : 'Un.'}
                             </td>
-                            <td className="py-2.5 px-4 text-right font-mono font-black text-emerald-700">
-                              ${resolveOrderTotal(order).toFixed(2)}
+                            <td className="py-2.5 px-4 text-right">
+                              <span className="font-mono font-black text-emerald-700 block">
+                                ${resolveOrderTotal(order).toFixed(2)}
+                              </span>
+                              <span className="text-[10px] font-bold text-slate-500 block">
+                                {paymentInfo.badgeText}
+                              </span>
                             </td>
                             <td className="py-2.5 px-4 text-center">
                               <span className="clay-badge text-[10px] font-black px-2.5 py-0.5 bg-emerald-100 text-emerald-800">
@@ -2041,7 +2146,8 @@ export default function BodegaPage() {
                               </span>
                             </td>
                           </tr>
-                        ))
+                          );
+                        })
                       )}
                     </tbody>
                   </table>
