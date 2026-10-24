@@ -14,6 +14,7 @@ import { PosSalesModule } from '@/components/pos/PosSalesModule';
 import { PosCajaModule } from '@/components/pos/PosCajaModule';
 import { PosBodegaModule } from '@/components/pos/PosBodegaModule';
 import PosDomicilioPanel from '@/components/pos/PosDomicilioPanel';
+import EcommerceOrdersPanel from '../bodega/EcommerceOrdersPanel';
 import PosPrefacturasModule, { type SavedQuote } from '@/components/pos/PosPrefacturasModule';
 import { 
   CustomerRecord, 
@@ -3459,6 +3460,13 @@ export default function PosPage() {
             handleMarkOrderDeliveredFromPos={handleMarkOrderDeliveredFromPos}
             customers={customers}
           />
+        )}
+
+        {/* ======================================================================= */}
+        {/* PESTAÑA: ECOMMERCE (PEDIDOS WEB)                                        */}
+        {/* ======================================================================= */}
+        {posTab === 'ecommerce' && (
+          <EcommerceOrdersPanel />
         )}
 
         {/* ======================================================================= */}

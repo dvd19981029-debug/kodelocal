@@ -22,6 +22,7 @@ export type PosTab =
   | 'clientes'
   | 'ventas'
   | 'bodega_ordenes'
+  | 'ecommerce'
   | 'domicilio'
   | 'pos';
 
