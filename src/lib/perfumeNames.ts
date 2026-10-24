@@ -578,9 +578,14 @@ export function getOriginalFragranceInfo(
     return { originalName: item.inspiredBy.trim(), brand: item.brand || undefined };
   }
 
-  // 2. Extraer el nombre limpio (quitando sufijos de presentación como "(½ Onza)", "(Unidad)", "(Litro)", etc.)
-  const rawName = String(item.name || '').trim();
-  const cleanName = rawName.replace(/\s*\([^)]*\)/g, '').trim();
+  // 2. Extraer el nombre limpio (quitando prefijo "Arma tu propio perfume:" y sufijos de presentación)
+  const rawName = String(item.name || (item as any).productName || '').trim();
+  const cleanName = rawName
+    .replace(/^Arma tu propio perfume:\s*/i, '')
+    .replace(/\s*\(Arma tu propio perfume[\s\S]*$/i, '')
+    .replace(/\s*\|[\s\S]*$/, '')
+    .replace(/\s*\([^)]*\)/g, '')
+    .trim();
   const upperClean = cleanName.toUpperCase();
 
   // Filtrar artículos que sabemos NO son fragancias (Botes, Alcohol, Empaque)
@@ -666,6 +671,156 @@ export function getOriginalFragranceInfo(
 
   return null;
 }
+
+export interface ParsedKitOrderItem {
+  isKit: true;
+  fragranceName: string;
+  originalName?: string;
+  brand?: string;
+  essencePuesto: string;
+  isPlus: boolean;
+  concentrationTitle: string;
+  bottleName: string;
+  bottlePuesto: string;
+  hasLabel: boolean;
+  labelTitle: string;
+}
+
+/**
+ * Detecta y extrae todos los detalles de un pedido de "Arma tu propio perfume"
+ * (Fragancia, Inspiración Original, Puesto de Esencia, Concentración 1 Oz / 1.5 Oz PLUS, Frasco 100ml, Puesto del Bote y Etiqueta).
+ */
+export function parseKitOrderItem(
+  item: any,
+  allProducts?: any[]
+): ParsedKitOrderItem | null {
+  if (!item) return null;
+
+  const rawName = String(item.productName || item.name || '').trim();
+  const rawPresentation = String(item.presentation || item.unit || '').trim();
+  const combined = `${rawName} | ${rawPresentation}`;
+  const kitDetails = item.kitDetails;
+
+  const isKit =
+    Boolean(kitDetails) ||
+    /arma tu propio perfume|kit_preparado/i.test(combined) ||
+    String(item.productId || '').startsWith('kit-');
+
+  if (!isKit) return null;
+
+  // 1. Nombre de la fragancia (Aromaniak)
+  let fragranceName = String(kitDetails?.essenceName || '').trim();
+  if (!fragranceName) {
+    fragranceName = rawName
+      .replace(/\s*\(Arma tu propio perfume[\s\S]*$/i, '')
+      .replace(/\s*\|[\s\S]*$/, '')
+      .replace(/^Arma tu propio perfume:\s*/i, '')
+      .replace(/\s*\([^)]*\)/g, '')
+      .trim();
+  }
+  if (!fragranceName || /\$1|alcohol/i.test(fragranceName)) {
+    const prodOff = String(item.product?.officialName || item.product?.name || '').trim();
+    if (prodOff && !/\$1|alcohol/i.test(prodOff)) {
+      fragranceName = prodOff;
+    }
+  }
+
+  // 2. Buscar el producto de esencia en el catálogo para puesto e inspiración
+  const upperFrag = fragranceName.toUpperCase();
+  const withoutGender = upperFrag.replace(/\s+[HFUM]$/i, '').trim();
+  const essenceProd =
+    (item.product && !/\$1|alcohol/i.test(String(item.product.name || '')) ? item.product : null) ||
+    (Array.isArray(allProducts)
+      ? allProducts.find(
+          (p) =>
+            (kitDetails?.essenceId && p.id === kitDetails.essenceId) ||
+            (item.productId && p.id === item.productId && !/\$1|alcohol/i.test(String(p.name || ''))) ||
+            (upperFrag && p.officialName && p.officialName.trim().toUpperCase() === upperFrag) ||
+            (withoutGender && p.officialName && p.officialName.trim().toUpperCase() === withoutGender) ||
+            (upperFrag && p.name && p.name.trim().toUpperCase() === upperFrag)
+        )
+      : null);
+
+  if (!fragranceName && essenceProd) {
+    fragranceName = essenceProd.officialName || essenceProd.name || 'Fragancia';
+  }
+
+  const origInfo = getOriginalFragranceInfo(
+    {
+      ...item,
+      name: fragranceName,
+      product: essenceProd,
+      originalName: !/\$1|alcohol/i.test(String(item.originalName || '')) ? item.originalName : undefined,
+      inspiredBy: !/\$1|alcohol/i.test(String(item.inspiredBy || '')) ? item.inspiredBy : undefined,
+    },
+    allProducts
+  );
+
+  const essencePuesto =
+    essenceProd?.puesto ||
+    (item.puesto && item.puesto !== 'A1' ? item.puesto : null) ||
+    item.puesto ||
+    'A1';
+
+  // 3. Concentración (Estándar 1 Oz vs PLUS 1.5 Oz)
+  const isPlus =
+    typeof kitDetails?.isPlus === 'boolean'
+      ? kitDetails.isPlus
+      : /plus|1\.5\s*oz/i.test(combined);
+  const concentrationTitle = isPlus
+    ? '1.5 Oz PLUS (1 Oz base + ½ Oz extra)'
+    : '1 Oz Estándar (1 Onza pura)';
+
+  // 4. Bote / Frasco de 100ml y su puesto
+  let bottleName = String(kitDetails?.bottleName || item.selectedBottle?.name || '').trim();
+  let explicitBottlePuesto = String(kitDetails?.bottlePuesto || '').trim();
+
+  if (!bottleName) {
+    const bottleMatch = combined.match(/(?:Frasco|Bote):\s*([^|•)\]]+?)(?:\s*\[([A-Z0-9-]+)\])?(?=\s*(?:\||•|\)|$))/i);
+    if (bottleMatch) {
+      bottleName = bottleMatch[1].trim();
+      if (bottleMatch[2]) explicitBottlePuesto = bottleMatch[2].trim();
+    }
+  }
+  if (!bottleName) {
+    bottleName = 'Bote Rey Luis 100ml Rosca';
+  }
+
+  const bottleProd = Array.isArray(allProducts)
+    ? allProducts.find(
+        (p) =>
+          (kitDetails?.bottleId && p.id === kitDetails.bottleId) ||
+          (p.name && p.name.trim().toLowerCase() === bottleName.toLowerCase()) ||
+          (p.officialName && p.officialName.trim().toLowerCase() === bottleName.toLowerCase())
+      )
+    : null;
+
+  const bottlePuesto = explicitBottlePuesto || bottleProd?.puesto || 'B6';
+
+  // 5. Selección de Etiqueta
+  const hasLabel =
+    typeof kitDetails?.hasLabel === 'boolean'
+      ? kitDetails.hasLabel
+      : /sin\s+etiqueta|nolabel/i.test(combined)
+      ? false
+      : true;
+  const labelTitle = hasLabel ? 'Con Etiqueta (Nombre impreso)' : 'Sin Etiqueta (Frasco liso)';
+
+  return {
+    isKit: true,
+    fragranceName: fragranceName || 'Fragancia',
+    originalName: origInfo?.originalName,
+    brand: origInfo?.brand || (essenceProd?.brand && !/aromaniak/i.test(essenceProd.brand) ? essenceProd.brand : undefined),
+    essencePuesto,
+    isPlus,
+    concentrationTitle,
+    bottleName,
+    bottlePuesto,
+    hasLabel,
+    labelTitle,
+  };
+}
+
 
 
 

@@ -240,9 +240,11 @@ export interface EcommerceCartItem {
     essenceName: string;
     essenceSku?: string;
     essenceBrand?: string;
+    essencePuesto?: string;
     essenceImageUrl?: string;
     bottleId: string;
     bottleName: string;
+    bottlePuesto?: string;
     bottleImageUrl?: string;
     hasLabel: boolean;
     isPlus: boolean;
@@ -574,7 +576,11 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     const extraShotPrice = kitConfig.extraShotPrice;
     const rawKitPrice = isPlus ? Number((baseKitPrice + extraShotPrice).toFixed(2)) : baseKitPrice;
     const presentation: ProductPresentation = isPlus ? 'KIT_PREPARADO_PLUS' : 'KIT_PREPARADO';
-    const presentationName = isPlus ? 'Arma tu propio perfume PLUS (1.5 oz)' : 'Arma tu propio perfume (1 oz)';
+    const bottleDisplayName = bottle.name || bottle.officialName || 'Frasco 100ml';
+    const bottlePuestoTag = bottle.puesto ? ` [${bottle.puesto}]` : '';
+    const labelDisplay = hasLabel ? 'Con etiqueta' : 'Sin etiqueta';
+    const formulaDisplay = isPlus ? 'Arma tu propio perfume PLUS (1.5 oz)' : 'Arma tu propio perfume (1 oz)';
+    const presentationName = `${formulaDisplay} | Frasco: ${bottleDisplayName}${bottlePuestoTag} | ${labelDisplay}`;
     const itemId = `kit-${essence.id}-${bottle.id}-${hasLabel ? 'label' : 'nolabel'}-${isPlus ? 'plus' : 'std'}`;
 
     const totalEssenceStock = typeof essence.stock === 'number' ? essence.stock : 0;
@@ -592,6 +598,7 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
       ...essence,
       id: itemId,
       name: `Arma tu propio perfume: ${essence.officialName || essence.name}`,
+      officialName: `Arma tu propio perfume: ${essence.officialName || essence.name}`,
       category: 'Arma tu propio perfume',
       price: rawKitPrice,
       imageUrl: essenceImageUrl,
@@ -651,9 +658,11 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
             essenceName: essence.officialName || essence.name,
             essenceSku: essence.sku,
             essenceBrand: essence.brand,
+            essencePuesto: essence.puesto,
             essenceImageUrl,
             bottleId: bottle.id,
-            bottleName: bottle.name,
+            bottleName: bottleDisplayName,
+            bottlePuesto: bottle.puesto,
             bottleImageUrl: bottle.imageUrl,
             hasLabel,
             isPlus,

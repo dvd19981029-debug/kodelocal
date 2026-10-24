@@ -2,7 +2,7 @@
 // Generador profesional de Ticket Térmico en PDF continuo de 80mm usando jsPDF
 
 import { SaleRecord, ProductItem } from './store';
-import { getOriginalFragranceInfo } from './perfumeNames';
+import { getOriginalFragranceInfo, parseKitOrderItem } from './perfumeNames';
 
 export interface ThermalTicketOptions {
   autoPrint?: boolean;
@@ -558,16 +558,21 @@ function renderDispatchOrderToDoc(doc: any, ticket: SaleRecord, products?: Produ
   for (let idx = 0; idx < items.length; idx++) {
     const it = items[idx];
     const origInfo = getOriginalFragranceInfo(it, products);
+    const kitInfo = parseKitOrderItem(it, products);
     const shelfLocation = cleanPdfText(
-      it.puesto || products?.find(p => p.id === it.productId)?.puesto || 'A1'
+      kitInfo?.essencePuesto || it.puesto || products?.find(p => p.id === it.productId)?.puesto || 'A1'
     ).toUpperCase();
 
     const unitStr = cleanPdfText(it.unit || 'Oz');
-    const qtyFormatted = /^\d/.test(unitStr)
+    const qtyFormatted = kitInfo
+      ? `${it.quantity} Perfume(s) 100ml`
+      : /^\d/.test(unitStr)
       ? `${it.quantity} x ${unitStr}`
       : `${it.quantity} ${unitStr}`;
 
-    const perfumeName = cleanPdfText(it.name || 'PRODUCTO');
+    const perfumeName = kitInfo
+      ? cleanPdfText(`ARMA TU PERFUME: ${kitInfo.fragranceName}`)
+      : cleanPdfText(it.name || 'PRODUCTO');
 
     // Caja destacada de PUESTO / ESTANTE a la derecha
     const boxW = 22;
@@ -596,9 +601,11 @@ function renderDispatchOrderToDoc(doc: any, ticket: SaleRecord, products?: Produ
     }
 
     // Inspiración / Original bien claro
-    if (origInfo?.originalName) {
-      const inspText = `Inspiracion: ${cleanPdfText(origInfo.originalName)}${
-        origInfo.brand ? ` (${cleanPdfText(origInfo.brand)})` : ''
+    const effectiveOriginal = kitInfo?.originalName || origInfo?.originalName;
+    const effectiveBrand = kitInfo?.brand || origInfo?.brand;
+    if (effectiveOriginal) {
+      const inspText = `Inspiracion: ${cleanPdfText(effectiveOriginal)}${
+        effectiveBrand ? ` (${cleanPdfText(effectiveBrand)})` : ''
       }`;
       doc.setFont('courier', 'bold');
       doc.setFontSize(7.8);
@@ -607,6 +614,26 @@ function renderDispatchOrderToDoc(doc: any, ticket: SaleRecord, products?: Produ
         doc.text(line, leftM + 2, y);
         y += 3.2;
       }
+    }
+
+    // Si es un pedido de Arma tu propio perfume, imprimir Fórmula, Bote 100ml y Etiqueta
+    if (kitInfo) {
+      doc.setFont('courier', 'bold');
+      doc.setFontSize(7.8);
+      const formulaLine = `Concentracion: ${kitInfo.isPlus ? 'PLUS 1.5 Oz (1 Oz + 1/2 Oz)' : 'Estandar 1 Oz'}`;
+      doc.text(cleanPdfText(formulaLine), leftM + 2, y);
+      y += 3.2;
+
+      const bottleLine = `Bote 100ml: ${kitInfo.bottleName} [Estante ${kitInfo.bottlePuesto}]`;
+      const splitBottle = doc.splitTextToSize(cleanPdfText(bottleLine), 62);
+      for (const bLine of splitBottle) {
+        doc.text(bLine, leftM + 2, y);
+        y += 3.2;
+      }
+
+      const labelLine = `Etiqueta: ${kitInfo.hasLabel ? 'CON ETIQUETA (Impresa)' : 'SIN ETIQUETA (Frasco liso)'}`;
+      doc.text(cleanPdfText(labelLine), leftM + 2, y);
+      y += 3.2;
     }
 
     // Cantidad y Posición en Estante claramente expresadas

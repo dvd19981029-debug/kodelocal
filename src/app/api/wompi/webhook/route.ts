@@ -163,12 +163,23 @@ export async function POST(request: Request) {
               const prod = productMap.get(it.productId);
               if (!prod) continue;
 
-              const isHalfOz = String(it.presentation || '').includes('½') || String(it.presentation || '').toUpperCase().includes('MEDIA');
+              const presLower = String(it.presentation || '').toLowerCase();
+              const isKit =
+                presLower.includes('arma tu propio perfume') ||
+                String(it.productName || '').toLowerCase().includes('arma tu propio perfume');
+              const isKitPlus = isKit && (presLower.includes('plus') || presLower.includes('1.5'));
+              const isHalfOz = !isKit && (String(it.presentation || '').includes('½') || String(it.presentation || '').toUpperCase().includes('MEDIA'));
+              const qty = Number(it.quantity || 0);
               
-              if (isHalfOz) {
-                halfDeltas.set(prod.id, (halfDeltas.get(prod.id) || 0) + Number(it.quantity || 0));
+              if (isKit) {
+                stockDeltas.set(prod.id, (stockDeltas.get(prod.id) || 0) + qty);
+                if (isKitPlus) {
+                  halfDeltas.set(prod.id, (halfDeltas.get(prod.id) || 0) + qty);
+                }
+              } else if (isHalfOz) {
+                halfDeltas.set(prod.id, (halfDeltas.get(prod.id) || 0) + qty);
               } else {
-                stockDeltas.set(prod.id, (stockDeltas.get(prod.id) || 0) + Number(it.quantity || 0));
+                stockDeltas.set(prod.id, (stockDeltas.get(prod.id) || 0) + qty);
               }
             }
 
@@ -238,8 +249,16 @@ export async function POST(request: Request) {
               items: (paidOrder.items || []).map((it) => {
                 const prod = (it as any).product;
                 const officialName = prod?.officialName?.trim();
-                const displayName = officialName || it.productName;
-                const isEssence = String(it.presentation || '').toLowerCase().includes('onza') ||
+                const isKitItem =
+                  String(it.productName || '').toLowerCase().includes('arma tu propio perfume') ||
+                  String(it.presentation || '').toLowerCase().includes('arma tu propio perfume');
+                const displayName = isKitItem
+                  ? (String(it.productName || '').toLowerCase().includes('arma tu propio perfume')
+                      ? it.productName
+                      : `Arma tu propio perfume: ${officialName || prod?.name || it.productName}`)
+                  : (officialName || it.productName);
+                const isEssence = isKitItem ||
+                                  String(it.presentation || '').toLowerCase().includes('onza') ||
                                   Boolean(prod?.name && prod?.name !== officialName);
                 const inspired = isEssence && prod ? getInspiracionPerfumeName(prod) : null;
                 return {

@@ -226,8 +226,16 @@ export async function GET(request: Request) {
       items: (o.items || []).map((it) => {
         const prod = it.product;
         const officialName = prod?.officialName?.trim();
-        const displayName = officialName || it.productName;
-        const isEssence = String(it.presentation || '').toLowerCase().includes('onza') ||
+        const isKitItem =
+          String(it.productName || '').toLowerCase().includes('arma tu propio perfume') ||
+          String(it.presentation || '').toLowerCase().includes('arma tu propio perfume');
+        const displayName = isKitItem
+          ? (String(it.productName || '').toLowerCase().includes('arma tu propio perfume')
+              ? it.productName
+              : `Arma tu propio perfume: ${officialName || prod?.name || it.productName}`)
+          : (officialName || it.productName);
+        const isEssence = isKitItem ||
+                          String(it.presentation || '').toLowerCase().includes('onza') ||
                           Boolean(prod?.name && prod?.name !== officialName);
         const inspired = isEssence && prod ? getInspiracionPerfumeName(prod) : null;
         return {
@@ -486,12 +494,18 @@ export async function PATCH(request: Request) {
           if (it.productId) {
             const qty = Math.max(1, it.quantity || 1);
             const presLower = String(it.presentation || '').toLowerCase();
-            const isHalfRestore = presLower.includes('media') || presLower.includes('½');
+            const isKit =
+              presLower.includes('arma tu propio perfume') ||
+              String(it.productName || '').toLowerCase().includes('arma tu propio perfume');
+            const isKitPlus = isKit && (presLower.includes('plus') || presLower.includes('1.5'));
+            const isHalfRestore = !isKit && (presLower.includes('media') || presLower.includes('½'));
             try {
               const updatedProd = await prisma.product.update({
                 where: { id: it.productId },
                 data: isHalfRestore
                   ? { stockHalf: { increment: qty } }
+                  : isKitPlus
+                  ? { stock: { increment: qty }, stockHalf: { increment: qty } }
                   : { stock: { increment: qty } },
               });
               
@@ -507,6 +521,21 @@ export async function PATCH(request: Request) {
                   userName: 'Sistema',
                 }
               });
+
+              if (isKitPlus) {
+                await prisma.stockMovement.create({
+                  data: {
+                    productId: it.productId,
+                    type: 'RETURN',
+                    quantity: qty,
+                    previousStock: (updatedProd as any).stockHalf - qty,
+                    newStock: (updatedProd as any).stockHalf,
+                    reference: `Devolución Web #${order.orderNumber} (Media Onza PLUS)`,
+                    notes: '½ Onza PLUS • Reversión de pedido cancelado/rechazado',
+                    userName: 'Sistema',
+                  }
+                });
+              }
             } catch (stockErr) {
               console.warn(`No se pudo restaurar inventario para producto ${it.productId}:`, stockErr);
             }
@@ -619,8 +648,16 @@ export async function PATCH(request: Request) {
           items: (updated.items || []).map((it) => {
             const prod = (it as any).product;
             const officialName = prod?.officialName?.trim();
-            const displayName = officialName || it.productName;
-            const isEssence = String(it.presentation || '').toLowerCase().includes('onza') ||
+            const isKitItem =
+              String(it.productName || '').toLowerCase().includes('arma tu propio perfume') ||
+              String(it.presentation || '').toLowerCase().includes('arma tu propio perfume');
+            const displayName = isKitItem
+              ? (String(it.productName || '').toLowerCase().includes('arma tu propio perfume')
+                  ? it.productName
+                  : `Arma tu propio perfume: ${officialName || prod?.name || it.productName}`)
+              : (officialName || it.productName);
+            const isEssence = isKitItem ||
+                              String(it.presentation || '').toLowerCase().includes('onza') ||
                               Boolean(prod?.name && prod?.name !== officialName);
             const inspired = isEssence && prod ? getInspiracionPerfumeName(prod) : null;
             return {
@@ -841,13 +878,42 @@ export async function POST(request: Request) {
       const requestedItems = Array.isArray(items) ? items : [];
       const productIdsToFetch = new Set<string>();
 
+      const parseKitIdsFromItem = (it: any) => {
+        const rawId = String(it?.productId || '').trim();
+        let essenceId = String(it?.kitDetails?.essenceId || '').trim();
+        let bottleId = String(it?.kitDetails?.bottleId || it?.selectedBottle?.id || '').trim();
+        let hasLabel: boolean | undefined =
+          typeof it?.kitDetails?.hasLabel === 'boolean' ? it.kitDetails.hasLabel : undefined;
+        let isPlus: boolean | undefined =
+          typeof it?.kitDetails?.isPlus === 'boolean' ? it.kitDetails.isPlus : undefined;
+
+        if (rawId.startsWith('kit-')) {
+          const fullMatch = rawId.match(/^kit-(.+?)-(bote-[a-z0-9-]+|bottle-\d+)-(label|nolabel)-(plus|std)$/i);
+          if (fullMatch) {
+            if (!essenceId) essenceId = fullMatch[1];
+            if (!bottleId) bottleId = fullMatch[2];
+            if (hasLabel === undefined) hasLabel = fullMatch[3].toLowerCase() === 'label';
+            if (isPlus === undefined) isPlus = fullMatch[4].toLowerCase() === 'plus';
+          } else {
+            const shortMatch = rawId.match(/^kit-(.+?)-(label|nolabel)-(plus|std)$/i);
+            if (shortMatch && !essenceId) {
+              essenceId = shortMatch[1];
+              if (hasLabel === undefined) hasLabel = shortMatch[2].toLowerCase() === 'label';
+              if (isPlus === undefined) isPlus = shortMatch[3].toLowerCase() === 'plus';
+            }
+          }
+        }
+
+        return { essenceId, bottleId, hasLabel, isPlus };
+      };
+
       for (const it of requestedItems) {
-        if (!it.productId) continue;
-        if (it.productId.startsWith('kit-')) {
-          const parts = it.productId.split('-');
-          const essenceId = parts[1];
+        if (!it.productId && !it.kitDetails) continue;
+        if ((it.productId && String(it.productId).startsWith('kit-')) || it.kitDetails) {
+          const { essenceId, bottleId } = parseKitIdsFromItem(it);
           if (essenceId) productIdsToFetch.add(essenceId);
-        } else {
+          if (bottleId) productIdsToFetch.add(bottleId);
+        } else if (it.productId) {
           productIdsToFetch.add(it.productId);
         }
       }
@@ -861,9 +927,6 @@ export async function POST(request: Request) {
         : [];
       const productMap = new Map(fetchedProducts.map((p) => [p.id, p]));
 
-      // Fallback para kits si fuera necesario
-      let defaultFallbackProdId: string | null = null;
-
       // Acumulador de deducción de stock por producto (unifica múltiples items que compartan la misma esencia)
       const stockDeltas = new Map<string, number>();
       const halfDeltas = new Map<string, number>();
@@ -873,27 +936,69 @@ export async function POST(request: Request) {
         const presentationStr = String(it.presentation || it.presentationName || '1 Onza').trim();
         const presLower = presentationStr.toLowerCase();
 
-        // Si es un kit preparado de "Arma tu perfume"
-        if (it.productId && it.productId.startsWith('kit-')) {
-          const isPlus = presLower.includes('plus') || presLower.includes('1.5');
-          const parts = it.productId.split('-');
-          const essenceId = parts[1];
+        // Si es un kit preparado de "Arma tu propio perfume"
+        const isKitRequest =
+          (it.productId && String(it.productId).startsWith('kit-')) ||
+          Boolean(it.kitDetails) ||
+          presLower.includes('arma tu propio perfume') ||
+          String(it.productName || '').toLowerCase().includes('arma tu propio perfume');
 
-          let targetProductId = '';
-          let baseKitPrice = dynamicKitBasePrice;
+        if (isKitRequest) {
+          const parsedKit = parseKitIdsFromItem(it);
+          const isPlus =
+            typeof parsedKit.isPlus === 'boolean'
+              ? parsedKit.isPlus
+              : presLower.includes('plus') || presLower.includes('1.5');
+          const hasLabel =
+            typeof parsedKit.hasLabel === 'boolean'
+              ? parsedKit.hasLabel
+              : presLower.includes('sin etiqueta')
+              ? false
+              : true;
 
-          if (essenceId) {
-            const essenceProd = productMap.get(essenceId);
-            if (essenceProd) {
-              targetProductId = essenceProd.id;
-              if (essenceProd.finishedPerfumePrice != null) {
-                baseKitPrice = Number(essenceProd.finishedPerfumePrice);
-              }
-              stockDeltas.set(essenceProd.id, (stockDeltas.get(essenceProd.id) || 0) + qty);
-              if (isPlus) {
-                halfDeltas.set(essenceProd.id, (halfDeltas.get(essenceProd.id) || 0) + qty);
+          let essenceProd = parsedKit.essenceId ? productMap.get(parsedKit.essenceId) : undefined;
+          if (!essenceProd) {
+            const cleanEssenceName = String(
+              it.kitDetails?.essenceName || it.productName || it.name || ''
+            )
+              .replace(/^Arma tu propio perfume:\s*/i, '')
+              .replace(/\s*\(Arma tu propio perfume[\s\S]*$/i, '')
+              .replace(/\s*\|[\s\S]*$/, '')
+              .trim();
+
+            if (cleanEssenceName) {
+              const foundByName = await tx.product.findFirst({
+                where: {
+                  id: { not: 'cmvfrqz7v0003jp08y8bmrnpz' },
+                  OR: [
+                    { officialName: { equals: cleanEssenceName, mode: 'insensitive' } },
+                    { name: { equals: cleanEssenceName, mode: 'insensitive' } },
+                  ],
+                },
+                include: { category: true },
+              });
+              if (foundByName) {
+                essenceProd = foundByName;
+                productMap.set(foundByName.id, foundByName);
               }
             }
+          }
+
+          if (!essenceProd) {
+            throw new Error('La esencia seleccionada para Arma tu propio perfume ya no se encuentra disponible.');
+          }
+
+          const bottleProd = parsedKit.bottleId ? productMap.get(parsedKit.bottleId) : undefined;
+
+          const targetProductId = essenceProd.id;
+          let baseKitPrice = dynamicKitBasePrice;
+          if (essenceProd.finishedPerfumePrice != null) {
+            baseKitPrice = Number(essenceProd.finishedPerfumePrice);
+          }
+
+          stockDeltas.set(essenceProd.id, (stockDeltas.get(essenceProd.id) || 0) + qty);
+          if (isPlus) {
+            halfDeltas.set(essenceProd.id, (halfDeltas.get(essenceProd.id) || 0) + qty);
           }
 
           let kitUnitPrice = isPlus ? Number((baseKitPrice + dynamicExtraShotPrice).toFixed(2)) : baseKitPrice;
@@ -916,24 +1021,33 @@ export async function POST(request: Request) {
           const lineTotal = Number((kitUnitPrice * qty).toFixed(2));
           verifiedSubtotal += lineTotal;
 
-          if (!targetProductId) {
-            if (!defaultFallbackProdId) {
-              const fallbackProd = await tx.product.findFirst();
-              if (fallbackProd) defaultFallbackProdId = fallbackProd.id;
-            }
-            if (defaultFallbackProdId) targetProductId = defaultFallbackProdId;
-          }
+          const essenceDisplayName = essenceProd.officialName?.trim() || essenceProd.name;
+          const bottleDisplayName =
+            String(
+              it.kitDetails?.bottleName ||
+              it.selectedBottle?.name ||
+              bottleProd?.name ||
+              bottleProd?.officialName ||
+              ''
+            ).trim() ||
+            (presentationStr.match(/(?:Frasco|Bote):\s*([^|•)\]]+)/i)?.[1]?.trim() || 'Bote Rey Luis 100ml Rosca');
+          const bottlePuesto =
+            String(it.kitDetails?.bottlePuesto || bottleProd?.puesto || '').trim() ||
+            (presentationStr.match(/\[([A-Z0-9-]+)\]/)?.[1]?.trim() || 'B6');
+          const labelDisplay = hasLabel ? 'Con etiqueta' : 'Sin etiqueta';
+          const formulaDisplay = isPlus
+            ? 'Arma tu propio perfume PLUS (1.5 oz)'
+            : 'Arma tu propio perfume (1 oz)';
+          const fullKitPresentation = `${formulaDisplay} | Frasco: ${bottleDisplayName} [${bottlePuesto}] | ${labelDisplay}`;
 
-          if (targetProductId) {
-            verifiedItems.push({
-              productId: targetProductId,
-              productName: it.productName || it.name || (isPlus ? 'Perfume Preparado PLUS (100ml)' : 'Perfume Preparado (100ml)'),
-              presentation: presentationStr,
-              unitPrice: kitUnitPrice,
-              quantity: qty,
-              total: lineTotal,
-            });
-          }
+          verifiedItems.push({
+            productId: targetProductId,
+            productName: `Arma tu propio perfume: ${essenceDisplayName}`,
+            presentation: fullKitPresentation,
+            unitPrice: kitUnitPrice,
+            quantity: qty,
+            total: lineTotal,
+          });
           continue;
         }
 
@@ -1156,8 +1270,16 @@ export async function POST(request: Request) {
           items: (newOrder.items || []).map((it) => {
             const prod = (it as any).product;
             const officialName = prod?.officialName?.trim();
-            const displayName = officialName || it.productName;
-            const isEssence = String(it.presentation || '').toLowerCase().includes('onza') ||
+            const isKitItem =
+              String(it.productName || '').toLowerCase().includes('arma tu propio perfume') ||
+              String(it.presentation || '').toLowerCase().includes('arma tu propio perfume');
+            const displayName = isKitItem
+              ? (String(it.productName || '').toLowerCase().includes('arma tu propio perfume')
+                  ? it.productName
+                  : `Arma tu propio perfume: ${officialName || prod?.name || it.productName}`)
+              : (officialName || it.productName);
+            const isEssence = isKitItem ||
+                              String(it.presentation || '').toLowerCase().includes('onza') ||
                               Boolean(prod?.name && prod?.name !== officialName);
             const inspired = isEssence && prod ? getInspiracionPerfumeName(prod) : null;
             return {

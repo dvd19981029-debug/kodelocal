@@ -55,7 +55,7 @@ import {
 import { getActiveUser, UserAccount, getStaffToken } from '@/lib/auth';
 import { supabase } from '@/lib/supabaseClient';
 import { getOfflineSalesQueue } from '@/lib/offlineSync';
-import { getOriginalFragranceInfo } from '@/lib/perfumeNames';
+import { getOriginalFragranceInfo, parseKitOrderItem } from '@/lib/perfumeNames';
 import { printDispatchTicketPdf, downloadDispatchTicketPdf } from '@/lib/thermalTicketPdf';
 
 // Singleton para el AudioContext
@@ -310,17 +310,21 @@ export default function BodegaPage() {
           items: o.items.map((it: any) => {
             const prod = it.product || products.find((p: any) => p.id === it.productId || p.sku === it.productId);
             const origInfo = getOriginalFragranceInfo({ ...it, product: prod }, products);
+            const kitParsed = parseKitOrderItem({ ...it, product: prod }, products);
             return {
               productId: it.productId,
-              name: `${it.productName} (${it.presentation})`,
+              name: kitParsed
+                ? `Arma tu propio perfume: ${kitParsed.fragranceName}`
+                : `${it.productName} (${it.presentation})`,
+              presentation: it.presentation,
               quantity: it.quantity,
               price: it.unitPrice,
               total: it.total,
               unit: it.presentation,
-              puesto: it.product?.puesto || prod?.puesto || 'A1',
-              originalName: origInfo?.originalName || it.inspiredBy || undefined,
-              inspiredBy: origInfo?.originalName || it.inspiredBy || undefined,
-              brand: origInfo?.brand || prod?.brand || undefined,
+              puesto: kitParsed?.essencePuesto || it.product?.puesto || prod?.puesto || 'A1',
+              originalName: kitParsed?.originalName || origInfo?.originalName || it.inspiredBy || undefined,
+              inspiredBy: kitParsed?.originalName || origInfo?.originalName || it.inspiredBy || undefined,
+              brand: kitParsed?.brand || origInfo?.brand || prod?.brand || undefined,
               product: prod || it.product || undefined,
             };
           })
@@ -1420,8 +1424,102 @@ export default function BodegaPage() {
                           <div className="space-y-2 mb-3">
                             {order.items.map((item, idx) => {
                               const isChecked = checkedItems[`${order.id}-${idx}`];
-                              const shelfLocation = item.puesto || products.find(p => p.id === item.productId)?.puesto || 'A1';
+                              const kitInfo = parseKitOrderItem(item, products);
+                              const shelfLocation = kitInfo?.essencePuesto || item.puesto || products.find(p => p.id === item.productId)?.puesto || 'A1';
                               const origInfo = getOriginalFragranceInfo(item, products);
+
+                              if (kitInfo) {
+                                return (
+                                  <div
+                                    key={idx}
+                                    onClick={() => handleToggleItemCheck(order.id, idx)}
+                                    className={`p-3 rounded-xl border transition-all cursor-pointer space-y-2 ${
+                                      isChecked
+                                        ? 'bg-emerald-50/70 border-emerald-300 text-emerald-900 line-through opacity-80'
+                                        : 'bg-purple-50/35 border-purple-200 hover:border-purple-400 shadow-sm'
+                                    }`}
+                                  >
+                                    <div className="flex items-start justify-between gap-2">
+                                      <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                                        <input
+                                          type="checkbox"
+                                          checked={!!isChecked}
+                                          onChange={() => {}}
+                                          className="w-4 h-4 mt-0.5 rounded text-purple-600 cursor-pointer pointer-events-none shrink-0"
+                                        />
+                                        <div className="min-w-0 flex-1">
+                                          <div className="flex items-center gap-1.5 flex-wrap">
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-600 text-white shadow-2xs">
+                                              <Sparkles className="w-3 h-3" />
+                                              <span>Arma tu propio perfume (100 ml)</span>
+                                            </span>
+                                            <span className="text-[10.5px] font-black text-indigo-800 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md">
+                                              Cant: {item.quantity} {item.quantity === 1 ? 'perfume' : 'perfumes'}
+                                            </span>
+                                          </div>
+
+                                          <h4 className="font-black text-sm text-slate-900 mt-1">
+                                            Fragancia: <span className="text-purple-900">{kitInfo.fragranceName}</span>
+                                          </h4>
+
+                                          {(kitInfo.originalName || origInfo?.originalName) && (
+                                            <div className="flex items-center gap-1.5 text-[11px] flex-wrap mt-0.5">
+                                              <span className="text-slate-500 font-medium">Original:</span>
+                                              <span className="font-black text-amber-950 bg-amber-100/90 px-1.5 py-0.5 rounded border border-amber-300 font-sans">
+                                                {kitInfo.originalName || origInfo?.originalName}
+                                              </span>
+                                              {(kitInfo.brand || origInfo?.brand) && (
+                                                <span className="text-[10px] text-slate-500 font-bold">
+                                                  • {kitInfo.brand || origInfo?.brand}
+                                                </span>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      <span className="clay-badge text-[10px] font-black px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-300 shrink-0 font-mono shadow-sm">
+                                        📍 Esencia: {shelfLocation}
+                                      </span>
+                                    </div>
+
+                                    {/* Especificaciones completas de la sección Arma tu propio perfume */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 pt-1.5 border-t border-purple-200/70 text-[11px]">
+                                      <div className="p-2 rounded-lg bg-white border border-purple-200/80">
+                                        <span className="text-[9.5px] font-bold text-slate-400 uppercase block">
+                                          Concentración / Esencia
+                                        </span>
+                                        <strong className={`font-black block ${kitInfo.isPlus ? 'text-purple-700' : 'text-slate-800'}`}>
+                                          {kitInfo.isPlus ? '🔥 1.5 Oz PLUS (1 Oz + ½ Oz)' : '💧 1 Oz Estándar'}
+                                        </strong>
+                                      </div>
+
+                                      <div className="p-2 rounded-lg bg-white border border-purple-200/80">
+                                        <div className="flex items-center justify-between gap-1">
+                                          <span className="text-[9.5px] font-bold text-slate-400 uppercase">
+                                            Bote 100ml elegido
+                                          </span>
+                                          <span className="text-[9.5px] font-mono font-black text-amber-900 bg-amber-100 px-1.5 py-0.2 rounded border border-amber-300">
+                                            📍 {kitInfo.bottlePuesto}
+                                          </span>
+                                        </div>
+                                        <strong className="font-black text-slate-900 block truncate" title={kitInfo.bottleName}>
+                                          🍾 {kitInfo.bottleName}
+                                        </strong>
+                                      </div>
+
+                                      <div className="p-2 rounded-lg bg-white border border-purple-200/80">
+                                        <span className="text-[9.5px] font-bold text-slate-400 uppercase block">
+                                          Etiqueta de Fragancia
+                                        </span>
+                                        <strong className={`font-black block ${kitInfo.hasLabel ? 'text-emerald-700' : 'text-slate-600'}`}>
+                                          {kitInfo.hasLabel ? '🏷️ Con Etiqueta' : '🚫 Sin Etiqueta'}
+                                        </strong>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              }
 
                               return (
                                 <div 
@@ -1622,6 +1720,40 @@ export default function BodegaPage() {
                         <div className="space-y-1.5 mb-3">
                           {order.items.map((item, idx) => {
                             const origInfo = getOriginalFragranceInfo(item, products);
+                            const kitInfo = parseKitOrderItem(item, products);
+                            if (kitInfo) {
+                              return (
+                                <div key={idx} className="p-2.5 rounded-xl bg-purple-50/40 border border-purple-200 text-xs space-y-1.5">
+                                  <div className="flex justify-between items-start gap-2">
+                                    <div className="min-w-0 flex-1">
+                                      <span className="font-black text-purple-900 block">
+                                        ✨ Arma tu propio perfume: {kitInfo.fragranceName}
+                                      </span>
+                                      {(kitInfo.originalName || origInfo?.originalName) && (
+                                        <span className="text-[10px] text-slate-600 font-medium block mt-0.5">
+                                          Original: <strong className="text-slate-900 font-black">{kitInfo.originalName || origInfo?.originalName}</strong>
+                                          {(kitInfo.brand || origInfo?.brand) && <span className="text-slate-400"> ({kitInfo.brand || origInfo?.brand})</span>}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span className="font-mono font-black text-indigo-700 shrink-0">
+                                      Cant: {item.quantity}
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold">
+                                    <span className="px-2 py-0.5 rounded bg-white border border-purple-200 text-purple-800">
+                                      {kitInfo.isPlus ? '🔥 1.5 Oz PLUS (1 Oz + ½ Oz)' : '💧 1 Oz Estándar'}
+                                    </span>
+                                    <span className="px-2 py-0.5 rounded bg-white border border-purple-200 text-slate-800">
+                                      🍾 {kitInfo.bottleName} (📍 {kitInfo.bottlePuesto})
+                                    </span>
+                                    <span className="px-2 py-0.5 rounded bg-white border border-purple-200 text-emerald-800">
+                                      {kitInfo.hasLabel ? '🏷️ Con Etiqueta' : '🚫 Sin Etiqueta'}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            }
                             return (
                               <div key={idx} className="p-2 rounded-xl bg-slate-50 border border-slate-200 text-xs flex justify-between items-center gap-2">
                                 <div className="truncate min-w-0 flex-1">

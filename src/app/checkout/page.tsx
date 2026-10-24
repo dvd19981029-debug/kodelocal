@@ -323,13 +323,15 @@ export default function CheckoutPage() {
           actividadEconomica: giro || undefined
         },
         items: cart.map((it) => ({
-          productId: it.product.id,
+          productId: it.kitDetails?.essenceId || it.product.id,
           name: `${it.product.name} (${it.presentationName})`,
           quantity: it.quantity,
           price: it.unitPrice,
           total: it.totalPrice,
-          unit: it.presentation,
-          puesto: it.product.puesto
+          unit: it.presentationName || it.presentation,
+          puesto: it.kitDetails?.essencePuesto || it.product.puesto,
+          kitDetails: it.kitDetails || undefined,
+          selectedBottle: it.selectedBottle || undefined,
         }))
       };
 
@@ -422,6 +424,8 @@ export default function CheckoutPage() {
               discountAmt: discountAmt,
               quantity: it.quantity,
               total: Number((finalPrice * it.quantity).toFixed(2)),
+              kitDetails: it.kitDetails || undefined,
+              selectedBottle: it.selectedBottle || undefined,
             };
           }),
           notes: `Entrega: ${metodoEntrega === 'RETIRO' ? 'Retiro en Local San Salvador' : 'Envío a Domicilio'} - Doc: ${tipoComprobante}`,

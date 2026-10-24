@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { CustomerRecord } from '@/lib/customers';
 import { SaleRecord, ProductItem } from '@/lib/store';
-import { getOriginalFragranceInfo } from '@/lib/perfumeNames';
+import { getOriginalFragranceInfo, parseKitOrderItem } from '@/lib/perfumeNames';
 
 export interface PosBodegaModuleProps {
   sales: SaleRecord[];
@@ -328,6 +328,40 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                     </span>
                     {order.items.map((it, idx) => {
                       const origInfo = getOriginalFragranceInfo(it, products);
+                      const kitInfo = parseKitOrderItem(it, products);
+                      if (kitInfo) {
+                        return (
+                          <div key={idx} className="p-2.5 rounded-xl bg-purple-50/40 border border-purple-200 text-xs space-y-1.5">
+                            <div className="flex justify-between items-start gap-2">
+                              <div className="min-w-0 flex-1">
+                                <span className="font-black text-purple-900 block">
+                                  ✨ Arma tu propio perfume: {kitInfo.fragranceName} (×{it.quantity})
+                                </span>
+                                {(kitInfo.originalName || origInfo?.originalName) && (
+                                  <span className="text-[10px] text-slate-600 font-medium block mt-0.5">
+                                    Original: <strong className="text-slate-900 font-black">{kitInfo.originalName || origInfo?.originalName}</strong>
+                                    {(kitInfo.brand || origInfo?.brand) && <span className="text-slate-400"> ({kitInfo.brand || origInfo?.brand})</span>}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="clay-badge text-[9.5px] font-mono font-black text-amber-950 bg-amber-100 px-2 py-0.5 border border-amber-300 shrink-0">
+                                📍 Esencia: {kitInfo.essencePuesto}
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold">
+                              <span className="px-2 py-0.5 rounded bg-white border border-purple-200 text-purple-800">
+                                {kitInfo.isPlus ? '🔥 1.5 Oz PLUS (1 Oz + ½ Oz)' : '💧 1 Oz Estándar'}
+                              </span>
+                              <span className="px-2 py-0.5 rounded bg-white border border-purple-200 text-slate-800">
+                                🍾 {kitInfo.bottleName} (📍 {kitInfo.bottlePuesto})
+                              </span>
+                              <span className="px-2 py-0.5 rounded bg-white border border-purple-200 text-emerald-800">
+                                {kitInfo.hasLabel ? '🏷️ Con Etiqueta' : '🚫 Sin Etiqueta'}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      }
                       return (
                         <div key={idx} className="p-2 rounded-xl bg-white border border-slate-200 text-xs flex justify-between items-center gap-2">
                           <div className="truncate min-w-0 flex-1">

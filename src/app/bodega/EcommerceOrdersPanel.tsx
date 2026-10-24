@@ -21,6 +21,7 @@ import {
   Check,
 } from 'lucide-react';
 import { getStaffToken } from '@/lib/auth';
+import { parseKitOrderItem } from '@/lib/perfumeNames';
 import {
   DEPARTAMENTOS_CATALOG,
   MUNICIPIOS_CATALOG,
@@ -957,20 +958,67 @@ function OrderDetailModal({
                   </tr>
                 </thead>
                 <tbody>
-                  {o.items.map((it) => (
-                    <tr key={it.id} className="border-t border-slate-200">
-                      <td className="py-1.5 font-bold">
-                        {it.productName}
-                        {it.inspiredBy && (
-                          <div className="text-[10px] font-medium text-slate-500">Inspirado en: {it.inspiredBy}</div>
-                        )}
-                      </td>
-                      <td className="py-1.5">{it.presentation}</td>
-                      <td className="py-1.5 text-center font-mono">{it.quantity}</td>
-                      <td className="py-1.5 text-right font-mono">{money(it.unitPrice)}</td>
-                      <td className="py-1.5 text-right font-mono font-bold">{money(it.total)}</td>
-                    </tr>
-                  ))}
+                  {o.items.map((it) => {
+                    const kitInfo = parseKitOrderItem(it);
+                    return (
+                      <tr key={it.id} className="border-t border-slate-200 align-top">
+                        <td className="py-2 font-bold">
+                          {kitInfo ? (
+                            <div className="space-y-0.5">
+                              <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-900 border border-purple-200">
+                                ✨ Arma tu propio perfume (100 ml)
+                              </span>
+                              <div className="text-slate-900 font-black">
+                                Fragancia: {kitInfo.fragranceName}
+                              </div>
+                              {(kitInfo.originalName || it.inspiredBy) && (
+                                <div className="text-[10.5px] font-bold text-amber-900">
+                                  Original: {kitInfo.originalName || it.inspiredBy}
+                                  {kitInfo.brand ? ` • ${kitInfo.brand}` : ''}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <>
+                              {it.productName}
+                              {it.inspiredBy && (
+                                <div className="text-[10px] font-medium text-slate-500">Inspirado en: {it.inspiredBy}</div>
+                              )}
+                            </>
+                          )}
+                        </td>
+                        <td className="py-2">
+                          {kitInfo ? (
+                            <div className="space-y-1 text-[11px]">
+                              <div>
+                                <span className="text-slate-500">Concentración: </span>
+                                <strong className={kitInfo.isPlus ? 'text-purple-700 font-black' : 'text-slate-800 font-bold'}>
+                                  {kitInfo.isPlus ? '1.5 Oz PLUS (1 Oz + ½ Oz)' : '1 Oz Estándar'}
+                                </strong>
+                              </div>
+                              <div>
+                                <span className="text-slate-500">Bote 100ml: </span>
+                                <strong className="text-slate-900 font-black">
+                                  {kitInfo.bottleName} (📍 {kitInfo.bottlePuesto})
+                                </strong>
+                              </div>
+                              <div>
+                                <span className="text-slate-500">Etiqueta: </span>
+                                <strong className={kitInfo.hasLabel ? 'text-emerald-700 font-black' : 'text-slate-600 font-bold'}>
+                                  {kitInfo.hasLabel ? 'Con Etiqueta' : 'Sin Etiqueta'}
+                                </strong>
+                              </div>
+                            </div>
+                          ) : (
+                            it.presentation
+                          )}
+                        </td>
+                        <td className="py-2 text-center font-mono">{it.quantity}</td>
+                        <td className="py-2 text-right font-mono">{money(it.unitPrice)}</td>
+                        <td className="py-2 text-right font-mono font-bold">{money(it.total)}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
               <div className="border-t border-slate-300 pt-2 mt-2 space-y-0.5">
