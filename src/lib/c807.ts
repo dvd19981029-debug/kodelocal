@@ -890,23 +890,23 @@ export class C807Client {
       // 1) ENCABEZADO: Logo Principal de Aromaniak + sv.com + Remitente
       if (aromaniakLogo) {
         page.drawImage(aromaniakLogo, {
-          x: RX,
-          y: 260,
-          width: 112,
-          height: 19,
+          x: RX - 1,
+          y: 256.5,
+          width: 135,
+          height: 23.5,
         });
         page.drawText('sv.com', {
-          x: RX + 114,
-          y: 262.2,
-          size: 13.5,
+          x: RX + 135.5,
+          y: 257.5,
+          size: 17.2,
           font: fontBold,
           color: black,
         });
       } else {
         page.drawText('Aromaniak sv.com', {
           x: RX,
-          y: 263,
-          size: 15,
+          y: 260,
+          size: 19,
           font: fontBold,
           color: black,
         });
@@ -914,15 +914,15 @@ export class C807Client {
 
       page.drawText(`${data.remitenteNombre}   |   Teléfono: ${data.remitenteTelefono}`, {
         x: RX,
-        y: 250.5,
+        y: 247,
         size: 7.0,
         font: fontBold,
         color: black,
       });
 
       page.drawLine({
-        start: { x: SPLIT_X, y: 247 },
-        end: { x: R, y: 247 },
+        start: { x: SPLIT_X, y: 243.5 },
+        end: { x: R, y: 243.5 },
         thickness: 1.1,
         color: black,
       });
@@ -930,14 +930,14 @@ export class C807Client {
       // 2) TÍTULO DE DESTINO (sin cuadro negro, texto limpio en negrita)
       page.drawText('Destino:', {
         x: RX,
-        y: 237.5,
+        y: 234,
         size: 8.2,
         font: fontBold,
         color: black,
       });
 
       // 3) CAMPOS DE DESTINO (Nombre, Teléfono y Dirección en negrita + auto-ajuste)
-      const destinoTopY = 234.5;
+      const destinoTopY = 231;
       const destinoBottomY = 123;
       const availDestinoH = destinoTopY - destinoBottomY; // 111.5pt
 
