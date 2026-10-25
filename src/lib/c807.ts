@@ -784,19 +784,22 @@ export class C807Client {
 
       // ==================== COLUMNA IZQUIERDA (ENRUTAMIENTO C807) ====================
       if (c807Logo) {
+        const c807W = 34;
+        const c807H = 11.5;
         page.drawImage(c807Logo, {
-          x: L + 12,
-          y: 263,
-          width: 52,
-          height: 18,
+          x: L + (SPLIT_X - L - c807W) / 2,
+          y: 268.5,
+          width: c807W,
+          height: c807H,
+          opacity: 0.72,
         });
       }
       const c807TelTxt = `Tel: ${data.c807Whatsapp || '72087895'}`;
       page.drawText(c807TelTxt, {
-        x: L + (SPLIT_X - L - fontBold.widthOfTextAtSize(c807TelTxt, 6.2)) / 2,
-        y: 255.5,
-        size: 6.2,
-        font: fontBold,
+        x: L + (SPLIT_X - L - fontRegular.widthOfTextAtSize(c807TelTxt, 5.2)) / 2,
+        y: 261.5,
+        size: 5.2,
+        font: fontRegular,
         color: black,
       });
 
@@ -804,12 +807,12 @@ export class C807Client {
       page.pushOperators(
         PDFOperator.of('q' as any),
         PDFOperator.of('cm' as any, [
-          PDFNumber.of(67),
+          PDFNumber.of(70),
           PDFNumber.of(0),
           PDFNumber.of(0),
-          PDFNumber.of(67),
-          PDFNumber.of(L + 4.5),
-          PDFNumber.of(186),
+          PDFNumber.of(70),
+          PDFNumber.of(L + 3),
+          PDFNumber.of(188),
         ]),
         PDFOperator.of('Do' as any, [PDFName.of('QrOrig')]),
         PDFOperator.of('Q' as any)
