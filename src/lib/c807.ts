@@ -1,6 +1,7 @@
 // src/lib/c807.ts
 // Cliente nativo para integración directa con C807 Express (Guías de Paquetería)
 
+import { PDFDocument } from 'pdf-lib';
 import { DEPTO_TO_ID, resolveC807MunicipioId } from './svTerritory';
 
 export interface C807GuideInput {
@@ -385,9 +386,31 @@ export class C807Client {
   }
 
   /**
-   * Obtiene el PDF oficial de la guía/viñeta directamente desde C807 Express
+   * Garantiza que un PDF de guía ocupe estrictamente 1 sola página (descarta desbordamientos en pág. 2+)
    */
-  async obtenerPdfGuia(numeroGuia: string): Promise<{
+  private async recortarPrimeraPaginaPdf(rawBuffer: Buffer): Promise<Buffer> {
+    try {
+      const srcDoc = await PDFDocument.load(rawBuffer, { ignoreEncryption: true });
+      if (srcDoc.getPageCount() <= 1) {
+        return rawBuffer;
+      }
+      const singlePageDoc = await PDFDocument.create();
+      const [firstPage] = await singlePageDoc.copyPages(srcDoc, [0]);
+      singlePageDoc.addPage(firstPage);
+      const savedBytes = await singlePageDoc.save();
+      return Buffer.from(savedBytes);
+    } catch {
+      return rawBuffer;
+    }
+  }
+
+  /**
+   * Obtiene el PDF oficial de la guía/viñeta directamente desde C807 Express (recortado a 1 sola página)
+   */
+  async obtenerPdfGuia(
+    numeroGuia: string,
+    preFetchedToken?: string
+  ): Promise<{
     success: boolean;
     pdfBuffer?: Buffer;
     error?: string;
@@ -398,7 +421,7 @@ export class C807Client {
     }
 
     try {
-      const token = await this.obtenerToken();
+      const token = preFetchedToken || (await this.obtenerToken());
       const pdfUrl = process.env.C807_GET_PDF_URL || 'https://app.c807.com/guia.php/api/get_pdf';
 
       const response = await fetch(pdfUrl, {
@@ -414,7 +437,8 @@ export class C807Client {
       const contentType = response.headers.get('content-type') || '';
       if (contentType.includes('application/pdf')) {
         const arrBuf = await response.arrayBuffer();
-        return { success: true, pdfBuffer: Buffer.from(arrBuf) };
+        const trimmed = await this.recortarPrimeraPaginaPdf(Buffer.from(arrBuf));
+        return { success: true, pdfBuffer: trimmed };
       }
 
       const data = await response.json().catch(() => null);
@@ -440,12 +464,95 @@ export class C807Client {
       }
 
       const cleanB64 = base64Pdf.replace(/^data:application\/pdf;base64,/i, '').trim();
-      const pdfBuffer = Buffer.from(cleanB64, 'base64');
-      return { success: true, pdfBuffer };
+      const rawBuffer = Buffer.from(cleanB64, 'base64');
+      const trimmed = await this.recortarPrimeraPaginaPdf(rawBuffer);
+      return { success: true, pdfBuffer: trimmed };
     } catch (err: any) {
       return {
         success: false,
         error: err?.message || 'Error de conexión al descargar PDF desde C807',
+      };
+    }
+  }
+
+  /**
+   * Obtiene múltiples guías de C807 y las une en un único documento PDF,
+   * garantizando que cada guía ocupe únicamente 1 página (descartando cualquier 2da página de desborde).
+   */
+  async obtenerPdfGuiasUnificadas(numerosGuia: string[]): Promise<{
+    success: boolean;
+    pdfBuffer?: Buffer;
+    includedGuides?: string[];
+    error?: string;
+  }> {
+    const cleanList = Array.from(
+      new Set(
+        (numerosGuia || [])
+          .map((g) => String(g || '').trim())
+          .filter(Boolean)
+      )
+    );
+
+    if (cleanList.length === 0) {
+      return { success: false, error: 'Selecciona al menos una guía para descargar.' };
+    }
+
+    if (cleanList.length === 1) {
+      const single = await this.obtenerPdfGuia(cleanList[0]);
+      return {
+        success: single.success,
+        pdfBuffer: single.pdfBuffer,
+        includedGuides: single.success ? [cleanList[0]] : [],
+        error: single.error,
+      };
+    }
+
+    try {
+      const token = await this.obtenerToken();
+      const results = await Promise.all(
+        cleanList.map(async (guia) => ({
+          guia,
+          res: await this.obtenerPdfGuia(guia, token),
+        }))
+      );
+
+      const mergedDoc = await PDFDocument.create();
+      const includedGuides: string[] = [];
+
+      for (const item of results) {
+        if (!item.res.success || !item.res.pdfBuffer) continue;
+        try {
+          const srcDoc = await PDFDocument.load(item.res.pdfBuffer, {
+            ignoreEncryption: true,
+          });
+          if (srcDoc.getPageCount() > 0) {
+            // Copiar exclusivamente la primera página [0] de cada guía
+            const [firstPage] = await mergedDoc.copyPages(srcDoc, [0]);
+            mergedDoc.addPage(firstPage);
+            includedGuides.push(item.guia);
+          }
+        } catch (pdfErr) {
+          console.warn(`[C807 Merge PDF] No se pudo procesar guía ${item.guia}:`, pdfErr);
+        }
+      }
+
+      if (includedGuides.length === 0) {
+        return {
+          success: false,
+          error: 'No se pudo obtener el PDF de ninguna de las guías seleccionadas en C807.',
+        };
+      }
+
+      const mergedBytes = await mergedDoc.save();
+      return {
+        success: true,
+        pdfBuffer: Buffer.from(mergedBytes),
+        includedGuides,
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err?.message || 'Error al unificar los PDFs de las guías seleccionadas.',
       };
     }
   }

@@ -213,6 +213,8 @@ export default function EcommerceOrdersPanel() {
   const [selected, setSelected] = useState<EcoOrder | null>(null);
   const [showUnpaid, setShowUnpaid] = useState(false);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [downloadingBatch, setDownloadingBatch] = useState(false);
 
   const handleConfirmTransfer = async (o: EcoOrder) => {
     if (
@@ -305,10 +307,109 @@ export default function EcommerceOrdersPanel() {
         o.orderNumber.toLowerCase().includes(q) ||
         o.customerName.toLowerCase().includes(q) ||
         (o.customerPhone || '').includes(q) ||
-        (o.customerEmail || '').toLowerCase().includes(q)
+        (o.customerEmail || '').toLowerCase().includes(q) ||
+        (o.trackingNumber || '').toLowerCase().includes(q)
       );
     });
   }, [orders, search, statusFilter, showUnpaid]);
+
+  const selectableOrdersWithGuide = useMemo(
+    () => filtered.filter((o) => Boolean(o.trackingNumber && o.trackingNumber.trim())),
+    [filtered]
+  );
+
+  const selectedOrdersWithGuide = useMemo(
+    () =>
+      orders.filter(
+        (o) =>
+          selectedIds.includes(o.id) &&
+          Boolean(o.trackingNumber && o.trackingNumber.trim())
+      ),
+    [orders, selectedIds]
+  );
+
+  const allVisibleWithGuideSelected =
+    selectableOrdersWithGuide.length > 0 &&
+    selectableOrdersWithGuide.every((o) => selectedIds.includes(o.id));
+
+  const toggleSelectOrder = (orderId: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId]
+    );
+  };
+
+  const toggleSelectAllWithGuide = () => {
+    if (allVisibleWithGuideSelected) {
+      const visibleIds = new Set(selectableOrdersWithGuide.map((o) => o.id));
+      setSelectedIds((prev) => prev.filter((id) => !visibleIds.has(id)));
+    } else {
+      const merged = new Set([
+        ...selectedIds,
+        ...selectableOrdersWithGuide.map((o) => o.id),
+      ]);
+      setSelectedIds(Array.from(merged));
+    }
+  };
+
+  const handleBatchPdfAction = async (mode: 'download' | 'print') => {
+    const guias = Array.from(
+      new Set(
+        selectedOrdersWithGuide
+          .map((o) => String(o.trackingNumber || '').trim())
+          .filter(Boolean)
+      )
+    );
+    if (guias.length === 0) {
+      alert('Selecciona al menos un pedido que ya tenga guía C807 generada.');
+      return;
+    }
+
+    if (mode === 'print' && guias.length <= 25) {
+      const url = `/api/c807/pdf?guias=${encodeURIComponent(guias.join(','))}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    setDownloadingBatch(true);
+    try {
+      const res = await fetch('/api/c807/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          guias,
+          download: mode === 'download',
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        alert(errData?.error || 'No se pudo generar el PDF unificado de las guías seleccionadas.');
+        return;
+      }
+
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      if (mode === 'print') {
+        window.open(blobUrl, '_blank', 'noopener,noreferrer');
+      } else {
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download =
+          guias.length === 1
+            ? `Guia-C807-${guias[0]}.pdf`
+            : `Guias-C807-Aromaniak-${guias.length}-ordenes.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
+      }
+    } catch (err: any) {
+      alert(`Error al descargar guías unificadas: ${err?.message || 'Error de red'}`);
+    } finally {
+      setDownloadingBatch(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -378,10 +479,87 @@ export default function EcommerceOrdersPanel() {
         </div>
       )}
 
+      {/* Barra de Selección Múltiple de Guías C807 */}
+      {(selectedOrdersWithGuide.length > 0 || selectableOrdersWithGuide.length > 0) && (
+        <div className="clay-card p-3 bg-indigo-50/80 border border-indigo-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5 flex-wrap text-xs">
+            <label className="inline-flex items-center gap-2 font-black text-indigo-950 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={allVisibleWithGuideSelected}
+                onChange={toggleSelectAllWithGuide}
+                className="w-4 h-4 accent-indigo-600 rounded cursor-pointer"
+              />
+              <span>
+                Seleccionar todas con guía ({selectableOrdersWithGuide.length})
+              </span>
+            </label>
+            {selectedOrdersWithGuide.length > 0 && (
+              <>
+                <span className="px-2.5 py-0.5 rounded-full bg-indigo-600 text-white text-[11px] font-black">
+                  {selectedOrdersWithGuide.length}{' '}
+                  {selectedOrdersWithGuide.length === 1 ? 'guía seleccionada' : 'guías seleccionadas'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedIds([])}
+                  className="text-[11px] font-bold text-slate-600 hover:text-rose-600 underline cursor-pointer"
+                >
+                  Limpiar selección
+                </button>
+              </>
+            )}
+          </div>
+
+          {selectedOrdersWithGuide.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+              <button
+                type="button"
+                disabled={downloadingBatch}
+                onClick={() => handleBatchPdfAction('print')}
+                className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-black inline-flex items-center justify-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                title="Abrir todas las guías seleccionadas en un solo PDF (1 página por guía) listo para imprimir"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>
+                  {downloadingBatch
+                    ? 'Unificando PDF...'
+                    : `Imprimir ${selectedOrdersWithGuide.length} Guías Juntas (1 pág c/u)`}
+                </span>
+              </button>
+              <button
+                type="button"
+                disabled={downloadingBatch}
+                onClick={() => handleBatchPdfAction('download')}
+                className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-black inline-flex items-center justify-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                title="Descargar todas las guías seleccionadas en un solo documento PDF (1 página por guía)"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>
+                  {downloadingBatch
+                    ? 'Generando PDF...'
+                    : `Descargar ${selectedOrdersWithGuide.length} Guías en 1 PDF`}
+                </span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="clay-card p-0 overflow-x-auto">
         <table className="w-full text-xs text-left">
           <thead>
             <tr className="text-slate-500 border-b border-slate-200">
+              <th className="py-2.5 px-3 w-9 text-center">
+                <input
+                  type="checkbox"
+                  checked={allVisibleWithGuideSelected}
+                  disabled={selectableOrdersWithGuide.length === 0}
+                  onChange={toggleSelectAllWithGuide}
+                  title="Seleccionar todas las órdenes visibles con guía C807"
+                  className="w-4 h-4 accent-indigo-600 rounded cursor-pointer disabled:opacity-40"
+                />
+              </th>
               <th className="py-2.5 px-3">Pedido</th>
               <th className="py-2.5 px-3">Fecha</th>
               <th className="py-2.5 px-3">Cliente</th>
@@ -395,7 +573,7 @@ export default function EcommerceOrdersPanel() {
           <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={8} className="py-8 text-center text-slate-400 font-medium">
+                <td colSpan={9} className="py-8 text-center text-slate-400 font-medium">
                   {loading ? 'Cargando pedidos…' : 'No hay pedidos ecommerce para mostrar'}
                 </td>
               </tr>
@@ -403,13 +581,38 @@ export default function EcommerceOrdersPanel() {
             {filtered.map((o) => {
               const real = isRealOrder(o);
               const twin = real ? null : findRealTwin(o, orders);
+              const hasGuide = Boolean(o.trackingNumber && o.trackingNumber.trim());
+              const isChecked = selectedIds.includes(o.id);
               return (
               <tr
                 key={o.id}
-                className={`border-b border-slate-100 hover:bg-slate-50 ${real ? '' : 'opacity-60'}`}
+                className={`border-b border-slate-100 hover:bg-slate-50 ${
+                  isChecked ? 'bg-indigo-50/50' : ''
+                } ${real ? '' : 'opacity-60'}`}
               >
+                <td className="py-2.5 px-3 text-center">
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    disabled={!hasGuide}
+                    onChange={() => toggleSelectOrder(o.id)}
+                    title={
+                      hasGuide
+                        ? `Seleccionar guía ${o.trackingNumber}`
+                        : 'Esta orden aún no tiene guía C807 generada'
+                    }
+                    className="w-4 h-4 accent-indigo-600 rounded cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                  />
+                </td>
                 <td className="py-2.5 px-3 font-mono font-bold text-slate-800">
                   {o.orderNumber}
+                  {hasGuide && (
+                    <div className="mt-0.5">
+                      <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-mono font-black bg-indigo-50 text-indigo-700 border border-indigo-200">
+                        Guía: {o.trackingNumber}
+                      </span>
+                    </div>
+                  )}
                   <div className="mt-1">
                     <ReadinessBadge order={o} twin={twin} />
                   </div>
