@@ -213,8 +213,8 @@ export const PosSalesModule: React.FC<PosSalesModuleProps> = React.memo(({
                     if (!ventasSearch.trim()) return true;
                     const q = ventasSearch.toLowerCase().trim();
                     return (
-                      s.saleNumber.toLowerCase().includes(q) ||
-                      s.cliente.nombre.toLowerCase().includes(q) ||
+                      String(s.saleNumber || '').toLowerCase().includes(q) ||
+                      String(s.cliente?.nombre || 'Consumidor Final').toLowerCase().includes(q) ||
                       (s.dteInfo?.numeroControl && s.dteInfo.numeroControl.toLowerCase().includes(q))
                     );
                   })
@@ -227,8 +227,8 @@ export const PosSalesModule: React.FC<PosSalesModuleProps> = React.memo(({
                         </span>
                       </td>
                       <td className="py-2.5 px-3">
-                        <span className="font-extrabold text-slate-800 block text-xs">{sale.cliente.nombre}</span>
-                        {sale.cliente.numDocumento && (
+                        <span className="font-extrabold text-slate-800 block text-xs">{sale.cliente?.nombre || 'Consumidor Final'}</span>
+                        {sale.cliente?.numDocumento && (
                           <span className="text-[10px] font-mono text-slate-400">Doc: {sale.cliente.numDocumento}</span>
                         )}
                       </td>
@@ -267,7 +267,7 @@ export const PosSalesModule: React.FC<PosSalesModuleProps> = React.memo(({
                           : sale.paymentMethod}
                       </td>
                       <td className="py-2.5 px-3 text-right font-mono font-black text-xs text-indigo-700">
-                        ${sale.total.toFixed(2)}
+                        ${Number(sale.total || 0).toFixed(2)}
                       </td>
                       <td className="py-2.5 px-3 text-center">
                         <button

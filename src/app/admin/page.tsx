@@ -232,14 +232,89 @@ export default function AdminPage() {
       })
       .catch(err => console.error('Error cargando roles desde Supabase:', err));
 
-    fetch('/api/sales?limit=500')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.sales)) {
-          setSales(data.sales);
-        }
+    getStaffToken().then(staffToken => {
+      fetch('/api/sales?limit=500', {
+        headers: {
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
       })
-      .catch(err => console.error('Error fetching sales:', err));
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.sales)) {
+            const normalized: SaleRecord[] = data.sales
+              .filter((s: any) => {
+                const st = String(s.orderStatus || s.status || '').toUpperCase();
+                return !['CANCELLED', 'CANCELADO', 'ANULADA', 'PENDING_PREPARATION', 'READY_AT_WINDOW'].includes(st);
+              })
+              .map((s: any) => {
+                let parsedNotes: any = null;
+                if (typeof s.notes === 'string' && s.notes.trim().startsWith('{')) {
+                  try {
+                    const lastBrace = s.notes.lastIndexOf('}');
+                    parsedNotes = JSON.parse(lastBrace !== -1 ? s.notes.slice(0, lastBrace + 1) : s.notes);
+                  } catch (_) {}
+                }
+                const parsedClient = parsedNotes?.cliente || null;
+                const dteTipo =
+                  s.dteDocument?.tipoDte === 'CREDITO_FISCAL_03'
+                    ? '03'
+                    : s.dteDocument?.tipoDte === 'FACTURA_01'
+                    ? '01'
+                    : parsedNotes?.tipoComprobante || s.tipoComprobante || '01';
+                const totalNum = Number(s.total || 0);
+                const subtotalNum = Number(s.subtotal || totalNum / 1.13);
+                const ivaNum = Number(s.taxAmount ?? s.ivaTotal ?? (totalNum - totalNum / 1.13));
+
+                return {
+                  id: s.id,
+                  saleNumber: s.saleNumber || s.orderNumber || 'S/N',
+                  createdAt: s.createdAt,
+                  invoicedAt: s.dteDocument?.fhProcesamiento || s.invoicedAt || s.createdAt,
+                  total: totalNum,
+                  subtotal: subtotalNum,
+                  ivaTotal: ivaNum,
+                  paymentMethod: s.paymentMethod || s.payments?.[0]?.method || 'CASH',
+                  paymentStatus: s.paymentStatus || 'COMPLETED',
+                  orderStatus: s.orderStatus || 'COMPLETED',
+                  status: 'COMPLETED',
+                  tipoComprobante: dteTipo,
+                  vendedor: s.cashierName || s.vendedor || 'Caja 1',
+                  cliente: {
+                    nombre:
+                      s.cliente?.nombre ||
+                      parsedClient?.nombre ||
+                      s.customer?.name ||
+                      parsedNotes?.domicilio?.customerName ||
+                      'Consumidor Final',
+                    numDocumento: s.cliente?.numDocumento || parsedClient?.numDocumento || s.customer?.documentNum || undefined,
+                    nrc: s.cliente?.nrc || parsedClient?.nrc || s.customer?.nrc || undefined,
+                  },
+                  dteInfo: s.dteDocument
+                    ? {
+                        codigoGeneracion: s.dteDocument.codigoGeneracion,
+                        numeroControl: s.dteDocument.numeroControl,
+                        selloRecepcion: s.dteDocument.selloRecepcion,
+                        estado: s.dteDocument.estado,
+                      }
+                    : s.dteInfo,
+                  items: Array.isArray(s.items)
+                    ? s.items.map((it: any) => ({
+                        productId: it.productId,
+                        name: it.name || it.productName || 'Producto',
+                        quantity: Number(it.quantity || 1),
+                        price: Number(it.price ?? it.unitPrice ?? 0),
+                        total: Number(it.total || 0),
+                        unit: it.unit || 'Onza',
+                        puesto: it.puesto,
+                      }))
+                    : [],
+                };
+              });
+            setSales(normalized);
+          }
+        })
+        .catch(err => console.error('Error fetching sales:', err));
+    });
 
     fetch('/api/suppliers')
       .then(res => res.json())
@@ -1599,10 +1674,10 @@ export default function AdminPage() {
                     <div key={s.id} className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
                       <div>
                         <span className="font-bold text-slate-800 block font-mono">{s.saleNumber}</span>
-                        <span className="text-[11px] text-slate-400">{s.cliente.nombre} • {s.paymentMethod}</span>
+                        <span className="text-[11px] text-slate-400">{s.cliente?.nombre || 'Consumidor Final'} • {s.paymentMethod || 'CASH'}</span>
                       </div>
                       <div className="text-right">
-                        <span className="font-black text-slate-900 text-sm block">${s.total.toFixed(2)}</span>
+                        <span className="font-black text-slate-900 text-sm block">${Number(s.total || 0).toFixed(2)}</span>
                         <span className="clay-badge bg-emerald-50 text-emerald-700 text-[9px] py-0.2 px-1.5">
                           {s.tipoComprobante === '01' ? 'Factura 01' : s.tipoComprobante === '03' ? 'Crédito Fiscal 03' : 'Ticket'}
                         </span>

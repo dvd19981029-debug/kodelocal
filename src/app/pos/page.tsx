@@ -982,40 +982,47 @@ export default function PosPage() {
   // --- CÁLCULOS DE VENTAS Y ONZAS VENDIDAS EN EL DÍA ---
   const totalOnzasVendidas = useMemo(() => {
     return sales.reduce((sum, sale) => {
-      const ozInSale = sale.items
-        .filter(it => it.unit === 'Onza' || it.name.includes('Esencia') || it.name.includes('Elixir') || it.unit === 'Oz')
-        .reduce((s, it) => s + it.quantity, 0);
+      const ozInSale = (sale.items || [])
+        .filter(it => {
+          const itemName = String(it?.name || (it as any)?.productName || '');
+          return it?.unit === 'Onza' || itemName.includes('Esencia') || itemName.includes('Elixir') || it?.unit === 'Oz';
+        })
+        .reduce((s, it) => s + Number(it?.quantity || 0), 0);
       return sum + ozInSale;
     }, 0);
   }, [sales]);
 
   const totalBotesVendidos = useMemo(() => {
     return sales.reduce((sum, sale) => {
-      const botesInSale = sale.items
-        .filter(it => it.name.toLowerCase().includes('bote') || it.name.toLowerCase().includes('frasco') || it.name.toLowerCase().includes('atomizador'))
-        .reduce((s, it) => s + it.quantity, 0);
+      const botesInSale = (sale.items || [])
+        .filter(it => {
+          const itemName = String(it?.name || (it as any)?.productName || '').toLowerCase();
+          return itemName.includes('bote') || itemName.includes('frasco') || itemName.includes('atomizador');
+        })
+        .reduce((s, it) => s + Number(it?.quantity || 0), 0);
       return sum + botesInSale;
     }, 0);
   }, [sales]);
 
   const totalMontoVentas = useMemo(() => {
-    return sales.reduce((sum, s) => sum + s.total, 0);
+    return sales.reduce((sum, s) => sum + Number(s?.total || 0), 0);
   }, [sales]);
 
   // Ranking de fragancias en onzas vendidas
   const rankingFragancias = useMemo(() => {
     const map: Record<string, { name: string; onzas: number; totalMonto: number; sku?: string }> = {};
     sales.forEach(sale => {
-      sale.items.forEach(it => {
-        const isOz = it.unit === 'Onza' || it.name.includes('Esencia') || it.name.includes('Elixir') || it.unit === 'Oz';
+      (sale.items || []).forEach(it => {
+        const itemName = String(it?.name || (it as any)?.productName || '');
+        const isOz = it?.unit === 'Onza' || itemName.includes('Esencia') || itemName.includes('Elixir') || it?.unit === 'Oz';
         if (isOz) {
-          const key = it.productId || it.name;
+          const key = it.productId || itemName;
           if (!map[key]) {
             const prod = products.find(p => p.id === it.productId);
-            map[key] = { name: it.name, onzas: 0, totalMonto: 0, sku: prod?.sku };
+            map[key] = { name: itemName || 'Fragancia', onzas: 0, totalMonto: 0, sku: prod?.sku };
           }
-          map[key].onzas += it.quantity;
-          map[key].totalMonto += it.total;
+          map[key].onzas += Number(it?.quantity || 0);
+          map[key].totalMonto += Number(it?.total || 0);
         }
       });
     });

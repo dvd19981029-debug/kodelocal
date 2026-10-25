@@ -577,7 +577,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                             );
                           })}
                         </div>
-                        {order.cliente.nrc && (
+                        {order.cliente?.nrc && (
                           <span className="text-[10px] font-mono text-purple-700 font-bold">NRC: {order.cliente.nrc}</span>
                         )}
                       </div>
@@ -1436,9 +1436,9 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                         </td>
                         <td className="py-2.5 px-3">
                           <span className="font-extrabold text-slate-800 block text-xs truncate max-w-[160px]">
-                            {sale.cliente.nombre}
+                            {resolveCustomerName(sale)}
                           </span>
-                          {sale.cliente.numDocumento && (
+                          {sale.cliente?.numDocumento && (
                             <span className="text-[10px] font-mono text-slate-400">
                               Doc: {sale.cliente.numDocumento}
                             </span>
@@ -1458,7 +1458,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                             : 'Bitcoin'}
                         </td>
                         <td className="py-2.5 px-3 text-right font-mono font-black text-xs text-indigo-700">
-                          ${sale.total.toFixed(2)}
+                          ${Number(sale.total || 0).toFixed(2)}
                         </td>
                         <td className="py-2.5 px-3 text-center">
                           {sale.dteInfo?.codigoGeneracion ? (
