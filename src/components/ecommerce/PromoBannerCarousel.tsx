@@ -449,10 +449,10 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
                         <div className="bg-slate-950/65 border border-amber-400/70 rounded-xl px-2 sm:px-3 py-1 sm:py-1.5 flex items-center gap-2 sm:gap-3 shadow-md">
                           <div>
                             <span className="text-[8px] sm:text-[10px] font-bold text-amber-200/90 block leading-none">
-                              Duración en Piel
+                              Duración según notas
                             </span>
                             <span className="text-[11px] sm:text-sm font-black text-amber-300 leading-tight">
-                              8 a 12+ Horas
+                              4 a 12 Horas
                             </span>
                           </div>
                           <div className="w-[1px] h-5 sm:h-6 bg-amber-400/40" />

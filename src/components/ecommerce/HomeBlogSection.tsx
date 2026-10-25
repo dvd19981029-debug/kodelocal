@@ -23,7 +23,7 @@ const INITIAL_BLOG_POSTS: BlogPostSummary[] = [
     id: 'cmvoe4bcr0000srtmka1kvcb4',
     slug: 'la-importancia-de-macerar',
     title: 'La Importancia de Macerar: Cómo Mejorar la Fijación, Duración y Proyección de tu Perfume',
-    excerpt: 'Descubre por qué el reposo o maceración es el secreto para que la esencia pura y el alcohol se fusionen por completo, logrando una fijación profunda en la piel, mayor duración de horas y una proyección limpia sin olor a alcohol.',
+    excerpt: 'Descubre por qué el reposo o maceración es el secreto para que la esencia pura y el alcohol se fusionen por completo, alcanzando de 4 a 12 horas de duración según sus notas olfativas, y conoce qué tipos de perfumes duran más y cuáles menos.',
     coverImage: '/images/promo/banner_aromas.webp',
     author: 'Equipo Aromaniak SV',
     category: 'Guías & Rendimiento',

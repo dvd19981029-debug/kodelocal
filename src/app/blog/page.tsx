@@ -174,7 +174,7 @@ export default async function BlogIndexPage() {
             Inspiración Olfativa
           </span>
           <h3 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
-            Fragancias con más de 8 a 12 horas de fijación
+            Fragancias con de 4 a 12 horas de fijación según sus notas
           </h3>
           <p className="text-slate-600 text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed font-medium">
             Conoce nuestras esencias 100% puras importadas sin diluir para formular perfumes de alta gama. Visítanos en nuestra sucursal en Centro Comercial El Rosal, Calle El Progreso, San Salvador (<a href="https://maps.app.goo.gl/shtetXTGcPZQpBwY6" target="_blank" rel="noopener noreferrer" className="text-purple-700 font-bold underline">ver en Google Maps</a>), o pide en línea con envíos a los 14 departamentos de El Salvador.
