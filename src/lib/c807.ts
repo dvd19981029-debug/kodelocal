@@ -785,22 +785,30 @@ export class C807Client {
       // ==================== COLUMNA IZQUIERDA (ENRUTAMIENTO C807) ====================
       if (c807Logo) {
         page.drawImage(c807Logo, {
-          x: L + 10,
-          y: 259,
-          width: 56,
-          height: 20,
+          x: L + 12,
+          y: 263,
+          width: 52,
+          height: 18,
         });
       }
+      const c807TelTxt = `Tel: ${data.c807Whatsapp || '72087895'}`;
+      page.drawText(c807TelTxt, {
+        x: L + (SPLIT_X - L - fontBold.widthOfTextAtSize(c807TelTxt, 6.2)) / 2,
+        y: 255.5,
+        size: 6.2,
+        font: fontBold,
+        color: black,
+      });
 
       // QR Superior Izquierdo (idéntico al original)
       page.pushOperators(
         PDFOperator.of('q' as any),
         PDFOperator.of('cm' as any, [
-          PDFNumber.of(70),
+          PDFNumber.of(67),
           PDFNumber.of(0),
           PDFNumber.of(0),
-          PDFNumber.of(70),
-          PDFNumber.of(L + 3),
+          PDFNumber.of(67),
+          PDFNumber.of(L + 4.5),
           PDFNumber.of(186),
         ]),
         PDFOperator.of('Do' as any, [PDFName.of('QrOrig')]),
