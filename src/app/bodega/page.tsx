@@ -308,8 +308,8 @@ export default function BodegaPage() {
           vendedor: 'Tienda Online (aromaniaksv.com)',
           cliente: {
             nombre: o.customerName,
-            telefono: o.customerPhone,
-            correo: o.customerEmail || undefined,
+            telefono: o.customerPhone || o.customer?.phone || undefined,
+            correo: o.customerEmail || o.customer?.email || undefined,
             direccion: `${o.shippingAddress}, ${o.municipality}, ${o.department}`,
           },
           items: o.items.map((it: any) => {
@@ -490,6 +490,11 @@ export default function BodegaPage() {
             const prevLocal = mergedMap.get(key);
             if (prevLocal?.cliente?.nombre && prevLocal.cliente.nombre !== 'Consumidor Final' && (!s.cliente?.nombre || s.cliente.nombre === 'Consumidor Final')) {
               mergedMap.set(key, { ...s, cliente: prevLocal.cliente });
+            } else if (prevLocal?.cliente?.telefono && !s.cliente?.telefono) {
+              mergedMap.set(key, {
+                ...s,
+                cliente: { ...(s.cliente || { nombre: 'Consumidor Final' }), telefono: prevLocal.cliente.telefono },
+              });
             } else {
               mergedMap.set(key, s);
             }

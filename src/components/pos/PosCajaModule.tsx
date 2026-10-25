@@ -32,7 +32,7 @@ import {
   Filter,
 } from 'lucide-react';
 import { CustomerRecord } from '@/lib/customers';
-import { SaleRecord } from '@/lib/store';
+import { SaleRecord, resolveOrderPaymentSummary } from '@/lib/store';
 import { getActiveSessionUI } from '@/lib/auth';
 import {
   printDailyCashSalesTicketPdf,
@@ -108,6 +108,23 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
       if (found?.name) return found.name;
     }
     return order.cliente?.nombre || 'Consumidor Final';
+  };
+
+  const resolveCustomerPhone = (order: SaleRecord) => {
+    const directPhone =
+      order.cliente?.telefono ||
+      (order as any).customerPhone ||
+      order.domicilio?.customerPhone ||
+      '';
+    if (directPhone && String(directPhone).trim() !== '') {
+      return String(directPhone).trim();
+    }
+    const custId = (order.cliente as any)?.id || (order as any).customerId;
+    if (custId && customers) {
+      const found = customers.find(c => c.id === custId);
+      if (found?.phone) return found.phone;
+    }
+    return '';
   };
 
   const [onlyCashToday, setOnlyCashToday] = useState(false);
@@ -495,7 +512,13 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
             </div>
           ) : (
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-              {readyInWindowOrders.map((order) => (
+              {readyInWindowOrders.map((order) => {
+                const customerPhone = resolveCustomerPhone(order);
+                const paymentInfo = resolveOrderPaymentSummary(order);
+                const isWebOrder =
+                  order.channel === 'ONLINE' ||
+                  String(order.saleNumber || order.orderNumber || '').toUpperCase().startsWith('WEB-');
+                return (
                 <div 
                   key={order.id} 
                   className="clay-card p-5 bg-white border-2 border-emerald-400 shadow-[0_8px_24px_rgba(16,185,129,0.15)] flex flex-col justify-between space-y-4"
@@ -508,10 +531,11 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                           <span className="font-mono font-black text-sm text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-lg">
                             #{order.orderNumber || order.saleNumber}
                           </span>
-                          <span className="font-black text-sm text-slate-800 flex items-center gap-1.5 bg-slate-100/90 border border-slate-200 px-2.5 py-0.5 rounded-lg">
-                            <User className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                            <span>{resolveCustomerName(order)}</span>
-                          </span>
+                          {isWebOrder && (
+                            <span className="px-2 py-0.5 text-[10px] font-black rounded-md bg-purple-50 text-purple-700 border border-purple-200 uppercase">
+                              Tienda Online
+                            </span>
+                          )}
                           <span className={`px-2 py-0.5 text-xs font-black rounded-lg border ${
                             (order.tipoComprobante || (order.cliente?.nrc ? '03' : '01')) === '03'
                               ? 'bg-purple-100 text-purple-800 border-purple-300'
@@ -536,7 +560,9 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                       </div>
 
                       <div className="text-right">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 block">Total a Cobrar</span>
+                        <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                          {paymentInfo.isPaid ? 'Total Pagado' : 'Total a Cobrar'}
+                        </span>
                         <span className="text-2xl font-black font-mono text-emerald-600">
                           ${order.total.toFixed(2)}
                         </span>
@@ -544,16 +570,30 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                     </div>
 
                     {/* Datos del Cliente */}
-                    <div className="my-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
-                      <div>
+                    <div className="my-3 p-3 rounded-xl bg-slate-50 border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
+                      <div className="space-y-0.5">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Cliente</span>
-                        <strong className="text-slate-800 text-sm">{resolveCustomerName(order)}</strong>
+                        <strong className="text-slate-800 text-sm block">{resolveCustomerName(order)}</strong>
+                        {customerPhone && (
+                          <span className="text-xs font-mono font-bold text-slate-700 block">
+                            Tel: {customerPhone}
+                          </span>
+                        )}
                         {order.cliente?.numDocumento && (
                           <span className="text-[11px] text-slate-500 font-mono block">Doc: {order.cliente.numDocumento}</span>
                         )}
                       </div>
 
-                      <div className="flex flex-col sm:items-end gap-1">
+                      <div className="flex flex-col sm:items-end gap-1.5">
+                        <span
+                          className={`px-2.5 py-1 text-[10.5px] font-black rounded-lg border ${
+                            paymentInfo.isPaid
+                              ? 'bg-green-100 text-green-800 border-green-200'
+                              : 'bg-amber-50 text-amber-800 border-amber-200'
+                          }`}
+                        >
+                          {paymentInfo.badgeText}
+                        </span>
                         <div className="inline-flex bg-white p-1 rounded-xl border border-slate-200 shadow-2xs gap-1">
                           {(['01', '03'] as const).map((tipo) => {
                             const currentTipo = order.tipoComprobante === '03' || order.cliente?.nrc ? '03' : '01';
@@ -595,8 +635,8 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                               <div className="flex items-center gap-1.5">
                                 <span className="font-bold text-slate-800 truncate block">{it.name}</span>
                                 {it.puesto && (
-                                  <span className="clay-badge text-[9px] font-mono font-black bg-amber-100 text-amber-900 px-1 py-0.2 border border-amber-200">
-                                    📍{it.puesto}
+                                  <span className="clay-badge text-[9px] font-mono font-black bg-amber-100 text-amber-900 px-1.5 py-0.2 border border-amber-200">
+                                    Puesto: {it.puesto}
                                   </span>
                                 )}
                               </div>
@@ -669,7 +709,8 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                   </div>
 
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
