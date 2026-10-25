@@ -28,7 +28,7 @@ const INITIAL_BLOG_POSTS: BlogPostSummary[] = [
     author: 'Equipo Aromaniak SV',
     category: 'Guías & Rendimiento',
     readingTimeMin: 6,
-    publishedAt: '2026-10-25T22:19:25.784Z',
+    publishedAt: '2026-10-03T15:00:00.000Z',
   },
   {
     id: 'cmvdbldm20000srprmby7428i',
