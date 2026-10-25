@@ -438,33 +438,87 @@ export class C807Client {
 
   private sanitizeWinAnsi(str: string): string {
     return (str || '')
+      .normalize('NFC')
+      .replace(/\uFB00/g, 'ff')
       .replace(/\uFB01/g, 'fi')
       .replace(/\uFB02/g, 'fl')
-      .replace(/[\u2018\u2019]/g, "'")
-      .replace(/[\u201C\u201D]/g, '"')
-      .replace(/\u2013|\u2014/g, '-')
+      .replace(/\uFB03/g, 'ffi')
+      .replace(/\uFB04/g, 'ffl')
+      .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
+      .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
+      .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212]/g, '-')
       .replace(/\u2026/g, '...')
+      .replace(/\u00A0/g, ' ')
       .replace(/[^\x20-\x7E\xA0-\xFF]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
   }
 
+  private unescapePdfLiteralBytes(raw: string): Buffer {
+    const bytes: number[] = [];
+    let i = 0;
+    while (i < raw.length) {
+      const ch = raw.charCodeAt(i);
+      if (ch === 0x5c /* '\\' */ && i + 1 < raw.length) {
+        i++;
+        const next = raw.charCodeAt(i);
+        if (next === 0x6e /* 'n' */) bytes.push(0x0a);
+        else if (next === 0x72 /* 'r' */) bytes.push(0x0d);
+        else if (next === 0x74 /* 't' */) bytes.push(0x09);
+        else if (next === 0x62 /* 'b' */) bytes.push(0x08);
+        else if (next === 0x66 /* 'f' */) bytes.push(0x0c);
+        else if (next === 0x28 /* '(' */) bytes.push(0x28);
+        else if (next === 0x29 /* ')' */) bytes.push(0x29);
+        else if (next === 0x5c /* '\\' */) bytes.push(0x5c);
+        else if (next === 0x0d /* CR */) {
+          if (i + 1 < raw.length && raw.charCodeAt(i + 1) === 0x0a) i++;
+        } else if (next === 0x0a /* LF */) {
+          // Salto de línea escapado en literal PDF (continuación)
+        } else if (next >= 0x30 && next <= 0x37) {
+          let oct = raw[i];
+          if (i + 1 < raw.length && raw.charCodeAt(i + 1) >= 0x30 && raw.charCodeAt(i + 1) <= 0x37) {
+            oct += raw[++i];
+            if (i + 1 < raw.length && raw.charCodeAt(i + 1) >= 0x30 && raw.charCodeAt(i + 1) <= 0x37) {
+              oct += raw[++i];
+            }
+          }
+          bytes.push(parseInt(oct, 8) & 0xff);
+        } else {
+          bytes.push(next & 0xff);
+        }
+      } else {
+        bytes.push(ch & 0xff);
+      }
+      i++;
+    }
+    return Buffer.from(bytes);
+  }
+
   private decodePdfTextTokens(contentLatin1: string): Array<{ x: number; y: number; text: string }> {
-    const regex = /BT\s+([\d.]+)\s+([\d.]+)\s+Td\s+\(([\s\S]*?)\)\s*Tj\s+ET/g;
     const items: Array<{ x: number; y: number; text: string }> = [];
+    const headerRegex = /BT\s+([\d.]+)\s+([\d.]+)\s+Td\s+\(/g;
     let match;
-    while ((match = regex.exec(contentLatin1)) !== null) {
+    while ((match = headerRegex.exec(contentLatin1)) !== null) {
       const x = parseFloat(match[1]);
       const y = parseFloat(match[2]);
-      const raw = match[3]
-        .replace(/\\\(/g, '(')
-        .replace(/\\\)/g, ')')
-        .replace(/\\n/g, '\n')
-        .replace(/\\r/g, '\r')
-        .replace(/\\\\/g, '\\');
-      const buf = Buffer.from(raw, 'latin1');
+      let cursor = headerRegex.lastIndex;
+      let depth = 1;
+      while (cursor < contentLatin1.length && depth > 0) {
+        const c = contentLatin1.charCodeAt(cursor);
+        if (c === 0x5c /* '\\' */) {
+          cursor += 2;
+          continue;
+        }
+        if (c === 0x28 /* '(' */) depth++;
+        else if (c === 0x29 /* ')' */) depth--;
+        cursor++;
+      }
+      const rawLiteral = contentLatin1.slice(headerRegex.lastIndex, Math.max(headerRegex.lastIndex, cursor - 1));
+      headerRegex.lastIndex = cursor;
+
+      const buf = this.unescapePdfLiteralBytes(rawLiteral);
       let str = '';
-      if (buf.length >= 2 && (buf[0] === 0 || buf[1] === 0 || buf.length % 2 === 0)) {
+      if (buf.length >= 2 && buf.length % 2 === 0 && (buf[0] === 0 || buf[1] === 0 || buf.some((b) => b === 0))) {
         for (let i = 0; i + 1 < buf.length; i += 2) {
           str += String.fromCharCode((buf[i] << 8) | buf[i + 1]);
         }
@@ -519,6 +573,9 @@ export class C807Client {
     return lines;
   }
 
+  private static cachedAromaniakLogoBytes: Buffer | null = null;
+  private static cachedC807LogoBytes: Buffer | null = null;
+
   /**
    * Transforma el PDF oficial de C807 en la guía personalizada 4x4 pulgadas (288x288 pt) en Blanco y Negro
    * de Aromaniak × C807, conservando el mismo QR exacto (/I3) en ambas esquinas y todos los datos íntegros.
@@ -531,15 +588,29 @@ export class C807Client {
       }
       const srcPage = srcDoc.getPages()[0];
 
-      // 1. Extraer todos los tokens de texto del PDF original de C807
+      // 1. Extraer todos los tokens de texto de la primera página del PDF original de C807
       const tokens: Array<{ x: number; y: number; text: string }> = [];
-      for (const [, obj] of srcDoc.context.enumerateIndirectObjects()) {
-        if (obj instanceof PDFRawStream && !obj.dict.get(PDFName.of('Subtype'))) {
+      const pageContents = srcPage.node.Contents();
+      if (pageContents) {
+        const resolved = srcDoc.context.lookup(pageContents);
+        if (resolved instanceof PDFRawStream) {
           try {
-            const inflated = zlib.inflateSync(Buffer.from(obj.contents)).toString('latin1');
+            const inflated = zlib.inflateSync(Buffer.from(resolved.contents)).toString('latin1');
             tokens.push(...this.decodePdfTextTokens(inflated));
           } catch {
-            // Ignorar streams que no sean FlateDecode de texto
+            // Stream no comprimido con FlateDecode
+          }
+        }
+      }
+      if (tokens.length === 0) {
+        for (const [, obj] of srcDoc.context.enumerateIndirectObjects()) {
+          if (obj instanceof PDFRawStream && !obj.dict.get(PDFName.of('Subtype'))) {
+            try {
+              const inflated = zlib.inflateSync(Buffer.from(obj.contents)).toString('latin1');
+              tokens.push(...this.decodePdfTextTokens(inflated));
+            } catch {
+              // Ignorar streams que no sean FlateDecode de texto
+            }
           }
         }
       }
@@ -642,26 +713,24 @@ export class C807Client {
           continue;
         }
 
+        // Banda central de Número de Guía y Contador de Bultos (185 <= y < 215 en PDF original C807)
         if (/^\d+\s+de\s+\d+$/i.test(txt)) {
           data.piezas = txt;
           currentField = null;
           continue;
         }
-        if (
-          /^(KODE-|C807|GUIA)/i.test(txt) ||
-          (tk.y < 225 && tk.y > 175 && currentField === 'No. Orden:' && accum['No. Orden:']?.length)
-        ) {
-          if (
-            /^[A-Z0-9-]{8,}$/i.test(txt) &&
-            !txt.startsWith('RECOLECTA') &&
-            !txt.startsWith('WEB-') &&
-            !txt.startsWith('CMD-')
-          ) {
-            data.numeroGuia = txt;
-            currentField = null;
-            continue;
-          }
+        if (tk.y >= 185 && tk.y < 215 && !labels.has(txt)) {
+          data.numeroGuia = txt;
+          currentField = null;
+          continue;
         }
+        if (/^(KODE-|C807)/i.test(txt) && tk.y < 225) {
+          data.numeroGuia = txt;
+          currentField = null;
+          continue;
+        }
+
+        // Banda inferior de pie de página original de C807 (y < 95)
         if (txt.includes('c807xpress.com')) {
           data.c807Web = txt;
           currentField = null;
@@ -680,11 +749,6 @@ export class C807Client {
         }
 
         if (currentField) {
-          if (currentField === 'No. Orden:' && accum['No. Orden:']?.length >= 1) {
-            data.numeroGuia = txt;
-            currentField = null;
-            continue;
-          }
           accum[currentField].push(txt);
         }
       }
@@ -742,20 +806,34 @@ export class C807Client {
       const black = rgb(0, 0, 0);
       const white = rgb(1, 1, 1);
 
-      const aromaniakLogoPath = path.join(process.cwd(), 'public', 'images', 'logo-aromaniak-bw.png');
-      const c807LogoPath = path.join(process.cwd(), 'public', 'images', 'logo-c807-bw.png');
-      const aromaniakLogo = fs.existsSync(aromaniakLogoPath)
-        ? await outDoc.embedPng(fs.readFileSync(aromaniakLogoPath))
+      if (!C807Client.cachedAromaniakLogoBytes) {
+        const aromaniakLogoPath = path.join(process.cwd(), 'public', 'images', 'logo-aromaniak-bw.png');
+        if (fs.existsSync(aromaniakLogoPath)) {
+          C807Client.cachedAromaniakLogoBytes = fs.readFileSync(aromaniakLogoPath);
+        }
+      }
+      if (!C807Client.cachedC807LogoBytes) {
+        const c807LogoPath = path.join(process.cwd(), 'public', 'images', 'logo-c807-bw.png');
+        if (fs.existsSync(c807LogoPath)) {
+          C807Client.cachedC807LogoBytes = fs.readFileSync(c807LogoPath);
+        }
+      }
+
+      const aromaniakLogo = C807Client.cachedAromaniakLogoBytes
+        ? await outDoc.embedPng(C807Client.cachedAromaniakLogoBytes)
         : null;
-      const c807Logo = fs.existsSync(c807LogoPath)
-        ? await outDoc.embedPng(fs.readFileSync(c807LogoPath))
+      const c807Logo = C807Client.cachedC807LogoBytes
+        ? await outDoc.embedPng(C807Client.cachedC807LogoBytes)
         : null;
 
-      // Clonar el stream binario exacto del QR original de C807 en el nuevo documento
+      // Clonar el stream binario exacto del QR original de C807 en el nuevo documento con clave única por guía
       const clonedQrDict = qrStream.dict.clone(outDoc.context);
+      clonedQrDict.delete(PDFName.of('SMask'));
       const clonedQrStream = PDFRawStream.of(clonedQrDict, Uint8Array.from(qrStream.contents));
       const qrRef = outDoc.context.register(clonedQrStream);
-      page.node.setXObject(PDFName.of('QrOrig'), qrRef);
+      const uniqueQrName = `Qr_${(data.numeroGuia || fallbackGuia || 'Orig').replace(/[^A-Za-z0-9]/g, '')}`;
+      const qrPdfName = PDFName.of(uniqueQrName);
+      page.node.setXObject(qrPdfName, qrRef);
 
       const L = 5;
       const R = 283;
@@ -814,7 +892,7 @@ export class C807Client {
           PDFNumber.of(L + 3),
           PDFNumber.of(188),
         ]),
-        PDFOperator.of('Do' as any, [PDFName.of('QrOrig')]),
+        PDFOperator.of('Do' as any, [qrPdfName]),
         PDFOperator.of('Q' as any)
       );
 
@@ -1044,7 +1122,7 @@ export class C807Client {
           PDFNumber.of(R - 75),
           PDFNumber.of(27),
         ]),
-        PDFOperator.of('Do' as any, [PDFName.of('QrOrig')]),
+        PDFOperator.of('Do' as any, [qrPdfName]),
         PDFOperator.of('Q' as any)
       );
 
