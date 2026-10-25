@@ -886,8 +886,8 @@ export default function CheckoutPage() {
         </div>
       )}
 
-      {/* Símbolos de Pago Seguro, Visa y Mastercard (abajo, uno a la par de otro) */}
-      <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3.5 py-1">
+      {/* Símbolos de Pago Seguro, Visa, Mastercard y Wompi · Bancoagrícola */}
+      <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 py-1">
         {/* 1. Símbolo de Pago Seguro */}
         <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200/80 text-slate-800 text-xs font-bold shadow-2xs h-[34px]">
           <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -907,6 +907,32 @@ export default function CheckoutPage() {
             <circle cx="12" cy="12" r="10" fill="#EB001B"/>
             <circle cx="24" cy="12" r="10" fill="#F79E1B"/>
             <path d="M18 4.8A9.95 9.95 0 0 0 14.5 12c0 2.8 1.1 5.3 2.9 7.1a9.95 9.95 0 0 0 7.1-7.1c0-2.8-1.1-5.3-2.9-7.1C18.4 4.6 18.2 4.7 18 4.8Z" fill="#FF5F00"/>
+          </svg>
+        </div>
+
+        {/* 4. Símbolo Unificado Wompi · Bancoagrícola */}
+        <div
+          className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-white border border-slate-200/80 shadow-2xs h-[34px]"
+          title="Wompi · Bancoagrícola"
+        >
+          <svg className="h-4 sm:h-[18px] w-auto" viewBox="0 0 218 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Wompi mark + wordmark */}
+            <rect x="0" y="3" width="22" height="22" rx="6" fill="#0B2240" />
+            <path d="M4.6 10.2L7.3 18.2L10.8 11.4L14.3 18.2L17.1 10.2" stroke="#FFFFFF" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="18.2" cy="8.2" r="1.7" fill="#00C8FF" />
+            <text x="27" y="19" fill="#0B2240" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="900" fontSize="14.5" letterSpacing="-0.4">
+              wompi
+            </text>
+            <circle cx="74.5" cy="17.2" r="1.8" fill="#00C8FF" />
+            {/* Connector */}
+            <line x1="83" y1="6" x2="83" y2="22" stroke="#CBD5E1" strokeWidth="1.2" />
+            {/* Bancoagrícola emblem + wordmark */}
+            <circle cx="95.5" cy="14" r="7.5" fill="#FFCC00" />
+            <path d="M91.5 16.2C93.2 11.8 97.8 11.8 99.5 16.2" stroke="#0B2240" strokeWidth="2" strokeLinecap="round" />
+            <circle cx="95.5" cy="11.2" r="1.4" fill="#0B2240" />
+            <text x="107" y="18.5" fill="#0B2240" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="800" fontSize="13" letterSpacing="-0.3">
+              Bancoagrícola
+            </text>
           </svg>
         </div>
       </div>
@@ -1309,9 +1335,21 @@ export default function CheckoutPage() {
                 </button>
               </div>
 
-              <p className="text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                🔒 Por tu seguridad y conveniencia, puedes realizar tu pago con <strong>Tarjeta de Crédito / Débito</strong> o mediante <strong>Transferencia Bancaria</strong> (Banco Agrícola).
-              </p>
+              {metodoPago === 'CARD' ? (
+                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/90 border border-slate-200/80 text-[11px] text-slate-600 leading-relaxed">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <p>
+                    Todas las compras son seguras y se procesan por medio de <strong className="font-bold text-slate-800">Wompi</strong>, que es propiedad de <strong className="font-bold text-slate-800">Bancoagrícola</strong>. <strong className="font-bold text-slate-800">Aromaniak</strong> no tiene ningún tipo de acceso ni puede ver tu número de tarjeta o información personal de acuerdo a las leyes de El Salvador.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/90 border border-slate-200/80 text-[11px] text-slate-600 leading-relaxed">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <p>
+                    Realiza tu transferencia a nuestra cuenta de <strong className="font-bold text-slate-800">Bancoagrícola</strong> y comparte tu comprobante por WhatsApp para validar tu pedido.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* 3. Comprobante Fiscal */}
@@ -1692,6 +1730,17 @@ export default function CheckoutPage() {
                   </>
                 )}
               </button>
+
+              {metodoPago === 'CARD' && (
+                <div className="pt-1">
+                  <div className="p-3 rounded-xl bg-slate-50/90 border border-slate-200/80 flex items-start gap-2.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
+                      Todas las compras son seguras y se procesan por medio de <strong className="font-bold text-slate-800">Wompi</strong>, que es propiedad de <strong className="font-bold text-slate-800">Bancoagrícola</strong>. <strong className="font-bold text-slate-800">Aromaniak</strong> no tiene ningún tipo de acceso ni puede ver tu número de tarjeta o información personal de acuerdo a las leyes de El Salvador.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Aviso de Maceración y Advertencias de Salud en Checkout (debajo del resumen de pedido) */}
