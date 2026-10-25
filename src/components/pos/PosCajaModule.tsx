@@ -32,7 +32,7 @@ import {
   Filter,
 } from 'lucide-react';
 import { CustomerRecord } from '@/lib/customers';
-import { SaleRecord, resolveOrderPaymentSummary } from '@/lib/store';
+import { SaleRecord, getOrderPaymentDisplayInfo } from '@/lib/store';
 import { getActiveSessionUI } from '@/lib/auth';
 import {
   printDailyCashSalesTicketPdf,
@@ -514,7 +514,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
               {readyInWindowOrders.map((order) => {
                 const customerPhone = resolveCustomerPhone(order);
-                const paymentInfo = resolveOrderPaymentSummary(order);
+                const paymentInfo = getOrderPaymentDisplayInfo(order);
                 const isWebOrder =
                   order.channel === 'ONLINE' ||
                   String(order.saleNumber || order.orderNumber || '').toUpperCase().startsWith('WEB-');

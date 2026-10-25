@@ -11,7 +11,8 @@ import {
   Search,
   ExternalLink,
   Mail,
-  FileText
+  FileText,
+  Printer
 } from 'lucide-react';
 import { getStaffToken } from '@/lib/auth';
 
@@ -252,6 +253,16 @@ export default function LogisticaPage() {
                   {shipment.trackingNumber && (
                     <>
                       <a
+                        href={`/api/c807/pdf?guia=${encodeURIComponent(shipment.trackingNumber)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[11px] font-black text-white bg-indigo-600 hover:bg-indigo-700 px-2.5 py-1 rounded-lg inline-flex items-center gap-1 transition-colors"
+                        title="Abrir e imprimir guía C807"
+                      >
+                        <Printer className="w-3 h-3" />
+                        <span>Imprimir Guía</span>
+                      </a>
+                      <a
                         href={`/api/c807/pdf?guia=${encodeURIComponent(shipment.trackingNumber)}&download=1`}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -261,15 +272,14 @@ export default function LogisticaPage() {
                         <FileText className="w-3 h-3" />
                         <span>PDF Guía</span>
                       </a>
-                      <a
-                        href={`https://c807xpress.com/tracking/?guia=${encodeURIComponent(shipment.trackingNumber)}`}
+                      <Link
+                        href={`/rastreo?guia=${encodeURIComponent(shipment.trackingNumber)}`}
                         target="_blank"
-                        rel="noopener noreferrer"
                         className="font-mono text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200 inline-flex items-center gap-1"
                       >
                         <span>Guía: {shipment.trackingNumber}</span>
                         <ExternalLink className="w-3 h-3" />
-                      </a>
+                      </Link>
                     </>
                   )}
                 </div>

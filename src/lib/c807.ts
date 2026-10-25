@@ -27,6 +27,62 @@ export interface C807GuideResult {
   error?: string;
 }
 
+export interface C807TrackingEvaluation {
+  pregunta: string;
+  respuesta: string;
+}
+
+export interface C807TrackingPhoto {
+  nombre: string;
+  url: string;
+  esFirma: boolean;
+}
+
+export interface C807TrackingStep {
+  codigo: string;
+  descripcion: string;
+  completado: boolean;
+  esIncidencia: boolean;
+  ocultar: boolean;
+}
+
+export interface C807TrackingEvent {
+  codigo: string;
+  fecha: string;
+  titulo: string;
+  estatusOriginal: string;
+  observaciones: string;
+  esIncidencia: boolean;
+  esEntregado: boolean;
+  esDevolucion: boolean;
+  etdMin?: string | null;
+  etdMax?: string | null;
+  fechaProgramada?: string | null;
+  destinatario?: string | null;
+  evaluacion: C807TrackingEvaluation[];
+  fotos: C807TrackingPhoto[];
+  firmas: C807TrackingPhoto[];
+}
+
+export interface C807DetailedTracking {
+  found: boolean;
+  guia: string;
+  estatusActual: string;
+  codigoActual: string;
+  esEntregado: boolean;
+  esDevolucion: boolean;
+  tieneIncidencia: boolean;
+  destinatario: string | null;
+  direccion: string | null;
+  fechaEntrega: string | null;
+  etdMin: string | null;
+  etdMax: string | null;
+  indicaciones: string | null;
+  flujo: C807TrackingStep[];
+  bitacora: C807TrackingEvent[];
+  todasLasFotos: C807TrackingPhoto[];
+}
+
 export class C807Client {
   private authUrl: string;
   private createGuideUrl: string;
@@ -391,6 +447,315 @@ export class C807Client {
         success: false,
         error: err?.message || 'Error de conexión al descargar PDF desde C807',
       };
+    }
+  }
+
+  private extraerComentarioNoRecogido(textoSucio?: string | null, fechaBitacora?: string | null): string {
+    if (!textoSucio || !fechaBitacora) return '';
+    try {
+      const fechaObjeto = new Date(fechaBitacora);
+      if (isNaN(fechaObjeto.getTime())) return '';
+
+      const dia = fechaObjeto.getDate().toString().padStart(2, '0');
+      const mes = (fechaObjeto.getMonth() + 1).toString().padStart(2, '0');
+      const anio = fechaObjeto.getFullYear();
+      const hora = fechaObjeto.getHours().toString().padStart(2, '0');
+      const minutos = fechaObjeto.getMinutes().toString().padStart(2, '0');
+
+      const fechaBusqueda = `${dia}/${mes}/${anio} ${hora}:${minutos}`;
+      const fechaPos = textoSucio.indexOf(fechaBusqueda);
+      if (fechaPos === -1) return '';
+
+      const textoAntes = textoSucio.substring(0, fechaPos).trim();
+      const posDosPuntos = textoAntes.lastIndexOf(':');
+      const posSaltoLinea = textoAntes.lastIndexOf('\n');
+
+      let encabezado = '';
+      if (posDosPuntos !== -1 && posDosPuntos > posSaltoLinea) {
+        let inicioEncabezado = textoAntes.lastIndexOf('\n', posDosPuntos);
+        if (inicioEncabezado === -1) inicioEncabezado = 0;
+        encabezado = textoAntes.substring(inicioEncabezado, posDosPuntos).replace(/:/g, '').trim();
+      }
+
+      const textoDespues = textoSucio.substring(fechaPos + fechaBusqueda.length).trim();
+      const proximaFechaPos = textoDespues.search(/\d{2}\/\d{2}\/\d{4}/);
+      let comentario =
+        proximaFechaPos !== -1
+          ? textoDespues.substring(0, proximaFechaPos).trim()
+          : textoDespues.trim();
+
+      if (comentario.includes('No tiene paquetes:')) {
+        comentario = comentario.replace('No tiene paquetes:', '').trim();
+      }
+      comentario = comentario
+        .split('\n')
+        .map((l) => l.trim())
+        .filter((l) => l.length > 0)
+        .join(' ');
+
+      if (encabezado.length > 0) {
+        return `${encabezado} ${comentario}`.replace(/:/g, '').trim();
+      }
+      return comentario.trim();
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * Obtiene el rastreo detallado completo (flujo, bitácora, incidencias, evaluaciones, fotos POD y firma)
+   * compatible 100% con el portal de rastreo de C807 Xpress.
+   */
+  async consultarRastreoDetallado(numeroGuia: string): Promise<C807DetailedTracking> {
+    const cleanGuia = String(numeroGuia || '').trim();
+    const emptyResult: C807DetailedTracking = {
+      found: false,
+      guia: cleanGuia,
+      estatusActual: 'Pendiente de guía',
+      codigoActual: '',
+      esEntregado: false,
+      esDevolucion: false,
+      tieneIncidencia: false,
+      destinatario: null,
+      direccion: null,
+      fechaEntrega: null,
+      etdMin: null,
+      etdMax: null,
+      indicaciones: null,
+      flujo: [],
+      bitacora: [],
+      todasLasFotos: [],
+    };
+
+    if (!cleanGuia) return emptyResult;
+
+    try {
+      const formBody = new URLSearchParams({ guia_xpress: cleanGuia }).toString();
+      const res = await fetch('https://c807xpress.com/api-xpress-gacela/guia.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        },
+        body: formBody,
+        cache: 'no-store',
+      });
+
+      if (!res.ok) return emptyResult;
+
+      const data = await res.json().catch(() => null);
+      const rawBitacora: any[] = Array.isArray(data?.status?.bitacora) ? data.status.bitacora : [];
+      const rawFlujo: any[] = Array.isArray(data?.flujo) ? [...data.flujo] : [];
+      const guiaInfo = data?.status?.guia || {};
+
+      if (rawBitacora.length === 0 && !guiaInfo?.guia) {
+        return emptyResult;
+      }
+
+      const codFlujoNums: number[] = rawBitacora
+        .map((ev) => parseInt(String(ev?.codigo || ''), 10))
+        .filter((n) => !isNaN(n));
+
+      // Ordenamiento idéntico al portal de C807 Xpress
+      const flujoDesor = rawFlujo.map((f) => ({
+        codigo: String(f?.codigo || '').trim(),
+        descripcion: String(f?.descripcion || '').trim(),
+      }));
+
+      if (cleanGuia.toUpperCase().includes('RECOLECTA') && codFlujoNums.includes(18)) {
+        if (!flujoDesor.some((f) => f.codigo === '18')) {
+          flujoDesor.unshift({ codigo: '18', descripcion: 'No Recogido' });
+        }
+      }
+
+      const flujoOrdenado = flujoDesor.sort((a, b) => {
+        if (a.codigo === '18') return 1;
+        if (b.codigo === '18') return -1;
+        if (a.codigo === '15') return 1;
+        if (b.codigo === '15') return -1;
+        return parseInt(a.codigo, 10) - parseInt(b.codigo, 10);
+      });
+
+      const idx12 = flujoOrdenado.findIndex((f) => parseInt(f.codigo, 10) === 12);
+      const idx13 = flujoOrdenado.findIndex((f) => parseInt(f.codigo, 10) === 13);
+      if (idx12 !== -1 && idx13 !== -1) {
+        const [item12] = flujoOrdenado.splice(idx12, 1);
+        const nuevaPos13 = flujoOrdenado.findIndex((f) => parseInt(f.codigo, 10) === 13);
+        flujoOrdenado.splice(nuevaPos13 + 1, 0, item12);
+      }
+
+      const existe14 = codFlujoNums.includes(14);
+      const existe16 = codFlujoNums.includes(16);
+
+      const flujoSteps: C807TrackingStep[] = flujoOrdenado.map((f) => {
+        const numCod = parseInt(f.codigo, 10);
+        const completado =
+          codFlujoNums.includes(numCod) || (numCod === 12 && existe14);
+        const esIncidencia = f.codigo === '16' || f.codigo === '18';
+        const ocultar =
+          f.codigo === '14' || (f.codigo === '16' && !existe16);
+        return {
+          codigo: f.codigo,
+          descripcion: f.descripcion,
+          completado,
+          esIncidencia,
+          ocultar,
+        };
+      });
+
+      const fallbackEval: any[] = Array.isArray(rawBitacora[0]?.evaluacion)
+        ? rawBitacora[0].evaluacion
+        : [];
+
+      const todasLasFotos: C807TrackingPhoto[] = [];
+
+      const bitacora: C807TrackingEvent[] = rawBitacora.map((ev) => {
+        const codigo = String(ev?.codigo || '').trim();
+        const fecha = String(ev?.fecha || '').trim();
+        const estatusOriginal = String(ev?.estatus || '').trim();
+        let rawObs = String(ev?.observaciones || '').replace(/,?\s*Truck.*/i, '').trim();
+
+        if (codigo === '18' && !rawObs) {
+          rawObs = this.extraerComentarioNoRecogido(guiaInfo?.indicaciones, fecha);
+        }
+
+        const esDevolucion = ev?.devolucion == 1 || ev?.devolucion === '1';
+        const esEntregado = codigo === '15';
+        const esIncidencia = codigo === '16' || codigo === '18';
+
+        let titulo = estatusOriginal || 'Actualización de estado';
+        if (codigo === '15') {
+          titulo = esDevolucion ? 'RETORNO A ORIGEN' : 'LLEGÓ A SU DESTINO';
+        } else if (codigo === '16') {
+          titulo = 'Problemas en la gestión';
+        } else if (codigo === '18' && cleanGuia.toUpperCase().includes('RECOLECTA')) {
+          titulo = 'NO RECOGIDO';
+        }
+
+        // Procesar preguntas y respuestas de evaluación
+        const rawEvals: any[] =
+          codigo === '15'
+            ? Array.isArray(ev?.evaluacion) && ev.evaluacion.length > 0
+              ? ev.evaluacion
+              : fallbackEval
+            : Array.isArray(ev?.evaluacion)
+            ? ev.evaluacion
+            : [];
+
+        const evaluacion: C807TrackingEvaluation[] = [];
+        let injectedDevolucion = false;
+
+        for (const item of rawEvals) {
+          const preg = String(item?.pregunta || '').trim();
+          const resp = String(item?.respuesta || '').trim();
+          if (!preg && !resp) continue;
+
+          if (codigo === '16' && !preg.toLowerCase().includes('rechazo') && rawEvals.length > 1) {
+            // En código 16 prioriza el motivo de rechazo pero conserva si es el único dato
+          }
+
+          if (codigo === '15' && preg.toLowerCase().includes('incluye devolución')) {
+            continue;
+          }
+
+          evaluacion.push({ pregunta: preg, respuesta: resp });
+
+          if (codigo === '15' && !injectedDevolucion && preg.toLowerCase().includes('quien recibe')) {
+            evaluacion.push({
+              pregunta: '¿INCLUYE DEVOLUCIÓN?',
+              respuesta: esDevolucion ? 'SÍ' : 'NO',
+            });
+            injectedDevolucion = true;
+          }
+        }
+
+        // Procesar imágenes POD y Firmas
+        const rawPod: any[] = Array.isArray(ev?.pod) ? ev.pod : [];
+        const fotos: C807TrackingPhoto[] = [];
+        const firmas: C807TrackingPhoto[] = [];
+
+        for (const p of rawPod) {
+          const url = String(p?.url || '').trim();
+          if (!url) continue;
+          const nombre = String(p?.nombre || 'Evidencia fotográfica').trim();
+          const esFirma = nombre.toLowerCase() === 'firma';
+          const photoObj: C807TrackingPhoto = { nombre, url, esFirma };
+          if (esFirma) {
+            firmas.push(photoObj);
+          } else {
+            fotos.push(photoObj);
+          }
+          if (!todasLasFotos.some((existing) => existing.url === url)) {
+            todasLasFotos.push(photoObj);
+          }
+        }
+
+        const fechaProg = fecha ? fecha.split(' ')[0] : null;
+
+        return {
+          codigo,
+          fecha,
+          titulo,
+          estatusOriginal,
+          observaciones: rawObs,
+          esIncidencia,
+          esEntregado,
+          esDevolucion,
+          etdMin: ev?.etd_min || null,
+          etdMax: ev?.etd_max || null,
+          fechaProgramada: codigo === '14' ? fechaProg : null,
+          destinatario: guiaInfo?.destinatario || null,
+          evaluacion,
+          fotos,
+          firmas,
+        };
+      });
+
+      const latestEvent = bitacora[0] || null;
+      const codigoActual = String(guiaInfo?.estatus_codigo || latestEvent?.codigo || '').trim();
+      const estatusActual = String(
+        guiaInfo?.estatus ||
+          latestEvent?.titulo ||
+          (codigoActual === '15'
+            ? 'Llegó a su destino'
+            : codigoActual === '13'
+            ? 'Recogido en origen'
+            : 'Creado en sistema')
+      ).trim();
+
+      const esEntregado =
+        codigoActual === '15' ||
+        bitacora.some((b) => b.codigo === '15') ||
+        estatusActual.toLowerCase().includes('llegó a su destino') ||
+        estatusActual.toLowerCase().includes('entregad') ||
+        Boolean(guiaInfo?.entrega);
+
+      const esDevolucion = bitacora.some((b) => b.esDevolucion);
+      const tieneIncidencia = bitacora.some((b) => b.esIncidencia);
+
+      return {
+        found: true,
+        guia: String(guiaInfo?.guia || cleanGuia),
+        estatusActual,
+        codigoActual,
+        esEntregado,
+        esDevolucion,
+        tieneIncidencia,
+        destinatario: guiaInfo?.destinatario || null,
+        direccion: guiaInfo?.direccion || null,
+        fechaEntrega:
+          guiaInfo?.entrega ||
+          bitacora.find((b) => b.codigo === '15')?.fecha ||
+          null,
+        etdMin: guiaInfo?.etd_min || null,
+        etdMax: guiaInfo?.etd_max || null,
+        indicaciones: guiaInfo?.indicaciones || null,
+        flujo: flujoSteps.filter((s) => !s.ocultar),
+        bitacora,
+        todasLasFotos,
+      };
+    } catch (err) {
+      console.warn(`[C807 Detailed Tracking] Error consultando guía ${cleanGuia}:`, err);
+      return emptyResult;
     }
   }
 

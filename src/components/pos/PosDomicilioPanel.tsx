@@ -14,6 +14,7 @@ import {
   CreditCard,
   Package,
   FileText,
+  Printer,
   ExternalLink,
   CheckCircle2,
   AlertTriangle,
@@ -473,16 +474,28 @@ export default function PosDomicilioPanel({ onOrderChanged }: { onOrderChanged?:
                   <td className="py-2.5 px-3 text-center">
                     <div className="inline-flex items-center gap-1.5">
                       {o.trackingNumber && (
-                        <a
-                          href={`/api/c807/pdf?guia=${encodeURIComponent(o.trackingNumber)}&download=1`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-2.5 py-1.5 text-[11px] font-black rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1 transition-colors"
-                          title={`Descargar PDF Guía ${o.trackingNumber}`}
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                          <span>PDF Guía</span>
-                        </a>
+                        <>
+                          <a
+                            href={`/api/c807/pdf?guia=${encodeURIComponent(o.trackingNumber)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2.5 py-1.5 text-[11px] font-black rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 inline-flex items-center gap-1 transition-colors"
+                            title={`Abrir e Imprimir Guía ${o.trackingNumber}`}
+                          >
+                            <Printer className="w-3.5 h-3.5" />
+                            <span>Imprimir Guía</span>
+                          </a>
+                          <a
+                            href={`/api/c807/pdf?guia=${encodeURIComponent(o.trackingNumber)}&download=1`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2.5 py-1.5 text-[11px] font-black rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1 transition-colors"
+                            title={`Descargar PDF Guía ${o.trackingNumber}`}
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            <span>PDF Guía</span>
+                          </a>
+                        </>
                       )}
                       <button
                         onClick={() => setSelected(o)}
@@ -1155,6 +1168,15 @@ function PosDomicilioDetailModal({
               {o.trackingNumber ? (
                 <>
                   <a
+                    href={`/api/c807/pdf?guia=${encodeURIComponent(o.trackingNumber)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 text-[11px] font-black rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs inline-flex items-center gap-1.5 transition-colors"
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                    <span>Imprimir Guía</span>
+                  </a>
+                  <a
                     href={`/api/c807/pdf?guia=${encodeURIComponent(o.trackingNumber)}&download=1`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -1163,15 +1185,14 @@ function PosDomicilioDetailModal({
                     <FileText className="w-3.5 h-3.5" />
                     <span>Descargar PDF Guía</span>
                   </a>
-                  <a
-                    href={`https://c807xpress.com/tracking/?guia=${encodeURIComponent(o.trackingNumber)}`}
+                  <Link
+                    href={`/rastreo?guia=${encodeURIComponent(o.trackingNumber)}`}
                     target="_blank"
-                    rel="noopener noreferrer"
                     className="clay-btn clay-btn-light px-3 py-1.5 text-[11px] font-bold text-indigo-700 inline-flex items-center gap-1.5 rounded-lg"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
                     <span>Rastrear Guía {o.trackingNumber}</span>
-                  </a>
+                  </Link>
                   <Link
                     href="/logistica"
                     className="clay-btn-primary px-3 py-1.5 text-[11px] font-bold inline-flex items-center gap-1.5 rounded-lg"

@@ -559,11 +559,23 @@ export default function CustomerDrawer() {
                                 Envío: <strong>{order.courierName || 'Mensajería Express'}</strong>
                               </span>
                             </div>
-                            {order.trackingNumber && (
-                              <span className="font-mono font-black text-purple-700 bg-white px-2 py-0.5 rounded border border-purple-200 text-[10px] break-all">
-                                Guía: {order.trackingNumber}
-                              </span>
-                            )}
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {order.trackingNumber && (
+                                <span className="font-mono font-black text-purple-700 bg-white px-2 py-0.5 rounded border border-purple-200 text-[10px] break-all">
+                                  Guía: {order.trackingNumber}
+                                </span>
+                              )}
+                              {order.trackingNumber && (
+                                <a
+                                  href={`/rastreo?guia=${encodeURIComponent(order.trackingNumber)}`}
+                                  onClick={closeDrawer}
+                                  className="px-2.5 py-0.5 rounded-md bg-purple-600 hover:bg-purple-700 text-white font-black text-[10px] inline-flex items-center gap-1 shadow-2xs transition-colors"
+                                >
+                                  <Truck className="w-3 h-3" />
+                                  <span>Rastrear en Vivo</span>
+                                </a>
+                              )}
+                            </div>
                           </div>
                         )}
 
