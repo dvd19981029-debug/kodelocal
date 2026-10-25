@@ -777,7 +777,7 @@ export class C807Client {
       });
 
       page.drawLine({
-        start: { x: SPLIT_X, y: 33 },
+        start: { x: SPLIT_X, y: 22 },
         end: { x: SPLIT_X, y: T },
         thickness: 1.3,
         color: black,
@@ -786,10 +786,10 @@ export class C807Client {
       // ==================== COLUMNA IZQUIERDA (ENRUTAMIENTO C807) ====================
       if (c807Logo) {
         page.drawImage(c807Logo, {
-          x: L + 11,
-          y: 261,
-          width: 54,
-          height: 19,
+          x: L + 10,
+          y: 259,
+          width: 56,
+          height: 20,
         });
       }
 
@@ -802,13 +802,13 @@ export class C807Client {
           PDFNumber.of(0),
           PDFNumber.of(70),
           PDFNumber.of(L + 3),
-          PDFNumber.of(188),
+          PDFNumber.of(186),
         ]),
         PDFOperator.of('Do' as any, [PDFName.of('QrOrig')]),
         PDFOperator.of('Q' as any)
       );
 
-      const leftDividers = [186, 160, 140, 114, 84, 55, 33];
+      const leftDividers = [184, 156, 134, 106, 74, 45, 22];
       for (const yDiv of leftDividers) {
         page.drawLine({
           start: { x: L, y: yDiv },
@@ -823,23 +823,12 @@ export class C807Client {
         boxBottom: number,
         boxTop: number,
         maxFontSize: number,
-        minFontSize = 6.5,
-        inverted = false
+        minFontSize = 6.5
       ) => {
         const clean = this.sanitizeWinAnsi(txt);
         if (!clean) return;
         const boxW = SPLIT_X - L;
         const boxH = boxTop - boxBottom;
-
-        if (inverted) {
-          page.drawRectangle({
-            x: L + 2,
-            y: boxBottom + 2,
-            width: boxW - 4,
-            height: boxH - 4,
-            color: black,
-          });
-        }
 
         const availW = boxW - 6;
         let fs = maxFontSize;
@@ -856,7 +845,7 @@ export class C807Client {
             y: ty,
             size: fs,
             font: fontBold,
-            color: inverted ? white : black,
+            color: black,
           });
         } else {
           const lines = this.wrapTextToLines(clean, fontBold, fs, availW).slice(0, 2);
@@ -870,38 +859,46 @@ export class C807Client {
               y: startY,
               size: fs,
               font: fontBold,
-              color: inverted ? white : black,
+              color: black,
             });
             startY -= lineGap;
           }
         }
       };
 
-      drawCenteredLeftText(data.hub, 160, 186, 14);
-      drawCenteredLeftText(data.zonaBox2, 140, 160, 11);
-      drawCenteredLeftText(data.deptoCode, 114, 140, 14);
-      drawCenteredLeftText(data.municipio, 84, 114, 10, 6.5);
-      drawCenteredLeftText(
-        data.tipoServicio,
-        55,
-        84,
-        14,
-        8,
-        data.tipoServicio.toUpperCase() === 'CCE'
-      );
-      drawCenteredLeftText(data.diasFrecuencia, 33, 55, 9.5, 7);
+      drawCenteredLeftText(data.hub, 156, 184, 14);
+      drawCenteredLeftText(data.zonaBox2, 134, 156, 11);
+      drawCenteredLeftText(data.deptoCode, 106, 134, 14);
+      drawCenteredLeftText(data.municipio, 74, 106, 10, 6.5);
+      drawCenteredLeftText(data.tipoServicio, 45, 74, 14, 8);
+      drawCenteredLeftText(data.diasFrecuencia, 22, 45, 9.5, 7);
 
       // ==================== COLUMNA DERECHA PRINCIPAL ====================
       const RX = SPLIT_X + 5; // 86
       const RW = R - RX - 4; // 193
 
-      // 1) ENCABEZADO: Logo Principal de Aromaniak + Remitente
+      // 1) ENCABEZADO: Logo Principal de Aromaniak + sv.com + Remitente
       if (aromaniakLogo) {
         page.drawImage(aromaniakLogo, {
           x: RX,
           y: 260,
-          width: 118,
-          height: 20,
+          width: 112,
+          height: 19,
+        });
+        page.drawText('sv.com', {
+          x: RX + 114,
+          y: 262.2,
+          size: 13.5,
+          font: fontBold,
+          color: black,
+        });
+      } else {
+        page.drawText('Aromaniak sv.com', {
+          x: RX,
+          y: 263,
+          size: 15,
+          font: fontBold,
+          color: black,
         });
       }
 
@@ -920,48 +917,41 @@ export class C807Client {
         color: black,
       });
 
-      // 2) BANDA DE DESTINO
-      page.drawRectangle({
-        x: SPLIT_X + 0.6,
-        y: 235,
-        width: R - SPLIT_X - 1.2,
-        height: 11.5,
-        color: black,
-      });
+      // 2) TÍTULO DE DESTINO (sin cuadro negro, texto limpio en negrita)
       page.drawText('Destino:', {
         x: RX,
-        y: 238.2,
-        size: 8.0,
+        y: 237.5,
+        size: 8.2,
         font: fontBold,
-        color: white,
+        color: black,
       });
 
-      // 3) CAMPOS DE DESTINO (auto-ajuste para soportar hasta los límites máximos de C807)
-      const destinoTopY = 232.5;
-      const destinoBottomY = 132;
-      const availDestinoH = destinoTopY - destinoBottomY; // 100.5pt
+      // 3) CAMPOS DE DESTINO (Nombre, Teléfono y Dirección en negrita + auto-ajuste)
+      const destinoTopY = 234.5;
+      const destinoBottomY = 123;
+      const availDestinoH = destinoTopY - destinoBottomY; // 111.5pt
 
       const rowsSpec: Array<{ label: string; value: string; boldValue?: boolean }> = [
-        { label: 'Nombre:', value: data.destinoNombre },
-        { label: 'Teléfono:', value: data.destinoTelefono },
+        { label: 'Nombre:', value: data.destinoNombre, boldValue: true },
+        { label: 'Teléfono:', value: data.destinoTelefono, boldValue: true },
         { label: 'Contacto:', value: data.destinoContacto },
-        { label: 'Dirección:', value: data.destinoDireccion },
+        { label: 'Dirección:', value: data.destinoDireccion, boldValue: true },
         { label: 'Referencia:', value: data.destinoReferencia },
         { label: 'Contenido:', value: data.contenido },
         { label: 'Solicitud:', value: data.solicitud },
         { label: 'No. Orden:', value: data.noOrden, boldValue: true },
       ];
 
-      let chosenFontSize = 6.8;
-      let chosenLineHeight = 7.8;
-      let chosenRowGap = 0.8;
+      let chosenFontSize = 7.2;
+      let chosenLineHeight = 8.2;
+      let chosenRowGap = 0.9;
 
-      for (const candidateFs of [6.8, 6.4, 6.0, 5.6, 5.2, 4.8, 4.4, 4.0, 3.6]) {
+      for (const candidateFs of [7.2, 6.8, 6.4, 6.0, 5.6, 5.2, 4.8, 4.4, 4.0, 3.6]) {
         const lh = candidateFs * 1.14;
-        const gap = candidateFs >= 6.0 ? 0.7 : 0.35;
+        const gap = candidateFs >= 6.0 ? 0.8 : 0.4;
         let totalH = 0;
         for (const r of rowsSpec) {
-          const labelW = fontBold.widthOfTextAtSize(r.label + ' ', candidateFs);
+          const labelW = fontBold.widthOfTextAtSize(r.label, candidateFs) + 3.5;
           const lines = this.wrapTextToLines(
             r.value,
             r.boldValue ? fontBold : fontRegular,
@@ -980,7 +970,7 @@ export class C807Client {
       let curY = destinoTopY - chosenFontSize;
       for (const r of rowsSpec) {
         const valFont = r.boldValue ? fontBold : fontRegular;
-        const labelW = fontBold.widthOfTextAtSize(r.label + ' ', chosenFontSize);
+        const labelW = fontBold.widthOfTextAtSize(r.label, chosenFontSize) + 3.5;
         const lines = this.wrapTextToLines(r.value, valFont, chosenFontSize, RW, RW - labelW);
         page.drawText(r.label, { x: RX, y: curY, size: chosenFontSize, font: fontBold, color: black });
         lines.forEach((ln, idx) => {
@@ -998,148 +988,104 @@ export class C807Client {
         curY -= chosenRowGap;
       }
 
-      // 4) BANDA DE NÚMERO DE GUÍA Y BULTOS (y: 113..131)
+      // 4) BANDA DE NÚMERO DE GUÍA Y BULTOS (y: 104..122, sin recuadro negro)
       page.drawLine({
-        start: { x: SPLIT_X, y: 131 },
-        end: { x: R, y: 131 },
+        start: { x: SPLIT_X, y: 122 },
+        end: { x: R, y: 122 },
         thickness: 1.1,
         color: black,
       });
       page.drawLine({
-        start: { x: SPLIT_X, y: 113 },
-        end: { x: R, y: 113 },
+        start: { x: SPLIT_X, y: 104 },
+        end: { x: R, y: 104 },
         thickness: 1.1,
         color: black,
       });
 
       let guiaFs = 10.5;
-      while (guiaFs > 7.5 && fontBold.widthOfTextAtSize(data.numeroGuia, guiaFs) > 148) {
+      while (guiaFs > 7.5 && fontBold.widthOfTextAtSize(data.numeroGuia, guiaFs) > 150) {
         guiaFs -= 0.5;
       }
       page.drawText(data.numeroGuia, {
         x: RX,
-        y: 118.5,
+        y: 109.5,
         size: guiaFs,
         font: fontBold,
         color: black,
       });
 
-      const piezasW = Math.max(36, fontBold.widthOfTextAtSize(data.piezas, 9) + 10);
-      page.drawRectangle({
-        x: R - piezasW - 4,
-        y: 115.5,
-        width: piezasW,
-        height: 13,
+      const piezasTw = fontBold.widthOfTextAtSize(data.piezas, 9.5);
+      page.drawText(data.piezas, {
+        x: R - piezasTw - 6,
+        y: 109.5,
+        size: 9.5,
+        font: fontBold,
         color: black,
       });
-      page.drawText(data.piezas, {
-        x: R - piezasW - 4 + (piezasW - fontBold.widthOfTextAtSize(data.piezas, 8.8)) / 2,
-        y: 119,
-        size: 8.8,
-        font: fontBold,
-        color: white,
-      });
 
-      // 5) SECCIÓN OPERATIVA, CONTRAENTREGA Y QR INFERIOR DERECHO (y: 33..113)
+      // 5) SECCIÓN OPERATIVA, CONTRAENTREGA Y QR INFERIOR DERECHO (y: 22..104)
       page.pushOperators(
         PDFOperator.of('q' as any),
         PDFOperator.of('cm' as any, [
-          PDFNumber.of(70),
+          PDFNumber.of(72),
           PDFNumber.of(0),
           PDFNumber.of(0),
-          PDFNumber.of(70),
-          PDFNumber.of(R - 73),
-          PDFNumber.of(39),
+          PDFNumber.of(72),
+          PDFNumber.of(R - 75),
+          PDFNumber.of(27),
         ]),
         PDFOperator.of('Do' as any, [PDFName.of('QrOrig')]),
         PDFOperator.of('Q' as any)
       );
 
-      const specRows: Array<[string, string]> = [
-        ['PAGO:', data.pago],
-        ['Peso:', data.peso],
-        ['Peso Máximo:', data.pesoMaximo],
-        ['Tipo de entrega:', data.tipoEntrega],
-        ['Especiales:', data.especiales],
+      const isCce = data.tieneContraentrega;
+      const montoStr = data.cobrarDestinatario || '0.00';
+
+      const specRows: Array<{ label: string; value: string; boldValue?: boolean }> = [
+        { label: 'PAGO:', value: data.pago },
+        { label: 'Peso:', value: data.peso },
+        { label: 'Peso Máximo:', value: data.pesoMaximo },
+        { label: 'Tipo de entrega:', value: data.tipoEntrega, boldValue: true },
+        { label: 'Especiales:', value: data.especiales },
+        { label: 'Contraentrega:', value: isCce ? 'SI (CCE)' : 'NO (SER)', boldValue: true },
+        { label: 'Cobrar a destinatario:', value: montoStr, boldValue: true },
       ];
 
-      let specY = 103.5;
-      for (const [k, v] of specRows) {
-        page.drawText(k, { x: RX, y: specY, size: 6.8, font: fontBold, color: black });
-        if (v) {
-          const valLines = this.wrapTextToLines(v, fontRegular, 6.5, 62).slice(0, 1);
+      let specY = 94.5;
+      for (const row of specRows) {
+        page.drawText(row.label, { x: RX, y: specY, size: 6.8, font: fontBold, color: black });
+        if (row.value) {
+          const labelW = Math.max(60, fontBold.widthOfTextAtSize(row.label + ' ', 6.8));
+          const availValW = Math.max(30, 120 - labelW);
+          const valFont = row.boldValue ? fontBold : fontRegular;
+          const valLines = this.wrapTextToLines(row.value, valFont, 6.8, availValW).slice(0, 1);
           page.drawText(valLines[0] || '', {
-            x: RX + 60,
+            x: RX + labelW,
             y: specY,
             size: 6.8,
-            font: k === 'Tipo de entrega:' ? fontBold : fontRegular,
+            font: valFont,
             color: black,
           });
         }
-        specY -= 9.5;
+        specY -= 10.2;
       }
 
-      // Casilla de Contraentrega y Cobrar a destinatario
-      const isCce = data.tieneContraentrega;
-      const montoStr = data.cobrarDestinatario || '0.00';
-      page.drawRectangle({
-        x: RX,
-        y: 36,
-        width: 120,
-        height: 21,
-        borderColor: black,
-        borderWidth: 1.1,
-        color: isCce ? black : white,
-      });
-      const cceLine1 = `Contraentrega: ${isCce ? 'SÍ (CCE)' : 'NO (SER)'}`;
-      const cceLine2 = `Cobrar a destinatario: ${montoStr}`;
-      page.drawText(cceLine1, {
-        x: RX + 4,
-        y: 48.5,
-        size: 6.6,
-        font: fontBold,
-        color: isCce ? white : black,
-      });
-      page.drawText(cceLine2, {
-        x: RX + 4,
-        y: 39.5,
-        size: 6.6,
-        font: fontBold,
-        color: isCce ? white : black,
-      });
-
-      // ==================== 6) PIE DE GUÍA (C807 + AROMANIAK) ====================
+      // ==================== 6) PIE DE GUÍA AROMANIAK (sin recuadro negro, sin link C807) ====================
       page.drawLine({
-        start: { x: L, y: 33 },
-        end: { x: R, y: 33 },
+        start: { x: L, y: 22 },
+        end: { x: R, y: 22 },
         thickness: 1.2,
         color: black,
       });
 
-      const c807FooterTxt = `${data.c807Web}   |   ${data.c807Whatsapp}`;
-      page.drawText(c807FooterTxt, {
-        x: L + (W - fontBold.widthOfTextAtSize(c807FooterTxt, 6.4)) / 2,
-        y: 24.5,
-        size: 6.4,
-        font: fontBold,
-        color: black,
-      });
-
-      page.drawRectangle({
-        x: L,
-        y: B,
-        width: W,
-        height: 16,
-        color: black,
-      });
       const aromaFooterTxt =
         'Compra seguro en aromaniaksv.com  •  WhatsApp: 60437496  •  Fijo: 2245 3890';
       page.drawText(aromaFooterTxt, {
-        x: L + (W - fontBold.widthOfTextAtSize(aromaFooterTxt, 6.5)) / 2,
-        y: 10.5,
-        size: 6.5,
+        x: L + (W - fontBold.widthOfTextAtSize(aromaFooterTxt, 6.8)) / 2,
+        y: 11,
+        size: 6.8,
         font: fontBold,
-        color: white,
+        color: black,
       });
 
       const saved = await outDoc.save();
