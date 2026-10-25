@@ -308,7 +308,10 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
     : liveCatalog.filter(p => 
         p.category === 'Botes' && p.stock > 0 && p.imageUrl && p.imageUrl.startsWith('/images/botes/')
       );
-  const contentParts = splitArticleContent(post.content);
+  const sanitizedContent = (post.content || '')
+    .replace(/\s*DEL CARIBE/gi, '')
+    .replace(/\s*APAESA(?:\s+GUATEMALA)?/gi, '');
+  const contentParts = splitArticleContent(sanitizedContent);
 
   return (
     <div className="w-full max-w-6xl mx-auto px-1 sm:px-4 py-4 sm:py-10 min-w-0 overflow-hidden">
