@@ -1571,7 +1571,7 @@ export default function BodegaPage() {
                                     : `Por cobrar: $${resolveOrderTotal(order).toFixed(2)}`}
                                 </span>
                                 {!paymentInfo.isPaid &&
-                                  (order.paymentMethod === 'TRANSFER' || order.paymentMethod === 'TRANSFERENCIA') && (
+                                  String(order.paymentMethod || '').toUpperCase().startsWith('TRANSFER') && (
                                     <button
                                       type="button"
                                       onClick={() => handleVerifyTransferPayment(order)}
@@ -2026,7 +2026,7 @@ export default function BodegaPage() {
                                   : `Por cobrar: $${resolveOrderTotal(order).toFixed(2)}`}
                               </span>
                               {!paymentInfo.isPaid &&
-                                (order.paymentMethod === 'TRANSFER' || order.paymentMethod === 'TRANSFERENCIA') && (
+                                String(order.paymentMethod || '').toUpperCase().startsWith('TRANSFER') && (
                                   <button
                                     type="button"
                                     onClick={() => handleVerifyTransferPayment(order)}

@@ -640,8 +640,15 @@ export async function PATCH(request: Request) {
       },
     });
 
-    // Enviar confirmación por correo si el pago se completó exitosamente (ej. retorno de Wompi)
-    if (safePaymentStatus === 'COMPLETED' && order.paymentStatus !== 'COMPLETED' && updated.customerEmail) {
+    // Enviar confirmación por correo solo si es un pago con tarjeta (Wompi) que acaba de completarse
+    // (los pedidos por transferencia o contra entrega ya envían su correo al crearse en POST; validar transferencia solo marca que ya transfirió)
+    if (
+      safePaymentStatus === 'COMPLETED' &&
+      order.paymentStatus !== 'COMPLETED' &&
+      order.paymentMethod !== 'TRANSFER' &&
+      order.paymentMethod !== 'CASH' &&
+      updated.customerEmail
+    ) {
       try {
         await sendOrderConfirmationEmail({
           orderNumber: updated.orderNumber,

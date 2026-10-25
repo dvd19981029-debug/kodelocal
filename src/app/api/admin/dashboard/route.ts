@@ -114,6 +114,7 @@ export async function GET(request: Request) {
     const validSales = sales.filter((s) => {
       const st = String(s.orderStatus || '').toUpperCase();
       if (st === 'CANCELADO' || st === 'CANCELLED' || st === 'ANULADA') return false;
+      if (st === 'PENDING_PREPARATION' || st === 'READY_AT_WINDOW') return false;
       if (s.paymentStatus !== 'COMPLETED' && st !== 'COMPLETED') return false;
       if (ecomOrderNumbers.has(s.saleNumber)) return false;
       return true;

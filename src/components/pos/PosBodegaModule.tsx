@@ -374,7 +374,7 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                             : `Por cobrar: $${Number(order.total || 0).toFixed(2)}`}
                         </span>
                         {!paymentInfo.isPaid &&
-                          (order.paymentMethod === 'TRANSFER' || order.paymentMethod === 'TRANSFERENCIA') && (
+                          String(order.paymentMethod || '').toUpperCase().startsWith('TRANSFER') && (
                             <button
                               type="button"
                               onClick={async () => {

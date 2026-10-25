@@ -257,7 +257,7 @@ export async function POST(request: Request) {
     // 0. Idempotencia: Si la venta ya existe registrada en la base de datos (ej: comanda enviada a Bodega que ahora se factura, o reconexión)
     const targetOrderStatus = orderStatus || 'COMPLETED';
     const targetPaymentStatus = paymentStatus || 'COMPLETED';
-    const isIncomingCompleted = targetPaymentStatus === 'COMPLETED' || targetOrderStatus === 'COMPLETED';
+    const isIncomingCompleted = targetOrderStatus === 'COMPLETED';
 
     if (saleNumber) {
       const existingSale = await prisma.sale.findUnique({
@@ -275,8 +275,12 @@ export async function POST(request: Request) {
           );
         }
 
+        const isExistingPendingComanda =
+          existingSale.orderStatus === 'PENDING_PREPARATION' ||
+          existingSale.orderStatus === 'READY_AT_WINDOW';
         const wasAlreadyCompleted =
-          existingSale.paymentStatus === 'COMPLETED' || existingSale.orderStatus === 'COMPLETED';
+          existingSale.orderStatus === 'COMPLETED' ||
+          (!isExistingPendingComanda && existingSale.paymentStatus === 'COMPLETED');
         const isCancelled =
           existingSale.orderStatus === 'CANCELLED' ||
           existingSale.orderStatus === 'CANCELADO' ||
@@ -287,7 +291,6 @@ export async function POST(request: Request) {
           const claim = await prisma.sale.updateMany({
             where: {
               id: existingSale.id,
-              paymentStatus: { not: 'COMPLETED' },
               OR: [{ orderStatus: null }, { orderStatus: { not: 'COMPLETED' } }],
             },
             data: {
@@ -899,7 +902,10 @@ export async function PATCH(request: Request) {
     const isAlreadyCancelled = sale.orderStatus === 'CANCELLED' || sale.orderStatus === 'CANCELADO' || sale.orderStatus === 'ANULADA';
     const isCancelling = (orderStatus === 'CANCELLED' || orderStatus === 'CANCELADO' || orderStatus === 'ANULADA') && !isAlreadyCancelled;
     
-    const isAlreadyCompleted = sale.paymentStatus === 'COMPLETED' || sale.orderStatus === 'COMPLETED';
+    const isPendingComanda =
+      sale.orderStatus === 'PENDING_PREPARATION' || sale.orderStatus === 'READY_AT_WINDOW';
+    const isAlreadyCompleted =
+      sale.orderStatus === 'COMPLETED' || (!isPendingComanda && sale.paymentStatus === 'COMPLETED');
 
     // Una venta ya cancelada no puede completarse (evitaría descontar stock de una comanda anulada)
     if (isAlreadyCancelled && (paymentStatus === 'COMPLETED' || orderStatus === 'COMPLETED')) {
@@ -909,7 +915,12 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const isCompletingNow = !isAlreadyCompleted && (paymentStatus === 'COMPLETED' || orderStatus === 'COMPLETED') && !isCancelling;
+    // IMPORTANTE: Si es una comanda en preparación o en ventanilla y solo se está validando la transferencia
+    // (paymentStatus === 'COMPLETED' sin orderStatus === 'COMPLETED'), NO se factura ni se descuenta inventario aún.
+    const isCompletingNow =
+      !isAlreadyCompleted &&
+      (orderStatus === 'COMPLETED' || (!isPendingComanda && paymentStatus === 'COMPLETED')) &&
+      !isCancelling;
 
     // Reclamo atómico de la transición a COMPLETED: si dos peticiones llegan a la vez,
     // solo una obtiene count > 0 y descuenta el inventario.
@@ -918,7 +929,6 @@ export async function PATCH(request: Request) {
       const claim = await prisma.sale.updateMany({
         where: {
           id: sale.id,
-          paymentStatus: { not: 'COMPLETED' },
           OR: [{ orderStatus: null }, { orderStatus: { not: 'COMPLETED' } }],
         },
         data: {

@@ -437,16 +437,34 @@ export default function PosPage() {
       setProducts(getStoredProducts());
     };
 
+    const handleSalesUpdate = () => {
+      try {
+        const raw = localStorage.getItem('kodelocal_sales');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) setSales(parsed);
+        }
+      } catch (_) {}
+    };
+
     const handleStorage = (e: StorageEvent) => {
       if (e.key === 'kodelocal_products') {
         setProducts(getStoredProducts());
       }
+      if (e.key === 'kodelocal_sales' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) setSales(parsed);
+        } catch (_) {}
+      }
     };
 
     window.addEventListener('kodelocal_products_updated', handleProductsUpdate);
+    window.addEventListener('kodelocal_sales_updated', handleSalesUpdate);
     window.addEventListener('storage', handleStorage);
     return () => {
       window.removeEventListener('kodelocal_products_updated', handleProductsUpdate);
+      window.removeEventListener('kodelocal_sales_updated', handleSalesUpdate);
       window.removeEventListener('storage', handleStorage);
     };
   }, []);
@@ -499,7 +517,7 @@ export default function PosPage() {
               ivaTotal: 0,
               shippingCost: Number(o.shippingCost || 0),
               paymentMethod: o.paymentMethod || 'CARD',
-              paymentStatus: o.paymentStatus || 'COMPLETED',
+              paymentStatus: o.paymentStatus || 'PENDING',
               notes: o.notes || undefined,
               deliveryNotes: o.deliveryReference ? `Entrega: ${o.shippingAddress} (Ref: ${o.deliveryReference})` : `Entrega: ${o.shippingAddress}`,
               status: o.orderStatus === 'NUEVO' || o.orderStatus === 'EN_PREPARACION'
@@ -623,7 +641,7 @@ export default function PosPage() {
                 saleNumber: s.saleNumber,
                 orderNumber: s.saleNumber,
                 createdAt: s.createdAt,
-                invoicedAt: s.dteDocument?.fhProcesamiento || s.dteDocument?.createdAt || ((s.orderStatus === 'COMPLETED' || s.paymentStatus === 'COMPLETED') && !isCancelledSale ? (s.updatedAt || s.createdAt) : undefined),
+                invoicedAt: s.dteDocument?.fhProcesamiento || s.dteDocument?.createdAt || (s.orderStatus === 'COMPLETED' && !isCancelledSale ? (s.updatedAt || s.createdAt) : undefined),
                 channel: s.channel || 'POS',
                 total: Number(s.total || 0),
                 subtotal: Number(s.subtotal || 0),
@@ -709,7 +727,9 @@ export default function PosPage() {
                   if (p.channel === 'ONLINE') {
                     existing.channel = 'ONLINE';
                     if (p.createdAt) {
-                      existing.invoicedAt = existing.invoicedAt || existing.createdAt;
+                      if (existing.status === 'COMPLETED') {
+                        existing.invoicedAt = existing.invoicedAt || existing.createdAt;
+                      }
                       existing.createdAt = p.createdAt;
                     }
                   }
@@ -2094,7 +2114,7 @@ export default function PosPage() {
       tipoComprobante,
       paymentMethod: resolvedDomicilioPaymentMethod,
       paymentStatus:
-        effectiveIsDomicilio && (domicilioPaymentMode === 'TARJETA' || domicilioPaymentMode === 'TRANSFERENCIA')
+        effectiveIsDomicilio && domicilioPaymentMode === 'TARJETA'
           ? 'COMPLETED'
           : 'PENDING',
       isDomicilio: effectiveIsDomicilio,
@@ -3137,9 +3157,9 @@ export default function PosPage() {
     return sales.filter(s => s.status === 'READY_AT_WINDOW');
   }, [sales]);
 
-  // Listado de DTEs y comprobantes emitidos en Caja
+  // Listado de DTEs y comprobantes emitidos en Caja (solo órdenes ya facturadas/completadas)
   const completedDteSales = useMemo(() => {
-    return sales.filter(s => s.status === 'COMPLETED' || !!s.dteInfo || !!s.invoicedAt);
+    return sales.filter(s => s.status === 'COMPLETED' || !!s.dteInfo);
   }, [sales]);
 
   // Filtro para la pestaña de DTEs emitidos
