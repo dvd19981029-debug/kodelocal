@@ -4,6 +4,23 @@
 import { PDFDocument } from 'pdf-lib';
 import { DEPTO_TO_ID, resolveC807MunicipioId } from './svTerritory';
 
+/**
+ * Límites oficiales de caracteres según la documentación API de C807 Xpress
+ * (POST https://app.c807.com/guia.php/api/set_registro)
+ */
+export const C807_LIMITS = {
+  ORDEN: 25,          // string(25)
+  NOMBRE: 75,         // string(75)
+  IDENTIFICACION: 75, // string(75)
+  DIRECCION: 250,     // string(250)
+  TELEFONO: 25,       // string(25)
+  CORREO: 75,         // string(75)
+  CONTACTO: 75,       // string(75)
+  REFERENCIA: 500,    // string(500)
+  INDICACIONES: 500,  // string(500)
+  CONTENIDO: 500,     // string(500)
+} as const;
+
 export interface C807GuideInput {
   numero_pedido: string;
   cliente_nombre: string;
@@ -152,11 +169,13 @@ export class C807Client {
       const fechaRecolecta = new Date(Date.now() + 24 * 60 * 60 * 1000);
       const fechaStr = fechaRecolecta.toISOString().replace('T', ' ').substring(0, 16);
 
-      // 4. Limpieza de teléfono y dirección
-      const cleanPhone = (input.cliente_telefono || '').toString().replace(/\D/g, '');
-      const direccionCompleta = input.cliente_referencia
-        ? `${input.cliente_direccion} (Ref: ${input.cliente_referencia})`
-        : input.cliente_direccion;
+      // 4. Limpieza de teléfono y dirección respetando límites oficiales C807
+      const cleanPhone = (input.cliente_telefono || '').toString().replace(/\D/g, '').slice(0, C807_LIMITS.TELEFONO);
+      const rawDir = (input.cliente_direccion || '').trim();
+      const rawRef = (input.cliente_referencia || '').trim();
+      const direccionCompleta = rawRef
+        ? `${rawDir} (Ref: ${rawRef})`
+        : rawDir;
 
       // 5. Construir payload reglamentario de C807
       const payload = {
@@ -165,11 +184,11 @@ export class C807Client {
         tipo_entrega: 'NRML',
         guias: [
           {
-            orden: input.numero_pedido,
-            nombre: input.cliente_nombre.trim(),
-            direccion: direccionCompleta.trim(),
+            orden: String(input.numero_pedido || '').trim().slice(0, C807_LIMITS.ORDEN),
+            nombre: (input.cliente_nombre || '').trim().slice(0, C807_LIMITS.NOMBRE),
+            direccion: direccionCompleta.trim().slice(0, C807_LIMITS.DIRECCION),
             telefono: cleanPhone || '60437496',
-            correo: input.cliente_correo?.trim() || 'luisundae@gmail.com',
+            correo: (input.cliente_correo?.trim() || 'luisundae@gmail.com').slice(0, C807_LIMITS.CORREO),
             tipo_servicio: tipoServicio,
             monto_cce: montoCce,
             departamento_id: deptoId,
@@ -179,7 +198,7 @@ export class C807Client {
             detalle: [
               {
                 peso: input.peso_libras || 5,
-                contenido: input.observaciones?.trim() || 'Fragancias y esencias de perfumería',
+                contenido: (input.observaciones?.trim() || 'Fragancias y esencias de perfumería').slice(0, C807_LIMITS.CONTENIDO),
                 unidad_medida: 'LB',
               },
             ],

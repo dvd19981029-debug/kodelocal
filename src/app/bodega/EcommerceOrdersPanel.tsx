@@ -1068,25 +1068,37 @@ function OrderDetailModal({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
-                    Dirección
-                  </label>
+                  <div className="flex items-center justify-between mb-0.5">
+                    <label className="text-[10px] font-bold uppercase text-slate-500">
+                      Dirección
+                    </label>
+                    <span className="text-[10px] font-semibold text-slate-400">
+                      {editAddress.length}/250
+                    </span>
+                  </div>
                   <textarea
                     rows={2}
+                    maxLength={250}
                     value={editAddress}
-                    onChange={(e) => setEditAddress(e.target.value)}
+                    onChange={(e) => setEditAddress(e.target.value.slice(0, 250))}
                     className="w-full px-2.5 py-1.5 text-xs font-bold text-slate-800 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
-                    Referencia
-                  </label>
+                  <div className="flex items-center justify-between mb-0.5">
+                    <label className="text-[10px] font-bold uppercase text-slate-500">
+                      Referencia
+                    </label>
+                    <span className="text-[10px] font-semibold text-slate-400">
+                      {editReference.length}/120
+                    </span>
+                  </div>
                   <input
                     type="text"
+                    maxLength={120}
                     value={editReference}
-                    onChange={(e) => setEditReference(e.target.value)}
+                    onChange={(e) => setEditReference(e.target.value.slice(0, 120))}
                     placeholder="Punto de referencia (opcional)"
                     className="w-full px-2.5 py-1.5 text-xs font-bold text-slate-800 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />

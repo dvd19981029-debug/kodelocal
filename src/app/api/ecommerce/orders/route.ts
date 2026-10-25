@@ -402,8 +402,8 @@ export async function PATCH(request: Request) {
 
     const cleanDepartment = department !== undefined ? sanitizeText(department, 50) : undefined;
     const cleanMunicipality = municipality !== undefined ? sanitizeText(municipality, 60) : undefined;
-    const cleanShippingAddress = shippingAddress !== undefined ? sanitizeText(shippingAddress, 255) : undefined;
-    const cleanDeliveryReference = deliveryReference !== undefined ? (sanitizeText(deliveryReference, 255) || null) : undefined;
+    const cleanShippingAddress = shippingAddress !== undefined ? sanitizeText(shippingAddress, 250) : undefined;
+    const cleanDeliveryReference = deliveryReference !== undefined ? (sanitizeText(deliveryReference, 120) || null) : undefined;
 
     // Si se intenta cancelar, validar que sea staff o sea el checkout de tarjeta pendiente del propio usuario
     const isAttemptingCancellation = orderStatus === 'CANCELADO' || paymentStatus === 'CANCELLED' || paymentStatus === 'REJECTED';
@@ -746,16 +746,16 @@ export async function POST(request: Request) {
       fiscalAddress,
     } = body;
 
-    // Sanitización estricta de entradas (SEC-07)
-    const cleanCustomerName = sanitizeText(customerName, 100) || 'Cliente Online';
-    const cleanBusinessName = sanitizeText(businessName, 150) || null;
+    // Sanitización estricta de entradas (SEC-07 + Límites Oficiales C807)
+    const cleanCustomerName = sanitizeText(customerName, 75) || 'Cliente Online';
+    const cleanBusinessName = sanitizeText(businessName, 75) || null;
     const cleanCustomerEmail = sanitizeEmail(customerEmail);
     const cleanCustomerPhone = sanitizePhone(customerPhone) || '';
     const cleanDepartment = sanitizeText(department, 50) || 'San Salvador';
     const cleanMunicipality = sanitizeText(municipality, 60) || 'San Salvador Centro';
-    const cleanShippingAddress = sanitizeText(shippingAddress, 255);
-    const cleanFiscalAddress = sanitizeText(fiscalAddress, 255) || null;
-    const cleanDeliveryReference = sanitizeText(deliveryReference, 255) || null;
+    const cleanShippingAddress = sanitizeText(shippingAddress, 250);
+    const cleanFiscalAddress = sanitizeText(fiscalAddress, 250) || null;
+    const cleanDeliveryReference = sanitizeText(deliveryReference, 120) || null;
     const cleanNotes = sanitizeText(notes, 500) || null;
     const cleanNumDoc = sanitizeDocument(numDoc, 30) || '00000000-0';
     const cleanNrc = sanitizeDocument(nrc, 30) || null;

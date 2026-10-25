@@ -210,15 +210,19 @@ export default function CustomerAuthModal() {
           
           {authModalTab === 'register' && (
             <div>
-              <label className="text-xs sm:text-sm font-bold text-slate-800 block mb-1.5">
-                Nombre Completo
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs sm:text-sm font-bold text-slate-800">
+                  Nombre Completo
+                </label>
+                <span className="text-[10px] font-semibold text-slate-400">{name.length}/75</span>
+              </div>
               <input
                 type="text"
                 required
+                maxLength={75}
                 placeholder="Tu nombre completo"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => setName(e.target.value.slice(0, 75))}
                 className="w-full px-4 py-3 text-sm rounded-2xl bg-white border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#52b747] focus:ring-2 focus:ring-[#52b747]/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] font-medium transition-all"
               />
             </div>
@@ -231,9 +235,10 @@ export default function CustomerAuthModal() {
             <input
               type="email"
               required
+              maxLength={75}
               placeholder="tu@email.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value.slice(0, 75))}
               className="w-full px-4 py-3 text-sm rounded-2xl bg-white border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#52b747] focus:ring-2 focus:ring-[#52b747]/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] font-medium transition-all"
             />
           </div>
@@ -245,9 +250,10 @@ export default function CustomerAuthModal() {
               </label>
               <input
                 type="tel"
+                maxLength={25}
                 placeholder="7000-0000"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => setPhone(e.target.value.slice(0, 25))}
                 className="w-full px-4 py-3 text-sm rounded-2xl bg-white border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#52b747] focus:ring-2 focus:ring-[#52b747]/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] font-medium transition-all"
               />
             </div>
@@ -277,9 +283,10 @@ export default function CustomerAuthModal() {
                     <input
                       type="text"
                       required={isCreditFiscal}
+                      maxLength={75}
                       placeholder="Nombre en tarjeta de IVA o Razón Social"
                       value={businessName}
-                      onChange={(e) => setBusinessName(e.target.value)}
+                      onChange={(e) => setBusinessName(e.target.value.slice(0, 75))}
                       className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#52b747] font-medium"
                     />
                   </div>
@@ -292,9 +299,10 @@ export default function CustomerAuthModal() {
                       <input
                         type="text"
                         required={isCreditFiscal}
+                        maxLength={75}
                         placeholder="0614-000000-000-0"
                         value={documentNum}
-                        onChange={(e) => setDocumentNum(e.target.value)}
+                        onChange={(e) => setDocumentNum(e.target.value.slice(0, 75))}
                         className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#52b747] font-mono"
                       />
                     </div>
@@ -305,9 +313,10 @@ export default function CustomerAuthModal() {
                       <input
                         type="text"
                         required={isCreditFiscal}
+                        maxLength={25}
                         placeholder="123456-7"
                         value={nrc}
-                        onChange={(e) => setNrc(e.target.value)}
+                        onChange={(e) => setNrc(e.target.value.slice(0, 25))}
                         className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#52b747] font-mono"
                       />
                     </div>
@@ -366,15 +375,19 @@ export default function CustomerAuthModal() {
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                      Dirección Fiscal *
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[11px] font-bold text-slate-700">
+                        Dirección Fiscal *
+                      </label>
+                      <span className="text-[10px] font-semibold text-slate-400">{address.length}/250</span>
+                    </div>
                     <input
                       type="text"
                       required={isCreditFiscal}
+                      maxLength={250}
                       placeholder="Colonia, calle, número de local o casa"
                       value={address}
-                      onChange={(e) => setAddress(e.target.value)}
+                      onChange={(e) => setAddress(e.target.value.slice(0, 250))}
                       className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#52b747] font-medium"
                     />
                   </div>

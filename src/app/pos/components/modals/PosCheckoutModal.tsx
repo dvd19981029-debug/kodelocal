@@ -391,12 +391,15 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
                 <label className="text-[10.5px] font-semibold text-slate-600 block">
                   {tipoComprobante === '03' ? 'Razón Social *' : 'Nombre del Cliente'}
                 </label>
-                
+                <span className="text-[10px] font-semibold text-slate-400">
+                  {clienteNombre.length}/75
+                </span>
               </div>
               <input
                 type="text"
+                maxLength={75}
                 value={clienteNombre}
-                onChange={(e) => setClienteNombre(e.target.value)}
+                onChange={(e) => setClienteNombre(e.target.value.slice(0, 75))}
                 placeholder="Nombre o Empresa"
                 className="clay-input w-full text-xs py-1.5"
               />
@@ -409,8 +412,9 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
                 </label>
                 <input
                   type="text"
+                  maxLength={75}
                   value={clienteDoc}
-                  onChange={(e) => setClienteDoc(e.target.value)}
+                  onChange={(e) => setClienteDoc(e.target.value.slice(0, 75))}
                   placeholder="00000000-0"
                   className="clay-input w-full text-xs py-1.5 font-mono"
                 />
@@ -422,8 +426,9 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
                 </label>
                 <input
                   type="text"
+                  maxLength={25}
                   value={clienteNrc}
-                  onChange={(e) => setClienteNrc(e.target.value)}
+                  onChange={(e) => setClienteNrc(e.target.value.slice(0, 25))}
                   placeholder="123456-7"
                   className="clay-input w-full text-xs py-1.5 font-mono"
                 />
@@ -450,8 +455,9 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
               </label>
               <input
                 type="email"
+                maxLength={75}
                 value={clienteEmail}
-                onChange={(e) => setClienteEmail(e.target.value)}
+                onChange={(e) => setClienteEmail(e.target.value.slice(0, 75))}
                 placeholder="correo@cliente.com"
                 className="clay-input w-full text-xs py-1.5 font-mono"
               />
@@ -497,13 +503,19 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
             </div>
 
             <div>
-              <label className="text-[10.5px] font-semibold text-slate-600 block mb-0.5">
-                Dirección (Calle, Colonia o Local)
-              </label>
+              <div className="flex justify-between items-center mb-0.5">
+                <label className="text-[10.5px] font-semibold text-slate-600 block">
+                  Dirección (Calle, Colonia o Local)
+                </label>
+                <span className="text-[10px] font-semibold text-slate-400">
+                  {clienteDireccion.length}/250
+                </span>
+              </div>
               <input
                 type="text"
+                maxLength={250}
                 value={clienteDireccion}
-                onChange={(e) => setClienteDireccion(e.target.value)}
+                onChange={(e) => setClienteDireccion(e.target.value.slice(0, 250))}
                 placeholder="Ej. Colonia Escalón, Calle El Mirador #42"
                 className="clay-input w-full text-xs py-1.5"
               />

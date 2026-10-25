@@ -753,11 +753,15 @@ export default function CustomerDrawer() {
                       </h4>
 
                       <div>
-                        <label className="block text-[11px] font-bold text-slate-700 mb-1">Nombre Completo</label>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-[11px] font-bold text-slate-700">Nombre Completo</label>
+                          <span className="text-[10px] font-semibold text-slate-400">{name.length}/75</span>
+                        </div>
                         <input
                           type="text"
+                          maxLength={75}
                           value={name}
-                          onChange={(e) => setName(e.target.value)}
+                          onChange={(e) => setName(e.target.value.slice(0, 75))}
                           placeholder="Tu nombre completo"
                           className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:bg-white focus:border-indigo-500 focus:outline-none transition-colors"
                         />
@@ -768,8 +772,9 @@ export default function CustomerDrawer() {
                           <label className="block text-[11px] font-bold text-slate-700 mb-1">Teléfono</label>
                           <input
                             type="tel"
+                            maxLength={25}
                             value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
+                            onChange={(e) => setPhone(e.target.value.slice(0, 25))}
                             placeholder="7000-0000"
                             className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:bg-white focus:border-indigo-500 focus:outline-none transition-colors"
                           />
@@ -793,8 +798,9 @@ export default function CustomerDrawer() {
                         <label className="block text-[11px] font-bold text-slate-700 mb-1">Número de Documento</label>
                         <input
                           type="text"
+                          maxLength={75}
                           value={documentNum}
-                          onChange={(e) => setDocumentNum(e.target.value)}
+                          onChange={(e) => setDocumentNum(e.target.value.slice(0, 75))}
                           placeholder="00000000-0"
                           className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:bg-white focus:border-indigo-500 focus:outline-none transition-colors"
                         />
@@ -842,11 +848,15 @@ export default function CustomerDrawer() {
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-bold text-slate-700 mb-1">Dirección Exacta</label>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-[11px] font-bold text-slate-700">Dirección Exacta</label>
+                          <span className="text-[10px] font-semibold text-slate-400">{address.length}/250</span>
+                        </div>
                         <textarea
                           rows={2}
+                          maxLength={250}
                           value={address}
-                          onChange={(e) => setAddress(e.target.value)}
+                          onChange={(e) => setAddress(e.target.value.slice(0, 250))}
                           placeholder="Colonia, calle, número de casa..."
                           className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:bg-white focus:border-indigo-500 focus:outline-none transition-colors resize-none"
                         />
@@ -875,8 +885,9 @@ export default function CustomerDrawer() {
                             <label className="block text-[11px] font-bold text-slate-700 mb-1">Razón Social / Nombre Comercial</label>
                             <input
                               type="text"
+                              maxLength={75}
                               value={businessName}
-                              onChange={(e) => setBusinessName(e.target.value)}
+                              onChange={(e) => setBusinessName(e.target.value.slice(0, 75))}
                               placeholder="Nombre de la empresa o negocio"
                               className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:bg-white focus:border-indigo-500 focus:outline-none transition-colors"
                             />
@@ -886,8 +897,9 @@ export default function CustomerDrawer() {
                             <label className="block text-[11px] font-bold text-slate-700 mb-1">NRC</label>
                             <input
                               type="text"
+                              maxLength={25}
                               value={nrc}
-                              onChange={(e) => setNrc(e.target.value)}
+                              onChange={(e) => setNrc(e.target.value.slice(0, 25))}
                               placeholder="000000-0"
                               className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium focus:bg-white focus:border-indigo-500 focus:outline-none transition-colors font-mono"
                             />

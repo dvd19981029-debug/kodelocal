@@ -245,15 +245,21 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
               <>
                 <div className={`grid grid-cols-1 ${requiresFiscalFields ? 'sm:grid-cols-2' : ''} gap-3`}>
                   <div>
-                    <label className="text-xs font-bold text-slate-700 block mb-1">
-                      {custTipoPersona === 'JURIDICA' ? 'Razón Social (según Tarjeta NRC) *' : 'Nombre Completo *'}
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-bold text-slate-700">
+                        {custTipoPersona === 'JURIDICA' ? 'Razón Social (según Tarjeta NRC) *' : 'Nombre Completo *'}
+                      </label>
+                      <span className="text-[10px] font-semibold text-slate-400">
+                        {custName.length}/75
+                      </span>
+                    </div>
                     <input
                       type="text"
                       required
+                      maxLength={75}
                       placeholder={custTipoPersona === 'JURIDICA' ? 'Ej. Distribuidora Las Fragancias S.A. de C.V.' : 'Ej. María Julia Hernández'}
                       value={custName}
-                      onChange={(e) => setCustName(e.target.value)}
+                      onChange={(e) => setCustName(e.target.value.slice(0, 75))}
                       className="clay-input w-full text-xs font-bold"
                     />
                   </div>
@@ -265,9 +271,10 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
                       </label>
                       <input
                         type="text"
+                        maxLength={75}
                         placeholder="Ej. Boutique Elegance"
                         value={custNombreComercial}
-                        onChange={(e) => setCustNombreComercial(e.target.value)}
+                        onChange={(e) => setCustNombreComercial(e.target.value.slice(0, 75))}
                         className="clay-input w-full text-xs"
                       />
                     </div>
@@ -300,9 +307,10 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
                     <input
                       type="text"
                       required={requiresFiscalFields}
+                      maxLength={75}
                       placeholder={custTipoDocumento === 'DUI' ? '00000000-0 (opcional en Factura)' : '0614-000000-000-0'}
                       value={custNumDocumento}
-                      onChange={(e) => setCustNumDocumento(e.target.value)}
+                      onChange={(e) => setCustNumDocumento(e.target.value.slice(0, 75))}
                       className="clay-input w-full text-xs font-mono font-bold"
                     />
                   </div>
@@ -315,9 +323,10 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
                       <input
                         type="text"
                         required={requiresFiscalFields}
+                        maxLength={25}
                         placeholder="Ej. 123456-7"
                         value={custNrc}
-                        onChange={(e) => setCustNrc(e.target.value)}
+                        onChange={(e) => setCustNrc(e.target.value.slice(0, 25))}
                         className="clay-input w-full text-xs font-mono font-bold"
                       />
                     </div>
@@ -368,9 +377,10 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
               <input
                 type="email"
                 required={custTipoPersona === 'JURIDICA' || custDocumentoPreferido === '03'}
+                maxLength={75}
                 placeholder="Opcional si no tiene correo"
                 value={custEmail}
-                onChange={(e) => setCustEmail(e.target.value)}
+                onChange={(e) => setCustEmail(e.target.value.slice(0, 75))}
                 className="clay-input w-full text-xs font-bold font-mono"
               />
             </div>
@@ -382,9 +392,10 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
               <input
                 type="text"
                 required
+                maxLength={25}
                 placeholder="7700-0000"
                 value={custPhone}
-                onChange={(e) => setCustPhone(e.target.value)}
+                onChange={(e) => setCustPhone(e.target.value.slice(0, 25))}
                 className="clay-input w-full text-xs font-mono"
               />
             </div>
@@ -632,14 +643,20 @@ export const PosCustomerFormModal: React.FC<PosCustomerFormModalProps> = ({
           </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-700 block mb-1">
-              Dirección Detallada (Calle, Colonia, N° Local o Casa)
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-bold text-slate-700">
+                Dirección Detallada (Calle, Colonia, N° Local o Casa)
+              </label>
+              <span className="text-[10px] font-semibold text-slate-400">
+                {custDireccion.length}/250
+              </span>
+            </div>
             <input
               type="text"
+              maxLength={250}
               placeholder="Ej. Colonia Escalón, Calle El Mirador #42"
               value={custDireccion}
-              onChange={(e) => setCustDireccion(e.target.value)}
+              onChange={(e) => setCustDireccion(e.target.value.slice(0, 250))}
               className="clay-input w-full text-xs"
             />
           </div>

@@ -401,8 +401,9 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
                       <label className="text-[9.5px] font-bold text-slate-600 block mb-0.5">Teléfono *</label>
                       <input
                         type="text"
+                        maxLength={25}
                         value={domicilioPhone || selectedCustomerObj?.phone || ''}
-                        onChange={(e) => setDomicilioPhone && setDomicilioPhone(e.target.value)}
+                        onChange={(e) => setDomicilioPhone && setDomicilioPhone(e.target.value.slice(0, 25))}
                         placeholder="7000-0000"
                         className="w-full px-2 py-1 text-[11px] rounded-md border border-blue-200 bg-white font-mono font-bold text-slate-800"
                       />
@@ -440,21 +441,33 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
                     </select>
                   </div>
                   <div>
-                    <label className="text-[9.5px] font-bold text-slate-600 block mb-0.5">Dirección detallada de entrega *</label>
+                    <div className="flex items-center justify-between mb-0.5">
+                      <label className="text-[9.5px] font-bold text-slate-600">Dirección detallada de entrega *</label>
+                      <span className="text-[9px] font-semibold text-slate-400">
+                        {(domicilioAddress || selectedCustomerObj?.direccion || '').length}/250
+                      </span>
+                    </div>
                     <input
                       type="text"
+                      maxLength={250}
                       value={domicilioAddress || selectedCustomerObj?.direccion || ''}
-                      onChange={(e) => setDomicilioAddress && setDomicilioAddress(e.target.value)}
+                      onChange={(e) => setDomicilioAddress && setDomicilioAddress(e.target.value.slice(0, 250))}
                       placeholder="Colonia, calle, pasaje, # de casa..."
                       className="w-full px-2 py-1 text-[11px] rounded-md border border-blue-200 bg-white text-slate-800"
                     />
                   </div>
                   <div>
-                    <label className="text-[9.5px] font-bold text-slate-600 block mb-0.5">Referencia (Opcional)</label>
+                    <div className="flex items-center justify-between mb-0.5">
+                      <label className="text-[9.5px] font-bold text-slate-600">Referencia (Opcional)</label>
+                      <span className="text-[9px] font-semibold text-slate-400">
+                        {(domicilioReference || '').length}/120
+                      </span>
+                    </div>
                     <input
                       type="text"
+                      maxLength={120}
                       value={domicilioReference}
-                      onChange={(e) => setDomicilioReference && setDomicilioReference(e.target.value)}
+                      onChange={(e) => setDomicilioReference && setDomicilioReference(e.target.value.slice(0, 120))}
                       placeholder="Ej. Frente a parque, portón negro..."
                       className="w-full px-2 py-1 text-[11px] rounded-md border border-blue-200 bg-white text-slate-800"
                     />

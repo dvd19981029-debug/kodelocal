@@ -1032,43 +1032,61 @@ export default function CheckoutPage() {
               {/* Formulario de contacto y destino */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
                 <div className="sm:col-span-2">
-                  <label className="font-bold text-slate-700 block mb-1">
-                    Nombre Completo <span className="text-rose-500">*</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-bold text-slate-700">
+                      Nombre Completo <span className="text-rose-500">*</span>
+                    </label>
+                    <span className="text-[10px] font-semibold text-slate-400">
+                      {nombre.length}/75
+                    </span>
+                  </div>
                   <input
                     type="text"
                     required
+                    maxLength={75}
                     placeholder="Ej. Carmen Santos de López"
                     value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
+                    onChange={(e) => setNombre(e.target.value.slice(0, 75))}
                     className="clay-input w-full font-medium"
                   />
                 </div>
 
                 <div>
-                  <label className="font-bold text-slate-700 block mb-1">
-                    Teléfono / WhatsApp <span className="text-rose-500">*</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-bold text-slate-700">
+                      Teléfono / WhatsApp <span className="text-rose-500">*</span>
+                    </label>
+                    <span className="text-[10px] font-semibold text-slate-400">
+                      {telefono.length}/25
+                    </span>
+                  </div>
                   <input
                     type="tel"
                     required
+                    maxLength={25}
                     placeholder="7000-0000"
                     value={telefono}
-                    onChange={(e) => setTelefono(e.target.value)}
+                    onChange={(e) => setTelefono(e.target.value.slice(0, 25))}
                     className="clay-input w-full font-medium"
                   />
                 </div>
 
                 <div>
-                  <label className="font-bold text-slate-700 block mb-1">
-                    Correo Electrónico {tipoComprobante === '03' ? <span className="text-rose-500">*</span> : '(Recomendado para guardar tus datos)'}
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-bold text-slate-700">
+                      Correo Electrónico {tipoComprobante === '03' ? <span className="text-rose-500">*</span> : '(Recomendado para guardar tus datos)'}
+                    </label>
+                    <span className="text-[10px] font-semibold text-slate-400">
+                      {email.length}/75
+                    </span>
+                  </div>
                   <input
                     type="email"
                     required={tipoComprobante === '03'}
+                    maxLength={75}
                     placeholder="carmen@ejemplo.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => setEmail(e.target.value.slice(0, 75))}
                     className="clay-input w-full font-medium"
                   />
                 </div>
@@ -1113,32 +1131,52 @@ export default function CheckoutPage() {
                       </select>
                     </div>
 
-                    <div className="sm:col-span-2">
-                      <label className="font-bold text-slate-700 block mb-1">
-                        Dirección Exacta de Entrega <span className="text-rose-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Colonia, Calle, Pasaje, Número de Casa o Edificio..."
-                        value={direccion}
-                        onChange={(e) => setDireccion(e.target.value)}
-                        className="clay-input w-full font-medium"
-                      />
-                    </div>
+                    {(() => {
+                      const maxDir = referencia.trim() ? Math.max(120, 242 - referencia.trim().length) : 250;
+                      const maxRef = Math.max(40, Math.min(120, 242 - direccion.trim().length));
+                      return (
+                        <>
+                          <div className="sm:col-span-2">
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="font-bold text-slate-700">
+                                Dirección Exacta de Entrega <span className="text-rose-500">*</span>
+                              </label>
+                              <span className="text-[10px] font-semibold text-slate-400">
+                                {direccion.length}/{maxDir}
+                              </span>
+                            </div>
+                            <input
+                              type="text"
+                              required
+                              maxLength={maxDir}
+                              placeholder="Colonia, Calle, Pasaje, Número de Casa o Edificio..."
+                              value={direccion}
+                              onChange={(e) => setDireccion(e.target.value.slice(0, maxDir))}
+                              className="clay-input w-full font-medium"
+                            />
+                          </div>
 
-                    <div className="sm:col-span-2">
-                      <label className="font-bold text-slate-700 block mb-1">
-                        Puntos de Referencia para el Repartidor
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Ej. Frente a parque infantil, portón negro con timbre blanco..."
-                        value={referencia}
-                        onChange={(e) => setReferencia(e.target.value)}
-                        className="clay-input w-full font-medium"
-                      />
-                    </div>
+                          <div className="sm:col-span-2">
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="font-bold text-slate-700">
+                                Puntos de Referencia para el Repartidor
+                              </label>
+                              <span className="text-[10px] font-semibold text-slate-400">
+                                {referencia.length}/{maxRef}
+                              </span>
+                            </div>
+                            <input
+                              type="text"
+                              maxLength={maxRef}
+                              placeholder="Ej. Frente a parque infantil, portón negro con timbre blanco..."
+                              value={referencia}
+                              onChange={(e) => setReferencia(e.target.value.slice(0, maxRef))}
+                              className="clay-input w-full font-medium"
+                            />
+                          </div>
+                        </>
+                      );
+                    })()}
                   </>
                 ) : (
                   <div className="sm:col-span-2 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 space-y-1.5">
@@ -1318,24 +1356,31 @@ export default function CheckoutPage() {
                   </label>
                   <input
                     type="text"
+                    maxLength={75}
                     placeholder="00000000-0"
                     value={numDoc}
-                    onChange={(e) => setNumDoc(e.target.value)}
+                    onChange={(e) => setNumDoc(e.target.value.slice(0, 75))}
                     className="clay-input w-full font-mono"
                   />
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs animate-in fade-in duration-150">
                   <div className="sm:col-span-2">
-                    <label className="font-bold text-slate-700 block mb-1">
-                      Razón Social / Nombre según Tarjeta de Contribuyente <span className="text-rose-500">*</span>
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="font-bold text-slate-700">
+                        Razón Social / Nombre según Tarjeta de Contribuyente <span className="text-rose-500">*</span>
+                      </label>
+                      <span className="text-[10px] font-semibold text-slate-400">
+                        {razonSocial.length}/75
+                      </span>
+                    </div>
                     <input
                       type="text"
                       required
+                      maxLength={75}
                       placeholder="Ej. Distribuidora Las Fragancias S.A. de C.V."
                       value={razonSocial}
-                      onChange={(e) => setRazonSocial(e.target.value)}
+                      onChange={(e) => setRazonSocial(e.target.value.slice(0, 75))}
                       className="clay-input w-full font-bold"
                     />
                   </div>
@@ -1346,9 +1391,10 @@ export default function CheckoutPage() {
                     <input
                       type="text"
                       required
+                      maxLength={25}
                       placeholder="123456-7"
                       value={nrc}
-                      onChange={(e) => setNrc(e.target.value)}
+                      onChange={(e) => setNrc(e.target.value.slice(0, 25))}
                       className="clay-input w-full font-mono"
                     />
                   </div>
@@ -1359,9 +1405,10 @@ export default function CheckoutPage() {
                     <input
                       type="text"
                       required
+                      maxLength={75}
                       placeholder="0614-000000-000-0"
                       value={numDoc}
-                      onChange={(e) => setNumDoc(e.target.value)}
+                      onChange={(e) => setNumDoc(e.target.value.slice(0, 75))}
                       className="clay-input w-full font-mono"
                     />
                   </div>
@@ -1415,15 +1462,21 @@ export default function CheckoutPage() {
                     </>
                   )}
                   <div className="sm:col-span-2">
-                    <label className="font-bold text-slate-700 block mb-1">
-                      Dirección Fiscal (según tarjeta NRC) <span className="text-rose-500">*</span>
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="font-bold text-slate-700">
+                        Dirección Fiscal (según tarjeta NRC) <span className="text-rose-500">*</span>
+                      </label>
+                      <span className="text-[10px] font-semibold text-slate-400">
+                        {(direccionFiscal || direccion).length}/250
+                      </span>
+                    </div>
                     <input
                       type="text"
                       required={metodoEntrega === 'RETIRO'}
+                      maxLength={250}
                       placeholder="Colonia, calle, número de local o casa registrada en Hacienda"
                       value={direccionFiscal || direccion}
-                      onChange={(e) => setDireccionFiscal(e.target.value)}
+                      onChange={(e) => setDireccionFiscal(e.target.value.slice(0, 250))}
                       className="clay-input w-full font-medium"
                     />
                   </div>

@@ -909,24 +909,36 @@ function PosDomicilioDetailModal({
             {isEditingDelivery ? (
               <div className="space-y-2 pt-1">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-600 block mb-0.5">
-                    Nombre quien recibe *
-                  </label>
+                  <div className="flex items-center justify-between mb-0.5">
+                    <label className="text-[10px] font-bold text-slate-600">
+                      Nombre quien recibe *
+                    </label>
+                    <span className="text-[10px] font-semibold text-slate-400">
+                      {editName.length}/75
+                    </span>
+                  </div>
                   <input
                     type="text"
+                    maxLength={75}
                     value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
+                    onChange={(e) => setEditName(e.target.value.slice(0, 75))}
                     className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white font-bold"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-600 block mb-0.5">
-                    Teléfono / WhatsApp *
-                  </label>
+                  <div className="flex items-center justify-between mb-0.5">
+                    <label className="text-[10px] font-bold text-slate-600">
+                      Teléfono / WhatsApp *
+                    </label>
+                    <span className="text-[10px] font-semibold text-slate-400">
+                      {editPhone.length}/25
+                    </span>
+                  </div>
                   <input
                     type="text"
+                    maxLength={25}
                     value={editPhone}
-                    onChange={(e) => setEditPhone(e.target.value)}
+                    onChange={(e) => setEditPhone(e.target.value.slice(0, 25))}
                     placeholder="7000-0000"
                     className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white font-mono font-bold"
                   />
@@ -971,25 +983,37 @@ function PosDomicilioDetailModal({
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-600 block mb-0.5">
-                    Dirección detallada de entrega *
-                  </label>
+                  <div className="flex items-center justify-between mb-0.5">
+                    <label className="text-[10px] font-bold text-slate-600">
+                      Dirección detallada de entrega *
+                    </label>
+                    <span className="text-[10px] font-semibold text-slate-400">
+                      {editAddress.length}/250
+                    </span>
+                  </div>
                   <input
                     type="text"
+                    maxLength={250}
                     value={editAddress}
-                    onChange={(e) => setEditAddress(e.target.value)}
+                    onChange={(e) => setEditAddress(e.target.value.slice(0, 250))}
                     placeholder="Colonia, calle, pasaje, # de casa o local..."
                     className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-600 block mb-0.5">
-                    Punto de referencia (Opcional)
-                  </label>
+                  <div className="flex items-center justify-between mb-0.5">
+                    <label className="text-[10px] font-bold text-slate-600">
+                      Punto de referencia (Opcional)
+                    </label>
+                    <span className="text-[10px] font-semibold text-slate-400">
+                      {editRef.length}/120
+                    </span>
+                  </div>
                   <input
                     type="text"
+                    maxLength={120}
                     value={editRef}
-                    onChange={(e) => setEditRef(e.target.value)}
+                    onChange={(e) => setEditRef(e.target.value.slice(0, 120))}
                     placeholder="Ej. Frente a parque, portón negro..."
                     className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white"
                   />
