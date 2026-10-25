@@ -211,6 +211,63 @@ export default function EcommerceOrdersPanel() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selected, setSelected] = useState<EcoOrder | null>(null);
   const [showUnpaid, setShowUnpaid] = useState(false);
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
+
+  const handleConfirmTransfer = async (o: EcoOrder) => {
+    if (
+      !confirm(
+        `¿Confirmar que el cliente ${o.customerName} ya realizó la transferencia bancaria por ${money(o.total)} para el pedido #${o.orderNumber}?`
+      )
+    ) {
+      return;
+    }
+    setVerifyingId(o.id);
+    try {
+      const staffToken = await getStaffToken();
+      const res = await fetch('/api/ecommerce/orders', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({
+          orderId: o.id,
+          orderNumber: o.orderNumber,
+          paymentStatus: 'COMPLETED',
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOrders((prev) =>
+          prev.map((item) => (item.id === o.id ? { ...item, paymentStatus: 'COMPLETED' } : item))
+        );
+        setSelected((prev) => (prev && prev.id === o.id ? { ...prev, paymentStatus: 'COMPLETED' } : prev));
+        if (typeof window !== 'undefined') {
+          try {
+            const raw = localStorage.getItem('kodelocal_sales');
+            if (raw) {
+              const saved = JSON.parse(raw);
+              if (Array.isArray(saved)) {
+                const updated = saved.map((s: any) =>
+                  s.id === o.id || s.saleNumber === o.orderNumber || s.orderNumber === o.orderNumber
+                    ? { ...s, paymentStatus: 'COMPLETED' }
+                    : s
+                );
+                localStorage.setItem('kodelocal_sales', JSON.stringify(updated));
+                window.dispatchEvent(new Event('kodelocal_sales_updated'));
+              }
+            }
+          } catch (_) {}
+        }
+      } else {
+        alert(data.error || 'No se pudo confirmar la transferencia');
+      }
+    } catch (err: any) {
+      alert(`Error de conexión: ${err?.message || 'Error desconocido'}`);
+    } finally {
+      setVerifyingId(null);
+    }
+  };
 
   const load = useCallback(async () => {
     try {
@@ -369,6 +426,19 @@ export default function EcommerceOrdersPanel() {
                   <div className="text-[11px] font-bold">
                     {PAYMENT_STATUS_LABELS[o.paymentStatus] || o.paymentStatus}
                   </div>
+                  {(o.paymentMethod === 'TRANSFER' || o.paymentMethod === 'TRANSFERENCIA') &&
+                    o.paymentStatus !== 'COMPLETED' &&
+                    o.orderStatus !== 'CANCELADO' && (
+                      <button
+                        type="button"
+                        disabled={verifyingId === o.id}
+                        onClick={() => handleConfirmTransfer(o)}
+                        className="mt-1 px-2 py-0.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black inline-flex items-center gap-1 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
+                      >
+                        <Check className="w-3 h-3" />
+                        <span>{verifyingId === o.id ? 'Confirmando...' : 'Confirmar Transferencia'}</span>
+                      </button>
+                    )}
                 </td>
                 <td className="py-2.5 px-3 text-right font-black text-slate-800">{money(o.total)}</td>
                 <td className="py-2.5 px-3 text-center">
@@ -828,7 +898,84 @@ function OrderDetailModal({
 
           <Section icon={<CreditCard className="w-3.5 h-3.5" />} title="Pago y facturación">
             <Row label="Forma de pago" value={PAYMENT_LABELS[o.paymentMethod] || o.paymentMethod} />
-            <Row label="Estado del pago" value={PAYMENT_STATUS_LABELS[o.paymentStatus] || o.paymentStatus} />
+            <Row
+              label="Estado del pago"
+              value={
+                <span className="inline-flex items-center gap-1.5 flex-wrap justify-end">
+                  <span
+                    className={
+                      o.paymentStatus === 'COMPLETED'
+                        ? 'text-emerald-700 font-black'
+                        : 'text-amber-700 font-black'
+                    }
+                  >
+                    {PAYMENT_STATUS_LABELS[o.paymentStatus] || o.paymentStatus}
+                  </span>
+                </span>
+              }
+            />
+            {(o.paymentMethod === 'TRANSFER' || o.paymentMethod === 'TRANSFERENCIA') &&
+              o.paymentStatus !== 'COMPLETED' &&
+              o.orderStatus !== 'CANCELADO' && (
+                <div className="pt-1.5">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (
+                        !confirm(
+                          `¿Confirmar que el cliente ${o.customerName} ya realizó la transferencia bancaria por ${money(o.total)} para el pedido #${o.orderNumber}?`
+                        )
+                      ) {
+                        return;
+                      }
+                      try {
+                        const staffToken = await getStaffToken();
+                        const res = await fetch('/api/ecommerce/orders', {
+                          method: 'PATCH',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+                          },
+                          body: JSON.stringify({
+                            orderId: o.id,
+                            orderNumber: o.orderNumber,
+                            paymentStatus: 'COMPLETED',
+                          }),
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                          onOrderUpdated({ id: o.id, paymentStatus: 'COMPLETED' });
+                          if (typeof window !== 'undefined') {
+                            try {
+                              const raw = localStorage.getItem('kodelocal_sales');
+                              if (raw) {
+                                const saved = JSON.parse(raw);
+                                if (Array.isArray(saved)) {
+                                  const updated = saved.map((s: any) =>
+                                    s.id === o.id || s.saleNumber === o.orderNumber || s.orderNumber === o.orderNumber
+                                      ? { ...s, paymentStatus: 'COMPLETED' }
+                                      : s
+                                  );
+                                  localStorage.setItem('kodelocal_sales', JSON.stringify(updated));
+                                  window.dispatchEvent(new Event('kodelocal_sales_updated'));
+                                }
+                              }
+                            } catch (_) {}
+                          }
+                        } else {
+                          alert(data.error || 'No se pudo confirmar la transferencia');
+                        }
+                      } catch (err: any) {
+                        alert(`Error de conexión: ${err?.message || 'Error desconocido'}`);
+                      }
+                    }}
+                    className="w-full py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black inline-flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Confirmar Transferencia Verificada</span>
+                  </button>
+                </div>
+              )}
             <Row
               label="Comprobante"
               value={o.sale?.tipoComprobante ? (isCcf ? 'Crédito Fiscal (CCF)' : 'Factura (FC)') : undefined}

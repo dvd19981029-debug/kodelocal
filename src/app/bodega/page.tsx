@@ -719,6 +719,67 @@ export default function BodegaPage() {
     showToast('📦 Pedido entregado al cliente / repartidor.');
   };
 
+  // Confirmar pago por transferencia bancaria para empezar a preparar o despachar
+  const handleVerifyTransferPayment = async (order: SaleRecord) => {
+    const totalVal = resolveOrderTotal(order);
+    if (
+      !confirm(
+        `¿Confirmar que el cliente ${order.cliente?.nombre || 'Consumidor Final'} ya realizó la transferencia bancaria por $${totalVal.toFixed(2)} para el pedido #${order.saleNumber}?`
+      )
+    ) {
+      return;
+    }
+
+    const staffToken = await getStaffToken();
+    const isOnline = order.channel === 'ONLINE' || String(order.saleNumber || '').toUpperCase().startsWith('WEB-');
+
+    try {
+      if (isOnline) {
+        await fetch('/api/ecommerce/orders', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
+          body: JSON.stringify({
+            orderId: order.id,
+            orderNumber: order.orderNumber || order.saleNumber,
+            paymentStatus: 'COMPLETED',
+          }),
+        });
+      } else {
+        await fetch('/api/sales', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
+          body: JSON.stringify({
+            id: order.id,
+            saleNumber: order.saleNumber,
+            paymentStatus: 'COMPLETED',
+          }),
+        });
+      }
+    } catch (err) {
+      console.error('Error confirmando transferencia:', err);
+    }
+
+    setSales(prev => {
+      const updated = prev.map(s => {
+        if (s.id === order.id || (order.saleNumber && s.saleNumber === order.saleNumber)) {
+          return { ...s, paymentStatus: 'COMPLETED' as const };
+        }
+        return s;
+      });
+      localStorage.setItem('kodelocal_sales', JSON.stringify(updated));
+      window.dispatchEvent(new Event('kodelocal_sales_updated'));
+      return updated;
+    });
+
+    showToast(`✅ Transferencia verificada para #${order.saleNumber}.`);
+  };
+
   // Contadores para insignias y menú
   const pendingCount = sales.filter(s => s.status === 'PENDING_PREPARATION' || !s.status).length;
   const readyCount = sales.filter(s => s.status === 'READY_AT_WINDOW').length;
@@ -1455,11 +1516,24 @@ export default function BodegaPage() {
                                 }`}
                               >
                                 <span>{paymentInfo.detailText}</span>
-                                <span className="shrink-0 font-mono px-2 py-0.5 rounded bg-white border border-slate-200/80 text-slate-900 shadow-2xs">
-                                  {paymentInfo.isPaid
-                                    ? `Pagado: $${resolveOrderTotal(order).toFixed(2)}`
-                                    : `Por cobrar: $${resolveOrderTotal(order).toFixed(2)}`}
-                                </span>
+                                <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                                  <span className="font-mono px-2 py-0.5 rounded bg-white border border-slate-200/80 text-slate-900 shadow-2xs">
+                                    {paymentInfo.isPaid
+                                      ? `Pagado: $${resolveOrderTotal(order).toFixed(2)}`
+                                      : `Por cobrar: $${resolveOrderTotal(order).toFixed(2)}`}
+                                  </span>
+                                  {!paymentInfo.isPaid &&
+                                    (order.paymentMethod === 'TRANSFER' || order.paymentMethod === 'TRANSFERENCIA') && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleVerifyTransferPayment(order)}
+                                        className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-black inline-flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+                                      >
+                                        <CheckCircle2 className="w-3.5 h-3.5" />
+                                        <span>Confirmar Transferencia</span>
+                                      </button>
+                                    )}
+                                </div>
                               </div>
                             </div>
 
@@ -1868,11 +1942,24 @@ export default function BodegaPage() {
                               }`}
                             >
                               <span>{paymentInfo.detailText}</span>
-                              <span className="shrink-0 font-mono px-2 py-0.5 rounded bg-white border border-slate-200/80 text-slate-900 shadow-2xs">
-                                {paymentInfo.isPaid
-                                  ? `Pagado: $${resolveOrderTotal(order).toFixed(2)}`
-                                  : `Por cobrar: $${resolveOrderTotal(order).toFixed(2)}`}
-                              </span>
+                              <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                                <span className="font-mono px-2 py-0.5 rounded bg-white border border-slate-200/80 text-slate-900 shadow-2xs">
+                                  {paymentInfo.isPaid
+                                    ? `Pagado: $${resolveOrderTotal(order).toFixed(2)}`
+                                    : `Por cobrar: $${resolveOrderTotal(order).toFixed(2)}`}
+                                </span>
+                                {!paymentInfo.isPaid &&
+                                  (order.paymentMethod === 'TRANSFER' || order.paymentMethod === 'TRANSFERENCIA') && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleVerifyTransferPayment(order)}
+                                      className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-black inline-flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+                                    >
+                                      <CheckCircle2 className="w-3.5 h-3.5" />
+                                      <span>Confirmar Transferencia</span>
+                                    </button>
+                                  )}
+                              </div>
                             </div>
                           </div>
 
