@@ -14,9 +14,10 @@ async function main() {
 <h3>Todo lo que necesitas en un solo lugar</h3>
 <p>Iniciar tu propio negocio de perfumes nunca había sido tan fácil. Al elegir a Aromaniak como tu proveedor, tienes acceso a un catálogo completo que incluye:</p>
 <ul>
-  <li><strong>Esencias de Perfume de Alta Concentración:</strong> Aromas masculinos, femeninos y unisex inspirados en los best-sellers mundiales.</li>
-  <li><strong>Botes y Envases de Vidrio:</strong> Una elegante selección de envases de lujo con atomizador para darle una presentación premium a tus productos.</li>
-  <li><strong>Alcohol de Perfumería y Fijadores:</strong> Insumos de grado cosmético indispensables para lograr la mezcla perfecta y duradera.</li>
+  <li><strong>Esencias de Perfume 100% Puras:</strong> Más de 80 aromas masculinos, femeninos y unisex en presentaciones reales de <strong>1 Onza ($3.75)</strong> y <strong>½ Onza ($1.90)</strong>.</li>
+  <li><strong>Botes de Vidrio de 100 ml con Atomizador de Rosca:</strong> Una elegante selección de envases de lujo de 100 ml (desde <strong>$1.45 a $1.50</strong>) con cierre de rosca manual sin necesidad de máquina selladora, más cajas de cartón genéricas ($0.50).</li>
+  <li><strong>Alcohol Especial para Perfumería con Fijador:</strong> Disponible en <strong>Medio Litro ($2.30)</strong> y <strong>1 Litro ($3.80)</strong>. Aclaración importante: <strong>de fijador son una o dos gotas solo si el alcohol no va preparado; si ya va preparado (como el alcohol con fijador de Aromaniak), no hay que agregar fijador</strong>.</li>
+  <li><strong>Concentraciones Reales para 100 ml de Perfume:</strong> Las concentraciones en las que se trabaja son de <strong>una onza (1 oz) o una onza y media (1.5 oz) como máximo para 100 ml de perfume</strong>; es decir, <strong>30 ml o 45 ml de esencias y lo demás de alcohol</strong> (aprox. 70 ml o 55 ml), teniendo en cuenta que <strong>la onza y media onza suelen equivaler a 30 o 45 ml dependiendo del peso del líquido</strong>.</li>
 </ul>
 
 <h3>Entregas a todo El Salvador</h3>
@@ -27,7 +28,7 @@ async function main() {
 </blockquote>
 
 <h3>El Futuro de las Fragancias Está Aquí</h3>
-<p>No importa si buscas crear tu propia línea de perfumes, fabricar velas aromáticas o aromatizantes ambientales; la calidad de tu producto final dependerá siempre de tu materia prima. Únete a los cientos de emprendedores que ya confían en Aromaniak y da el primer paso hacia el éxito en el fascinante mundo de la perfumería fina.</p>
+<p>No importa si buscas crear tu propia línea de perfumes para emprender o armar tus fragancias personales de 100 ml; la calidad y fijación de tu perfume dependerán siempre de la pureza de su esencia. Únete a los cientos de emprendedores que ya confían en Aromaniak y da el primer paso hacia el éxito en el fascinante mundo de la perfumería fina.</p>
 `;
 
   const slug = "aromaniak-distribuidora-perfumeria-fina-el-salvador";
