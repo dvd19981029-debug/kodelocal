@@ -1,7 +1,20 @@
 // src/lib/c807.ts
 // Cliente nativo para integración directa con C807 Express (Guías de Paquetería)
 
-import { PDFDocument } from 'pdf-lib';
+import fs from 'fs';
+import path from 'path';
+import zlib from 'zlib';
+import {
+  PDFDocument,
+  PDFName,
+  PDFDict,
+  PDFRawStream,
+  PDFOperator,
+  PDFNumber,
+  StandardFonts,
+  rgb,
+  PDFFont,
+} from 'pdf-lib';
 import { DEPTO_TO_ID, resolveC807MunicipioId } from './svTerritory';
 
 /**
@@ -423,8 +436,722 @@ export class C807Client {
     }
   }
 
+  private sanitizeWinAnsi(str: string): string {
+    return (str || '')
+      .replace(/\uFB01/g, 'fi')
+      .replace(/\uFB02/g, 'fl')
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/\u2013|\u2014/g, '-')
+      .replace(/\u2026/g, '...')
+      .replace(/[^\x20-\x7E\xA0-\xFF]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private decodePdfTextTokens(contentLatin1: string): Array<{ x: number; y: number; text: string }> {
+    const regex = /BT\s+([\d.]+)\s+([\d.]+)\s+Td\s+\(([\s\S]*?)\)\s*Tj\s+ET/g;
+    const items: Array<{ x: number; y: number; text: string }> = [];
+    let match;
+    while ((match = regex.exec(contentLatin1)) !== null) {
+      const x = parseFloat(match[1]);
+      const y = parseFloat(match[2]);
+      const raw = match[3]
+        .replace(/\\\(/g, '(')
+        .replace(/\\\)/g, ')')
+        .replace(/\\n/g, '\n')
+        .replace(/\\r/g, '\r')
+        .replace(/\\\\/g, '\\');
+      const buf = Buffer.from(raw, 'latin1');
+      let str = '';
+      if (buf.length >= 2 && (buf[0] === 0 || buf[1] === 0 || buf.length % 2 === 0)) {
+        for (let i = 0; i + 1 < buf.length; i += 2) {
+          str += String.fromCharCode((buf[i] << 8) | buf[i + 1]);
+        }
+      } else {
+        str = buf.toString('latin1');
+      }
+      items.push({ x, y, text: this.sanitizeWinAnsi(str) });
+    }
+    return items;
+  }
+
+  private wrapTextToLines(
+    text: string,
+    font: PDFFont,
+    fontSize: number,
+    maxWidth: number,
+    firstLineMaxWidth?: number
+  ): string[] {
+    const clean = this.sanitizeWinAnsi(text);
+    if (!clean) return [''];
+    const words = clean.split(' ');
+    const lines: string[] = [];
+    let currentLine = '';
+
+    for (const word of words) {
+      const limit = lines.length === 0 && firstLineMaxWidth !== undefined ? firstLineMaxWidth : maxWidth;
+      const candidate = currentLine ? `${currentLine} ${word}` : word;
+      if (font.widthOfTextAtSize(candidate, fontSize) <= limit) {
+        currentLine = candidate;
+      } else {
+        if (currentLine) {
+          lines.push(currentLine);
+          currentLine = word;
+        } else {
+          let chunk = '';
+          for (const ch of word) {
+            const nextLimit = lines.length === 0 && firstLineMaxWidth !== undefined ? firstLineMaxWidth : maxWidth;
+            if (font.widthOfTextAtSize(chunk + ch, fontSize) <= nextLimit) {
+              chunk += ch;
+            } else {
+              if (chunk) lines.push(chunk);
+              chunk = ch;
+            }
+          }
+          currentLine = chunk;
+        }
+      }
+    }
+    if (currentLine || lines.length === 0) {
+      lines.push(currentLine);
+    }
+    return lines;
+  }
+
   /**
-   * Obtiene el PDF oficial de la guía/viñeta directamente desde C807 Express (recortado a 1 sola página)
+   * Transforma el PDF oficial de C807 en la guía personalizada 4x4 pulgadas (288x288 pt) en Blanco y Negro
+   * de Aromaniak × C807, conservando el mismo QR exacto (/I3) en ambas esquinas y todos los datos íntegros.
+   */
+  private async personalizarPdfGuiaC807(rawBuffer: Buffer, fallbackGuia = ''): Promise<Buffer> {
+    try {
+      const srcDoc = await PDFDocument.load(rawBuffer, { ignoreEncryption: true });
+      if (srcDoc.getPageCount() === 0) {
+        return rawBuffer;
+      }
+      const srcPage = srcDoc.getPages()[0];
+
+      // 1. Extraer todos los tokens de texto del PDF original de C807
+      const tokens: Array<{ x: number; y: number; text: string }> = [];
+      for (const [, obj] of srcDoc.context.enumerateIndirectObjects()) {
+        if (obj instanceof PDFRawStream && !obj.dict.get(PDFName.of('Subtype'))) {
+          try {
+            const inflated = zlib.inflateSync(Buffer.from(obj.contents)).toString('latin1');
+            tokens.push(...this.decodePdfTextTokens(inflated));
+          } catch {
+            // Ignorar streams que no sean FlateDecode de texto
+          }
+        }
+      }
+
+      const data = {
+        hub: '',
+        zonaBox2: '',
+        deptoCode: '',
+        municipio: '',
+        tipoServicio: 'SER',
+        diasFrecuencia: 'L M X J V S',
+        remitenteNombre: 'Aromaniak SV',
+        remitenteTelefono: '60437496 74965015',
+        destinoNombre: '',
+        destinoTelefono: '',
+        destinoContacto: '',
+        destinoDireccion: '',
+        destinoReferencia: '',
+        contenido: '',
+        solicitud: '',
+        noOrden: '',
+        numeroGuia: fallbackGuia,
+        piezas: '1 de 1',
+        pago: 'Prepago',
+        peso: '5.00 LB',
+        pesoMaximo: '50.00 LB',
+        tipoEntrega: 'NRML',
+        especiales: '',
+        tieneContraentrega: false,
+        cobrarDestinatario: '0.00',
+        c807Web: 'www.c807xpress.com/sv',
+        c807Whatsapp: '72087895',
+      };
+
+      const leftTokens = tokens.filter((t) => t.x < 120 && t.text.length > 0);
+      const muniParts: string[] = [];
+      for (const lt of leftTokens) {
+        if (/L\s*M\s*X\s*J\s*V\s*S/i.test(lt.text)) {
+          data.diasFrecuencia = lt.text;
+        } else if (lt.y >= 218) {
+          data.hub = lt.text;
+        } else if (lt.y >= 188 && lt.y < 218) {
+          data.zonaBox2 = lt.text;
+        } else if (lt.y >= 158 && lt.y < 188) {
+          data.deptoCode = lt.text;
+        } else if (lt.y >= 120 && lt.y < 158) {
+          muniParts.push(lt.text);
+        } else if (lt.y >= 90 && lt.y < 120) {
+          data.tipoServicio = lt.text;
+        }
+      }
+      if (muniParts.length > 0) {
+        data.municipio = muniParts.join(' ');
+      }
+
+      const rightTokens = tokens.filter((t) => t.x >= 120 && t.text.length > 0);
+      const labels = new Set([
+        'Destino:',
+        'Nombre:',
+        'Teléfono:',
+        'Contacto:',
+        'Dirección:',
+        'Referencia:',
+        'Contenido:',
+        'Solicitud:',
+        'No. Orden:',
+        'PAGO:',
+        'Peso:',
+        'Peso Máximo:',
+        'Tipo de entrega:',
+        'Especiales:',
+        'Cobrar a destinatario:',
+      ]);
+
+      let seenDestinoHeader = false;
+      let currentField: string | null = null;
+      const accum: Record<string, string[]> = {};
+
+      for (let i = 0; i < rightTokens.length; i++) {
+        const tk = rightTokens[i];
+        const txt = tk.text;
+
+        if (!seenDestinoHeader) {
+          if (txt === 'Destino:') {
+            seenDestinoHeader = true;
+            currentField = null;
+            continue;
+          }
+          if (txt === 'Teléfono:') {
+            currentField = 'remitenteTelefono';
+            continue;
+          }
+          if (currentField === 'remitenteTelefono') {
+            data.remitenteTelefono = txt;
+            currentField = null;
+            continue;
+          }
+          if (tk.y > 365) {
+            data.remitenteNombre = txt;
+          }
+          continue;
+        }
+
+        if (/^\d+\s+de\s+\d+$/i.test(txt)) {
+          data.piezas = txt;
+          currentField = null;
+          continue;
+        }
+        if (
+          /^(KODE-|C807|GUIA)/i.test(txt) ||
+          (tk.y < 225 && tk.y > 175 && currentField === 'No. Orden:' && accum['No. Orden:']?.length)
+        ) {
+          if (
+            /^[A-Z0-9-]{8,}$/i.test(txt) &&
+            !txt.startsWith('RECOLECTA') &&
+            !txt.startsWith('WEB-') &&
+            !txt.startsWith('CMD-')
+          ) {
+            data.numeroGuia = txt;
+            currentField = null;
+            continue;
+          }
+        }
+        if (txt.includes('c807xpress.com')) {
+          data.c807Web = txt;
+          currentField = null;
+          continue;
+        }
+        if (txt === '72087895' || (tk.y < 95 && /^\d{8}$/.test(txt))) {
+          data.c807Whatsapp = txt;
+          currentField = null;
+          continue;
+        }
+
+        if (labels.has(txt)) {
+          currentField = txt;
+          if (!accum[currentField]) accum[currentField] = [];
+          continue;
+        }
+
+        if (currentField) {
+          if (currentField === 'No. Orden:' && accum['No. Orden:']?.length >= 1) {
+            data.numeroGuia = txt;
+            currentField = null;
+            continue;
+          }
+          accum[currentField].push(txt);
+        }
+      }
+
+      if (accum['Nombre:']?.length) data.destinoNombre = accum['Nombre:'].join(' ');
+      if (accum['Teléfono:']?.length) data.destinoTelefono = accum['Teléfono:'].join(' ');
+      if (accum['Contacto:']?.length) data.destinoContacto = accum['Contacto:'].join(' ');
+      if (accum['Dirección:']?.length) data.destinoDireccion = accum['Dirección:'].join(' ');
+      if (accum['Referencia:']?.length) data.destinoReferencia = accum['Referencia:'].join(' ');
+      if (accum['Contenido:']?.length) data.contenido = accum['Contenido:'].join(' ');
+      if (accum['Solicitud:']?.length) data.solicitud = accum['Solicitud:'].join(' ');
+      if (accum['No. Orden:']?.length) data.noOrden = accum['No. Orden:'].join(' ');
+      if (accum['PAGO:']?.length) data.pago = accum['PAGO:'].join(' ');
+      if (accum['Peso:']?.length) data.peso = accum['Peso:'].join(' ');
+      if (accum['Peso Máximo:']?.length) data.pesoMaximo = accum['Peso Máximo:'].join(' ');
+      if (accum['Tipo de entrega:']?.length) data.tipoEntrega = accum['Tipo de entrega:'].join(' ');
+      if (accum['Especiales:']?.length) data.especiales = accum['Especiales:'].join(' ');
+      if (accum['Cobrar a destinatario:']?.length) {
+        data.cobrarDestinatario = accum['Cobrar a destinatario:'].join(' ');
+        data.tieneContraentrega = true;
+      }
+
+      if (data.tipoServicio.toUpperCase() === 'CCE' || parseFloat(data.cobrarDestinatario) > 0) {
+        data.tieneContraentrega = true;
+      }
+
+      // 2. Localizar el XObject exacto del QR (/I3, 320x320) del PDF original de C807
+      const srcResources = srcPage.node.Resources();
+      const srcXObjects = srcResources?.lookup(PDFName.of('XObject')) as PDFDict | undefined;
+      let qrStream: PDFRawStream | null = null;
+      if (srcXObjects instanceof PDFDict) {
+        for (const key of srcXObjects.keys()) {
+          const obj = srcXObjects.lookup(key);
+          if (obj instanceof PDFRawStream) {
+            const w = obj.dict.get(PDFName.of('Width'))?.toString();
+            const h = obj.dict.get(PDFName.of('Height'))?.toString();
+            if (w && h && w === h && parseInt(w, 10) >= 120) {
+              qrStream = obj;
+              break;
+            }
+          }
+        }
+      }
+
+      if (!qrStream) {
+        return this.recortarPrimeraPaginaPdf(rawBuffer);
+      }
+
+      // 3. Construir la nueva guía personalizada de 4x4 pulgadas (288 x 288 pt) en Blanco y Negro
+      const outDoc = await PDFDocument.create();
+      const page = outDoc.addPage([288, 288]); // Exacto 4.00 x 4.00 pulgadas
+      const fontRegular = await outDoc.embedFont(StandardFonts.Helvetica);
+      const fontBold = await outDoc.embedFont(StandardFonts.HelveticaBold);
+
+      const black = rgb(0, 0, 0);
+      const white = rgb(1, 1, 1);
+
+      const aromaniakLogoPath = path.join(process.cwd(), 'public', 'images', 'logo-aromaniak-bw.png');
+      const c807LogoPath = path.join(process.cwd(), 'public', 'images', 'logo-c807-bw.png');
+      const aromaniakLogo = fs.existsSync(aromaniakLogoPath)
+        ? await outDoc.embedPng(fs.readFileSync(aromaniakLogoPath))
+        : null;
+      const c807Logo = fs.existsSync(c807LogoPath)
+        ? await outDoc.embedPng(fs.readFileSync(c807LogoPath))
+        : null;
+
+      // Clonar el stream binario exacto del QR original de C807 en el nuevo documento
+      const clonedQrDict = qrStream.dict.clone(outDoc.context);
+      const clonedQrStream = PDFRawStream.of(clonedQrDict, Uint8Array.from(qrStream.contents));
+      const qrRef = outDoc.context.register(clonedQrStream);
+      page.node.setXObject(PDFName.of('QrOrig'), qrRef);
+
+      const L = 5;
+      const R = 283;
+      const B = 5;
+      const T = 283;
+      const W = R - L; // 278
+      const H = T - B; // 278
+      const SPLIT_X = 81; // Columna izquierda = 76pt, Columna derecha = 202pt
+
+      page.drawRectangle({
+        x: L,
+        y: B,
+        width: W,
+        height: H,
+        borderColor: black,
+        borderWidth: 1.5,
+        color: white,
+      });
+
+      page.drawLine({
+        start: { x: SPLIT_X, y: 33 },
+        end: { x: SPLIT_X, y: T },
+        thickness: 1.3,
+        color: black,
+      });
+
+      // ==================== COLUMNA IZQUIERDA (ENRUTAMIENTO C807) ====================
+      if (c807Logo) {
+        page.drawImage(c807Logo, {
+          x: L + 11,
+          y: 261,
+          width: 54,
+          height: 19,
+        });
+      }
+
+      // QR Superior Izquierdo (idéntico al original)
+      page.pushOperators(
+        PDFOperator.of('q' as any),
+        PDFOperator.of('cm' as any, [
+          PDFNumber.of(70),
+          PDFNumber.of(0),
+          PDFNumber.of(0),
+          PDFNumber.of(70),
+          PDFNumber.of(L + 3),
+          PDFNumber.of(188),
+        ]),
+        PDFOperator.of('Do' as any, [PDFName.of('QrOrig')]),
+        PDFOperator.of('Q' as any)
+      );
+
+      const leftDividers = [186, 160, 140, 114, 84, 55, 33];
+      for (const yDiv of leftDividers) {
+        page.drawLine({
+          start: { x: L, y: yDiv },
+          end: { x: SPLIT_X, y: yDiv },
+          thickness: 1.1,
+          color: black,
+        });
+      }
+
+      const drawCenteredLeftText = (
+        txt: string,
+        boxBottom: number,
+        boxTop: number,
+        maxFontSize: number,
+        minFontSize = 6.5,
+        inverted = false
+      ) => {
+        const clean = this.sanitizeWinAnsi(txt);
+        if (!clean) return;
+        const boxW = SPLIT_X - L;
+        const boxH = boxTop - boxBottom;
+
+        if (inverted) {
+          page.drawRectangle({
+            x: L + 2,
+            y: boxBottom + 2,
+            width: boxW - 4,
+            height: boxH - 4,
+            color: black,
+          });
+        }
+
+        const availW = boxW - 6;
+        let fs = maxFontSize;
+        while (fs > minFontSize && fontBold.widthOfTextAtSize(clean, fs) > availW) {
+          fs -= 0.5;
+        }
+
+        if (fontBold.widthOfTextAtSize(clean, fs) <= availW) {
+          const tw = fontBold.widthOfTextAtSize(clean, fs);
+          const tx = L + (boxW - tw) / 2;
+          const ty = boxBottom + (boxH - fs) / 2 + 1;
+          page.drawText(clean, {
+            x: tx,
+            y: ty,
+            size: fs,
+            font: fontBold,
+            color: inverted ? white : black,
+          });
+        } else {
+          const lines = this.wrapTextToLines(clean, fontBold, fs, availW).slice(0, 2);
+          const lineGap = fs + 1.5;
+          const totalH = lines.length * lineGap;
+          let startY = boxBottom + (boxH + totalH) / 2 - fs;
+          for (const ln of lines) {
+            const tw = fontBold.widthOfTextAtSize(ln, fs);
+            page.drawText(ln, {
+              x: L + (boxW - tw) / 2,
+              y: startY,
+              size: fs,
+              font: fontBold,
+              color: inverted ? white : black,
+            });
+            startY -= lineGap;
+          }
+        }
+      };
+
+      drawCenteredLeftText(data.hub, 160, 186, 14);
+      drawCenteredLeftText(data.zonaBox2, 140, 160, 11);
+      drawCenteredLeftText(data.deptoCode, 114, 140, 14);
+      drawCenteredLeftText(data.municipio, 84, 114, 10, 6.5);
+      drawCenteredLeftText(
+        data.tipoServicio,
+        55,
+        84,
+        14,
+        8,
+        data.tipoServicio.toUpperCase() === 'CCE'
+      );
+      drawCenteredLeftText(data.diasFrecuencia, 33, 55, 9.5, 7);
+
+      // ==================== COLUMNA DERECHA PRINCIPAL ====================
+      const RX = SPLIT_X + 5; // 86
+      const RW = R - RX - 4; // 193
+
+      // 1) ENCABEZADO: Logo Principal de Aromaniak + Remitente
+      if (aromaniakLogo) {
+        page.drawImage(aromaniakLogo, {
+          x: RX,
+          y: 260,
+          width: 118,
+          height: 20,
+        });
+      }
+
+      page.drawText(`${data.remitenteNombre}   |   Teléfono: ${data.remitenteTelefono}`, {
+        x: RX,
+        y: 250.5,
+        size: 7.0,
+        font: fontBold,
+        color: black,
+      });
+
+      page.drawLine({
+        start: { x: SPLIT_X, y: 247 },
+        end: { x: R, y: 247 },
+        thickness: 1.1,
+        color: black,
+      });
+
+      // 2) BANDA DE DESTINO
+      page.drawRectangle({
+        x: SPLIT_X + 0.6,
+        y: 235,
+        width: R - SPLIT_X - 1.2,
+        height: 11.5,
+        color: black,
+      });
+      page.drawText('Destino:', {
+        x: RX,
+        y: 238.2,
+        size: 8.0,
+        font: fontBold,
+        color: white,
+      });
+
+      // 3) CAMPOS DE DESTINO (auto-ajuste para soportar hasta los límites máximos de C807)
+      const destinoTopY = 232.5;
+      const destinoBottomY = 132;
+      const availDestinoH = destinoTopY - destinoBottomY; // 100.5pt
+
+      const rowsSpec: Array<{ label: string; value: string; boldValue?: boolean }> = [
+        { label: 'Nombre:', value: data.destinoNombre },
+        { label: 'Teléfono:', value: data.destinoTelefono },
+        { label: 'Contacto:', value: data.destinoContacto },
+        { label: 'Dirección:', value: data.destinoDireccion },
+        { label: 'Referencia:', value: data.destinoReferencia },
+        { label: 'Contenido:', value: data.contenido },
+        { label: 'Solicitud:', value: data.solicitud },
+        { label: 'No. Orden:', value: data.noOrden, boldValue: true },
+      ];
+
+      let chosenFontSize = 6.8;
+      let chosenLineHeight = 7.8;
+      let chosenRowGap = 0.8;
+
+      for (const candidateFs of [6.8, 6.4, 6.0, 5.6, 5.2, 4.8, 4.4, 4.0, 3.6]) {
+        const lh = candidateFs * 1.14;
+        const gap = candidateFs >= 6.0 ? 0.7 : 0.35;
+        let totalH = 0;
+        for (const r of rowsSpec) {
+          const labelW = fontBold.widthOfTextAtSize(r.label + ' ', candidateFs);
+          const lines = this.wrapTextToLines(
+            r.value,
+            r.boldValue ? fontBold : fontRegular,
+            candidateFs,
+            RW,
+            RW - labelW
+          );
+          totalH += lines.length * lh + gap;
+        }
+        chosenFontSize = candidateFs;
+        chosenLineHeight = lh;
+        chosenRowGap = gap;
+        if (totalH <= availDestinoH) break;
+      }
+
+      let curY = destinoTopY - chosenFontSize;
+      for (const r of rowsSpec) {
+        const valFont = r.boldValue ? fontBold : fontRegular;
+        const labelW = fontBold.widthOfTextAtSize(r.label + ' ', chosenFontSize);
+        const lines = this.wrapTextToLines(r.value, valFont, chosenFontSize, RW, RW - labelW);
+        page.drawText(r.label, { x: RX, y: curY, size: chosenFontSize, font: fontBold, color: black });
+        lines.forEach((ln, idx) => {
+          if (ln) {
+            page.drawText(ln, {
+              x: idx === 0 ? RX + labelW : RX,
+              y: curY,
+              size: chosenFontSize,
+              font: valFont,
+              color: black,
+            });
+          }
+          curY -= chosenLineHeight;
+        });
+        curY -= chosenRowGap;
+      }
+
+      // 4) BANDA DE NÚMERO DE GUÍA Y BULTOS (y: 113..131)
+      page.drawLine({
+        start: { x: SPLIT_X, y: 131 },
+        end: { x: R, y: 131 },
+        thickness: 1.1,
+        color: black,
+      });
+      page.drawLine({
+        start: { x: SPLIT_X, y: 113 },
+        end: { x: R, y: 113 },
+        thickness: 1.1,
+        color: black,
+      });
+
+      let guiaFs = 10.5;
+      while (guiaFs > 7.5 && fontBold.widthOfTextAtSize(data.numeroGuia, guiaFs) > 148) {
+        guiaFs -= 0.5;
+      }
+      page.drawText(data.numeroGuia, {
+        x: RX,
+        y: 118.5,
+        size: guiaFs,
+        font: fontBold,
+        color: black,
+      });
+
+      const piezasW = Math.max(36, fontBold.widthOfTextAtSize(data.piezas, 9) + 10);
+      page.drawRectangle({
+        x: R - piezasW - 4,
+        y: 115.5,
+        width: piezasW,
+        height: 13,
+        color: black,
+      });
+      page.drawText(data.piezas, {
+        x: R - piezasW - 4 + (piezasW - fontBold.widthOfTextAtSize(data.piezas, 8.8)) / 2,
+        y: 119,
+        size: 8.8,
+        font: fontBold,
+        color: white,
+      });
+
+      // 5) SECCIÓN OPERATIVA, CONTRAENTREGA Y QR INFERIOR DERECHO (y: 33..113)
+      page.pushOperators(
+        PDFOperator.of('q' as any),
+        PDFOperator.of('cm' as any, [
+          PDFNumber.of(70),
+          PDFNumber.of(0),
+          PDFNumber.of(0),
+          PDFNumber.of(70),
+          PDFNumber.of(R - 73),
+          PDFNumber.of(39),
+        ]),
+        PDFOperator.of('Do' as any, [PDFName.of('QrOrig')]),
+        PDFOperator.of('Q' as any)
+      );
+
+      const specRows: Array<[string, string]> = [
+        ['PAGO:', data.pago],
+        ['Peso:', data.peso],
+        ['Peso Máximo:', data.pesoMaximo],
+        ['Tipo de entrega:', data.tipoEntrega],
+        ['Especiales:', data.especiales],
+      ];
+
+      let specY = 103.5;
+      for (const [k, v] of specRows) {
+        page.drawText(k, { x: RX, y: specY, size: 6.8, font: fontBold, color: black });
+        if (v) {
+          const valLines = this.wrapTextToLines(v, fontRegular, 6.5, 62).slice(0, 1);
+          page.drawText(valLines[0] || '', {
+            x: RX + 60,
+            y: specY,
+            size: 6.8,
+            font: k === 'Tipo de entrega:' ? fontBold : fontRegular,
+            color: black,
+          });
+        }
+        specY -= 9.5;
+      }
+
+      // Casilla de Contraentrega y Cobrar a destinatario
+      const isCce = data.tieneContraentrega;
+      const montoStr = data.cobrarDestinatario || '0.00';
+      page.drawRectangle({
+        x: RX,
+        y: 36,
+        width: 120,
+        height: 21,
+        borderColor: black,
+        borderWidth: 1.1,
+        color: isCce ? black : white,
+      });
+      const cceLine1 = `Contraentrega: ${isCce ? 'SÍ (CCE)' : 'NO (SER)'}`;
+      const cceLine2 = `Cobrar a destinatario: ${montoStr}`;
+      page.drawText(cceLine1, {
+        x: RX + 4,
+        y: 48.5,
+        size: 6.6,
+        font: fontBold,
+        color: isCce ? white : black,
+      });
+      page.drawText(cceLine2, {
+        x: RX + 4,
+        y: 39.5,
+        size: 6.6,
+        font: fontBold,
+        color: isCce ? white : black,
+      });
+
+      // ==================== 6) PIE DE GUÍA (C807 + AROMANIAK) ====================
+      page.drawLine({
+        start: { x: L, y: 33 },
+        end: { x: R, y: 33 },
+        thickness: 1.2,
+        color: black,
+      });
+
+      const c807FooterTxt = `${data.c807Web}   |   ${data.c807Whatsapp}`;
+      page.drawText(c807FooterTxt, {
+        x: L + (W - fontBold.widthOfTextAtSize(c807FooterTxt, 6.4)) / 2,
+        y: 24.5,
+        size: 6.4,
+        font: fontBold,
+        color: black,
+      });
+
+      page.drawRectangle({
+        x: L,
+        y: B,
+        width: W,
+        height: 16,
+        color: black,
+      });
+      const aromaFooterTxt =
+        'Compra seguro en aromaniaksv.com  •  WhatsApp: 60437496  •  Fijo: 2245 3890';
+      page.drawText(aromaFooterTxt, {
+        x: L + (W - fontBold.widthOfTextAtSize(aromaFooterTxt, 6.5)) / 2,
+        y: 10.5,
+        size: 6.5,
+        font: fontBold,
+        color: white,
+      });
+
+      const saved = await outDoc.save();
+      return Buffer.from(saved);
+    } catch (err) {
+      console.warn('[C807 Custom PDF] Fallback a primera página original:', err);
+      return this.recortarPrimeraPaginaPdf(rawBuffer);
+    }
+  }
+
+  /**
+   * Obtiene el PDF oficial de la guía/viñeta desde C807 Express y lo transforma al diseño 4x4 B&W de Aromaniak
    */
   async obtenerPdfGuia(
     numeroGuia: string,
@@ -456,8 +1183,8 @@ export class C807Client {
       const contentType = response.headers.get('content-type') || '';
       if (contentType.includes('application/pdf')) {
         const arrBuf = await response.arrayBuffer();
-        const trimmed = await this.recortarPrimeraPaginaPdf(Buffer.from(arrBuf));
-        return { success: true, pdfBuffer: trimmed };
+        const customized = await this.personalizarPdfGuiaC807(Buffer.from(arrBuf), cleanGuia);
+        return { success: true, pdfBuffer: customized };
       }
 
       const data = await response.json().catch(() => null);
@@ -484,8 +1211,8 @@ export class C807Client {
 
       const cleanB64 = base64Pdf.replace(/^data:application\/pdf;base64,/i, '').trim();
       const rawBuffer = Buffer.from(cleanB64, 'base64');
-      const trimmed = await this.recortarPrimeraPaginaPdf(rawBuffer);
-      return { success: true, pdfBuffer: trimmed };
+      const customized = await this.personalizarPdfGuiaC807(rawBuffer, cleanGuia);
+      return { success: true, pdfBuffer: customized };
     } catch (err: any) {
       return {
         success: false,
