@@ -479,230 +479,270 @@ export default function EcommerceOrdersPanel() {
         </div>
       )}
 
-      {/* Barra de Selección Múltiple de Guías C807 */}
-      {(selectedOrdersWithGuide.length > 0 || selectableOrdersWithGuide.length > 0) && (
-        <div className="clay-card p-3 bg-indigo-50/80 border border-indigo-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2.5 flex-wrap text-xs">
-            <label className="inline-flex items-center gap-2 font-black text-indigo-950 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={allVisibleWithGuideSelected}
-                onChange={toggleSelectAllWithGuide}
-                className="w-4 h-4 accent-indigo-600 rounded cursor-pointer"
-              />
-              <span>
-                Seleccionar todas con guía ({selectableOrdersWithGuide.length})
-              </span>
-            </label>
-            {selectedOrdersWithGuide.length > 0 && (
-              <>
-                <span className="px-2.5 py-0.5 rounded-full bg-indigo-600 text-white text-[11px] font-black">
-                  {selectedOrdersWithGuide.length}{' '}
-                  {selectedOrdersWithGuide.length === 1 ? 'guía seleccionada' : 'guías seleccionadas'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedIds([])}
-                  className="text-[11px] font-bold text-slate-600 hover:text-rose-600 underline cursor-pointer"
-                >
-                  Limpiar selección
-                </button>
-              </>
-            )}
-          </div>
-
-          {selectedOrdersWithGuide.length > 0 && (
-            <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
-              <button
-                type="button"
-                disabled={downloadingBatch}
-                onClick={() => handleBatchPdfAction('print')}
-                className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-black inline-flex items-center justify-center gap-1.5 shadow-sm transition-colors cursor-pointer"
-                title="Abrir todas las guías seleccionadas en un solo PDF (1 página por guía) listo para imprimir"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                <span>
-                  {downloadingBatch
-                    ? 'Unificando PDF...'
-                    : `Imprimir ${selectedOrdersWithGuide.length} Guías Juntas (1 pág c/u)`}
-                </span>
-              </button>
-              <button
-                type="button"
-                disabled={downloadingBatch}
-                onClick={() => handleBatchPdfAction('download')}
-                className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-black inline-flex items-center justify-center gap-1.5 shadow-sm transition-colors cursor-pointer"
-                title="Descargar todas las guías seleccionadas en un solo documento PDF (1 página por guía)"
-              >
-                <FileText className="w-3.5 h-3.5" />
-                <span>
-                  {downloadingBatch
-                    ? 'Generando PDF...'
-                    : `Descargar ${selectedOrdersWithGuide.length} Guías en 1 PDF`}
-                </span>
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      <div className="clay-card p-0 overflow-x-auto">
-        <table className="w-full text-xs text-left">
-          <thead>
-            <tr className="text-slate-500 border-b border-slate-200">
-              <th className="py-2.5 px-3 w-9 text-center">
+      {/* Tabla de Pedidos Ecommerce con Barra de Selección Integrada */}
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+        {(selectedOrdersWithGuide.length > 0 || selectableOrdersWithGuide.length > 0) && (
+          <div className="px-4 py-2.5 bg-slate-50/90 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-3 flex-wrap">
+              <label className="inline-flex items-center gap-2 font-semibold text-slate-700 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={allVisibleWithGuideSelected}
-                  disabled={selectableOrdersWithGuide.length === 0}
                   onChange={toggleSelectAllWithGuide}
-                  title="Seleccionar todas las órdenes visibles con guía C807"
-                  className="w-4 h-4 accent-indigo-600 rounded cursor-pointer disabled:opacity-40"
+                  className="w-4 h-4 accent-indigo-600 rounded cursor-pointer"
                 />
-              </th>
-              <th className="py-2.5 px-3">Pedido</th>
-              <th className="py-2.5 px-3">Fecha</th>
-              <th className="py-2.5 px-3">Cliente</th>
-              <th className="py-2.5 px-3">Entrega</th>
-              <th className="py-2.5 px-3">Pago</th>
-              <th className="py-2.5 px-3 text-right">Total</th>
-              <th className="py-2.5 px-3 text-center">Estado</th>
-              <th className="py-2.5 px-3 text-center">Detalle</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan={9} className="py-8 text-center text-slate-400 font-medium">
-                  {loading ? 'Cargando pedidos…' : 'No hay pedidos ecommerce para mostrar'}
-                </td>
-              </tr>
+                <span>
+                  Seleccionar guías ({selectableOrdersWithGuide.length})
+                </span>
+              </label>
+              {selectedOrdersWithGuide.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-bold whitespace-nowrap">
+                    {selectedOrdersWithGuide.length}{' '}
+                    {selectedOrdersWithGuide.length === 1 ? 'seleccionada' : 'seleccionadas'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedIds([])}
+                    className="text-[11px] font-semibold text-slate-500 hover:text-slate-800 cursor-pointer whitespace-nowrap"
+                  >
+                    Limpiar
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {selectedOrdersWithGuide.length > 0 && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={downloadingBatch}
+                  onClick={() => handleBatchPdfAction('print')}
+                  className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>
+                    {downloadingBatch
+                      ? 'Preparando...'
+                      : `Imprimir (${selectedOrdersWithGuide.length})`}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  disabled={downloadingBatch}
+                  onClick={() => handleBatchPdfAction('download')}
+                  className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 disabled:opacity-50 text-slate-700 border border-slate-300 text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  <FileText className="w-3.5 h-3.5 text-slate-500" />
+                  <span>
+                    {downloadingBatch
+                      ? 'Generando...'
+                      : `Descargar PDF (${selectedOrdersWithGuide.length})`}
+                  </span>
+                </button>
+              </div>
             )}
-            {filtered.map((o) => {
-              const real = isRealOrder(o);
-              const twin = real ? null : findRealTwin(o, orders);
-              const hasGuide = Boolean(o.trackingNumber && o.trackingNumber.trim());
-              const isChecked = selectedIds.includes(o.id);
-              return (
-              <tr
-                key={o.id}
-                className={`border-b border-slate-100 hover:bg-slate-50 ${
-                  isChecked ? 'bg-indigo-50/50' : ''
-                } ${real ? '' : 'opacity-60'}`}
-              >
-                <td className="py-2.5 px-3 text-center">
+          </div>
+        )}
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs text-left border-collapse">
+            <thead>
+              <tr className="text-[11px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50/50 border-b border-slate-200/80">
+                <th className="py-3 px-3.5 w-9 text-center">
                   <input
                     type="checkbox"
-                    checked={isChecked}
-                    disabled={!hasGuide}
-                    onChange={() => toggleSelectOrder(o.id)}
-                    title={
-                      hasGuide
-                        ? `Seleccionar guía ${o.trackingNumber}`
-                        : 'Esta orden aún no tiene guía C807 generada'
-                    }
-                    className="w-4 h-4 accent-indigo-600 rounded cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                    checked={allVisibleWithGuideSelected}
+                    disabled={selectableOrdersWithGuide.length === 0}
+                    onChange={toggleSelectAllWithGuide}
+                    title="Seleccionar todas las órdenes visibles con guía C807"
+                    className="w-4 h-4 accent-indigo-600 rounded cursor-pointer disabled:opacity-40"
                   />
-                </td>
-                <td className="py-2.5 px-3 font-mono font-bold text-slate-800">
-                  {o.orderNumber}
-                  {hasGuide && (
-                    <div className="mt-0.5">
-                      <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-mono font-black bg-indigo-50 text-indigo-700 border border-indigo-200">
-                        Guía: {o.trackingNumber}
-                      </span>
-                    </div>
-                  )}
-                  <div className="mt-1">
-                    <ReadinessBadge order={o} twin={twin} />
-                  </div>
-                </td>
-                <td className="py-2.5 px-3 text-slate-600">{fmtDate(o.createdAt)}</td>
-                <td className="py-2.5 px-3">
-                  <div className="font-bold text-slate-800">{o.customerName}</div>
-                  <div className="text-[11px] text-slate-500">{o.customerPhone}</div>
-                </td>
-                <td className="py-2.5 px-3 text-slate-600">
-                  {isPickup(o) ? 'Retiro en sucursal' : `Domicilio · ${o.municipality}`}
-                </td>
-                <td className="py-2.5 px-3 text-slate-600">
-                  <div>{PAYMENT_LABELS[o.paymentMethod] || o.paymentMethod}</div>
-                  <div className="mt-1">
-                    <span
-                      className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-black border ${
-                        o.paymentStatus === 'COMPLETED'
-                          ? 'bg-green-100 text-green-800 border-green-200'
-                          : o.paymentStatus === 'CANCELLED'
-                          ? 'bg-rose-100 text-rose-800 border-rose-200'
-                          : 'bg-amber-100 text-amber-800 border-amber-200'
-                      }`}
-                    >
-                      {PAYMENT_STATUS_LABELS[o.paymentStatus] || o.paymentStatus}
-                    </span>
-                  </div>
-                  {(o.paymentMethod === 'TRANSFER' || o.paymentMethod === 'TRANSFERENCIA') &&
-                    o.paymentStatus !== 'COMPLETED' &&
-                    o.orderStatus !== 'CANCELADO' && (
-                      <button
-                        type="button"
-                        disabled={verifyingId === o.id}
-                        onClick={() => handleConfirmTransfer(o)}
-                        className="mt-1 px-2 py-0.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black inline-flex items-center gap-1 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
-                      >
-                        <Check className="w-3 h-3" />
-                        <span>{verifyingId === o.id ? 'Confirmando...' : 'Confirmar Transferencia'}</span>
-                      </button>
-                    )}
-                </td>
-                <td className="py-2.5 px-3 text-right font-black text-slate-800">{money(o.total)}</td>
-                <td className="py-2.5 px-3 text-center">
-                  <span
-                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-black ${
-                      STATUS_COLORS[o.orderStatus] || 'bg-slate-100 text-slate-700'
-                    }`}
-                  >
-                    {ORDER_STATUS_LABELS[o.orderStatus] || o.orderStatus}
-                  </span>
-                </td>
-                <td className="py-2.5 px-3 text-center">
-                  <div className="inline-flex items-center gap-1.5">
-                    {o.trackingNumber && (
-                      <>
-                        <a
-                          href={`/api/c807/pdf?guia=${encodeURIComponent(o.trackingNumber)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-2.5 py-1.5 text-[11px] font-black rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 inline-flex items-center gap-1 transition-colors"
-                          title={`Abrir e Imprimir Guía ${o.trackingNumber}`}
-                        >
-                          <Printer className="w-3.5 h-3.5" />
-                          <span>Imprimir Guía</span>
-                        </a>
-                        <a
-                          href={`/api/c807/pdf?guia=${encodeURIComponent(o.trackingNumber)}&download=1`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-2.5 py-1.5 text-[11px] font-black rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1 transition-colors"
-                          title={`Descargar PDF Guía ${o.trackingNumber}`}
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                          <span>PDF Guía</span>
-                        </a>
-                      </>
-                    )}
-                    <button
-                      onClick={() => setSelected(o)}
-                      className="clay-btn-primary px-3 py-1.5 text-[11px] font-bold rounded-lg"
-                    >
-                      Ver detalles
-                    </button>
-                  </div>
-                </td>
+                </th>
+                <th className="py-3 px-3 whitespace-nowrap">Pedido / Guía</th>
+                <th className="py-3 px-3 whitespace-nowrap">Fecha</th>
+                <th className="py-3 px-3 whitespace-nowrap">Cliente</th>
+                <th className="py-3 px-3 whitespace-nowrap">Entrega</th>
+                <th className="py-3 px-3 whitespace-nowrap">Pago</th>
+                <th className="py-3 px-3 text-right whitespace-nowrap">Total</th>
+                <th className="py-3 px-3 text-center whitespace-nowrap">Estado</th>
+                <th className="py-3 px-3.5 text-right whitespace-nowrap">Acciones</th>
               </tr>
-              );
-            })}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={9} className="py-10 text-center text-slate-400 font-medium">
+                    {loading ? 'Cargando pedidos…' : 'No hay pedidos ecommerce para mostrar'}
+                  </td>
+                </tr>
+              )}
+              {filtered.map((o) => {
+                const real = isRealOrder(o);
+                const twin = real ? null : findRealTwin(o, orders);
+                const hasGuide = Boolean(o.trackingNumber && o.trackingNumber.trim());
+                const isChecked = selectedIds.includes(o.id);
+                const d = new Date(o.createdAt);
+                const dateLine = d.toLocaleDateString('es-SV', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                });
+                const timeLine = d.toLocaleTimeString('es-SV', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                });
+                const pickup = isPickup(o);
+
+                let statusLabel = ORDER_STATUS_LABELS[o.orderStatus] || o.orderStatus;
+                let statusCls = STATUS_COLORS[o.orderStatus] || 'bg-slate-100 text-slate-700';
+                if (o.orderStatus === 'CANCELADO' || o.paymentStatus === 'CANCELLED') {
+                  statusLabel = 'Cancelado';
+                  statusCls = 'bg-rose-50 text-rose-700 border border-rose-200';
+                } else if (!real) {
+                  statusLabel = twin ? `Intento (${twin.orderNumber})` : 'Sin pagar';
+                  statusCls = 'bg-slate-100 text-slate-600 border border-slate-200';
+                } else if (o.orderStatus === 'NUEVO') {
+                  statusLabel = 'Listo para preparar';
+                  statusCls = 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+                }
+
+                return (
+                  <tr
+                    key={o.id}
+                    className={`transition-colors hover:bg-slate-50/80 ${
+                      isChecked ? 'bg-indigo-50/40' : ''
+                    } ${real ? '' : 'opacity-60'}`}
+                  >
+                    <td className="py-3 px-3.5 text-center align-middle">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        disabled={!hasGuide}
+                        onChange={() => toggleSelectOrder(o.id)}
+                        title={
+                          hasGuide
+                            ? `Seleccionar guía ${o.trackingNumber}`
+                            : 'Esta orden aún no tiene guía C807 generada'
+                        }
+                        className="w-4 h-4 accent-indigo-600 rounded cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
+                      />
+                    </td>
+                    <td className="py-3 px-3 align-middle whitespace-nowrap">
+                      <div className="font-mono font-bold text-slate-900">{o.orderNumber}</div>
+                      {hasGuide && (
+                        <div className="text-[11px] font-mono font-medium text-indigo-600 mt-0.5">
+                          {o.trackingNumber}
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-3 px-3 align-middle whitespace-nowrap">
+                      <div className="font-medium text-slate-700">{dateLine}</div>
+                      <div className="text-[11px] text-slate-400">{timeLine}</div>
+                    </td>
+                    <td className="py-3 px-3 align-middle">
+                      <div className="font-bold text-slate-800 leading-snug max-w-[180px] truncate" title={o.customerName}>
+                        {o.customerName}
+                      </div>
+                      <div className="text-[11px] font-mono text-slate-500 whitespace-nowrap">
+                        {o.customerPhone}
+                      </div>
+                    </td>
+                    <td className="py-3 px-3 align-middle">
+                      {pickup ? (
+                        <span className="font-medium text-slate-600 whitespace-nowrap">
+                          Retiro en sucursal
+                        </span>
+                      ) : (
+                        <div>
+                          <div className="font-medium text-slate-700 whitespace-nowrap">Domicilio</div>
+                          <div className="text-[11px] text-slate-500 truncate max-w-[150px]" title={o.municipality}>
+                            {o.municipality}
+                          </div>
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-3 px-3 align-middle whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-slate-700 font-medium">
+                          {o.paymentMethod === 'TRANSFER'
+                            ? 'Transferencia'
+                            : PAYMENT_LABELS[o.paymentMethod] || o.paymentMethod}
+                        </span>
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                            o.paymentStatus === 'COMPLETED'
+                              ? 'bg-green-100 text-green-800 border-green-200'
+                              : o.paymentStatus === 'CANCELLED'
+                              ? 'bg-rose-50 text-rose-700 border-rose-200'
+                              : 'bg-amber-50 text-amber-700 border-amber-200'
+                          }`}
+                        >
+                          {PAYMENT_STATUS_LABELS[o.paymentStatus] || o.paymentStatus}
+                        </span>
+                      </div>
+                      {(o.paymentMethod === 'TRANSFER' || o.paymentMethod === 'TRANSFERENCIA') &&
+                        o.paymentStatus !== 'COMPLETED' &&
+                        o.orderStatus !== 'CANCELADO' && (
+                          <button
+                            type="button"
+                            disabled={verifyingId === o.id}
+                            onClick={() => handleConfirmTransfer(o)}
+                            className="mt-1 px-2 py-0.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold inline-flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-50"
+                          >
+                            <Check className="w-3 h-3" />
+                            <span>{verifyingId === o.id ? 'Confirmando...' : 'Confirmar pago'}</span>
+                          </button>
+                        )}
+                    </td>
+                    <td className="py-3 px-3 align-middle text-right font-mono font-bold text-slate-900 whitespace-nowrap">
+                      {money(o.total)}
+                    </td>
+                    <td className="py-3 px-3 align-middle text-center whitespace-nowrap">
+                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold ${statusCls}`}>
+                        {statusLabel}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3.5 align-middle text-right whitespace-nowrap">
+                      <div className="inline-flex items-center justify-end gap-1.5">
+                        {o.trackingNumber && (
+                          <>
+                            <a
+                              href={`/api/c807/pdf?guia=${encodeURIComponent(o.trackingNumber)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-2.5 py-1.5 text-[11px] font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 inline-flex items-center gap-1 transition-colors whitespace-nowrap"
+                              title={`Imprimir guía ${o.trackingNumber}`}
+                            >
+                              <Printer className="w-3.5 h-3.5 text-slate-600" />
+                              <span>Imprimir</span>
+                            </a>
+                            <a
+                              href={`/api/c807/pdf?guia=${encodeURIComponent(o.trackingNumber)}&download=1`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-2.5 py-1.5 text-[11px] font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 inline-flex items-center gap-1 transition-colors whitespace-nowrap"
+                              title={`Descargar PDF guía ${o.trackingNumber}`}
+                            >
+                              <FileText className="w-3.5 h-3.5 text-slate-600" />
+                              <span>PDF</span>
+                            </a>
+                          </>
+                        )}
+                        <button
+                          onClick={() => setSelected(o)}
+                          className="px-3 py-1.5 text-[11px] font-bold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer whitespace-nowrap"
+                        >
+                          Ver detalles
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {selected && (
