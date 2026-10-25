@@ -40,15 +40,15 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
   const blogSlides: PromoSlide[] = [
     {
       id: 'promo-blog-como-hacer-perfume',
-      imageAlt: 'Blog más leído: Cómo hacer un perfume con esencias Aromaniak paso a paso',
+      imageUrl: '/images/promo/banner_guia_preparar.webp',
+      imageAlt: 'Guía definitiva: Cómo hacer un perfume con esencias Aromaniak paso a paso',
       action: 'blog-como-hacer-perfume',
-      customRender: 'blog-como-hacer-perfume',
     },
     {
       id: 'promo-blog-importancia-macerar',
-      imageAlt: 'La Importancia de Macerar: Cómo mejorar la fijación, duración y proyección de tu perfume',
+      imageUrl: '/images/promo/banner_importancia_macerar.webp',
+      imageAlt: 'La Importancia de Macerar: Cómo mejorar la fijación, duración de 4 a 12 horas y proyección de tu perfume',
       action: 'blog-importancia-macerar',
-      customRender: 'blog-importancia-macerar',
     },
   ];
 
