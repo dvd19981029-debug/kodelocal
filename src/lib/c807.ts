@@ -968,15 +968,15 @@ export class C807Client {
       // 1) ENCABEZADO: Logo Principal de Aromaniak + sv.com + Remitente
       if (aromaniakLogo) {
         page.drawImage(aromaniakLogo, {
-          x: RX - 1,
-          y: 256.5,
-          width: 135,
-          height: 23.5,
+          x: RX,
+          y: 257.5,
+          width: 126,
+          height: 22,
         });
         page.drawText('sv.com', {
-          x: RX + 135.5,
-          y: 257.5,
-          size: 17.2,
+          x: RX + 127.5,
+          y: 258.8,
+          size: 15.8,
           font: fontBold,
           color: black,
         });
