@@ -552,7 +552,7 @@ export class C807Client {
         tipoServicio: 'SER',
         diasFrecuencia: 'L M X J V S',
         remitenteNombre: 'Aromaniak SV',
-        remitenteTelefono: '60437496 74965015',
+        remitenteTelefono: '72304650 60437496',
         destinoNombre: '',
         destinoTelefono: '',
         destinoContacto: '',
@@ -633,7 +633,6 @@ export class C807Client {
             continue;
           }
           if (currentField === 'remitenteTelefono') {
-            data.remitenteTelefono = txt;
             currentField = null;
             continue;
           }
