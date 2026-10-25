@@ -721,7 +721,14 @@ function OrderDetailModal({
           orderStatus: data.order.orderStatus || 'EN_RUTA',
         });
         setIsEditingDelivery(false);
-        alert(`✅ Guía C807 generada exitosamente: ${data.order.trackingNumber}\nEl pedido fue enviado a la vista de Logística.`);
+        if (typeof window !== 'undefined') {
+          window.open(
+            `/api/c807/pdf?guia=${encodeURIComponent(data.order.trackingNumber)}`,
+            '_blank',
+            'noopener,noreferrer'
+          );
+        }
+        alert(`✅ Guía C807 generada exitosamente: ${data.order.trackingNumber}\nSe abrió el PDF de la guía listo para imprimir.`);
       } else {
         alert(`Error al generar guía C807: ${data.error || 'No se pudo generar la guía'}`);
       }
