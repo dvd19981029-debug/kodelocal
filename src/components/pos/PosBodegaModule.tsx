@@ -11,6 +11,7 @@ import {
   Eye,
   X,
   User,
+  Phone,
   ZoomIn,
   RotateCcw
 } from 'lucide-react';
@@ -67,6 +68,20 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
       if (found?.name) return found.name;
     }
     return order.cliente?.nombre || 'Consumidor Final';
+  };
+
+  const resolveCustomerPhone = (order: SaleRecord) => {
+    const direct =
+      order.cliente?.telefono ||
+      (order as any).customerPhone ||
+      order.domicilio?.customerPhone;
+    if (direct && String(direct).trim()) return String(direct).trim();
+    const custId = (order.cliente as any)?.id || (order as any).customerId;
+    if (custId && customers) {
+      const found = customers.find(c => c.id === custId);
+      if (found?.phone) return found.phone;
+    }
+    return '';
   };
 
   return (
@@ -236,6 +251,10 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
             const isReady = order.status === 'READY_AT_WINDOW';
             const isCompleted = order.status === 'COMPLETED';
             const paymentInfo = getOrderPaymentDisplayInfo(order);
+            const isOnlineOrder =
+              order.channel === 'ONLINE' ||
+              String(order.saleNumber || order.orderNumber || '').toUpperCase().startsWith('WEB-');
+            const customerPhone = resolveCustomerPhone(order);
 
             return (
               <div 
@@ -250,16 +269,21 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
               >
                 <div>
                   {/* Fila Superior: Comanda & Estado */}
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
+                  <div className="pb-3 border-b border-slate-100 space-y-2.5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="font-mono font-black text-sm text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-lg">
                           #{order.saleNumber}
                         </span>
-                        <span className="font-black text-sm text-slate-800 flex items-center gap-1.5 bg-slate-100/90 border border-slate-200 px-2.5 py-0.5 rounded-lg">
-                          <User className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                          <span>{resolveCustomerName(order)}</span>
-                        </span>
+                        {isOnlineOrder && (
+                          <span className={`clay-badge text-[10px] font-black py-0.5 px-2.5 ${
+                            paymentInfo.isPaid
+                              ? 'bg-green-100 text-green-800 border border-green-200'
+                              : 'bg-purple-100 text-purple-900 border border-purple-200'
+                          }`}>
+                            Tienda Online
+                          </span>
+                        )}
                         <span className={`clay-badge text-[10px] font-black py-0.5 px-2 ${
                           (order.tipoComprobante || (order.cliente?.nrc ? '03' : '01')) === '03'
                             ? 'bg-purple-100 text-purple-900 border border-purple-200'
@@ -271,128 +295,156 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                         </span>
                         <span className={`clay-badge text-[10px] font-black py-0.5 px-2.5 ${
                           isReady 
-                            ? 'bg-emerald-500 text-white shadow-sm animate-pulse' 
+                            ? 'bg-emerald-600 text-white shadow-sm' 
                             : isPending 
                             ? 'bg-amber-100 text-amber-900 border border-amber-300' 
                             : 'bg-slate-100 text-slate-700'
                         }`}>
-                          {isReady ? '✅ ¡LISTO EN VENTANILLA!' : isPending ? '⏳ En Preparación' : '📦 Entregado'}
+                          {isReady ? 'Listo en Ventanilla' : isPending ? 'En Preparación' : 'Entregado'}
                         </span>
-                        <span className={`clay-badge text-[10px] font-black py-0.5 px-2.5 ${
-                          paymentInfo.isPaid
-                            ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
-                            : paymentInfo.tone === 'orange'
-                            ? 'bg-orange-100 text-orange-950 border border-orange-300'
-                            : 'bg-amber-100 text-amber-950 border border-amber-300'
+                        <span className="text-[10.5px] text-slate-400 font-semibold ml-0.5">
+                          {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <span className={`text-[9px] font-black uppercase block ${
+                          paymentInfo.isPaid ? 'text-green-700' : 'text-amber-700'
                         }`}>
-                          {paymentInfo.badgeText}
+                          {paymentInfo.isPaid ? 'Ya Pagó' : 'Por Cancelar'}
                         </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-[10.5px] text-slate-400 mt-1 font-medium">
-                        <span>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                        <span>•</span>
-                        <span>Cliente: <strong className="text-slate-800 font-black">{resolveCustomerName(order)}</strong></span>
-                      </div>
-                      <div
-                        className={`mt-1.5 px-2.5 py-1.5 rounded-lg border text-[10.5px] font-black flex flex-wrap items-center justify-between gap-2 ${
+                        <span className={`text-sm font-black font-mono px-2 py-0.5 rounded-lg inline-block mt-0.5 ${
                           paymentInfo.isPaid
-                            ? 'bg-emerald-50/90 text-emerald-900 border-emerald-300'
-                            : paymentInfo.tone === 'orange'
-                            ? 'bg-orange-50/90 text-orange-950 border-orange-300'
-                            : 'bg-amber-50/90 text-amber-950 border-amber-300'
-                        }`}
-                      >
-                        <span>{paymentInfo.detailText}</span>
-                        <div className="flex flex-wrap items-center gap-1.5 shrink-0">
-                          <span className="font-mono px-2 py-0.5 rounded bg-white border border-slate-200/80 text-slate-900 shadow-2xs">
-                            {paymentInfo.isPaid
-                              ? `Pagado: $${Number(order.total || 0).toFixed(2)}`
-                              : `Por cobrar: $${Number(order.total || 0).toFixed(2)}`}
-                          </span>
-                          {!paymentInfo.isPaid &&
-                            (order.paymentMethod === 'TRANSFER' || order.paymentMethod === 'TRANSFERENCIA') && (
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  if (
-                                    !confirm(
-                                      `¿Confirmar que el cliente ${resolveCustomerName(order)} ya realizó la transferencia bancaria por $${Number(order.total || 0).toFixed(2)} para el pedido #${order.saleNumber}?`
-                                    )
-                                  ) {
-                                    return;
-                                  }
-                                  try {
-                                    const { getStaffToken } = await import('@/lib/auth');
-                                    const staffToken = await getStaffToken();
-                                    const isOnline =
-                                      order.channel === 'ONLINE' ||
-                                      String(order.saleNumber || '').toUpperCase().startsWith('WEB-');
-                                    if (isOnline) {
-                                      await fetch('/api/ecommerce/orders', {
-                                        method: 'PATCH',
-                                        headers: {
-                                          'Content-Type': 'application/json',
-                                          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
-                                        },
-                                        body: JSON.stringify({
-                                          orderId: order.id,
-                                          orderNumber: order.orderNumber || order.saleNumber,
-                                          paymentStatus: 'COMPLETED',
-                                        }),
-                                      });
-                                    } else {
-                                      await fetch('/api/sales', {
-                                        method: 'PATCH',
-                                        headers: {
-                                          'Content-Type': 'application/json',
-                                          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
-                                        },
-                                        body: JSON.stringify({
-                                          id: order.id,
-                                          saleNumber: order.saleNumber,
-                                          paymentStatus: 'COMPLETED',
-                                        }),
-                                      });
-                                    }
-                                    if (typeof window !== 'undefined') {
-                                      const raw = localStorage.getItem('kodelocal_sales');
-                                      if (raw) {
-                                        const saved = JSON.parse(raw);
-                                        if (Array.isArray(saved)) {
-                                          const updated = saved.map((s: any) =>
-                                            s.id === order.id ||
-                                            (order.saleNumber && s.saleNumber === order.saleNumber)
-                                              ? { ...s, paymentStatus: 'COMPLETED' }
-                                              : s
-                                          );
-                                          localStorage.setItem('kodelocal_sales', JSON.stringify(updated));
-                                          window.dispatchEvent(new Event('kodelocal_sales_updated'));
-                                        }
-                                      }
-                                    }
-                                  } catch (err) {
-                                    console.error('Error confirmando transferencia en POS Bodega:', err);
-                                  }
-                                }}
-                                className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-black inline-flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
-                              >
-                                <CheckCircle2 className="w-3.5 h-3.5" />
-                                <span>Confirmar Transferencia</span>
-                              </button>
-                            )}
-                        </div>
+                            ? 'text-green-800 bg-green-100/80 border border-green-200'
+                            : 'text-amber-950 bg-amber-50 border border-amber-300'
+                        }`}>
+                          ${order.total.toFixed(2)}
+                        </span>
                       </div>
                     </div>
 
-                    <div className="text-right shrink-0">
-                      <span className={`text-[9px] font-black uppercase block ${
-                        paymentInfo.isPaid ? 'text-emerald-700' : 'text-amber-700'
-                      }`}>
-                        {paymentInfo.isPaid ? 'Ya Pagó' : 'Por Cancelar'}
-                      </span>
-                      <span className="text-sm font-black text-slate-800 font-mono">
-                        ${order.total.toFixed(2)}
-                      </span>
+                    {/* Bloque de Cliente (Nombre + Teléfono) */}
+                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-1.5 text-xs text-slate-800">
+                          <User className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                          <span className="text-slate-500 font-semibold">Cliente:</span>
+                          <strong className="font-black text-slate-900">{resolveCustomerName(order)}</strong>
+                        </div>
+                        {customerPhone && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-slate-800 bg-white px-2 py-0.5 rounded-md border border-slate-200 shadow-2xs">
+                            <Phone className="w-3 h-3 text-indigo-600 shrink-0" />
+                            <span>Tel: {customerPhone}</span>
+                          </span>
+                        )}
+                      </div>
+                      {order.deliveryNotes && (
+                        <p className="text-[10.5px] text-indigo-800 font-semibold bg-indigo-50/70 px-2 py-1 rounded-lg border border-indigo-100 leading-snug">
+                          {order.deliveryNotes}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Burbuja y Detalle de Pago */}
+                    <div
+                      className={`px-2.5 py-2 rounded-xl border text-[10.5px] font-bold flex flex-wrap items-center justify-between gap-2 ${
+                        paymentInfo.isPaid
+                          ? 'bg-green-50/90 text-green-900 border-green-200'
+                          : paymentInfo.tone === 'orange'
+                          ? 'bg-orange-50/90 text-orange-950 border-orange-200'
+                          : 'bg-amber-50/90 text-amber-950 border-amber-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                          paymentInfo.isPaid
+                            ? 'bg-green-100 text-green-800 border border-green-200'
+                            : paymentInfo.tone === 'orange'
+                            ? 'bg-orange-100 text-orange-900 border border-orange-300'
+                            : 'bg-amber-100 text-amber-900 border border-amber-300'
+                        }`}>
+                          {paymentInfo.badgeText}
+                        </span>
+                        <span className="text-slate-700 font-semibold">{paymentInfo.detailText}</span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                        <span className="font-mono font-black px-2 py-0.5 rounded bg-white border border-slate-200/80 text-slate-900 shadow-2xs">
+                          {paymentInfo.isPaid
+                            ? `Pagado: $${Number(order.total || 0).toFixed(2)}`
+                            : `Por cobrar: $${Number(order.total || 0).toFixed(2)}`}
+                        </span>
+                        {!paymentInfo.isPaid &&
+                          (order.paymentMethod === 'TRANSFER' || order.paymentMethod === 'TRANSFERENCIA') && (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (
+                                  !confirm(
+                                    `¿Confirmar que el cliente ${resolveCustomerName(order)} ya realizó la transferencia bancaria por $${Number(order.total || 0).toFixed(2)} para el pedido #${order.saleNumber}?`
+                                  )
+                                ) {
+                                  return;
+                                }
+                                try {
+                                  const { getStaffToken } = await import('@/lib/auth');
+                                  const staffToken = await getStaffToken();
+                                  const isOnline =
+                                    order.channel === 'ONLINE' ||
+                                    String(order.saleNumber || '').toUpperCase().startsWith('WEB-');
+                                  if (isOnline) {
+                                    await fetch('/api/ecommerce/orders', {
+                                      method: 'PATCH',
+                                      headers: {
+                                        'Content-Type': 'application/json',
+                                        ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+                                      },
+                                      body: JSON.stringify({
+                                        orderId: order.id,
+                                        orderNumber: order.orderNumber || order.saleNumber,
+                                        paymentStatus: 'COMPLETED',
+                                      }),
+                                    });
+                                  } else {
+                                    await fetch('/api/sales', {
+                                      method: 'PATCH',
+                                      headers: {
+                                        'Content-Type': 'application/json',
+                                        ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+                                      },
+                                      body: JSON.stringify({
+                                        id: order.id,
+                                        saleNumber: order.saleNumber,
+                                        paymentStatus: 'COMPLETED',
+                                      }),
+                                    });
+                                  }
+                                  if (typeof window !== 'undefined') {
+                                    const raw = localStorage.getItem('kodelocal_sales');
+                                    if (raw) {
+                                      const saved = JSON.parse(raw);
+                                      if (Array.isArray(saved)) {
+                                        const updated = saved.map((s: any) =>
+                                          s.id === order.id ||
+                                          (order.saleNumber && s.saleNumber === order.saleNumber)
+                                            ? { ...s, paymentStatus: 'COMPLETED' }
+                                            : s
+                                        );
+                                        localStorage.setItem('kodelocal_sales', JSON.stringify(updated));
+                                        window.dispatchEvent(new Event('kodelocal_sales_updated'));
+                                      }
+                                    }
+                                  }
+                                } catch (err) {
+                                  console.error('Error confirmando transferencia en POS Bodega:', err);
+                                }
+                              }}
+                              className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-black inline-flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>Confirmar Transferencia</span>
+                            </button>
+                          )}
+                      </div>
                     </div>
                   </div>
 
@@ -441,7 +493,7 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                             <div className="flex justify-between items-start gap-2">
                               <div className="min-w-0 flex-1">
                                 <span className="font-black text-purple-900 block">
-                                  ✨ Arma tu propio perfume: {kitInfo.fragranceName} (×{it.quantity})
+                                  Arma tu propio perfume: {kitInfo.fragranceName} (×{it.quantity})
                                 </span>
                                 {(kitInfo.originalName || origInfo?.originalName) && (
                                   <span className="text-[10px] text-slate-600 font-medium block mt-0.5">
@@ -451,12 +503,12 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                                 )}
                               </div>
                               <span className="clay-badge text-[9.5px] font-mono font-black text-amber-950 bg-amber-100 px-2 py-0.5 border border-amber-300 shrink-0">
-                                📍 Esencia: {kitInfo.essencePuesto}
+                                Esencia: {kitInfo.essencePuesto}
                               </span>
                             </div>
                             <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold">
                               <span className="px-2 py-0.5 rounded bg-white border border-purple-200 text-purple-800">
-                                {kitInfo.isPlus ? '🔥 1.5 Oz PLUS (1 Oz + ½ Oz)' : '💧 1 Oz Estándar'}
+                                {kitInfo.isPlus ? '1.5 Oz PLUS (1 Oz + ½ Oz)' : '1 Oz Estándar'}
                               </span>
                               <button
                                 type="button"
@@ -478,10 +530,10 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                                     className="w-5 h-5 object-contain rounded"
                                   />
                                 )}
-                                <span>🍾 {kitInfo.bottleName} (📍 {kitInfo.bottlePuesto})</span>
+                                <span>{kitInfo.bottleName} (Estante: {kitInfo.bottlePuesto})</span>
                               </button>
                               <span className="px-2 py-0.5 rounded bg-white border border-purple-200 text-emerald-800">
-                                {kitInfo.hasLabel ? '🏷️ Con Etiqueta' : '🚫 Sin Etiqueta'}
+                                {kitInfo.hasLabel ? 'Con Etiqueta' : 'Sin Etiqueta'}
                               </span>
                             </div>
                           </div>
@@ -529,7 +581,7 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                             </div>
                           </div>
                           <span className="clay-badge text-[9.5px] font-mono font-black text-amber-950 bg-amber-100 px-2 py-0.5 border border-amber-300 shrink-0">
-                            📍 Puesto: {resolvedPuesto}
+                            Puesto: {resolvedPuesto}
                           </span>
                         </div>
                       );

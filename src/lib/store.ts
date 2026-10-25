@@ -136,10 +136,10 @@ export function getOrderPaymentDisplayInfo(order: SaleRecord): OrderPaymentDispl
       if (cardPaid) {
         return {
           isPaid: true,
-          badgeText: '💳 ✅ Ya Pagó • Tarjeta (Wompi)',
+          badgeText: 'Ya Pagó • Tarjeta (Wompi)',
           detailText: isPickup
-            ? '💳 ✅ YA PAGÓ CON TARJETA (Wompi Online) • Solo entregar acá en el Local (No cobrar)'
-            : '💳 ✅ YA PAGÓ CON TARJETA (Wompi Online) • Envío sin cobro contra entrega',
+            ? 'Ya pagó con Tarjeta (Wompi Online) • Solo entregar en el Local (No cobrar)'
+            : 'Ya pagó con Tarjeta (Wompi Online) • Envío sin cobro contra entrega',
           methodLabel: 'Tarjeta (Wompi Online)',
           statusLabel: 'YA PAGÓ (TARJETA ONLINE)',
           tone: 'emerald',
@@ -147,8 +147,8 @@ export function getOrderPaymentDisplayInfo(order: SaleRecord): OrderPaymentDispl
       }
       return {
         isPaid: false,
-        badgeText: '⏳ Tarjeta Pendiente (Wompi)',
-        detailText: '⏳ PAGO CON TARJETA PENDIENTE DE CONFIRMAR • Verificar en Caja antes de entregar',
+        badgeText: 'Tarjeta Pendiente (Wompi)',
+        detailText: 'Pago con tarjeta pendiente de confirmar • Verificar en Caja antes de entregar',
         methodLabel: 'Tarjeta (Pendiente)',
         statusLabel: 'PENDIENTE DE PAGO',
         tone: 'amber',
@@ -159,10 +159,10 @@ export function getOrderPaymentDisplayInfo(order: SaleRecord): OrderPaymentDispl
       if (ps === 'COMPLETED') {
         return {
           isPaid: true,
-          badgeText: '🏦 ✅ Ya Pagó • Transferencia',
+          badgeText: 'Ya Pagó • Transferencia',
           detailText: isPickup
-            ? '🏦 ✅ YA PAGÓ POR TRANSFERENCIA VERIFICADA • Solo entregar acá en el Local (No cobrar)'
-            : '🏦 ✅ YA PAGÓ POR TRANSFERENCIA VERIFICADA • Envío sin cobro contra entrega',
+            ? 'Ya pagó por Transferencia verificada • Solo entregar en el Local (No cobrar)'
+            : 'Ya pagó por Transferencia verificada • Envío sin cobro contra entrega',
           methodLabel: 'Transferencia Bancaria (Verificada)',
           statusLabel: 'YA PAGÓ (TRANSFERENCIA)',
           tone: 'emerald',
@@ -171,11 +171,11 @@ export function getOrderPaymentDisplayInfo(order: SaleRecord): OrderPaymentDispl
       return {
         isPaid: false,
         badgeText: isPickup
-          ? '🏦 Transferencia / Verificar o Paga en Local'
-          : '🏦 Transferencia (Pendiente verificar)',
+          ? 'Transferencia / Verificar o Paga en Local'
+          : 'Transferencia (Pendiente verificar)',
         detailText: isPickup
-          ? '🏦 SELECCIONÓ TRANSFERENCIA BANCARIA • Verificar comprobante o cobrar acá en el Local al retirar'
-          : '🏦 SELECCIONÓ TRANSFERENCIA BANCARIA • Pendiente verificar comprobante en Caja antes de enviar',
+          ? 'Seleccionó Transferencia Bancaria • Verificar comprobante o cobrar en el Local al retirar'
+          : 'Seleccionó Transferencia Bancaria • Pendiente verificar comprobante en Caja antes de enviar',
         methodLabel: isPickup ? 'Transferencia o Pago en Local' : 'Transferencia Bancaria (Por verificar)',
         statusLabel: isPickup ? 'VERIFICAR TRANSFERENCIA O PAGA EN LOCAL' : 'PENDIENTE VERIFICAR TRANSFERENCIA',
         tone: 'amber',
@@ -186,8 +186,8 @@ export function getOrderPaymentDisplayInfo(order: SaleRecord): OrderPaymentDispl
     if (ps === 'COMPLETED') {
       return {
         isPaid: true,
-        badgeText: '💵 ✅ Ya Pagó • Efectivo',
-        detailText: '💵 ✅ YA PAGÓ EN EFECTIVO • Cobrado en Caja',
+        badgeText: 'Ya Pagó • Efectivo',
+        detailText: 'Ya pagó en Efectivo • Cobrado en Caja',
         methodLabel: 'Efectivo',
         statusLabel: 'YA PAGÓ (EFECTIVO)',
         tone: 'emerald',
@@ -195,10 +195,10 @@ export function getOrderPaymentDisplayInfo(order: SaleRecord): OrderPaymentDispl
     }
     return {
       isPaid: false,
-      badgeText: isPickup ? '🏪 Va a pagar acá en el Local' : '💵 Pago Contra Entrega',
+      badgeText: isPickup ? 'Va a pagar en el Local' : 'Pago Contra Entrega',
       detailText: isPickup
-        ? '🏪 PENDIENTE DE PAGO • El cliente va a pagar acá en el Local al retirar'
-        : '💵 PAGO CONTRA ENTREGA • Se cobrará en efectivo al entregar el pedido',
+        ? 'Pendiente de pago • El cliente va a pagar en el Local al retirar'
+        : 'Pago contra entrega • Se cobrará en efectivo al entregar el pedido',
       methodLabel: isPickup ? 'Pago en Local' : 'Contra Entrega (Efectivo)',
       statusLabel: isPickup ? 'VA A PAGAR EN EL LOCAL' : 'PAGO CONTRA ENTREGA',
       tone: 'orange',
@@ -210,8 +210,8 @@ export function getOrderPaymentDisplayInfo(order: SaleRecord): OrderPaymentDispl
     if (c807Mode === 'TARJETA' || pm === 'CARD' || pm === 'WOMPI' || pm === 'TARJETA') {
       return {
         isPaid: true,
-        badgeText: '💳 ✅ Ya Pagó • Tarjeta (C807 Regular)',
-        detailText: '💳 ✅ YA PAGÓ CON TARJETA • Servicio Regular C807 (Sin cobrar contra entrega)',
+        badgeText: 'Ya Pagó • Tarjeta (C807 Regular)',
+        detailText: 'Ya pagó con Tarjeta • Servicio Regular C807 (Sin cobrar contra entrega)',
         methodLabel: 'Tarjeta (Servicio Regular C807)',
         statusLabel: 'YA PAGÓ (TARJETA)',
         tone: 'emerald',
@@ -220,8 +220,8 @@ export function getOrderPaymentDisplayInfo(order: SaleRecord): OrderPaymentDispl
     if (c807Mode === 'TRANSFERENCIA' || pm === 'TRANSFER' || pm === 'TRANSFERENCIA' || c807Service === 'SER') {
       return {
         isPaid: true,
-        badgeText: '🏦 ✅ Ya Pagó • Transferencia (C807 Regular)',
-        detailText: '🏦 ✅ YA PAGÓ POR TRANSFERENCIA • Servicio Regular C807 (Sin cobrar contra entrega)',
+        badgeText: 'Ya Pagó • Transferencia (C807 Regular)',
+        detailText: 'Ya pagó por Transferencia • Servicio Regular C807 (Sin cobrar contra entrega)',
         methodLabel: 'Transferencia (Servicio Regular C807)',
         statusLabel: 'YA PAGÓ (TRANSFERENCIA)',
         tone: 'emerald',
@@ -229,8 +229,8 @@ export function getOrderPaymentDisplayInfo(order: SaleRecord): OrderPaymentDispl
     }
     return {
       isPaid: false,
-      badgeText: '💵 Contra Entrega en Efectivo (C807)',
-      detailText: '💵 PAGO CONTRA ENTREGA EN EFECTIVO • C807 cobrará el total al entregar al cliente',
+      badgeText: 'Contra Entrega en Efectivo (C807)',
+      detailText: 'Pago contra entrega en efectivo • C807 cobrará el total al entregar al cliente',
       methodLabel: 'Contra Entrega en Efectivo (C807 CCE)',
       statusLabel: 'PAGO CONTRA ENTREGA (EFECTIVO)',
       tone: 'orange',
@@ -250,16 +250,10 @@ export function getOrderPaymentDisplayInfo(order: SaleRecord): OrderPaymentDispl
         : pm === 'TRANSFER' || pm === 'TRANSFERENCIA'
         ? 'Transferencia Bancaria'
         : 'Efectivo';
-    const icon =
-      pm === 'CARD' || pm === 'TARJETA' || pm === 'WOMPI'
-        ? '💳'
-        : pm === 'TRANSFER' || pm === 'TRANSFERENCIA'
-        ? '🏦'
-        : '💵';
     return {
       isPaid: true,
-      badgeText: `${icon} ✅ Ya Pagó en Local • ${methodStr}`,
-      detailText: `${icon} ✅ YA PAGÓ ACÁ EN EL LOCAL • Cobrado en Caja vía ${methodStr}`,
+      badgeText: `Ya Pagó en Local • ${methodStr}`,
+      detailText: `Ya pagó en el Local • Cobrado en Caja vía ${methodStr}`,
       methodLabel: `${methodStr} (En Local)`,
       statusLabel: `YA PAGÓ EN LOCAL (${methodStr.toUpperCase()})`,
       tone: 'emerald',
@@ -269,8 +263,8 @@ export function getOrderPaymentDisplayInfo(order: SaleRecord): OrderPaymentDispl
   // Comanda enviada a Bodega desde Cotizador / Prefactura pendiente de pasar a pagar a Caja
   return {
     isPaid: false,
-    badgeText: '🏪 Va a pagar acá en el Local (Caja)',
-    detailText: '🏪 PENDIENTE DE PAGO EN CAJA • El cliente va a pagar acá en el Local al retirar en ventanilla',
+    badgeText: 'Va a pagar en el Local (Caja)',
+    detailText: 'Pendiente de pago en Caja • El cliente va a pagar en el Local al retirar en ventanilla',
     methodLabel: 'Pago en Local (Caja)',
     statusLabel: 'VA A PAGAR EN EL LOCAL (CAJA)',
     tone: 'amber',

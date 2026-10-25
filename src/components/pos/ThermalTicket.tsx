@@ -119,10 +119,11 @@ export default function ThermalTicket({ ticket }: ThermalTicketProps) {
                 );
               })()}
 
-              {/* Si es Crédito Fiscal, mostrar datos del cliente */}
+              {/* Si hay datos del cliente, mostrar nombre y teléfono */}
               {currentTicket.cliente?.nombre && (
                 <div style={{ marginTop: '3px', paddingTop: '2px', borderTop: '1px dotted #666' }}>
                   <div>CLIENTE: {currentTicket.cliente.nombre}</div>
+                  {currentTicket.cliente.telefono && <div>TEL: {currentTicket.cliente.telefono}</div>}
                   {currentTicket.cliente.numDocumento && <div>DOC/NIT: {currentTicket.cliente.numDocumento}</div>}
                   {currentTicket.cliente.nrc && <div>NRC: {currentTicket.cliente.nrc}</div>}
                 </div>

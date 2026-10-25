@@ -443,7 +443,7 @@ export default function CustomerDrawer() {
           </div>
 
           {/* ================= CONTENIDO DEL DRAWER ================= */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 overscroll-contain">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-5 space-y-4 overscroll-contain">
             
             {/* ---------------- PESTAÑA 1: MIS PEDIDOS ---------------- */}
             {drawerTab === 'orders' && (
@@ -525,11 +525,11 @@ export default function CustomerDrawer() {
                     return (
                       <div
                         key={order.id || order.orderNumber}
-                        className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs hover:shadow-md transition-shadow space-y-3"
+                        className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs hover:shadow-md transition-shadow space-y-3 overflow-hidden"
                       >
                         {/* Cabecera del pedido */}
                         <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-2.5">
-                          <div>
+                          <div className="min-w-0">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-[11px] font-black text-indigo-700 font-mono">
                                 #{order.orderNumber || order.id?.slice(-8).toUpperCase()}
@@ -542,7 +542,7 @@ export default function CustomerDrawer() {
                                 </span>
                               )}
                             </div>
-                            <p className="text-[10px] text-slate-400 font-medium">{orderDate}</p>
+                            <p className="text-[10px] text-slate-400 font-medium whitespace-nowrap mt-0.5">{orderDate}</p>
                           </div>
                           <div className="flex items-center gap-1.5 flex-wrap justify-end">
                             {getPaymentBadge(order.paymentStatus, order.paymentMethod)}
@@ -552,15 +552,15 @@ export default function CustomerDrawer() {
 
                         {/* Información de Courier y Rastreo si ya fue despachado */}
                         {(order.courierName || order.trackingNumber) && (
-                          <div className="p-2.5 rounded-xl bg-purple-50/80 border border-purple-100 text-[11px] text-purple-900 flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-1.5">
+                          <div className="p-2.5 rounded-xl bg-purple-50/80 border border-purple-100 text-[11px] text-purple-900 flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5 min-w-0">
                               <Truck className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                              <span>
+                              <span className="truncate">
                                 Envío: <strong>{order.courierName || 'Mensajería Express'}</strong>
                               </span>
                             </div>
                             {order.trackingNumber && (
-                              <span className="font-mono font-black text-purple-700 bg-white px-2 py-0.5 rounded border border-purple-200 text-[10px]">
+                              <span className="font-mono font-black text-purple-700 bg-white px-2 py-0.5 rounded border border-purple-200 text-[10px] break-all">
                                 Guía: {order.trackingNumber}
                               </span>
                             )}
@@ -568,34 +568,58 @@ export default function CustomerDrawer() {
                         )}
 
                         {/* Artículos del pedido con nombre oficial e inspiración dinámica */}
-                        <div className="space-y-2">
-                          {order.items?.map((item: any, idx: number) => (
-                            <div key={idx} className="flex items-start justify-between text-xs gap-2">
-                              <div className="flex flex-col min-w-0 pr-1">
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className="font-bold text-slate-800 text-[11px]">
-                                    {item.quantity}x
-                                  </span>
-                                  <span className="text-slate-800 font-bold truncate text-[11px]">
-                                    {item.productName}
-                                  </span>
-                                  {item.presentation && (
-                                    <span className="px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 text-[9px] font-bold shrink-0">
-                                      {item.presentation}
+                        <div className="space-y-2.5">
+                          {order.items?.map((item: any, idx: number) => {
+                            const cleanPresentation = item.presentation
+                              ? String(item.presentation).replace(/\s*\[[^\]]+\]/g, '').trim()
+                              : '';
+                            const presentationParts = cleanPresentation.includes('|')
+                              ? cleanPresentation
+                                  .split('|')
+                                  .map((p: string) => p.trim())
+                                  .filter(Boolean)
+                              : [];
+
+                            return (
+                              <div key={idx} className="flex items-start justify-between text-xs gap-2.5">
+                                <div className="flex flex-col flex-1 min-w-0">
+                                  <div className="flex items-baseline gap-1.5 flex-wrap">
+                                    <span className="font-bold text-slate-800 text-[11px] shrink-0">
+                                      {item.quantity}x
+                                    </span>
+                                    <span className="text-slate-800 font-bold text-[11px] break-words">
+                                      {item.productName}
+                                    </span>
+                                    {cleanPresentation && presentationParts.length === 0 && (
+                                      <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[9.5px] font-bold break-words">
+                                        {cleanPresentation}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {presentationParts.length > 0 && (
+                                    <div className="flex flex-wrap gap-1 mt-1 pl-4">
+                                      {presentationParts.map((part: string, pIdx: number) => (
+                                        <span
+                                          key={pIdx}
+                                          className="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[9.5px] font-semibold leading-tight break-words"
+                                        >
+                                          {part}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {item.inspiredBy && (
+                                    <span className="text-[10.5px] text-slate-600 font-medium pl-4 mt-0.5 break-words">
+                                      Inspirado en: <strong className="text-slate-950 font-black">{item.inspiredBy}</strong>
                                     </span>
                                   )}
                                 </div>
-                                {item.inspiredBy && (
-                                  <span className="text-[10.5px] text-slate-600 font-medium pl-4">
-                                    Inspirado en: <strong className="text-slate-950 font-black">{item.inspiredBy}</strong>
-                                  </span>
-                                )}
+                                <span className="font-bold text-slate-900 text-[11px] shrink-0 font-mono">
+                                  ${(item.total || 0).toFixed(2)}
+                                </span>
                               </div>
-                              <span className="font-bold text-slate-900 text-[11px] shrink-0 font-mono">
-                                ${(item.total || 0).toFixed(2)}
-                              </span>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
 
                         {/* Resumen de Total */}

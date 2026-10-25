@@ -169,6 +169,11 @@ function renderTicketToDoc(doc: any, ticket: SaleRecord): number {
     doc.setFontSize(7.2);
     doc.text(`CLIENTE: ${ticket.cliente.nombre.slice(0, 28)}`, leftM, y);
     y += 3.1;
+    const ticketPhone = ticket.cliente.telefono || (ticket as any).customerPhone || ticket.domicilio?.customerPhone;
+    if (ticketPhone) {
+      doc.text(`TEL: ${ticketPhone}`, leftM, y);
+      y += 3.1;
+    }
     if (ticket.cliente.numDocumento) {
       doc.text(`DOC: ${ticket.cliente.numDocumento}`, leftM, y);
       y += 3.1;
@@ -517,7 +522,9 @@ function renderDispatchOrderToDoc(doc: any, ticket: SaleRecord, products?: Produ
   const resolvedTotal = Number(ticket.total || 0) > 0 ? Number(ticket.total) : itemsSubtotal + shippingAmount;
 
   const customerName = cleanPdfText(ticket.cliente?.nombre || 'Consumidor Final');
-  const customerPhone = cleanPdfText(ticket.cliente?.telefono || '');
+  const customerPhone = cleanPdfText(
+    ticket.cliente?.telefono || (ticket as any).customerPhone || ticket.domicilio?.customerPhone || ''
+  );
   const customerDoc = cleanPdfText(ticket.cliente?.numDocumento || ticket.cliente?.nrc || '');
   const docTypeLabel =
     (ticket.tipoComprobante || (ticket.cliente?.nrc ? '03' : '01')) === '03'
@@ -563,16 +570,16 @@ function renderDispatchOrderToDoc(doc: any, ticket: SaleRecord, products?: Produ
     y += 3.5;
   }
 
-  if (customerPhone || customerDoc) {
+  if (customerPhone) {
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(8.2);
+    doc.text(`TEL: ${customerPhone}`, leftM, y);
+    y += 3.4;
+  }
+  if (customerDoc) {
     doc.setFont('courier', 'normal');
     doc.setFontSize(7.5);
-    const extraClientInfo = [
-      customerPhone ? `Tel: ${customerPhone}` : '',
-      customerDoc ? `Doc/NRC: ${customerDoc}` : '',
-    ]
-      .filter(Boolean)
-      .join('  |  ');
-    doc.text(extraClientInfo, leftM, y);
+    doc.text(`Doc/NRC: ${customerDoc}`, leftM, y);
     y += 3.3;
   }
 
@@ -722,7 +729,10 @@ function renderDispatchOrderToDoc(doc: any, ticket: SaleRecord, products?: Produ
 
   doc.setFont('courier', 'bold');
   doc.setFontSize(8.2);
-  const splitFooterClient = doc.splitTextToSize(`CLIENTE: ${customerName.toUpperCase()}`, 64);
+  const splitFooterClient = doc.splitTextToSize(
+    `CLIENTE: ${customerName.toUpperCase()}${customerPhone ? ` - TEL: ${customerPhone}` : ''}`,
+    64
+  );
   for (const line of splitFooterClient) {
     doc.text(line, leftM, y);
     y += 3.4;

@@ -422,9 +422,19 @@ export default function EcommerceOrdersPanel() {
                   {isPickup(o) ? 'Retiro en sucursal' : `Domicilio · ${o.municipality}`}
                 </td>
                 <td className="py-2.5 px-3 text-slate-600">
-                  {PAYMENT_LABELS[o.paymentMethod] || o.paymentMethod}
-                  <div className="text-[11px] font-bold">
-                    {PAYMENT_STATUS_LABELS[o.paymentStatus] || o.paymentStatus}
+                  <div>{PAYMENT_LABELS[o.paymentMethod] || o.paymentMethod}</div>
+                  <div className="mt-1">
+                    <span
+                      className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-black border ${
+                        o.paymentStatus === 'COMPLETED'
+                          ? 'bg-green-100 text-green-800 border-green-200'
+                          : o.paymentStatus === 'CANCELLED'
+                          ? 'bg-rose-100 text-rose-800 border-rose-200'
+                          : 'bg-amber-100 text-amber-800 border-amber-200'
+                      }`}
+                    >
+                      {PAYMENT_STATUS_LABELS[o.paymentStatus] || o.paymentStatus}
+                    </span>
                   </div>
                   {(o.paymentMethod === 'TRANSFER' || o.paymentMethod === 'TRANSFERENCIA') &&
                     o.paymentStatus !== 'COMPLETED' &&

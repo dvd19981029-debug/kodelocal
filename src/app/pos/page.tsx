@@ -662,7 +662,7 @@ export default function PosPage() {
                   numDocumento: parsedClient?.numDocumento || s.customer?.documentNum || undefined,
                   nrc: s.customer?.nrc || parsedClient?.nrc || undefined,
                   correo: s.customer?.email || parsedClient?.correo || undefined,
-                  telefono: parsedClient?.telefono || s.customer?.phone || undefined,
+                  telefono: parsedClient?.telefono || s.customer?.phone || parsedDomicilio?.customerPhone || firstShipment?.phone || undefined,
                   direccion: parsedClient?.direccion || s.customer?.address || undefined,
                   departamento: parsedClient?.departamento || s.customer?.department || undefined,
                   municipio: parsedClient?.municipio || s.customer?.municipality || undefined,

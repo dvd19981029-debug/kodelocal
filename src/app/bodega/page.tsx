@@ -28,6 +28,7 @@ import {
   AlertTriangle,
   FileText,
   User,
+  Phone,
   PlusCircle,
   ExternalLink,
   Volume2,
@@ -1451,6 +1452,14 @@ export default function BodegaPage() {
                   {filteredOrders.map((order) => {
                     const allItemsChecked = order.items.every((_, idx) => checkedItems[`${order.id}-${idx}`]);
                     const paymentInfo = getOrderPaymentDisplayInfo(order);
+                    const isOnlineOrder =
+                      order.channel === 'ONLINE' ||
+                      String(order.saleNumber || order.orderNumber || '').toUpperCase().startsWith('WEB-');
+                    const customerPhone =
+                      order.cliente?.telefono ||
+                      (order as any).customerPhone ||
+                      order.domicilio?.customerPhone ||
+                      '';
 
                     return (
                       <div 
@@ -1459,16 +1468,22 @@ export default function BodegaPage() {
                       >
                         <div>
                           {/* Encabezado del Pedido */}
-                          <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 mb-3">
-                            <div>
-                              <div className="flex items-center gap-2 flex-wrap">
+                          <div className="pb-3 border-b border-slate-100 mb-3 space-y-2.5">
+                            {/* Fila 1: Número de orden, Canal, Comprobante, Estado y Total */}
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="font-mono font-black text-sm text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-lg">
                                   #{order.saleNumber}
                                 </span>
-                                <span className="font-black text-sm text-slate-800 flex items-center gap-1.5 bg-slate-100/90 border border-slate-200 px-2.5 py-0.5 rounded-lg">
-                                  <User className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                                  <span>{order.cliente?.nombre || 'Consumidor Final'}</span>
-                                </span>
+                                {isOnlineOrder && (
+                                  <span className={`clay-badge text-[10px] font-black py-0.5 px-2.5 ${
+                                    paymentInfo.isPaid
+                                      ? 'bg-green-100 text-green-800 border border-green-200'
+                                      : 'bg-purple-100 text-purple-900 border border-purple-200'
+                                  }`}>
+                                    Tienda Online
+                                  </span>
+                                )}
                                 <span className={`clay-badge text-[10px] font-black py-0.5 px-2 ${
                                   (order.tipoComprobante || (order.cliente?.nrc ? '03' : '01')) === '03'
                                     ? 'bg-purple-100 text-purple-900 border border-purple-200'
@@ -1479,80 +1494,94 @@ export default function BodegaPage() {
                                   {(order.tipoComprobante || (order.cliente?.nrc ? '03' : '01')) === '03' ? 'Crédito Fiscal (CCF)' : order.tipoComprobante === 'TICKET' ? 'Ticket' : 'Factura (FC)'}
                                 </span>
                                 <span className="clay-badge text-[10px] font-black py-0.5 px-2 bg-rose-100 text-rose-900 border border-rose-200">
-                                  ⏳ Por Preparar
+                                  Por Preparar
                                 </span>
-                                {order.channel === 'ONLINE' && (
-                                  <span className="clay-badge text-[9.5px] font-black py-0.5 px-2 bg-purple-100 text-purple-900 border border-purple-200">
-                                    🌐 Tienda Online
-                                  </span>
-                                )}
-                                <span className={`clay-badge text-[10px] font-black py-0.5 px-2.5 ${
-                                  paymentInfo.isPaid
-                                    ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
-                                    : paymentInfo.tone === 'orange'
-                                    ? 'bg-orange-100 text-orange-950 border border-orange-300'
-                                    : 'bg-amber-100 text-amber-950 border border-amber-300'
+                                <span className="text-[10.5px] text-slate-400 font-semibold ml-0.5">
+                                  {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
+
+                              <div className="text-right shrink-0">
+                                <span className={`text-[9.5px] font-black uppercase tracking-wider block ${
+                                  paymentInfo.isPaid ? 'text-green-700' : 'text-amber-700'
                                 }`}>
-                                  {paymentInfo.badgeText}
+                                  {paymentInfo.isPaid ? 'Ya Pagó' : 'Total a Cancelar'}
                                 </span>
-                              </div>
-                              <div className="flex items-center gap-2 text-[10.5px] text-slate-400 mt-1 font-medium">
-                                <span>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                <span>•</span>
-                                <span>Cliente: <strong className="text-slate-800 font-black">{order.cliente?.nombre || 'Consumidor Final'}</strong></span>
-                              </div>
-                              {order.deliveryNotes && (
-                                <p className="text-[10px] text-indigo-700 font-semibold mt-1 bg-indigo-50/70 p-1.5 rounded-lg border border-indigo-100">
-                                  📍 {order.deliveryNotes}
-                                </p>
-                              )}
-                              <div
-                                className={`mt-1.5 px-2.5 py-1.5 rounded-lg border text-[10.5px] font-black flex flex-wrap items-center justify-between gap-2 ${
+                                <span className={`text-base font-black px-2.5 py-0.5 rounded-lg inline-block font-mono shadow-2xs mt-0.5 ${
                                   paymentInfo.isPaid
-                                    ? 'bg-emerald-50/90 text-emerald-900 border-emerald-300'
-                                    : paymentInfo.tone === 'orange'
-                                    ? 'bg-orange-50/90 text-orange-950 border-orange-300'
-                                    : 'bg-amber-50/90 text-amber-950 border-amber-300'
-                                }`}
-                              >
-                                <span>{paymentInfo.detailText}</span>
-                                <div className="flex flex-wrap items-center gap-1.5 shrink-0">
-                                  <span className="font-mono px-2 py-0.5 rounded bg-white border border-slate-200/80 text-slate-900 shadow-2xs">
-                                    {paymentInfo.isPaid
-                                      ? `Pagado: $${resolveOrderTotal(order).toFixed(2)}`
-                                      : `Por cobrar: $${resolveOrderTotal(order).toFixed(2)}`}
-                                  </span>
-                                  {!paymentInfo.isPaid &&
-                                    (order.paymentMethod === 'TRANSFER' || order.paymentMethod === 'TRANSFERENCIA') && (
-                                      <button
-                                        type="button"
-                                        onClick={() => handleVerifyTransferPayment(order)}
-                                        className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-black inline-flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
-                                      >
-                                        <CheckCircle2 className="w-3.5 h-3.5" />
-                                        <span>Confirmar Transferencia</span>
-                                      </button>
-                                    )}
-                                </div>
+                                    ? 'text-green-800 bg-green-100/80 border border-green-200'
+                                    : 'text-amber-950 bg-amber-50 border border-amber-300'
+                                }`}>
+                                  ${resolveOrderTotal(order).toFixed(2)}
+                                </span>
+                                <span className="text-[10px] font-bold text-slate-400 block font-mono mt-0.5">
+                                  Vol: {order.items.reduce((a, b) => a + b.quantity, 0)} {order.items.some(i => i.unit === 'Onza') ? 'Oz' : 'Un.'}
+                                </span>
                               </div>
                             </div>
 
-                            <div className="text-right shrink-0">
-                              <span className={`text-[9.5px] font-black uppercase tracking-wider block ${
-                                paymentInfo.isPaid ? 'text-emerald-700' : 'text-amber-700'
-                              }`}>
-                                {paymentInfo.isPaid ? 'Ya Pagó' : 'Total a Cancelar'}
-                              </span>
-                              <span className={`text-base font-black px-2.5 py-0.5 rounded-lg inline-block font-mono shadow-2xs mt-0.5 ${
+                            {/* Fila 2: Datos del Cliente (Nombre + Teléfono + Entrega) */}
+                            <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+                              <div className="flex items-center justify-between gap-2 flex-wrap">
+                                <div className="flex items-center gap-1.5 text-xs text-slate-800">
+                                  <User className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                                  <span className="text-slate-500 font-semibold">Cliente:</span>
+                                  <strong className="font-black text-slate-900">{order.cliente?.nombre || 'Consumidor Final'}</strong>
+                                </div>
+                                {customerPhone && (
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-slate-800 bg-white px-2 py-0.5 rounded-md border border-slate-200 shadow-2xs">
+                                    <Phone className="w-3 h-3 text-indigo-600 shrink-0" />
+                                    <span>Tel: {customerPhone}</span>
+                                  </span>
+                                )}
+                              </div>
+                              {order.deliveryNotes && (
+                                <p className="text-[10.5px] text-indigo-800 font-semibold bg-indigo-50/70 px-2 py-1 rounded-lg border border-indigo-100 leading-snug">
+                                  {order.deliveryNotes}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Fila 3: Burbuja y Detalle de Pago */}
+                            <div
+                              className={`px-2.5 py-2 rounded-xl border text-[10.5px] font-bold flex flex-wrap items-center justify-between gap-2 ${
                                 paymentInfo.isPaid
-                                  ? 'text-emerald-800 bg-emerald-50 border border-emerald-300'
-                                  : 'text-amber-950 bg-amber-50 border border-amber-300'
-                              }`}>
-                                ${resolveOrderTotal(order).toFixed(2)}
-                              </span>
-                              <span className="text-[10px] font-bold text-slate-400 block font-mono mt-0.5">
-                                Vol: {order.items.reduce((a, b) => a + b.quantity, 0)} {order.items.some(i => i.unit === 'Onza') ? 'Oz' : 'Un.'}
-                              </span>
+                                  ? 'bg-green-50/90 text-green-900 border-green-200'
+                                  : paymentInfo.tone === 'orange'
+                                  ? 'bg-orange-50/90 text-orange-950 border-orange-200'
+                                  : 'bg-amber-50/90 text-amber-950 border-amber-200'
+                              }`}
+                            >
+                              <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                                  paymentInfo.isPaid
+                                    ? 'bg-green-100 text-green-800 border border-green-200'
+                                    : paymentInfo.tone === 'orange'
+                                    ? 'bg-orange-100 text-orange-900 border border-orange-300'
+                                    : 'bg-amber-100 text-amber-900 border border-amber-300'
+                                }`}>
+                                  {paymentInfo.badgeText}
+                                </span>
+                                <span className="text-slate-700 font-semibold">{paymentInfo.detailText}</span>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                                <span className="font-mono font-black px-2 py-0.5 rounded bg-white border border-slate-200/80 text-slate-900 shadow-2xs">
+                                  {paymentInfo.isPaid
+                                    ? `Pagado: $${resolveOrderTotal(order).toFixed(2)}`
+                                    : `Por cobrar: $${resolveOrderTotal(order).toFixed(2)}`}
+                                </span>
+                                {!paymentInfo.isPaid &&
+                                  (order.paymentMethod === 'TRANSFER' || order.paymentMethod === 'TRANSFERENCIA') && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleVerifyTransferPayment(order)}
+                                      className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-black inline-flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+                                    >
+                                      <CheckCircle2 className="w-3.5 h-3.5" />
+                                      <span>Confirmar Transferencia</span>
+                                    </button>
+                                  )}
+                              </div>
                             </div>
                           </div>
 
@@ -1586,7 +1615,6 @@ export default function BodegaPage() {
                                         <div className="min-w-0 flex-1">
                                           <div className="flex items-center gap-1.5 flex-wrap">
                                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-600 text-white shadow-2xs">
-                                              <Sparkles className="w-3 h-3" />
                                               <span>Arma tu propio perfume (100 ml)</span>
                                             </span>
                                             <span className="text-[10.5px] font-black text-indigo-800 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md">
@@ -1615,7 +1643,7 @@ export default function BodegaPage() {
                                       </div>
 
                                       <span className="clay-badge text-[10px] font-black px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-300 shrink-0 font-mono shadow-sm">
-                                        📍 Esencia: {shelfLocation}
+                                        Esencia: {shelfLocation}
                                       </span>
                                     </div>
 
@@ -1626,7 +1654,7 @@ export default function BodegaPage() {
                                           Concentración / Esencia
                                         </span>
                                         <strong className={`font-black block ${kitInfo.isPlus ? 'text-purple-700' : 'text-slate-800'}`}>
-                                          {kitInfo.isPlus ? '🔥 1.5 Oz PLUS (1 Oz + ½ Oz)' : '💧 1 Oz Estándar'}
+                                          {kitInfo.isPlus ? '1.5 Oz PLUS (1 Oz + ½ Oz)' : '1 Oz Estándar'}
                                         </strong>
                                       </div>
 
@@ -1638,7 +1666,7 @@ export default function BodegaPage() {
                                               e.stopPropagation();
                                               setZoomedBottle({
                                                 imageUrl: kitInfo.bottleImageUrl!,
-                                                name: kitInfo.bottleName,
+                                              name: kitInfo.bottleName,
                                                 puesto: kitInfo.bottlePuesto,
                                               });
                                             }}
@@ -1661,11 +1689,11 @@ export default function BodegaPage() {
                                               Bote 100ml elegido
                                             </span>
                                             <span className="text-[9.5px] font-mono font-black text-amber-900 bg-amber-100 px-1.5 py-0.2 rounded border border-amber-300 shrink-0">
-                                              📍 {kitInfo.bottlePuesto}
+                                              Estante: {kitInfo.bottlePuesto}
                                             </span>
                                           </div>
                                           <strong className="font-black text-slate-900 block truncate" title={kitInfo.bottleName}>
-                                            🍾 {kitInfo.bottleName}
+                                            {kitInfo.bottleName}
                                           </strong>
                                         </div>
                                       </div>
@@ -1675,7 +1703,7 @@ export default function BodegaPage() {
                                           Etiqueta de Fragancia
                                         </span>
                                         <strong className={`font-black block ${kitInfo.hasLabel ? 'text-emerald-700' : 'text-slate-600'}`}>
-                                          {kitInfo.hasLabel ? '🏷️ Con Etiqueta' : '🚫 Sin Etiqueta'}
+                                          {kitInfo.hasLabel ? 'Con Etiqueta' : 'Sin Etiqueta'}
                                         </strong>
                                       </div>
                                     </div>
@@ -1751,7 +1779,7 @@ export default function BodegaPage() {
 
                                   {/* Badge de Puesto de Estante */}
                                   <span className="clay-badge text-[10px] font-black px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-300 shrink-0 font-mono shadow-sm">
-                                    📍 Puesto: {shelfLocation}
+                                    Puesto: {shelfLocation}
                                   </span>
                                 </div>
                               );
@@ -1762,23 +1790,29 @@ export default function BodegaPage() {
                           <div
                             className={`mb-3 px-3 py-2 rounded-xl border flex items-center justify-between gap-2 text-xs ${
                               paymentInfo.isPaid
-                                ? 'bg-emerald-50/80 border-emerald-200'
+                                ? 'bg-green-50/80 border-green-200'
                                 : 'bg-amber-50/80 border-amber-200'
                             }`}
                           >
                             <div className="truncate min-w-0">
                               <span className="text-slate-500 font-semibold">Cliente: </span>
                               <strong className="font-black text-slate-900">{order.cliente?.nombre || 'Consumidor Final'}</strong>
+                              {customerPhone && (
+                                <>
+                                  <span className="mx-1.5 text-slate-300">•</span>
+                                  <span className="font-mono font-bold text-slate-700">Tel: {customerPhone}</span>
+                                </>
+                              )}
                               <span className="mx-1.5 text-slate-300">•</span>
-                              <span className={`font-black text-[10.5px] ${paymentInfo.isPaid ? 'text-emerald-800' : 'text-amber-900'}`}>
+                              <span className={`font-black text-[10.5px] ${paymentInfo.isPaid ? 'text-green-800' : 'text-amber-900'}`}>
                                 {paymentInfo.badgeText}
                               </span>
                             </div>
                             <div className="text-right shrink-0 font-mono">
-                              <span className={`text-[10.5px] font-bold uppercase mr-1.5 ${paymentInfo.isPaid ? 'text-emerald-800' : 'text-amber-900'}`}>
+                              <span className={`text-[10.5px] font-bold uppercase mr-1.5 ${paymentInfo.isPaid ? 'text-green-800' : 'text-amber-900'}`}>
                                 {paymentInfo.isPaid ? 'Total pagado:' : 'Total a cancelar:'}
                               </span>
-                              <strong className={`text-sm font-black ${paymentInfo.isPaid ? 'text-emerald-900' : 'text-amber-950'}`}>
+                              <strong className={`text-sm font-black ${paymentInfo.isPaid ? 'text-green-900' : 'text-amber-950'}`}>
                                 ${resolveOrderTotal(order).toFixed(2)}
                               </strong>
                             </div>
@@ -1881,22 +1915,35 @@ export default function BodegaPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {filteredOrders.map((order) => {
                     const paymentInfo = getOrderPaymentDisplayInfo(order);
+                    const isOnlineOrder =
+                      order.channel === 'ONLINE' ||
+                      String(order.saleNumber || order.orderNumber || '').toUpperCase().startsWith('WEB-');
+                    const customerPhone =
+                      order.cliente?.telefono ||
+                      (order as any).customerPhone ||
+                      order.domicilio?.customerPhone ||
+                      '';
                     return (
                     <div 
                       key={order.id} 
                       className="clay-card p-4 flex flex-col justify-between border-l-4 border-emerald-500 hover:shadow-md transition-all"
                     >
                       <div>
-                        <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 mb-3">
-                          <div>
-                            <div className="flex items-center gap-2 flex-wrap">
+                        <div className="pb-3 border-b border-slate-100 mb-3 space-y-2.5">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="font-mono font-black text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-lg">
                                 #{order.saleNumber}
                               </span>
-                              <span className="font-black text-sm text-slate-800 flex items-center gap-1.5 bg-slate-100/90 border border-slate-200 px-2.5 py-0.5 rounded-lg">
-                                <User className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                                <span>{order.cliente?.nombre || 'Consumidor Final'}</span>
-                              </span>
+                              {isOnlineOrder && (
+                                <span className={`clay-badge text-[10px] font-black py-0.5 px-2.5 ${
+                                  paymentInfo.isPaid
+                                    ? 'bg-green-100 text-green-800 border border-green-200'
+                                    : 'bg-purple-100 text-purple-900 border border-purple-200'
+                                }`}>
+                                  Tienda Online
+                                </span>
+                              )}
                               <span className={`clay-badge text-[10px] font-black py-0.5 px-2 ${
                                 (order.tipoComprobante || (order.cliente?.nrc ? '03' : '01')) === '03'
                                   ? 'bg-purple-100 text-purple-900 border border-purple-200'
@@ -1907,78 +1954,89 @@ export default function BodegaPage() {
                                 {(order.tipoComprobante || (order.cliente?.nrc ? '03' : '01')) === '03' ? 'Crédito Fiscal (CCF)' : order.tipoComprobante === 'TICKET' ? 'Ticket' : 'Factura (FC)'}
                               </span>
                               <span className="clay-badge text-[10px] font-black py-0.5 px-2 bg-emerald-100 text-emerald-900 border border-emerald-200">
-                                ✅ Listo en Ventanilla
-                              </span>
-                              {order.channel === 'ONLINE' && (
-                                <span className="clay-badge text-[9.5px] font-black py-0.5 px-2 bg-purple-100 text-purple-900 border border-purple-200">
-                                  🌐 Tienda Online
-                                </span>
-                              )}
-                              <span className={`clay-badge text-[10px] font-black py-0.5 px-2.5 ${
-                                paymentInfo.isPaid
-                                  ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
-                                  : paymentInfo.tone === 'orange'
-                                  ? 'bg-orange-100 text-orange-950 border border-orange-300'
-                                  : 'bg-amber-100 text-amber-950 border border-amber-300'
-                              }`}>
-                                {paymentInfo.badgeText}
+                                Listo en Ventanilla
                               </span>
                             </div>
-                            <span className="text-[10.5px] text-slate-400 font-medium block mt-1">
-                              Cliente: <strong className="text-slate-800 font-black">{order.cliente?.nombre || 'Consumidor Final'}</strong>
-                            </span>
-                            {order.deliveryNotes && (
-                              <p className="text-[10px] text-emerald-800 font-semibold mt-1 bg-emerald-50/70 p-1.5 rounded-lg border border-emerald-100">
-                                📍 {order.deliveryNotes}
-                              </p>
-                            )}
-                            <div
-                              className={`mt-1.5 px-2.5 py-1.5 rounded-lg border text-[10.5px] font-black flex flex-wrap items-center justify-between gap-2 ${
+
+                            <div className="text-right shrink-0">
+                              <span className={`text-[9.5px] font-black uppercase tracking-wider block ${
+                                paymentInfo.isPaid ? 'text-green-700' : 'text-amber-700'
+                              }`}>
+                                {paymentInfo.isPaid ? 'Ya Pagó' : 'Total a Cancelar'}
+                              </span>
+                              <span className={`text-base font-black px-2.5 py-0.5 rounded-lg inline-block font-mono shadow-2xs mt-0.5 ${
                                 paymentInfo.isPaid
-                                  ? 'bg-emerald-50/90 text-emerald-900 border-emerald-300'
-                                  : paymentInfo.tone === 'orange'
-                                  ? 'bg-orange-50/90 text-orange-950 border-orange-300'
-                                  : 'bg-amber-50/90 text-amber-950 border-amber-300'
-                              }`}
-                            >
-                              <span>{paymentInfo.detailText}</span>
-                              <div className="flex flex-wrap items-center gap-1.5 shrink-0">
-                                <span className="font-mono px-2 py-0.5 rounded bg-white border border-slate-200/80 text-slate-900 shadow-2xs">
-                                  {paymentInfo.isPaid
-                                    ? `Pagado: $${resolveOrderTotal(order).toFixed(2)}`
-                                    : `Por cobrar: $${resolveOrderTotal(order).toFixed(2)}`}
-                                </span>
-                                {!paymentInfo.isPaid &&
-                                  (order.paymentMethod === 'TRANSFER' || order.paymentMethod === 'TRANSFERENCIA') && (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleVerifyTransferPayment(order)}
-                                      className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-black inline-flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
-                                    >
-                                      <CheckCircle2 className="w-3.5 h-3.5" />
-                                      <span>Confirmar Transferencia</span>
-                                    </button>
-                                  )}
-                              </div>
+                                  ? 'text-green-800 bg-green-100/80 border border-green-200'
+                                  : 'text-amber-950 bg-amber-50 border border-amber-300'
+                              }`}>
+                                ${resolveOrderTotal(order).toFixed(2)}
+                              </span>
+                              <span className="text-[10px] font-bold text-slate-400 block font-mono mt-0.5">
+                                Ítems: {order.items.reduce((a, b) => a + b.quantity, 0)} {order.items.some(i => i.unit === 'Onza') ? 'Oz' : 'Un.'}
+                              </span>
                             </div>
                           </div>
 
-                          <div className="text-right shrink-0">
-                            <span className={`text-[9.5px] font-black uppercase tracking-wider block ${
-                              paymentInfo.isPaid ? 'text-emerald-700' : 'text-amber-700'
-                            }`}>
-                              {paymentInfo.isPaid ? 'Ya Pagó' : 'Total a Cancelar'}
-                            </span>
-                            <span className={`text-base font-black px-2.5 py-0.5 rounded-lg inline-block font-mono shadow-2xs mt-0.5 ${
+                          <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              <div className="flex items-center gap-1.5 text-xs text-slate-800">
+                                <User className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                                <span className="text-slate-500 font-semibold">Cliente:</span>
+                                <strong className="font-black text-slate-900">{order.cliente?.nombre || 'Consumidor Final'}</strong>
+                              </div>
+                              {customerPhone && (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-slate-800 bg-white px-2 py-0.5 rounded-md border border-slate-200 shadow-2xs">
+                                  <Phone className="w-3 h-3 text-indigo-600 shrink-0" />
+                                  <span>Tel: {customerPhone}</span>
+                                </span>
+                              )}
+                            </div>
+                            {order.deliveryNotes && (
+                              <p className="text-[10.5px] text-emerald-800 font-semibold bg-emerald-50/70 px-2 py-1 rounded-lg border border-emerald-100 leading-snug">
+                                {order.deliveryNotes}
+                              </p>
+                            )}
+                          </div>
+
+                          <div
+                            className={`px-2.5 py-2 rounded-xl border text-[10.5px] font-bold flex flex-wrap items-center justify-between gap-2 ${
                               paymentInfo.isPaid
-                                ? 'text-emerald-800 bg-emerald-50 border border-emerald-300'
-                                : 'text-amber-950 bg-amber-50 border border-amber-300'
-                            }`}>
-                              ${resolveOrderTotal(order).toFixed(2)}
-                            </span>
-                            <span className="text-[10px] font-bold text-slate-400 block font-mono mt-0.5">
-                              Ítems: {order.items.reduce((a, b) => a + b.quantity, 0)} {order.items.some(i => i.unit === 'Onza') ? 'Oz' : 'Un.'}
-                            </span>
+                                ? 'bg-green-50/90 text-green-900 border-green-200'
+                                : paymentInfo.tone === 'orange'
+                                ? 'bg-orange-50/90 text-orange-950 border-orange-200'
+                                : 'bg-amber-50/90 text-amber-950 border-amber-200'
+                            }`}
+                          >
+                            <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                                paymentInfo.isPaid
+                                  ? 'bg-green-100 text-green-800 border border-green-200'
+                                  : paymentInfo.tone === 'orange'
+                                  ? 'bg-orange-100 text-orange-900 border border-orange-300'
+                                  : 'bg-amber-100 text-amber-900 border border-amber-300'
+                              }`}>
+                                {paymentInfo.badgeText}
+                              </span>
+                              <span className="text-slate-700 font-semibold">{paymentInfo.detailText}</span>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                              <span className="font-mono font-black px-2 py-0.5 rounded bg-white border border-slate-200/80 text-slate-900 shadow-2xs">
+                                {paymentInfo.isPaid
+                                  ? `Pagado: $${resolveOrderTotal(order).toFixed(2)}`
+                                  : `Por cobrar: $${resolveOrderTotal(order).toFixed(2)}`}
+                              </span>
+                              {!paymentInfo.isPaid &&
+                                (order.paymentMethod === 'TRANSFER' || order.paymentMethod === 'TRANSFERENCIA') && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleVerifyTransferPayment(order)}
+                                    className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-black inline-flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+                                  >
+                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                    <span>Confirmar Transferencia</span>
+                                  </button>
+                                )}
+                            </div>
                           </div>
                         </div>
 
@@ -1992,7 +2050,7 @@ export default function BodegaPage() {
                                   <div className="flex justify-between items-start gap-2">
                                     <div className="min-w-0 flex-1">
                                       <span className="font-black text-purple-900 block">
-                                        ✨ Arma tu propio perfume: {kitInfo.fragranceName}
+                                        Arma tu propio perfume: {kitInfo.fragranceName}
                                       </span>
                                       {(kitInfo.originalName || origInfo?.originalName) && (
                                         <span className="text-[10px] text-slate-600 font-medium block mt-0.5">
@@ -2007,7 +2065,7 @@ export default function BodegaPage() {
                                   </div>
                                   <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold">
                                     <span className="px-2 py-0.5 rounded bg-white border border-purple-200 text-purple-800">
-                                      {kitInfo.isPlus ? '🔥 1.5 Oz PLUS (1 Oz + ½ Oz)' : '💧 1 Oz Estándar'}
+                                      {kitInfo.isPlus ? '1.5 Oz PLUS (1 Oz + ½ Oz)' : '1 Oz Estándar'}
                                     </span>
                                     <button
                                       type="button"
@@ -2029,10 +2087,10 @@ export default function BodegaPage() {
                                           className="w-5 h-5 object-contain rounded"
                                         />
                                       )}
-                                      <span>🍾 {kitInfo.bottleName} (📍 {kitInfo.bottlePuesto})</span>
+                                      <span>{kitInfo.bottleName} (Estante: {kitInfo.bottlePuesto})</span>
                                     </button>
                                     <span className="px-2 py-0.5 rounded bg-white border border-purple-200 text-emerald-800">
-                                      {kitInfo.hasLabel ? '🏷️ Con Etiqueta' : '🚫 Sin Etiqueta'}
+                                      {kitInfo.hasLabel ? 'Con Etiqueta' : 'Sin Etiqueta'}
                                     </span>
                                   </div>
                                 </div>
@@ -2084,23 +2142,29 @@ export default function BodegaPage() {
                         <div
                           className={`mb-3 px-3 py-2 rounded-xl border flex items-center justify-between gap-2 text-xs ${
                             paymentInfo.isPaid
-                              ? 'bg-emerald-50/80 border-emerald-200'
+                              ? 'bg-green-50/80 border-green-200'
                               : 'bg-amber-50/80 border-amber-200'
                           }`}
                         >
                           <div className="truncate min-w-0">
                             <span className="text-slate-500 font-semibold">Cliente: </span>
                             <strong className="font-black text-slate-900">{order.cliente?.nombre || 'Consumidor Final'}</strong>
+                            {customerPhone && (
+                              <>
+                                <span className="mx-1.5 text-slate-300">•</span>
+                                <span className="font-mono font-bold text-slate-700">Tel: {customerPhone}</span>
+                              </>
+                            )}
                             <span className="mx-1.5 text-slate-300">•</span>
-                            <span className={`font-black text-[10.5px] ${paymentInfo.isPaid ? 'text-emerald-800' : 'text-amber-900'}`}>
+                            <span className={`font-black text-[10.5px] ${paymentInfo.isPaid ? 'text-green-800' : 'text-amber-900'}`}>
                               {paymentInfo.badgeText}
                             </span>
                           </div>
                           <div className="text-right shrink-0 font-mono">
-                            <span className={`text-[10.5px] font-bold uppercase mr-1.5 ${paymentInfo.isPaid ? 'text-emerald-800' : 'text-amber-900'}`}>
+                            <span className={`text-[10.5px] font-bold uppercase mr-1.5 ${paymentInfo.isPaid ? 'text-green-800' : 'text-amber-900'}`}>
                               {paymentInfo.isPaid ? 'Total pagado:' : 'Total a cancelar:'}
                             </span>
-                            <strong className={`text-sm font-black ${paymentInfo.isPaid ? 'text-emerald-900' : 'text-amber-950'}`}>
+                            <strong className={`text-sm font-black ${paymentInfo.isPaid ? 'text-green-900' : 'text-amber-950'}`}>
                               ${resolveOrderTotal(order).toFixed(2)}
                             </strong>
                           </div>
@@ -2207,6 +2271,11 @@ export default function BodegaPage() {
                       ) : (
                         filteredOrders.map(order => {
                           const paymentInfo = getOrderPaymentDisplayInfo(order);
+                          const customerPhone =
+                            order.cliente?.telefono ||
+                            (order as any).customerPhone ||
+                            order.domicilio?.customerPhone ||
+                            '';
                           return (
                           <tr key={order.id} className="hover:bg-slate-50/60 transition-colors">
                             <td className="py-2.5 px-4 font-mono text-slate-500 font-bold">
@@ -2216,7 +2285,12 @@ export default function BodegaPage() {
                               #{order.saleNumber}
                             </td>
                             <td className="py-2.5 px-4 font-bold text-slate-800">
-                              {order.cliente?.nombre || 'Consumidor Final'}
+                              <div>{order.cliente?.nombre || 'Consumidor Final'}</div>
+                              {customerPhone && (
+                                <div className="text-[11px] font-mono font-semibold text-slate-500">
+                                  Tel: {customerPhone}
+                                </div>
+                              )}
                             </td>
                             <td className="py-2.5 px-4 text-slate-600">
                               {order.vendedor || 'Caja 1'}
@@ -2233,8 +2307,8 @@ export default function BodegaPage() {
                               </span>
                             </td>
                             <td className="py-2.5 px-4 text-center">
-                              <span className="clay-badge text-[10px] font-black px-2.5 py-0.5 bg-emerald-100 text-emerald-800">
-                                📦 Entregado
+                              <span className="clay-badge text-[10px] font-black px-2.5 py-0.5 bg-green-100 text-green-800 border border-green-200">
+                                Entregado
                               </span>
                             </td>
                           </tr>
