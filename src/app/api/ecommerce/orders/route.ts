@@ -165,37 +165,40 @@ export async function GET(request: Request) {
     });
 
     // Sincronizar en tiempo real con C807 cualquier pedido Ecommerce con guía activa
-    try {
-      const activeWithGuide = orders
-        .filter(
-          (o) =>
-            Boolean(o.trackingNumber && o.trackingNumber.trim()) &&
-            o.orderStatus !== 'ENTREGADO' &&
-            o.orderStatus !== 'CANCELADO'
-        )
-        .slice(0, 15);
+    const skipC807Sync = searchParams.get('skipC807Sync') === '1' || searchParams.get('skipC807Sync') === 'true';
+    if (!skipC807Sync) {
+      try {
+        const activeWithGuide = orders
+          .filter(
+            (o) =>
+              Boolean(o.trackingNumber && o.trackingNumber.trim()) &&
+              o.orderStatus !== 'ENTREGADO' &&
+              o.orderStatus !== 'CANCELADO'
+          )
+          .slice(0, 15);
 
-      if (activeWithGuide.length > 0) {
-        await Promise.all(
-          activeWithGuide.map(async (o) => {
-            const trackNum = String(o.trackingNumber || '').trim();
-            if (!trackNum) return;
-            const c807Live = await c807Client.consultarEstadoGuia(trackNum);
-            if (!c807Live.found) return;
+        if (activeWithGuide.length > 0) {
+          await Promise.all(
+            activeWithGuide.map(async (o) => {
+              const trackNum = String(o.trackingNumber || '').trim();
+              if (!trackNum) return;
+              const c807Live = await c807Client.consultarEstadoGuia(trackNum);
+              if (!c807Live.found) return;
 
-            const nextOrderStatus = c807Live.esEntregado ? 'ENTREGADO' : 'EN_RUTA';
-            if (o.orderStatus !== nextOrderStatus) {
-              o.orderStatus = nextOrderStatus as any;
-              await prisma.ecommerceOrder.update({
-                where: { id: o.id },
-                data: { orderStatus: nextOrderStatus as any },
-              });
-            }
-          })
-        );
+              const nextOrderStatus = c807Live.esEntregado ? 'ENTREGADO' : 'EN_RUTA';
+              if (o.orderStatus !== nextOrderStatus) {
+                o.orderStatus = nextOrderStatus as any;
+                await prisma.ecommerceOrder.update({
+                  where: { id: o.id },
+                  data: { orderStatus: nextOrderStatus as any },
+                });
+              }
+            })
+          );
+        }
+      } catch (syncErr) {
+        console.warn('Error sincronizando estados C807 en GET /api/ecommerce/orders:', syncErr);
       }
-    } catch (syncErr) {
-      console.warn('Error sincronizando estados C807 en GET /api/ecommerce/orders:', syncErr);
     }
 
     const formatted = orders.map((o) => ({

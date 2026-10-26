@@ -147,6 +147,8 @@ export default function BodegaPage() {
   const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date());
   const knownOrderIdsRef = useRef<Set<string>>(new Set());
   const isFirstLoadRef = useRef(true);
+  const isFetchingOrdersRef = useRef(false);
+  const pendingRefetchRef = useRef(false);
 
   // 1. Ventas / Comandas
   const [sales, setSales] = useState<SaleRecord[]>(() => {
@@ -263,26 +265,61 @@ export default function BodegaPage() {
       .catch(err => console.error('Error sincronizando compras con Supabase en Bodega:', err));
   }, []);
 
-  // Función de consulta y sincronización de pedidos web (Ecommerce)
-  const fetchEcommerceOrders = useCallback(async () => {
+  // Función de consulta y sincronización de pedidos web (Ecommerce) y comandas POS
+  const fetchEcommerceOrders = useCallback(async (options?: { silent?: boolean }) => {
+    if (isFetchingOrdersRef.current) {
+      pendingRefetchRef.current = true;
+      return;
+    }
+    isFetchingOrdersRef.current = true;
+    const isSilent = Boolean(options?.silent && !isFirstLoadRef.current);
+
     try {
-      setIsSyncing(true);
+      if (!isSilent) {
+        setIsSyncing(true);
+      }
       let staffToken = await getStaffToken();
-      let res = await fetch('/api/ecommerce/orders', {
-        headers: {
-          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
-        },
-      });
-      if (res.status === 401 && typeof window !== 'undefined') {
-        sessionStorage.removeItem('kodelocal_staff_token');
-        staffToken = await getStaffToken();
-        res = await fetch('/api/ecommerce/orders', {
+      const skipParam = isSilent ? 'skipC807Sync=1' : '';
+      const ecoUrl = skipParam ? `/api/ecommerce/orders?${skipParam}` : '/api/ecommerce/orders';
+      const salesUrl = skipParam ? `/api/sales?limit=100&${skipParam}` : '/api/sales?limit=100';
+
+      // Peticiones en paralelo para reducir la latencia a la mitad
+      const [ecoOutcome, salesOutcome] = await Promise.allSettled([
+        fetch(ecoUrl, {
           headers: {
             ...(staffToken ? { 'x-staff-token': staffToken } : {}),
           },
-        });
+        }),
+        fetch(salesUrl, {
+          headers: {
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
+        }),
+      ]);
+
+      let res = ecoOutcome.status === 'fulfilled' ? ecoOutcome.value : null;
+      let salesRes = salesOutcome.status === 'fulfilled' ? salesOutcome.value : null;
+
+      if (res && res.status === 401 && typeof window !== 'undefined') {
+        sessionStorage.removeItem('kodelocal_staff_token');
+        staffToken = await getStaffToken();
+        const [retryEco, retrySales] = await Promise.allSettled([
+          fetch(ecoUrl, {
+            headers: {
+              ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+            },
+          }),
+          fetch(salesUrl, {
+            headers: {
+              ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+            },
+          }),
+        ]);
+        res = retryEco.status === 'fulfilled' ? retryEco.value : null;
+        salesRes = retrySales.status === 'fulfilled' ? retrySales.value : null;
       }
-      const data = await res.json();
+
+      const data = res ? await res.json() : { success: false };
       if (data.success && Array.isArray(data.orders)) {
         // Solo enviar a preparación en bodega pedidos con pago confirmado (autorización de Wompi)
         // o transferencias válidas. Descartar órdenes canceladas e intentos de tarjeta no pagados.
@@ -379,16 +416,11 @@ export default function BodegaPage() {
         knownOrderIdsRef.current = new Set(webSales.map(s => s.id));
         setLastSyncTime(new Date());
 
-        // Cargar también ventas y comandas de mostrador registradas en Supabase
+        // Procesar también ventas y comandas de mostrador descargadas en paralelo
         let posSales: SaleRecord[] = [];
         let posLoaded = false;
         try {
-          const salesRes = await fetch('/api/sales?limit=100', {
-            headers: {
-              ...(staffToken ? { 'x-staff-token': staffToken } : {}),
-            },
-          });
-          const salesData = await salesRes.json();
+          const salesData = salesRes ? await salesRes.json() : { success: false };
           if (salesData.success && Array.isArray(salesData.sales)) {
             posLoaded = true;
             posSales = salesData.sales
@@ -517,14 +549,21 @@ export default function BodegaPage() {
     } catch (err) {
       console.error('Error sincronizando pedidos ecommerce en Bodega:', err);
     } finally {
-      setIsSyncing(false);
+      isFetchingOrdersRef.current = false;
+      if (!isSilent) {
+        setIsSyncing(false);
+      }
+      if (pendingRefetchRef.current) {
+        pendingRefetchRef.current = false;
+        fetchEcommerceOrders({ silent: true });
+      }
     }
   }, [soundEnabled, showToast]);
 
-  // SUSCRIPCIÓN EN TIEMPO REAL (Supabase WebSocket + Heartbeat cada 8 segundos)
+  // SUSCRIPCIÓN EN TIEMPO REAL (Supabase WebSocket + Heartbeat inteligente en segundo plano)
   useEffect(() => {
     // 1. Carga inicial
-    fetchEcommerceOrders();
+    fetchEcommerceOrders({ silent: false });
 
     // 2. Canal Supabase Realtime vía WebSocket instantáneo (pedidos web EcommerceOrder)
     const channelWeb = supabase
@@ -534,7 +573,7 @@ export default function BodegaPage() {
         { event: '*', schema: 'public', table: 'EcommerceOrder' },
         (payload) => {
           console.log('⚡ [Bodega Realtime] Evento de pedido web recibido:', payload.eventType);
-          fetchEcommerceOrders();
+          fetchEcommerceOrders({ silent: true });
         }
       )
       .subscribe((status) => {
@@ -551,7 +590,7 @@ export default function BodegaPage() {
         { event: '*', schema: 'public', table: 'Sale' },
         (payload) => {
           console.log('⚡ [Bodega Realtime] Evento de comanda/despacho mostrador recibido:', payload.eventType);
-          fetchEcommerceOrders();
+          fetchEcommerceOrders({ silent: true });
         }
       )
       .subscribe((status) => {
@@ -560,15 +599,17 @@ export default function BodegaPage() {
         }
       });
 
-    // 3. Heartbeat de respaldo cada 8 segundos (por si la red pierde paquetes o reconecta)
+    // 3. Heartbeat silencioso de respaldo cada 20 segundos (solo cuando la pestaña está visible)
     const intervalId = setInterval(() => {
-      fetchEcommerceOrders();
-    }, 8000);
+      if (typeof document === 'undefined' || document.visibilityState === 'visible') {
+        fetchEcommerceOrders({ silent: true });
+      }
+    }, 20000);
 
-    // 4. Reconexión y refresco al volver al navegador / pestaña activa
+    // 4. Reconexión y refresco silencioso al volver al navegador / pestaña activa
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
-        fetchEcommerceOrders();
+        fetchEcommerceOrders({ silent: true });
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);

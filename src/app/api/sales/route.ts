@@ -125,77 +125,80 @@ export async function GET(request: Request) {
     ]);
 
     // Sincronizar en tiempo real con C807 cualquier pedido POS Domicilio activo con guía en tránsito
-    try {
-      const inTransitSales = sales
-        .filter((s) => {
-          let domTrack = s.shipments?.[0]?.trackingNumber || '';
-          let domStat = s.shipments?.[0]?.status === 'DELIVERED' ? 'ENTREGADO' : '';
-          if (s.notes && s.notes.trim().startsWith('{')) {
-            try {
-              const lastBrace = s.notes.lastIndexOf('}');
-              const parsed = JSON.parse(lastBrace !== -1 ? s.notes.slice(0, lastBrace + 1) : s.notes);
-              if (parsed?.domicilio?.trackingNumber) domTrack = parsed.domicilio.trackingNumber;
-              if (parsed?.domicilio?.domicilioStatus) domStat = parsed.domicilio.domicilioStatus;
-            } catch (_) {}
-          }
-          return Boolean(domTrack) && domStat !== 'ENTREGADO' && domStat !== 'CANCELADO';
-        })
-        .slice(0, 15);
-
-      if (inTransitSales.length > 0) {
-        await Promise.all(
-          inTransitSales.map(async (s) => {
-            let parsed: any = null;
+    const skipC807Sync = searchParams.get('skipC807Sync') === '1' || searchParams.get('skipC807Sync') === 'true';
+    if (!skipC807Sync) {
+      try {
+        const inTransitSales = sales
+          .filter((s) => {
+            let domTrack = s.shipments?.[0]?.trackingNumber || '';
+            let domStat = s.shipments?.[0]?.status === 'DELIVERED' ? 'ENTREGADO' : '';
             if (s.notes && s.notes.trim().startsWith('{')) {
               try {
                 const lastBrace = s.notes.lastIndexOf('}');
-                parsed = JSON.parse(lastBrace !== -1 ? s.notes.slice(0, lastBrace + 1) : s.notes);
+                const parsed = JSON.parse(lastBrace !== -1 ? s.notes.slice(0, lastBrace + 1) : s.notes);
+                if (parsed?.domicilio?.trackingNumber) domTrack = parsed.domicilio.trackingNumber;
+                if (parsed?.domicilio?.domicilioStatus) domStat = parsed.domicilio.domicilioStatus;
               } catch (_) {}
             }
-            const trackNum = String(parsed?.domicilio?.trackingNumber || s.shipments?.[0]?.trackingNumber || '').trim();
-            if (!trackNum) return;
+            return Boolean(domTrack) && domStat !== 'ENTREGADO' && domStat !== 'CANCELADO';
+          })
+          .slice(0, 15);
 
-            const c807Live = await c807Client.consultarEstadoGuia(trackNum);
-            if (!c807Live.found) return;
-
-            const nextDomStatus = c807Live.esEntregado ? 'ENTREGADO' : 'EN_RUTA';
-            const prevDomStatus = parsed?.domicilio?.domicilioStatus || 'EN_RUTA';
-            const prevWebhookStatus = parsed?.domicilio?.lastWebhookStatus || '';
-
-            if (nextDomStatus !== prevDomStatus || c807Live.estatus !== prevWebhookStatus) {
-              if (parsed) {
-                parsed.domicilio = {
-                  ...(parsed.domicilio || {}),
-                  trackingNumber: trackNum,
-                  domicilioStatus: nextDomStatus,
-                  lastWebhookStatus: c807Live.estatus,
-                };
-                const newNotes = JSON.stringify(parsed);
-                s.notes = newNotes;
-                await prisma.sale.update({
-                  where: { id: s.id },
-                  data: { notes: newNotes },
-                });
+        if (inTransitSales.length > 0) {
+          await Promise.all(
+            inTransitSales.map(async (s) => {
+              let parsed: any = null;
+              if (s.notes && s.notes.trim().startsWith('{')) {
+                try {
+                  const lastBrace = s.notes.lastIndexOf('}');
+                  parsed = JSON.parse(lastBrace !== -1 ? s.notes.slice(0, lastBrace + 1) : s.notes);
+                } catch (_) {}
               }
-              if (s.shipments?.[0]) {
-                const nextShipStatus = c807Live.esEntregado ? 'DELIVERED' : 'IN_TRANSIT';
-                if (s.shipments[0].status !== nextShipStatus) {
-                  s.shipments[0].status = nextShipStatus as any;
-                  await prisma.shipment.update({
-                    where: { id: s.shipments[0].id },
-                    data: {
-                      status: nextShipStatus,
-                      ...(c807Live.esEntregado ? { deliveredAt: new Date() } : {}),
-                    },
+              const trackNum = String(parsed?.domicilio?.trackingNumber || s.shipments?.[0]?.trackingNumber || '').trim();
+              if (!trackNum) return;
+
+              const c807Live = await c807Client.consultarEstadoGuia(trackNum);
+              if (!c807Live.found) return;
+
+              const nextDomStatus = c807Live.esEntregado ? 'ENTREGADO' : 'EN_RUTA';
+              const prevDomStatus = parsed?.domicilio?.domicilioStatus || 'EN_RUTA';
+              const prevWebhookStatus = parsed?.domicilio?.lastWebhookStatus || '';
+
+              if (nextDomStatus !== prevDomStatus || c807Live.estatus !== prevWebhookStatus) {
+                if (parsed) {
+                  parsed.domicilio = {
+                    ...(parsed.domicilio || {}),
+                    trackingNumber: trackNum,
+                    domicilioStatus: nextDomStatus,
+                    lastWebhookStatus: c807Live.estatus,
+                  };
+                  const newNotes = JSON.stringify(parsed);
+                  s.notes = newNotes;
+                  await prisma.sale.update({
+                    where: { id: s.id },
+                    data: { notes: newNotes },
                   });
                 }
+                if (s.shipments?.[0]) {
+                  const nextShipStatus = c807Live.esEntregado ? 'DELIVERED' : 'IN_TRANSIT';
+                  if (s.shipments[0].status !== nextShipStatus) {
+                    s.shipments[0].status = nextShipStatus as any;
+                    await prisma.shipment.update({
+                      where: { id: s.shipments[0].id },
+                      data: {
+                        status: nextShipStatus,
+                        ...(c807Live.esEntregado ? { deliveredAt: new Date() } : {}),
+                      },
+                    });
+                  }
+                }
               }
-            }
-          })
-        );
+            })
+          );
+        }
+      } catch (syncErr) {
+        console.warn('Error sincronizando estados C807 en GET /api/sales:', syncErr);
       }
-    } catch (syncErr) {
-      console.warn('Error sincronizando estados C807 en GET /api/sales:', syncErr);
     }
 
     return NextResponse.json({
