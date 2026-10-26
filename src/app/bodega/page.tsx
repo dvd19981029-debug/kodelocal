@@ -36,6 +36,8 @@ import {
   Radio,
   ShoppingBag,
   ZoomIn,
+  ChevronDown,
+  ChevronUp,
   X
 } from 'lucide-react';
 import EcommerceOrdersPanel from './EcommerceOrdersPanel';
@@ -179,7 +181,12 @@ export default function BodegaPage() {
   // Estados de control de comandas
   const [searchQuery, setSearchQuery] = useState('');
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+  const [expandedOrderIds, setExpandedOrderIds] = useState<Record<string, boolean>>({});
   const [zoomedBottle, setZoomedBottle] = useState<{ imageUrl: string; name: string; puesto?: string } | null>(null);
+
+  const toggleOrderExpanded = useCallback((orderId: string) => {
+    setExpandedOrderIds(prev => ({ ...prev, [orderId]: !prev[orderId] }));
+  }, []);
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
@@ -1453,7 +1460,7 @@ export default function BodegaPage() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
                   {filteredOrders.map((order) => {
                     const allItemsChecked = order.items.every((_, idx) => checkedItems[`${order.id}-${idx}`]);
                     const paymentInfo = getOrderPaymentDisplayInfo(order);
@@ -1465,6 +1472,107 @@ export default function BodegaPage() {
                       (order as any).customerPhone ||
                       order.domicilio?.customerPhone ||
                       '';
+                    const isExpanded = !!expandedOrderIds[order.id];
+
+                    if (!isExpanded) {
+                      return (
+                        <div
+                          key={order.id}
+                          onClick={() => toggleOrderExpanded(order.id)}
+                          className="clay-card px-3.5 py-2.5 border-l-4 border-rose-500 hover:shadow-md transition-all cursor-pointer space-y-1.5"
+                        >
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                              <span className="font-mono font-black text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg">
+                                #{order.saleNumber}
+                              </span>
+                              {isOnlineOrder && (
+                                <span className={`clay-badge text-[10px] font-black py-0.5 px-2 ${
+                                  paymentInfo.isPaid
+                                    ? 'bg-green-100 text-green-800 border border-green-200'
+                                    : 'bg-purple-100 text-purple-900 border border-purple-200'
+                                }`}>
+                                  Tienda Online
+                                </span>
+                              )}
+                              <span className={`clay-badge text-[10px] font-black py-0.5 px-2 ${
+                                (order.tipoComprobante || (order.cliente?.nrc ? '03' : '01')) === '03'
+                                  ? 'bg-purple-100 text-purple-900 border border-purple-200'
+                                  : order.tipoComprobante === 'TICKET'
+                                  ? 'bg-slate-100 text-slate-700 border border-slate-200'
+                                  : 'bg-blue-100 text-blue-900 border border-blue-200'
+                              }`}>
+                                {(order.tipoComprobante || (order.cliente?.nrc ? '03' : '01')) === '03' ? 'CCF' : order.tipoComprobante === 'TICKET' ? 'Ticket' : 'Factura (FC)'}
+                              </span>
+                              <span className="text-[10.5px] text-slate-400 font-semibold">
+                                {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+                              <span className={`text-xs font-black px-2 py-0.5 rounded-lg font-mono shadow-2xs ${
+                                paymentInfo.isPaid
+                                  ? 'text-green-800 bg-green-100/80 border border-green-200'
+                                  : 'text-amber-950 bg-amber-50 border border-amber-300'
+                              }`}>
+                                ${resolveOrderTotal(order).toFixed(2)}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  printDispatchTicketPdf(order, products);
+                                }}
+                                title="Imprimir Orden de Despacho en ticketera térmica 80mm"
+                                className="clay-btn clay-btn-light px-2.5 py-1 text-[11px] font-bold flex items-center gap-1 text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50 border border-indigo-200 cursor-pointer"
+                              >
+                                <Printer className="w-3.5 h-3.5" />
+                                <span>Imprimir Tk</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleOrderExpanded(order.id);
+                                }}
+                                title="Maximizar comanda"
+                                className="p-1 rounded-lg bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 border border-slate-200 transition-colors cursor-pointer"
+                              >
+                                <ChevronDown className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between gap-2 flex-wrap text-xs pt-1 border-t border-slate-100">
+                            <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                              <User className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                              <strong className="font-black text-slate-900 truncate max-w-[180px] sm:max-w-[230px]">
+                                {order.cliente?.nombre || 'Consumidor Final'}
+                              </strong>
+                              {customerPhone && (
+                                <span className="inline-flex items-center gap-1 text-[10.5px] font-mono font-bold text-slate-700 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">
+                                  <Phone className="w-2.5 h-2.5 text-indigo-600 shrink-0" />
+                                  <span>{customerPhone}</span>
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-black ${
+                                paymentInfo.isPaid
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-amber-100 text-amber-900'
+                              }`}>
+                                {paymentInfo.isPaid ? 'Ya Pagó' : 'Por Cobrar'}
+                              </span>
+                              <span className="text-[10.5px] font-bold text-slate-500 font-mono">
+                                Vol: {order.items.reduce((a, b) => a + b.quantity, 0)} {order.items.some(i => i.unit === 'Onza') ? 'Oz' : 'Un.'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
 
                     return (
                       <div 
@@ -1506,22 +1614,32 @@ export default function BodegaPage() {
                                 </span>
                               </div>
 
-                              <div className="text-right shrink-0">
-                                <span className={`text-[9.5px] font-black uppercase tracking-wider block ${
-                                  paymentInfo.isPaid ? 'text-green-700' : 'text-amber-700'
-                                }`}>
-                                  {paymentInfo.isPaid ? 'Ya Pagó' : 'Total a Cancelar'}
-                                </span>
-                                <span className={`text-base font-black px-2.5 py-0.5 rounded-lg inline-block font-mono shadow-2xs mt-0.5 ${
-                                  paymentInfo.isPaid
-                                    ? 'text-green-800 bg-green-100/80 border border-green-200'
-                                    : 'text-amber-950 bg-amber-50 border border-amber-300'
-                                }`}>
-                                  ${resolveOrderTotal(order).toFixed(2)}
-                                </span>
-                                <span className="text-[10px] font-bold text-slate-400 block font-mono mt-0.5">
-                                  Vol: {order.items.reduce((a, b) => a + b.quantity, 0)} {order.items.some(i => i.unit === 'Onza') ? 'Oz' : 'Un.'}
-                                </span>
+                              <div className="flex items-start gap-2 shrink-0">
+                                <div className="text-right">
+                                  <span className={`text-[9.5px] font-black uppercase tracking-wider block ${
+                                    paymentInfo.isPaid ? 'text-green-700' : 'text-amber-700'
+                                  }`}>
+                                    {paymentInfo.isPaid ? 'Ya Pagó' : 'Total a Cancelar'}
+                                  </span>
+                                  <span className={`text-base font-black px-2.5 py-0.5 rounded-lg inline-block font-mono shadow-2xs mt-0.5 ${
+                                    paymentInfo.isPaid
+                                      ? 'text-green-800 bg-green-100/80 border border-green-200'
+                                      : 'text-amber-950 bg-amber-50 border border-amber-300'
+                                  }`}>
+                                    ${resolveOrderTotal(order).toFixed(2)}
+                                  </span>
+                                  <span className="text-[10px] font-bold text-slate-400 block font-mono mt-0.5">
+                                    Vol: {order.items.reduce((a, b) => a + b.quantity, 0)} {order.items.some(i => i.unit === 'Onza') ? 'Oz' : 'Un.'}
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleOrderExpanded(order.id)}
+                                  title="Minimizar comanda"
+                                  className="p-1.5 rounded-lg bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 border border-slate-200 transition-colors cursor-pointer"
+                                >
+                                  <ChevronUp className="w-4 h-4" />
+                                </button>
                               </div>
                             </div>
 
@@ -1917,7 +2035,7 @@ export default function BodegaPage() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
                   {filteredOrders.map((order) => {
                     const paymentInfo = getOrderPaymentDisplayInfo(order);
                     const isOnlineOrder =
@@ -1928,6 +2046,108 @@ export default function BodegaPage() {
                       (order as any).customerPhone ||
                       order.domicilio?.customerPhone ||
                       '';
+                    const isExpanded = !!expandedOrderIds[order.id];
+
+                    if (!isExpanded) {
+                      return (
+                        <div
+                          key={order.id}
+                          onClick={() => toggleOrderExpanded(order.id)}
+                          className="clay-card px-3.5 py-2.5 border-l-4 border-emerald-500 hover:shadow-md transition-all cursor-pointer space-y-1.5"
+                        >
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                              <span className="font-mono font-black text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">
+                                #{order.saleNumber}
+                              </span>
+                              {isOnlineOrder && (
+                                <span className={`clay-badge text-[10px] font-black py-0.5 px-2 ${
+                                  paymentInfo.isPaid
+                                    ? 'bg-green-100 text-green-800 border border-green-200'
+                                    : 'bg-purple-100 text-purple-900 border border-purple-200'
+                                }`}>
+                                  Tienda Online
+                                </span>
+                              )}
+                              <span className={`clay-badge text-[10px] font-black py-0.5 px-2 ${
+                                (order.tipoComprobante || (order.cliente?.nrc ? '03' : '01')) === '03'
+                                  ? 'bg-purple-100 text-purple-900 border border-purple-200'
+                                  : order.tipoComprobante === 'TICKET'
+                                  ? 'bg-slate-100 text-slate-700 border border-slate-200'
+                                  : 'bg-blue-100 text-blue-900 border border-blue-200'
+                              }`}>
+                                {(order.tipoComprobante || (order.cliente?.nrc ? '03' : '01')) === '03' ? 'CCF' : order.tipoComprobante === 'TICKET' ? 'Ticket' : 'Factura (FC)'}
+                              </span>
+                              <span className="text-[10.5px] text-slate-400 font-semibold">
+                                {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+                              <span className={`text-xs font-black px-2 py-0.5 rounded-lg font-mono shadow-2xs ${
+                                paymentInfo.isPaid
+                                  ? 'text-green-800 bg-green-100/80 border border-green-200'
+                                  : 'text-amber-950 bg-amber-50 border border-amber-300'
+                              }`}>
+                                ${resolveOrderTotal(order).toFixed(2)}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  printDispatchTicketPdf(order, products);
+                                }}
+                                title="Imprimir Orden de Despacho en ticketera térmica 80mm"
+                                className="clay-btn clay-btn-light px-2.5 py-1 text-[11px] font-bold flex items-center gap-1 text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50 border border-indigo-200 cursor-pointer"
+                              >
+                                <Printer className="w-3.5 h-3.5" />
+                                <span>Imprimir Tk</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleOrderExpanded(order.id);
+                                }}
+                                title="Maximizar comanda"
+                                className="p-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-slate-200 transition-colors cursor-pointer"
+                              >
+                                <ChevronDown className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between gap-2 flex-wrap text-xs pt-1 border-t border-slate-100">
+                            <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                              <User className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                              <strong className="font-black text-slate-900 truncate max-w-[180px] sm:max-w-[230px]">
+                                {order.cliente?.nombre || 'Consumidor Final'}
+                              </strong>
+                              {customerPhone && (
+                                <span className="inline-flex items-center gap-1 text-[10.5px] font-mono font-bold text-slate-700 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">
+                                  <Phone className="w-2.5 h-2.5 text-indigo-600 shrink-0" />
+                                  <span>{customerPhone}</span>
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-black ${
+                                paymentInfo.isPaid
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-amber-100 text-amber-900'
+                              }`}>
+                                {paymentInfo.isPaid ? 'Ya Pagó' : 'Por Cobrar'}
+                              </span>
+                              <span className="text-[10.5px] font-bold text-slate-500 font-mono">
+                                Ítems: {order.items.reduce((a, b) => a + b.quantity, 0)} {order.items.some(i => i.unit === 'Onza') ? 'Oz' : 'Un.'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
                     return (
                     <div 
                       key={order.id} 
@@ -1963,22 +2183,32 @@ export default function BodegaPage() {
                               </span>
                             </div>
 
-                            <div className="text-right shrink-0">
-                              <span className={`text-[9.5px] font-black uppercase tracking-wider block ${
-                                paymentInfo.isPaid ? 'text-green-700' : 'text-amber-700'
-                              }`}>
-                                {paymentInfo.isPaid ? 'Ya Pagó' : 'Total a Cancelar'}
-                              </span>
-                              <span className={`text-base font-black px-2.5 py-0.5 rounded-lg inline-block font-mono shadow-2xs mt-0.5 ${
-                                paymentInfo.isPaid
-                                  ? 'text-green-800 bg-green-100/80 border border-green-200'
-                                  : 'text-amber-950 bg-amber-50 border border-amber-300'
-                              }`}>
-                                ${resolveOrderTotal(order).toFixed(2)}
-                              </span>
-                              <span className="text-[10px] font-bold text-slate-400 block font-mono mt-0.5">
-                                Ítems: {order.items.reduce((a, b) => a + b.quantity, 0)} {order.items.some(i => i.unit === 'Onza') ? 'Oz' : 'Un.'}
-                              </span>
+                            <div className="flex items-start gap-2 shrink-0">
+                              <div className="text-right">
+                                <span className={`text-[9.5px] font-black uppercase tracking-wider block ${
+                                  paymentInfo.isPaid ? 'text-green-700' : 'text-amber-700'
+                                }`}>
+                                  {paymentInfo.isPaid ? 'Ya Pagó' : 'Total a Cancelar'}
+                                </span>
+                                <span className={`text-base font-black px-2.5 py-0.5 rounded-lg inline-block font-mono shadow-2xs mt-0.5 ${
+                                  paymentInfo.isPaid
+                                    ? 'text-green-800 bg-green-100/80 border border-green-200'
+                                    : 'text-amber-950 bg-amber-50 border border-amber-300'
+                                }`}>
+                                  ${resolveOrderTotal(order).toFixed(2)}
+                                </span>
+                                <span className="text-[10px] font-bold text-slate-400 block font-mono mt-0.5">
+                                  Ítems: {order.items.reduce((a, b) => a + b.quantity, 0)} {order.items.some(i => i.unit === 'Onza') ? 'Oz' : 'Un.'}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => toggleOrderExpanded(order.id)}
+                                title="Minimizar comanda"
+                                className="p-1.5 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-slate-200 transition-colors cursor-pointer"
+                              >
+                                <ChevronUp className="w-4 h-4" />
+                              </button>
                             </div>
                           </div>
 
