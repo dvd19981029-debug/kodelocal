@@ -2090,7 +2090,7 @@ export default function ConfiguracionKodeModule() {
                 <thead>
                   <tr className="border-b border-slate-200 text-slate-400 font-bold uppercase text-[10px]">
                     <th className="py-2.5 px-3">Código</th>
-                    <th className="py-2.5 px-3">Fragancia / Contratipo</th>
+                    <th className="py-2.5 px-3">Fragancia / Esencia</th>
                     <th className="py-2.5 px-3">Marca Inspirada</th>
                     <th className="py-2.5 px-3 text-center">Unidades Normal</th>
                     <th className="py-2.5 px-3 text-center">Unidades Plus</th>

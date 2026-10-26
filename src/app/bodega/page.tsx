@@ -2381,7 +2381,7 @@ export default function BodegaPage() {
                     <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
                     <input
                       type="text"
-                      placeholder="Buscar por fragancia, contratipo, SKU (#100) o Puesto (A1)..."
+                      placeholder="Buscar por fragancia, inspiración, SKU (#100) o Puesto (A1)..."
                       value={stockSearch}
                       onChange={(e) => setStockSearch(e.target.value)}
                       className="clay-input has-icon w-full pr-3 py-2 text-xs font-bold"
@@ -2481,7 +2481,7 @@ export default function BodegaPage() {
                                         </span>
                                       ) : prod.brand ? (
                                         <span className="text-[10px] text-slate-400 font-medium">
-                                          Contratipo / Marca: {prod.brand}
+                                          Inspiración / Marca: {prod.brand}
                                         </span>
                                       ) : null}
                                     </div>

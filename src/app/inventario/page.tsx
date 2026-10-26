@@ -539,7 +539,7 @@ export default function InventarioPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-[11px] font-bold text-slate-700 block mb-1">Inspiración (Contratipo) <span className="text-rose-500">*</span></label>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1">Inspiración (Perfil Olfativo) <span className="text-rose-500">*</span></label>
                         <input type="text" required value={formData.name || ''} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="Ej. Sauvage H" className="clay-input w-full text-xs font-bold" />
                       </div>
                       <div>

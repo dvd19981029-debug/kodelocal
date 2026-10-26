@@ -161,7 +161,7 @@ export const PosQuickEditProductModal: React.FC<PosQuickEditProductModalProps> =
 
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Inspirado en (Contratipo) <span className="text-rose-500">*</span>
+                    Inspirado en (Perfil Olfativo) <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"

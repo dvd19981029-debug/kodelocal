@@ -1798,7 +1798,7 @@ export default function AromaniakDashboardModule({
             <div>
               <h3 className="font-extrabold text-sm text-slate-800 flex items-center gap-2">
                 <Droplets className="w-4 h-4 text-indigo-600" />
-                <span>Top Fragancias & Contratipos Más Vendidos</span>
+                <span>Top Fragancias &amp; Esencias Más Vendidas</span>
               </h3>
               <p className="text-[11px] text-slate-400 font-medium">Ranking por facturación y onzas despachadas</p>
             </div>
@@ -1848,7 +1848,7 @@ export default function AromaniakDashboardModule({
           {topFragancias[0] && (
             <div className="p-3 rounded-xl bg-indigo-50/60 border border-indigo-100 text-xs text-indigo-900 mt-2 flex items-center justify-between">
               <span>
-                🏆 <strong>Contratipo Estrella:</strong> &quot;{topFragancias[0].name}&quot; lidera las ventas con{' '}
+                🏆 <strong>Fragancia Estrella:</strong> &quot;{topFragancias[0].name}&quot; lidera las ventas con{' '}
                 <strong>${topFragancias[0].revenue.toFixed(2)}</strong> ({topFragancias[0].ounces} Onzas).
               </span>
             </div>
@@ -1953,7 +1953,7 @@ export default function AromaniakDashboardModule({
 
           {inventario.stockCritico.length === 0 ? (
             <div className="p-6 text-center text-slate-400 text-xs italic bg-slate-50 rounded-xl">
-              ✅ Todos los contratipos e insumos cuentan con stock por encima del nivel mínimo.
+              ✅ Todas las esencias e insumos cuentan con stock por encima del nivel mínimo.
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">

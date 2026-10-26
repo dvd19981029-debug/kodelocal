@@ -12,11 +12,11 @@ export const revalidate = 0; // Datos frescos inmediatos en cada visita
 
 export const metadata: Metadata = {
   title: 'Blog de Perfumería y Fragancias de Lujo en El Salvador',
-  description: 'Guías expertas, contratipos de alta fijación, notas olfativas y consejos para comprar perfumes en El Salvador. Envíos express a todo el país por Aromaniak SV.',
+  description: 'Guías expertas, perfiles olfativos de alta fijación, notas aromáticas y consejos para comprar perfumes en El Salvador. Envíos express a todo el país por Aromaniak SV.',
   keywords: [
     'blog de perfumes el salvador',
     'perfumes el salvador',
-    'mejores contratipos el salvador',
+    'inspiraciones de perfumes el salvador',
     'perfumeria fina san salvador',
     'esencias de alta fijacion',
     'guia de perfumes hombre y mujer el salvador',
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Blog de Perfumería y Fragancias | Aromaniak SV',
-    description: 'Guías expertas de perfumes, contratipos de alta fijación y notas olfativas en El Salvador.',
+    description: 'Guías expertas de perfumes, perfiles olfativos de alta fijación y notas aromáticas en El Salvador.',
     url: 'https://aromaniaksv.com/blog',
     siteName: 'Aromaniak SV',
     locale: 'es_SV',
@@ -82,7 +82,7 @@ export default async function BlogIndexPage() {
     '@type': 'Blog',
     name: 'Blog de Perfumería Fina Aromaniak El Salvador',
     url: 'https://aromaniaksv.com/blog',
-    description: 'Guías olfativas, contratipos premium y consejos de perfumería en El Salvador.',
+    description: 'Guías olfativas, esencias concentradas y consejos de perfumería en El Salvador.',
     inLanguage: 'es-SV',
     publisher: {
       '@type': 'LocalBusiness',

@@ -2645,7 +2645,7 @@ export default function AdminPage() {
 
                 <div className="sm:col-span-6">
                   <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Inspirado en (Contratipo) <span className="text-rose-500">*</span>
+                    Inspirado en (Perfil Olfativo) <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -2655,7 +2655,7 @@ export default function AdminPage() {
                     placeholder="Ej. Sauvage H"
                     className="clay-input w-full text-xs font-bold"
                   />
-                  <span className="text-[10px] text-slate-400 mt-0.5 block">Nombre del contratipo / esencia</span>
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">Nombre del perfil olfativo / esencia</span>
                 </div>
               </div>
 

@@ -423,7 +423,7 @@ export async function GET(request: Request) {
           .replace(/Arma tu propio perfume:\s*/i, '')
           .replace(/Arma tu propio perfume/i, '')
           .replace(/\s*\([^)]*\)/g, '')
-          .trim() || 'Contratipo Personalizado';
+          .trim() || 'Fragancia Personalizada';
 
       if (!customFragranceMap[cleanFragrance]) customFragranceMap[cleanFragrance] = 0;
       customFragranceMap[cleanFragrance] += it.quantity;

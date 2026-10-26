@@ -1346,7 +1346,7 @@ export function AbastecimientoModule() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
-                placeholder="Buscar por nombre, contratipo, código APAESA o SKU..."
+                placeholder="Buscar por nombre, inspiración, código APAESA o SKU..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="clay-input pl-9 w-full text-xs font-semibold"

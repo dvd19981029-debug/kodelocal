@@ -53,7 +53,7 @@ export const PosSalesModule: React.FC<PosSalesModuleProps> = React.memo(({
               Resumen de Fragancias Vendidas en el Turno
             </h2>
             <p className="text-xs text-indigo-100/90 mt-1 max-w-xl">
-              Monitoreo en tiempo real del consumo de esencias contratipo preparadas y despachadas en mostrador.
+              Monitoreo en tiempo real del consumo de esencias preparadas y despachadas en mostrador.
             </p>
           </div>
 
@@ -133,7 +133,7 @@ export const PosSalesModule: React.FC<PosSalesModuleProps> = React.memo(({
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/70 text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
                 <th className="py-2.5 px-3" style={{ width: '10%' }}>SKU</th>
-                <th className="py-2.5 px-3" style={{ width: '50%' }}>Fragancia / Contratipo</th>
+                <th className="py-2.5 px-3" style={{ width: '50%' }}>Fragancia / Esencia</th>
                 <th className="py-2.5 px-3 text-right" style={{ width: '20%' }}>Onzas Vendidas</th>
                 <th className="py-2.5 px-3 text-right" style={{ width: '20%' }}>Total Recaudado ($)</th>
               </tr>

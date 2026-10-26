@@ -66,7 +66,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
             autoCorrect="off"
             autoCapitalize="none"
             spellCheck={false}
-            placeholder="Buscar por código (100), contratipo, marca..."
+            placeholder="Buscar por código (100), inspiración, marca..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="clay-input has-icon w-full pr-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold"

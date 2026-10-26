@@ -2008,7 +2008,7 @@ export default function ComprasModule({
                 </span>
               </h3>
               <p className="text-[11px] text-slate-500">
-                Busca por nombre, contratipo, SKU o puesto para agregarlo a la factura de compra.
+                Busca por nombre, inspiración, SKU o puesto para agregarlo a la factura de compra.
               </p>
             </div>
 

@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     "distribuidora de esencias perfumeria fina",
     "esencias de perfumeria fina el salvador",
     "venta de esencias el salvador",
-    "contratipos de perfumes el salvador",
+    "inspiraciones de perfumes el salvador",
     "esencias por mayoreo el salvador",
     "perfumes por mayoreo el salvador",
     "aromas quimicos el salvador",
