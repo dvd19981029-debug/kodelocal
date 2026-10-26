@@ -373,76 +373,147 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                             ? `Pagado: $${Number(order.total || 0).toFixed(2)}`
                             : `Por cobrar: $${Number(order.total || 0).toFixed(2)}`}
                         </span>
-                        {!paymentInfo.isPaid &&
-                          String(order.paymentMethod || '').toUpperCase().startsWith('TRANSFER') && (
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                if (
-                                  !confirm(
-                                    `¿Confirmar que el cliente ${resolveCustomerName(order)} ya realizó la transferencia bancaria por $${Number(order.total || 0).toFixed(2)} para el pedido #${order.saleNumber}?`
-                                  )
-                                ) {
-                                  return;
-                                }
-                                try {
-                                  const { getStaffToken } = await import('@/lib/auth');
-                                  const staffToken = await getStaffToken();
-                                  const isOnline =
-                                    order.channel === 'ONLINE' ||
-                                    String(order.saleNumber || '').toUpperCase().startsWith('WEB-');
-                                  if (isOnline) {
-                                    await fetch('/api/ecommerce/orders', {
-                                      method: 'PATCH',
-                                      headers: {
-                                        'Content-Type': 'application/json',
-                                        ...(staffToken ? { 'x-staff-token': staffToken } : {}),
-                                      },
-                                      body: JSON.stringify({
-                                        orderId: order.id,
-                                        orderNumber: order.orderNumber || order.saleNumber,
-                                        paymentStatus: 'COMPLETED',
-                                      }),
-                                    });
-                                  } else {
-                                    await fetch('/api/sales', {
-                                      method: 'PATCH',
-                                      headers: {
-                                        'Content-Type': 'application/json',
-                                        ...(staffToken ? { 'x-staff-token': staffToken } : {}),
-                                      },
-                                      body: JSON.stringify({
-                                        id: order.id,
-                                        saleNumber: order.saleNumber,
-                                        paymentStatus: 'COMPLETED',
-                                      }),
-                                    });
+                        {String(order.paymentMethod || '').toUpperCase().startsWith('TRANSFER') &&
+                          order.status !== 'COMPLETED' && (
+                            !paymentInfo.isPaid ? (
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  if (
+                                    !confirm(
+                                      `¿Confirmar que el cliente ${resolveCustomerName(order)} ya realizó la transferencia bancaria por $${Number(order.total || 0).toFixed(2)} para el pedido #${order.saleNumber}?`
+                                    )
+                                  ) {
+                                    return;
                                   }
-                                  if (typeof window !== 'undefined') {
-                                    const raw = localStorage.getItem('kodelocal_sales');
-                                    if (raw) {
-                                      const saved = JSON.parse(raw);
-                                      if (Array.isArray(saved)) {
-                                        const updated = saved.map((s: any) =>
-                                          s.id === order.id ||
-                                          (order.saleNumber && s.saleNumber === order.saleNumber)
-                                            ? { ...s, paymentStatus: 'COMPLETED' }
-                                            : s
-                                        );
-                                        localStorage.setItem('kodelocal_sales', JSON.stringify(updated));
-                                        window.dispatchEvent(new Event('kodelocal_sales_updated'));
+                                  try {
+                                    const { getStaffToken } = await import('@/lib/auth');
+                                    const staffToken = await getStaffToken();
+                                    const isOnline =
+                                      order.channel === 'ONLINE' ||
+                                      String(order.saleNumber || '').toUpperCase().startsWith('WEB-');
+                                    if (isOnline) {
+                                      await fetch('/api/ecommerce/orders', {
+                                        method: 'PATCH',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+                                        },
+                                        body: JSON.stringify({
+                                          orderId: order.id,
+                                          orderNumber: order.orderNumber || order.saleNumber,
+                                          paymentStatus: 'COMPLETED',
+                                        }),
+                                      });
+                                    } else {
+                                      await fetch('/api/sales', {
+                                        method: 'PATCH',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+                                        },
+                                        body: JSON.stringify({
+                                          id: order.id,
+                                          saleNumber: order.saleNumber,
+                                          paymentStatus: 'COMPLETED',
+                                        }),
+                                      });
+                                    }
+                                    if (typeof window !== 'undefined') {
+                                      const raw = localStorage.getItem('kodelocal_sales');
+                                      if (raw) {
+                                        const saved = JSON.parse(raw);
+                                        if (Array.isArray(saved)) {
+                                          const updated = saved.map((s: any) =>
+                                            s.id === order.id ||
+                                            (order.saleNumber && s.saleNumber === order.saleNumber)
+                                              ? { ...s, paymentStatus: 'COMPLETED' }
+                                              : s
+                                          );
+                                          localStorage.setItem('kodelocal_sales', JSON.stringify(updated));
+                                          window.dispatchEvent(new Event('kodelocal_sales_updated'));
+                                        }
                                       }
                                     }
+                                  } catch (err) {
+                                    console.error('Error confirmando transferencia en POS Bodega:', err);
                                   }
-                                } catch (err) {
-                                  console.error('Error confirmando transferencia en POS Bodega:', err);
-                                }
-                              }}
-                              className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-black inline-flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
-                            >
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              <span>Confirmar Transferencia</span>
-                            </button>
+                                }}
+                                className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-black inline-flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>Confirmar Transferencia</span>
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  if (
+                                    !confirm(
+                                      `¿Marcar el pedido #${order.saleNumber} de ${resolveCustomerName(order)} como pendiente de transferencia?`
+                                    )
+                                  ) {
+                                    return;
+                                  }
+                                  try {
+                                    const { getStaffToken } = await import('@/lib/auth');
+                                    const staffToken = await getStaffToken();
+                                    const isOnline =
+                                      order.channel === 'ONLINE' ||
+                                      String(order.saleNumber || '').toUpperCase().startsWith('WEB-');
+                                    if (isOnline) {
+                                      await fetch('/api/ecommerce/orders', {
+                                        method: 'PATCH',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+                                        },
+                                        body: JSON.stringify({
+                                          orderId: order.id,
+                                          orderNumber: order.orderNumber || order.saleNumber,
+                                          paymentStatus: 'PENDING',
+                                        }),
+                                      });
+                                    } else {
+                                      await fetch('/api/sales', {
+                                        method: 'PATCH',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+                                        },
+                                        body: JSON.stringify({
+                                          id: order.id,
+                                          saleNumber: order.saleNumber,
+                                          paymentStatus: 'PENDING',
+                                        }),
+                                      });
+                                    }
+                                    if (typeof window !== 'undefined') {
+                                      const raw = localStorage.getItem('kodelocal_sales');
+                                      if (raw) {
+                                        const saved = JSON.parse(raw);
+                                        if (Array.isArray(saved)) {
+                                          const updated = saved.map((s: any) =>
+                                            s.id === order.id ||
+                                            (order.saleNumber && s.saleNumber === order.saleNumber)
+                                              ? { ...s, paymentStatus: 'PENDING' }
+                                              : s
+                                          );
+                                          localStorage.setItem('kodelocal_sales', JSON.stringify(updated));
+                                          window.dispatchEvent(new Event('kodelocal_sales_updated'));
+                                        }
+                                      }
+                                    }
+                                  } catch (err) {
+                                    console.error('Error revirtiendo transferencia en POS Bodega:', err);
+                                  }
+                                }}
+                                className="px-2 py-1 rounded-md bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-[10px] font-black inline-flex items-center gap-1 transition-colors cursor-pointer"
+                                title="Marcar como pendiente de transferencia"
+                              >
+                                <span>No transfirió</span>
+                              </button>
+                            )
                           )}
                       </div>
                     </div>

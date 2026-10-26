@@ -127,6 +127,70 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
     return '';
   };
 
+  const handleToggleTransferPayment = async (order: SaleRecord, nextStatus: 'COMPLETED' | 'PENDING') => {
+    const orderLabel = order.orderNumber || order.saleNumber;
+    const msg =
+      nextStatus === 'COMPLETED'
+        ? `¿Confirmar que el cliente ${resolveCustomerName(order)} ya realizó la transferencia bancaria por $${Number(order.total || 0).toFixed(2)} para el pedido #${orderLabel}?`
+        : `¿Marcar el pedido #${orderLabel} de ${resolveCustomerName(order)} como pendiente de transferencia?`;
+    if (!confirm(msg)) return;
+
+    try {
+      const { getStaffToken } = await import('@/lib/auth');
+      const staffToken = await getStaffToken();
+      const isOnline =
+        order.channel === 'ONLINE' ||
+        String(order.saleNumber || order.orderNumber || '').toUpperCase().startsWith('WEB-');
+
+      if (isOnline) {
+        await fetch('/api/ecommerce/orders', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
+          body: JSON.stringify({
+            orderId: order.id,
+            orderNumber: order.orderNumber || order.saleNumber,
+            paymentStatus: nextStatus,
+          }),
+        });
+      } else {
+        await fetch('/api/sales', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
+          body: JSON.stringify({
+            id: order.id,
+            saleNumber: order.saleNumber,
+            paymentStatus: nextStatus,
+          }),
+        });
+      }
+
+      if (typeof window !== 'undefined') {
+        const raw = localStorage.getItem('kodelocal_sales');
+        if (raw) {
+          const saved = JSON.parse(raw);
+          if (Array.isArray(saved)) {
+            const updated = saved.map((s: any) =>
+              s.id === order.id || (order.saleNumber && s.saleNumber === order.saleNumber)
+                ? { ...s, paymentStatus: nextStatus }
+                : s
+            );
+            localStorage.setItem('kodelocal_sales', JSON.stringify(updated));
+            window.dispatchEvent(new Event('kodelocal_sales_updated'));
+          }
+        }
+      }
+      onOrderChanged?.();
+    } catch (err) {
+      console.error('Error actualizando estado de transferencia en Caja:', err);
+    }
+  };
+
   const [onlyCashToday, setOnlyCashToday] = useState(false);
   const [todaySearch, setTodaySearch] = useState('');
   const [todaySortField, setTodaySortField] = useState<'HORA' | 'CLIENTE' | 'ORDEN' | 'ITEMS' | 'FORMA_PAGO' | 'MONTO'>('HORA');
@@ -585,15 +649,39 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                       </div>
 
                       <div className="flex flex-col sm:items-end gap-1.5">
-                        <span
-                          className={`px-2.5 py-1 text-[10.5px] font-black rounded-lg border ${
-                            paymentInfo.isPaid
-                              ? 'bg-green-100 text-green-800 border-green-200'
-                              : 'bg-amber-50 text-amber-800 border-amber-200'
-                          }`}
-                        >
-                          {paymentInfo.badgeText}
-                        </span>
+                        <div className="flex flex-wrap items-center sm:justify-end gap-1.5">
+                          <span
+                            className={`px-2.5 py-1 text-[10.5px] font-black rounded-lg border ${
+                              paymentInfo.isPaid
+                                ? 'bg-green-100 text-green-800 border-green-200'
+                                : 'bg-amber-50 text-amber-800 border-amber-200'
+                            }`}
+                          >
+                            {paymentInfo.badgeText}
+                          </span>
+                          {String(order.paymentMethod || '').toUpperCase().startsWith('TRANSFER') && (
+                            !paymentInfo.isPaid ? (
+                              <button
+                                type="button"
+                                onClick={() => handleToggleTransferPayment(order, 'COMPLETED')}
+                                className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-black inline-flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>Confirmar Transferencia</span>
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleToggleTransferPayment(order, 'PENDING')}
+                                className="px-2 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-[10px] font-black inline-flex items-center gap-1 transition-colors cursor-pointer"
+                                title="Marcar como pendiente de transferencia"
+                              >
+                                <RotateCcw className="w-3 h-3" />
+                                <span>No transfirió</span>
+                              </button>
+                            )
+                          )}
+                        </div>
                         <div className="inline-flex bg-white p-1 rounded-xl border border-slate-200 shadow-2xs gap-1">
                           {(['01', '03'] as const).map((tipo) => {
                             const currentTipo = order.tipoComprobante === '03' || order.cliente?.nrc ? '03' : '01';
