@@ -1508,6 +1508,11 @@ export default function BodegaPage() {
                     const isOnlineOrder =
                       order.channel === 'ONLINE' ||
                       String(order.saleNumber || order.orderNumber || '').toUpperCase().startsWith('WEB-');
+                    const isPickupInStore =
+                      /retiro/i.test(order.deliveryNotes || '') ||
+                      /retiro/i.test(order.notes || '') ||
+                      /retiro/i.test(order.cliente?.direccion || '') ||
+                      (isOnlineOrder && Number(order.shippingCost ?? 1) === 0 && !order.isDomicilio);
                     const customerPhone =
                       order.cliente?.telefono ||
                       (order as any).customerPhone ||
@@ -1534,6 +1539,12 @@ export default function BodegaPage() {
                                     : 'bg-purple-100 text-purple-900 border border-purple-200'
                                 }`}>
                                   Tienda Online
+                                </span>
+                              )}
+                              {isPickupInStore && (
+                                <span className="clay-badge text-[10px] font-black py-0.5 px-2 bg-amber-100 text-amber-950 border border-amber-300 inline-flex items-center gap-1">
+                                  <Store className="w-2.5 h-2.5 text-amber-700 shrink-0" />
+                                  <span>Retiro en Local</span>
                                 </span>
                               )}
                               <span className={`clay-badge text-[10px] font-black py-0.5 px-2 ${
@@ -2082,6 +2093,11 @@ export default function BodegaPage() {
                     const isOnlineOrder =
                       order.channel === 'ONLINE' ||
                       String(order.saleNumber || order.orderNumber || '').toUpperCase().startsWith('WEB-');
+                    const isPickupInStore =
+                      /retiro/i.test(order.deliveryNotes || '') ||
+                      /retiro/i.test(order.notes || '') ||
+                      /retiro/i.test(order.cliente?.direccion || '') ||
+                      (isOnlineOrder && Number(order.shippingCost ?? 1) === 0 && !order.isDomicilio);
                     const customerPhone =
                       order.cliente?.telefono ||
                       (order as any).customerPhone ||
@@ -2108,6 +2124,12 @@ export default function BodegaPage() {
                                     : 'bg-purple-100 text-purple-900 border border-purple-200'
                                 }`}>
                                   Tienda Online
+                                </span>
+                              )}
+                              {isPickupInStore && (
+                                <span className="clay-badge text-[10px] font-black py-0.5 px-2 bg-amber-100 text-amber-950 border border-amber-300 inline-flex items-center gap-1">
+                                  <Store className="w-2.5 h-2.5 text-amber-700 shrink-0" />
+                                  <span>Retiro en Local</span>
                                 </span>
                               )}
                               <span className={`clay-badge text-[10px] font-black py-0.5 px-2 ${
