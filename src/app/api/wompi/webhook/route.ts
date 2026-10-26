@@ -164,11 +164,17 @@ export async function POST(request: Request) {
               if (!prod) continue;
 
               const presLower = String(it.presentation || '').toLowerCase();
+              const prodNameLower = String(it.productName || prod.name || '').toLowerCase();
+              const isNonEssenceOrLitro =
+                prodNameLower.includes('litro') ||
+                presLower.includes('litro') ||
+                prodNameLower.includes('alcohol') ||
+                prod.unit !== 'Onza';
               const isKit =
                 presLower.includes('arma tu propio perfume') ||
-                String(it.productName || '').toLowerCase().includes('arma tu propio perfume');
+                prodNameLower.includes('arma tu propio perfume');
               const isKitPlus = isKit && (presLower.includes('plus') || presLower.includes('1.5'));
-              const isHalfOz = !isKit && (String(it.presentation || '').includes('½') || String(it.presentation || '').toUpperCase().includes('MEDIA'));
+              const isHalfOz = !isKit && !isNonEssenceOrLitro && (presLower.includes('½') || presLower.includes('media'));
               const qty = Number(it.quantity || 0);
               
               if (isKit) {

@@ -497,11 +497,16 @@ export async function PATCH(request: Request) {
           if (it.productId) {
             const qty = Math.max(1, it.quantity || 1);
             const presLower = String(it.presentation || '').toLowerCase();
+            const prodNameLower = String(it.productName || '').toLowerCase();
+            const isNonEssenceOrLitro =
+              prodNameLower.includes('litro') ||
+              presLower.includes('litro') ||
+              prodNameLower.includes('alcohol');
             const isKit =
               presLower.includes('arma tu propio perfume') ||
-              String(it.productName || '').toLowerCase().includes('arma tu propio perfume');
+              prodNameLower.includes('arma tu propio perfume');
             const isKitPlus = isKit && (presLower.includes('plus') || presLower.includes('1.5'));
-            const isHalfRestore = !isKit && (presLower.includes('media') || presLower.includes('½'));
+            const isHalfRestore = !isKit && !isNonEssenceOrLitro && (presLower.includes('media') || presLower.includes('½'));
             try {
               const updatedProd = await prisma.product.update({
                 where: { id: it.productId },
@@ -1084,10 +1089,16 @@ export async function POST(request: Request) {
         let legitimateUnitPrice = Number(prod.price || 0);
         const catName = prod.category?.name || '';
         const prodNameLower = prod.name.toLowerCase();
-        const isEssence = catName === 'Esencias para Perfume' || catName === 'Esencias & Fragancias' || prod.unit === 'Onza' || !catName;
+        const isNonEssenceOrLitro =
+          prodNameLower.includes('litro') ||
+          presLower.includes('litro') ||
+          prodNameLower.includes('alcohol');
+        const isEssence =
+          !isNonEssenceOrLitro &&
+          (catName === 'Esencias para Perfume' || catName === 'Esencias & Fragancias' || prod.unit === 'Onza' || !catName);
         const isBottle = !isEssence && (catName === 'Botes' || catName === 'Botes & Envases' || catName === 'Envases & Botes' || prodNameLower.includes('bote') || prodNameLower.includes('frasco'));
 
-        const isHalfOunce = presLower.includes('media') || presLower.includes('½') || presLower.includes('half');
+        const isHalfOunce = isEssence && (presLower.includes('media') || presLower.includes('½') || presLower.includes('half'));
         const isHalloweenPromo = isEssence && isHalloweenPromoProduct(prod);
 
         if (isHalloweenPromo) {
@@ -1140,8 +1151,8 @@ export async function POST(request: Request) {
         const lineTotal = Number((legitimateUnitPrice * qty).toFixed(2));
         verifiedSubtotal += lineTotal;
 
-        // Descontar existencias: acumular en stockDeltas para ejecución atómica
-        const isHalfLine = presLower.includes('media') || presLower.includes('½');
+        // Descontar existencias: acumular en stockDeltas para ejecución atómica (solo esencias en ½ onza descuentan de stockHalf)
+        const isHalfLine = isHalfOunce;
         if (isHalfLine) {
           halfDeltas.set(prod.id, (halfDeltas.get(prod.id) || 0) + qty);
         } else {
