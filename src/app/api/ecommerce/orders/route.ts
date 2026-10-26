@@ -314,7 +314,9 @@ export async function GET(request: Request) {
             orderId: s.id,
             productId: it.productId,
             productName: it.productName,
-            presentation: it.productName.includes('½') ? '½ Onza' : '1 Onza',
+            presentation:
+              (it as any).unit ||
+              (!it.productName.toLowerCase().includes('litro') && it.productName.includes('½') ? '½ Onza' : '1 Onza'),
             unitPrice: Number(it.unitPrice || 0),
             quantity: Number(it.quantity || 1),
             total: Number(it.total || 0),

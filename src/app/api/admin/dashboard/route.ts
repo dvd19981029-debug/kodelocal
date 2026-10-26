@@ -143,15 +143,24 @@ export async function GET(request: Request) {
       let oz = 0;
       const pres = String(it.presentation || it.unit || '').toLowerCase();
       const nameLower = cleanName.toLowerCase();
+      const isNonEssenceOrLitro =
+        nameLower.includes('litro') ||
+        pres.includes('litro') ||
+        rawLower.includes('litro') ||
+        nameLower.includes('alcohol') ||
+        nameLower.includes('bote') ||
+        nameLower.includes('caja');
 
-      if (pres.includes('½') || pres.includes('0.5') || pres.includes('media') || rawLower.includes('½') || rawLower.includes('media onza')) {
-        oz = 0.5 * qty;
-      } else if (pres.includes('1.5')) {
-        oz = 1.5 * qty;
-      } else if (pres.includes('onza') || pres.includes('1 oz') || nameLower.includes('onza')) {
-        oz = 1.0 * qty;
-      } else if (nameLower.includes('arma tu propio perfume')) {
-        oz = pres.includes('plus') ? 1.5 * qty : 1.0 * qty;
+      if (!isNonEssenceOrLitro) {
+        if (pres.includes('½') || pres.includes('0.5') || pres.includes('media') || rawLower.includes('½') || rawLower.includes('media onza')) {
+          oz = 0.5 * qty;
+        } else if (pres.includes('1.5')) {
+          oz = 1.5 * qty;
+        } else if (pres.includes('onza') || pres.includes('1 oz') || nameLower.includes('onza')) {
+          oz = 1.0 * qty;
+        } else if (nameLower.includes('arma tu propio perfume')) {
+          oz = pres.includes('plus') ? 1.5 * qty : 1.0 * qty;
+        }
       }
 
       onzasVendidas += oz;
@@ -662,8 +671,9 @@ export async function GET(request: Request) {
         const qty = it.quantity || 1;
         let oz = qty;
         const pres = (it.presentation || '').toLowerCase();
-        if (pres.includes('½') || pres.includes('0.5')) oz = 0.5 * qty;
-        else if (pres.includes('1.5')) oz = 1.5 * qty;
+        const isLitroOrAlcohol = pres.includes('litro') || (it.productName || '').toLowerCase().includes('litro') || (it.productName || '').toLowerCase().includes('alcohol');
+        if (!isLitroOrAlcohol && (pres.includes('½') || pres.includes('0.5'))) oz = 0.5 * qty;
+        else if (!isLitroOrAlcohol && pres.includes('1.5')) oz = 1.5 * qty;
 
         if (it.productId) {
           if (!productUsageById[it.productId]) productUsageById[it.productId] = { units: 0, ounces: 0 };
@@ -837,8 +847,9 @@ export async function GET(request: Request) {
         const qty = it.quantity || 1;
         let oz = qty;
         const pres = (it.presentation || '').toLowerCase();
-        if (pres.includes('½') || pres.includes('0.5')) oz = 0.5 * qty;
-        else if (pres.includes('1.5')) oz = 1.5 * qty;
+        const isLitroOrAlcohol = pres.includes('litro') || (it.productName || '').toLowerCase().includes('litro') || (it.productName || '').toLowerCase().includes('alcohol');
+        if (!isLitroOrAlcohol && (pres.includes('½') || pres.includes('0.5'))) oz = 0.5 * qty;
+        else if (!isLitroOrAlcohol && pres.includes('1.5')) oz = 1.5 * qty;
 
         totalCategorizedOunces += oz;
         if (

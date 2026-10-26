@@ -234,7 +234,7 @@ export function resolveDteItemDiscount(item: {
 
   // 2. Detección automática para compras de la promoción de Halloween ($3.30 la onza -> orig $3.75, dto $0.45; $1.85 media onza -> orig $1.90, dto $0.05)
   const descLower = String(item.descripcion || '').toLowerCase();
-  const isHalf = descLower.includes('½') || descLower.includes('media onza') || descLower.includes('1/2');
+  const isHalf = !descLower.includes('litro') && (descLower.includes('½') || descLower.includes('media onza') || descLower.includes('1/2'));
 
   if (!isHalf && Math.abs(paidUnit - HALLOWEEN_PROMO_PRICE_1OZ) < 0.005) {
     return {
