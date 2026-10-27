@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { emitirDteKode } from '@/lib/facturalamaKode';
+import { emitirDteKode, buildKodeDteItemsFromPedido } from '@/lib/facturalamaKode';
 import { queryKode } from '@/lib/kodeDb';
 
 export const dynamic = 'force-dynamic';
@@ -22,6 +22,8 @@ export async function POST(request: Request) {
         p.id,
         p.numero_pedido,
         p.subtotal,
+        p.descuento,
+        p.costo_envio,
         p.total,
         p.notas,
         c.nombre_completo AS cliente_nombre,
@@ -58,17 +60,12 @@ export async function POST(request: Request) {
 
     const pedido = res.rows[0];
 
-    // 2. Calcular precio sin IVA (precios en El Salvador incluyen 13% de IVA)
-    const itemsFormatted = (pedido.items || []).map((it: any) => {
-      const precioConIva = Number(it.precio_unitario || 0);
-      const precioSinIva = Number((precioConIva / 1.13).toFixed(4));
-      return {
-        kodigo: it.kodigo || 'KODE-01',
-        nombre_mh: it.nombre_mh,
-        cantidad: it.cantidad || 1,
-        precio_sin_iva: precioSinIva > 0 ? precioSinIva : 0.01,
-      };
-    });
+    // 2. Calcular precio sin IVA respetando el total del pedido (si hay descuento, divide el total entre la cantidad de ítems)
+    const itemsFormatted = buildKodeDteItemsFromPedido(
+      pedido.items || [],
+      pedido.total,
+      pedido.descuento
+    );
 
     // 3. Emitir a Factura Llama
     const dteResult = await emitirDteKode({

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { queryKode } from '@/lib/kodeDb';
 import { c807Client } from '@/lib/c807';
-import { emitirDteKode } from '@/lib/facturalamaKode';
+import { emitirDteKode, buildKodeDteItemsFromPedido } from '@/lib/facturalamaKode';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,6 +30,9 @@ export async function POST(request: Request) {
         p.numero_pedido,
         p.estado,
         p.tipo_pago,
+        p.subtotal,
+        p.descuento,
+        p.costo_envio,
         p.total,
         p.c807_guia_numero,
         p.c807_link_rastreo,
@@ -145,16 +148,11 @@ export async function POST(request: Request) {
           [pedido_id]
         );
 
-        const itemsFormatted = (itemsRes.rows || []).map((it: any) => {
-          const precioConIva = Number(it.precio_unitario || 0);
-          const precioSinIva = Number((precioConIva / 1.13).toFixed(4));
-          return {
-            kodigo: it.kodigo || 'KODE-01',
-            nombre_mh: it.nombre_mh,
-            cantidad: it.cantidad || 1,
-            precio_sin_iva: precioSinIva > 0 ? precioSinIva : 0.01,
-          };
-        });
+        const itemsFormatted = buildKodeDteItemsFromPedido(
+          itemsRes.rows || [],
+          pedido.total,
+          pedido.descuento
+        );
 
         dteResult = await emitirDteKode({
           id_pedido: pedido.numero_pedido,
@@ -162,12 +160,7 @@ export async function POST(request: Request) {
           cliente_direccion: pedido.cliente_direccion,
           cliente_departamento: pedido.cliente_departamento,
           cliente_municipio: pedido.cliente_municipio,
-          items: itemsFormatted.length > 0 ? itemsFormatted : [{
-            kodigo: 'KODE-01',
-            nombre_mh: 'Fragancia y Esencia Kode',
-            cantidad: 1,
-            precio_sin_iva: Number((Number(pedido.total || 0) / 1.13).toFixed(4)) || 0.01,
-          }],
+          items: itemsFormatted,
           comentarios: `Guía C807: ${finalGuia} | Pedido: ${pedido.numero_pedido}`,
         });
 
