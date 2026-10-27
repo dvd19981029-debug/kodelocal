@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { queryKode } from '@/lib/kodeDb';
-import { c807Client } from '@/lib/c807';
+import { c807KodeClient } from '@/lib/c807';
 import { emitirDteKode, buildKodeDteItemsFromPedido } from '@/lib/facturalamaKode';
 
 export const dynamic = 'force-dynamic';
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
         }, { status: 409 });
       }
 
-      const c807Result = await c807Client.generarGuia({
+      const c807Result = await c807KodeClient.generarGuia({
         numero_pedido: pedido.numero_pedido,
         cliente_nombre: pedido.cliente_nombre,
         cliente_direccion: pedido.cliente_direccion,

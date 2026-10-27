@@ -118,17 +118,30 @@ export class C807Client {
   private authUrl: string;
   private createGuideUrl: string;
   private basicAuth: string;
+  private brand: 'AROMANIAK' | 'KODE';
   private telegramToken: string;
   private telegramChatId: string;
 
-  constructor() {
+  constructor(brand: 'AROMANIAK' | 'KODE' = 'AROMANIAK') {
+    this.brand = brand;
     this.authUrl = process.env.C807_AUTH_URL || 'https://app.c807.com/admin.php/sesion/get_token';
     this.createGuideUrl = process.env.C807_CREATE_GUIDE_URL || 'https://app.c807.com/guia.php/api/set_registro';
-    const envBasic = process.env.C807_AROMANIAK_BASIC_AUTH || process.env.C807_BASIC_AUTH;
-    this.basicAuth =
-      envBasic && !envBasic.includes('YWRtaW5AbHVpc2VnbToyMDI2')
-        ? (envBasic.startsWith('Basic ') ? envBasic : `Basic ${envBasic}`)
-        : 'Basic QURNSU5Aa29kZToyMDI2'; // ADMIN@kode:2026
+
+    if (brand === 'KODE') {
+      // Usuario C807 exclusivo de KÖDE (admin@luisegm:2026 -> puid 27921, nombre "KODE")
+      const envKodeBasic = process.env.C807_KODE_BASIC_AUTH;
+      this.basicAuth = envKodeBasic
+        ? (envKodeBasic.startsWith('Basic ') ? envKodeBasic : `Basic ${envKodeBasic}`)
+        : 'Basic YWRtaW5AbHVpc2VnbToyMDI2'; // admin@luisegm:2026
+    } else {
+      // Usuario C807 exclusivo de Aromaniak SV (ADMIN@kode:2026 -> puid 32959, Remitente "Aromaniak SV")
+      const envAromaBasic = process.env.C807_AROMANIAK_BASIC_AUTH || process.env.C807_BASIC_AUTH;
+      this.basicAuth =
+        envAromaBasic && !envAromaBasic.includes('YWRtaW5AbHVpc2VnbToyMDI2')
+          ? (envAromaBasic.startsWith('Basic ') ? envAromaBasic : `Basic ${envAromaBasic}`)
+          : 'Basic QURNSU5Aa29kZToyMDI2'; // ADMIN@kode:2026
+    }
+
     this.telegramToken = process.env.TELEGRAM_TOKEN || '8865534990:AAHD-hl9hCzo9IUs4DL0n8TFiQ6BR0hCJow';
     this.telegramChatId = process.env.TELEGRAM_CHAT_ID || '-5596828280';
   }
@@ -193,14 +206,17 @@ export class C807Client {
       // 5. Construir payload reglamentario de C807
       const payload = {
         recolecta_fecha: fechaStr,
-        recolecta_comentario: 'Recolección solicitada desde App Kode',
+        recolecta_comentario:
+          this.brand === 'KODE'
+            ? 'Recolección solicitada desde App Kode'
+            : 'Recolección solicitada desde Aromaniak SV',
         tipo_entrega: 'NRML',
         guias: [
           {
             orden: String(input.numero_pedido || '').trim().slice(0, C807_LIMITS.ORDEN),
             nombre: (input.cliente_nombre || '').trim().slice(0, C807_LIMITS.NOMBRE),
             direccion: direccionCompleta.trim().slice(0, C807_LIMITS.DIRECCION),
-            telefono: cleanPhone || '60437496',
+            telefono: cleanPhone || (this.brand === 'KODE' ? '78339470' : '60437496'),
             correo: (input.cliente_correo?.trim() || 'luisundae@gmail.com').slice(0, C807_LIMITS.CORREO),
             tipo_servicio: tipoServicio,
             monto_cce: montoCce,
@@ -1703,4 +1719,5 @@ export class C807Client {
   }
 }
 
-export const c807Client = new C807Client();
+export const c807Client = new C807Client('AROMANIAK');
+export const c807KodeClient = new C807Client('KODE');
