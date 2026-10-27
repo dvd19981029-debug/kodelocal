@@ -207,7 +207,6 @@ export default function KodeSystemPage() {
       const data = await res.json();
       if (data.success && data.vendedoras.length > 0) {
         setVendedoras(data.vendedoras);
-        setVendedoraSeleccionada(data.vendedoras[0].id);
       }
     } catch (e) {
       console.error('Error cargando vendedoras:', e);
@@ -283,11 +282,7 @@ export default function KodeSystemPage() {
           const parsed = JSON.parse(stored);
           if (parsed && parsed.id && parsed.nombre) {
             setCurrentUser(parsed);
-            if (parsed.rol !== 'ADMIN') {
-              setVendedoraSeleccionada(parsed.id);
-            }
-            setCheckingAuth(false);
-            return;
+            setVendedoraSeleccionada(parsed.id);
           }
         }
 
@@ -296,10 +291,8 @@ export default function KodeSystemPage() {
         if (data.success && data.authenticated && data.user) {
           setCurrentUser(data.user);
           localStorage.setItem('kode_auth_user', JSON.stringify(data.user));
-          if (data.user.rol !== 'ADMIN') {
-            setVendedoraSeleccionada(data.user.id);
-          }
-        } else {
+          setVendedoraSeleccionada(data.user.id);
+        } else if (!stored) {
           setCurrentUser(null);
         }
       } catch (err) {
@@ -311,6 +304,27 @@ export default function KodeSystemPage() {
 
     checkSession();
   }, []);
+
+  // Mantener siempre vendedoraSeleccionada sincronizada con el usuario de la sesión activa
+  useEffect(() => {
+    if (!currentUser) return;
+    if (vendedoras.length > 0) {
+      const cleanEmail = (currentUser.email || '').trim().toLowerCase();
+      const cleanName = (currentUser.nombre || '').trim().toLowerCase();
+      const match =
+        vendedoras.find((v) => v.id === currentUser.id) ||
+        (cleanEmail ? vendedoras.find((v) => (v.email || '').trim().toLowerCase() === cleanEmail) : undefined) ||
+        (cleanName ? vendedoras.find((v) => (v.nombre || '').trim().toLowerCase() === cleanName) : undefined);
+
+      if (match) {
+        setVendedoraSeleccionada(match.id);
+        return;
+      }
+    }
+    if (currentUser.id) {
+      setVendedoraSeleccionada(currentUser.id);
+    }
+  }, [currentUser, vendedoras]);
 
   const handleLogout = async () => {
     try {
@@ -965,6 +979,7 @@ export default function KodeSystemPage() {
                   vendedoras={vendedoras}
                   vendedoraSeleccionada={vendedoraSeleccionada}
                   onVendedoraSeleccionadaChange={setVendedoraSeleccionada}
+                  currentUser={currentUser}
                   onGuardarPedido={handleGuardarPedido}
                   loading={loading}
                   onBack={() => setVentasView('hub')}

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { queryKode, kodePool } from '@/lib/kodeDb';
+import { verifyStaffRequest } from '@/lib/customerAuthToken';
 
 export const dynamic = 'force-dynamic';
 
@@ -398,7 +399,32 @@ export async function POST(request: Request) {
       finalEstadoPago = 'PENDIENTE';
     }
 
-    // 4. Crear el pedido (Estado inicial: Registrado / Rojo)
+    // 4. Resolver el vendedor de la sesión activa en public.usuarios
+    let finalVendedoraId: string | null = null;
+    let finalVendedoraNombre: string = 'KÖDE';
+
+    const { authorized, payload: sessionUser } = verifyStaffRequest(request);
+    const candidateEmail = String(sessionUser?.email || '').trim().toLowerCase();
+    const candidateName = String(sessionUser?.name || '').trim().toLowerCase();
+    const candidateId = String(sessionUser?.id || vendedora_id || '').trim();
+
+    if (candidateId || candidateEmail || candidateName) {
+      const vendRes = await client.query(
+        `SELECT id, nombre FROM public.usuarios
+         WHERE id::text = $1
+            OR ($2 != '' AND LOWER(email) = $2)
+            OR ($3 != '' AND LOWER(nombre) = $3)
+            OR ($4 != '' AND id::text = $4)
+         LIMIT 1`,
+        [candidateId, candidateEmail, candidateName, String(vendedora_id || '').trim()]
+      );
+      if (vendRes.rows.length > 0) {
+        finalVendedoraId = vendRes.rows[0].id;
+        finalVendedoraNombre = vendRes.rows[0].nombre || finalVendedoraNombre;
+      }
+    }
+
+    // Crear el pedido (Estado inicial: Registrado / Rojo)
     const newOrderRes = await client.query(
       `INSERT INTO public.pedidos (
         numero_pedido, cliente_id, vendedora_id, estado, tipo_pago, estado_pago, subtotal, descuento, costo_envio, total, monto_cobrar_cce, notas
@@ -407,7 +433,7 @@ export async function POST(request: Request) {
       [
         numeroPedido,
         clienteId,
-        vendedora_id || null,
+        finalVendedoraId,
         finalTipoPago,
         finalEstadoPago,
         subtotal,
@@ -435,7 +461,7 @@ export async function POST(request: Request) {
           (p.num_documento_auto || '').trim(),
           p.comprobante_url || null,
           p.estado_pago || (p.forma_pago_id === '1003' ? 'Pendiente' : 'Confirmado'),
-          vendedora_id || 'KÖDE',
+          finalVendedoraNombre || finalVendedoraId || 'KÖDE',
           p.observaciones || (p.forma_pago_id === '1003' ? 'Cobro contra entrega C807' : 'Pago registrado al crear pedido'),
         ]
       );
@@ -447,7 +473,7 @@ export async function POST(request: Request) {
       const precio = parseFloat(it.precio_unitario) || 20.0;
       const itemSubtotal = cant * precio;
       const version = (it.version === 'Plus' || it.version === 'EXTRA_SHOT') ? 'Plus' : 'Normal';
-      const usuario = body.vendedora_id || 'WhatsApp';
+      const usuario = finalVendedoraNombre || finalVendedoraId || 'WhatsApp';
 
       await client.query(
         `INSERT INTO public.pedido_items (

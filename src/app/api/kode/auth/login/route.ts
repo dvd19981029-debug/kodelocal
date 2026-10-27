@@ -143,14 +143,43 @@ export async function POST(request: Request) {
       }).catch(() => {});
     }
 
-    const safeToken = createStaffInternalToken(staffUser.role, staffUser.email, staffUser.name, staffUser.id);
+    // Sincronizar y obtener el UUID exacto de public.usuarios en KÖDE para asignar ventas a la sesión activa
+    let kodeUserId = staffUser.id;
+    let kodeUserNombre = staffUser.name;
+    try {
+      const cleanEmail = String(staffUser.email || '').trim().toLowerCase();
+      if (cleanEmail) {
+        const uRes = await queryKode(
+          `SELECT id, nombre FROM public.usuarios WHERE LOWER(email) = $1 LIMIT 1`,
+          [cleanEmail]
+        );
+        if (uRes.rows.length > 0) {
+          kodeUserId = uRes.rows[0].id;
+          kodeUserNombre = uRes.rows[0].nombre || staffUser.name;
+        } else {
+          const insRes = await queryKode(
+            `INSERT INTO public.usuarios (nombre, email, rol, activo)
+             VALUES ($1, $2, $3, TRUE)
+             RETURNING id, nombre`,
+            [staffUser.name, cleanEmail, staffUser.role === 'ADMIN' ? 'ADMIN' : 'VENDEDORA']
+          );
+          if (insRes.rows.length > 0) {
+            kodeUserId = insRes.rows[0].id;
+          }
+        }
+      }
+    } catch (syncErr) {
+      console.error('Error sincronizando usuario con public.usuarios:', syncErr);
+    }
+
+    const safeToken = createStaffInternalToken(staffUser.role, staffUser.email, kodeUserNombre, kodeUserId);
 
     const response = NextResponse.json({
       success: true,
       token: safeToken,
       user: {
-        id: staffUser.id,
-        nombre: staffUser.name,
+        id: kodeUserId,
+        nombre: kodeUserNombre,
         email: staffUser.email,
         rol: staffUser.role
       }
@@ -165,8 +194,8 @@ export async function POST(request: Request) {
     });
 
     response.cookies.set('kode_session_ui', JSON.stringify({
-      id: staffUser.id,
-      name: staffUser.name,
+      id: kodeUserId,
+      name: kodeUserNombre,
       email: staffUser.email,
       role: staffUser.role
     }), {

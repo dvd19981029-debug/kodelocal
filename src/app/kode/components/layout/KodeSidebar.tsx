@@ -216,17 +216,11 @@ export const KodeSidebar: React.FC<KodeSidebarProps> = ({
             </button>
           )}
         </div>
-        <select
-          value={vendedoraSeleccionada}
-          onChange={(e) => setVendedoraSeleccionada(e.target.value)}
-          className="w-full bg-white border border-slate-200 rounded-xl px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer shadow-2xs"
-        >
-          {vendedoras.map((v) => (
-            <option key={v.id} value={v.id}>
-              {v.nombre}
-            </option>
-          ))}
-        </select>
+        <div className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 shadow-2xs truncate">
+          {currentUser?.nombre ||
+            vendedoras.find((v) => v.id === vendedoraSeleccionada)?.nombre ||
+            'Sesión Activa'}
+        </div>
       </div>
     </aside>
   );

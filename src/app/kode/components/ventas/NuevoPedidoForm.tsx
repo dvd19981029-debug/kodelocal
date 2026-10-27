@@ -43,6 +43,12 @@ interface NuevoPedidoFormProps {
   vendedoras: Vendedora[];
   vendedoraSeleccionada: string;
   onVendedoraSeleccionadaChange: (id: string) => void;
+  currentUser?: {
+    id: string;
+    nombre: string;
+    email: string;
+    rol: string;
+  } | null;
   onGuardarPedido: (pedidoPayload: any) => Promise<void>;
   loading: boolean;
   onBack: () => void;
@@ -427,6 +433,7 @@ export function NuevoPedidoForm({
   vendedoras,
   vendedoraSeleccionada,
   onVendedoraSeleccionadaChange,
+  currentUser,
   onGuardarPedido,
   loading,
   onBack,
@@ -1980,22 +1987,21 @@ export function NuevoPedidoForm({
               </div>
             </div>
 
-            {/* Vendedora / Cajera Asignada */}
+            {/* Vendedora / Cajera Asignada (Fijada a la sesión activa) */}
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                Vendedora / Cajera Asignada
+                Vendedora / Cajera Asignada (Sesión Activa)
               </label>
-              <select
-                value={vendedoraSeleccionada}
-                onChange={(e) => onVendedoraSeleccionadaChange(e.target.value)}
-                className="clay-input w-full text-xs font-bold cursor-pointer"
-              >
-                {vendedoras.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.nombre}
-                  </option>
-                ))}
-              </select>
+              <div className="clay-input w-full text-xs font-bold bg-slate-100 text-slate-800 flex items-center justify-between select-none">
+                <span>
+                  {currentUser?.nombre ||
+                    vendedoras.find((v) => v.id === vendedoraSeleccionada)?.nombre ||
+                    'Vendedor en Sesión'}
+                </span>
+                <span className="text-[10px] font-black uppercase text-emerald-700 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
+                  Sesión Activa
+                </span>
+              </div>
             </div>
 
             {/* Observaciones */}
