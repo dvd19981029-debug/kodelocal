@@ -166,7 +166,7 @@ export function CompraPendienteTabla({
         /* VISTA EN TABLA SIMPLE: INSUMOS DEL DÍA (ONZAS POR PERFUME)*/
         /* ========================================================= */
         <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
-          <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between gap-2">
+          <div className="px-4 py-2 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <h2 className="text-xs font-black uppercase text-slate-700 tracking-wider">
                 Insumos del día
@@ -181,41 +181,41 @@ export function CompraPendienteTabla({
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+            <table className="w-full text-left text-xs border-collapse leading-tight">
               <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
                 <tr>
-                  <th className="py-2.5 px-4">Perfume / Kodigo</th>
-                  <th className="py-2.5 px-4 text-center">Normal (1 oz)</th>
-                  <th className="py-2.5 px-4 text-center">Plus (1.5 oz)</th>
-                  <th className="py-2.5 px-4 text-center">Onzas a Comprar</th>
-                  <th className="py-2.5 px-4 text-right">Acción</th>
+                  <th className="py-1.5 px-4">Perfume / Kodigo</th>
+                  <th className="py-1.5 px-4 text-center">Normal (1 oz)</th>
+                  <th className="py-1.5 px-4 text-center">Plus (1.5 oz)</th>
+                  <th className="py-1.5 px-4 text-center">Onzas a Comprar</th>
+                  <th className="py-1.5 px-4 text-right">Acción</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
                 {consolidadoOnzas.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-slate-400 font-medium">
+                    <td colSpan={5} className="py-8 text-center text-slate-400 font-medium">
                       No hay insumos pendientes por comprar hoy.
                     </td>
                   </tr>
                 ) : (
                   consolidadoOnzas.map((frag) => (
                     <tr key={frag.key} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3 px-4 font-bold text-slate-800">
+                      <td className="py-1.5 px-4 font-bold text-slate-800">
                         {frag.contratipo} - <span className="font-mono text-indigo-600">{frag.codigo}</span>
                       </td>
-                      <td className="py-3 px-4 text-center font-mono text-slate-600">
+                      <td className="py-1.5 px-4 text-center font-mono text-slate-600">
                         {frag.normalCount > 0 ? `${frag.normalCount} (${frag.normalCount * 1} oz)` : '-'}
                       </td>
-                      <td className="py-3 px-4 text-center font-mono text-slate-600">
+                      <td className="py-1.5 px-4 text-center font-mono text-slate-600">
                         {frag.plusCount > 0 ? `${frag.plusCount} (${frag.plusCount * 1.5} oz)` : '-'}
                       </td>
-                      <td className="py-3 px-4 text-center">
-                        <span className="font-black font-mono text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-full">
+                      <td className="py-1.5 px-4 text-center">
+                        <span className="font-black font-mono text-[11px] text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">
                           {frag.totalOnzas} oz
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                      <td className="py-1.5 px-4 text-right whitespace-nowrap">
                         {frag.catalogo_id && (
                           <div className="relative group/tooltip inline-flex">
                             <button
@@ -223,9 +223,9 @@ export function CompraPendienteTabla({
                               disabled={loading}
                               onClick={() => onMarcarInsumo({ catalogo_id: frag.catalogo_id })}
                               title={`Cambiar estado a "Insumo comprado" (${frag.totalOnzas} oz de ${frag.contratipo})`}
-                              className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-600 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+                              className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-600 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
                             >
-                              <CheckCircle2 className="w-4 h-4" />
+                              <CheckCircle2 className="w-3.5 h-3.5" />
                             </button>
                             <span className="pointer-events-none invisible opacity-0 group-hover/tooltip:visible group-hover/tooltip:opacity-100 transition-opacity duration-150 absolute right-full mr-2 top-1/2 -translate-y-1/2 z-50 w-52 whitespace-normal rounded-lg bg-slate-900 px-2.5 py-1.5 text-[10px] font-semibold text-white text-left leading-tight shadow-lg">
                               Cambiar estado a &ldquo;Insumo comprado&rdquo; ({frag.totalOnzas} oz de {frag.contratipo})
