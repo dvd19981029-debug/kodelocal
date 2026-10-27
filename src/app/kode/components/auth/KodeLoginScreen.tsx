@@ -268,7 +268,16 @@ export const KodeLoginScreen: React.FC<KodeLoginScreenProps> = ({
           </p>
           <div className="grid grid-cols-2 gap-2">
             {vendedoras
-              .filter((v) => (v as any).rol !== 'ADMIN')
+              .filter((v) => {
+                const n = (v.nombre || '').toLowerCase();
+                const e = (v.email || '').toLowerCase();
+                return (
+                  n.includes('patricia') ||
+                  e.includes('pm3923193') ||
+                  n.includes('isis') ||
+                  e.includes('dayana')
+                );
+              })
               .map((v) => {
                 const emailLower = (v.email || '').toLowerCase();
                 const isIsis = emailLower.includes('dayana') || v.nombre.toLowerCase().includes('isis');
