@@ -350,6 +350,32 @@ export async function POST(request: Request) {
     const pagosAnticipo = listaPagos.filter((p) => p.forma_pago_id !== '1003');
     const pagosContraEntrega = listaPagos.filter((p) => p.forma_pago_id === '1003');
 
+    // Validar que todo pago de tipo BANCO lleve comprobante_url
+    if (pagosAnticipo.length > 0) {
+      const fpIds = pagosAnticipo.map((p) => p.forma_pago_id);
+      const fpCheckRes = await client.query(
+        `SELECT id, nombre, tipo FROM public.formas_pago WHERE id = ANY($1::varchar[])`,
+        [fpIds]
+      );
+      const fpMap = new Map<string, { nombre: string; tipo: string }>();
+      for (const r of fpCheckRes.rows) {
+        fpMap.set(String(r.id), { nombre: r.nombre, tipo: r.tipo });
+      }
+      for (const p of pagosAnticipo) {
+        const fpInfo = fpMap.get(p.forma_pago_id);
+        if (fpInfo?.tipo === 'BANCO' && (!p.comprobante_url || !p.comprobante_url.trim())) {
+          await client.query('ROLLBACK');
+          return NextResponse.json(
+            {
+              success: false,
+              error: `Es obligatorio adjuntar la captura del comprobante para pagos en ${fpInfo.nombre}`,
+            },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
     const totalAnticipo = pagosAnticipo.reduce((acc, p) => acc + p.monto, 0);
     const totalContraEntrega = pagosContraEntrega.reduce((acc, p) => acc + p.monto, 0);
     const montoCobrarCce = totalContraEntrega;

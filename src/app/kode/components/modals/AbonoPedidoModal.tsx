@@ -62,6 +62,16 @@ export const AbonoPedidoModal: React.FC<AbonoPedidoModalProps> = ({
       return;
     }
 
+    const formaSeleccionada = formasPago.find((f) => f.id === abonoFormaPagoId);
+    if (abonoSubiendoComprobante) {
+      showToast('Espera a que termine de subir la captura del comprobante', 'error');
+      return;
+    }
+    if (formaSeleccionada?.tipo === 'BANCO' && !abonoComprobante.trim()) {
+      showToast('Es obligatorio adjuntar la captura del comprobante para pagos de cuenta bancaria', 'error');
+      return;
+    }
+
     const obsFinales = abonoObservaciones.trim();
 
     try {
@@ -234,8 +244,15 @@ export const AbonoPedidoModal: React.FC<AbonoPedidoModalProps> = ({
           })()}
 
           <div>
-            <label className="block font-bold text-slate-700 mb-1">
-              Captura / Comprobante de Transferencia (Foto o Screenshot)
+            <label className="block font-bold text-slate-700 mb-1 flex items-center justify-between">
+              <span>
+                Captura / Comprobante de Transferencia {formasPago.find((f) => f.id === abonoFormaPagoId)?.tipo === 'BANCO' ? '*' : ''}
+              </span>
+              {formasPago.find((f) => f.id === abonoFormaPagoId)?.tipo === 'BANCO' && !abonoComprobante && (
+                <span className="text-[9px] font-black uppercase text-rose-700 bg-rose-100 border border-rose-300 px-1.5 py-0.5 rounded leading-none">
+                  Obligatorio
+                </span>
+              )}
             </label>
             {abonoComprobante ? (
               <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl shadow-2xs">

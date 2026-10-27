@@ -125,6 +125,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Debe seleccionar una forma de pago' }, { status: 400 });
     }
 
+    // Validar que si es cuenta bancaria (BANCO), tenga comprobante adjunto
+    const fpRes = await queryKode(
+      `SELECT id, nombre, tipo FROM public.formas_pago WHERE id = $1 LIMIT 1`,
+      [forma_pago_id]
+    );
+    const formaPagoRow = fpRes.rows[0];
+    if (formaPagoRow?.tipo === 'BANCO' && (!comprobante_url || !String(comprobante_url).trim())) {
+      return NextResponse.json(
+        { success: false, error: `Es obligatorio adjuntar el comprobante de transferencia para pagos en ${formaPagoRow.nombre}` },
+        { status: 400 }
+      );
+    }
+
     // 1. Obtener datos del pedido
     const pedidoRes = await queryKode(
       `SELECT id, cliente_id, total, tipo_pago FROM public.pedidos WHERE id = $1 LIMIT 1`,

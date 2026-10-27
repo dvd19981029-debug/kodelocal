@@ -760,6 +760,14 @@ export function NuevoPedidoForm({
       showToast('Selecciona una forma de pago válida', 'error');
       return;
     }
+    if (subiendoComprobante) {
+      showToast('Espera a que termine de subir la captura del comprobante', 'error');
+      return;
+    }
+    if (forma.tipo === 'BANCO' && !pagoInputComprobante.trim()) {
+      showToast('Es obligatorio adjuntar la captura del comprobante para pagos de cuenta bancaria', 'error');
+      return;
+    }
 
     const nuevoPago: PagoRegistroItem = {
       id: `${Date.now()}`,
@@ -820,8 +828,60 @@ export function NuevoPedidoForm({
       return;
     }
 
+    if (subiendoComprobante) {
+      showToast('Espera a que termine de subir la captura del comprobante', 'error');
+      return;
+    }
+
     // Resolver pagos
     let pagosFinales = [...pagosPedido];
+    const montoInputPendiente = parseFloat(pagoInputMonto);
+    const formaInputActual = formasPago.find((f) => f.id === pagoInputFormaId);
+
+    // Si dejó un monto escrito en el formulario de pago sin darle "+ Agregar Pago"
+    if (!isNaN(montoInputPendiente) && montoInputPendiente > 0 && formaInputActual) {
+      if (formaInputActual.tipo === 'BANCO' && !pagoInputComprobante.trim()) {
+        showToast('Es obligatorio adjuntar la captura del comprobante para pagos de cuenta bancaria', 'error');
+        return;
+      }
+      pagosFinales.push({
+        id: `${Date.now()}`,
+        forma_pago_id: formaInputActual.id,
+        forma_pago_nombre: formaInputActual.nombre,
+        forma_pago_tipo: formaInputActual.tipo,
+        monto: montoInputPendiente,
+        num_documento_auto: pagoInputDoc.trim() || undefined,
+        comprobante_url: pagoInputComprobante.trim() || null,
+        observaciones: '',
+      });
+    } else if (pagosFinales.length === 0 && formaInputActual?.tipo === 'BANCO') {
+      if (!pagoInputComprobante.trim()) {
+        showToast('Seleccionaste una cuenta bancaria: adjunta la captura del comprobante y el monto, o cambia a Contra Entrega', 'error');
+        return;
+      }
+      pagosFinales.push({
+        id: `${Date.now()}`,
+        forma_pago_id: formaInputActual.id,
+        forma_pago_nombre: formaInputActual.nombre,
+        forma_pago_tipo: formaInputActual.tipo,
+        monto: totalPedido,
+        num_documento_auto: pagoInputDoc.trim() || undefined,
+        comprobante_url: pagoInputComprobante.trim(),
+        observaciones: '',
+      });
+    }
+
+    const pagoBancoSinComprobante = pagosFinales.find(
+      (p) => p.forma_pago_tipo === 'BANCO' && !p.comprobante_url?.trim()
+    );
+    if (pagoBancoSinComprobante) {
+      showToast(
+        `Es obligatorio adjuntar la captura del comprobante para el pago en ${pagoBancoSinComprobante.forma_pago_nombre}`,
+        'error'
+      );
+      return;
+    }
+
     const sumaActual = pagosFinales.reduce((acc, p) => acc + p.monto, 0);
     const saldoRestante = Math.max(0, totalPedido - sumaActual);
 
@@ -1517,15 +1577,15 @@ export function NuevoPedidoForm({
                   const montoParaWompi = parseFloat(pagoInputMonto) || balancePendiente || totalPedido;
 
                   return (
-                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                      <div className="sm:col-span-5">
-                        <label className="block text-[10px] font-bold text-slate-600 mb-1 uppercase">
+                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
+                      <div className="sm:col-span-5 flex flex-col justify-end">
+                        <label className="block text-[10px] font-bold text-slate-600 mb-1 uppercase whitespace-nowrap">
                           Forma de Pago *
                         </label>
                         <select
                           value={pagoInputFormaId}
                           onChange={(e) => setPagoInputFormaId(e.target.value)}
-                          className="clay-input w-full text-xs font-bold bg-white cursor-pointer"
+                          className="clay-input w-full h-[42px] text-xs font-bold bg-white cursor-pointer"
                         >
                           {formasPago.filter((fp) => fp.activo !== false).map((fp) => (
                             <option key={fp.id} value={fp.id}>
@@ -1535,8 +1595,8 @@ export function NuevoPedidoForm({
                         </select>
                       </div>
 
-                      <div className="sm:col-span-3">
-                        <label className="block text-[10px] font-bold text-slate-600 mb-1 uppercase">
+                      <div className="sm:col-span-3 flex flex-col justify-end">
+                        <label className="block text-[10px] font-bold text-slate-600 mb-1 uppercase whitespace-nowrap">
                           Monto ($) *
                         </label>
                         <input
@@ -1546,12 +1606,12 @@ export function NuevoPedidoForm({
                           placeholder={balancePendiente > 0 ? balancePendiente.toFixed(2) : '0.00'}
                           value={pagoInputMonto}
                           onChange={(e) => setPagoInputMonto(e.target.value)}
-                          className="clay-input w-full text-xs font-mono font-bold"
+                          className="clay-input w-full h-[42px] text-xs font-mono font-bold"
                         />
                       </div>
 
-                      <div className="sm:col-span-4">
-                        <label className="block text-[10px] font-bold text-slate-600 mb-1 uppercase flex items-center justify-between">
+                      <div className="sm:col-span-4 flex flex-col justify-end">
+                        <label className="block text-[10px] font-bold text-slate-600 mb-1 uppercase flex items-center justify-between whitespace-nowrap">
                           <span>{esWompi ? 'No. Auto Wompi' : 'No. Voucher / Ref'}</span>
                           {esWompi && (
                             <span className="text-[9px] font-bold text-indigo-600 lowercase bg-indigo-50 px-1 rounded">
@@ -1564,7 +1624,7 @@ export function NuevoPedidoForm({
                           placeholder={esWompi ? 'Ej. 984723 o Auto Wompi' : 'Ej. TRF-12345'}
                           value={pagoInputDoc}
                           onChange={(e) => setPagoInputDoc(e.target.value)}
-                          className={`clay-input w-full text-xs font-mono ${
+                          className={`clay-input w-full h-[42px] text-xs font-mono ${
                             esWompi ? 'font-bold border-indigo-300 text-indigo-900 bg-indigo-50/20' : 'font-medium'
                           }`}
                         />
@@ -1616,9 +1676,16 @@ export function NuevoPedidoForm({
                             📸
                           </div>
                           <div>
-                            <span className="text-xs font-bold text-slate-800 block">
-                              Comprobante de Transferencia
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs font-bold text-slate-800">
+                                Comprobante de Transferencia {esBanco ? '*' : ''}
+                              </span>
+                              {esBanco && !pagoInputComprobante && (
+                                <span className="text-[9px] font-black uppercase text-rose-700 bg-rose-100 border border-rose-300 px-1.5 py-0.5 rounded leading-none">
+                                  Obligatorio
+                                </span>
+                              )}
+                            </div>
                             <span className="text-[11px] text-slate-500 block">
                               Sube captura o pega con <kbd className="px-1 py-0.5 bg-white border border-slate-300 rounded font-mono text-[10px]">Ctrl+V</kbd>
                             </span>
