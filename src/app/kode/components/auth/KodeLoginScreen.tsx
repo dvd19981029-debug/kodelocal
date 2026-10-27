@@ -261,44 +261,36 @@ export const KodeLoginScreen: React.FC<KodeLoginScreenProps> = ({
           </button>
         </form>
 
-        {/* Acceso rápido de demostración */}
+        {/* Acceso rápido por asesora */}
         <div className="mt-6 pt-4 border-t border-slate-100">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center mb-2.5">
             Acceso Rápido por Asesora:
           </p>
           <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                const patricia = vendedoras.find((v) =>
-                  v.nombre.toLowerCase().includes('patricia')
+            {vendedoras
+              .filter((v) => (v as any).rol !== 'ADMIN')
+              .map((v) => {
+                const emailLower = (v.email || '').toLowerCase();
+                const isIsis = emailLower.includes('dayana') || v.nombre.toLowerCase().includes('isis');
+                return (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedVendedoraId(v.id);
+                      setManualUser(v.email || v.nombre);
+                      setMode('SELECT');
+                      setPassword(isIsis ? '1006' : 'Kode2026*');
+                    }}
+                    className="p-2 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 text-left cursor-pointer transition-colors"
+                  >
+                    <span className="text-[11px] font-extrabold text-slate-800 block truncate">
+                      🌸 {v.nombre}
+                    </span>
+                    <span className="text-[9px] text-slate-400 block font-mono">Autocompletar</span>
+                  </button>
                 );
-                if (patricia) setSelectedVendedoraId(patricia.id);
-                setMode('SELECT');
-                setPassword('Kode2026*');
-              }}
-              className="p-2 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 text-left cursor-pointer transition-colors"
-            >
-              <span className="text-[11px] font-extrabold text-slate-800 block truncate">
-                🌸 Patricia Mejía
-              </span>
-              <span className="text-[9px] text-slate-400 block font-mono">Autocompletar</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedVendedoraId('user-admin');
-                setMode('SELECT');
-                setPassword('admin123');
-              }}
-              className="p-2 rounded-xl bg-slate-50 hover:bg-purple-50 border border-slate-200 hover:border-purple-300 text-left cursor-pointer transition-colors"
-            >
-              <span className="text-[11px] font-extrabold text-purple-700 block truncate">
-                👑 Gerente General
-              </span>
-              <span className="text-[9px] text-slate-400 block font-mono">Autocompletar</span>
-            </button>
+              })}
           </div>
         </div>
 
