@@ -47,7 +47,7 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
     {
       id: 'promo-blog-importancia-macerar',
       imageUrl: '/images/promo/banner_importancia_macerar.webp?v=2',
-      imageAlt: 'La Importancia de Macerar: Cómo mejorar la fijación, duración de 4 a 12 horas y proyección de tu perfume',
+      imageAlt: 'La Importancia de Macerar: Cómo mejorar la fijación, duración de 4 a 8 horas y proyección de tu perfume',
       action: 'blog-importancia-macerar',
     },
   ];

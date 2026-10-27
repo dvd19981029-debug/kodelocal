@@ -104,8 +104,8 @@ export function getRecommendationsForPost(
     subheadline = 'Líneas de alta rotación por onza y frascos con excelente margen para vender desde casa.';
   } else if (isPerformance) {
     intentType = 'performance';
-    headline = 'Esencias de Máxima Fijación y Rendimiento';
-    subheadline = 'Concentrados puros de más de 8 a 12 horas de duración sobre la piel.';
+    headline = 'Esencias de Buena Fijación y Rendimiento';
+    subheadline = 'Concentrados puros con duración estimada de 4 a 8 horas sobre la piel según sus notas.';
   }
 
   return {

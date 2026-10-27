@@ -933,7 +933,7 @@ export default function EcommerceHomePage() {
               ¿Qué calidad y fijación tienen las esencias de Aromaniak?
             </h3>
             <p>
-              Nuestras esencias son grado cosmético premium sin diluir, garantizando una fijación prolongada de más de 8 a 12 horas en piel y ropa al mezclarse con nuestra fórmula balanceada de alcohol de perfumería.
+              Nuestras esencias son grado cosmético premium sin diluir, ofreciendo una duración estimada de 4 a 8 horas en piel (según la familia olfativa) al mezclarse con nuestra fórmula balanceada de alcohol de perfumería.
             </p>
           </div>
         </div>
@@ -993,7 +993,7 @@ export default function EcommerceHomePage() {
                   "name": "¿Qué calidad y fijación tienen las esencias de Aromaniak?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Nuestras esencias son grado cosmético premium 100% puras sin diluir, con duración comprobada de más de 8 a 12 horas al formularse con alcohol de perfumería."
+                    "text": "Nuestras esencias son grado cosmético premium 100% puras sin diluir, con una duración estimada de 4 a 8 horas según la familia olfativa al formularse con alcohol de perfumería."
                   }
                 }
               ]
