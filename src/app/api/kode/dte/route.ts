@@ -26,6 +26,8 @@ export async function POST(request: Request) {
         p.costo_envio,
         p.total,
         p.notas,
+        p.dte_codigo_generacion,
+        p.dte_numero_control,
         c.nombre_completo AS cliente_nombre,
         c.telefono_whatsapp AS cliente_telefono,
         c.direccion_entrega AS cliente_direccion,
@@ -59,6 +61,16 @@ export async function POST(request: Request) {
     }
 
     const pedido = res.rows[0];
+
+    if (pedido.dte_codigo_generacion || pedido.dte_numero_control) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Este pedido ya tiene un DTE emitido (${pedido.dte_numero_control || pedido.dte_codigo_generacion})`,
+        },
+        { status: 409 }
+      );
+    }
 
     // 2. Calcular precio sin IVA respetando el total del pedido (si hay descuento, divide el total entre la cantidad de ítems)
     const itemsFormatted = buildKodeDteItemsFromPedido(

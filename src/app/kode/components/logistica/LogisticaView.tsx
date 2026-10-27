@@ -353,16 +353,18 @@ export function LogisticaView({
                             <span>Enviar</span>
                           </button>
 
-                          <button
-                            type="button"
-                            onClick={() => onEmitirDte(p)}
-                            disabled={emitiendoDteId === p.id}
-                            className="bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 text-[11px] font-bold flex items-center gap-1 rounded-lg transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
-                            title="Emitir Factura Electrónica (DTE) con Factura Llama"
-                          >
-                            <ReceiptText className={`w-3 h-3 ${emitiendoDteId === p.id ? 'animate-spin' : 'text-emerald-600'}`} />
-                            <span>{emitiendoDteId === p.id ? 'Emitiendo...' : 'Facturar DTE'}</span>
-                          </button>
+                          {!(p.dte_numero_control || p.dte_codigo_generacion) && (
+                            <button
+                              type="button"
+                              onClick={() => onEmitirDte(p)}
+                              disabled={emitiendoDteId === p.id}
+                              className="bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 text-[11px] font-bold flex items-center gap-1 rounded-lg transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
+                              title="Emitir Factura Electrónica (DTE) manualmente si aún no ha sido emitida"
+                            >
+                              <ReceiptText className={`w-3 h-3 ${emitiendoDteId === p.id ? 'animate-spin' : 'text-emerald-600'}`} />
+                              <span>{emitiendoDteId === p.id ? 'Emitiendo...' : 'Facturar DTE'}</span>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
