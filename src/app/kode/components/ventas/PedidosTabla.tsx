@@ -131,9 +131,21 @@ export const PedidosTabla: React.FC<PedidosTablaProps> = ({
                   return (
                     <React.Fragment key={p.id}>
                       <tr className="hover:bg-slate-50/80 transition-colors">
-                        {/* 1. Numero de Pedido */}
-                        <td className={`py-3 px-3 font-mono font-black text-[1.15em] whitespace-nowrap tracking-tight ${getClienteColorPorEstado(p.estado)}`}>
-                          {p.numero_pedido}
+                        {/* 1. Numero de Pedido (Click para ver detalle) */}
+                        <td className="py-3 px-3 whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedPedidoId(isExpanded ? null : p.id)}
+                            className={`font-mono font-black text-[1.15em] whitespace-nowrap tracking-tight hover:underline cursor-pointer inline-flex items-center gap-1 text-left ${getClienteColorPorEstado(p.estado)}`}
+                            title="Haz clic para ver qué lleva el pedido y cómo va a pagar"
+                          >
+                            <span>{p.numero_pedido}</span>
+                            {isExpanded ? (
+                              <ChevronUp className="w-3.5 h-3.5 opacity-75 shrink-0" />
+                            ) : (
+                              <ChevronDown className="w-3.5 h-3.5 opacity-75 shrink-0" />
+                            )}
+                          </button>
                         </td>
 
                         {/* 2. Cliente */}
