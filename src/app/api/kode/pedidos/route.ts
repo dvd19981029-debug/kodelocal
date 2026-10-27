@@ -327,24 +327,12 @@ export async function POST(request: Request) {
       }
     }
 
-    // Si aún hay saldo por cubrir y no se definió otra cosa o pago_contraentrega no es false
-    const totalPagosActuales = listaPagos.reduce((acc, p) => acc + p.monto, 0);
-    const saldoRestante = Math.max(0, total - totalPagosActuales);
-    const tieneContraEntrega = listaPagos.some((p) => p.forma_pago_id === '1003');
-
-    if (saldoRestante > 0 && (body.pago_contraentrega !== false || !tieneContraEntrega)) {
-      const idx = listaPagos.findIndex((p) => p.forma_pago_id === '1003');
-      if (idx >= 0) {
-        listaPagos[idx].monto += saldoRestante;
-      } else {
-        listaPagos.push({
-          forma_pago_id: '1003',
-          monto: saldoRestante,
-          num_documento_auto: '',
-          observaciones: 'Cobro contra entrega C807',
-          estado_pago: 'Pendiente',
-        });
-      }
+    if ( listaPagos.length === 0) {
+      await client.query('ROLLBACK');
+      return NextResponse.json(
+        { success: false, error: 'Debes registrar al menos una forma de pago para guardar el pedido' },
+        { status: 400 }
+      );
     }
 
     // Categorizar pagos: anticipados (bancos/efectivo) vs contraentrega

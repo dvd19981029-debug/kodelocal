@@ -840,43 +840,13 @@ export function NuevoPedidoForm({
       return;
     }
 
-    // Resolver pagos
-    let pagosFinales = [...pagosPedido];
-    const montoInputPendiente = parseFloat(pagoInputMonto);
-    const formaInputActual = formasPago.find((f) => f.id === pagoInputFormaId);
-
-    // Si dejó un monto escrito en el formulario de pago sin darle "+ Agregar Pago"
-    if (!isNaN(montoInputPendiente) && montoInputPendiente > 0 && formaInputActual) {
-      if (formaInputActual.tipo === 'BANCO' && !pagoInputComprobante.trim()) {
-        showToast('Es obligatorio adjuntar la captura del comprobante para pagos de cuenta bancaria', 'error');
-        return;
-      }
-      pagosFinales.push({
-        id: `${Date.now()}`,
-        forma_pago_id: formaInputActual.id,
-        forma_pago_nombre: formaInputActual.nombre,
-        forma_pago_tipo: formaInputActual.tipo,
-        monto: montoInputPendiente,
-        num_documento_auto: pagoInputDoc.trim() || undefined,
-        comprobante_url: pagoInputComprobante.trim() || null,
-        observaciones: '',
-      });
-    } else if (pagosFinales.length === 0 && formaInputActual?.tipo === 'BANCO') {
-      if (!pagoInputComprobante.trim()) {
-        showToast('Seleccionaste una cuenta bancaria: adjunta la captura del comprobante y el monto, o cambia a Contra Entrega', 'error');
-        return;
-      }
-      pagosFinales.push({
-        id: `${Date.now()}`,
-        forma_pago_id: formaInputActual.id,
-        forma_pago_nombre: formaInputActual.nombre,
-        forma_pago_tipo: formaInputActual.tipo,
-        monto: totalPedido,
-        num_documento_auto: pagoInputDoc.trim() || undefined,
-        comprobante_url: pagoInputComprobante.trim(),
-        observaciones: '',
-      });
+    // Exigir que se haya registrado explícitamente la forma de pago en la lista de pagos del pedido
+    if (pagosPedido.length === 0) {
+      showToast('Debes registrar una forma de pago (haz clic en "+ Agregar Pago") antes de guardar el pedido', 'error');
+      return;
     }
+
+    const pagosFinales = [...pagosPedido];
 
     const pagoBancoSinComprobante = pagosFinales.find(
       (p) => p.forma_pago_tipo === 'BANCO' && !p.comprobante_url?.trim()
@@ -890,38 +860,14 @@ export function NuevoPedidoForm({
     }
 
     const sumaActual = pagosFinales.reduce((acc, p) => acc + p.monto, 0);
-    const saldoRestante = Math.max(0, totalPedido - sumaActual);
+    const saldoRestante = Number((totalPedido - sumaActual).toFixed(2));
 
-    if (pagosFinales.length === 0) {
-      const contraEntrega = formasPago.find((f) => f.id === '1003') || {
-        id: '1003',
-        nombre: 'Contra Entrega',
-        tipo: 'CONTRA_ENTREGA',
-      };
-      pagosFinales.push({
-        id: `${Date.now()}`,
-        forma_pago_id: contraEntrega.id,
-        forma_pago_nombre: contraEntrega.nombre,
-        forma_pago_tipo: contraEntrega.tipo,
-        monto: totalPedido,
-        num_documento_auto: '',
-        observaciones: 'Pago completo contra entrega',
-      });
-    } else if (saldoRestante > 0) {
-      const contraEntrega = formasPago.find((f) => f.id === '1003') || {
-        id: '1003',
-        nombre: 'Contra Entrega',
-        tipo: 'CONTRA_ENTREGA',
-      };
-      pagosFinales.push({
-        id: `${Date.now()}`,
-        forma_pago_id: contraEntrega.id,
-        forma_pago_nombre: contraEntrega.nombre,
-        forma_pago_tipo: contraEntrega.tipo,
-        monto: saldoRestante,
-        num_documento_auto: '',
-        observaciones: 'Saldo restante cobro contra entrega',
-      });
+    if (saldoRestante > 0) {
+      showToast(
+        `Aún queda un saldo sin asignar de $${saldoRestante.toFixed(2)}. Registra la forma de pago restante antes de guardar el pedido.`,
+        'error'
+      );
+      return;
     }
 
     const totalCCE = pagosFinales
