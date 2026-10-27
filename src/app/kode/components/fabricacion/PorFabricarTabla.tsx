@@ -261,17 +261,18 @@ export function PorFabricarTabla({
                     <th
                       onClick={() => handleToggleSortFragancias('kodigo')}
                       className="py-2.5 px-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
-                      title="Clic para ordenar por Kodigo (A-Z / Z-A)"
+                      title="Clic para ordenar por Kodigo"
                     >
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1">
                         <span>Kodigo</span>
                         {sortFragancias.column === 'kodigo' ? (
-                          <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
-                            {sortFragancias.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                            <span>{sortFragancias.direction === 'asc' ? 'A-Z' : 'Z-A'}</span>
-                          </span>
+                          sortFragancias.direction === 'asc' ? (
+                            <ChevronUp className="w-3.5 h-3.5 text-indigo-600" />
+                          ) : (
+                            <ChevronDown className="w-3.5 h-3.5 text-indigo-600" />
+                          )
                         ) : (
-                          <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]" title="Ordenar A-Z">
+                          <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]">
                             ⇅
                           </span>
                         )}
@@ -282,17 +283,18 @@ export function PorFabricarTabla({
                     <th
                       onClick={() => handleToggleSortFragancias('cliente')}
                       className="py-2.5 px-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
-                      title="Clic para ordenar por Cliente (A-Z / Z-A)"
+                      title="Clic para ordenar por Cliente"
                     >
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1">
                         <span>Cliente</span>
                         {sortFragancias.column === 'cliente' ? (
-                          <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
-                            {sortFragancias.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                            <span>{sortFragancias.direction === 'asc' ? 'A-Z' : 'Z-A'}</span>
-                          </span>
+                          sortFragancias.direction === 'asc' ? (
+                            <ChevronUp className="w-3.5 h-3.5 text-indigo-600" />
+                          ) : (
+                            <ChevronDown className="w-3.5 h-3.5 text-indigo-600" />
+                          )
                         ) : (
-                          <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]" title="Ordenar A-Z">
+                          <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]">
                             ⇅
                           </span>
                         )}
@@ -303,17 +305,18 @@ export function PorFabricarTabla({
                     <th
                       onClick={() => handleToggleSortFragancias('fecha')}
                       className="py-2.5 px-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
-                      title="Clic para ordenar por Fecha (Reciente / Antiguo)"
+                      title="Clic para ordenar por Fecha"
                     >
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1">
                         <span>Fecha registro</span>
                         {sortFragancias.column === 'fecha' ? (
-                          <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
-                            {sortFragancias.direction === 'desc' ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
-                            <span>{sortFragancias.direction === 'desc' ? 'Más reciente' : 'Más antiguo'}</span>
-                          </span>
+                          sortFragancias.direction === 'desc' ? (
+                            <ChevronDown className="w-3.5 h-3.5 text-indigo-600" />
+                          ) : (
+                            <ChevronUp className="w-3.5 h-3.5 text-indigo-600" />
+                          )
                         ) : (
-                          <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]" title="Ordenar por fecha">
+                          <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]">
                             ⇅
                           </span>
                         )}
@@ -324,17 +327,18 @@ export function PorFabricarTabla({
                     <th
                       onClick={() => handleToggleSortFragancias('version')}
                       className="py-2.5 px-3 text-center cursor-pointer hover:bg-slate-100 transition-colors select-none group"
-                      title="Clic para ordenar por Versión (A-Z / Z-A)"
+                      title="Clic para ordenar por Versión"
                     >
-                      <div className="flex items-center justify-center gap-1.5">
+                      <div className="flex items-center justify-center gap-1">
                         <span>Version</span>
                         {sortFragancias.column === 'version' ? (
-                          <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
-                            {sortFragancias.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                            <span>{sortFragancias.direction === 'asc' ? 'A-Z' : 'Z-A'}</span>
-                          </span>
+                          sortFragancias.direction === 'asc' ? (
+                            <ChevronUp className="w-3.5 h-3.5 text-indigo-600" />
+                          ) : (
+                            <ChevronDown className="w-3.5 h-3.5 text-indigo-600" />
+                          )
                         ) : (
-                          <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]" title="Ordenar por versión">
+                          <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]">
                             ⇅
                           </span>
                         )}

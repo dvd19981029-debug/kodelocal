@@ -381,17 +381,18 @@ export function CompraPendienteTabla({
                     <th
                       onClick={() => handleToggleSortInsumos('kodigo')}
                       className="py-2.5 px-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
-                      title="Clic para ordenar por Kodigo (A-Z / Z-A)"
+                      title="Clic para ordenar por Kodigo"
                     >
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1">
                         <span>Kodigo</span>
                         {sortInsumos.column === 'kodigo' ? (
-                          <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
-                            {sortInsumos.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                            <span>{sortInsumos.direction === 'asc' ? 'A-Z' : 'Z-A'}</span>
-                          </span>
+                          sortInsumos.direction === 'asc' ? (
+                            <ChevronUp className="w-3.5 h-3.5 text-indigo-600" />
+                          ) : (
+                            <ChevronDown className="w-3.5 h-3.5 text-indigo-600" />
+                          )
                         ) : (
-                          <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]" title="Ordenar A-Z">
+                          <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]">
                             ⇅
                           </span>
                         )}
@@ -402,17 +403,18 @@ export function CompraPendienteTabla({
                     <th
                       onClick={() => handleToggleSortInsumos('cliente')}
                       className="py-2.5 px-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
-                      title="Clic para ordenar por Cliente (A-Z / Z-A)"
+                      title="Clic para ordenar por Cliente"
                     >
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1">
                         <span>Cliente</span>
                         {sortInsumos.column === 'cliente' ? (
-                          <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
-                            {sortInsumos.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                            <span>{sortInsumos.direction === 'asc' ? 'A-Z' : 'Z-A'}</span>
-                          </span>
+                          sortInsumos.direction === 'asc' ? (
+                            <ChevronUp className="w-3.5 h-3.5 text-indigo-600" />
+                          ) : (
+                            <ChevronDown className="w-3.5 h-3.5 text-indigo-600" />
+                          )
                         ) : (
-                          <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]" title="Ordenar A-Z">
+                          <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]">
                             ⇅
                           </span>
                         )}
@@ -423,17 +425,18 @@ export function CompraPendienteTabla({
                     <th
                       onClick={() => handleToggleSortInsumos('fecha')}
                       className="py-2.5 px-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
-                      title="Clic para ordenar por Fecha (Reciente / Antiguo)"
+                      title="Clic para ordenar por Fecha"
                     >
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1">
                         <span>Fecha registro</span>
                         {sortInsumos.column === 'fecha' ? (
-                          <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
-                            {sortInsumos.direction === 'desc' ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
-                            <span>{sortInsumos.direction === 'desc' ? 'Más reciente' : 'Más antiguo'}</span>
-                          </span>
+                          sortInsumos.direction === 'desc' ? (
+                            <ChevronDown className="w-3.5 h-3.5 text-indigo-600" />
+                          ) : (
+                            <ChevronUp className="w-3.5 h-3.5 text-indigo-600" />
+                          )
                         ) : (
-                          <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]" title="Ordenar por fecha">
+                          <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]">
                             ⇅
                           </span>
                         )}
@@ -444,17 +447,18 @@ export function CompraPendienteTabla({
                     <th
                       onClick={() => handleToggleSortInsumos('version')}
                       className="py-2.5 px-3 text-center cursor-pointer hover:bg-slate-100 transition-colors select-none group"
-                      title="Clic para ordenar por Versión (A-Z / Z-A)"
+                      title="Clic para ordenar por Versión"
                     >
-                      <div className="flex items-center justify-center gap-1.5">
+                      <div className="flex items-center justify-center gap-1">
                         <span>Version</span>
                         {sortInsumos.column === 'version' ? (
-                          <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
-                            {sortInsumos.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                            <span>{sortInsumos.direction === 'asc' ? 'A-Z' : 'Z-A'}</span>
-                          </span>
+                          sortInsumos.direction === 'asc' ? (
+                            <ChevronUp className="w-3.5 h-3.5 text-indigo-600" />
+                          ) : (
+                            <ChevronDown className="w-3.5 h-3.5 text-indigo-600" />
+                          )
                         ) : (
-                          <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]" title="Ordenar por versión">
+                          <span className="text-slate-300 group-hover:text-slate-500 transition-colors text-[10px]">
                             ⇅
                           </span>
                         )}
