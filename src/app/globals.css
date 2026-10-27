@@ -466,5 +466,169 @@ html, body {
   contain-intrinsic-size: auto none auto 500px;
 }
 
+/* ================= KÖDE DARK MODE THEME (.kode-dark) ================= */
+.kode-dark {
+  color-scheme: dark;
+  background-color: #0b1120 !important;
+  color: #e2e8f0 !important;
+}
+
+.kode-dark .bg-\[\#f1f4f9\],
+.kode-dark.bg-\[\#f1f4f9\] {
+  background-color: #0b1120 !important;
+}
+
+.kode-dark header {
+  background-color: rgba(15, 23, 42, 0.92) !important;
+  border-color: #1e293b !important;
+}
+
+.kode-dark aside {
+  background-color: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+.kode-dark .clay-card,
+.kode-dark .bg-white,
+.kode-dark .bg-white\/95,
+.kode-dark .bg-white\/90,
+.kode-dark .bg-white\/80 {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+.kode-dark .bg-slate-50,
+.kode-dark .bg-slate-50\/50,
+.kode-dark .bg-slate-50\/60,
+.kode-dark .bg-slate-50\/70,
+.kode-dark .bg-slate-50\/80 {
+  background-color: #0f172a !important;
+}
+
+.kode-dark .bg-slate-100,
+.kode-dark .bg-slate-100\/80,
+.kode-dark .bg-slate-200\/60 {
+  background-color: #334155 !important;
+}
+
+.kode-dark .clay-input,
+.kode-dark input:not([type="checkbox"]):not([type="radio"]),
+.kode-dark select,
+.kode-dark textarea {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+}
+
+.kode-dark .clay-input::placeholder,
+.kode-dark input::placeholder,
+.kode-dark textarea::placeholder {
+  color: #64748b !important;
+}
+
+.kode-dark .clay-btn-light {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-color: #334155 !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3) !important;
+}
+
+.kode-dark .clay-btn-light:hover {
+  background: #334155 !important;
+}
+
+.kode-dark .text-slate-900,
+.kode-dark .text-slate-800 {
+  color: #f1f5f9 !important;
+}
+
+.kode-dark .text-slate-700 {
+  color: #e2e8f0 !important;
+}
+
+.kode-dark .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+.kode-dark .text-slate-500,
+.kode-dark .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+.kode-dark .border-slate-100,
+.kode-dark .border-slate-200,
+.kode-dark .border-slate-200\/60,
+.kode-dark .border-slate-200\/80,
+.kode-dark .border-slate-200\/90,
+.kode-dark .border-slate-300 {
+  border-color: #334155 !important;
+}
+
+.kode-dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+.kode-dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #1e293b !important;
+}
+
+.kode-dark .hover\:bg-slate-50:hover,
+.kode-dark .hover\:bg-slate-50\/80:hover,
+.kode-dark .hover\:bg-slate-100:hover,
+.kode-dark .hover\:bg-indigo-50\/30:hover,
+.kode-dark .hover\:bg-amber-50\/40:hover {
+  background-color: rgba(51, 65, 85, 0.65) !important;
+}
+
+/* Soft semantic backgrounds in KÖDE Dark Mode */
+.kode-dark .bg-indigo-50,
+.kode-dark .bg-indigo-50\/30,
+.kode-dark .bg-indigo-50\/40,
+.kode-dark .bg-indigo-50\/50 {
+  background-color: rgba(79, 70, 229, 0.18) !important;
+  border-color: rgba(99, 102, 241, 0.35) !important;
+}
+
+.kode-dark .text-indigo-700,
+.kode-dark .text-indigo-800,
+.kode-dark .text-indigo-900 {
+  color: #a5b4fc !important;
+}
+
+.kode-dark .bg-emerald-50,
+.kode-dark .bg-emerald-50\/50 {
+  background-color: rgba(16, 185, 129, 0.16) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+.kode-dark .text-emerald-700,
+.kode-dark .text-emerald-800 {
+  color: #6ee7b7 !important;
+}
+
+.kode-dark .bg-rose-50,
+.kode-dark .bg-rose-50\/50 {
+  background-color: rgba(244, 63, 94, 0.16) !important;
+  border-color: rgba(244, 63, 94, 0.35) !important;
+}
+
+.kode-dark .text-rose-700,
+.kode-dark .text-rose-800 {
+  color: #fda4af !important;
+}
+
+.kode-dark .bg-amber-50,
+.kode-dark .bg-amber-50\/50,
+.kode-dark .bg-amber-50\/60 {
+  background-color: rgba(245, 158, 11, 0.16) !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
+}
+
+.kode-dark .text-amber-700,
+.kode-dark .text-amber-800,
+.kode-dark .text-amber-900 {
+  color: #fcd34d !important;
+}
+
+
 
 

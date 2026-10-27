@@ -93,6 +93,9 @@ const COMPRAS_INICIALES: CompraGasto[] = [
 ];
 
 export default function KodeSystemPage() {
+  // Modo Oscuro / Claro de KÖDE
+  const [darkMode, setDarkMode] = useState(false);
+
   // Navegación Sidebar Principal
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -271,6 +274,26 @@ export default function KodeSystemPage() {
     } catch (e) {
       console.error('Error guardando en localStorage', e);
     }
+  };
+
+  // Cargar preferencia de modo oscuro de KÖDE
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('kode_theme_mode');
+      if (savedTheme === 'dark') {
+        setDarkMode(true);
+      }
+    } catch {}
+  }, []);
+
+  const handleToggleDarkMode = () => {
+    setDarkMode((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('kode_theme_mode', next ? 'dark' : 'light');
+      } catch {}
+      return next;
+    });
   };
 
   // Comprobar sesión de usuario KÖDE al montar
@@ -824,7 +847,7 @@ export default function KodeSystemPage() {
   // Pantalla de carga mientras se verifica la sesión
   if (checkingAuth) {
     return (
-      <div className="min-h-screen bg-[#f1f4f9] flex flex-col items-center justify-center p-4">
+      <div className={`min-h-screen bg-[#f1f4f9] flex flex-col items-center justify-center p-4 ${darkMode ? 'kode-dark' : ''}`}>
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center font-black text-2xl shadow-md animate-pulse">
             K
@@ -838,21 +861,23 @@ export default function KodeSystemPage() {
   // Si no está autenticado, mostrar pantalla de inicio de sesión
   if (!currentUser) {
     return (
-      <KodeLoginScreen
-        vendedoras={vendedoras}
-        onLoginSuccess={(user) => {
-          setCurrentUser(user);
-          if (user.rol !== 'ADMIN') {
-            setVendedoraSeleccionada(user.id);
-          }
-        }}
-        showToast={showToast}
-      />
+      <div className={darkMode ? 'kode-dark' : ''}>
+        <KodeLoginScreen
+          vendedoras={vendedoras}
+          onLoginSuccess={(user) => {
+            setCurrentUser(user);
+            if (user.rol !== 'ADMIN') {
+              setVendedoraSeleccionada(user.id);
+            }
+          }}
+          showToast={showToast}
+        />
+      </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f1f4f9] text-slate-800 flex font-sans antialiased overflow-x-hidden">
+    <div className={`min-h-screen bg-[#f1f4f9] text-slate-800 flex font-sans antialiased overflow-x-hidden transition-colors duration-200 ${darkMode ? 'kode-dark' : ''}`}>
       {/* Toast Notificación */}
       {toast && (
         <div
@@ -922,6 +947,8 @@ export default function KodeSystemPage() {
           setSearchQuery={setSearchQuery}
           currentUser={currentUser}
           onLogout={handleLogout}
+          darkMode={darkMode}
+          onToggleDarkMode={handleToggleDarkMode}
           onRefreshAll={() => {
             fetchPedidos();
             fetchInsumos();
