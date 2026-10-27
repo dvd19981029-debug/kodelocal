@@ -569,13 +569,16 @@ export default function KodeSystemPage() {
   };
 
   const handleMarcarInsumo = async (
-    target: { item_id?: string; catalogo_id?: string; version?: string } | string,
+    target: { item_id?: string; pedido_id?: string; catalogo_id?: string; version?: string } | string,
     versionFallback?: string
   ) => {
     try {
       setLoading(true);
       const payload: any = {
-        comprado_por: vendedoras.find((v) => v.id === vendedoraSeleccionada)?.nombre || 'Bodega KÖDE',
+        comprado_por:
+          currentUser?.nombre_completo ||
+          vendedoras.find((v) => v.id === vendedoraSeleccionada)?.nombre ||
+          'Bodega KÖDE',
       };
 
       if (typeof target === 'string') {
@@ -583,6 +586,7 @@ export default function KodeSystemPage() {
         payload.version = versionFallback;
       } else {
         if (target.item_id) payload.item_id = target.item_id;
+        if (target.pedido_id) payload.pedido_id = target.pedido_id;
         if (target.catalogo_id) payload.catalogo_id = target.catalogo_id;
         if (target.version) payload.version = target.version;
       }
@@ -595,7 +599,7 @@ export default function KodeSystemPage() {
 
       const data = await res.json();
       if (data.success) {
-        showToast('Insumo marcado como comprado.', 'success');
+        showToast(data.message || 'Insumo marcado como comprado.', 'success');
         fetchInsumos();
         fetchPedidos();
       } else {

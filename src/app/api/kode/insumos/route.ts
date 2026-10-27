@@ -41,7 +41,29 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { item_id, catalogo_id, version, comprado_por = 'Bodega' } = body;
+    const { item_id, pedido_id, catalogo_id, version, comprado_por = 'Bodega' } = body;
+
+    if (pedido_id) {
+      // Marcar todos los insumos del pedido y cambiar el pedido a 'Insumos comprados'
+      await queryKode(
+        `UPDATE public.pedido_items 
+         SET insumo_comprado = TRUE, fecha_compra_insumo = NOW(), comprado_por = $1
+         WHERE pedido_id = $2 AND insumo_comprado = FALSE`,
+        [comprado_por, pedido_id]
+      );
+
+      await queryKode(
+        `UPDATE public.pedidos
+         SET estado = 'Insumos comprados', updated_at = NOW()
+         WHERE id = $1`,
+        [pedido_id]
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: 'Pedido actualizado a estado "Insumo comprado"',
+      });
+    }
 
     if (item_id) {
       // Marcar un item específico

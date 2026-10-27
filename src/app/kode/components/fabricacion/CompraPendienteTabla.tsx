@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { ChevronRight, ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronRight, ChevronUp, ChevronDown, CheckCircle2 } from 'lucide-react';
 import { Pedido, InsumoItem } from '../../types';
 import { formatearMarcaTemporal } from '../../utils/formatters';
 
@@ -11,7 +11,7 @@ interface CompraPendienteTablaProps {
   selectedPedidoId: string | null;
   onSelectPedidoId: (id: string | null) => void;
   onBack: () => void;
-  onMarcarInsumo: (target: { item_id: string }) => Promise<void>;
+  onMarcarInsumo: (target: { item_id?: string; pedido_id?: string }) => Promise<void>;
   loading?: boolean;
 }
 
@@ -129,7 +129,7 @@ export function CompraPendienteTabla({
                     <th className="py-2.5 px-3">Cliente</th>
                     <th className="py-2.5 px-3">Marca Temporal</th>
                     <th className="py-2.5 px-3">Usuario</th>
-                    <th className="py-2.5 px-2 w-7 text-center"></th>
+                    <th className="py-2.5 px-2 text-right">Acción</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white">
@@ -166,13 +166,33 @@ export function CompraPendienteTabla({
                             {formatearMarcaTemporal(p.created_at)}
                           </td>
                           <td
-                            className="py-3 px-3 text-slate-700 font-medium text-xs truncate max-w-[180px]"
+                            className="py-3 px-3 text-slate-700 font-medium text-xs truncate max-w-[160px]"
                             title={p.vendedora_nombre || 'Erika Melgar'}
                           >
                             {p.vendedora_nombre || 'Erika Melgar'}
                           </td>
-                          <td className="py-3 px-2 text-center text-slate-400">
-                            <ChevronRight className="w-4 h-4 inline opacity-60" />
+                          <td className="py-3 px-2 text-right whitespace-nowrap">
+                            <div className="inline-flex items-center gap-1.5">
+                              <div className="relative group/tooltip inline-flex">
+                                <button
+                                  type="button"
+                                  disabled={loading}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onMarcarInsumo({ pedido_id: p.id });
+                                  }}
+                                  title='Cambiar estado del pedido a "Insumo comprado" (marca todos sus insumos como comprados y pasa a Por Fabricar)'
+                                  aria-label='Cambiar estado del pedido a "Insumo comprado"'
+                                  className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-600 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+                                >
+                                  <CheckCircle2 className="w-4 h-4" />
+                                </button>
+                                <span className="pointer-events-none invisible opacity-0 group-hover/tooltip:visible group-hover/tooltip:opacity-100 transition-opacity duration-150 absolute right-full mr-2 top-1/2 -translate-y-1/2 z-50 w-56 whitespace-normal rounded-lg bg-slate-900 px-2.5 py-1.5 text-[10px] font-semibold text-white text-left leading-tight shadow-lg">
+                                  Cambiar pedido a &ldquo;Insumo comprado&rdquo; (marca todos sus insumos y pasa a Por Fabricar)
+                                </span>
+                              </div>
+                              <ChevronRight className="w-4 h-4 inline opacity-60 text-slate-400" />
+                            </div>
                           </td>
                         </tr>
                       );
@@ -292,12 +312,15 @@ export function CompraPendienteTabla({
                         )}
                       </div>
                     </th>
+
+                    {/* 5. Acción */}
+                    <th className="py-2.5 px-3 text-right">Acción</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white">
                   {insumosSplitPane.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-12 text-center text-slate-400 font-medium">
+                      <td colSpan={5} className="py-12 text-center text-slate-400 font-medium">
                         ¡Todos los insumos han sido comprados!
                       </td>
                     </tr>
@@ -315,7 +338,7 @@ export function CompraPendienteTabla({
                                   type="button"
                                   onClick={() => onMarcarInsumo({ item_id: item.item_id })}
                                   disabled={loading}
-                                  title="Comprar insumo (Plus)"
+                                  title='Cambiar estado a "Insumo comprado" (marca este insumo Plus como comprado)'
                                   className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-black text-[11px] leading-none shrink-0 transition-transform active:scale-95 cursor-pointer shadow-2xs disabled:opacity-50"
                                 >
                                   +
@@ -325,7 +348,7 @@ export function CompraPendienteTabla({
                                   type="button"
                                   onClick={() => onMarcarInsumo({ item_id: item.item_id })}
                                   disabled={loading}
-                                  title="Comprar insumo (Normal)"
+                                  title='Cambiar estado a "Insumo comprado" (marca este insumo Normal como comprado)'
                                   className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-[11px] leading-none shrink-0 transition-transform active:scale-95 cursor-pointer shadow-2xs disabled:opacity-50"
                                 >
                                   ↓
@@ -334,7 +357,7 @@ export function CompraPendienteTabla({
 
                               <span
                                 onClick={() => onMarcarInsumo({ item_id: item.item_id })}
-                                title="Clic para marcar como comprado"
+                                title='Clic para cambiar estado a "Insumo comprado"'
                                 className={`font-bold cursor-pointer hover:underline text-xs ${
                                   isPlus
                                     ? 'text-blue-600 hover:text-blue-700'
@@ -381,6 +404,25 @@ export function CompraPendienteTabla({
                                 Normal
                               </span>
                             )}
+                          </td>
+
+                          {/* 5. Acción: Cambiar a Insumo comprado */}
+                          <td className="py-3 px-3 text-right whitespace-nowrap">
+                            <div className="relative group/tooltip inline-flex">
+                              <button
+                                type="button"
+                                disabled={loading}
+                                onClick={() => onMarcarInsumo({ item_id: item.item_id })}
+                                title='Cambiar estado a "Insumo comprado" (marca este insumo como comprado)'
+                                aria-label='Cambiar estado a "Insumo comprado"'
+                                className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-600 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+                              >
+                                <CheckCircle2 className="w-4 h-4" />
+                              </button>
+                              <span className="pointer-events-none invisible opacity-0 group-hover/tooltip:visible group-hover/tooltip:opacity-100 transition-opacity duration-150 absolute right-full mr-2 top-1/2 -translate-y-1/2 z-50 w-52 whitespace-normal rounded-lg bg-slate-900 px-2.5 py-1.5 text-[10px] font-semibold text-white text-left leading-tight shadow-lg">
+                                Cambiar estado a &ldquo;Insumo comprado&rdquo; (marca este insumo como comprado)
+                              </span>
+                            </div>
                           </td>
                         </tr>
                       );
