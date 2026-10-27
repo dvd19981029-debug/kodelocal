@@ -338,13 +338,17 @@ export const ClienteFichaView: React.FC<ClienteFichaViewProps> = ({
                                   <span className="font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 whitespace-nowrap text-[11px]">
                                     {p.dte_numero_control || p.dte_codigo_generacion?.slice(0, 15)}
                                   </span>
-                                  {p.dte_pdf_url && (
+                                  {(p.dte_codigo_generacion || p.dte_pdf_url) && (
                                     <a
-                                      href={p.dte_pdf_url}
+                                      href={
+                                        p.dte_codigo_generacion
+                                          ? `/api/kode/dte/${p.dte_codigo_generacion}/pdf`
+                                          : p.dte_pdf_url
+                                      }
                                       target="_blank"
                                       rel="noreferrer"
                                       className="text-emerald-700 hover:text-emerald-900 p-0.5 rounded hover:bg-emerald-50 transition-colors inline-flex"
-                                      title="Ver DTE Factura Llama"
+                                      title="Ver DTE Factura Llama (PDF)"
                                     >
                                       <FileText className="w-3.5 h-3.5" />
                                     </a>

@@ -68,9 +68,13 @@ export function DteResultModal({ data, onClose }: Props) {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 pt-2">
-          {data.result.pdf_url && (
+          {(data.result.codigo_generacion || data.result.pdf_url) && (
             <a
-              href={data.result.pdf_url}
+              href={
+                data.result.codigo_generacion
+                  ? `/api/kode/dte/${data.result.codigo_generacion}/pdf`
+                  : data.result.pdf_url
+              }
               target="_blank"
               rel="noreferrer"
               className="flex-1 clay-btn clay-btn-primary py-2.5 px-4 text-xs font-black flex items-center justify-center gap-2"
@@ -79,9 +83,13 @@ export function DteResultModal({ data, onClose }: Props) {
               Descargar PDF Factura
             </a>
           )}
-          {data.result.json_url && (
+          {(data.result.codigo_generacion || data.result.json_url) && (
             <a
-              href={data.result.json_url}
+              href={
+                data.result.codigo_generacion
+                  ? `/api/kode/dte/${data.result.codigo_generacion}/json`
+                  : data.result.json_url
+              }
               target="_blank"
               rel="noreferrer"
               className="clay-btn clay-btn-light py-2.5 px-4 text-xs font-bold flex items-center justify-center gap-1.5"

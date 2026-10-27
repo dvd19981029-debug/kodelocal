@@ -213,8 +213,8 @@ export async function emitirDteKode(input: EmitirDteKodeInput): Promise<KodeDteR
       fh_procesamiento: mhData?.fhProcesamiento || data.generatedAt || new Date().toISOString(),
       estado: 'PROCESADO',
       mensaje: mhData?.descripcionMsg || 'DTE de Kode emitido con éxito.',
-      pdf_url: `${config.facturaLlamaBaseUrl}/dte/${codGen}/download/pdf`,
-      json_url: `${config.facturaLlamaBaseUrl}/dte/${codGen}/download/json`,
+      pdf_url: `/api/kode/dte/${codGen}/pdf`,
+      json_url: `/api/kode/dte/${codGen}/json`,
       rawResponse: data,
       sentPayload: payload,
     };
@@ -341,8 +341,8 @@ export async function emitirDteFseKode(input: EmitirDteFseKodeInput): Promise<Ko
       fh_procesamiento: mhData?.fhProcesamiento || data.generatedAt || new Date().toISOString(),
       estado: 'PROCESADO',
       mensaje: mhData?.descripcionMsg || 'Factura de Sujeto Excluido (DTE-14) emitida con éxito.',
-      pdf_url: `${config.facturaLlamaBaseUrl}/dte/${codGen}/download/pdf`,
-      json_url: `${config.facturaLlamaBaseUrl}/dte/${codGen}/download/json`,
+      pdf_url: `/api/kode/dte/${codGen}/pdf`,
+      json_url: `/api/kode/dte/${codGen}/json`,
       rawResponse: data,
       sentPayload: payload,
     };

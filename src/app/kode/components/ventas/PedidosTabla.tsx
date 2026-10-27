@@ -206,9 +206,13 @@ export const PedidosTabla: React.FC<PedidosTablaProps> = ({
                               >
                                 {p.dte_numero_control || `${p.dte_codigo_generacion?.slice(0, 10)}...`}
                               </span>
-                              {p.dte_pdf_url && (
+                              {(p.dte_codigo_generacion || p.dte_pdf_url) && (
                                 <a
-                                  href={p.dte_pdf_url}
+                                  href={
+                                    p.dte_codigo_generacion
+                                      ? `/api/kode/dte/${p.dte_codigo_generacion}/pdf`
+                                      : p.dte_pdf_url
+                                  }
                                   target="_blank"
                                   rel="noreferrer"
                                   className="text-emerald-600 hover:text-emerald-800 p-0.5 rounded hover:bg-emerald-100 transition-colors inline-flex"

@@ -220,7 +220,8 @@ export async function middleware(request: NextRequest) {
   // 6. PROTECCIÓN CRIPTOGRÁFICA DE APIs OPERATIVAS Y ADMINISTRATIVAS
   const isPublicApiException =
     PUBLIC_OPERATIONAL_API_EXCEPTIONS.some((p) => pathname === p || pathname.startsWith(`${p}/`)) ||
-    (pathname.startsWith('/api/dte/') && request.method === 'GET');
+    (pathname.startsWith('/api/dte/') && (request.method === 'GET' || request.method === 'HEAD')) ||
+    (pathname.startsWith('/api/kode/dte/') && (request.method === 'GET' || request.method === 'HEAD'));
 
   if (isOperationalApi && !isPublicApiException) {
     const authHeader = request.headers.get('authorization') || '';
