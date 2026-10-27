@@ -55,6 +55,7 @@ import ComprasModule from '@/components/admin/ComprasModule';
 import KardexModule from '@/components/admin/KardexModule';
 import ConfiguracionKodeModule from '@/components/admin/ConfiguracionKodeModule';
 import { AbastecimientoModule } from "@/components/admin/AbastecimientoModule";
+import PlanillaModule from '@/components/admin/PlanillaModule';
 
 import AromaniakDashboardModule from '@/components/admin/AromaniakDashboardModule';
 import {
@@ -83,6 +84,7 @@ type AdminTab =
   | 'abastecimiento'
   | 'usuarios' 
   | 'roles' 
+  | 'planilla'
   | 'configuracion'
   | 'configuracion-kode';
 
@@ -830,6 +832,7 @@ export default function AdminPage() {
                 {activeTab === 'reportes-financieros' && 'Reportes Financieros'}
                 {activeTab === 'usuarios' && 'Personal & Permisos'}
                 {activeTab === 'roles' && 'Roles del Sistema'}
+                {activeTab === 'planilla' && 'Planilla & SPU (ISSS/AFP)'}
                 {activeTab === 'configuracion' && 'Factura Llama & Negocio'}
                 {activeTab === 'configuracion-kode' && 'Configuración Kode'}
               </span>
@@ -969,6 +972,17 @@ export default function AdminPage() {
               >
                 <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
                 <span className="truncate">Roles</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setActiveTab('planilla'); setIsMobileAdminMenuOpen(false); }}
+                className={`p-2.5 rounded-xl text-xs font-bold text-left flex items-center gap-2 transition-all ${
+                  activeTab === 'planilla' ? 'clay-btn-primary' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <DollarSign className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span className="truncate">Planilla & SPU</span>
               </button>
 
               <button
@@ -1226,6 +1240,23 @@ export default function AdminPage() {
               >
                 <ShieldAlert className="w-4 h-4" />
                 <span>Roles & Permisos</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('planilla')}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+                  activeTab === 'planilla'
+                    ? 'clay-btn-primary !shadow-[3px_4px_10px_rgba(79,70,229,0.35)]'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <DollarSign className="w-4 h-4 text-emerald-500" />
+                  <span>Planilla & SPU</span>
+                </div>
+                <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 font-black uppercase tracking-wider">
+                  SV
+                </span>
               </button>
             </div>
           </div>
@@ -2126,6 +2157,13 @@ export default function AdminPage() {
         {activeTab === 'abastecimiento' && (
           <div className="animate-in fade-in duration-150">
             <AbastecimientoModule />
+          </div>
+        )}
+
+        {/* ================= TAB 14: PLANILLA SALARIAL & PLANILLA ÚNICA SPU ================= */}
+        {activeTab === 'planilla' && (
+          <div className="animate-in fade-in duration-150">
+            <PlanillaModule />
           </div>
         )}
 
