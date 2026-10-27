@@ -24,6 +24,7 @@ export function CompraPendienteTabla({
   onMarcarInsumo,
   loading = false,
 }: CompraPendienteTablaProps) {
+  const [vistaModo, setVistaModo] = useState<'DETALLE' | 'INSUMOS_DIA'>('DETALLE');
   const [sortInsumos, setSortInsumos] = useState<{
     column: 'kodigo' | 'cliente' | 'fecha' | 'version';
     direction: 'asc' | 'desc';
@@ -135,100 +136,113 @@ export function CompraPendienteTabla({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <button
           onClick={onBack}
           className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1 cursor-pointer"
         >
           ← Volver a Fabricación
         </button>
-        <span className="text-xs text-rose-600 font-bold">Fase 1: Insumos por Comprar</span>
+
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setVistaModo((prev) => (prev === 'DETALLE' ? 'INSUMOS_DIA' : 'DETALLE'))}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition-all cursor-pointer shadow-2xs ${
+              vistaModo === 'INSUMOS_DIA'
+                ? 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700'
+                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            <FlaskConical className="w-3.5 h-3.5" />
+            <span>{vistaModo === 'INSUMOS_DIA' ? '← Ver Pedidos e Insumos' : 'Insumos del día'}</span>
+          </button>
+          <span className="text-xs text-rose-600 font-bold">Fase 1: Insumos por Comprar</span>
+        </div>
       </div>
 
-      {/* ========================================================= */}
-      {/* BLOQUE CONSOLIDADO: INSUMOS DEL DÍA (ONZAS POR PERFUME)   */}
-      {/* ========================================================= */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
-        <div className="px-4 py-3 bg-indigo-50/60 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <FlaskConical className="w-4 h-4 text-indigo-600" />
-            <h2 className="text-xs font-black uppercase text-slate-800 tracking-wider">
-              Insumos del día (Consolidado de compra en onzas)
-            </h2>
-            <span className="text-[10px] font-semibold text-slate-500">
-              Normal = 1 oz · Plus = 1.5 oz
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-extrabold bg-indigo-600 text-white px-2.5 py-0.5 rounded-full font-mono">
+      {vistaModo === 'INSUMOS_DIA' ? (
+        /* ========================================================= */
+        /* VISTA EN TABLA SIMPLE: INSUMOS DEL DÍA (ONZAS POR PERFUME)*/
+        /* ========================================================= */
+        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+          <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xs font-black uppercase text-slate-700 tracking-wider">
+                Insumos del día
+              </h2>
+              <span className="text-[10px] font-semibold text-slate-400">
+                (Normal = 1 oz · Plus = 1.5 oz)
+              </span>
+            </div>
+            <span className="text-xs text-indigo-700 font-black font-mono">
               Total: {totalOnzasGeneral} {totalOnzasGeneral === 1 ? 'onza' : 'onzas'}
             </span>
           </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                <tr>
+                  <th className="py-2.5 px-4">Perfume / Kodigo</th>
+                  <th className="py-2.5 px-4 text-center">Normal (1 oz)</th>
+                  <th className="py-2.5 px-4 text-center">Plus (1.5 oz)</th>
+                  <th className="py-2.5 px-4 text-center">Onzas a Comprar</th>
+                  <th className="py-2.5 px-4 text-right">Acción</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {consolidadoOnzas.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-12 text-center text-slate-400 font-medium">
+                      No hay insumos pendientes por comprar hoy.
+                    </td>
+                  </tr>
+                ) : (
+                  consolidadoOnzas.map((frag) => (
+                    <tr key={frag.key} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3 px-4 font-bold text-slate-800">
+                        {frag.contratipo} - <span className="font-mono text-indigo-600">{frag.codigo}</span>
+                      </td>
+                      <td className="py-3 px-4 text-center font-mono text-slate-600">
+                        {frag.normalCount > 0 ? `${frag.normalCount} (${frag.normalCount * 1} oz)` : '-'}
+                      </td>
+                      <td className="py-3 px-4 text-center font-mono text-slate-600">
+                        {frag.plusCount > 0 ? `${frag.plusCount} (${frag.plusCount * 1.5} oz)` : '-'}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="font-black font-mono text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-full">
+                          {frag.totalOnzas} oz
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                        {frag.catalogo_id && (
+                          <div className="relative group/tooltip inline-flex">
+                            <button
+                              type="button"
+                              disabled={loading}
+                              onClick={() => onMarcarInsumo({ catalogo_id: frag.catalogo_id })}
+                              title={`Cambiar estado a "Insumo comprado" (${frag.totalOnzas} oz de ${frag.contratipo})`}
+                              className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-600 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+                            >
+                              <CheckCircle2 className="w-4 h-4" />
+                            </button>
+                            <span className="pointer-events-none invisible opacity-0 group-hover/tooltip:visible group-hover/tooltip:opacity-100 transition-opacity duration-150 absolute right-full mr-2 top-1/2 -translate-y-1/2 z-50 w-52 whitespace-normal rounded-lg bg-slate-900 px-2.5 py-1.5 text-[10px] font-semibold text-white text-left leading-tight shadow-lg">
+                              Cambiar estado a &ldquo;Insumo comprado&rdquo; ({frag.totalOnzas} oz de {frag.contratipo})
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-
-        {consolidadoOnzas.length === 0 ? (
-          <div className="py-6 text-center text-xs text-slate-400 font-medium">
-            No hay onzas pendientes por comprar hoy.
-          </div>
-        ) : (
-          <div className="p-3.5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-            {consolidadoOnzas.map((frag) => (
-              <div
-                key={frag.key}
-                className="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-slate-50 transition-colors"
-              >
-                <div className="min-w-0">
-                  <div className="font-extrabold text-xs text-slate-800 truncate" title={`${frag.contratipo} - ${frag.codigo}`}>
-                    {frag.contratipo} - <span className="font-mono text-indigo-600">{frag.codigo}</span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1 text-[10px] font-bold">
-                    {frag.normalCount > 0 && (
-                      <span className="bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.2 rounded">
-                        {frag.normalCount} Normal ({frag.normalCount * 1} oz)
-                      </span>
-                    )}
-                    {frag.plusCount > 0 && (
-                      <span className="bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.2 rounded">
-                        {frag.plusCount} Plus ({frag.plusCount * 1.5} oz)
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <div className="text-right">
-                    <span className="block text-sm font-black font-mono text-indigo-700 leading-none">
-                      {frag.totalOnzas} oz
-                    </span>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase">
-                      a comprar
-                    </span>
-                  </div>
-                  {frag.catalogo_id && (
-                    <div className="relative group/tooltip inline-flex">
-                      <button
-                        type="button"
-                        disabled={loading}
-                        onClick={() => onMarcarInsumo({ catalogo_id: frag.catalogo_id })}
-                        title={`Marcar todas las unidades de ${frag.contratipo} (${frag.totalOnzas} oz) como "Insumo comprado"`}
-                        className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-600 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
-                      >
-                        <CheckCircle2 className="w-4 h-4" />
-                      </button>
-                      <span className="pointer-events-none invisible opacity-0 group-hover/tooltip:visible group-hover/tooltip:opacity-100 transition-opacity duration-150 absolute right-full mr-2 top-1/2 -translate-y-1/2 z-50 w-52 whitespace-normal rounded-lg bg-slate-900 px-2.5 py-1.5 text-[10px] font-semibold text-white text-left leading-tight shadow-lg">
-                        Marcar {frag.totalOnzas} oz de {frag.contratipo} como &ldquo;Insumo comprado&rdquo;
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Tabla Split-Pane AppSheet */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+      ) : (
+        /* Tabla Split-Pane AppSheet */
+        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
           {/* ========================================================= */}
           {/* TABLA IZQUIERDA: ESTADO REGISTRADO                        */}
@@ -568,6 +582,7 @@ export function CompraPendienteTabla({
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }
