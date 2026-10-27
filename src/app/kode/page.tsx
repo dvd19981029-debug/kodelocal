@@ -633,6 +633,7 @@ export default function KodeSystemPage() {
           'success'
         );
         fetchPedidos();
+        fetchInsumos();
       } else {
         showToast(data.error || 'Error al generar guía con C807 Express', 'error');
         setGuiaModalPedido(pedido);
@@ -663,6 +664,7 @@ export default function KodeSystemPage() {
         showToast(`🚀 ¡Guía ${data.numero_guia} generada en C807! Pedido en estado Azul.`, 'success');
         setGuiaModalPedido(null);
         fetchPedidos();
+        fetchInsumos();
       } else {
         showToast(data.error || 'Error al generar guía con C807 Express', 'error');
       }

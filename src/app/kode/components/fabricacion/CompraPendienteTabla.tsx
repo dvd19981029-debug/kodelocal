@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { ChevronRight, ChevronUp, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { ChevronRight, ChevronUp, ChevronDown, CheckCircle2, FlaskConical } from 'lucide-react';
 import { Pedido, InsumoItem } from '../../types';
 import { formatearMarcaTemporal } from '../../utils/formatters';
 
@@ -11,7 +11,7 @@ interface CompraPendienteTablaProps {
   selectedPedidoId: string | null;
   onSelectPedidoId: (id: string | null) => void;
   onBack: () => void;
-  onMarcarInsumo: (target: { item_id?: string; pedido_id?: string }) => Promise<void>;
+  onMarcarInsumo: (target: { item_id?: string; pedido_id?: string; catalogo_id?: string }) => Promise<void>;
   loading?: boolean;
 }
 
@@ -41,10 +41,14 @@ export function CompraPendienteTabla({
     });
   };
 
+  const pedidosRojosIds = useMemo(() => new Set(pedidosRojos.map((p) => p.id)), [pedidosRojos]);
+
   const insumosSplitPane = useMemo(() => {
+    const activeInsumos = insumos.filter((item) => pedidosRojosIds.has(item.pedido_id));
+
     const list = selectedPedidoId
-      ? insumos.filter((item) => item.pedido_id === selectedPedidoId)
-      : [...insumos];
+      ? activeInsumos.filter((item) => item.pedido_id === selectedPedidoId)
+      : [...activeInsumos];
 
     return [...list].sort((a, b) => {
       if (sortInsumos.column === 'kodigo') {
@@ -79,7 +83,55 @@ export function CompraPendienteTabla({
 
       return 0;
     });
-  }, [insumos, selectedPedidoId, sortInsumos]);
+  }, [insumos, pedidosRojosIds, selectedPedidoId, sortInsumos]);
+
+  // Consolidado de Insumos del Día por perfume (Normal = 1 oz, Plus = 1.5 oz)
+  const consolidadoOnzas = useMemo(() => {
+    const mapa = new Map<
+      string,
+      {
+        key: string;
+        catalogo_id: string;
+        codigo: string;
+        contratipo: string;
+        normalCount: number;
+        plusCount: number;
+        totalOnzas: number;
+      }
+    >();
+
+    insumosSplitPane.forEach((item) => {
+      const key = item.catalogo_id || `${item.contratipo}-${item.codigo}`;
+      const cant = Math.max(1, Number(item.cantidad || 1));
+      const isPlus = item.version === 'Plus' || item.version === 'EXTRA_SHOT';
+      const onzasItem = cant * (isPlus ? 1.5 : 1);
+
+      const actual = mapa.get(key) || {
+        key,
+        catalogo_id: item.catalogo_id,
+        codigo: item.codigo,
+        contratipo: item.contratipo,
+        normalCount: 0,
+        plusCount: 0,
+        totalOnzas: 0,
+      };
+
+      if (isPlus) {
+        actual.plusCount += cant;
+      } else {
+        actual.normalCount += cant;
+      }
+      actual.totalOnzas += onzasItem;
+      mapa.set(key, actual);
+    });
+
+    return Array.from(mapa.values()).sort((a, b) => b.totalOnzas - a.totalOnzas);
+  }, [insumosSplitPane]);
+
+  const totalOnzasGeneral = useMemo(
+    () => consolidadoOnzas.reduce((acc, item) => acc + item.totalOnzas, 0),
+    [consolidadoOnzas]
+  );
 
   return (
     <div className="space-y-4">
@@ -91,6 +143,88 @@ export function CompraPendienteTabla({
           ← Volver a Fabricación
         </button>
         <span className="text-xs text-rose-600 font-bold">Fase 1: Insumos por Comprar</span>
+      </div>
+
+      {/* ========================================================= */}
+      {/* BLOQUE CONSOLIDADO: INSUMOS DEL DÍA (ONZAS POR PERFUME)   */}
+      {/* ========================================================= */}
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+        <div className="px-4 py-3 bg-indigo-50/60 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <FlaskConical className="w-4 h-4 text-indigo-600" />
+            <h2 className="text-xs font-black uppercase text-slate-800 tracking-wider">
+              Insumos del día (Consolidado de compra en onzas)
+            </h2>
+            <span className="text-[10px] font-semibold text-slate-500">
+              Normal = 1 oz · Plus = 1.5 oz
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-extrabold bg-indigo-600 text-white px-2.5 py-0.5 rounded-full font-mono">
+              Total: {totalOnzasGeneral} {totalOnzasGeneral === 1 ? 'onza' : 'onzas'}
+            </span>
+          </div>
+        </div>
+
+        {consolidadoOnzas.length === 0 ? (
+          <div className="py-6 text-center text-xs text-slate-400 font-medium">
+            No hay onzas pendientes por comprar hoy.
+          </div>
+        ) : (
+          <div className="p-3.5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            {consolidadoOnzas.map((frag) => (
+              <div
+                key={frag.key}
+                className="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-slate-50 transition-colors"
+              >
+                <div className="min-w-0">
+                  <div className="font-extrabold text-xs text-slate-800 truncate" title={`${frag.contratipo} - ${frag.codigo}`}>
+                    {frag.contratipo} - <span className="font-mono text-indigo-600">{frag.codigo}</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1 text-[10px] font-bold">
+                    {frag.normalCount > 0 && (
+                      <span className="bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.2 rounded">
+                        {frag.normalCount} Normal ({frag.normalCount * 1} oz)
+                      </span>
+                    )}
+                    {frag.plusCount > 0 && (
+                      <span className="bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.2 rounded">
+                        {frag.plusCount} Plus ({frag.plusCount * 1.5} oz)
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="text-right">
+                    <span className="block text-sm font-black font-mono text-indigo-700 leading-none">
+                      {frag.totalOnzas} oz
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase">
+                      a comprar
+                    </span>
+                  </div>
+                  {frag.catalogo_id && (
+                    <div className="relative group/tooltip inline-flex">
+                      <button
+                        type="button"
+                        disabled={loading}
+                        onClick={() => onMarcarInsumo({ catalogo_id: frag.catalogo_id })}
+                        title={`Marcar todas las unidades de ${frag.contratipo} (${frag.totalOnzas} oz) como "Insumo comprado"`}
+                        className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-600 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                      </button>
+                      <span className="pointer-events-none invisible opacity-0 group-hover/tooltip:visible group-hover/tooltip:opacity-100 transition-opacity duration-150 absolute right-full mr-2 top-1/2 -translate-y-1/2 z-50 w-52 whitespace-normal rounded-lg bg-slate-900 px-2.5 py-1.5 text-[10px] font-semibold text-white text-left leading-tight shadow-lg">
+                        Marcar {frag.totalOnzas} oz de {frag.contratipo} como &ldquo;Insumo comprado&rdquo;
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Tabla Split-Pane AppSheet */}
