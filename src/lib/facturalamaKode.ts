@@ -68,63 +68,14 @@ export function buildKodeDteItemsFromPedido(
     });
   }
 
-  // Expandir o asignar el precio unitario igual a (total / totalUnidades)
-  const precioBaseConIva = Number((totalNum / totalUnidades).toFixed(2));
-  const diffCentavos = Number((totalNum - precioBaseConIva * totalUnidades).toFixed(2));
-
-  // Si la división es exacta al centavo (ej. $60 / 3 = $20.00), todos llevan el mismo precio unitario
-  if (Math.abs(diffCentavos) < 0.001) {
-    const precioSinIva = Number((precioBaseConIva / 1.13).toFixed(4));
-    return normalized.map((it) => ({
-      kodigo: it.kodigo,
-      nombre_mh: it.nombre_mh,
-      cantidad: it.cantidad,
-      precio_sin_iva: precioSinIva > 0 ? precioSinIva : 0.01,
-    }));
-  }
-
-  // Si hay residuo de centavos (ej. $65 / 3 = 21.67 + 21.67 + 21.66), ajustar la última unidad
-  const result: KodeDteItem[] = [];
-  normalized.forEach((it, idx) => {
-    const isLast = idx === normalized.length - 1;
-    if (!isLast) {
-      const precioSinIva = Number((precioBaseConIva / 1.13).toFixed(4));
-      result.push({
-        kodigo: it.kodigo,
-        nombre_mh: it.nombre_mh,
-        cantidad: it.cantidad,
-        precio_sin_iva: precioSinIva > 0 ? precioSinIva : 0.01,
-      });
-    } else if (it.cantidad === 1) {
-      const precioAjustadoConIva = Number((precioBaseConIva + diffCentavos).toFixed(2));
-      const precioSinIva = Number((precioAjustadoConIva / 1.13).toFixed(4));
-      result.push({
-        kodigo: it.kodigo,
-        nombre_mh: it.nombre_mh,
-        cantidad: 1,
-        precio_sin_iva: precioSinIva > 0 ? precioSinIva : 0.01,
-      });
-    } else {
-      // Separar (cantidad - 1) al precio base y 1 unidad con el ajuste de centavos
-      const precioSinIvaBase = Number((precioBaseConIva / 1.13).toFixed(4));
-      result.push({
-        kodigo: it.kodigo,
-        nombre_mh: it.nombre_mh,
-        cantidad: it.cantidad - 1,
-        precio_sin_iva: precioSinIvaBase > 0 ? precioSinIvaBase : 0.01,
-      });
-      const precioAjustadoConIva = Number((precioBaseConIva + diffCentavos).toFixed(2));
-      const precioSinIvaAjustado = Number((precioAjustadoConIva / 1.13).toFixed(4));
-      result.push({
-        kodigo: it.kodigo,
-        nombre_mh: it.nombre_mh,
-        cantidad: 1,
-        precio_sin_iva: precioSinIvaAjustado > 0 ? precioSinIvaAjustado : 0.01,
-      });
-    }
-  });
-
-  return result;
+  // Dividir el total directamente entre la cantidad de ítems y quitar el 13% de IVA con 4 decimales de precisión
+  const precioSinIva = Number(((totalNum / totalUnidades) / 1.13).toFixed(4));
+  return normalized.map((it) => ({
+    kodigo: it.kodigo,
+    nombre_mh: it.nombre_mh,
+    cantidad: it.cantidad,
+    precio_sin_iva: precioSinIva > 0 ? precioSinIva : 0.01,
+  }));
 }
 
 export interface EmitirDteKodeInput {
