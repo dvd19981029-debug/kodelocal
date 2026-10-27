@@ -49,21 +49,23 @@ export class FacturaLlamaClient {
   private baseUrl: string;
 
   constructor() {
-    this.apiKey = process.env.FACTURALLAMA_API_KEY || 'live_sk_1b857a22-475e-4966-a80b-54a7f80f0177';
+    // Clave de producción exclusiva de Aromaniak SV (aislada de KÖDE)
+    const envKey = process.env.AROMANIAK_FACTURALLAMA_API_KEY || process.env.FACTURALLAMA_API_KEY;
+    const isKodeKey =
+      envKey &&
+      (envKey.includes('45b8180f') || envKey.includes('18558fbf'));
+    this.apiKey =
+      envKey && !isKodeKey
+        ? envKey
+        : 'live_sk_1b857a22-475e-4966-a80b-54a7f80f0177';
     this.apiVersion = process.env.FACTURALLAMA_API_VERSION || '1';
     this.baseUrl = process.env.FACTURALLAMA_BASE_URL || 'https://api.facturallama.com';
   }
 
   getApiKey(): string {
-    try {
-      const { getActiveFacturaLlamaApiKey } = require('./kodeConfig');
-      const active = getActiveFacturaLlamaApiKey();
-      if (active) return active;
-    } catch {
-      // ignore
-    }
-    if (process.env.FACTURALLAMA_API_KEY) {
-      return process.env.FACTURALLAMA_API_KEY;
+    const envKey = process.env.AROMANIAK_FACTURALLAMA_API_KEY || process.env.FACTURALLAMA_API_KEY;
+    if (envKey && !envKey.includes('45b8180f') && !envKey.includes('18558fbf')) {
+      return envKey;
     }
     return this.apiKey || 'live_sk_1b857a22-475e-4966-a80b-54a7f80f0177';
   }
@@ -120,23 +122,12 @@ export class FacturaLlamaClient {
       };
     }
 
-    // 2. Transmisión Real a la API de Factura Llama
+    // 2. Transmisión Real a la API de Factura Llama (Exclusiva de Aromaniak SV)
     try {
-      let activeApiKey = this.getApiKey();
-      let apiVer = this.apiVersion;
-      let activeBaseUrl = this.baseUrl;
-      let activeAmbiente = 'PRODUCCION';
-
-      try {
-        const { getKodeConfigAsync, getActiveFacturaLlamaApiKey } = await import('./kodeConfig');
-        const config = await getKodeConfigAsync();
-        activeApiKey = getActiveFacturaLlamaApiKey(config) || activeApiKey;
-        apiVer = config.facturaLlamaApiVersion || apiVer;
-        activeBaseUrl = config.facturaLlamaBaseUrl || activeBaseUrl;
-        activeAmbiente = config.ambiente?.toUpperCase() || activeAmbiente;
-      } catch (err) {
-        console.warn('[FacturaLlama] Error obteniendo config de DB, usando fallback:', err);
-      }
+      const activeApiKey = this.getApiKey();
+      const apiVer = this.apiVersion;
+      const activeBaseUrl = this.baseUrl;
+      const activeAmbiente = activeApiKey.startsWith('test_') ? 'SANDBOX' : 'PRODUCCION';
 
       const endpoint = tipoDte === '03' ? `${activeBaseUrl}/dte/ccf` : `${activeBaseUrl}/dte/fc`;
       const payload = this.buildFacturaLlamaPayload({

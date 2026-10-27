@@ -19,11 +19,25 @@ export interface KodeConfig {
   updatedAt?: string;
 }
 
+const KODE_DEFAULT_TEST_KEY = 'test_sk_45b8180f-9dab-44d5-9575-ba1487c73ed1';
+const KODE_DEFAULT_LIVE_KEY = 'live_sk_18558fbf-1c1b-445b-b124-b79fb4f45c67';
+
+// Evitar que una llave de Aromaniak (1b857a22 / 77425a0a) se cruce hacia KÖDE
+function sanitizeKodeTestKey(key?: string): string {
+  if (!key || key.includes('77425a0a')) return KODE_DEFAULT_TEST_KEY;
+  return key;
+}
+
+function sanitizeKodeLiveKey(key?: string): string {
+  if (!key || key.includes('1b857a22')) return KODE_DEFAULT_LIVE_KEY;
+  return key;
+}
+
 const DEFAULT_CONFIG: KodeConfig = {
   ambiente: 'produccion',
-  testApiKey: 'test_sk_77425a0a-6d88-490e-a006-07cdd031b05c',
-  liveApiKey: 'live_sk_1b857a22-475e-4966-a80b-54a7f80f0177',
-  facturaLlamaApiKey: 'live_sk_1b857a22-475e-4966-a80b-54a7f80f0177',
+  testApiKey: KODE_DEFAULT_TEST_KEY,
+  liveApiKey: KODE_DEFAULT_LIVE_KEY,
+  facturaLlamaApiKey: KODE_DEFAULT_LIVE_KEY,
   facturaLlamaApiVersion: '1',
   facturaLlamaBaseUrl: 'https://api.facturallama.com',
   defaultEmail: 'luisg@forbiddensoluciones.com',
@@ -38,14 +52,14 @@ let lastCacheTime = 0;
 const CACHE_TTL_MS = 10000; // 10 segundos
 
 /**
- * Retorna la API Key activa para Factura Llama según el ambiente configurado
+ * Retorna la API Key activa para Factura Llama según el ambiente configurado (Exclusiva de KÖDE)
  */
 export function getActiveFacturaLlamaApiKey(config?: KodeConfig): string {
   const cfg = config || getKodeConfig();
   if (cfg.ambiente === 'sandbox') {
-    return cfg.testApiKey || 'test_sk_77425a0a-6d88-490e-a006-07cdd031b05c';
+    return sanitizeKodeTestKey(cfg.testApiKey);
   }
-  return cfg.liveApiKey || cfg.facturaLlamaApiKey || 'live_sk_1b857a22-475e-4966-a80b-54a7f80f0177';
+  return sanitizeKodeLiveKey(cfg.liveApiKey || cfg.facturaLlamaApiKey);
 }
 
 /**
@@ -91,6 +105,8 @@ export async function getKodeConfigAsync(): Promise<KodeConfig> {
         ...DEFAULT_CONFIG,
         ...dbValue,
       };
+      merged.testApiKey = sanitizeKodeTestKey(merged.testApiKey);
+      merged.liveApiKey = sanitizeKodeLiveKey(merged.liveApiKey);
       merged.facturaLlamaApiKey = getActiveFacturaLlamaApiKey(merged);
       cachedConfig = merged;
       lastCacheTime = now;
@@ -123,6 +139,8 @@ export function getKodeConfig(): KodeConfig {
         ...DEFAULT_CONFIG,
         ...parsed,
       };
+      merged.testApiKey = sanitizeKodeTestKey(merged.testApiKey);
+      merged.liveApiKey = sanitizeKodeLiveKey(merged.liveApiKey);
       merged.facturaLlamaApiKey = getActiveFacturaLlamaApiKey(merged);
       return merged;
     }
