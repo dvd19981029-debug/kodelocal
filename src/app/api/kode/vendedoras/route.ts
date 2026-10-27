@@ -13,7 +13,8 @@ export async function GET() {
         VALUES 
           ('Virgen Cerna', 'virgicerna@gmail.com', 'VENDEDORA'),
           ('Patricia Mejía', 'pm3923193@gmail.com', 'VENDEDORA'),
-          ('Erika Melgar', 'erikamelgargarcia@gmail.com', 'VENDEDORA')
+          ('Erika Melgar', 'erikamelgargarcia@gmail.com', 'VENDEDORA'),
+          ('Isis Dayana', 'dayanajimenezelena7@gmail.com', 'VENDEDORA')
         ON CONFLICT (email) DO NOTHING;
       `);
     }

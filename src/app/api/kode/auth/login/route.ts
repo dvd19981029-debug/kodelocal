@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { identifier, password, isPin } = body;
+    const { identifier, password, isPin, app } = body;
 
     if (!identifier || !password) {
       return NextResponse.json(
@@ -43,7 +43,36 @@ export async function POST(request: Request) {
     }
     const cleanPwd = String(password).trim();
 
-    let staffUser = null;
+    const referer = request.headers.get('referer') || '';
+    const host = request.headers.get('host') || '';
+    const isKodeContext =
+      app === 'KODE' ||
+      referer.includes('/kode') ||
+      referer.includes('kode.') ||
+      host.startsWith('kode.');
+
+    const KODE_ONLY_EMAILS = new Set([
+      'pm3923193@gmail.com',
+      'm3923193@gmail.com',
+      'dayanajimenezelena7@gmail.com',
+    ]);
+    const KODE_ONLY_USERNAMES = new Set(['pm3923193', 'dayanajimenezelena7']);
+
+    if (
+      !isKodeContext &&
+      (KODE_ONLY_EMAILS.has(cleanId) || KODE_ONLY_USERNAMES.has(cleanId))
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Acceso denegado: Este usuario solo tiene acceso autorizado al sistema KÖDE.',
+        },
+        { status: 403 }
+      );
+    }
+
+    let staffUser: any = null;
+    let isKodeOnlyUser = false;
 
     if (isPin) {
       staffUser = await prisma.staffUser.findFirst({
@@ -88,39 +117,40 @@ export async function POST(request: Request) {
         );
         if (kodeRes.rows.length > 0) {
           const kUser = kodeRes.rows[0];
+          const kEmailLower = String(kUser.email || '').trim().toLowerCase();
+          if (!isKodeContext && KODE_ONLY_EMAILS.has(kEmailLower)) {
+            return NextResponse.json(
+              {
+                success: false,
+                error: 'Acceso denegado: Este usuario solo tiene acceso autorizado al sistema KÖDE.',
+              },
+              { status: 403 }
+            );
+          }
+
           const pwdMatch =
             kUser.password === cleanPwd ||
             cleanPwd === '123' ||
             (isPin && kUser.password === cleanPwd);
           if (pwdMatch) {
-            const passwordHash = hashPasswordSecure(cleanPwd);
-            const userRole = String(kUser.rol || 'CASHIER').toUpperCase() === 'ADMIN' ? 'ADMIN' : 'CASHIER';
-            const syncedStaff = await prisma.staffUser.upsert({
-              where: { email: kUser.email.toLowerCase().trim() },
-              update: {
-                name: kUser.nombre,
-                role: userRole,
-                isActive: true,
-                passwordHash,
-                pin: isPin ? cleanPwd : '123',
-                lastLogin: new Date(),
-              },
-              create: {
-                name: kUser.nombre,
-                email: kUser.email.toLowerCase().trim(),
-                role: userRole,
-                isActive: true,
-                passwordHash,
-                pin: isPin ? cleanPwd : '123',
-                lastLogin: new Date(),
-              }
-            }).catch(() => null);
+            const isAdminRole = String(kUser.rol || '').toUpperCase() === 'ADMIN';
+            isKodeOnlyUser = KODE_ONLY_EMAILS.has(kEmailLower) || !isAdminRole;
+            if (!isKodeContext && isKodeOnlyUser) {
+              return NextResponse.json(
+                {
+                  success: false,
+                  error: 'Acceso denegado: Este usuario solo tiene acceso autorizado al sistema KÖDE.',
+                },
+                { status: 403 }
+              );
+            }
 
-            staffUser = syncedStaff || {
+            staffUser = {
               id: kUser.id,
               name: kUser.nombre,
               email: kUser.email,
-              role: userRole,
+              role: isAdminRole ? 'ADMIN' : 'KODE_ONLY',
+              isKodeOnly: true,
             };
           }
         }
@@ -136,7 +166,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (staffUser.id) {
+    if (staffUser.id && !staffUser.isKodeOnly) {
       await prisma.staffUser.update({
         where: { id: staffUser.id },
         data: { lastLogin: new Date() }
@@ -156,7 +186,7 @@ export async function POST(request: Request) {
         if (uRes.rows.length > 0) {
           kodeUserId = uRes.rows[0].id;
           kodeUserNombre = uRes.rows[0].nombre || staffUser.name;
-        } else {
+        } else if (isKodeContext) {
           const insRes = await queryKode(
             `INSERT INTO public.usuarios (nombre, email, rol, activo)
              VALUES ($1, $2, $3, TRUE)
@@ -172,7 +202,14 @@ export async function POST(request: Request) {
       console.error('Error sincronizando usuario con public.usuarios:', syncErr);
     }
 
-    const safeToken = createStaffInternalToken(staffUser.role, staffUser.email, kodeUserNombre, kodeUserId);
+    const tokenRole =
+      KODE_ONLY_EMAILS.has(String(staffUser.email || '').trim().toLowerCase()) ||
+      staffUser.role === 'KODE_ONLY'
+        ? 'KODE_ONLY'
+        : staffUser.role;
+    const uiRole = tokenRole === 'KODE_ONLY' ? 'VENDEDORA' : staffUser.role;
+
+    const safeToken = createStaffInternalToken(tokenRole, staffUser.email, kodeUserNombre, kodeUserId);
 
     const response = NextResponse.json({
       success: true,
@@ -181,7 +218,7 @@ export async function POST(request: Request) {
         id: kodeUserId,
         nombre: kodeUserNombre,
         email: staffUser.email,
-        rol: staffUser.role
+        rol: uiRole
       }
     });
 
@@ -197,7 +234,7 @@ export async function POST(request: Request) {
       id: kodeUserId,
       name: kodeUserNombre,
       email: staffUser.email,
-      role: staffUser.role
+      role: tokenRole
     }), {
       path: '/',
       sameSite: 'lax',

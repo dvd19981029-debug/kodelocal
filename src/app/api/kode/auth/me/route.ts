@@ -35,7 +35,7 @@ export async function GET(request: Request) {
         id: kodeUserId,
         nombre: kodeUserNombre,
         email: payload.email,
-        rol: payload.role,
+        rol: payload.role === 'KODE_ONLY' ? 'VENDEDORA' : payload.role,
       },
     });
   } catch (error: any) {

@@ -85,6 +85,7 @@ export const KodeLoginScreen: React.FC<KodeLoginScreenProps> = ({
         body: JSON.stringify({
           identifier,
           password: password.trim(),
+          app: 'KODE',
         }),
       });
 

@@ -60,10 +60,22 @@ async function getEdgeAuthSecret(): Promise<string> {
   return 'aromaniak_auth_token_secret_prod_fallback_2026';
 }
 
-async function verifyStaffTokenEdge(token?: string | null): Promise<boolean> {
-  if (!token || typeof token !== 'string') return false;
+const KODE_ONLY_EMAILS = new Set([
+  'pm3923193@gmail.com',
+  'm3923193@gmail.com',
+  'dayanajimenezelena7@gmail.com',
+]);
+
+async function getStaffTokenPayloadEdge(token?: string | null): Promise<{
+  role?: string;
+  email?: string;
+  name?: string;
+  id?: string;
+  scope?: string;
+} | null> {
+  if (!token || typeof token !== 'string') return null;
   const parts = token.split('.');
-  if (parts.length !== 2) return false;
+  if (parts.length !== 2) return null;
   const [payloadB64, receivedSig] = parts;
 
   try {
@@ -84,18 +96,31 @@ async function verifyStaffTokenEdge(token?: string | null): Promise<boolean> {
       sigBytes.buffer as ArrayBuffer,
       encoder.encode(payloadB64)
     );
-    if (!isValidSig) return false;
+    if (!isValidSig) return null;
 
     const payloadJson = new TextDecoder().decode(base64UrlToUint8Array(payloadB64));
     const payload = JSON.parse(payloadJson);
     const graceMs = 30 * 24 * 60 * 60 * 1000;
     if (!payload || typeof payload.exp !== 'number' || Date.now() > payload.exp + graceMs) {
-      return false;
+      return null;
     }
-    return payload.scope === 'internal_operations';
+    if (payload.scope !== 'internal_operations') return null;
+    return payload;
   } catch {
-    return false;
+    return null;
   }
+}
+
+function isKodeRestrictedPayload(payload: { role?: string; email?: string } | null): boolean {
+  if (!payload) return false;
+  if (payload.role === 'KODE_ONLY') return true;
+  const emailLower = String(payload.email || '').trim().toLowerCase();
+  return KODE_ONLY_EMAILS.has(emailLower);
+}
+
+async function verifyStaffTokenEdge(token?: string | null): Promise<boolean> {
+  const payload = await getStaffTokenPayloadEdge(token);
+  return payload !== null;
 }
 
 export async function middleware(request: NextRequest) {
@@ -179,12 +204,16 @@ export async function middleware(request: NextRequest) {
 
   if (isProtectedUiRoute) {
     const token = request.cookies.get('kodelocal_staff_token')?.value;
-    const isValid = await verifyStaffTokenEdge(token);
-    if (!isValid) {
+    const payload = await getStaffTokenPayloadEdge(token);
+    if (!payload) {
       const loginRedirect = NextResponse.redirect(new URL('/login', request.url));
       loginRedirect.cookies.delete('kodelocal_staff_token');
       loginRedirect.cookies.delete('kode_session_ui');
       return loginRedirect;
+    }
+    // Usuarios exclusivos de KÖDE (Patricia, Isis, etc.) no pueden acceder a Aromaniak
+    if (isKodeRestrictedPayload(payload)) {
+      return NextResponse.redirect(new URL('/kode', request.url));
     }
   }
 
@@ -199,11 +228,11 @@ export async function middleware(request: NextRequest) {
     const staffHeaderToken = request.headers.get('x-staff-token');
     const cookieToken = request.cookies.get('kodelocal_staff_token')?.value;
 
-    const validCookie = await verifyStaffTokenEdge(cookieToken);
-    const validHeader = !validCookie ? await verifyStaffTokenEdge(staffHeaderToken) : true;
-    const validBearer = !validCookie && !validHeader ? await verifyStaffTokenEdge(bearerToken) : true;
+    const cookiePayload = await getStaffTokenPayloadEdge(cookieToken);
+    const headerPayload = !cookiePayload ? await getStaffTokenPayloadEdge(staffHeaderToken) : cookiePayload;
+    const activePayload = !headerPayload ? await getStaffTokenPayloadEdge(bearerToken) : headerPayload;
 
-    if (!validCookie && !validHeader && !validBearer) {
+    if (!activePayload) {
       return NextResponse.json(
         {
           success: false,
@@ -211,6 +240,24 @@ export async function middleware(request: NextRequest) {
         },
         {
           status: 401,
+          headers: { 'X-Robots-Tag': 'noindex, nofollow, noarchive, nosnippet' },
+        }
+      );
+    }
+
+    const isKodeAllowedApi =
+      pathname.startsWith('/api/kode') ||
+      pathname.startsWith('/api/wompi/enlaces') ||
+      pathname.startsWith('/api/dte');
+
+    if (isKodeRestrictedPayload(activePayload) && !isKodeAllowedApi) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Acceso denegado: Este usuario tiene acceso exclusivo al sistema KÖDE.',
+        },
+        {
+          status: 403,
           headers: { 'X-Robots-Tag': 'noindex, nofollow, noarchive, nosnippet' },
         }
       );
