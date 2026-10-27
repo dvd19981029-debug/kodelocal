@@ -56,6 +56,35 @@ export interface PayrollParameters {
   mensualBrackets: IsrBracket[];
 }
 
+export interface JornadaDaySchedule {
+  dayOfWeek: number; // 1 = Lunes, 2 = Martes, 3 = Miércoles, 4 = Jueves, 5 = Viernes, 6 = Sábado, 0 = Domingo
+  dayName: string;
+  isWorkDay: boolean;
+  entradaTurno: string; // HH:mm
+  hasLunch: boolean;
+  salidaAlmuerzo: string; // HH:mm
+  entradaAlmuerzo: string; // HH:mm
+  salidaTurno: string; // HH:mm
+}
+
+export interface WorkJornada {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  graceMinutesEntrada: number;
+  graceMinutesAlmuerzo: number;
+  days: JornadaDaySchedule[];
+}
+
+export interface DailyPunchRecord {
+  marcacionEntrada: string; // HH:mm
+  marcacionSalidaAlmuerzo: string; // HH:mm
+  marcacionEntradaAlmuerzo: string; // HH:mm
+  marcacionSalidaTurno: string; // HH:mm
+  observacion?: string;
+}
+
 export interface PayrollEmployee {
   id: string;
   code: string;
@@ -69,6 +98,7 @@ export interface PayrollEmployee {
   hireDate: string;
   position: string;
   department: string;
+  jornadaId?: string;
   docType: string; // '01 DUI' | '02 PASAPORTE' | '03 CARNÉ DE MINORIDAD' | '04 CARNÉ DE RESIDENTE'
   docNumber: string;
   isssNumber: string;
@@ -146,6 +176,64 @@ const DEFAULT_PARAMETERS: PayrollParameters = {
   ],
 };
 
+export function buildStandardWeekDays(
+  entrada = '08:00',
+  salidaAlm = '12:00',
+  entradaAlm = '13:00',
+  salida = '17:00',
+  sabEntrada = '08:00',
+  sabSalida = '12:00'
+): JornadaDaySchedule[] {
+  return [
+    { dayOfWeek: 1, dayName: 'Lunes', isWorkDay: true, entradaTurno: entrada, hasLunch: true, salidaAlmuerzo: salidaAlm, entradaAlmuerzo: entradaAlm, salidaTurno: salida },
+    { dayOfWeek: 2, dayName: 'Martes', isWorkDay: true, entradaTurno: entrada, hasLunch: true, salidaAlmuerzo: salidaAlm, entradaAlmuerzo: entradaAlm, salidaTurno: salida },
+    { dayOfWeek: 3, dayName: 'Miércoles', isWorkDay: true, entradaTurno: entrada, hasLunch: true, salidaAlmuerzo: salidaAlm, entradaAlmuerzo: entradaAlm, salidaTurno: salida },
+    { dayOfWeek: 4, dayName: 'Jueves', isWorkDay: true, entradaTurno: entrada, hasLunch: true, salidaAlmuerzo: salidaAlm, entradaAlmuerzo: entradaAlm, salidaTurno: salida },
+    { dayOfWeek: 5, dayName: 'Viernes', isWorkDay: true, entradaTurno: entrada, hasLunch: true, salidaAlmuerzo: salidaAlm, entradaAlmuerzo: entradaAlm, salidaTurno: salida },
+    { dayOfWeek: 6, dayName: 'Sábado', isWorkDay: true, entradaTurno: sabEntrada, hasLunch: false, salidaAlmuerzo: '12:00', entradaAlmuerzo: '12:00', salidaTurno: sabSalida },
+    { dayOfWeek: 0, dayName: 'Domingo', isWorkDay: false, entradaTurno: '08:00', hasLunch: false, salidaAlmuerzo: '12:00', entradaAlmuerzo: '13:00', salidaTurno: '17:00' },
+  ];
+}
+
+const DEFAULT_JORNADAS: WorkJornada[] = [
+  {
+    id: 'jor-gerencia',
+    code: 'JOR-GER',
+    name: 'Gerencia',
+    description: 'Jornada de Gerencia y Administración General (Lun–Vie 08:00–17:00, Sáb 08:00–12:00)',
+    graceMinutesEntrada: 0,
+    graceMinutesAlmuerzo: 0,
+    days: buildStandardWeekDays('08:00', '12:00', '13:00', '17:00', '08:00', '12:00'),
+  },
+  {
+    id: 'jor-ventas',
+    code: 'JOR-VEN',
+    name: 'Ventas / Recepción',
+    description: 'Jornada de Atención en Sala de Ventas y Recepción',
+    graceMinutesEntrada: 0,
+    graceMinutesAlmuerzo: 0,
+    days: buildStandardWeekDays('08:00', '12:00', '13:00', '17:00', '08:00', '12:00'),
+  },
+  {
+    id: 'jor-bodega',
+    code: 'JOR-BOD',
+    name: 'Bodega',
+    description: 'Jornada Operativa de Bodega y Despacho',
+    graceMinutesEntrada: 0,
+    graceMinutesAlmuerzo: 0,
+    days: buildStandardWeekDays('08:00', '12:00', '13:00', '17:00', '08:00', '12:00'),
+  },
+  {
+    id: 'jor-marketing',
+    code: 'JOR-MKT',
+    name: 'Marketing',
+    description: 'Jornada de Equipo Creativo y Marketing Digital',
+    graceMinutesEntrada: 0,
+    graceMinutesAlmuerzo: 0,
+    days: buildStandardWeekDays('08:00', '12:00', '13:00', '17:00', '08:00', '12:00'),
+  },
+];
+
 const INITIAL_EMPLOYEES: PayrollEmployee[] = [
   {
     id: 'emp-1',
@@ -160,6 +248,7 @@ const INITIAL_EMPLOYEES: PayrollEmployee[] = [
     hireDate: '2023-01-15',
     position: 'Gerente',
     department: 'ADMINISTRACIÓN',
+    jornadaId: 'jor-gerencia',
     docType: '01 DUI',
     docNumber: '00000001-0',
     isssNumber: 'ISSS00001',
@@ -192,6 +281,7 @@ const INITIAL_EMPLOYEES: PayrollEmployee[] = [
     hireDate: '2023-03-01',
     position: 'Recepción',
     department: 'VENTA',
+    jornadaId: 'jor-ventas',
     docType: '01 DUI',
     docNumber: '00000002-0',
     isssNumber: 'ISSS00002',
@@ -224,6 +314,7 @@ const INITIAL_EMPLOYEES: PayrollEmployee[] = [
     hireDate: '2023-04-10',
     position: 'Bodega',
     department: 'BODEGA',
+    jornadaId: 'jor-bodega',
     docType: '01 DUI',
     docNumber: '00000003-0',
     isssNumber: 'ISSS00003',
@@ -256,6 +347,7 @@ const INITIAL_EMPLOYEES: PayrollEmployee[] = [
     hireDate: '2023-05-01',
     position: 'Marketing',
     department: 'MARKETING',
+    jornadaId: 'jor-marketing',
     docType: '01 DUI',
     docNumber: '00000004-0',
     isssNumber: 'ISSS00004',
@@ -288,6 +380,7 @@ const INITIAL_EMPLOYEES: PayrollEmployee[] = [
     hireDate: '2023-05-01',
     position: 'Marketing',
     department: 'MARKETING',
+    jornadaId: 'jor-marketing',
     docType: '01 DUI',
     docNumber: '00000005-0',
     isssNumber: 'ISSS00005',
@@ -371,10 +464,121 @@ export function calculateIsrFromBrackets(gravable: number, brackets: IsrBracket[
   return 0;
 }
 
+export function parseTimeMinutes(hhmm: string): number | null {
+  const m = String(hhmm || '').trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return null;
+  const h = parseInt(m[1], 10);
+  const min = parseInt(m[2], 10);
+  if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+  return h * 60 + min;
+}
+
+export function calcDayScheduledHours(d: JornadaDaySchedule): number {
+  if (!d.isWorkDay) return 0;
+  const inMin = parseTimeMinutes(d.entradaTurno);
+  const outMin = parseTimeMinutes(d.salidaTurno);
+  if (inMin === null || outMin === null || outMin <= inMin) return 0;
+  let totalMin = outMin - inMin;
+  if (d.hasLunch) {
+    const lOut = parseTimeMinutes(d.salidaAlmuerzo);
+    const lIn = parseTimeMinutes(d.entradaAlmuerzo);
+    if (lOut !== null && lIn !== null && lIn > lOut) {
+      totalMin -= lIn - lOut;
+    }
+  }
+  return round2(Math.max(0, totalMin / 60));
+}
+
+export function getDatesInRange(startStr: string, endStr: string): string[] {
+  const s = new Date(`${startStr}T00:00:00`);
+  const e = new Date(`${endStr}T00:00:00`);
+  if (isNaN(s.getTime()) || isNaN(e.getTime()) || e < s) return [];
+  const dates: string[] = [];
+  const cur = new Date(s);
+  let guard = 0;
+  while (cur <= e && guard < 45) {
+    const yyyy = cur.getFullYear();
+    const mm = String(cur.getMonth() + 1).padStart(2, '0');
+    const dd = String(cur.getDate()).padStart(2, '0');
+    dates.push(`${yyyy}-${mm}-${dd}`);
+    cur.setDate(cur.getDate() + 1);
+    guard++;
+  }
+  return dates;
+}
+
+export function crossDayPunch(
+  daySchedule: JornadaDaySchedule | undefined,
+  punch: DailyPunchRecord | undefined,
+  graceEntrada = 0,
+  graceAlmuerzo = 0
+) {
+  if (!daySchedule || !daySchedule.isWorkDay || !punch) {
+    return {
+      minTardeEntrada: 0,
+      minSalidaAntesAlmuerzo: 0,
+      minTardeEntradaAlmuerzo: 0,
+      minSalidaAntesTurno: 0,
+      totalMinutosDescuento: 0,
+    };
+  }
+
+  let minTardeEntrada = 0;
+  let minSalidaAntesAlmuerzo = 0;
+  let minTardeEntradaAlmuerzo = 0;
+  let minSalidaAntesTurno = 0;
+
+  // 1. Entrada de Turno vs Marcación de Entrada
+  const schedIn = parseTimeMinutes(daySchedule.entradaTurno);
+  const punchIn = parseTimeMinutes(punch.marcacionEntrada);
+  if (schedIn !== null && punchIn !== null && punchIn > schedIn) {
+    const diff = punchIn - schedIn;
+    if (diff > graceEntrada) {
+      minTardeEntrada = diff;
+    }
+  }
+
+  // 2. Salida a Almuerzo y Entrada de Almuerzo
+  if (daySchedule.hasLunch) {
+    const schedLunchOut = parseTimeMinutes(daySchedule.salidaAlmuerzo);
+    const punchLunchOut = parseTimeMinutes(punch.marcacionSalidaAlmuerzo);
+    if (schedLunchOut !== null && punchLunchOut !== null && punchLunchOut < schedLunchOut) {
+      minSalidaAntesAlmuerzo = schedLunchOut - punchLunchOut;
+    }
+
+    const schedLunchIn = parseTimeMinutes(daySchedule.entradaAlmuerzo);
+    const punchLunchIn = parseTimeMinutes(punch.marcacionEntradaAlmuerzo);
+    if (schedLunchIn !== null && punchLunchIn !== null && punchLunchIn > schedLunchIn) {
+      const diffAlm = punchLunchIn - schedLunchIn;
+      if (diffAlm > graceAlmuerzo) {
+        minTardeEntradaAlmuerzo = diffAlm;
+      }
+    }
+  }
+
+  // 3. Salida de Turno vs Marcación de Salida
+  const schedOut = parseTimeMinutes(daySchedule.salidaTurno);
+  const punchOut = parseTimeMinutes(punch.marcacionSalidaTurno);
+  if (schedOut !== null && punchOut !== null && punchOut < schedOut) {
+    minSalidaAntesTurno = schedOut - punchOut;
+  }
+
+  const totalMinutosDescuento =
+    minTardeEntrada + minSalidaAntesAlmuerzo + minTardeEntradaAlmuerzo + minSalidaAntesTurno;
+
+  return {
+    minTardeEntrada,
+    minSalidaAntesAlmuerzo,
+    minTardeEntradaAlmuerzo,
+    minSalidaAntesTurno,
+    totalMinutosDescuento,
+  };
+}
+
 const STORAGE_KEY = 'kodelocal_planilla_sv_v1';
 
 export default function PlanillaModule() {
-  const [subTab, setSubTab] = useState<'quincenal' | 'spu' | 'resumen' | 'parametros'>('quincenal');
+  const [subTab, setSubTab] = useState<'quincenal' | 'jornadas' | 'spu' | 'resumen' | 'parametros'>('quincenal');
   const [frequency, setFrequency] = useState<PayrollFrequency>('QUINCENAL');
 
   // Doble Calendario (Período de Salario Ordinario vs. Período de Corte de Novedades/Reloj)
@@ -386,6 +590,14 @@ export default function PlanillaModule() {
 
   const [parameters, setParameters] = useState<PayrollParameters>(DEFAULT_PARAMETERS);
   const [employees, setEmployees] = useState<PayrollEmployee[]>(INITIAL_EMPLOYEES);
+  const [jornadas, setJornadas] = useState<WorkJornada[]>(DEFAULT_JORNADAS);
+  const [selectedJornadaId, setSelectedJornadaId] = useState<string>('jor-gerencia');
+  const [selectedPunchEmpId, setSelectedPunchEmpId] = useState<string>('emp-1');
+  // Mapa de marcaciones por `${empId}_${YYYY-MM-DD}`
+  const [punchRecords, setPunchRecords] = useState<Record<string, DailyPunchRecord>>({});
+  const [bulkPunchCsvText, setBulkPunchCsvText] = useState<string>('');
+  const [showBulkPunchModal, setShowBulkPunchModal] = useState<boolean>(false);
+
   const [history, setHistory] = useState<SavedPayrollSnapshot[]>([]);
   const [isSavingServer, setIsSavingServer] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -401,13 +613,33 @@ export default function PlanillaModule() {
 
   // Cargar datos de localStorage y Supabase al iniciar
   useEffect(() => {
+    const defaultJornadaForDept = (dept: string) => {
+      const u = String(dept || '').toUpperCase();
+      if (u.includes('ADMIN') || u.includes('GEREN')) return 'jor-gerencia';
+      if (u.includes('VENT') || u.includes('RECEP')) return 'jor-ventas';
+      if (u.includes('BODEG')) return 'jor-bodega';
+      if (u.includes('MARKET')) return 'jor-marketing';
+      return 'jor-gerencia';
+    };
+
     if (typeof window !== 'undefined') {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         try {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed.employees) && parsed.employees.length > 0) {
-            setEmployees(parsed.employees);
+            setEmployees(
+              parsed.employees.map((e: PayrollEmployee) => ({
+                ...e,
+                jornadaId: e.jornadaId || defaultJornadaForDept(e.department),
+              }))
+            );
+          }
+          if (Array.isArray(parsed.jornadas) && parsed.jornadas.length > 0) {
+            setJornadas(parsed.jornadas);
+          }
+          if (parsed.punchRecords && typeof parsed.punchRecords === 'object') {
+            setPunchRecords(parsed.punchRecords);
           }
           if (parsed.parameters) {
             setParameters({ ...DEFAULT_PARAMETERS, ...parsed.parameters });
@@ -430,7 +662,20 @@ export default function PlanillaModule() {
       .then((res) => {
         if (res.success && res.data) {
           const d = res.data;
-          if (Array.isArray(d.employees) && d.employees.length > 0) setEmployees(d.employees);
+          if (Array.isArray(d.employees) && d.employees.length > 0) {
+            setEmployees(
+              d.employees.map((e: PayrollEmployee) => ({
+                ...e,
+                jornadaId: e.jornadaId || defaultJornadaForDept(e.department),
+              }))
+            );
+          }
+          if (Array.isArray(d.jornadas) && d.jornadas.length > 0) {
+            setJornadas(d.jornadas);
+          }
+          if (d.punchRecords && typeof d.punchRecords === 'object') {
+            setPunchRecords(d.punchRecords);
+          }
           if (d.parameters) setParameters({ ...DEFAULT_PARAMETERS, ...d.parameters });
           if (Array.isArray(d.history)) setHistory(d.history);
           if (d.periodStart) setPeriodStart(d.periodStart);
@@ -451,12 +696,16 @@ export default function PlanillaModule() {
     nextEmployees = employees,
     nextParams = parameters,
     nextHistory = history,
-    nextPeriod = { periodStart, periodEnd, cutoffStart, cutoffEnd, paymentDate, frequency }
+    nextPeriod = { periodStart, periodEnd, cutoffStart, cutoffEnd, paymentDate, frequency },
+    nextJornadas = jornadas,
+    nextPunchRecords = punchRecords
   ) => {
     const payload = {
       employees: nextEmployees,
       parameters: nextParams,
       history: nextHistory,
+      jornadas: nextJornadas,
+      punchRecords: nextPunchRecords,
       ...nextPeriod,
     };
     if (typeof window !== 'undefined') {
@@ -1173,6 +1422,7 @@ export default function PlanillaModule() {
       hireDate: new Date().toISOString().slice(0, 10),
       position: 'Vendedor',
       department: 'VENTA',
+      jornadaId: jornadas[0]?.id || 'jor-gerencia',
       docType: '01 DUI',
       docNumber: '00000000-0',
       isssNumber: 'ISSS00000',
@@ -1193,6 +1443,303 @@ export default function PlanillaModule() {
       otherDeductions: 0,
     });
     setIsEmpModalOpen(true);
+  };
+
+  // ================= LÓGICA DE JORNADAS Y CRUCE DE MARCACIONES (ESTILO ASEINFO EVOLUTION) =================
+  const selectedJornada = useMemo(() => {
+    return jornadas.find((j) => j.id === selectedJornadaId) || jornadas[0] || DEFAULT_JORNADAS[0];
+  }, [jornadas, selectedJornadaId]);
+
+  const handleCreateJornada = () => {
+    const nextNum = jornadas.length + 1;
+    const newJor: WorkJornada = {
+      id: `jor-${Date.now()}`,
+      code: `JOR-0${nextNum}`,
+      name: `Nueva Jornada ${nextNum}`,
+      description: 'Horario semanal personalizado para cruce de marcaciones',
+      graceMinutesEntrada: 0,
+      graceMinutesAlmuerzo: 0,
+      days: buildStandardWeekDays('08:00', '12:00', '13:00', '17:00', '08:00', '12:00'),
+    };
+    const next = [...jornadas, newJor];
+    setJornadas(next);
+    setSelectedJornadaId(newJor.id);
+    persistState(employees, parameters, history, { periodStart, periodEnd, cutoffStart, cutoffEnd, paymentDate, frequency }, next, punchRecords);
+    showToast(`✅ Jornada "${newJor.name}" creada.`);
+  };
+
+  const handleDuplicateJornada = () => {
+    if (!selectedJornada) return;
+    const copy: WorkJornada = {
+      ...JSON.parse(JSON.stringify(selectedJornada)),
+      id: `jor-${Date.now()}`,
+      code: `${selectedJornada.code}-COPIA`,
+      name: `${selectedJornada.name} (Copia)`,
+    };
+    const next = [...jornadas, copy];
+    setJornadas(next);
+    setSelectedJornadaId(copy.id);
+    persistState(employees, parameters, history, { periodStart, periodEnd, cutoffStart, cutoffEnd, paymentDate, frequency }, next, punchRecords);
+    showToast(`✅ Jornada duplicada como "${copy.name}".`);
+  };
+
+  const handleDeleteJornada = (jorId: string) => {
+    if (jornadas.length <= 1) {
+      showToast('⚠️ Debe existir al menos una jornada configurada.');
+      return;
+    }
+    const target = jornadas.find((j) => j.id === jorId);
+    if (!target) return;
+    if (!confirm(`¿Eliminar la jornada "${target.name}"?`)) return;
+    const next = jornadas.filter((j) => j.id !== jorId);
+    setJornadas(next);
+    setSelectedJornadaId(next[0].id);
+    persistState(employees, parameters, history, { periodStart, periodEnd, cutoffStart, cutoffEnd, paymentDate, frequency }, next, punchRecords);
+    showToast(`🗑️ Jornada "${target.name}" eliminada.`);
+  };
+
+  const updateSelectedJornadaField = <K extends keyof WorkJornada>(field: K, value: WorkJornada[K]) => {
+    const next = jornadas.map((j) => (j.id === selectedJornada.id ? { ...j, [field]: value } : j));
+    setJornadas(next);
+  };
+
+  const updateSelectedJornadaDay = (
+    dayOfWeek: number,
+    field: keyof JornadaDaySchedule,
+    value: string | boolean
+  ) => {
+    const next = jornadas.map((j) => {
+      if (j.id !== selectedJornada.id) return j;
+      return {
+        ...j,
+        days: j.days.map((d) => (d.dayOfWeek === dayOfWeek ? { ...d, [field]: value } : d)),
+      };
+    });
+    setJornadas(next);
+  };
+
+  const copyMondayToWeekdays = () => {
+    const monday = selectedJornada.days.find((d) => d.dayOfWeek === 1);
+    if (!monday) return;
+    const next = jornadas.map((j) => {
+      if (j.id !== selectedJornada.id) return j;
+      return {
+        ...j,
+        days: j.days.map((d) =>
+          d.dayOfWeek >= 2 && d.dayOfWeek <= 5
+            ? {
+                ...d,
+                isWorkDay: monday.isWorkDay,
+                entradaTurno: monday.entradaTurno,
+                hasLunch: monday.hasLunch,
+                salidaAlmuerzo: monday.salidaAlmuerzo,
+                entradaAlmuerzo: monday.entradaAlmuerzo,
+                salidaTurno: monday.salidaTurno,
+              }
+            : d
+        ),
+      };
+    });
+    setJornadas(next);
+    persistState(employees, parameters, history, { periodStart, periodEnd, cutoffStart, cutoffEnd, paymentDate, frequency }, next, punchRecords);
+    showToast('✅ Horario del Lunes aplicado de Martes a Viernes.');
+  };
+
+  const handleAssignEmployeeJornada = (empId: string, jorId: string) => {
+    const next = employees.map((emp) => (emp.id === empId ? { ...emp, jornadaId: jorId } : emp));
+    setEmployees(next);
+    persistState(next, parameters, history, { periodStart, periodEnd, cutoffStart, cutoffEnd, paymentDate, frequency }, jornadas, punchRecords);
+  };
+
+  // Fechas del período de corte activo para el cruce de marcaciones
+  const cutoffDates = useMemo(() => {
+    return getDatesInRange(cutoffStart, cutoffEnd);
+  }, [cutoffStart, cutoffEnd]);
+
+  const selectedPunchEmp = useMemo(() => {
+    return employees.find((e) => e.id === selectedPunchEmpId) || employees[0];
+  }, [employees, selectedPunchEmpId]);
+
+  const updatePunchField = (
+    empId: string,
+    dateStr: string,
+    field: keyof DailyPunchRecord,
+    value: string
+  ) => {
+    const key = `${empId}_${dateStr}`;
+    const existing = punchRecords[key] || {
+      marcacionEntrada: '',
+      marcacionSalidaAlmuerzo: '',
+      marcacionEntradaAlmuerzo: '',
+      marcacionSalidaTurno: '',
+    };
+    const nextPunches = {
+      ...punchRecords,
+      [key]: {
+        ...existing,
+        [field]: value,
+      },
+    };
+    setPunchRecords(nextPunches);
+  };
+
+  const fillOnTimePunchesForEmployee = (empId: string) => {
+    const emp = employees.find((e) => e.id === empId);
+    if (!emp) return;
+    const jor = jornadas.find((j) => j.id === emp.jornadaId) || jornadas[0] || DEFAULT_JORNADAS[0];
+    const nextPunches = { ...punchRecords };
+    for (const dateStr of cutoffDates) {
+      const dow = new Date(`${dateStr}T00:00:00`).getDay();
+      const daySched = jor.days.find((d) => d.dayOfWeek === dow);
+      if (daySched && daySched.isWorkDay) {
+        nextPunches[`${empId}_${dateStr}`] = {
+          marcacionEntrada: daySched.entradaTurno,
+          marcacionSalidaAlmuerzo: daySched.hasLunch ? daySched.salidaAlmuerzo : '',
+          marcacionEntradaAlmuerzo: daySched.hasLunch ? daySched.entradaAlmuerzo : '',
+          marcacionSalidaTurno: daySched.salidaTurno,
+        };
+      }
+    }
+    setPunchRecords(nextPunches);
+    persistState(employees, parameters, history, { periodStart, periodEnd, cutoffStart, cutoffEnd, paymentDate, frequency }, jornadas, nextPunches);
+    showToast(`✅ Horario puntual precargado para ${emp.fullName}. Edita solo las marcaciones con retraso.`);
+  };
+
+  const clearPunchesForEmployee = (empId: string) => {
+    const emp = employees.find((e) => e.id === empId);
+    if (!emp) return;
+    const nextPunches = { ...punchRecords };
+    for (const dateStr of cutoffDates) {
+      delete nextPunches[`${empId}_${dateStr}`];
+    }
+    setPunchRecords(nextPunches);
+    persistState(employees, parameters, history, { periodStart, periodEnd, cutoffStart, cutoffEnd, paymentDate, frequency }, jornadas, nextPunches);
+    showToast(`🧹 Marcaciones del corte limpiadas para ${emp.fullName}.`);
+  };
+
+  // Resumen de cruce de marcaciones por empleado en el corte actual
+  const crossedSummaryByEmp = useMemo(() => {
+    const map: Record<
+      string,
+      {
+        totalMinTardeEntrada: number;
+        totalMinSalidaAntesAlmuerzo: number;
+        totalMinTardeEntradaAlmuerzo: number;
+        totalMinSalidaAntesTurno: number;
+        totalMinutosDescuento: number;
+        totalMontoDescuento: number;
+        daysWithPunches: number;
+      }
+    > = {};
+
+    for (const emp of employees) {
+      const jor = jornadas.find((j) => j.id === emp.jornadaId) || jornadas[0] || DEFAULT_JORNADAS[0];
+      let totalMinTardeEntrada = 0;
+      let totalMinSalidaAntesAlmuerzo = 0;
+      let totalMinTardeEntradaAlmuerzo = 0;
+      let totalMinSalidaAntesTurno = 0;
+      let totalMinutosDescuento = 0;
+      let daysWithPunches = 0;
+
+      for (const dateStr of cutoffDates) {
+        const dow = new Date(`${dateStr}T00:00:00`).getDay();
+        const daySched = jor.days.find((d) => d.dayOfWeek === dow);
+        const punch = punchRecords[`${emp.id}_${dateStr}`];
+        if (
+          punch &&
+          (punch.marcacionEntrada ||
+            punch.marcacionSalidaAlmuerzo ||
+            punch.marcacionEntradaAlmuerzo ||
+            punch.marcacionSalidaTurno)
+        ) {
+          daysWithPunches++;
+        }
+        const cross = crossDayPunch(
+          daySched,
+          punch,
+          jor.graceMinutesEntrada,
+          jor.graceMinutesAlmuerzo
+        );
+        totalMinTardeEntrada += cross.minTardeEntrada;
+        totalMinSalidaAntesAlmuerzo += cross.minSalidaAntesAlmuerzo;
+        totalMinTardeEntradaAlmuerzo += cross.minTardeEntradaAlmuerzo;
+        totalMinSalidaAntesTurno += cross.minSalidaAntesTurno;
+        totalMinutosDescuento += cross.totalMinutosDescuento;
+      }
+
+      const totalMontoDescuento = round2((emp.baseSalaryMonthly / 14400) * totalMinutosDescuento);
+      map[emp.id] = {
+        totalMinTardeEntrada,
+        totalMinSalidaAntesAlmuerzo,
+        totalMinTardeEntradaAlmuerzo,
+        totalMinSalidaAntesTurno,
+        totalMinutosDescuento,
+        totalMontoDescuento,
+        daysWithPunches,
+      };
+    }
+
+    return map;
+  }, [employees, jornadas, cutoffDates, punchRecords]);
+
+  const applySingleEmpCrossToPayroll = (empId: string) => {
+    const summary = crossedSummaryByEmp[empId];
+    const emp = employees.find((e) => e.id === empId);
+    if (!summary || !emp) return;
+    const nextEmployees = employees.map((e) =>
+      e.id === empId ? { ...e, tardyMinutes: summary.totalMinutosDescuento } : e
+    );
+    setEmployees(nextEmployees);
+    persistState(nextEmployees, parameters, history, { periodStart, periodEnd, cutoffStart, cutoffEnd, paymentDate, frequency }, jornadas, punchRecords);
+    showToast(
+      `✅ ${emp.fullName}: ${summary.totalMinutosDescuento} min ($${summary.totalMontoDescuento.toFixed(2)}) enviados a la Planilla Quincenal.`
+    );
+  };
+
+  const applyAllCrossedToPayroll = () => {
+    const nextEmployees = employees.map((e) => {
+      const s = crossedSummaryByEmp[e.id];
+      if (!s || s.daysWithPunches === 0) return e;
+      return { ...e, tardyMinutes: s.totalMinutosDescuento };
+    });
+    setEmployees(nextEmployees);
+    persistState(nextEmployees, parameters, history, { periodStart, periodEnd, cutoffStart, cutoffEnd, paymentDate, frequency }, jornadas, punchRecords);
+    showToast('✅ Todos los cruces de marcaciones fueron aplicados a la Planilla Quincenal.');
+  };
+
+  const handleImportBulkCsvPunches = () => {
+    if (!bulkPunchCsvText.trim()) return;
+    const lines = bulkPunchCsvText.trim().split(/\r?\n/);
+    const nextPunches = { ...punchRecords };
+    let count = 0;
+    for (const rawLine of lines) {
+      const cols = rawLine.split(/[;,\t]/).map((c) => c.trim());
+      if (cols.length < 3) continue;
+      // Formato esperado: CodigoONombre, YYYY-MM-DD, Entrada, SalidaAlmuerzo, EntradaAlmuerzo, SalidaTurno
+      const empRef = cols[0].toLowerCase();
+      const dateStr = cols[1];
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) continue;
+      const emp =
+        employees.find(
+          (e) =>
+            e.code.toLowerCase() === empRef ||
+            e.fullName.toLowerCase().includes(empRef) ||
+            e.id.toLowerCase() === empRef
+        ) || selectedPunchEmp;
+      if (!emp) continue;
+      nextPunches[`${emp.id}_${dateStr}`] = {
+        marcacionEntrada: cols[2] || '',
+        marcacionSalidaAlmuerzo: cols[3] || '',
+        marcacionEntradaAlmuerzo: cols[4] || '',
+        marcacionSalidaTurno: cols[5] || '',
+      };
+      count++;
+    }
+    setPunchRecords(nextPunches);
+    setShowBulkPunchModal(false);
+    setBulkPunchCsvText('');
+    persistState(employees, parameters, history, { periodStart, periodEnd, cutoffStart, cutoffEnd, paymentDate, frequency }, jornadas, nextPunches);
+    showToast(`✅ ${count} registros de marcación importados y cruzados contra sus jornadas.`);
   };
 
   const handleSaveEmployeeModal = (e: React.FormEvent) => {
@@ -1278,6 +1825,19 @@ export default function PlanillaModule() {
             >
               <Calculator className="w-4 h-4" />
               <span>Planilla {frequency === 'QUINCENAL' ? 'Quincenal' : 'Mensual'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSubTab('jornadas')}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                subTab === 'jornadas'
+                  ? 'bg-cyan-600 text-white shadow-md'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
+              }`}
+            >
+              <Clock className="w-4 h-4" />
+              <span>Jornadas & Marcaciones</span>
             </button>
 
             <button
@@ -1646,6 +2206,25 @@ export default function PlanillaModule() {
                         <div className="text-[10px] text-slate-500 font-semibold">
                           {r.emp.position} • <span className="text-indigo-600">{r.emp.department}</span>
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const empJor =
+                              jornadas.find((j) => j.id === r.emp.jornadaId) || jornadas[0];
+                            if (empJor) setSelectedJornadaId(empJor.id);
+                            setSelectedPunchEmpId(r.emp.id);
+                            setSubTab('jornadas');
+                          }}
+                          className="mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-cyan-50 text-cyan-800 border border-cyan-200 text-[9.5px] font-bold hover:bg-cyan-100 cursor-pointer"
+                          title="Ver jornada asignada y cruzar marcaciones"
+                        >
+                          <Clock className="w-2.5 h-2.5 text-cyan-600" />
+                          <span>
+                            Jornada:{' '}
+                            {(jornadas.find((j) => j.id === r.emp.jornadaId) || jornadas[0])?.name ||
+                              'Gerencia'}
+                          </span>
+                        </button>
                       </th>
                       <td className="py-2.5 px-2.5 text-right font-mono font-bold text-slate-800">
                         <input
@@ -1845,6 +2424,894 @@ export default function PlanillaModule() {
               </table>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ================= SUBPESTAÑA 1.5: JORNADAS & CRUCE DE MARCACIONES (ESTILO ASEINFO EVOLUTION) ================= */}
+      {subTab === 'jornadas' && (
+        <div className="space-y-5">
+          {/* SECCIÓN A: CONFIGURADOR DE JORNADAS POR DÍA DE LA SEMANA */}
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
+            {/* Columna Izquierda: Lista de Jornadas + Asignación de Jornada por Empleado */}
+            <div className="xl:col-span-4 space-y-4">
+              <div className="clay-card p-4 bg-white space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                  <div>
+                    <h3 className="text-sm font-black text-slate-800 flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-cyan-600" />
+                      <span>Catálogo de Jornadas (Evolution)</span>
+                    </h3>
+                    <p className="text-[11px] text-slate-500">
+                      Selecciona una jornada para editar sus horarios de Lunes a Domingo o crea una nueva.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCreateJornada}
+                    className="clay-btn clay-btn-primary px-2.5 py-1.5 text-[11px] font-black flex items-center gap-1 cursor-pointer shrink-0"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Nueva Jornada</span>
+                  </button>
+                </div>
+
+                <div className="space-y-1.5">
+                  {jornadas.map((jor) => {
+                    const isSelected = jor.id === selectedJornada.id;
+                    const assignedCount = employees.filter((e) => (e.jornadaId || 'jor-gerencia') === jor.id).length;
+                    const weeklyHours = round2(
+                      jor.days.reduce((acc, d) => acc + calcDayScheduledHours(d), 0)
+                    );
+                    return (
+                      <div
+                        key={jor.id}
+                        onClick={() => setSelectedJornadaId(jor.id)}
+                        className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                          isSelected
+                            ? 'bg-cyan-50/90 border-cyan-500 shadow-xs'
+                            : 'bg-slate-50/70 border-slate-200 hover:bg-slate-100/80'
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-black text-slate-800">{jor.name}</span>
+                            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-white border border-slate-200 text-slate-600 font-bold">
+                              {jor.code}
+                            </span>
+                          </div>
+                          <div className="text-[10.5px] text-slate-500 font-semibold mt-0.5">
+                            {weeklyHours} hrs/sem • {assignedCount} colaborador(es)
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {jornadas.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteJornada(jor.id);
+                              }}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
+                              title="Eliminar jornada"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Asignación de Jornada a cada Colaborador */}
+              <div className="clay-card p-4 bg-white space-y-3">
+                <div className="border-b border-slate-100 pb-2">
+                  <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>Asignación de Jornada por Colaborador</span>
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Define qué jornada rige el cruce de marcaciones de cada empleado.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  {employees.map((emp) => {
+                    const summary = crossedSummaryByEmp[emp.id];
+                    const isEmpSelected = selectedPunchEmp?.id === emp.id;
+                    return (
+                      <div
+                        key={emp.id}
+                        className={`p-2.5 rounded-xl border text-xs transition-all ${
+                          isEmpSelected
+                            ? 'bg-indigo-50/70 border-indigo-400'
+                            : 'bg-slate-50/70 border-slate-200'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <div>
+                            <span className="font-black text-slate-800">{emp.fullName}</span>
+                            <span className="text-[10px] text-slate-500 font-semibold ml-1.5">
+                              ({emp.position})
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedPunchEmpId(emp.id)}
+                            className={`px-2 py-0.5 rounded text-[10px] font-black cursor-pointer ${
+                              isEmpSelected
+                                ? 'bg-indigo-600 text-white'
+                                : 'bg-white border border-slate-200 text-indigo-700 hover:bg-indigo-50'
+                            }`}
+                          >
+                            {isEmpSelected ? 'Viendo Marcaciones' : 'Cruzar Reloj'}
+                          </button>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-2">
+                          <label htmlFor={`jor-select-${emp.id}`} className="sr-only">
+                            Jornada de {emp.fullName}
+                          </label>
+                          <select
+                            id={`jor-select-${emp.id}`}
+                            name={`jornada_${emp.id}`}
+                            value={emp.jornadaId || jornadas[0]?.id || 'jor-gerencia'}
+                            onChange={(e) => handleAssignEmployeeJornada(emp.id, e.target.value)}
+                            className="clay-input py-1 px-2 text-xs font-bold w-full"
+                          >
+                            {jornadas.map((j) => (
+                              <option key={j.id} value={j.id}>
+                                Jornada: {j.name} ({j.code})
+                              </option>
+                            ))}
+                          </select>
+                          {summary && summary.totalMinutosDescuento > 0 && (
+                            <span className="shrink-0 px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-mono font-black text-[10px]">
+                              {summary.totalMinutosDescuento}m (-${summary.totalMontoDescuento.toFixed(2)})
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Columna Derecha: Matriz de Horario por Día de la Semana (Lunes a Domingo) */}
+            <div className="xl:col-span-8">
+              <div className="clay-card p-5 bg-white space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-3">
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-cyan-700 bg-cyan-50 border border-cyan-200 px-2 py-0.5 rounded-full">
+                      Configuración de Horario Semanal • Estilo Aseinfo Evolution
+                    </span>
+                    <h3 className="text-base font-black text-slate-800 mt-1">
+                      Jornada: {selectedJornada.name} ({selectedJornada.code})
+                    </h3>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={copyMondayToWeekdays}
+                      className="clay-btn clay-btn-light px-3 py-1.5 text-xs font-bold text-cyan-800 flex items-center gap-1.5 cursor-pointer"
+                      title="Copia las horas del Lunes a Martes, Miércoles, Jueves y Viernes"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5 text-cyan-600" />
+                      <span>Copiar Lunes a Mar–Vie</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDuplicateJornada}
+                      className="clay-btn clay-btn-light px-3 py-1.5 text-xs font-bold text-slate-700 cursor-pointer"
+                    >
+                      Duplicar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        persistState(
+                          employees,
+                          parameters,
+                          history,
+                          { periodStart, periodEnd, cutoffStart, cutoffEnd, paymentDate, frequency },
+                          jornadas,
+                          punchRecords
+                        );
+                        showToast(`✅ Jornada "${selectedJornada.name}" guardada correctamente.`);
+                      }}
+                      className="clay-btn clay-btn-success px-3.5 py-1.5 text-xs font-black flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Save className="w-3.5 h-3.5" />
+                      <span>Guardar Jornada</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Datos Generales de la Jornada */}
+                <fieldset className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+                  <legend className="sr-only">Datos generales de la jornada</legend>
+                  <div className="sm:col-span-2">
+                    <label
+                      htmlFor="jornada-name-input"
+                      className="text-[10.5px] font-black text-slate-600 uppercase block mb-1"
+                    >
+                      Nombre de la Jornada (Ej. Gerencia, Bodega, Ventas)
+                    </label>
+                    <input
+                      id="jornada-name-input"
+                      name="jornada_name"
+                      type="text"
+                      value={selectedJornada.name}
+                      onChange={(e) => updateSelectedJornadaField('name', e.target.value)}
+                      placeholder="Ej. Gerencia"
+                      className="clay-input w-full font-black text-slate-800"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="jornada-code-input"
+                      className="text-[10.5px] font-black text-slate-600 uppercase block mb-1"
+                    >
+                      Código Jornada
+                    </label>
+                    <input
+                      id="jornada-code-input"
+                      name="jornada_code"
+                      type="text"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck={false}
+                      value={selectedJornada.code}
+                      onChange={(e) => updateSelectedJornadaField('code', e.target.value.toUpperCase())}
+                      className="clay-input w-full font-mono font-bold"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label
+                        htmlFor="jornada-grace-in"
+                        className="text-[10px] font-black text-slate-600 uppercase block mb-1"
+                        title="Minutos de gracia en entrada de turno"
+                      >
+                        Tol. Entrada (m)
+                      </label>
+                      <input
+                        id="jornada-grace-in"
+                        name="grace_entrada"
+                        type="number"
+                        min="0"
+                        max="60"
+                        value={selectedJornada.graceMinutesEntrada}
+                        onChange={(e) =>
+                          updateSelectedJornadaField(
+                            'graceMinutesEntrada',
+                            parseInt(e.target.value, 10) || 0
+                          )
+                        }
+                        className="clay-input w-full font-mono text-center font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="jornada-grace-lunch"
+                        className="text-[10px] font-black text-slate-600 uppercase block mb-1"
+                        title="Minutos de gracia en regreso de almuerzo"
+                      >
+                        Tol. Almuerzo (m)
+                      </label>
+                      <input
+                        id="jornada-grace-lunch"
+                        name="grace_almuerzo"
+                        type="number"
+                        min="0"
+                        max="60"
+                        value={selectedJornada.graceMinutesAlmuerzo}
+                        onChange={(e) =>
+                          updateSelectedJornadaField(
+                            'graceMinutesAlmuerzo',
+                            parseInt(e.target.value, 10) || 0
+                          )
+                        }
+                        className="clay-input w-full font-mono text-center font-bold"
+                      />
+                    </div>
+                  </div>
+                </fieldset>
+
+                {/* Tabla de Días de la Semana (Lunes a Domingo) y los 4 Tiempos a la derecha */}
+                <div
+                  tabIndex={0}
+                  role="region"
+                  aria-label="Horario semanal por día de la jornada"
+                  className="overflow-auto max-w-full border border-slate-200 rounded-2xl"
+                >
+                  <table className="w-full text-left border-separate border-spacing-0 text-xs">
+                    <thead className="bg-slate-900 text-white text-[10px] uppercase tracking-wider">
+                      <tr>
+                        <th className="py-3 px-3.5 border-b border-slate-700 sticky left-0 z-10 bg-slate-900">
+                          Día de la Semana
+                        </th>
+                        <th className="py-3 px-2.5 border-b border-slate-700 text-center">
+                          Tipo de Día
+                        </th>
+                        <th className="py-3 px-3 border-b border-slate-700 text-center bg-emerald-950/80">
+                          1. Entrada de Turno
+                        </th>
+                        <th className="py-3 px-2.5 border-b border-slate-700 text-center">
+                          Receso Almuerzo
+                        </th>
+                        <th className="py-3 px-3 border-b border-slate-700 text-center bg-amber-950/70">
+                          2. Salida de Almuerzo
+                        </th>
+                        <th className="py-3 px-3 border-b border-slate-700 text-center bg-amber-950/70">
+                          3. Entrada de Almuerzo
+                        </th>
+                        <th className="py-3 px-3 border-b border-slate-700 text-center bg-indigo-950/90">
+                          4. Salida de Turno
+                        </th>
+                        <th className="py-3 px-3 border-b border-slate-700 text-right">
+                          Horas Ord.
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {selectedJornada.days.map((d) => {
+                        const hrs = calcDayScheduledHours(d);
+                        return (
+                          <tr
+                            key={d.dayOfWeek}
+                            className={
+                              d.isWorkDay ? 'bg-white hover:bg-slate-50/80' : 'bg-slate-50/70 text-slate-400'
+                            }
+                          >
+                            <th
+                              scope="row"
+                              className="py-2.5 px-3.5 font-black text-slate-800 sticky left-0 z-10 bg-inherit border-r border-slate-100"
+                            >
+                              {d.dayName}
+                            </th>
+                            <td className="py-2.5 px-2.5 text-center">
+                              <label className="inline-flex items-center gap-1.5 cursor-pointer text-[11px] font-bold">
+                                <input
+                                  type="checkbox"
+                                  checked={d.isWorkDay}
+                                  onChange={(e) =>
+                                    updateSelectedJornadaDay(d.dayOfWeek, 'isWorkDay', e.target.checked)
+                                  }
+                                  className="rounded text-cyan-600 focus:ring-cyan-500"
+                                />
+                                <span
+                                  className={
+                                    d.isWorkDay
+                                      ? 'text-emerald-700 font-black'
+                                      : 'text-slate-400 font-semibold'
+                                  }
+                                >
+                                  {d.isWorkDay ? 'Laboral' : 'Descanso'}
+                                </span>
+                              </label>
+                            </td>
+                            <td className="py-2.5 px-3 text-center bg-emerald-50/30">
+                              <input
+                                type="time"
+                                aria-label={`Entrada de turno ${d.dayName}`}
+                                disabled={!d.isWorkDay}
+                                value={d.entradaTurno}
+                                onChange={(e) =>
+                                  updateSelectedJornadaDay(d.dayOfWeek, 'entradaTurno', e.target.value)
+                                }
+                                className="clay-input py-1 px-2 text-xs font-mono font-black text-emerald-900 disabled:opacity-40"
+                              />
+                            </td>
+                            <td className="py-2.5 px-2.5 text-center">
+                              <label className="inline-flex items-center gap-1 cursor-pointer text-[10.5px] font-semibold">
+                                <input
+                                  type="checkbox"
+                                  disabled={!d.isWorkDay}
+                                  checked={d.hasLunch}
+                                  onChange={(e) =>
+                                    updateSelectedJornadaDay(d.dayOfWeek, 'hasLunch', e.target.checked)
+                                  }
+                                  className="rounded text-amber-600"
+                                />
+                                <span>{d.hasLunch ? 'Con Almuerzo' : 'Continuo'}</span>
+                              </label>
+                            </td>
+                            <td className="py-2.5 px-3 text-center bg-amber-50/30">
+                              <input
+                                type="time"
+                                aria-label={`Salida de almuerzo ${d.dayName}`}
+                                disabled={!d.isWorkDay || !d.hasLunch}
+                                value={d.salidaAlmuerzo}
+                                onChange={(e) =>
+                                  updateSelectedJornadaDay(d.dayOfWeek, 'salidaAlmuerzo', e.target.value)
+                                }
+                                className="clay-input py-1 px-2 text-xs font-mono font-bold text-amber-900 disabled:opacity-35"
+                              />
+                            </td>
+                            <td className="py-2.5 px-3 text-center bg-amber-50/30">
+                              <input
+                                type="time"
+                                aria-label={`Entrada de almuerzo ${d.dayName}`}
+                                disabled={!d.isWorkDay || !d.hasLunch}
+                                value={d.entradaAlmuerzo}
+                                onChange={(e) =>
+                                  updateSelectedJornadaDay(d.dayOfWeek, 'entradaAlmuerzo', e.target.value)
+                                }
+                                className="clay-input py-1 px-2 text-xs font-mono font-bold text-amber-900 disabled:opacity-35"
+                              />
+                            </td>
+                            <td className="py-2.5 px-3 text-center bg-indigo-50/30">
+                              <input
+                                type="time"
+                                aria-label={`Salida de turno ${d.dayName}`}
+                                disabled={!d.isWorkDay}
+                                value={d.salidaTurno}
+                                onChange={(e) =>
+                                  updateSelectedJornadaDay(d.dayOfWeek, 'salidaTurno', e.target.value)
+                                }
+                                className="clay-input py-1 px-2 text-xs font-mono font-black text-indigo-900 disabled:opacity-40"
+                              />
+                            </td>
+                            <td className="py-2.5 px-3 text-right font-mono font-black text-slate-700">
+                              {d.isWorkDay ? `${hrs.toFixed(2)} h` : '—'}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                    <tfoot className="bg-slate-900 text-white font-mono text-xs font-black">
+                      <tr>
+                        <th scope="row" colSpan={7} className="py-2.5 px-3.5 text-right uppercase">
+                          Total Horas Ordinarias de la Jornada por Semana (Art. 161 Código de Trabajo máx. 44h):
+                        </th>
+                        <td className="py-2.5 px-3 text-right text-cyan-300">
+                          {round2(
+                            selectedJornada.days.reduce((acc, d) => acc + calcDayScheduledHours(d), 0)
+                          ).toFixed(2)}{' '}
+                          h
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* SECCIÓN B: CRUCE DE MARCACIONES CONTRA LA JORNADA ASIGNADA */}
+          {selectedPunchEmp && (
+            <div className="clay-card p-5 bg-white space-y-4 border-t-4 border-cyan-600">
+              {(() => {
+                const empJor =
+                  jornadas.find((j) => j.id === selectedPunchEmp.jornadaId) ||
+                  jornadas[0] ||
+                  DEFAULT_JORNADAS[0];
+                const empSummary = crossedSummaryByEmp[selectedPunchEmp.id] || {
+                  totalMinTardeEntrada: 0,
+                  totalMinSalidaAntesAlmuerzo: 0,
+                  totalMinTardeEntradaAlmuerzo: 0,
+                  totalMinSalidaAntesTurno: 0,
+                  totalMinutosDescuento: 0,
+                  totalMontoDescuento: 0,
+                  daysWithPunches: 0,
+                };
+
+                return (
+                  <>
+                    <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 border-b border-slate-100 pb-3">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10.5px] font-black uppercase">
+                            Cruce de Marcaciones vs. Horario de Jornada
+                          </span>
+                          <span className="text-xs font-mono font-bold text-slate-500">
+                            Corte de Reloj: {cutoffStart} al {cutoffEnd} ({cutoffDates.length} días)
+                          </span>
+                        </div>
+                        <h3 className="text-base font-black text-slate-800 mt-1">
+                          Colaborador: <span className="text-indigo-700">{selectedPunchEmp.fullName}</span> •
+                          Jornada Asignada: <span className="text-cyan-700">{empJor.name}</span> (Sueldo: $
+                          {selectedPunchEmp.baseSalaryMonthly.toFixed(2)}/mes)
+                        </h3>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <select
+                          aria-label="Cambiar colaborador en cruce de marcaciones"
+                          value={selectedPunchEmp.id}
+                          onChange={(e) => setSelectedPunchEmpId(e.target.value)}
+                          className="clay-input py-1.5 px-3 text-xs font-black text-slate-800"
+                        >
+                          {employees.map((e) => (
+                            <option key={e.id} value={e.id}>
+                              👤 {e.fullName} ({e.position})
+                            </option>
+                          ))}
+                        </select>
+
+                        <button
+                          type="button"
+                          onClick={() => fillOnTimePunchesForEmployee(selectedPunchEmp.id)}
+                          className="clay-btn clay-btn-light px-3 py-1.5 text-xs font-bold text-emerald-800 flex items-center gap-1.5 cursor-pointer"
+                          title="Rellena todos los días laborales con la hora exacta de su jornada para que solo modifiques los días que llegó tarde"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Precargar Horario Puntual</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setShowBulkPunchModal(true)}
+                          className="clay-btn clay-btn-light px-3 py-1.5 text-xs font-bold text-indigo-800 flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <FileSpreadsheet className="w-3.5 h-3.5 text-indigo-600" />
+                          <span>Pegar / Importar Reloj (CSV)</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => clearPunchesForEmployee(selectedPunchEmp.id)}
+                          className="clay-btn clay-btn-light px-2.5 py-1.5 text-xs font-bold text-slate-600 cursor-pointer"
+                        >
+                          Limpiar
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => applySingleEmpCrossToPayroll(selectedPunchEmp.id)}
+                          className="clay-btn clay-btn-primary px-3.5 py-1.5 text-xs font-black flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Calculator className="w-3.5 h-3.5" />
+                          <span>
+                            Aplicar a Planilla ({empSummary.totalMinutosDescuento} min = -$
+                            {empSummary.totalMontoDescuento.toFixed(2)})
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={applyAllCrossedToPayroll}
+                          className="clay-btn clay-btn-success px-3 py-1.5 text-xs font-black cursor-pointer"
+                          title="Sincroniza los minutos cruzados de todos los empleados hacia la Planilla Quincenal"
+                        >
+                          Sincronizar Todos
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Resumen de Desfase de Tiempos del Colaborador */}
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
+                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase block">
+                          Tardía 1. Entrada Turno
+                        </span>
+                        <span className="text-base font-black font-mono text-slate-800">
+                          {empSummary.totalMinTardeEntrada} min
+                        </span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase block">
+                          Anticipo 2. Salida Almuerzo
+                        </span>
+                        <span className="text-base font-black font-mono text-slate-800">
+                          {empSummary.totalMinSalidaAntesAlmuerzo} min
+                        </span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase block">
+                          Tardía 3. Entrada Almuerzo
+                        </span>
+                        <span className="text-base font-black font-mono text-slate-800">
+                          {empSummary.totalMinTardeEntradaAlmuerzo} min
+                        </span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase block">
+                          Anticipo 4. Salida Turno
+                        </span>
+                        <span className="text-base font-black font-mono text-slate-800">
+                          {empSummary.totalMinSalidaAntesTurno} min
+                        </span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-amber-50 border border-amber-300">
+                        <span className="text-[10px] font-black text-amber-900 uppercase block">
+                          Total Minutos / Descuento Corte
+                        </span>
+                        <span className="text-base font-black font-mono text-amber-900">
+                          {empSummary.totalMinutosDescuento} min (-$
+                          {empSummary.totalMontoDescuento.toFixed(2)})
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Sabana Diaria de Cruce: Horario Jornada vs. Marcaciones */}
+                    <div
+                      tabIndex={0}
+                      role="region"
+                      aria-label="Tabla de cruce de marcaciones diarias contra la jornada"
+                      className="overflow-auto max-w-full max-h-[60vh] border border-slate-200 rounded-2xl"
+                    >
+                      <table className="w-full text-left border-separate border-spacing-0 text-xs">
+                        <thead className="sticky top-0 z-20 bg-slate-900 text-white text-[10px] uppercase tracking-wider">
+                          <tr>
+                            <th className="py-2.5 px-3 border-b border-slate-700 sticky left-0 z-30 bg-slate-900">
+                              Fecha / Día
+                            </th>
+                            <th className="py-2.5 px-2.5 border-b border-slate-700 text-center bg-slate-800">
+                              Horario Oficial ({empJor.name})
+                            </th>
+                            <th className="py-2.5 px-2.5 border-b border-slate-700 text-center bg-emerald-950">
+                              Marcación Entrada
+                            </th>
+                            <th className="py-2.5 px-2.5 border-b border-slate-700 text-center bg-amber-950/80">
+                              Marcación Sal. Almuerzo
+                            </th>
+                            <th className="py-2.5 px-2.5 border-b border-slate-700 text-center bg-amber-950/80">
+                              Marcación Ent. Almuerzo
+                            </th>
+                            <th className="py-2.5 px-2.5 border-b border-slate-700 text-center bg-indigo-950">
+                              Marcación Sal. Turno
+                            </th>
+                            <th className="py-2.5 px-2 border-b border-slate-700 text-center">
+                              Tardía Ent.
+                            </th>
+                            <th className="py-2.5 px-2 border-b border-slate-700 text-center">
+                              Desfase Alm.
+                            </th>
+                            <th className="py-2.5 px-2 border-b border-slate-700 text-center">
+                              Sal. Antes
+                            </th>
+                            <th className="py-2.5 px-2.5 border-b border-slate-700 text-right bg-rose-950">
+                              Min. / Desc. ($)
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {cutoffDates.map((dateStr) => {
+                            const dt = new Date(`${dateStr}T00:00:00`);
+                            const dow = dt.getDay();
+                            const daySched = empJor.days.find((d) => d.dayOfWeek === dow);
+                            const isWork = Boolean(daySched?.isWorkDay);
+                            const key = `${selectedPunchEmp.id}_${dateStr}`;
+                            const punch = punchRecords[key] || {
+                              marcacionEntrada: '',
+                              marcacionSalidaAlmuerzo: '',
+                              marcacionEntradaAlmuerzo: '',
+                              marcacionSalidaTurno: '',
+                            };
+                            const cross = crossDayPunch(
+                              daySched,
+                              punch,
+                              empJor.graceMinutesEntrada,
+                              empJor.graceMinutesAlmuerzo
+                            );
+                            const dayDiscount = round2(
+                              (selectedPunchEmp.baseSalaryMonthly / 14400) *
+                                cross.totalMinutosDescuento
+                            );
+
+                            return (
+                              <tr
+                                key={dateStr}
+                                className={
+                                  isWork
+                                    ? cross.totalMinutosDescuento > 0
+                                      ? 'bg-amber-50/40 hover:bg-amber-50/70'
+                                      : 'bg-white hover:bg-slate-50'
+                                    : 'bg-slate-50/80 text-slate-400'
+                                }
+                              >
+                                <th
+                                  scope="row"
+                                  className="py-2 px-3 sticky left-0 z-10 bg-inherit border-r border-slate-100 font-bold text-slate-800 whitespace-nowrap"
+                                >
+                                  <span className="font-mono">{dateStr}</span> •{' '}
+                                  <span className={isWork ? 'text-indigo-700 font-black' : 'text-slate-400'}>
+                                    {daySched?.dayName || ''}
+                                  </span>
+                                </th>
+                                <td className="py-2 px-2.5 text-center font-mono text-[11px] text-slate-600 whitespace-nowrap">
+                                  {isWork && daySched ? (
+                                    daySched.hasLunch ? (
+                                      <span>
+                                        {daySched.entradaTurno} | {daySched.salidaAlmuerzo}–
+                                        {daySched.entradaAlmuerzo} | {daySched.salidaTurno}
+                                      </span>
+                                    ) : (
+                                      <span>
+                                        {daySched.entradaTurno} — {daySched.salidaTurno} (Continuo)
+                                      </span>
+                                    )
+                                  ) : (
+                                    <span className="text-slate-400 italic">Día de Descanso</span>
+                                  )}
+                                </td>
+                                <td className="py-2 px-2.5 text-center">
+                                  <input
+                                    type="time"
+                                    aria-label={`Marcación entrada ${dateStr}`}
+                                    disabled={!isWork}
+                                    value={punch.marcacionEntrada}
+                                    onChange={(e) =>
+                                      updatePunchField(
+                                        selectedPunchEmp.id,
+                                        dateStr,
+                                        'marcacionEntrada',
+                                        e.target.value
+                                      )
+                                    }
+                                    className={`clay-input py-1 px-2 text-xs font-mono font-bold disabled:opacity-30 ${
+                                      cross.minTardeEntrada > 0
+                                        ? 'border-rose-400 bg-rose-50 text-rose-900 font-black'
+                                        : ''
+                                    }`}
+                                  />
+                                </td>
+                                <td className="py-2 px-2.5 text-center">
+                                  <input
+                                    type="time"
+                                    aria-label={`Marcación salida almuerzo ${dateStr}`}
+                                    disabled={!isWork || !daySched?.hasLunch}
+                                    value={punch.marcacionSalidaAlmuerzo}
+                                    onChange={(e) =>
+                                      updatePunchField(
+                                        selectedPunchEmp.id,
+                                        dateStr,
+                                        'marcacionSalidaAlmuerzo',
+                                        e.target.value
+                                      )
+                                    }
+                                    className={`clay-input py-1 px-2 text-xs font-mono font-bold disabled:opacity-30 ${
+                                      cross.minSalidaAntesAlmuerzo > 0
+                                        ? 'border-amber-400 bg-amber-50 text-amber-900 font-black'
+                                        : ''
+                                    }`}
+                                  />
+                                </td>
+                                <td className="py-2 px-2.5 text-center">
+                                  <input
+                                    type="time"
+                                    aria-label={`Marcación entrada almuerzo ${dateStr}`}
+                                    disabled={!isWork || !daySched?.hasLunch}
+                                    value={punch.marcacionEntradaAlmuerzo}
+                                    onChange={(e) =>
+                                      updatePunchField(
+                                        selectedPunchEmp.id,
+                                        dateStr,
+                                        'marcacionEntradaAlmuerzo',
+                                        e.target.value
+                                      )
+                                    }
+                                    className={`clay-input py-1 px-2 text-xs font-mono font-bold disabled:opacity-30 ${
+                                      cross.minTardeEntradaAlmuerzo > 0
+                                        ? 'border-rose-400 bg-rose-50 text-rose-900 font-black'
+                                        : ''
+                                    }`}
+                                  />
+                                </td>
+                                <td className="py-2 px-2.5 text-center">
+                                  <input
+                                    type="time"
+                                    aria-label={`Marcación salida turno ${dateStr}`}
+                                    disabled={!isWork}
+                                    value={punch.marcacionSalidaTurno}
+                                    onChange={(e) =>
+                                      updatePunchField(
+                                        selectedPunchEmp.id,
+                                        dateStr,
+                                        'marcacionSalidaTurno',
+                                        e.target.value
+                                      )
+                                    }
+                                    className={`clay-input py-1 px-2 text-xs font-mono font-bold disabled:opacity-30 ${
+                                      cross.minSalidaAntesTurno > 0
+                                        ? 'border-rose-400 bg-rose-50 text-rose-900 font-black'
+                                        : ''
+                                    }`}
+                                  />
+                                </td>
+                                <td className="py-2 px-2 text-center font-mono font-bold">
+                                  {cross.minTardeEntrada > 0 ? (
+                                    <span className="text-rose-600">+{cross.minTardeEntrada}m</span>
+                                  ) : (
+                                    <span className="text-slate-300">0</span>
+                                  )}
+                                </td>
+                                <td className="py-2 px-2 text-center font-mono font-bold">
+                                  {cross.minSalidaAntesAlmuerzo + cross.minTardeEntradaAlmuerzo > 0 ? (
+                                    <span className="text-amber-700">
+                                      +{cross.minSalidaAntesAlmuerzo + cross.minTardeEntradaAlmuerzo}m
+                                    </span>
+                                  ) : (
+                                    <span className="text-slate-300">0</span>
+                                  )}
+                                </td>
+                                <td className="py-2 px-2 text-center font-mono font-bold">
+                                  {cross.minSalidaAntesTurno > 0 ? (
+                                    <span className="text-rose-600">+{cross.minSalidaAntesTurno}m</span>
+                                  ) : (
+                                    <span className="text-slate-300">0</span>
+                                  )}
+                                </td>
+                                <td className="py-2 px-2.5 text-right font-mono font-black whitespace-nowrap">
+                                  {cross.totalMinutosDescuento > 0 ? (
+                                    <span className="text-rose-700">
+                                      {cross.totalMinutosDescuento}m (-${dayDiscount.toFixed(2)})
+                                    </span>
+                                  ) : (
+                                    <span className="text-emerald-600 text-[11px]">OK</span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* Modal para pegar/importar marcaciones desde Excel o Reloj Biométrico */}
+          {showBulkPunchModal && (
+            <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+              <div className="clay-card bg-white w-full max-w-xl p-6 space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div>
+                    <h3 className="text-sm font-black text-slate-800">
+                      Pegar / Importar Marcaciones del Reloj Biométrico (CSV / Excel)
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Formato por línea: <code>Empleado, YYYY-MM-DD, Entrada, SalidaAlmuerzo, EntradaAlmuerzo, SalidaTurno</code>
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowBulkPunchModal(false)}
+                    className="p-1 text-slate-400 hover:text-slate-700"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div>
+                  <label htmlFor="bulk-punch-textarea" className="text-xs font-bold text-slate-700 block mb-1">
+                    Pega aquí las filas de marcaciones:
+                  </label>
+                  <textarea
+                    id="bulk-punch-textarea"
+                    rows={7}
+                    value={bulkPunchCsvText}
+                    onChange={(e) => setBulkPunchCsvText(e.target.value)}
+                    placeholder={`Jorge Luis, 2026-10-01, 08:12, 12:00, 13:05, 17:00\nErika Maria, 2026-10-01, 08:00, 12:00, 13:10, 17:00`}
+                    className="clay-input w-full font-mono text-xs p-3"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowBulkPunchModal(false)}
+                    className="clay-btn clay-btn-light px-4 py-2 text-xs font-bold"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleImportBulkCsvPunches}
+                    className="clay-btn clay-btn-primary px-4 py-2 text-xs font-black"
+                  >
+                    Cruzar Marcaciones contra Jornadas
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -2439,7 +3906,7 @@ export default function PlanillaModule() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                 <div>
                   <label className="font-bold text-slate-700 block mb-1">Cargo</label>
                   <input
@@ -2457,6 +3924,20 @@ export default function PlanillaModule() {
                     onChange={(e) => setEditingEmp({ ...editingEmp, department: e.target.value.toUpperCase() })}
                     className="clay-input w-full"
                   />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Jornada (Evolution)</label>
+                  <select
+                    value={editingEmp.jornadaId || jornadas[0]?.id || 'jor-gerencia'}
+                    onChange={(e) => setEditingEmp({ ...editingEmp, jornadaId: e.target.value })}
+                    className="clay-input w-full font-bold text-cyan-800"
+                  >
+                    {jornadas.map((j) => (
+                      <option key={j.id} value={j.id}>
+                        {j.name} ({j.code})
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="font-bold text-slate-700 block mb-1">Salario Base Mensual ($)</label>
