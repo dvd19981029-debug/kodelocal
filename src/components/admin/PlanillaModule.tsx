@@ -67,6 +67,8 @@ export interface JornadaDaySchedule {
   salidaTurno: string; // HH:mm
 }
 
+export type LunchEvaluationMode = 'DURATION' | 'FIXED_TIME';
+
 export interface WorkJornada {
   id: string;
   code: string;
@@ -74,6 +76,7 @@ export interface WorkJornada {
   description: string;
   graceMinutesEntrada: number;
   graceMinutesAlmuerzo: number;
+  lunchEvaluationMode?: LunchEvaluationMode; // 'DURATION' (por defecto: mide minutos tomados) | 'FIXED_TIME' (hora fija)
   days: JornadaDaySchedule[];
 }
 
@@ -511,7 +514,8 @@ export function crossDayPunch(
   daySchedule: JornadaDaySchedule | undefined,
   punch: DailyPunchRecord | undefined,
   graceEntrada = 0,
-  graceAlmuerzo = 0
+  graceAlmuerzo = 0,
+  lunchMode: LunchEvaluationMode = 'DURATION'
 ) {
   if (!daySchedule || !daySchedule.isWorkDay || !punch) {
     return {
@@ -519,6 +523,8 @@ export function crossDayPunch(
       minSalidaAntesAlmuerzo: 0,
       minTardeEntradaAlmuerzo: 0,
       minSalidaAntesTurno: 0,
+      allowedLunchMinutes: 0,
+      takenLunchMinutes: null as number | null,
       totalMinutosDescuento: 0,
     };
   }
@@ -527,6 +533,8 @@ export function crossDayPunch(
   let minSalidaAntesAlmuerzo = 0;
   let minTardeEntradaAlmuerzo = 0;
   let minSalidaAntesTurno = 0;
+  let allowedLunchMinutes = 0;
+  let takenLunchMinutes: number | null = null;
 
   // 1. Entrada de Turno vs Marcación de Entrada
   const schedIn = parseTimeMinutes(daySchedule.entradaTurno);
@@ -538,20 +546,40 @@ export function crossDayPunch(
     }
   }
 
-  // 2. Salida a Almuerzo y Entrada de Almuerzo
+  // 2. Evaluación de Almuerzo: Por Duración Flexible ('DURATION') o Por Hora Fija ('FIXED_TIME')
   if (daySchedule.hasLunch) {
     const schedLunchOut = parseTimeMinutes(daySchedule.salidaAlmuerzo);
-    const punchLunchOut = parseTimeMinutes(punch.marcacionSalidaAlmuerzo);
-    if (schedLunchOut !== null && punchLunchOut !== null && punchLunchOut < schedLunchOut) {
-      minSalidaAntesAlmuerzo = schedLunchOut - punchLunchOut;
+    const schedLunchIn = parseTimeMinutes(daySchedule.entradaAlmuerzo);
+    if (schedLunchOut !== null && schedLunchIn !== null && schedLunchIn > schedLunchOut) {
+      allowedLunchMinutes = schedLunchIn - schedLunchOut;
     }
 
-    const schedLunchIn = parseTimeMinutes(daySchedule.entradaAlmuerzo);
+    const punchLunchOut = parseTimeMinutes(punch.marcacionSalidaAlmuerzo);
     const punchLunchIn = parseTimeMinutes(punch.marcacionEntradaAlmuerzo);
-    if (schedLunchIn !== null && punchLunchIn !== null && punchLunchIn > schedLunchIn) {
-      const diffAlm = punchLunchIn - schedLunchIn;
-      if (diffAlm > graceAlmuerzo) {
-        minTardeEntradaAlmuerzo = diffAlm;
+
+    if (punchLunchOut !== null && punchLunchIn !== null && punchLunchIn >= punchLunchOut) {
+      takenLunchMinutes = punchLunchIn - punchLunchOut;
+    }
+
+    if (lunchMode === 'DURATION') {
+      // MODO FLEXIBLE POR DURACIÓN: No importa si salió a las 11:45, 12:15 o 13:00;
+      // solo evalúa cuántos minutos duró su almuerzo respecto a los minutos permitidos (ej. 60 min).
+      if (takenLunchMinutes !== null && allowedLunchMinutes > 0) {
+        const excess = takenLunchMinutes - allowedLunchMinutes;
+        if (excess > graceAlmuerzo) {
+          minTardeEntradaAlmuerzo = excess;
+        }
+      }
+    } else {
+      // MODO RÍGIDO POR HORA FIJA: Evalúa contra la hora exacta programada
+      if (schedLunchOut !== null && punchLunchOut !== null && punchLunchOut < schedLunchOut) {
+        minSalidaAntesAlmuerzo = schedLunchOut - punchLunchOut;
+      }
+      if (schedLunchIn !== null && punchLunchIn !== null && punchLunchIn > schedLunchIn) {
+        const diffAlm = punchLunchIn - schedLunchIn;
+        if (diffAlm > graceAlmuerzo) {
+          minTardeEntradaAlmuerzo = diffAlm;
+        }
       }
     }
   }
@@ -571,6 +599,8 @@ export function crossDayPunch(
     minSalidaAntesAlmuerzo,
     minTardeEntradaAlmuerzo,
     minSalidaAntesTurno,
+    allowedLunchMinutes,
+    takenLunchMinutes,
     totalMinutosDescuento,
   };
 }
@@ -1658,7 +1688,8 @@ export default function PlanillaModule() {
           daySched,
           punch,
           jor.graceMinutesEntrada,
-          jor.graceMinutesAlmuerzo
+          jor.graceMinutesAlmuerzo,
+          jor.lunchEvaluationMode || 'DURATION'
         );
         totalMinTardeEntrada += cross.minTardeEntrada;
         totalMinSalidaAntesAlmuerzo += cross.minSalidaAntesAlmuerzo;
@@ -2630,7 +2661,7 @@ export default function PlanillaModule() {
                 </div>
 
                 {/* Datos Generales de la Jornada */}
-                <fieldset className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+                <fieldset className="grid grid-cols-1 sm:grid-cols-6 gap-3 text-xs">
                   <legend className="sr-only">Datos generales de la jornada</legend>
                   <div className="sm:col-span-2">
                     <label
@@ -2668,6 +2699,33 @@ export default function PlanillaModule() {
                       className="clay-input w-full font-mono font-bold"
                     />
                   </div>
+                  <div className="sm:col-span-2">
+                    <label
+                      htmlFor="jornada-lunch-mode"
+                      className="text-[10.5px] font-black text-amber-800 uppercase block mb-1"
+                    >
+                      Regla de Almuerzo (Duración vs. Hora Fija)
+                    </label>
+                    <select
+                      id="jornada-lunch-mode"
+                      name="lunch_evaluation_mode"
+                      value={selectedJornada.lunchEvaluationMode || 'DURATION'}
+                      onChange={(e) =>
+                        updateSelectedJornadaField(
+                          'lunchEvaluationMode',
+                          e.target.value as LunchEvaluationMode
+                        )
+                      }
+                      className="clay-input w-full font-bold text-amber-900"
+                    >
+                      <option value="DURATION">
+                        Por Duración (Flexible: solo mide ej. 60 min tomados)
+                      </option>
+                      <option value="FIXED_TIME">
+                        Por Hora Fija (Rígido: exige salir 12:00 y entrar 13:00)
+                      </option>
+                    </select>
+                  </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label
@@ -2675,7 +2733,7 @@ export default function PlanillaModule() {
                         className="text-[10px] font-black text-slate-600 uppercase block mb-1"
                         title="Minutos de gracia en entrada de turno"
                       >
-                        Tol. Entrada (m)
+                        Tol. Ent. (m)
                       </label>
                       <input
                         id="jornada-grace-in"
@@ -2697,9 +2755,9 @@ export default function PlanillaModule() {
                       <label
                         htmlFor="jornada-grace-lunch"
                         className="text-[10px] font-black text-slate-600 uppercase block mb-1"
-                        title="Minutos de gracia en regreso de almuerzo"
+                        title="Minutos de gracia en exceso de almuerzo"
                       >
-                        Tol. Almuerzo (m)
+                        Tol. Alm. (m)
                       </label>
                       <input
                         id="jornada-grace-lunch"
@@ -3059,7 +3117,7 @@ export default function PlanillaModule() {
                               Tardía Ent.
                             </th>
                             <th className="py-2.5 px-2 border-b border-slate-700 text-center">
-                              Desfase Alm.
+                              Duración / Exceso Alm.
                             </th>
                             <th className="py-2.5 px-2 border-b border-slate-700 text-center">
                               Sal. Antes
@@ -3086,7 +3144,8 @@ export default function PlanillaModule() {
                               daySched,
                               punch,
                               empJor.graceMinutesEntrada,
-                              empJor.graceMinutesAlmuerzo
+                              empJor.graceMinutesAlmuerzo,
+                              empJor.lunchEvaluationMode || 'DURATION'
                             );
                             const dayDiscount = round2(
                               (selectedPunchEmp.baseSalaryMonthly / 14400) *
@@ -3117,8 +3176,9 @@ export default function PlanillaModule() {
                                   {isWork && daySched ? (
                                     daySched.hasLunch ? (
                                       <span>
-                                        {daySched.entradaTurno} | {daySched.salidaAlmuerzo}–
-                                        {daySched.entradaAlmuerzo} | {daySched.salidaTurno}
+                                        {daySched.entradaTurno} | Alm. {cross.allowedLunchMinutes}m (
+                                        {daySched.salidaAlmuerzo}–{daySched.entradaAlmuerzo}) |{' '}
+                                        {daySched.salidaTurno}
                                       </span>
                                     ) : (
                                       <span>
@@ -3220,8 +3280,19 @@ export default function PlanillaModule() {
                                     <span className="text-slate-300">0</span>
                                   )}
                                 </td>
-                                <td className="py-2 px-2 text-center font-mono font-bold">
-                                  {cross.minSalidaAntesAlmuerzo + cross.minTardeEntradaAlmuerzo > 0 ? (
+                                <td className="py-2 px-2 text-center font-mono font-bold whitespace-nowrap">
+                                  {cross.takenLunchMinutes !== null ? (
+                                    cross.minSalidaAntesAlmuerzo + cross.minTardeEntradaAlmuerzo > 0 ? (
+                                      <span className="text-amber-700 font-black">
+                                        {cross.takenLunchMinutes}m / {cross.allowedLunchMinutes}m (+
+                                        {cross.minSalidaAntesAlmuerzo + cross.minTardeEntradaAlmuerzo}m)
+                                      </span>
+                                    ) : (
+                                      <span className="text-emerald-700 text-[11px]">
+                                        {cross.takenLunchMinutes}m / {cross.allowedLunchMinutes}m
+                                      </span>
+                                    )
+                                  ) : cross.minSalidaAntesAlmuerzo + cross.minTardeEntradaAlmuerzo > 0 ? (
                                     <span className="text-amber-700">
                                       +{cross.minSalidaAntesAlmuerzo + cross.minTardeEntradaAlmuerzo}m
                                     </span>
