@@ -10,6 +10,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { ClienteDirectorioItem } from '../../types';
+import { KodeSelect } from '../ui/KodeSelect';
 import {
   DEPARTAMENTOS_CATALOG,
   getMunicipiosByDepto,
@@ -163,18 +164,18 @@ export function NuevoClienteForm({
                 <CreditCard className="w-3.5 h-3.5 text-slate-400" />
                 <span>Tipo de Doc. (Opcional)</span>
               </label>
-              <select
+              <KodeSelect
                 value={ncTipoDoc}
-                onChange={(e) => setNcTipoDoc(e.target.value)}
-                className="clay-input w-full text-xs font-bold cursor-pointer"
-              >
-                <option value="DUI">DUI (El Salvador)</option>
-                <option value="Pasaporte">Pasaporte</option>
-                <option value="Carnet de Residente">Carnet de Residente</option>
-                <option value="Licencia">Licencia de Conducir</option>
-                <option value="NIT">NIT</option>
-                <option value="Otro">Otro Documento</option>
-              </select>
+                onChange={(val) => setNcTipoDoc(val)}
+                options={[
+                  { value: 'DUI', label: 'DUI (El Salvador)' },
+                  { value: 'Pasaporte', label: 'Pasaporte' },
+                  { value: 'Carnet de Residente', label: 'Carnet de Residente' },
+                  { value: 'Licencia', label: 'Licencia de Conducir' },
+                  { value: 'NIT', label: 'NIT' },
+                  { value: 'Otro', label: 'Otro Documento' },
+                ]}
+              />
             </div>
 
             <div>
@@ -218,48 +219,39 @@ export function NuevoClienteForm({
               <label className="block text-xs font-bold text-slate-700 mb-1.5">
                 Departamento *
               </label>
-              <select
+              <KodeSelect
                 value={ncDepto}
-                onChange={(e) => {
-                  const depto = e.target.value;
+                onChange={(depto) => {
                   setNcDepto(depto);
                   setNcMuni('');
                 }}
-                className="clay-input w-full text-xs font-bold cursor-pointer"
-                required
-              >
-                <option value="">-- Seleccionar Departamento --</option>
-                {DEPARTAMENTOS_CATALOG.filter((d) => d.id !== '00').map((d) => (
-                  <option key={d.id} value={d.nombre}>
-                    {d.nombre}
-                  </option>
-                ))}
-              </select>
+                placeholder="-- Seleccionar Departamento --"
+                options={DEPARTAMENTOS_CATALOG.filter((d) => d.id !== '00').map((d) => ({
+                  value: d.nombre,
+                  label: d.nombre,
+                }))}
+              />
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">
                 Municipio *
               </label>
-              <select
+              <KodeSelect
                 value={ncMuni}
-                onChange={(e) => setNcMuni(e.target.value)}
+                onChange={(val) => setNcMuni(val)}
                 disabled={!ncDepto}
-                className="clay-input w-full text-xs font-bold cursor-pointer disabled:opacity-50"
-                required
-              >
-                <option value="">
-                  {ncDepto ? '-- Seleccionar Municipio --' : '-- Primero selecciona departamento --'}
-                </option>
-                {ncMunicipiosDisponibles.map((m: any) => {
+                placeholder={
+                  ncDepto ? '-- Seleccionar Municipio --' : '-- Primero selecciona departamento --'
+                }
+                options={ncMunicipiosDisponibles.map((m: any) => {
                   const nombreMuni = m.nombre_municipio || m.nombre_mh || m.nombre || String(m);
-                  return (
-                    <option key={m.id_municipio || nombreMuni} value={nombreMuni}>
-                      {nombreMuni}
-                    </option>
-                  );
+                  return {
+                    value: nombreMuni,
+                    label: nombreMuni,
+                  };
                 })}
-              </select>
+              />
             </div>
           </div>
 

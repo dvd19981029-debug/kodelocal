@@ -35,6 +35,7 @@ import {
   getMunicipiosByDepto,
 } from '@/lib/svTerritory';
 import { compressAndUploadImage } from '../../utils/imageUpload';
+import { KodeSelect } from '../ui/KodeSelect';
 
 interface NuevoPedidoFormProps {
   catalogo: CatalogoItem[];
@@ -1067,18 +1068,18 @@ export function NuevoPedidoForm({
                   <CreditCard className="w-3.5 h-3.5 text-slate-400" />
                   <span>Tipo de Doc.</span>
                 </label>
-                <select
+                <KodeSelect
                   value={clienteTipoDoc}
-                  onChange={(e) => setClienteTipoDoc(e.target.value)}
-                  className="clay-input w-full text-xs font-bold cursor-pointer"
-                >
-                  <option value="DUI">DUI (El Salvador)</option>
-                  <option value="Pasaporte">Pasaporte</option>
-                  <option value="Carnet de Residente">Carnet de Residente</option>
-                  <option value="Licencia">Licencia de Conducir</option>
-                  <option value="NIT">NIT</option>
-                  <option value="Otro">Otro Documento</option>
-                </select>
+                  onChange={(val) => setClienteTipoDoc(val)}
+                  options={[
+                    { value: 'DUI', label: 'DUI (El Salvador)' },
+                    { value: 'Pasaporte', label: 'Pasaporte' },
+                    { value: 'Carnet de Residente', label: 'Carnet de Residente' },
+                    { value: 'Licencia', label: 'Licencia de Conducir' },
+                    { value: 'NIT', label: 'NIT' },
+                    { value: 'Otro', label: 'Otro Documento' },
+                  ]}
+                />
               </div>
 
               <div>
@@ -1114,48 +1115,39 @@ export function NuevoPedidoForm({
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
                   Departamento *
                 </label>
-                <select
+                <KodeSelect
                   value={clienteDepto}
-                  onChange={(e) => {
-                    const depto = e.target.value;
+                  onChange={(depto) => {
                     setClienteDepto(depto);
                     setClienteMuni('');
                   }}
-                  className="clay-input w-full text-xs font-bold cursor-pointer"
-                  required
-                >
-                  <option value="">-- Seleccionar Departamento --</option>
-                  {DEPARTAMENTOS_CATALOG.filter((d) => d.id !== '00').map((d) => (
-                    <option key={d.id} value={d.nombre}>
-                      {d.nombre}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="-- Seleccionar Departamento --"
+                  options={DEPARTAMENTOS_CATALOG.filter((d) => d.id !== '00').map((d) => ({
+                    value: d.nombre,
+                    label: d.nombre,
+                  }))}
+                />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
                   Municipio *
                 </label>
-                <select
+                <KodeSelect
                   value={clienteMuni}
-                  onChange={(e) => setClienteMuni(e.target.value)}
+                  onChange={(val) => setClienteMuni(val)}
                   disabled={!clienteDepto}
-                  className="clay-input w-full text-xs font-bold cursor-pointer disabled:opacity-50"
-                  required
-                >
-                  <option value="">
-                    {clienteDepto ? '-- Seleccionar Municipio --' : '-- Selecciona departamento --'}
-                  </option>
-                  {municipiosDisponibles.map((m: any) => {
+                  placeholder={
+                    clienteDepto ? '-- Seleccionar Municipio --' : '-- Primero selecciona departamento --'
+                  }
+                  options={municipiosDisponibles.map((m: any) => {
                     const nombreMuni = m.nombre_municipio || m.nombre_mh || m.nombre || String(m);
-                    return (
-                      <option key={m.id_municipio || nombreMuni} value={nombreMuni}>
-                        {nombreMuni}
-                      </option>
-                    );
+                    return {
+                      value: nombreMuni,
+                      label: nombreMuni,
+                    };
                   })}
-                </select>
+                />
               </div>
             </div>
 
@@ -1535,17 +1527,17 @@ export function NuevoPedidoForm({
                         <label className="block text-[10px] font-bold text-slate-600 mb-1 uppercase whitespace-nowrap">
                           Forma de Pago *
                         </label>
-                        <select
+                        <KodeSelect
                           value={pagoInputFormaId}
-                          onChange={(e) => setPagoInputFormaId(e.target.value)}
-                          className="clay-input w-full h-[42px] text-xs font-bold bg-white cursor-pointer"
-                        >
-                          {formasPago.filter((fp) => fp.activo !== false).map((fp) => (
-                            <option key={fp.id} value={fp.id}>
-                              {fp.nombre} ({fp.tipo})
-                            </option>
-                          ))}
-                        </select>
+                          onChange={(val) => setPagoInputFormaId(val)}
+                          placeholder="-- Seleccionar Forma de Pago --"
+                          options={formasPago
+                            .filter((fp) => fp.activo !== false)
+                            .map((fp) => ({
+                              value: fp.id,
+                              label: `${fp.nombre} (${fp.tipo})`,
+                            }))}
+                        />
                       </div>
 
                       <div className="sm:col-span-3 flex flex-col justify-end">

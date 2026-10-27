@@ -214,6 +214,136 @@ html, body {
     0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
+/* Custom Select Dropdown Styling */
+select.clay-input,
+.kode-dark select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.9rem center !important;
+  background-size: 1rem 1rem !important;
+  padding: 0.7rem 2.5rem 0.7rem 1rem !important;
+  border-radius: 0.95rem !important;
+  min-height: 2.65rem;
+  line-height: 1.25rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+select.clay-input:hover:not(:disabled) {
+  border-color: #a5b4fc;
+}
+
+.kode-dark select:hover:not(:disabled) {
+  border-color: #6366f1 !important;
+}
+
+select.clay-input option {
+  background-color: #ffffff;
+  color: #0f172a;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+}
+
+.kode-dark select option {
+  background-color: #1e293b;
+  color: #f8fafc;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+}
+
+@supports (appearance: base-select) {
+  select.clay-input,
+  select.clay-input::picker(select),
+  .kode-dark select,
+  .kode-dark select::picker(select) {
+    appearance: base-select;
+  }
+
+  select.clay-input,
+  .kode-dark select {
+    background-image: none !important;
+    padding: 0.65rem 1rem !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  select.clay-input::picker-icon,
+  .kode-dark select::picker-icon {
+    color: #6366f1;
+    transition: transform 0.2s ease;
+  }
+
+  select.clay-input:open::picker-icon,
+  .kode-dark select:open::picker-icon {
+    transform: rotate(180deg);
+  }
+
+  select.clay-input::picker(select) {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    padding: 0.4rem;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14);
+    margin-top: 0.35rem;
+    max-height: 18rem;
+  }
+
+  .kode-dark select::picker(select) {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
+    color: #f8fafc;
+  }
+
+  select.clay-input option {
+    padding: 0.55rem 0.75rem;
+    border-radius: 0.65rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #1e293b;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  select.clay-input option:hover,
+  select.clay-input option:focus {
+    background-color: #eef2ff;
+    color: #4f46e5;
+  }
+
+  select.clay-input option:checked {
+    background-color: rgba(99, 102, 241, 0.12);
+    color: #4f46e5;
+  }
+
+  select.clay-input option::checkmark {
+    color: #6366f1;
+    font-weight: 900;
+  }
+
+  .kode-dark select option {
+    color: #e2e8f0;
+    background-color: transparent;
+  }
+
+  .kode-dark select option:hover,
+  .kode-dark select option:focus {
+    background-color: #334155;
+    color: #a5b4fc;
+  }
+
+  .kode-dark select option:checked {
+    background-color: rgba(99, 102, 241, 0.22);
+    color: #a5b4fc;
+  }
+
+  .kode-dark select option::checkmark {
+    color: #818cf8;
+  }
+}
+
 /* Clay Pill Badge */
 .clay-badge {
   display: inline-flex;
