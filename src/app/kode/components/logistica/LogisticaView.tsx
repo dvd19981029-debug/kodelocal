@@ -425,27 +425,44 @@ export function LogisticaView({
                                     const cant = Number(it.cantidad) || 1;
                                     return (
                                       <div key={i} className="py-1 flex items-center justify-between gap-1.5">
-                                        <div className="flex items-center gap-1 min-w-0">
+                                        <div className="flex items-center gap-1.5 min-w-0">
+                                          {isPlus ? (
+                                            <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-blue-600 text-white font-black text-[10px] leading-none shrink-0 shadow-2xs">
+                                              +
+                                            </span>
+                                          ) : (
+                                            <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-amber-400 text-amber-950 font-black text-[10px] leading-none shrink-0 shadow-2xs">
+                                              ↓
+                                            </span>
+                                          )}
                                           {cant > 1 && (
                                             <span className="font-mono font-black text-indigo-700">
                                               {cant}x
                                             </span>
                                           )}
-                                          <span className="font-mono font-bold text-slate-500 shrink-0">
+                                          <span
+                                            className={`font-mono font-bold shrink-0 ${
+                                              isPlus ? 'text-blue-600' : 'text-amber-600'
+                                            }`}
+                                          >
                                             #{it.codigo}
                                           </span>
-                                          <span className="font-bold text-slate-900 truncate">
+                                          <span
+                                            className={`font-bold truncate ${
+                                              isPlus ? 'text-blue-600' : 'text-amber-600'
+                                            }`}
+                                          >
                                             {it.contratipo}
                                           </span>
                                         </div>
                                         <span
-                                          className={`text-[10px] font-extrabold px-1.5 py-0.2 rounded border shrink-0 ${
+                                          className={`text-[10px] font-extrabold px-2 py-0.2 rounded-full border shrink-0 ${
                                             isPlus
-                                              ? 'bg-amber-50 text-amber-800 border-amber-200'
-                                              : 'bg-slate-100 text-slate-600 border-slate-200'
+                                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                              : 'bg-amber-50 text-amber-800 border-amber-200'
                                           }`}
                                         >
-                                          {isPlus ? '⚡ Plus' : 'Normal'}
+                                          {isPlus ? 'Plus' : 'Normal'}
                                         </span>
                                       </div>
                                     );
