@@ -60,6 +60,41 @@ export async function POST(request: Request) {
 
     const pedido = pedidoRes.rows[0];
 
+    // Consultar los ítems del pedido para armar el campo "Contenido" de C807 y los ítems de DTE
+    const itemsRes = await queryKode(
+      `SELECT 
+        COALESCE(cat.codigo, 'KODE-01') AS kodigo,
+        COALESCE(cat.contratipo, 'Fragancia') AS nombre_mh,
+        COALESCE(pi.version, 'Normal') AS version,
+        pi.cantidad,
+        pi.precio_unitario
+       FROM public.pedido_items pi
+       LEFT JOIN public.catalogo cat ON pi.catalogo_id = cat.id
+       WHERE pi.pedido_id = $1
+       ORDER BY pi.created_at ASC`,
+      [pedido_id]
+    );
+
+    const codeTokens: string[] = [];
+    for (const row of itemsRes.rows || []) {
+      const rawCode = String(row.kodigo || '').trim();
+      if (!rawCode) continue;
+      const ver = String(row.version || '').trim().toLowerCase();
+      const isPlus = ver === 'plus' || ver === 'extra_shot';
+      const token = isPlus && !rawCode.endsWith('+') ? `${rawCode}+` : rawCode;
+      const qty = Math.max(1, parseInt(String(row.cantidad || 1), 10) || 1);
+      for (let i = 0; i < qty; i++) {
+        codeTokens.push(token);
+      }
+    }
+
+    const contenidoGuia =
+      codeTokens.length === 0
+        ? 'Fragancias Kode'
+        : codeTokens.length === 1
+        ? codeTokens[0]
+        : `${codeTokens.slice(0, -1).join(' ')} y ${codeTokens[codeTokens.length - 1]}`;
+
     let finalGuia = c807_guia_numero?.trim();
     let finalLink = c807_link_rastreo?.trim();
     let rawC807Response = null;
@@ -86,7 +121,7 @@ export async function POST(request: Request) {
         cliente_referencia: pedido.cliente_referencia,
         tipo_pago: pedido.tipo_pago,
         total: Number(pedido.total || 0),
-        observaciones: pedido.notas || 'Fragancias y esencias Kode',
+        observaciones: contenidoGuia,
       });
 
       if (!c807Result.success) {
@@ -126,28 +161,6 @@ export async function POST(request: Request) {
     let dteResult: any = null;
     if (!pedido.dte_codigo_generacion) {
       try {
-        await queryKode(`
-          ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_estado VARCHAR(50);
-          ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_codigo_generacion VARCHAR(150);
-          ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_numero_control VARCHAR(100);
-          ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_sello_recepcion VARCHAR(150);
-          ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_pdf_url TEXT;
-          ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_json_url TEXT;
-          ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS dte_fecha_emision TIMESTAMPTZ;
-        `);
-
-        const itemsRes = await queryKode(
-          `SELECT 
-            COALESCE(cat.codigo, 'KODE-01') AS kodigo,
-            COALESCE(cat.contratipo, 'Fragancia') AS nombre_mh,
-            pi.cantidad,
-            pi.precio_unitario
-           FROM public.pedido_items pi
-           LEFT JOIN public.catalogo cat ON pi.catalogo_id = cat.id
-           WHERE pi.pedido_id = $1`,
-          [pedido_id]
-        );
-
         const itemsFormatted = buildKodeDteItemsFromPedido(
           itemsRes.rows || [],
           pedido.total,
