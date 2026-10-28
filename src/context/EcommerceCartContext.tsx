@@ -968,21 +968,22 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
       const current = prev.find(item => item.id === id);
       if (!current) return prev;
 
-      // Validar inventario si es un aumento de cantidad
-      if (quantity > current.quantity) {
+      let effectiveQuantity = Math.floor(quantity);
+
+      // Validar y ajustar al inventario máximo disponible si es un aumento de cantidad
+      if (effectiveQuantity > current.quantity) {
         const storedCatalog = typeof window !== 'undefined' ? getStoredProducts() : [];
         const prod = current.product;
         const liveProd = storedCatalog.find((p) => p.id === (current.kitDetails?.essenceId || prod.id)) || prod;
         const totalStock = typeof liveProd.stock === 'number' ? liveProd.stock : 0;
         const isEssence = liveProd.category === 'Esencias para Perfume' || prod.category === 'Esencias para Perfume';
 
+        let maxAllowed = effectiveQuantity;
         if (current.kitDetails) {
           const discrete = getEssenceDiscreteStock(totalStock, prev, current.kitDetails.essenceId, id, liveProd.stockHalf || 0);
-          if (quantity > discrete.available1oz) {
-            return prev;
-          }
-          if (current.kitDetails.isPlus && quantity > discrete.availableHalfOz) {
-            return prev;
+          maxAllowed = discrete.available1oz;
+          if (current.kitDetails.isPlus) {
+            maxAllowed = Math.min(maxAllowed, discrete.availableHalfOz);
           }
           if (current.kitDetails.bottleId) {
             const liveBottle = storedCatalog.find((p) => p.id === current.kitDetails?.bottleId);
@@ -993,24 +994,23 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
                 current.kitDetails.bottleId,
                 id
               );
-              if (quantity > availableBottle) {
-                return prev;
-              }
+              maxAllowed = Math.min(maxAllowed, availableBottle);
             }
           }
         } else if (isEssence) {
           const discrete = getEssenceDiscreteStock(totalStock, prev, prod.id, id, liveProd.stockHalf || 0);
-          if (current.presentation === 'ONZA_COMPLETA' && quantity > discrete.available1oz) {
-            return prev;
-          }
-          if (current.presentation === 'MEDIA_ONZA' && quantity > discrete.availableHalfOz) {
-            return prev;
+          if (current.presentation === 'ONZA_COMPLETA') {
+            maxAllowed = discrete.available1oz;
+          } else if (current.presentation === 'MEDIA_ONZA') {
+            maxAllowed = discrete.availableHalfOz;
           }
         } else {
-          const availableUnits = getBottleAvailableStock(totalStock, prev, prod.id, id);
-          if (quantity > availableUnits) {
-            return prev; // Bloquear aumento más allá del stock
-          }
+          maxAllowed = getBottleAvailableStock(totalStock, prev, prod.id, id);
+        }
+
+        effectiveQuantity = Math.min(effectiveQuantity, Math.max(current.quantity, maxAllowed));
+        if (effectiveQuantity <= current.quantity) {
+          return prev;
         }
 
         trackMetaAddToCart({
@@ -1018,7 +1018,7 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
           productName: prod.officialName || prod.name,
           category: prod.category,
           unitPrice: current.unitPrice,
-          quantity: quantity - current.quantity,
+          quantity: effectiveQuantity - current.quantity,
         });
 
         triggerCartPulse();
@@ -1026,7 +1026,7 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
 
       return prev.map(item => 
         item.id === id 
-          ? { ...item, quantity, totalPrice: Number((item.unitPrice * quantity).toFixed(2)) }
+          ? { ...item, quantity: effectiveQuantity, totalPrice: Number((item.unitPrice * effectiveQuantity).toFixed(2)) }
           : item
       );
     });

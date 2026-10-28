@@ -24,6 +24,8 @@ export default function CartDrawer() {
     totalItems
   } = useEcommerceCart();
 
+  const [editingQtyMap, setEditingQtyMap] = React.useState<Record<string, string>>({});
+
   // Bloquear el scroll de fondo mientras el carrito esté abierto
   useEffect(() => {
     if (!isCartOpen) return;
@@ -221,32 +223,21 @@ export default function CartDrawer() {
                     <div className="flex items-center justify-between pt-2 border-t border-slate-100">
                       {/* Control de cantidad */}
                       <div className="flex items-center gap-1.5 bg-slate-50 rounded-lg p-1 border border-slate-200/80 shadow-2xs">
-                        <button
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="w-5 h-5 rounded flex items-center justify-center text-slate-600 hover:bg-white font-bold cursor-pointer transition-colors"
-                          aria-label="Disminuir una unidad"
-                        >
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <span className="text-xs font-black text-slate-800 w-5 text-center">
-                          {item.quantity}
-                        </span>
                         {(() => {
                           const prod = item.product;
                           const storedCatalog = typeof window !== 'undefined' ? getStoredProducts() : [];
                           const liveProd = storedCatalog.find((p) => p.id === (item.kitDetails?.essenceId || prod.id)) || prod;
                           const totalStock = typeof liveProd.stock === 'number' ? liveProd.stock : 0;
                           const isEssence = liveProd.category === 'Esencias para Perfume' || prod.category === 'Esencias para Perfume';
-                          let canAddMoreInDrawer = true;
+                          let maxAvailableInDrawer = 9999;
 
                           if (item.kitDetails) {
                             const discrete = getEssenceDiscreteStock(totalStock, cart, item.kitDetails.essenceId, item.id, liveProd.stockHalf || 0);
-                            const nextQty = item.quantity + 1;
-                            canAddMoreInDrawer = nextQty <= discrete.available1oz;
-                            if (item.kitDetails.isPlus && nextQty > discrete.availableHalfOz) {
-                              canAddMoreInDrawer = false;
+                            maxAvailableInDrawer = discrete.available1oz;
+                            if (item.kitDetails.isPlus) {
+                              maxAvailableInDrawer = Math.min(maxAvailableInDrawer, discrete.availableHalfOz);
                             }
-                            if (canAddMoreInDrawer && item.kitDetails.bottleId) {
+                            if (item.kitDetails.bottleId) {
                               const liveBottle = storedCatalog.find((p) => p.id === item.kitDetails?.bottleId);
                               if (liveBottle) {
                                 const availBottle = getBottleAvailableStock(
@@ -255,38 +246,111 @@ export default function CartDrawer() {
                                   item.kitDetails.bottleId,
                                   item.id
                                 );
-                                if (nextQty > availBottle) {
-                                  canAddMoreInDrawer = false;
-                                }
+                                maxAvailableInDrawer = Math.min(maxAvailableInDrawer, availBottle);
                               }
                             }
                           } else if (isEssence) {
                             const discrete = getEssenceDiscreteStock(totalStock, cart, prod.id, item.id, liveProd.stockHalf || 0);
-                            const nextQty = item.quantity + 1;
                             if (item.presentation === 'ONZA_COMPLETA') {
-                              canAddMoreInDrawer = nextQty <= discrete.available1oz;
+                              maxAvailableInDrawer = discrete.available1oz;
                             } else if (item.presentation === 'MEDIA_ONZA') {
-                              canAddMoreInDrawer = nextQty <= discrete.availableHalfOz;
+                              maxAvailableInDrawer = discrete.availableHalfOz;
                             }
                           } else {
-                            const availUnits = getBottleAvailableStock(totalStock, cart, prod.id, item.id);
-                            canAddMoreInDrawer = item.quantity + 1 <= availUnits;
+                            maxAvailableInDrawer = getBottleAvailableStock(totalStock, cart, prod.id, item.id);
                           }
 
+                          const maxAllowedQty = Math.max(1, maxAvailableInDrawer);
+                          const canAddMoreInDrawer = item.quantity + 1 <= maxAvailableInDrawer;
+                          const displayValue =
+                            editingQtyMap[item.id] !== undefined ? editingQtyMap[item.id] : String(item.quantity);
+
                           return (
-                            <button
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              disabled={!canAddMoreInDrawer}
-                              className={`w-5 h-5 rounded flex items-center justify-center font-bold transition-colors ${
-                                canAddMoreInDrawer 
-                                  ? 'text-slate-600 hover:bg-white cursor-pointer' 
-                                  : 'text-slate-300 cursor-not-allowed opacity-40'
-                              }`}
-                              title={canAddMoreInDrawer ? "Aumentar una unidad" : "Inventario máximo alcanzado"}
-                              aria-label="Aumentar una unidad"
-                            >
-                              <Plus className="w-3 h-3" />
-                            </button>
+                            <>
+                              <button
+                                onClick={() => {
+                                  setEditingQtyMap((prev) => {
+                                    if (prev[item.id] === undefined) return prev;
+                                    const next = { ...prev };
+                                    delete next[item.id];
+                                    return next;
+                                  });
+                                  updateQuantity(item.id, item.quantity - 1);
+                                }}
+                                className="w-5 h-5 rounded flex items-center justify-center text-slate-600 hover:bg-white font-bold cursor-pointer transition-colors"
+                                aria-label="Disminuir una unidad"
+                              >
+                                <Minus className="w-3 h-3" />
+                              </button>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                value={displayValue}
+                                onFocus={(e) => {
+                                  setEditingQtyMap((prev) => ({ ...prev, [item.id]: String(item.quantity) }));
+                                  e.target.select();
+                                }}
+                                onChange={(e) => {
+                                  const raw = e.target.value.replace(/\D/g, '');
+                                  if (raw === '') {
+                                    setEditingQtyMap((prev) => ({ ...prev, [item.id]: '' }));
+                                    return;
+                                  }
+                                  const parsed = parseInt(raw, 10);
+                                  if (isNaN(parsed)) return;
+                                  if (parsed === 0) {
+                                    setEditingQtyMap((prev) => ({ ...prev, [item.id]: '0' }));
+                                    return;
+                                  }
+                                  const clamped = Math.min(parsed, maxAllowedQty);
+                                  setEditingQtyMap((prev) => ({ ...prev, [item.id]: String(clamped) }));
+                                  if (clamped !== item.quantity) {
+                                    updateQuantity(item.id, clamped);
+                                  }
+                                }}
+                                onBlur={() => {
+                                  const draftVal = editingQtyMap[item.id];
+                                  setEditingQtyMap((prev) => {
+                                    const next = { ...prev };
+                                    delete next[item.id];
+                                    return next;
+                                  });
+                                  if (draftVal === '0') {
+                                    removeFromCart(item.id);
+                                  }
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    (e.target as HTMLInputElement).blur();
+                                  }
+                                }}
+                                title={`Editar cantidad (máx. ${maxAllowedQty} disponibles)`}
+                                aria-label="Cantidad"
+                                className="w-9 h-5 text-xs font-black text-center text-slate-800 bg-white rounded border border-slate-200/90 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none px-0.5 font-mono"
+                              />
+                              <button
+                                onClick={() => {
+                                  setEditingQtyMap((prev) => {
+                                    if (prev[item.id] === undefined) return prev;
+                                    const next = { ...prev };
+                                    delete next[item.id];
+                                    return next;
+                                  });
+                                  updateQuantity(item.id, item.quantity + 1);
+                                }}
+                                disabled={!canAddMoreInDrawer}
+                                className={`w-5 h-5 rounded flex items-center justify-center font-bold transition-colors ${
+                                  canAddMoreInDrawer 
+                                    ? 'text-slate-600 hover:bg-white cursor-pointer' 
+                                    : 'text-slate-300 cursor-not-allowed opacity-40'
+                                }`}
+                                title={canAddMoreInDrawer ? "Aumentar una unidad" : "Inventario máximo alcanzado"}
+                                aria-label="Aumentar una unidad"
+                              >
+                                <Plus className="w-3 h-3" />
+                              </button>
+                            </>
                           );
                         })()}
                       </div>

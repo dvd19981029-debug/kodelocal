@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Barcode, Sparkles, Edit3, Plus } from 'lucide-react';
+import { Search, Barcode, Sparkles, Edit3, Plus, Check } from 'lucide-react';
 import { ProductItem, CartItem } from '@/lib/store';
 import { getProductImage } from '@/lib/perfumeImages';
 import { isIncomingEssence } from '@/lib/perfumeNames';
@@ -52,6 +52,65 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
   onOpenEditProduct,
   onOpenNewProduct,
 }) => {
+  const [clickedFeedback, setClickedFeedback] = React.useState<
+    Record<string, { pres: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD'; tick: number; phase: 'press' | 'glow' }>
+  >({});
+  const feedbackTimersRef = React.useRef<
+    Record<string, { pressTimer?: ReturnType<typeof setTimeout>; clearTimer?: ReturnType<typeof setTimeout> }>
+  >({});
+
+  const handleSelectProduct = React.useCallback(
+    (product: ProductItem, presentation?: 'ONZA_COMPLETA' | 'MEDIA_ONZA') => {
+      onAddToCart(product, presentation);
+      const id = product.id;
+      const existingTimers = feedbackTimersRef.current[id];
+      if (existingTimers?.pressTimer) clearTimeout(existingTimers.pressTimer);
+      if (existingTimers?.clearTimer) clearTimeout(existingTimers.clearTimer);
+
+      const resolvedPres = presentation || 'UNIDAD';
+      setClickedFeedback((prev) => ({
+        ...prev,
+        [id]: {
+          pres: resolvedPres,
+          tick: (prev[id]?.tick || 0) + 1,
+          phase: 'press',
+        },
+      }));
+
+      const pressTimer = setTimeout(() => {
+        setClickedFeedback((prev) => {
+          if (!prev[id]) return prev;
+          return {
+            ...prev,
+            [id]: { ...prev[id], phase: 'glow' },
+          };
+        });
+      }, 130);
+
+      const clearTimer = setTimeout(() => {
+        setClickedFeedback((prev) => {
+          if (!prev[id]) return prev;
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
+      }, 550);
+
+      feedbackTimersRef.current[id] = { pressTimer, clearTimer };
+    },
+    [onAddToCart]
+  );
+
+  React.useEffect(() => {
+    const timersMap = feedbackTimersRef.current;
+    return () => {
+      Object.values(timersMap).forEach((t) => {
+        if (t?.pressTimer) clearTimeout(t.pressTimer);
+        if (t?.clearTimer) clearTimeout(t.clearTimer);
+      });
+    };
+  }, []);
+
   return (
     <div className="flex-1 flex flex-col gap-3.5 sm:gap-5 min-w-0">
       {/* Barra superior de Búsqueda y Cotizador Rápido */}
@@ -182,14 +241,22 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
                 ? Number(product.priceHalfOunce) 
                 : Number((product.price / 2).toFixed(2))));
 
+          const feedback = clickedFeedback[product.id];
+          const isPressing = feedback?.phase === 'press';
+          const isGlowing = feedback?.phase === 'glow';
+
           return (
             <div 
               key={product.id}
-              onClick={() => !isOutOfStock && (isEssence ? fullRemaining > 0 : availableRemaining > 0) && onAddToCart(product, 'ONZA_COMPLETA')}
-              className={`clay-card p-2.5 sm:p-3 flex flex-col justify-between cursor-pointer transition-all hover:scale-[1.015] ${
+              onClick={() => !isOutOfStock && (isEssence ? fullRemaining > 0 : availableRemaining > 0) && handleSelectProduct(product, 'ONZA_COMPLETA')}
+              className={`clay-card p-2.5 sm:p-3 flex flex-col justify-between cursor-pointer transition-all duration-150 ${
                 isOutOfStock 
                   ? 'opacity-55 cursor-not-allowed bg-slate-50/70' 
-                  : 'hover:shadow-[3px_5px_12px_rgba(99,102,241,0.18)]'
+                  : isPressing
+                  ? 'scale-[0.96] ring-2 ring-emerald-500 !border-emerald-400 !bg-emerald-50/60 shadow-[0_0_20px_rgba(16,185,129,0.35)]'
+                  : isGlowing
+                  ? 'scale-[1.02] ring-2 ring-emerald-500/80 !border-emerald-400 !bg-emerald-50/25 shadow-[0_4px_18px_rgba(16,185,129,0.25)]'
+                  : 'hover:scale-[1.015] hover:shadow-[3px_5px_12px_rgba(99,102,241,0.18)]'
               }`}
             >
               <div>
@@ -280,20 +347,30 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
                       <button
                         type="button"
                         disabled={fullRemaining <= 0}
-                        onClick={() => onAddToCart(product, 'ONZA_COMPLETA')}
-                        className="w-full py-1.5 px-1 text-[11px] font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-lg border border-indigo-200 transition-all shadow-2xs disabled:opacity-50 flex items-center justify-center whitespace-nowrap active:scale-95"
+                        onClick={() => handleSelectProduct(product, 'ONZA_COMPLETA')}
+                        className={`w-full py-1.5 px-1 text-[11px] font-bold rounded-lg border transition-all duration-150 shadow-2xs disabled:opacity-50 flex items-center justify-center gap-0.5 whitespace-nowrap active:scale-95 ${
+                          feedback?.pres === 'ONZA_COMPLETA'
+                            ? 'bg-emerald-600 text-white border-emerald-600 scale-95 shadow-sm'
+                            : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white border-indigo-200'
+                        }`}
                         title="Agregar 1 Onza al pedido"
                       >
-                        +1 Oz
+                        {feedback?.pres === 'ONZA_COMPLETA' && <Check className="w-3 h-3 stroke-[3]" />}
+                        <span>+1 Oz</span>
                       </button>
                       <button
                         type="button"
                         disabled={halfRemaining <= 0}
-                        onClick={() => onAddToCart(product, 'MEDIA_ONZA')}
-                        className="w-full py-1.5 px-1 text-[11px] font-bold bg-violet-50 text-violet-700 hover:bg-violet-600 hover:text-white rounded-lg border border-violet-200 transition-all shadow-2xs disabled:opacity-50 flex items-center justify-center whitespace-nowrap active:scale-95"
+                        onClick={() => handleSelectProduct(product, 'MEDIA_ONZA')}
+                        className={`w-full py-1.5 px-1 text-[11px] font-bold rounded-lg border transition-all duration-150 shadow-2xs disabled:opacity-50 flex items-center justify-center gap-0.5 whitespace-nowrap active:scale-95 ${
+                          feedback?.pres === 'MEDIA_ONZA'
+                            ? 'bg-emerald-600 text-white border-emerald-600 scale-95 shadow-sm'
+                            : 'bg-violet-50 text-violet-700 hover:bg-violet-600 hover:text-white border-violet-200'
+                        }`}
                         title="Agregar ½ Onza al pedido"
                       >
-                        +½ Oz
+                        {feedback?.pres === 'MEDIA_ONZA' && <Check className="w-3 h-3 stroke-[3]" />}
+                        <span>+½ Oz</span>
                       </button>
                     </div>
                   </>
@@ -312,12 +389,16 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
                       disabled={isOutOfStock || availableRemaining <= 0}
                       onClick={(e) => {
                         e.stopPropagation();
-                        onAddToCart(product);
+                        handleSelectProduct(product);
                       }}
-                      className="px-2.5 py-1 text-[11px] font-bold bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-lg border border-indigo-200 shadow-2xs flex items-center gap-1 disabled:opacity-50 active:scale-95 transition-all"
+                      className={`px-2.5 py-1 text-[11px] font-bold rounded-lg border shadow-2xs flex items-center gap-1 disabled:opacity-50 active:scale-95 transition-all duration-150 ${
+                        feedback
+                          ? 'bg-emerald-600 text-white border-emerald-600 scale-95 shadow-sm'
+                          : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white border-indigo-200'
+                      }`}
                     >
-                      <Plus className="w-3 h-3" />
-                      <span>Agregar</span>
+                      {feedback ? <Check className="w-3 h-3 stroke-[3]" /> : <Plus className="w-3 h-3" />}
+                      <span>{feedback ? '+1' : 'Agregar'}</span>
                     </button>
                   </div>
                 )}

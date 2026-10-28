@@ -57,13 +57,13 @@ export interface PosCartPanelProps {
   setPosTab: (tab: PosTab) => void;
   // Cart item management
   getItemUnitPrice: (item: CartItem) => number;
-  removeFromCart: (productId: string, presentation?: 'ONZA_COMPLETA' | 'MEDIA_ONZA') => void;
+  removeFromCart: (productId: string, presentation?: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD') => void;
   setItemPresentation: (
     productId: string, 
     currentPresentation: 'ONZA_COMPLETA' | 'MEDIA_ONZA', 
     newPresentation: 'ONZA_COMPLETA' | 'MEDIA_ONZA'
   ) => void;
-  updateQuantity: (productId: string, delta: number, presentation?: 'ONZA_COMPLETA' | 'MEDIA_ONZA') => void;
+  updateQuantity: (productId: string, delta: number, presentation?: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD') => void;
   // Financial totals
   subtotalNeto: number;
   ivaCalculado: number;
@@ -120,6 +120,8 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
   onOpenCheckout,
   editingQuoteNumber,
 }) => {
+  const [editingQtyMap, setEditingQtyMap] = React.useState<Record<string, string>>({});
+
   return (
     <div className="w-full xl:w-96 flex flex-col gap-4 shrink-0">
       <div className="clay-card p-3 sm:p-4 flex flex-col h-auto xl:sticky xl:top-20">
@@ -633,19 +635,14 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
                     </div>
 
                     {/* Botón eliminar item */}
-                    {(() => {
-                      const presArg = itemPres === 'MEDIA_ONZA' || itemPres === 'ONZA_COMPLETA' ? itemPres : undefined;
-                      return (
-                        <button
-                          type="button"
-                          onClick={() => removeFromCart(item.product.id, presArg)}
-                          className="text-slate-300 hover:text-rose-500 transition-colors p-0.5"
-                          title="Quitar producto"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      );
-                    })()}
+                    <button
+                      type="button"
+                      onClick={() => removeFromCart(item.product.id, itemPres)}
+                      className="text-slate-300 hover:text-rose-500 transition-colors p-0.5"
+                      title="Quitar producto"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
                   </div>
 
                   {/* Selector de Presentación para Esencias y Controles de Cantidad */}
@@ -687,25 +684,113 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
                       {/* Controles de cantidad */}
                       <div className="flex items-center gap-1 bg-slate-50 px-1.5 py-0.5 rounded-lg border border-slate-200/80 shrink-0">
                         {(() => {
-                          const presArg = itemPres === 'MEDIA_ONZA' || itemPres === 'ONZA_COMPLETA' ? itemPres : undefined;
+                          const rowKey = `${item.product.id}-${itemPres}`;
+                          const isHalfPres = itemPres === 'MEDIA_ONZA';
+                          const isService =
+                            item.product.category === 'Logística' ||
+                            item.product.unit === 'Servicio' ||
+                            item.product.id === 'ENVIO-DOM';
+                          const rawLimit = isHalfPres ? (item.product.stockHalf || 0) : (item.product.stock || 0);
+                          const otherSamePresQty = cart
+                            .filter(
+                              (it) =>
+                                it !== item &&
+                                it.product.id === item.product.id &&
+                                (it.presentation === 'MEDIA_ONZA') === isHalfPres
+                            )
+                            .reduce((s, it) => s + it.quantity, 0);
+                          const maxAllowedQty = isService ? 9999 : Math.max(1, rawLimit - otherSamePresQty);
+                          const canIncrease = isService || item.quantity < maxAllowedQty;
+                          const displayValue =
+                            editingQtyMap[rowKey] !== undefined ? editingQtyMap[rowKey] : String(item.quantity);
+
                           return (
                             <>
                               <button
                                 type="button"
-                                onClick={() => updateQuantity(item.product.id, -1, presArg)}
+                                onClick={() => {
+                                  setEditingQtyMap((prev) => {
+                                    if (prev[rowKey] === undefined) return prev;
+                                    const next = { ...prev };
+                                    delete next[rowKey];
+                                    return next;
+                                  });
+                                  updateQuantity(item.product.id, -1, itemPres);
+                                }}
                                 className="w-4 h-4 rounded bg-white text-slate-600 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center active:scale-90 shadow-2xs"
                                 title="Reducir cantidad"
                               >
                                 <Minus className="w-2.5 h-2.5" />
                               </button>
-                              <span className="text-[11px] font-black w-4 text-center text-slate-800">
-                                {item.quantity}
-                              </span>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                value={displayValue}
+                                onFocus={(e) => {
+                                  setEditingQtyMap((prev) => ({ ...prev, [rowKey]: String(item.quantity) }));
+                                  e.target.select();
+                                }}
+                                onChange={(e) => {
+                                  const raw = e.target.value.replace(/\D/g, '');
+                                  if (raw === '') {
+                                    setEditingQtyMap((prev) => ({ ...prev, [rowKey]: '' }));
+                                    return;
+                                  }
+                                  const parsed = parseInt(raw, 10);
+                                  if (isNaN(parsed)) return;
+                                  if (parsed === 0) {
+                                    setEditingQtyMap((prev) => ({ ...prev, [rowKey]: '0' }));
+                                    return;
+                                  }
+                                  const clamped = Math.min(parsed, maxAllowedQty);
+                                  setEditingQtyMap((prev) => ({ ...prev, [rowKey]: String(clamped) }));
+                                  if (clamped !== item.quantity) {
+                                    updateQuantity(item.product.id, clamped - item.quantity, itemPres);
+                                  }
+                                }}
+                                onBlur={() => {
+                                  const draftVal = editingQtyMap[rowKey];
+                                  setEditingQtyMap((prev) => {
+                                    const next = { ...prev };
+                                    delete next[rowKey];
+                                    return next;
+                                  });
+                                  if (draftVal === '0') {
+                                    removeFromCart(item.product.id, itemPres);
+                                  }
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    (e.target as HTMLInputElement).blur();
+                                  }
+                                }}
+                                title={
+                                  isService
+                                    ? 'Editar cantidad'
+                                    : `Editar cantidad (máx. ${maxAllowedQty} disponibles en inventario)`
+                                }
+                                aria-label="Cantidad"
+                                className="w-8 h-4 text-[11px] font-black text-center text-slate-800 bg-white rounded border border-slate-200/90 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none px-0.5 font-mono"
+                              />
                               <button
                                 type="button"
-                                onClick={() => updateQuantity(item.product.id, 1, presArg)}
-                                className="w-4 h-4 rounded bg-white text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-center active:scale-90 shadow-2xs"
-                                title="Aumentar cantidad"
+                                disabled={!canIncrease}
+                                onClick={() => {
+                                  setEditingQtyMap((prev) => {
+                                    if (prev[rowKey] === undefined) return prev;
+                                    const next = { ...prev };
+                                    delete next[rowKey];
+                                    return next;
+                                  });
+                                  updateQuantity(item.product.id, 1, itemPres);
+                                }}
+                                className="w-4 h-4 rounded bg-white text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-center active:scale-90 shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed"
+                                title={
+                                  canIncrease
+                                    ? 'Aumentar cantidad'
+                                    : `Inventario máximo alcanzado (${maxAllowedQty} disponibles)`
+                                }
                               >
                                 <Plus className="w-2.5 h-2.5" />
                               </button>

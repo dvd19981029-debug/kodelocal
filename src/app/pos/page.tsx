@@ -1424,32 +1424,46 @@ export default function PosPage() {
   const updateQuantity = (
     productId: string, 
     delta: number, 
-    presentation: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD' = 'ONZA_COMPLETA'
+    presentation?: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD'
   ) => {
+    if (delta === 0) return;
     setCart(prev => {
+      const isHalfPres = presentation === 'MEDIA_ONZA';
       const targetItem = prev.find(item => 
         item.product.id === productId && 
-        (item.presentation || 'ONZA_COMPLETA') === presentation
+        (presentation
+          ? (item.presentation || 'ONZA_COMPLETA') === presentation
+          : (item.presentation === 'MEDIA_ONZA') === isHalfPres)
       );
       if (!targetItem) return prev;
 
-      if (delta > 0) {
-        const isHalfPres = presentation === 'MEDIA_ONZA';
-        const limit = isHalfPres ? (targetItem.product.stockHalf || 0) : targetItem.product.stock;
+      const liveProd = products.find(p => p.id === productId) || targetItem.product;
+      const isService =
+        liveProd.category === 'Logística' ||
+        liveProd.unit === 'Servicio' ||
+        liveProd.id === 'ENVIO-DOM';
+
+      let effectiveDelta = delta;
+      if (delta > 0 && !isService) {
+        const limit = isHalfPres ? (liveProd.stockHalf || 0) : (liveProd.stock || 0);
         const currentBottles = prev
           .filter(it => it.product.id === productId && ((it.presentation === 'MEDIA_ONZA') === isHalfPres))
           .reduce((sum, it) => sum + it.quantity, 0);
         if (currentBottles + delta > limit) {
-          alert(`Stock máximo alcanzado (${limit} frascos disponibles).`);
-          return prev;
+          const maxDeltaAllowed = Math.max(0, limit - currentBottles);
+          if (maxDeltaAllowed <= 0) {
+            alert(`Stock máximo alcanzado (${limit} disponibles).`);
+            return prev;
+          }
+          effectiveDelta = maxDeltaAllowed;
         }
       }
 
       return prev.map(item => {
-        if (item.product.id === productId && (item.presentation || 'ONZA_COMPLETA') === presentation) {
-          const newQty = item.quantity + delta;
+        if (item === targetItem) {
+          const newQty = item.quantity + effectiveDelta;
           if (newQty <= 0) return null;
-          return { ...item, quantity: newQty };
+          return { ...item, product: liveProd, quantity: newQty };
         }
         return item;
       }).filter(Boolean) as CartItem[];
