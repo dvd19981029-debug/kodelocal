@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { ShoppingBag, Check, Sparkles, Plus, Minus } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS } from '@/lib/store';
-import { useEcommerceCart, getPresentationsForProduct, ProductPresentation, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
+import { useEcommerceCart, getPresentationsForProduct, ProductPresentation, getEssenceDiscreteStock, getBottleAvailableStock } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName, formatPerfumeDisplayName, getBottleLabelConfig, isIncomingEssence } from '@/lib/perfumeNames';
@@ -42,7 +42,8 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
   const relevantCartItems = React.useMemo(() => {
     return cart.filter(item => 
       item.product?.id === product.id || 
-      (item.kitDetails && item.kitDetails.essenceId === product.id)
+      (item.kitDetails && (item.kitDetails.essenceId === product.id || item.kitDetails.bottleId === product.id)) ||
+      (item.selectedBottle && item.selectedBottle.id === product.id)
     );
   }, [cart, product.id]);
 
@@ -58,7 +59,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
   // Unidades disponibles según la presentación actualmente seleccionada
   const availableUnits = isEssence
     ? (selectedPresentation === 'MEDIA_ONZA' ? (discreteStock?.availableHalfOz ?? 0) : (discreteStock?.available1oz ?? 0))
-    : Math.max(0, totalStock - (relevantCartItems.find(it => it.product?.id === product.id && !it.kitDetails)?.quantity || 0));
+    : getBottleAvailableStock(totalStock, relevantCartItems, product.id);
 
   const canAddMore = availableUnits >= 1;
 

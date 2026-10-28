@@ -1029,6 +1029,9 @@ export async function POST(request: Request) {
           if (isPlus) {
             halfDeltas.set(essenceProd.id, (halfDeltas.get(essenceProd.id) || 0) + qty);
           }
+          if (bottleProd) {
+            stockDeltas.set(bottleProd.id, (stockDeltas.get(bottleProd.id) || 0) + qty);
+          }
 
           let kitUnitPrice = isPlus ? Number((baseKitPrice + dynamicExtraShotPrice).toFixed(2)) : baseKitPrice;
           if (dbCustomer?.tier) {

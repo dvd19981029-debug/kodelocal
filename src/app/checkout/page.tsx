@@ -46,8 +46,13 @@ import { isHalloweenPromoProduct } from '@/lib/halloweenPromo';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart, subtotal, rawSubtotal, discountTotal, totalItems, clearCart } = useEcommerceCart();
+  const { cart, subtotal, rawSubtotal, discountTotal, totalItems, clearCart, syncCartWithLiveCatalog } = useEcommerceCart();
   const { customer, isLoggedIn, openAuthModal, openDrawer, updateCustomerProfile } = useCustomerAuth();
+
+  // Sincronizar inventario en vivo al entrar al checkout para depurar cualquier producto agotado
+  React.useEffect(() => {
+    syncCartWithLiveCatalog();
+  }, [syncCartWithLiveCatalog]);
 
   // Método de entrega: Envío a domicilio o Retiro en sucursal
   const [metodoEntrega, setMetodoEntrega] = useState<'ENVIO' | 'RETIRO'>('ENVIO');
@@ -590,7 +595,14 @@ export default function CheckoutPage() {
       setWompiStatusText(null);
       setIsSubmitting(false);
       console.error('Error procesando pedido online:', error);
-      alert(error.message || 'Hubo un inconveniente al procesar tu pedido. Por favor verifica las existencias o escríbenos.');
+      const errMsg = String(error?.message || '');
+      if (errMsg.includes('INSUFFICIENT_STOCK')) {
+        await syncCartWithLiveCatalog();
+        const cleanMsg = errMsg.replace(/^INSUFFICIENT_STOCK:\s*/i, '');
+        alert(`${cleanMsg}\n\nHemos actualizado tu carrito automáticamente con las existencias reales disponibles para que puedas continuar con tu compra.`);
+      } else {
+        alert(errMsg || 'Hubo un inconveniente al procesar tu pedido. Por favor verifica las existencias o escríbenos.');
+      }
     }
   };
 

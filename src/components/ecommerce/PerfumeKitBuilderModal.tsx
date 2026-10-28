@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { ProductItem } from '@/lib/store';
 import { MOCK_100ML_BOTTLES } from '@/lib/bottles';
-import { useEcommerceCart, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
+import { useEcommerceCart, getEssenceDiscreteStock, getBottleAvailableStock } from '@/context/EcommerceCartContext';
 import { getInspiracionPerfumeName, formatPerfumeDisplayName } from '@/lib/perfumeNames';
 import { getProductImage } from '@/lib/perfumeImages';
 
@@ -81,7 +81,36 @@ export default function PerfumeKitBuilderModal({
   }, [availableBottles]);
 
   const [selectedBottle, setSelectedBottle] = useState<ProductItem | null>(null);
-  const activeBottle: ProductItem = selectedBottle || bottlesList[0] || MOCK_100ML_BOTTLES[0];
+  const firstAvailableBottle = useMemo(() => {
+    return (
+      bottlesList.find(
+        (b) => getBottleAvailableStock(typeof b.stock === 'number' ? b.stock : 0, cart, b.id) > 0
+      ) || null
+    );
+  }, [bottlesList, cart]);
+
+  const activeBottle: ProductItem = useMemo(() => {
+    if (selectedBottle) {
+      const latestSelected = bottlesList.find((b) => b.id === selectedBottle.id) || selectedBottle;
+      const avail = getBottleAvailableStock(
+        typeof latestSelected.stock === 'number' ? latestSelected.stock : 0,
+        cart,
+        latestSelected.id
+      );
+      if (avail > 0) return latestSelected;
+    }
+    return firstAvailableBottle || bottlesList[0] || MOCK_100ML_BOTTLES[0];
+  }, [selectedBottle, bottlesList, firstAvailableBottle, cart]);
+
+  const activeBottleAvailableStock = useMemo(() => {
+    if (!activeBottle) return 0;
+    return getBottleAvailableStock(
+      typeof activeBottle.stock === 'number' ? activeBottle.stock : 0,
+      cart,
+      activeBottle.id
+    );
+  }, [activeBottle, cart]);
+
   const bottlesScrollRef = useRef<HTMLDivElement>(null);
 
   const scrollBottles = (direction: 'left' | 'right') => {
@@ -177,7 +206,7 @@ export default function PerfumeKitBuilderModal({
   const totalPrice = basePrice + plusCost;
 
   const handleConfirmKit = () => {
-    if (!selectedEssence || !activeBottle) return;
+    if (!selectedEssence || !activeBottle || activeBottleAvailableStock <= 0) return;
 
     addKitToCart({
       essence: selectedEssence,
@@ -296,8 +325,8 @@ export default function PerfumeKitBuilderModal({
 
           <button
             type="button"
-            onClick={() => selectedEssence && activeBottle && setCurrentStep(3)}
-            disabled={!selectedEssence || !activeBottle}
+            onClick={() => selectedEssence && activeBottle && activeBottleAvailableStock > 0 && setCurrentStep(3)}
+            disabled={!selectedEssence || !activeBottle || activeBottleAvailableStock <= 0}
             className={`clay-tab-item py-1.5 sm:py-2 px-2 sm:px-3 text-[11px] sm:text-xs font-extrabold flex-1 transition-all gap-1.5 ${
               currentStep === 3
                 ? 'clay-tab-active'
@@ -529,13 +558,17 @@ export default function PerfumeKitBuilderModal({
                   className="flex gap-3 sm:gap-4 overflow-x-auto py-3 px-8 sm:px-10 snap-x snap-mandatory scroll-smooth no-scrollbar"
                 >
                   {bottlesList.map((bottle) => {
-                    const isChosen = activeBottle.id === bottle.id;
-                    const bStock = typeof bottle.stock === 'number' ? bottle.stock : 50;
+                    const bStock = getBottleAvailableStock(
+                      typeof bottle.stock === 'number' ? bottle.stock : 0,
+                      cart,
+                      bottle.id
+                    );
                     const bMinStockThreshold = typeof bottle.minStock === 'number' && bottle.minStock > 0
                       ? bottle.minStock
                       : 15;
                     const isBottleBelowMin = bStock > 0 && bStock <= bMinStockThreshold;
                     const isBottleOutOfStock = bStock <= 0;
+                    const isChosen = !isBottleOutOfStock && activeBottle.id === bottle.id;
 
                     return (
                       <div
@@ -630,8 +663,13 @@ export default function PerfumeKitBuilderModal({
                 </div>
                 <button
                   type="button"
-                  onClick={() => setCurrentStep(3)}
-                  className="clay-btn clay-btn-primary px-3 sm:px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 cursor-pointer shrink-0 shadow-xs"
+                  disabled={activeBottleAvailableStock <= 0}
+                  onClick={() => activeBottleAvailableStock > 0 && setCurrentStep(3)}
+                  className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 shrink-0 shadow-xs ${
+                    activeBottleAvailableStock <= 0
+                      ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                      : 'clay-btn clay-btn-primary cursor-pointer'
+                  }`}
                 >
                   <span>Continuar</span>
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -831,10 +869,10 @@ export default function PerfumeKitBuilderModal({
               {currentStep < 3 ? (
                 <button
                   type="button"
-                  disabled={currentStep === 1 && !selectedEssence}
+                  disabled={(currentStep === 1 && !selectedEssence) || (currentStep === 2 && activeBottleAvailableStock <= 0)}
                   onClick={() => setCurrentStep((prev) => (prev + 1) as 2 | 3)}
                   className={`px-3.5 sm:px-6 py-2 sm:py-2.5 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all shadow-md shrink-0 ${
-                    currentStep === 1 && !selectedEssence
+                    (currentStep === 1 && !selectedEssence) || (currentStep === 2 && activeBottleAvailableStock <= 0)
                       ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
                       : 'clay-btn-primary active:scale-95 cursor-pointer hover:brightness-105'
                   }`}
@@ -845,10 +883,10 @@ export default function PerfumeKitBuilderModal({
               ) : (
                 <button
                   type="button"
-                  disabled={!selectedEssence || justAdded}
+                  disabled={!selectedEssence || activeBottleAvailableStock <= 0 || justAdded}
                   onClick={handleConfirmKit}
                   className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-all shadow-md min-w-0 ${
-                    !selectedEssence
+                    !selectedEssence || activeBottleAvailableStock <= 0
                       ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
                       : justAdded
                       ? 'clay-btn-success text-white'

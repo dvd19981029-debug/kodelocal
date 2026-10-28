@@ -21,7 +21,7 @@ import {
   Clock
 } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS, getStoredProducts, saveStoredProducts } from '@/lib/store';
-import { useEcommerceCart, getPresentationsForProduct, ProductPresentation, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
+import { useEcommerceCart, getPresentationsForProduct, ProductPresentation, getEssenceDiscreteStock, getBottleAvailableStock } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getFragranceProfile, getFragranceAccordBars } from '@/lib/fragranceProfiles';
@@ -52,7 +52,7 @@ export default function ProductDetailPage() {
     let isMounted = true;
     const loadCatalog = async () => {
       try {
-        const res = await fetch('/api/products');
+        const res = await fetch('/api/products?fresh=true', { cache: 'no-store' });
         const data = await res.json();
         if (isMounted && data.success && Array.isArray(data.products) && data.products.length > 0) {
           setProducts(data.products);
@@ -67,9 +67,23 @@ export default function ProductDetailPage() {
       }
     };
 
+    const handleProductsUpdate = () => {
+      if (isMounted) {
+        const fresh = getStoredProducts();
+        if (fresh && fresh.length > 0) {
+          setProducts(fresh);
+        }
+      }
+    };
+
     loadCatalog();
+    window.addEventListener('kodelocal_products_updated', handleProductsUpdate);
+    window.addEventListener('storage', handleProductsUpdate);
+
     return () => {
       isMounted = false;
+      window.removeEventListener('kodelocal_products_updated', handleProductsUpdate);
+      window.removeEventListener('storage', handleProductsUpdate);
     };
   }, []);
 
@@ -216,11 +230,8 @@ export default function ProductDetailPage() {
         ? (discreteStock?.availableHalfOz ?? 0) 
         : (discreteStock?.available1oz ?? 0);
     }
-    const otherUnitsInCart = cart
-      .filter(it => it.product.id === product.id && it.id !== cartItemId)
-      .reduce((acc, it) => acc + it.quantity, 0);
-    return Math.max(0, totalStock - otherUnitsInCart - cartQuantity);
-  }, [product, isEssence, selectedPresentation, discreteStock, cart, cartItemId, totalStock, cartQuantity]);
+    return getBottleAvailableStock(totalStock, cart, product.id);
+  }, [product, isEssence, selectedPresentation, discreteStock, cart, totalStock]);
 
   // Límite máximo seleccionable en el contador: lo que ya tiene en carrito + lo que queda disponible en bodega
   const maxSelectable = cartQuantity + availableRemaining;

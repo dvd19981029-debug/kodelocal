@@ -1751,7 +1751,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 1.45,
     "cost": 0.55,
-    "stock": 1883,
+    "stock": 1587,
     "minStock": 25,
     "imageUrl": "/images/botes/bote_100ml_rey_luis.jpg",
     "description": "Frasco cilíndrico de vidrio transparente 100ml estilo Louis Vuitton con cuello translúcido y tapa escalonada negra.",
@@ -1772,7 +1772,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 1.45,
     "cost": 0.55,
-    "stock": 5,
+    "stock": 0,
     "minStock": 15,
     "imageUrl": "/images/botes/bote_100ml_miss.jpg",
     "description": "Frasco rectangular de vidrio cristalino 100ml con cuello dorado de rosca y tapa facetada transparente de lujo.",
@@ -1792,7 +1792,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 1.45,
     "cost": 0.55,
-    "stock": 46,
+    "stock": 15,
     "minStock": 10,
     "imageUrl": "/images/botes/bote_100ml_goliat.jpg",
     "description": "Frasco de vidrio pesado 100ml con base gruesa, hombros redondeados, cuello de rosca y tapa cilíndrica negra brillante.",
@@ -1812,7 +1812,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 1.45,
     "cost": 0.55,
-    "stock": 78,
+    "stock": 35,
     "minStock": 15,
     "imageUrl": "/images/botes/bote_100ml_wolf.jpg",
     "description": "Frasco cilíndrico de vidrio transparente 100ml tipo campana con aro en la base, cierre de rosca y tapa metálica plateada cromada.",
@@ -1832,7 +1832,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 1.45,
     "cost": 0.55,
-    "stock": 56,
+    "stock": 24,
     "minStock": 10,
     "imageUrl": "/images/botes/bote_100ml_golf_club.jpg",
     "description": "Frasco rectangular contorneado de vidrio transparente 100ml con hombros redondeados, cierre de rosca y tapa metálica plateada cromada.",
@@ -2649,7 +2649,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   }
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v35_unified_gender_hf";
+export const DATA_VERSION = "2026_oficial_real_v36_bottle_stock_sync";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;

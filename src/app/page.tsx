@@ -51,8 +51,8 @@ export default function EcommerceHomePage() {
       setProducts(localProds);
     }
 
-    // 2. Sincronizar con la API (aprovechando caché Stale-While-Revalidate)
-    fetch('/api/products')
+    // 2. Sincronizar con la API (consultando existencias frescas en tiempo real)
+    fetch('/api/products?fresh=true', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         if (isMounted && data.success && Array.isArray(data.products) && data.products.length > 0) {

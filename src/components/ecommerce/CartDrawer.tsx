@@ -3,7 +3,8 @@
 import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, ArrowLeft, ShieldCheck, AlertTriangle, Tag } from 'lucide-react';
-import { useEcommerceCart, getEssenceDiscreteStock } from '@/context/EcommerceCartContext';
+import { useEcommerceCart, getEssenceDiscreteStock, getBottleAvailableStock } from '@/context/EcommerceCartContext';
+import { getStoredProducts } from '@/lib/store';
 import { trackMetaInitiateCheckout } from '@/components/analytics/MarketingScripts';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName, formatPerfumeDisplayName } from '@/lib/perfumeNames';
@@ -232,19 +233,35 @@ export default function CartDrawer() {
                         </span>
                         {(() => {
                           const prod = item.product;
-                          const totalStock = typeof prod.stock === 'number' ? prod.stock : 0;
-                          const isEssence = prod.category === 'Esencias para Perfume';
+                          const storedCatalog = typeof window !== 'undefined' ? getStoredProducts() : [];
+                          const liveProd = storedCatalog.find((p) => p.id === (item.kitDetails?.essenceId || prod.id)) || prod;
+                          const totalStock = typeof liveProd.stock === 'number' ? liveProd.stock : 0;
+                          const isEssence = liveProd.category === 'Esencias para Perfume' || prod.category === 'Esencias para Perfume';
                           let canAddMoreInDrawer = true;
 
                           if (item.kitDetails) {
-                            const discrete = getEssenceDiscreteStock(totalStock, cart, item.kitDetails.essenceId, item.id, prod.stockHalf || 0);
+                            const discrete = getEssenceDiscreteStock(totalStock, cart, item.kitDetails.essenceId, item.id, liveProd.stockHalf || 0);
                             const nextQty = item.quantity + 1;
                             canAddMoreInDrawer = nextQty <= discrete.available1oz;
                             if (item.kitDetails.isPlus && nextQty > discrete.availableHalfOz) {
                               canAddMoreInDrawer = false;
                             }
+                            if (canAddMoreInDrawer && item.kitDetails.bottleId) {
+                              const liveBottle = storedCatalog.find((p) => p.id === item.kitDetails?.bottleId);
+                              if (liveBottle) {
+                                const availBottle = getBottleAvailableStock(
+                                  typeof liveBottle.stock === 'number' ? liveBottle.stock : 0,
+                                  cart,
+                                  item.kitDetails.bottleId,
+                                  item.id
+                                );
+                                if (nextQty > availBottle) {
+                                  canAddMoreInDrawer = false;
+                                }
+                              }
+                            }
                           } else if (isEssence) {
-                            const discrete = getEssenceDiscreteStock(totalStock, cart, prod.id, item.id, prod.stockHalf || 0);
+                            const discrete = getEssenceDiscreteStock(totalStock, cart, prod.id, item.id, liveProd.stockHalf || 0);
                             const nextQty = item.quantity + 1;
                             if (item.presentation === 'ONZA_COMPLETA') {
                               canAddMoreInDrawer = nextQty <= discrete.available1oz;
@@ -252,7 +269,8 @@ export default function CartDrawer() {
                               canAddMoreInDrawer = nextQty <= discrete.availableHalfOz;
                             }
                           } else {
-                            canAddMoreInDrawer = item.quantity + 1 <= totalStock;
+                            const availUnits = getBottleAvailableStock(totalStock, cart, prod.id, item.id);
+                            canAddMoreInDrawer = item.quantity + 1 <= availUnits;
                           }
 
                           return (
