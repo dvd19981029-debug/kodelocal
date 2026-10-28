@@ -16,6 +16,8 @@ import {
   Package,
   CreditCard,
   MapPin,
+  Printer,
+  Download,
 } from 'lucide-react';
 import { Pedido } from '../../types';
 import {
@@ -48,6 +50,8 @@ export function LogisticaView({
   const [filtroLogisticaDias, setFiltroLogisticaDias] = useState<'7dias' | 'todos'>('7dias');
   const [copiedTrackingId, setCopiedTrackingId] = useState<string | null>(null);
   const [expandedPedidoId, setExpandedPedidoId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [downloadingBatch, setDownloadingBatch] = useState(false);
 
   // Módulo de Logística C807: Envíos filtrados y ordenados del más reciente al más antiguo
   const { pedidosLogistica, conteoLogistica7Dias, conteoLogisticaTodos } = useMemo(() => {
@@ -111,6 +115,94 @@ export function LogisticaView({
     window.open(url, '_blank');
   };
 
+  const selectablePedidosConGuia = useMemo(
+    () => pedidosLogistica.filter((p) => Boolean(p.c807_guia_numero && p.c807_guia_numero !== 'PENDIENTE')),
+    [pedidosLogistica]
+  );
+
+  const selectedPedidosConGuia = useMemo(
+    () => selectablePedidosConGuia.filter((p) => selectedIds.includes(p.id)),
+    [selectablePedidosConGuia, selectedIds]
+  );
+
+  const allVisibleSelected =
+    selectablePedidosConGuia.length > 0 &&
+    selectablePedidosConGuia.every((p) => selectedIds.includes(p.id));
+
+  const toggleSelectPedido = (id: string) => {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
+  const toggleSelectAllConGuia = () => {
+    const visibleIds = selectablePedidosConGuia.map((p) => p.id);
+    if (allVisibleSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !visibleIds.includes(id)));
+    } else {
+      const merged = new Set([...selectedIds, ...visibleIds]);
+      setSelectedIds(Array.from(merged));
+    }
+  };
+
+  const handleBatchPdfAction = async (mode: 'download' | 'print') => {
+    const guias = Array.from(
+      new Set(
+        selectedPedidosConGuia
+          .map((p) => String(p.c807_guia_numero || '').trim())
+          .filter(Boolean)
+      )
+    );
+    if (guias.length === 0) {
+      showToast('Selecciona al menos un pedido con guía C807 generada.', 'info');
+      return;
+    }
+
+    if (mode === 'print' && guias.length <= 25) {
+      const url = `/api/kode/guia/pdf?guias=${encodeURIComponent(guias.join(','))}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    setDownloadingBatch(true);
+    try {
+      const res = await fetch('/api/kode/guia/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          guias,
+          download: mode === 'download',
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        showToast(errData?.error || 'No se pudo generar el PDF de las guías seleccionadas.', 'error');
+        return;
+      }
+
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      if (mode === 'print') {
+        window.open(blobUrl, '_blank', 'noopener,noreferrer');
+      } else {
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download =
+          guias.length === 1
+            ? `Guia-C807-KODE-${guias[0]}.pdf`
+            : `Guias-C807-KODE-${guias.length}-ordenes.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
+      }
+    } catch (err: any) {
+      showToast(`Error al descargar guías: ${err?.message || 'Error de red'}`, 'error');
+    } finally {
+      setDownloadingBatch(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -160,10 +252,81 @@ export function LogisticaView({
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+        {(selectedPedidosConGuia.length > 0 || selectablePedidosConGuia.length > 0) && (
+          <div className="px-4 py-2.5 bg-slate-50/90 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-3 flex-wrap">
+              <label className="inline-flex items-center gap-2 font-semibold text-slate-700 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={allVisibleSelected}
+                  onChange={toggleSelectAllConGuia}
+                  className="w-4 h-4 accent-indigo-600 rounded cursor-pointer"
+                />
+                <span>Seleccionar guías ({selectablePedidosConGuia.length})</span>
+              </label>
+              {selectedPedidosConGuia.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-bold whitespace-nowrap">
+                    {selectedPedidosConGuia.length}{' '}
+                    {selectedPedidosConGuia.length === 1 ? 'seleccionada' : 'seleccionadas'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedIds([])}
+                    className="text-[11px] font-semibold text-slate-500 hover:text-slate-800 cursor-pointer whitespace-nowrap"
+                  >
+                    Limpiar
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {selectedPedidosConGuia.length > 0 && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={downloadingBatch}
+                  onClick={() => handleBatchPdfAction('print')}
+                  className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>
+                    {downloadingBatch
+                      ? 'Preparando...'
+                      : `Imprimir (${selectedPedidosConGuia.length})`}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  disabled={downloadingBatch}
+                  onClick={() => handleBatchPdfAction('download')}
+                  className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 disabled:opacity-50 text-slate-700 border border-slate-300 text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  <Download className="w-3.5 h-3.5 text-slate-500" />
+                  <span>
+                    {downloadingBatch
+                      ? 'Generando...'
+                      : `Descargar PDF (${selectedPedidosConGuia.length})`}
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse min-w-[1250px]">
+          <table className="w-full text-left text-xs border-collapse min-w-[1280px]">
             <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider whitespace-nowrap">
               <tr>
+                <th className="py-2.5 px-3 w-9 text-center">
+                  <input
+                    type="checkbox"
+                    checked={allVisibleSelected}
+                    disabled={selectablePedidosConGuia.length === 0}
+                    onChange={toggleSelectAllConGuia}
+                    title="Seleccionar todas las guías visibles"
+                    className="w-4 h-4 accent-indigo-600 rounded cursor-pointer disabled:opacity-40"
+                  />
+                </th>
                 <th className="py-2.5 px-4 whitespace-nowrap">Numero de Pedido</th>
                 <th className="py-2.5 px-4 whitespace-nowrap">Cliente</th>
                 <th className="py-2.5 px-4 whitespace-nowrap">Teléfono</th>
@@ -179,9 +342,9 @@ export function LogisticaView({
             <tbody className="divide-y divide-slate-100 bg-white">
               {pedidosLogistica.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-slate-400 font-medium">
-                    {filtroLogisticaDias === '20dias'
-                      ? 'No hay envíos registrados en los últimos 20 días.'
+                  <td colSpan={11} className="py-12 text-center text-slate-400 font-medium">
+                    {filtroLogisticaDias === '7dias'
+                      ? 'No hay envíos registrados en los últimos 7 días.'
                       : 'No hay envíos registrados en logística.'}
                   </td>
                 </tr>
@@ -189,6 +352,7 @@ export function LogisticaView({
                 pedidosLogistica.map((p) => {
                   const isExpanded = expandedPedidoId === p.id;
                   const tieneGuia = !!p.c807_guia_numero && p.c807_guia_numero !== 'PENDIENTE';
+                  const isChecked = selectedIds.includes(p.id);
                   const linkRastreo = getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo);
                   const totalNum = parseFloat(p.total?.toString() || '0');
                   const subtotalNum = parseFloat(p.subtotal?.toString() || '0');
@@ -203,9 +367,26 @@ export function LogisticaView({
                         className={`transition-colors ${
                           isExpanded
                             ? 'bg-indigo-50/90 border-l-4 border-l-indigo-600'
+                            : isChecked
+                            ? 'bg-indigo-50/40'
                             : 'hover:bg-slate-50/80'
                         }`}
                       >
+                        <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            disabled={!tieneGuia}
+                            onChange={() => toggleSelectPedido(p.id)}
+                            title={
+                              tieneGuia
+                                ? `Seleccionar guía ${p.c807_guia_numero}`
+                                : 'Sin guía C807 generada'
+                            }
+                            className="w-4 h-4 accent-indigo-600 rounded cursor-pointer disabled:opacity-30"
+                          />
+                        </td>
+
                         {/* 1. Numero de Pedido (Click para ver detalle) */}
                         <td className="py-2.5 px-4 whitespace-nowrap">
                           <button
@@ -265,6 +446,26 @@ export function LogisticaView({
                                 <span className="font-mono text-[10px] font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 whitespace-nowrap">
                                   {p.c807_guia_numero}
                                 </span>
+                                <a
+                                  href={`/api/kode/guia/pdf?guia=${encodeURIComponent(p.c807_guia_numero!)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 inline-flex items-center gap-1 transition-colors whitespace-nowrap"
+                                  title={`Imprimir guía ${p.c807_guia_numero}`}
+                                >
+                                  <Printer className="w-3 h-3" />
+                                  <span>Imprimir</span>
+                                </a>
+                                <a
+                                  href={`/api/kode/guia/pdf?guia=${encodeURIComponent(p.c807_guia_numero!)}&download=1`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 inline-flex items-center gap-1 transition-colors whitespace-nowrap"
+                                  title={`Descargar PDF guía ${p.c807_guia_numero}`}
+                                >
+                                  <Download className="w-3 h-3" />
+                                  <span>PDF</span>
+                                </a>
                                 {linkRastreo && (
                                   <a
                                     href={linkRastreo}
@@ -404,7 +605,7 @@ export function LogisticaView({
                       </tr>
                       {isExpanded && (
                         <tr className="bg-indigo-50/40 border-l-4 border-l-indigo-600 border-b-2 border-b-indigo-200">
-                          <td colSpan={10} className="py-2 px-4">
+                          <td colSpan={11} className="py-2 px-4">
                             <div className="max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-2.5 text-[11px] leading-tight">
                               {/* 1. LO QUE LLEVA (COMPACTO: CÓDIGO + NOMBRE + VERSIÓN) */}
                               <div className="bg-white py-2 px-3 rounded-lg border border-indigo-200/80 shadow-2xs">

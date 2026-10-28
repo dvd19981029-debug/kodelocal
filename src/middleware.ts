@@ -222,7 +222,8 @@ export async function middleware(request: NextRequest) {
   const isPublicApiException =
     PUBLIC_OPERATIONAL_API_EXCEPTIONS.some((p) => pathname === p || pathname.startsWith(`${p}/`)) ||
     (pathname.startsWith('/api/dte/') && (request.method === 'GET' || request.method === 'HEAD')) ||
-    (pathname.startsWith('/api/kode/dte/') && (request.method === 'GET' || request.method === 'HEAD'));
+    (pathname.startsWith('/api/kode/dte/') && (request.method === 'GET' || request.method === 'HEAD')) ||
+    (pathname === '/api/kode/guia/pdf' && (request.method === 'GET' || request.method === 'HEAD'));
 
   if (isOperationalApi && !isPublicApiException) {
     const authHeader = request.headers.get('authorization') || '';

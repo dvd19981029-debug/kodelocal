@@ -15,6 +15,8 @@ import {
   Eye,
   Package,
   MapPin,
+  Printer,
+  Download,
 } from 'lucide-react';
 import { Pedido } from '../../types';
 import {
@@ -196,6 +198,26 @@ export const PedidosTabla: React.FC<PedidosTablaProps> = ({
                                 <span className="font-mono text-[10px] font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 whitespace-nowrap">
                                   {p.c807_guia_numero}
                                 </span>
+                                <a
+                                  href={`/api/kode/guia/pdf?guia=${encodeURIComponent(p.c807_guia_numero)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 inline-flex items-center gap-1 transition-colors whitespace-nowrap"
+                                  title={`Imprimir guía ${p.c807_guia_numero}`}
+                                >
+                                  <Printer className="w-3 h-3" />
+                                  <span>Imprimir</span>
+                                </a>
+                                <a
+                                  href={`/api/kode/guia/pdf?guia=${encodeURIComponent(p.c807_guia_numero)}&download=1`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 inline-flex items-center gap-1 transition-colors whitespace-nowrap"
+                                  title={`Descargar PDF guía ${p.c807_guia_numero}`}
+                                >
+                                  <Download className="w-3 h-3" />
+                                  <span>PDF</span>
+                                </a>
                                 {getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo) && (
                                   <a
                                     href={getC807TrackingUrl(p.c807_guia_numero, p.c807_link_rastreo)}

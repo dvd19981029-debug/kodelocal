@@ -686,6 +686,13 @@ export default function KodeSystemPage() {
 
       const data = await res.json();
       if (data.success) {
+        if (typeof window !== 'undefined' && data.numero_guia) {
+          window.open(
+            `/api/kode/guia/pdf?guia=${encodeURIComponent(data.numero_guia)}`,
+            '_blank',
+            'noopener,noreferrer'
+          );
+        }
         showToast(
           data.dte?.success
             ? `🚀 ¡Guía ${data.numero_guia} y Factura DTE generadas con éxito!`
@@ -721,6 +728,13 @@ export default function KodeSystemPage() {
 
       const data = await res.json();
       if (data.success) {
+        if (typeof window !== 'undefined' && data.numero_guia) {
+          window.open(
+            `/api/kode/guia/pdf?guia=${encodeURIComponent(data.numero_guia)}`,
+            '_blank',
+            'noopener,noreferrer'
+          );
+        }
         showToast(`🚀 ¡Guía ${data.numero_guia} generada en C807! Pedido en estado Azul.`, 'success');
         setGuiaModalPedido(null);
         fetchPedidos();

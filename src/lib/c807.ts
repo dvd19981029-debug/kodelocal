@@ -638,8 +638,8 @@ export class C807Client {
         municipio: '',
         tipoServicio: 'SER',
         diasFrecuencia: 'L M X J V S',
-        remitenteNombre: 'Aromaniak SV',
-        remitenteTelefono: '72304650 60437496',
+        remitenteNombre: this.brand === 'KODE' ? 'KÖDE' : 'Aromaniak SV',
+        remitenteTelefono: this.brand === 'KODE' ? '72304650' : '72304650 60437496',
         destinoNombre: '',
         destinoTelefono: '',
         destinoContacto: '',
@@ -720,11 +720,14 @@ export class C807Client {
             continue;
           }
           if (currentField === 'remitenteTelefono') {
+            if (this.brand === 'KODE' && txt) {
+              data.remitenteTelefono = txt;
+            }
             currentField = null;
             continue;
           }
           if (tk.y > 365) {
-            data.remitenteNombre = txt;
+            data.remitenteNombre = this.brand === 'KODE' && txt === 'KODE' ? 'KÖDE' : txt;
           }
           continue;
         }
@@ -981,8 +984,16 @@ export class C807Client {
       const RX = SPLIT_X + 5; // 86
       const RW = R - RX - 4; // 193
 
-      // 1) ENCABEZADO: Logo Principal de Aromaniak + sv.com + Remitente
-      if (aromaniakLogo) {
+      // 1) ENCABEZADO: Logo Principal de Aromaniak + sv.com (o KÖDE) + Remitente
+      if (this.brand === 'KODE') {
+        page.drawText(this.sanitizeWinAnsi('KÖDE'), {
+          x: RX,
+          y: 259,
+          size: 20,
+          font: fontBold,
+          color: black,
+        });
+      } else if (aromaniakLogo) {
         page.drawImage(aromaniakLogo, {
           x: RX,
           y: 257.5,
@@ -1006,13 +1017,16 @@ export class C807Client {
         });
       }
 
-      page.drawText(`${data.remitenteNombre}   |   Teléfono: ${data.remitenteTelefono}`, {
-        x: RX,
-        y: 247,
-        size: 7.0,
-        font: fontBold,
-        color: black,
-      });
+      page.drawText(
+        this.sanitizeWinAnsi(`${data.remitenteNombre}   |   Teléfono: ${data.remitenteTelefono}`),
+        {
+          x: RX,
+          y: 247,
+          size: 7.0,
+          font: fontBold,
+          color: black,
+        }
+      );
 
       page.drawLine({
         start: { x: SPLIT_X, y: 243.5 },
@@ -1174,7 +1188,7 @@ export class C807Client {
         specY -= 10.2;
       }
 
-      // ==================== 6) PIE DE GUÍA AROMANIAK (sin recuadro negro, sin link C807) ====================
+      // ==================== 6) PIE DE GUÍA (sin recuadro negro, sin link C807) ====================
       page.drawLine({
         start: { x: L, y: 22 },
         end: { x: R, y: 22 },
@@ -1182,10 +1196,13 @@ export class C807Client {
         color: black,
       });
 
-      const aromaFooterTxt =
-        'Compra seguro en aromaniaksv.com  •  WhatsApp: 60437496  •  Fijo: 2245 3890';
-      page.drawText(aromaFooterTxt, {
-        x: L + (W - fontBold.widthOfTextAtSize(aromaFooterTxt, 6.8)) / 2,
+      const footerTxt = this.sanitizeWinAnsi(
+        this.brand === 'KODE'
+          ? `KÖDE  •  WhatsApp: ${data.remitenteTelefono || '72304650'}  •  C807 Express: ${data.c807Whatsapp || '72087895'}`
+          : 'Compra seguro en aromaniaksv.com  •  WhatsApp: 60437496  •  Fijo: 2245 3890'
+      );
+      page.drawText(footerTxt, {
+        x: L + (W - fontBold.widthOfTextAtSize(footerTxt, 6.8)) / 2,
         y: 11,
         size: 6.8,
         font: fontBold,
