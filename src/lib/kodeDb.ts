@@ -16,9 +16,12 @@ export const kodePool =
     ssl: {
       rejectUnauthorized: false,
     },
-    max: 10,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 10000,
+    max: 6,
+    idleTimeoutMillis: 20000,
+    connectionTimeoutMillis: 8000,
+    query_timeout: 15000,
+    statement_timeout: 15000,
+    keepAlive: true,
   });
 
 if (process.env.NODE_ENV !== 'production') {
@@ -26,11 +29,18 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 export async function queryKode(text: string, params?: any[]) {
-  const start = Date.now();
-  const res = await kodePool.query(text, params);
-  const duration = Date.now() - start;
-  if (process.env.NODE_ENV === 'development') {
-    // console.log('Executed KODE query', { text, duration, rows: res.rowCount });
+  try {
+    return await kodePool.query(text, params);
+  } catch (err: any) {
+    const msg = String(err?.message || '');
+    const isTransientConnectionError =
+      msg.includes('Connection terminated') ||
+      msg.includes('connection timeout') ||
+      msg.includes('ECONNRESET') ||
+      msg.includes('Client has encountered a connection error');
+    if (isTransientConnectionError) {
+      return await kodePool.query(text, params);
+    }
+    throw err;
   }
-  return res;
 }

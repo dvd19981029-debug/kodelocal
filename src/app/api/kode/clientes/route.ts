@@ -31,7 +31,6 @@ async function ensureClientesTable() {
 
 export async function GET(request: Request) {
   try {
-    await ensureClientesTable();
     const { searchParams } = new URL(request.url);
     const q = searchParams.get('q');
 
@@ -80,7 +79,6 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    await ensureClientesTable();
     const body = await request.json();
     const {
       nombre_completo,

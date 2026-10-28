@@ -43,8 +43,6 @@ async function ensureFormasPagoTable() {
 
 export async function GET(request: Request) {
   try {
-    await ensureFormasPagoTable();
-
     const { searchParams } = new URL(request.url);
     const soloActivas = searchParams.get('activas_only') === 'true';
 

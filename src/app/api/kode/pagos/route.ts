@@ -33,7 +33,6 @@ async function ensurePagosTable() {
 
 export async function GET(request: Request) {
   try {
-    await ensurePagosTable();
     const { searchParams } = new URL(request.url);
     const pedidoId = searchParams.get('pedido_id');
     const formaPagoId = searchParams.get('forma_pago_id');
@@ -98,7 +97,6 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    await ensurePagosTable();
     const body = await request.json();
     const {
       pedido_id,

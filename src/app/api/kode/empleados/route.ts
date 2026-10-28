@@ -5,62 +5,7 @@ export const dynamic = 'force-dynamic';
 
 // Asegura que las columnas de empleados, credenciales y Sujeto Excluido existan en public.usuarios
 async function ensureUsuariosColumns() {
-  try {
-    await queryKode(`
-      CREATE TABLE IF NOT EXISTS public.usuarios (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        nombre VARCHAR(150) NOT NULL,
-        email VARCHAR(150) UNIQUE NOT NULL,
-        username VARCHAR(100),
-        password VARCHAR(255),
-        telefono VARCHAR(50),
-        rol VARCHAR(50) DEFAULT 'VENDEDORA',
-        doc_tipo VARCHAR(20) DEFAULT 'DUI',
-        doc_numero VARCHAR(30),
-        departamento_mh VARCHAR(10) DEFAULT '06',
-        municipio_mh VARCHAR(10) DEFAULT '14',
-        direccion_complemento TEXT,
-        actividad_economica VARCHAR(20) DEFAULT '82990',
-        comision_normal DECIMAL(10, 2) DEFAULT 1.00,
-        comision_plus DECIMAL(10, 2) DEFAULT 1.50,
-        activo BOOLEAN DEFAULT TRUE,
-        created_at TIMESTAMPTZ DEFAULT NOW(),
-        updated_at TIMESTAMPTZ DEFAULT NOW()
-      );
-
-      ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS username VARCHAR(100);
-      ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS password VARCHAR(255);
-      ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS telefono VARCHAR(50);
-      ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS doc_tipo VARCHAR(20) DEFAULT 'DUI';
-      ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS doc_numero VARCHAR(30);
-      ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS departamento_mh VARCHAR(10) DEFAULT '06';
-      ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS municipio_mh VARCHAR(10) DEFAULT '14';
-      ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS direccion_complemento TEXT;
-      ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS actividad_economica VARCHAR(20) DEFAULT '82990';
-      ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS comision_normal DECIMAL(10, 2) DEFAULT 1.00;
-      ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS comision_plus DECIMAL(10, 2) DEFAULT 1.50;
-      ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS comision_porcentaje DECIMAL(5, 2) DEFAULT 5.00;
-      ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS rol VARCHAR(50) DEFAULT 'VENDEDORA';
-      ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT TRUE;
-      ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
-      ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
-
-      -- Sembrar vendedoras y administradores base si está vacía
-      INSERT INTO public.usuarios (nombre, email, username, password, telefono, rol, doc_tipo, doc_numero, departamento_mh, municipio_mh, direccion_complemento, comision_normal, comision_plus, comision_porcentaje)
-      VALUES 
-        ('Virgen Cerna', 'virgicerna@gmail.com', 'virgencerna', 'Kode2026*', '7890-1122', 'VENDEDORA', 'DUI', '045812903', '06', '14', 'San Salvador Centro, El Salvador', 1.00, 1.50, 5.00),
-        ('Patricia Elizabeth Mejía Ramírez', 'pm3923193@gmail.com', 'patriciamejia', 'Kode2026*', '7230-4650', 'VENDEDORA', 'DUI', '068614130', '10', '15', 'Caserío Las Vegas, Cantón Cañas, Tepetitán, San Vicente', 1.00, 1.50, 5.00),
-        ('Erika Melgar', 'erikamelgargarcia@gmail.com', 'erikamelgar', 'Kode2026*', '7123-5566', 'VENDEDORA', 'DUI', '028913401', '06', '14', 'San Salvador, El Salvador', 1.00, 1.50, 5.00),
-        ('Jorge Luis Fuentes Vasquez', 'jlfuentes2709@gmail.com', 'jlfuentes2709', '123456jl', '7000-0000', 'ADMIN', 'DUI', '000000000', '06', '14', 'San Salvador, El Salvador', 1.00, 1.50, 5.00)
-      ON CONFLICT (email) DO UPDATE SET
-        nombre = EXCLUDED.nombre,
-        password = COALESCE(EXCLUDED.password, public.usuarios.password),
-        rol = EXCLUDED.rol,
-        comision_porcentaje = COALESCE(public.usuarios.comision_porcentaje, 5.00);
-    `);
-  } catch (err) {
-    console.error('Error ensuring usuarios table structure:', err);
-  }
+  return;
 }
 
 export async function GET() {

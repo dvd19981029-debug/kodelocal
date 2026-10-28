@@ -165,7 +165,6 @@ async function ensurePedidosSchema() {
 }
 
 export async function POST(request: Request) {
-  await ensurePedidosSchema();
   const client = await kodePool.connect();
   try {
     const body = await request.json();

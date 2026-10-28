@@ -473,12 +473,16 @@ export default function KodeSystemPage() {
       }
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
     try {
       setGuardandoCliente(true);
       const res = await fetch('/api/kode/clientes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(clienteData),
+        signal: controller.signal,
       });
 
       const data = await res.json();
@@ -487,8 +491,20 @@ export default function KodeSystemPage() {
         return;
       }
 
+      if (data.cliente) {
+        setClientesDb((prev) => {
+          const filtered = prev.filter(
+            (c) =>
+              c.id !== data.cliente.id &&
+              (c.telefono_whatsapp || '').replace(/\D/g, '') !==
+                (data.cliente.telefono_whatsapp || '').replace(/\D/g, '')
+          );
+          return [data.cliente, ...filtered];
+        });
+      }
+
       showToast(`Cliente "${clienteData.nombre_completo}" registrado con éxito`, 'success');
-      await fetchClientes();
+      fetchClientes();
 
       if (crearPedidoDirecto) {
         handleSeleccionarCliente({
@@ -508,8 +524,14 @@ export default function KodeSystemPage() {
       }
     } catch (e: any) {
       console.error('Error guardando cliente:', e);
-      showToast(e.message || 'Error al conectar con el servidor', 'error');
+      if (e?.name === 'AbortError') {
+        showToast('La solicitud tardó demasiado. Verifica en el directorio si el cliente ya quedó guardado.', 'error');
+        fetchClientes();
+      } else {
+        showToast(e.message || 'Error al conectar con el servidor', 'error');
+      }
     } finally {
+      clearTimeout(timeoutId);
       setGuardandoCliente(false);
     }
   };
@@ -545,12 +567,15 @@ export default function KodeSystemPage() {
   };
 
   const handleGuardarPedido = async (payload: any) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
     try {
       setLoading(true);
       const res = await fetch('/api/kode/pedidos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
+        signal: controller.signal,
       });
 
       const data = await res.json();
@@ -560,14 +585,21 @@ export default function KodeSystemPage() {
         setPedidoInitialPerfume(null);
         fetchPedidos();
         fetchInsumos();
+        fetchClientes();
         setActiveNav('VENTAS');
         setVentasView('pedidos');
       } else {
         showToast(data.error || 'Error al registrar pedido', 'error');
       }
     } catch (err: any) {
-      showToast(err.message, 'error');
+      if (err?.name === 'AbortError') {
+        showToast('La solicitud tardó demasiado. Verifica en Pedidos si la orden ya se registró.', 'error');
+        fetchPedidos();
+      } else {
+        showToast(err.message || 'Error al conectar con el servidor', 'error');
+      }
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   };
