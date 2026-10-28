@@ -301,21 +301,26 @@ export default function KodeSystemPage() {
     const checkSession = async () => {
       try {
         const stored = localStorage.getItem('kode_auth_user');
+        let storedEmail = '';
         if (stored) {
           const parsed = JSON.parse(stored);
           if (parsed && parsed.id && parsed.nombre) {
             setCurrentUser(parsed);
             setVendedoraSeleccionada(parsed.id);
+            storedEmail = String(parsed.email || '').trim();
           }
         }
 
-        const res = await fetch('/api/kode/auth/me');
+        const res = await fetch('/api/kode/auth/me', {
+          headers: storedEmail ? { 'x-kode-user-email': storedEmail } : undefined,
+        });
         const data = await res.json();
         if (data.success && data.authenticated && data.user) {
           setCurrentUser(data.user);
           localStorage.setItem('kode_auth_user', JSON.stringify(data.user));
           setVendedoraSeleccionada(data.user.id);
-        } else if (!stored) {
+        } else {
+          localStorage.removeItem('kode_auth_user');
           setCurrentUser(null);
         }
       } catch (err) {

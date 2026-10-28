@@ -30,6 +30,7 @@ const OPERATIONAL_API_ROUTES = [
 const PUBLIC_OPERATIONAL_API_EXCEPTIONS = [
   '/api/kode/auth/login',
   '/api/kode/auth/logout',
+  '/api/kode/auth/me',
   '/api/kode/vendedoras',
   '/api/kode/c807/webhook',
   '/api/staff/token',
