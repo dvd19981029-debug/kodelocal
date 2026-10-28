@@ -199,18 +199,28 @@ export function LogisticaView({
 
                   return (
                     <React.Fragment key={p.id}>
-                      <tr className="hover:bg-slate-50/80 transition-colors">
+                      <tr
+                        className={`transition-colors ${
+                          isExpanded
+                            ? 'bg-indigo-50/90 border-l-4 border-l-indigo-600'
+                            : 'hover:bg-slate-50/80'
+                        }`}
+                      >
                         {/* 1. Numero de Pedido (Click para ver detalle) */}
-                        <td className="py-3 px-4 whitespace-nowrap">
+                        <td className="py-2.5 px-4 whitespace-nowrap">
                           <button
                             type="button"
                             onClick={() => setExpandedPedidoId(isExpanded ? null : p.id)}
-                            className={`font-mono font-black text-[1.2em] whitespace-nowrap tracking-tight hover:underline cursor-pointer inline-flex items-center gap-1 text-left ${getClienteColorPorEstado(p.estado)}`}
+                            className={`font-mono font-black text-[1.15em] whitespace-nowrap tracking-tight cursor-pointer inline-flex items-center gap-1 text-left transition-all ${
+                              isExpanded
+                                ? 'bg-indigo-600 text-white px-2.5 py-0.5 rounded-lg shadow-xs'
+                                : `hover:underline ${getClienteColorPorEstado(p.estado)}`
+                            }`}
                             title="Haz clic para ver qué lleva el pedido y cómo va a pagar"
                           >
                             <span>{p.numero_pedido}</span>
                             {isExpanded ? (
-                              <ChevronUp className="w-3.5 h-3.5 opacity-75 shrink-0" />
+                              <ChevronUp className="w-3.5 h-3.5 shrink-0" />
                             ) : (
                               <ChevronDown className="w-3.5 h-3.5 opacity-75 shrink-0" />
                             )}
@@ -218,12 +228,12 @@ export function LogisticaView({
                         </td>
 
                         {/* 2. Cliente */}
-                        <td className={`py-3 px-4 whitespace-nowrap ${getClienteColorPorEstado(p.estado)}`}>
+                        <td className={`py-2.5 px-4 whitespace-nowrap ${getClienteColorPorEstado(p.estado)}`}>
                           {p.cliente_nombre}
                         </td>
 
                         {/* 3. Teléfono */}
-                        <td className="py-3 px-4 font-mono whitespace-nowrap">
+                        <td className="py-2.5 px-4 font-mono whitespace-nowrap">
                           <a
                             href={`https://wa.me/503${p.cliente_telefono}`}
                             target="_blank"
@@ -235,19 +245,19 @@ export function LogisticaView({
                         </td>
 
                         {/* 4. Fecha Pedido */}
-                        <td className="py-3 px-4 text-slate-500 font-mono whitespace-nowrap">
+                        <td className="py-2.5 px-4 text-slate-500 font-mono whitespace-nowrap">
                           {new Date(p.created_at).toLocaleDateString('es-SV')}
                         </td>
 
                         {/* 5. Total */}
-                        <td className="py-3 px-4 whitespace-nowrap">
+                        <td className="py-2.5 px-4 whitespace-nowrap">
                           <div className="font-mono font-black text-slate-900 text-sm">
                             ${totalNum.toFixed(2)}
                           </div>
                         </td>
 
                         {/* 6. Estado C807 */}
-                        <td className="py-3 px-4 whitespace-nowrap">
+                        <td className="py-2.5 px-4 whitespace-nowrap">
                           {tieneGuia ? (
                             <div className="flex flex-col gap-1 items-start whitespace-nowrap">
                               {renderBadgeEstadoC807(p.c807_estado, true)}
@@ -293,7 +303,7 @@ export function LogisticaView({
                         </td>
 
                         {/* 7. Numero de DTE */}
-                        <td className="py-3 px-4 font-mono text-xs whitespace-nowrap">
+                        <td className="py-2.5 px-4 font-mono text-xs whitespace-nowrap">
                           {p.dte_numero_control || p.dte_codigo_generacion ? (
                             <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
                               <span className="font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 whitespace-nowrap text-[11px]">
@@ -321,7 +331,7 @@ export function LogisticaView({
                         </td>
 
                         {/* 8. Estado Envío */}
-                        <td className="py-3 px-4 whitespace-nowrap">
+                        <td className="py-2.5 px-4 whitespace-nowrap">
                           {(p.estado === 'Registrado' || p.estado === 'PENDIENTE_COMPRA') && (
                             <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full inline-block whitespace-nowrap">
                               🔴 Registrado
@@ -350,12 +360,12 @@ export function LogisticaView({
                         </td>
 
                         {/* 9. Destino */}
-                        <td className="py-3 px-4 text-slate-600 whitespace-nowrap">
+                        <td className="py-2.5 px-4 text-slate-600 whitespace-nowrap">
                           {p.cliente_municipio ? `${p.cliente_municipio}, ${p.cliente_departamento}` : p.cliente_departamento || '-'}
                         </td>
 
                         {/* 10. Acciones WhatsApp */}
-                        <td className="py-3 px-4 text-center whitespace-nowrap">
+                        <td className="py-2.5 px-4 text-center whitespace-nowrap">
                           <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
                             <button
                               type="button"
@@ -393,104 +403,66 @@ export function LogisticaView({
                         </td>
                       </tr>
                       {isExpanded && (
-                        <tr className="bg-slate-50/70">
-                          <td colSpan={10} className="p-4 border-t border-slate-200/80">
-                            <div className="max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                              {/* 1. LO QUE LLEVA */}
-                              <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
-                                <div>
-                                  <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2.5">
-                                    <div className="flex items-center gap-1.5">
-                                      <Package className="w-4 h-4 text-indigo-600" />
-                                      <span className="font-extrabold text-slate-800">
-                                        Lo que lleva ({p.items?.reduce((acc, it) => acc + (Number(it.cantidad) || 1), 0) || p.items?.length || 0})
-                                      </span>
-                                    </div>
-                                    <span className="text-[10px] font-mono font-bold text-slate-400">
-                                      {p.numero_pedido}
+                        <tr className="bg-indigo-50/40 border-l-4 border-l-indigo-600 border-b-2 border-b-indigo-200">
+                          <td colSpan={10} className="py-2 px-4">
+                            <div className="max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-2.5 text-[11px] leading-tight">
+                              {/* 1. LO QUE LLEVA (COMPACTO: CÓDIGO + NOMBRE + VERSIÓN) */}
+                              <div className="bg-white py-2 px-3 rounded-lg border border-indigo-200/80 shadow-2xs">
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-1 mb-1">
+                                  <span className="font-extrabold text-indigo-900 flex items-center gap-1">
+                                    <Package className="w-3.5 h-3.5 text-indigo-600" />
+                                    Lo que lleva ({p.items?.reduce((acc, it) => acc + (Number(it.cantidad) || 1), 0) || p.items?.length || 0})
+                                  </span>
+                                  {descuentoNum > 0 && (
+                                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded">
+                                      Promo -${descuentoNum.toFixed(0)}
                                     </span>
-                                  </div>
-
-                                  <div className="divide-y divide-slate-100">
-                                    {p.items.map((it, i) => {
-                                      const isPlus = it.version === 'Plus' || (it.version as any) === 'EXTRA_SHOT';
-                                      const cant = Number(it.cantidad) || 1;
-                                      return (
-                                        <div key={i} className="py-2 flex items-start justify-between gap-2">
-                                          <div className="space-y-0.5">
-                                            <div className="flex items-center gap-1.5 flex-wrap">
-                                              <span className="font-mono font-black text-[11px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded border border-indigo-200">
-                                                {cant}x
-                                              </span>
-                                              <span className="font-mono font-bold text-slate-500">
-                                                #{it.codigo}
-                                              </span>
-                                              <span className="font-bold text-slate-900">
-                                                {it.contratipo}
-                                              </span>
-                                              <span
-                                                className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full border ${
-                                                  isPlus
-                                                    ? 'bg-amber-50 text-amber-800 border-amber-200'
-                                                    : 'bg-slate-100 text-slate-600 border-slate-200'
-                                                }`}
-                                              >
-                                                {isPlus ? '⚡ Plus' : 'Normal'}
-                                              </span>
-                                            </div>
-                                            {it.marca && (
-                                              <p className="text-[11px] text-slate-400 pl-7">
-                                                Inspirado en: {it.marca}
-                                              </p>
-                                            )}
-                                          </div>
-                                          <span className="font-mono font-black text-slate-800 whitespace-nowrap">
-                                            ${parseFloat(it.subtotal?.toString() || '0').toFixed(2)}
+                                  )}
+                                </div>
+                                <div className="divide-y divide-slate-100">
+                                  {p.items.map((it, i) => {
+                                    const isPlus = it.version === 'Plus' || (it.version as any) === 'EXTRA_SHOT';
+                                    const cant = Number(it.cantidad) || 1;
+                                    return (
+                                      <div key={i} className="py-1 flex items-center justify-between gap-1.5">
+                                        <div className="flex items-center gap-1 min-w-0">
+                                          {cant > 1 && (
+                                            <span className="font-mono font-black text-indigo-700">
+                                              {cant}x
+                                            </span>
+                                          )}
+                                          <span className="font-mono font-bold text-slate-500 shrink-0">
+                                            #{it.codigo}
+                                          </span>
+                                          <span className="font-bold text-slate-900 truncate">
+                                            {it.contratipo}
                                           </span>
                                         </div>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-
-                                <div className="mt-3 pt-2.5 border-t border-slate-100 space-y-1">
-                                  {descuentoNum > 0 && (
-                                    <>
-                                      <div className="flex justify-between text-[11px] text-slate-500">
-                                        <span>Subtotal:</span>
-                                        <span className="font-mono">${subtotalNum.toFixed(2)}</span>
+                                        <span
+                                          className={`text-[10px] font-extrabold px-1.5 py-0.2 rounded border shrink-0 ${
+                                            isPlus
+                                              ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                              : 'bg-slate-100 text-slate-600 border-slate-200'
+                                          }`}
+                                        >
+                                          {isPlus ? '⚡ Plus' : 'Normal'}
+                                        </span>
                                       </div>
-                                      <div className="flex justify-between text-[11px] text-emerald-700 font-bold">
-                                        <span>🎁 Descuento Promo:</span>
-                                        <span className="font-mono">-${descuentoNum.toFixed(2)}</span>
-                                      </div>
-                                    </>
-                                  )}
-                                  {costoEnvioNum > 0 && (
-                                    <div className="flex justify-between text-[11px] text-slate-500">
-                                      <span>Envío:</span>
-                                      <span className="font-mono">+${costoEnvioNum.toFixed(2)}</span>
-                                    </div>
-                                  )}
-                                  <div className="flex justify-between items-center pt-1 text-xs font-black text-slate-900">
-                                    <span>Total del Pedido:</span>
-                                    <span className="font-mono text-sm">${totalNum.toFixed(2)}</span>
-                                  </div>
+                                    );
+                                  })}
                                 </div>
                               </div>
 
-                              {/* 2. CÓMO VA A PAGAR */}
-                              <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between space-y-3">
-                                <div className="space-y-2.5">
-                                  <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
-                                    <div className="flex items-center gap-1.5">
-                                      <CreditCard className="w-4 h-4 text-indigo-600" />
-                                      <span className="font-extrabold text-slate-800">
-                                        Cómo va a pagar
-                                      </span>
-                                    </div>
+                              {/* 2. CÓMO VA A PAGAR (COMPACTO) */}
+                              <div className="bg-white py-2 px-3 rounded-lg border border-indigo-200/80 shadow-2xs flex flex-col justify-between">
+                                <div>
+                                  <div className="flex items-center justify-between gap-1 border-b border-slate-100 pb-1 mb-1.5">
+                                    <span className="font-extrabold text-indigo-900 flex items-center gap-1">
+                                      <CreditCard className="w-3.5 h-3.5 text-indigo-600" />
+                                      Cómo va a pagar
+                                    </span>
                                     <span
-                                      className={`text-[10px] font-black px-2 py-0.5 rounded-full border uppercase ${
+                                      className={`text-[9px] font-black px-1.5 py-0.2 rounded border uppercase ${
                                         p.tipo_pago === 'CONTRAENTREGA'
                                           ? 'bg-amber-50 text-amber-800 border-amber-200'
                                           : p.tipo_pago === 'MIXTO'
@@ -502,101 +474,60 @@ export function LogisticaView({
                                     </span>
                                   </div>
 
-                                  <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200/70">
-                                    <div>
-                                      <span className="text-[10px] font-bold text-slate-400 block uppercase">
-                                        Cobrar en Entrega (C807)
-                                      </span>
-                                      <span className="font-mono font-black text-indigo-700 text-sm">
-                                        ${cobroCceNum.toFixed(2)}
-                                      </span>
-                                    </div>
-                                    <div>
-                                      <span className="text-[10px] font-bold text-slate-400 block uppercase">
-                                        Pagado / Anticipo
-                                      </span>
-                                      <span className="font-mono font-black text-emerald-600 text-sm">
-                                        ${totalPagadoNum.toFixed(2)}
-                                      </span>
-                                    </div>
+                                  <div className="flex items-center justify-between bg-slate-50 px-2 py-1 rounded border border-slate-200/70 mb-1">
+                                    <span className="text-[10px] font-bold text-slate-500">
+                                      Cobrar C807: <strong className="font-mono text-indigo-700">${cobroCceNum.toFixed(2)}</strong>
+                                    </span>
+                                    <span className="text-[10px] font-bold text-slate-500">
+                                      Anticipo: <strong className="font-mono text-emerald-600">${totalPagadoNum.toFixed(2)}</strong>
+                                    </span>
                                   </div>
 
-                                  <div className="space-y-1.5">
-                                    <span className="text-[11px] font-bold text-slate-600 block">
-                                      Detalle de pago registrado:
-                                    </span>
-                                    {(!p.pagos || p.pagos.length === 0) ? (
-                                      <div className="text-center py-2.5 text-slate-400 text-[11px] bg-slate-50/60 rounded-lg border border-dashed border-slate-200">
-                                        Sin registros detallados ({p.tipo_pago || 'Contra Entrega'})
-                                      </div>
-                                    ) : (
-                                      <div className="divide-y divide-slate-100 border border-slate-200/80 rounded-xl overflow-hidden">
-                                        {p.pagos.map((pg, idx) => {
-                                          const esContraEntrega = String(pg.forma_pago_id) === '1003';
-                                          return (
-                                            <div
-                                              key={pg.id || idx}
-                                              className="p-2 bg-white flex items-center justify-between gap-2 text-xs"
-                                            >
-                                              <div className="flex items-center gap-1.5 flex-wrap">
-                                                <span className="font-bold text-slate-800">
-                                                  {pg.forma_pago_nombre || (esContraEntrega ? 'Contra Entrega' : 'Pago')}
-                                                </span>
-                                                <span
-                                                  className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${
-                                                    esContraEntrega
-                                                      ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                                      : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                                  }`}
-                                                >
-                                                  {esContraEntrega ? 'Al recibir' : pg.estado_pago || 'Confirmado'}
-                                                </span>
-                                              </div>
-                                              <span className="font-mono font-black text-slate-900">
-                                                ${parseFloat(pg.monto?.toString() || '0').toFixed(2)}
+                                  {p.pagos && p.pagos.length > 0 && (
+                                    <div className="space-y-0.5">
+                                      {p.pagos.map((pg, idx) => {
+                                        const esContraEntrega = String(pg.forma_pago_id) === '1003';
+                                        return (
+                                          <div key={pg.id || idx} className="flex items-center justify-between text-[11px] py-0.5">
+                                            <span className="font-semibold text-slate-700">
+                                              {pg.forma_pago_nombre || (esContraEntrega ? 'Contra Entrega' : 'Pago')}{' '}
+                                              <span className="text-[10px] text-slate-400">
+                                                ({esContraEntrega ? 'Al recibir' : pg.estado_pago || 'Pagado'})
                                               </span>
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                    )}
-                                  </div>
+                                            </span>
+                                            <span className="font-mono font-black text-slate-900">
+                                              ${parseFloat(pg.monto?.toString() || '0').toFixed(2)}
+                                            </span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
 
-                              {/* 3. DIRECCIÓN DE ENTREGA */}
-                              <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
-                                <div className="space-y-2">
-                                  <div className="flex items-center gap-1.5 border-b border-slate-100 pb-2">
-                                    <MapPin className="w-4 h-4 text-indigo-600" />
-                                    <span className="font-extrabold text-slate-800">
-                                      Dirección de Entrega
+                              {/* 3. DIRECCIÓN DE ENTREGA (COMPACTO) */}
+                              <div className="bg-white py-2 px-3 rounded-lg border border-indigo-200/80 shadow-2xs flex flex-col justify-between">
+                                <div className="space-y-1">
+                                  <div className="flex items-center justify-between border-b border-slate-100 pb-1">
+                                    <span className="font-extrabold text-indigo-900 flex items-center gap-1">
+                                      <MapPin className="w-3.5 h-3.5 text-indigo-600" />
+                                      Destino
                                     </span>
+                                    {p.vendedora_nombre && (
+                                      <span className="text-[10px] text-slate-400 truncate max-w-[130px]" title={p.vendedora_nombre}>
+                                        Por: <strong className="text-slate-600">{p.vendedora_nombre.split(' ')[0]}</strong>
+                                      </span>
+                                    )}
                                   </div>
-                                  <p className="text-slate-900 font-medium leading-relaxed">
+                                  <p className="text-slate-900 font-semibold leading-snug">
                                     {p.cliente_direccion}
                                   </p>
-                                  <p className="text-slate-500 font-semibold">
+                                  <p className="text-slate-500 text-[10px] font-medium">
                                     {p.cliente_municipio}, {p.cliente_departamento}
+                                    {p.cliente_referencia ? ` · Ref: ${p.cliente_referencia}` : ''}
                                   </p>
-                                  {p.cliente_referencia && (
-                                    <p className="text-indigo-600 font-bold text-[11px] bg-indigo-50/70 px-2.5 py-1.5 rounded-lg border border-indigo-100">
-                                      📍 Ref: {p.cliente_referencia}
-                                    </p>
-                                  )}
-                                  {p.notas && (
-                                    <p className="text-slate-600 text-[11px] mt-2 pt-2 border-t border-slate-100 italic">
-                                      📝 Notas: {p.notas}
-                                    </p>
-                                  )}
                                 </div>
-
-                                {p.vendedora_nombre && (
-                                  <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-                                    <span>Registrado por:</span>
-                                    <span className="font-bold text-slate-600">{p.vendedora_nombre}</span>
-                                  </div>
-                                )}
                               </div>
                             </div>
                           </td>
