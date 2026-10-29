@@ -61,6 +61,7 @@ import {
   FabView,
   BiView,
 } from './types';
+import { puedeEditarPedidoKode } from './utils/c807Helpers';
 
 const COMPRAS_INICIALES: CompraGasto[] = [
   {
@@ -146,9 +147,10 @@ export default function KodeSystemPage() {
   const [modalNuevaFragancia, setModalNuevaFragancia] = useState(false);
   const [togglingActivoId, setTogglingActivoId] = useState<string | null>(null);
 
-  // Selección previa para Nuevo Pedido (desde Catálogo o Clientes)
+  // Selección previa para Nuevo Pedido (desde Catálogo o Clientes) o Edición de Pedido
   const [pedidoInitialCliente, setPedidoInitialCliente] = useState<ClienteDirectorioItem | null>(null);
   const [pedidoInitialPerfume, setPedidoInitialPerfume] = useState<CatalogoItem | null>(null);
+  const [pedidoEditando, setPedidoEditando] = useState<Pedido | null>(null);
 
   // Modales
   const [modalAbonoPedido, setModalAbonoPedido] = useState<Pedido | null>(null);
@@ -565,19 +567,37 @@ export default function KodeSystemPage() {
       showToast(`La fragancia #${p.codigo} (${p.contratipo}) está inactiva/agotada y no se puede vender.`, 'error');
       return;
     }
+    setPedidoEditando(null);
     setPedidoInitialPerfume(p);
     setActiveNav('VENTAS');
     setVentasView('nuevo_pedido');
     showToast(`Fragancia #${p.codigo} (${p.contratipo}) seleccionada para nuevo pedido`, 'info');
   };
 
+  const handleEditarPedido = (pedido: Pedido) => {
+    if (!puedeEditarPedidoKode(pedido)) {
+      showToast(
+        `No se puede modificar el pedido ${pedido.numero_pedido} porque C807 ya reportó movimiento en la guía (${pedido.c807_estado || pedido.estado}).`,
+        'error'
+      );
+      return;
+    }
+    setPedidoInitialCliente(null);
+    setPedidoInitialPerfume(null);
+    setPedidoEditando(pedido);
+    setClienteFichaModal(null);
+    setActiveNav('VENTAS');
+    setVentasView('nuevo_pedido');
+  };
+
   const handleGuardarPedido = async (payload: any) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 25000);
+    const isEdit = Boolean(payload?.id);
     try {
       setLoading(true);
       const res = await fetch('/api/kode/pedidos', {
-        method: 'POST',
+        method: isEdit ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
         signal: controller.signal,
@@ -585,16 +605,25 @@ export default function KodeSystemPage() {
 
       const data = await res.json();
       if (data.success) {
-        showToast(`Pedido ${data.pedido?.numero_pedido || ''} registrado con éxito en estado Registrado`, 'success');
+        showToast(
+          isEdit
+            ? `Pedido ${data.pedido?.numero_pedido || ''} modificado con éxito`
+            : `Pedido ${data.pedido?.numero_pedido || ''} registrado con éxito en estado Registrado`,
+          'success'
+        );
         setPedidoInitialCliente(null);
         setPedidoInitialPerfume(null);
+        setPedidoEditando(null);
         fetchPedidos();
         fetchInsumos();
         fetchClientes();
         setActiveNav('VENTAS');
         setVentasView('pedidos');
       } else {
-        showToast(data.error || 'Error al registrar pedido', 'error');
+        showToast(
+          data.error || (isEdit ? 'Error al modificar pedido' : 'Error al registrar pedido'),
+          'error'
+        );
       }
     } catch (err: any) {
       if (err?.name === 'AbortError') {
@@ -1023,6 +1052,7 @@ export default function KodeSystemPage() {
                     if (v === 'nuevo_pedido') {
                       setPedidoInitialCliente(null);
                       setPedidoInitialPerfume(null);
+                      setPedidoEditando(null);
                     }
                     setVentasView(v);
                   }}
@@ -1030,6 +1060,7 @@ export default function KodeSystemPage() {
                     if (v === 'nuevo_pedido') {
                       setPedidoInitialCliente(null);
                       setPedidoInitialPerfume(null);
+                      setPedidoEditando(null);
                     }
                     setVentasView(v);
                   }}
@@ -1066,13 +1097,18 @@ export default function KodeSystemPage() {
                   currentUser={currentUser}
                   onGuardarPedido={handleGuardarPedido}
                   loading={loading}
-                  onBack={() => setVentasView('hub')}
+                  onBack={() => {
+                    const wasEditing = Boolean(pedidoEditando);
+                    setPedidoEditando(null);
+                    setVentasView(wasEditing ? 'pedidos' : 'hub');
+                  }}
                   onRegistrarNuevoCliente={() => setVentasView('nuevo_cliente')}
                   onVerDirectorioClientes={() => setVentasView('clientes')}
                   onViewComprobante={(url) => setModalComprobanteUrl(url)}
                   showToast={showToast}
                   initialCliente={pedidoInitialCliente}
                   initialPerfume={pedidoInitialPerfume}
+                  pedidoEditando={pedidoEditando}
                 />
               )}
 
@@ -1092,6 +1128,7 @@ export default function KodeSystemPage() {
                   onOpenAbonoModal={(p) => setModalAbonoPedido(p)}
                   onViewComprobante={(url) => setModalComprobanteUrl(url)}
                   onEliminarAbono={handleEliminarAbono}
+                  onEditarPedido={handleEditarPedido}
                 />
               )}
 
@@ -1355,6 +1392,7 @@ export default function KodeSystemPage() {
         }}
         onGenerarGuia={handleGenerarGuiaDirecta}
         generandoGuiaPedidoId={generandoGuiaPedidoId}
+        onEditarPedido={handleEditarPedido}
       />
 
       {/* MODAL: ALERTA DE CLIENTE DUPLICADO POR TELÉFONO */}

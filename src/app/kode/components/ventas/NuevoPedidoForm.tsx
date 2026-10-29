@@ -29,6 +29,7 @@ import {
   Vendedora,
   PedidoItem,
   PagoRegistroItem,
+  Pedido,
 } from '../../types';
 import {
   DEPARTAMENTOS_CATALOG,
@@ -59,6 +60,7 @@ interface NuevoPedidoFormProps {
   showToast: (msg: string, type?: 'success' | 'error' | 'info') => void;
   initialCliente?: ClienteDirectorioItem | null;
   initialPerfume?: CatalogoItem | null;
+  pedidoEditando?: Pedido | null;
 }
 
 interface ModalPerfumeFormProps {
@@ -444,6 +446,7 @@ export function NuevoPedidoForm({
   showToast,
   initialCliente,
   initialPerfume,
+  pedidoEditando,
 }: NuevoPedidoFormProps) {
   // Datos del Cliente
   const [clienteNombre, setClienteNombre] = useState('');
@@ -485,8 +488,122 @@ export function NuevoPedidoForm({
   const [pagoInputComprobante, setPagoInputComprobante] = useState<string>('');
   const [subiendoComprobante, setSubiendoComprobante] = useState(false);
 
+  // Pre-cargar datos si estamos editando un pedido existente
+  useEffect(() => {
+    if (!pedidoEditando) return;
+
+    setClienteNombre(pedidoEditando.cliente_nombre || '');
+    setClienteTelefono(pedidoEditando.cliente_telefono || '');
+    setClienteDireccion(pedidoEditando.cliente_direccion || '');
+    setClienteDepto(pedidoEditando.cliente_departamento || 'San Salvador');
+    setClienteMuni(pedidoEditando.cliente_municipio || 'San Salvador');
+    setClienteReferencia(pedidoEditando.cliente_referencia || '');
+    setClienteTipoDoc(pedidoEditando.cliente_tipo_documento || 'DUI');
+    setClienteNumDoc(pedidoEditando.cliente_numero_documento || '');
+    setClienteEmail(pedidoEditando.cliente_email || '');
+    setClienteSeleccionadoId(pedidoEditando.cliente_id || null);
+
+    const itemsCargados: PedidoItem[] = (pedidoEditando.items || []).map((it) => {
+      const cat = catalogo.find(
+        (c) => String(c.id) === String(it.catalogo_id) || c.codigo === it.codigo
+      );
+      const cant = Math.max(1, Number(it.cantidad) || 1);
+      const unit = Number(it.precio_unitario) || (it.version === 'Plus' ? 25 : 20);
+      return {
+        id: it.id || pedidoEditando.numero_pedido,
+        catalogo_id: String(it.catalogo_id || cat?.id || ''),
+        codigo: it.codigo || cat?.codigo || '',
+        contratipo: it.contratipo || cat?.contratipo || '',
+        marca: it.marca || cat?.marca_inspirada || '',
+        genero: it.genero || cat?.genero || '',
+        version: it.version === 'Plus' || it.version === 'EXTRA_SHOT' ? 'Plus' : 'Normal',
+        cantidad: cant,
+        precio_unitario: unit,
+        subtotal: Number(it.subtotal) || cant * unit,
+        insumo_comprado: Boolean(it.insumo_comprado),
+        comprado_por: it.comprado_por,
+        inv_fisico: 0,
+        estado_compra: it.insumo_comprado ? 'Comprado' : 'Registrado',
+        fecha_registro: pedidoEditando.created_at
+          ? new Date(pedidoEditando.created_at).toLocaleString('es-SV')
+          : new Date().toLocaleString('es-SV'),
+      };
+    });
+    setItemsPedido(itemsCargados);
+
+    const envioExistente = Number(pedidoEditando.costo_envio) || 0;
+    setCostoEnvio(envioExistente);
+
+    const totalFrascosExistente = itemsCargados.reduce((acc, i) => acc + i.cantidad, 0);
+    const promoAuto = totalFrascosExistente >= 2 ? (totalFrascosExistente - 1) * 5 : 0;
+    const descExistente =
+      pedidoEditando.descuento !== undefined && pedidoEditando.descuento !== null
+        ? Number(pedidoEditando.descuento) || 0
+        : promoAuto;
+    setDescuento(descExistente);
+    setDescuentoManual(descExistente !== promoAuto);
+
+    // Extraer solicitudes y contacto adicional de notas consolidadas
+    const partesNotas = (pedidoEditando.notas || '')
+      .split('|')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    let sol = '';
+    let cont = '';
+    const otrasNotas: string[] = [];
+    for (const parte of partesNotas) {
+      if (parte.startsWith('Solicitudes:')) {
+        sol = parte.replace(/^Solicitudes:\s*/i, '').trim();
+      } else if (parte.startsWith('Contacto Adicional:')) {
+        cont = parte.replace(/^Contacto Adicional:\s*/i, '').trim();
+      } else if (
+        !parte.startsWith('Promo KÖDE') &&
+        !parte.startsWith('Descuento:') &&
+        !parte.startsWith('Cobro CCE:')
+      ) {
+        otrasNotas.push(parte);
+      }
+    }
+    setSolicitudesEspeciales([sol, ...otrasNotas].filter(Boolean).join(' | '));
+    setContactoAdicional(cont);
+
+    // Cargar pagos existentes
+    if (Array.isArray(pedidoEditando.pagos) && pedidoEditando.pagos.length > 0) {
+      setPagosPedido(
+        pedidoEditando.pagos.map((pg, idx) => ({
+          id: pg.id || `${Date.now()}-${idx}`,
+          forma_pago_id: String(pg.forma_pago_id || '1003'),
+          forma_pago_nombre:
+            pg.forma_pago_nombre ||
+            (String(pg.forma_pago_id) === '1003' ? 'Contra Entrega' : 'Transferencia'),
+          forma_pago_tipo: pg.forma_pago_tipo,
+          monto: Number(pg.monto) || 0,
+          num_documento_auto: pg.num_documento_auto || undefined,
+          comprobante_url: pg.comprobante_url || null,
+          observaciones: pg.observaciones || '',
+        }))
+      );
+    } else {
+      const totalExistente = Number(pedidoEditando.total) || 0;
+      const esCce =
+        (pedidoEditando.tipo_pago || '').toLowerCase().includes('contra') ||
+        Number(pedidoEditando.monto_cobrar_cce) > 0;
+      setPagosPedido([
+        {
+          id: `${Date.now()}-0`,
+          forma_pago_id: esCce ? '1003' : '1000',
+          forma_pago_nombre: esCce ? 'Contra Entrega' : pedidoEditando.tipo_pago || 'Transferencia',
+          forma_pago_tipo: esCce ? 'CONTRA_ENTREGA' : 'OTRO',
+          monto: totalExistente,
+          observaciones: '',
+        },
+      ]);
+    }
+  }, [pedidoEditando, catalogo]);
+
   // Aplicar initialCliente o initialPerfume si se recibieron
   useEffect(() => {
+    if (pedidoEditando) return;
     if (initialCliente) {
       setClienteNombre(initialCliente.nombre);
       setClienteTelefono(initialCliente.telefono);
@@ -892,7 +1009,11 @@ export function NuevoPedidoForm({
       .join(' | ');
 
     onGuardarPedido({
+      ...(pedidoEditando ? { id: pedidoEditando.id } : {}),
       cliente: {
+        ...(clienteSeleccionadoId || pedidoEditando?.cliente_id
+          ? { id: clienteSeleccionadoId || pedidoEditando?.cliente_id }
+          : {}),
         nombre_completo: clienteNombre.trim(),
         telefono_whatsapp: clienteTelefono.trim(),
         departamento: clienteDepto,
@@ -910,6 +1031,8 @@ export function NuevoPedidoForm({
       notas: notasConsolidadas,
       pagos: pagosFinales.map((p) => ({
         forma_pago_id: p.forma_pago_id,
+        forma_pago_nombre: p.forma_pago_nombre,
+        forma_pago_tipo: p.forma_pago_tipo,
         monto: p.monto,
         num_documento_auto: p.num_documento_auto || '',
         comprobante_url: p.comprobante_url || '',
@@ -926,9 +1049,13 @@ export function NuevoPedidoForm({
           onClick={onBack}
           className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1 cursor-pointer"
         >
-          ← Volver a Ventas
+          ← {pedidoEditando ? 'Cancelar Edición y Volver' : 'Volver a Ventas'}
         </button>
-        <span className="text-xs text-slate-500 font-medium">Formulario de Pedido WhatsApp</span>
+        <span className="text-xs text-slate-500 font-medium">
+          {pedidoEditando
+            ? `Modificando Pedido #${pedidoEditando.numero_pedido}`
+            : 'Formulario de Pedido WhatsApp'}
+        </span>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -1963,7 +2090,15 @@ export function NuevoPedidoForm({
               className="clay-btn clay-btn-success w-full py-3 text-xs font-black shadow-lg cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <Send className="w-4 h-4" />
-              <span>{loading ? 'Guardando pedido...' : 'Registrar Pedido WhatsApp'}</span>
+              <span>
+                {loading
+                  ? pedidoEditando
+                    ? 'Guardando cambios...'
+                    : 'Guardando pedido...'
+                  : pedidoEditando
+                  ? `Guardar Cambios (#${pedidoEditando.numero_pedido})`
+                  : 'Registrar Pedido WhatsApp'}
+              </span>
             </button>
           </div>
         </div>

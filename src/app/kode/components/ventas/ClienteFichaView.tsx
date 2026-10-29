@@ -20,12 +20,15 @@ import {
   MapPin,
   Printer,
   Download,
+  Edit2,
+  Lock,
 } from 'lucide-react';
 import { ClienteDirectorioItem, Pedido } from '../../types';
 import {
   getClienteColorPorEstado,
   getC807TrackingUrl,
   renderBadgeEstadoC807,
+  puedeEditarPedidoKode,
 } from '../../utils/c807Helpers';
 
 interface ClienteFichaViewProps {
@@ -35,6 +38,7 @@ interface ClienteFichaViewProps {
   onNuevoPedido: (cliente: ClienteDirectorioItem) => void;
   onGenerarGuia: (pedido: Pedido) => void;
   generandoGuiaPedidoId: string | null;
+  onEditarPedido?: (pedido: Pedido) => void;
 }
 
 export const ClienteFichaView: React.FC<ClienteFichaViewProps> = ({
@@ -44,6 +48,7 @@ export const ClienteFichaView: React.FC<ClienteFichaViewProps> = ({
   onNuevoPedido,
   onGenerarGuia,
   generandoGuiaPedidoId,
+  onEditarPedido,
 }) => {
   const [expandedPedidoId, setExpandedPedidoId] = useState<string | null>(null);
 
@@ -447,21 +452,42 @@ export const ClienteFichaView: React.FC<ClienteFichaViewProps> = ({
 
                               {/* 9. Fragancias / Productos */}
                               <td className="py-2.5 px-4">
-                                <div className="flex flex-wrap gap-1 max-w-sm">
-                                  {p.items && p.items.length > 0 ? (
-                                    p.items.map((it, idx) => (
-                                      <span
-                                        key={idx}
-                                        className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200/80 font-medium"
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="flex flex-wrap gap-1 max-w-sm">
+                                    {p.items && p.items.length > 0 ? (
+                                      p.items.map((it, idx) => (
+                                        <span
+                                          key={idx}
+                                          className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200/80 font-medium"
+                                        >
+                                          <span className="font-bold text-indigo-600">{it.cantidad}x</span>
+                                          <span>{it.contratipo || it.codigo}</span>
+                                          <span className="text-[9px] text-slate-400 font-mono">({it.version})</span>
+                                        </span>
+                                      ))
+                                    ) : (
+                                      <span className="text-slate-400 italic text-[11px]">Sin detalle de items</span>
+                                    )}
+                                  </div>
+                                  {onEditarPedido &&
+                                    (puedeEditarPedidoKode(p) ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => onEditarPedido(p)}
+                                        className="px-2 py-1 rounded-lg text-[10px] font-bold inline-flex items-center gap-1 transition-all cursor-pointer border shadow-2xs bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100 shrink-0"
+                                        title="Modificar pedido (la guía aún no tiene movimiento C807)"
                                       >
-                                        <span className="font-bold text-indigo-600">{it.cantidad}x</span>
-                                        <span>{it.contratipo || it.codigo}</span>
-                                        <span className="text-[9px] text-slate-400 font-mono">({it.version})</span>
+                                        <Edit2 className="w-3 h-3" />
+                                        <span>Editar</span>
+                                      </button>
+                                    ) : (
+                                      <span
+                                        className="px-2 py-1 rounded-lg text-[10px] font-bold inline-flex items-center gap-1 border bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed select-none shrink-0"
+                                        title={`Edición bloqueada: C807 ya reportó movimiento (${p.c807_estado || p.estado})`}
+                                      >
+                                        <Lock className="w-3 h-3" />
                                       </span>
-                                    ))
-                                  ) : (
-                                    <span className="text-slate-400 italic text-[11px]">Sin detalle de items</span>
-                                  )}
+                                    ))}
                                 </div>
                               </td>
                             </tr>

@@ -85,3 +85,33 @@ export function renderBadgeEstadoC807(estado?: string, tieneGuia?: boolean) {
     </span>
   );
 }
+
+/**
+ * Determina si un pedido de KÖDE puede ser modificado:
+ * Solo permite editar si C807 NO ha enviado ninguna actualización de estado vía webhook
+ * (es decir, c807_estado está vacío o en su estado inicial 'Generada' / 'Pendiente')
+ * y el pedido no está Entregado ni Cancelado.
+ */
+export function puedeEditarPedidoKode(pedido: {
+  estado?: string | null;
+  c807_estado?: string | null;
+}): boolean {
+  const estPedido = (pedido.estado || '').trim().toUpperCase();
+  if (estPedido === 'ENTREGADO' || estPedido === 'CANCELADO') {
+    return false;
+  }
+
+  const c807Est = (pedido.c807_estado || '').trim().toLowerCase();
+  if (
+    !c807Est ||
+    c807Est === 'generada' ||
+    c807Est === 'pendiente' ||
+    c807Est === 'pendiente guia' ||
+    c807Est === 'pendiente guía'
+  ) {
+    return true;
+  }
+
+  return false;
+}
+

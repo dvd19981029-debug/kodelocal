@@ -490,3 +490,362 @@ export async function POST(request: Request) {
     client.release();
   }
 }
+
+export async function PUT(request: Request) {
+  const client = await kodePool.connect();
+
+  try {
+    const body = await request.json();
+    const {
+      id: pedidoId,
+      cliente,
+      items,
+      tipo_pago,
+      estado_pago,
+      pagos,
+      costo_envio = 0,
+      descuento: descuentoBody,
+      notas = '',
+      vendedora_id = null,
+      vendedora_nombre = null,
+    } = body;
+
+    if (!pedidoId) {
+      return NextResponse.json(
+        { success: false, error: 'El ID del pedido es obligatorio para editar.' },
+        { status: 400 }
+      );
+    }
+
+    if (!cliente?.nombre_completo || !cliente?.telefono_whatsapp || !items?.length) {
+      return NextResponse.json(
+        { success: false, error: 'Datos de cliente y al menos 1 producto son obligatorios.' },
+        { status: 400 }
+      );
+    }
+
+    const { payload: sessionUser } = verifyStaffRequest(request);
+    const finalVendedoraId = String(sessionUser?.id || vendedora_id || '') || null;
+    const finalVendedoraNombre = String(sessionUser?.name || vendedora_nombre || 'KÖDE');
+
+    await client.query('BEGIN');
+
+    // 1. Verificar que el pedido exista y NO tenga movimiento vía webhook de C807
+    const existingRes = await client.query(
+      `SELECT id, numero_pedido, cliente_id, estado, c807_guia_numero, c807_estado
+       FROM public.pedidos
+       WHERE id = $1
+       FOR UPDATE`,
+      [pedidoId]
+    );
+
+    if (existingRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return NextResponse.json(
+        { success: false, error: 'El pedido no existe.' },
+        { status: 404 }
+      );
+    }
+
+    const existingOrder = existingRes.rows[0];
+    const estPedido = (existingOrder.estado || '').trim().toUpperCase();
+    const c807Est = (existingOrder.c807_estado || '').trim().toLowerCase();
+
+    const sinMovimientoWebhook =
+      !c807Est ||
+      c807Est === 'generada' ||
+      c807Est === 'pendiente' ||
+      c807Est === 'pendiente guia' ||
+      c807Est === 'pendiente guía';
+
+    if (estPedido === 'ENTREGADO' || estPedido === 'CANCELADO' || !sinMovimientoWebhook) {
+      await client.query('ROLLBACK');
+      return NextResponse.json(
+        {
+          success: false,
+          error: `No se puede modificar el pedido ${existingOrder.numero_pedido} porque la guía C807 ya registra movimiento (${existingOrder.c807_estado || existingOrder.estado}).`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // 2. Actualizar datos del cliente asociado al pedido
+    const clienteId = cliente.id || existingOrder.cliente_id;
+    const telefonoNorm = String(cliente.telefono_whatsapp || '').replace(/\D/g, '');
+
+    if (clienteId) {
+      await client.query(
+        `UPDATE public.clientes SET
+          nombre_completo = $1,
+          telefono_whatsapp = $2,
+          direccion_entrega = $3,
+          departamento = $4,
+          municipio = $5,
+          punto_referencia = $6,
+          tipo_documento = $7,
+          numero_documento = $8,
+          email = $9,
+          updated_at = NOW()
+        WHERE id = $10`,
+        [
+          cliente.nombre_completo.trim(),
+          telefonoNorm,
+          (cliente.direccion_entrega || '').trim(),
+          (cliente.departamento || 'San Salvador').trim(),
+          (cliente.municipio || 'San Salvador').trim(),
+          (cliente.punto_referencia || '').trim() || null,
+          (cliente.tipo_documento || 'DUI').trim(),
+          (cliente.numero_documento || '').trim() || null,
+          (cliente.email || '').trim() || null,
+          clienteId,
+        ]
+      );
+    }
+
+    // 3. Recalcular montos y promoción
+    let subtotal = 0;
+    let totalFrascos = 0;
+    for (const it of items) {
+      const cant = Math.max(1, parseInt(it.cantidad, 10) || 1);
+      const precio = parseFloat(it.precio_unitario) || 20.0;
+      subtotal += cant * precio;
+      totalFrascos += cant;
+    }
+    const envio = parseFloat(costo_envio) || 0;
+    const descuentoPromoAuto = totalFrascos >= 2 ? (totalFrascos - 1) * 5 : 0;
+    const descuento =
+      descuentoBody !== undefined && descuentoBody !== null
+        ? Math.max(0, parseFloat(descuentoBody) || 0)
+        : descuentoPromoAuto;
+    const total = Math.max(0, subtotal - descuento) + envio;
+
+    // 4. Procesar pagos (misma estructura que POST)
+    let finalTipoPago = 'CONTRAENTREGA';
+    let finalEstadoPago = 'PENDIENTE';
+    let montoCobrarCce = total;
+
+    const listaPagos: Array<{
+      forma_pago_id: string;
+      forma_pago_nombre: string;
+      monto: number;
+      num_documento_auto?: string;
+      comprobante_url?: string | null;
+      estado_pago: string;
+      observaciones?: string;
+    }> = [];
+
+    if (Array.isArray(pagos) && pagos.length > 0) {
+      let sumaAnticipo = 0;
+      let sumaCce = 0;
+
+      for (const p of pagos) {
+        const m = parseFloat(p.monto) || 0;
+        if (m <= 0) continue;
+        const fpId = String(p.forma_pago_id || '1003');
+        const fpNombre = p.forma_pago_nombre || (fpId === '1003' ? 'Contra Entrega' : 'Transferencia');
+        const esContraEntrega =
+          fpId === '1003' ||
+          fpNombre.toLowerCase().includes('contra entrega') ||
+          p.forma_pago_tipo === 'CONTRA_ENTREGA';
+
+        if (esContraEntrega) {
+          sumaCce += m;
+        } else {
+          sumaAnticipo += m;
+        }
+
+        listaPagos.push({
+          forma_pago_id: fpId,
+          forma_pago_nombre: fpNombre,
+          monto: m,
+          num_documento_auto: (p.num_documento_auto || '').trim(),
+          comprobante_url: p.comprobante_url || null,
+          estado_pago: esContraEntrega ? 'Pendiente' : 'Confirmado',
+          observaciones: p.observaciones || '',
+        });
+      }
+
+      if (sumaCce > 0 && sumaAnticipo > 0) {
+        finalTipoPago = 'MIXTO';
+        finalEstadoPago = 'PARCIAL';
+        montoCobrarCce = sumaCce;
+      } else if (sumaCce > 0 && sumaAnticipo === 0) {
+        finalTipoPago = 'CONTRAENTREGA';
+        finalEstadoPago = 'PENDIENTE';
+        montoCobrarCce = sumaCce;
+      } else if (sumaAnticipo >= total) {
+        finalTipoPago = tipo_pago || 'TRANSFERENCIA';
+        finalEstadoPago = 'PAGADO';
+        montoCobrarCce = 0;
+      } else {
+        const resto = Math.max(0, total - sumaAnticipo);
+        finalTipoPago = tipo_pago || 'TRANSFERENCIA';
+        finalEstadoPago = resto > 0 ? 'PARCIAL' : 'PAGADO';
+        montoCobrarCce = resto;
+      }
+    } else {
+      const esCce =
+        !tipo_pago ||
+        tipo_pago === 'CONTRAENTREGA' ||
+        tipo_pago === 'CONTRA_ENTREGA' ||
+        tipo_pago.toLowerCase().includes('contra');
+      finalTipoPago = esCce ? 'CONTRAENTREGA' : tipo_pago;
+      finalEstadoPago = estado_pago || (esCce ? 'PENDIENTE' : 'PAGADO');
+      montoCobrarCce = esCce ? total : 0;
+      listaPagos.push({
+        forma_pago_id: esCce ? '1003' : '1001',
+        forma_pago_nombre: esCce ? 'Contra Entrega' : finalTipoPago,
+        monto: total,
+        num_documento_auto: '',
+        comprobante_url: null,
+        estado_pago: esCce ? 'Pendiente' : 'Confirmado',
+        observaciones: 'Actualizado al editar pedido',
+      });
+    }
+
+    // 5. Preservar estado de insumo_comprado de items previos que coincidan
+    const prevItemsRes = await client.query(
+      `SELECT id, catalogo_id, version, insumo_comprado, comprado_por, fecha_compra_insumo, usuario
+       FROM public.pedido_items
+       WHERE pedido_id = $1`,
+      [pedidoId]
+    );
+    const prevItemsPool = [...prevItemsRes.rows];
+
+    await client.query(`DELETE FROM public.pedido_items WHERE pedido_id = $1`, [pedidoId]);
+
+    let todosComprados = items.length > 0;
+    for (const it of items) {
+      const cant = Math.max(1, parseInt(it.cantidad, 10) || 1);
+      const precio = parseFloat(it.precio_unitario) || 20.0;
+      const itemSubtotal = cant * precio;
+      const version = it.version === 'Plus' || it.version === 'EXTRA_SHOT' ? 'Plus' : 'Normal';
+      const usuario = finalVendedoraNombre || finalVendedoraId || 'WhatsApp';
+
+      // Buscar coincidencia en prevItemsPool (primero por id si viene, luego por catalogo_id + version)
+      let matchIdx = -1;
+      if (it.id) {
+        matchIdx = prevItemsPool.findIndex((p) => String(p.id) === String(it.id));
+      }
+      if (matchIdx === -1) {
+        matchIdx = prevItemsPool.findIndex(
+          (p) =>
+            String(p.catalogo_id) === String(it.catalogo_id) &&
+            (p.version === 'Plus' || p.version === 'EXTRA_SHOT' ? 'Plus' : 'Normal') === version
+        );
+      }
+
+      let insumoComprado = Boolean(it.insumo_comprado);
+      let compradoPor: string | null = null;
+      let fechaCompraInsumo: any = null;
+
+      if (matchIdx !== -1) {
+        const matched = prevItemsPool.splice(matchIdx, 1)[0];
+        insumoComprado = Boolean(matched.insumo_comprado);
+        compradoPor = matched.comprado_por || null;
+        fechaCompraInsumo = matched.fecha_compra_insumo || null;
+      }
+
+      if (!insumoComprado) {
+        todosComprados = false;
+      }
+
+      await client.query(
+        `INSERT INTO public.pedido_items (
+          pedido_id, catalogo_id, version, cantidad, precio_unitario, subtotal,
+          insumo_comprado, comprado_por, fecha_compra_insumo, usuario
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        [
+          pedidoId,
+          it.catalogo_id,
+          version,
+          cant,
+          precio,
+          itemSubtotal,
+          insumoComprado,
+          compradoPor,
+          fechaCompraInsumo,
+          usuario,
+        ]
+      );
+    }
+
+    // Si el pedido estaba en etapa de fabricación ('Registrado' o 'Insumos comprados'), ajustar según insumos
+    let nuevoEstadoPedido = existingOrder.estado;
+    if (
+      existingOrder.estado === 'Registrado' ||
+      existingOrder.estado === 'Insumos comprados'
+    ) {
+      nuevoEstadoPedido = todosComprados ? 'Insumos comprados' : 'Registrado';
+    }
+
+    // 6. Actualizar el registro principal en public.pedidos
+    await client.query(
+      `UPDATE public.pedidos SET
+        tipo_pago = $1,
+        estado_pago = $2,
+        subtotal = $3,
+        descuento = $4,
+        costo_envio = $5,
+        total = $6,
+        monto_cobrar_cce = $7,
+        notas = $8,
+        estado = $9,
+        updated_at = NOW()
+      WHERE id = $10`,
+      [
+        finalTipoPago,
+        finalEstadoPago,
+        subtotal,
+        descuento,
+        envio,
+        total,
+        montoCobrarCce,
+        notas,
+        nuevoEstadoPedido,
+        pedidoId,
+      ]
+    );
+
+    // 7. Reemplazar los pagos del pedido en public.pagos
+    await client.query(`DELETE FROM public.pagos WHERE pedido_id = $1`, [pedidoId]);
+
+    for (const p of listaPagos) {
+      await client.query(
+        `INSERT INTO public.pagos (
+          pedido_id, cliente_id, forma_pago_id, monto, fecha_pago, num_documento_auto, comprobante_url, estado_pago, usuario, observaciones
+        ) VALUES ($1, $2, $3, $4, CURRENT_DATE, $5, $6, $7, $8, $9)`,
+        [
+          pedidoId,
+          clienteId,
+          p.forma_pago_id,
+          p.monto,
+          (p.num_documento_auto || '').trim(),
+          p.comprobante_url || null,
+          p.estado_pago || (p.forma_pago_id === '1003' ? 'Pendiente' : 'Confirmado'),
+          finalVendedoraNombre || finalVendedoraId || 'KÖDE',
+          p.observaciones || (p.forma_pago_id === '1003' ? 'Cobro contra entrega C807' : 'Pago actualizado al editar pedido'),
+        ]
+      );
+    }
+
+    await client.query('COMMIT');
+
+    return NextResponse.json({
+      success: true,
+      message: `Pedido ${existingOrder.numero_pedido} actualizado con éxito`,
+      pedido: {
+        id: pedidoId,
+        numero_pedido: existingOrder.numero_pedido,
+        estado: nuevoEstadoPedido,
+        total,
+      },
+    });
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    console.error('Error updating KODE order:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } finally {
+    client.release();
+  }
+}
