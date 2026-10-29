@@ -474,7 +474,7 @@ export const PedidosTabla: React.FC<PedidosTablaProps> = ({
                                               <span className="font-mono font-black text-slate-900">
                                                 ${parseFloat(pg.monto?.toString() || '0').toFixed(2)}
                                               </span>
-                                              {pg.id && !esContraEntrega && (
+                                              {pg.id && !esContraEntrega && puedeEditarPedidoKode(p) && (
                                                 <button
                                                   type="button"
                                                   onClick={() => onEliminarAbono(pg.id)}
@@ -492,15 +492,34 @@ export const PedidosTabla: React.FC<PedidosTablaProps> = ({
                                   )}
                                 </div>
 
-                                <div className="pt-1.5 mt-1 border-t border-slate-100 flex items-center justify-end">
-                                  <button
-                                    type="button"
-                                    onClick={() => onOpenAbonoModal(p)}
-                                    className="text-[10px] font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2 py-0.5 rounded inline-flex items-center gap-1 cursor-pointer"
-                                  >
-                                    <Plus className="w-2.5 h-2.5" />
-                                    Registrar Abono
-                                  </button>
+                                <div className="pt-1.5 mt-1 border-t border-slate-100 flex items-center justify-end gap-1.5">
+                                  {puedeEditarPedidoKode(p) ? (
+                                    <>
+                                      {onEditarPedido && (
+                                        <button
+                                          type="button"
+                                          onClick={() => onEditarPedido(p)}
+                                          className="text-[10px] font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-0.5 rounded inline-flex items-center gap-1 cursor-pointer"
+                                        >
+                                          <Edit2 className="w-2.5 h-2.5" />
+                                          Editar Pagos
+                                        </button>
+                                      )}
+                                      <button
+                                        type="button"
+                                        onClick={() => onOpenAbonoModal(p)}
+                                        className="text-[10px] font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2 py-0.5 rounded inline-flex items-center gap-1 cursor-pointer"
+                                      >
+                                        <Plus className="w-2.5 h-2.5" />
+                                        Registrar Abono
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <span className="text-[10px] font-bold text-slate-400 inline-flex items-center gap-1">
+                                      <Lock className="w-2.5 h-2.5" />
+                                      Pagos bloqueados (guía en movimiento C807)
+                                    </span>
+                                  )}
                                 </div>
                               </div>
 

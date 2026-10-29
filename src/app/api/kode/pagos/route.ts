@@ -138,7 +138,7 @@ export async function POST(request: Request) {
 
     // 1. Obtener datos del pedido
     const pedidoRes = await queryKode(
-      `SELECT id, cliente_id, total, tipo_pago FROM public.pedidos WHERE id = $1 LIMIT 1`,
+      `SELECT id, numero_pedido, cliente_id, total, tipo_pago, estado, c807_estado FROM public.pedidos WHERE id = $1 LIMIT 1`,
       [pedido_id]
     );
 
@@ -147,6 +147,25 @@ export async function POST(request: Request) {
     }
 
     const pedido = pedidoRes.rows[0];
+    const estPedido = (pedido.estado || '').trim().toUpperCase();
+    const c807Est = (pedido.c807_estado || '').trim().toLowerCase();
+    const sinMovimientoWebhook =
+      !c807Est ||
+      c807Est === 'generada' ||
+      c807Est === 'pendiente' ||
+      c807Est === 'pendiente guia' ||
+      c807Est === 'pendiente guía';
+
+    if (estPedido === 'ENTREGADO' || estPedido === 'CANCELADO' || !sinMovimientoWebhook) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `No se pueden modificar los pagos del pedido ${pedido.numero_pedido} porque la guía C807 ya registra movimiento (${pedido.c807_estado || pedido.estado}).`,
+        },
+        { status: 400 }
+      );
+    }
+
     const finalClienteId = cliente_id || pedido.cliente_id;
 
     // 2. Registrar el pago
@@ -234,6 +253,32 @@ export async function DELETE(request: Request) {
     }
 
     const { pedido_id } = pagoRes.rows[0];
+
+    const pedidoCheckRes = await queryKode(
+      `SELECT numero_pedido, estado, c807_estado FROM public.pedidos WHERE id = $1 LIMIT 1`,
+      [pedido_id]
+    );
+    const pedidoCheck = pedidoCheckRes.rows[0];
+    if (pedidoCheck) {
+      const estPedido = (pedidoCheck.estado || '').trim().toUpperCase();
+      const c807Est = (pedidoCheck.c807_estado || '').trim().toLowerCase();
+      const sinMovimientoWebhook =
+        !c807Est ||
+        c807Est === 'generada' ||
+        c807Est === 'pendiente' ||
+        c807Est === 'pendiente guia' ||
+        c807Est === 'pendiente guía';
+
+      if (estPedido === 'ENTREGADO' || estPedido === 'CANCELADO' || !sinMovimientoWebhook) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `No se pueden eliminar pagos del pedido ${pedidoCheck.numero_pedido} porque la guía C807 ya registra movimiento (${pedidoCheck.c807_estado || pedidoCheck.estado}).`,
+          },
+          { status: 400 }
+        );
+      }
+    }
 
     // Eliminar el pago
     await queryKode(`DELETE FROM public.pagos WHERE id = $1`, [id]);

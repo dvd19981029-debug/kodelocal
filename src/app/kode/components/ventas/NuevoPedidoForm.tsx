@@ -937,6 +937,17 @@ export function NuevoPedidoForm({
     setPagosPedido(pagosPedido.filter((_, i) => i !== index));
   };
 
+  const handleEditarPago = (index: number) => {
+    const p = pagosPedido[index];
+    if (!p) return;
+    setPagoInputFormaId(String(p.forma_pago_id || '1003'));
+    setPagoInputMonto(String(p.monto || ''));
+    setPagoInputDoc(p.num_documento_auto || '');
+    setPagoInputComprobante(p.comprobante_url || '');
+    setPagosPedido(pagosPedido.filter((_, i) => i !== index));
+    showToast(`Editando pago de $${p.monto.toFixed(2)} (${p.forma_pago_nombre}). Modifícalo arriba y pulsa "Agregar Pago".`, 'info');
+  };
+
   // Submit Final
   const handleGuardar = () => {
     if (!clienteNombre.trim() || !clienteTelefono.trim() || !clienteDepto || !clienteMuni || !clienteDireccion.trim()) {
@@ -1932,7 +1943,7 @@ export function NuevoPedidoForm({
                           <th className="py-2 px-3">Forma de Pago</th>
                           <th className="py-2 px-3">Monto</th>
                           <th className="py-2 px-3">Comprobante / Ref</th>
-                          <th className="py-2 px-3 text-center">Quitar</th>
+                          <th className="py-2 px-3 text-center">Acciones</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
@@ -1970,14 +1981,24 @@ export function NuevoPedidoForm({
                               </div>
                             </td>
                             <td className="py-2 px-3 text-center">
-                              <button
-                                type="button"
-                                onClick={() => handleEliminarPago(idx)}
-                                className="p-1 text-slate-400 hover:text-rose-600 rounded cursor-pointer"
-                                title="Eliminar pago"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                              <div className="inline-flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleEditarPago(idx)}
+                                  className="p-1 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded cursor-pointer"
+                                  title="Editar pago"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleEliminarPago(idx)}
+                                  className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded cursor-pointer"
+                                  title="Eliminar pago"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
