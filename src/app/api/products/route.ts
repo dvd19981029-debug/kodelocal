@@ -248,6 +248,7 @@ export async function GET(request: Request) {
         description: p.description || '',
         isAvailableOnline: p.isAvailableOnline,
         puesto: (p as any).puesto || '',
+        supplier: (p as any).supplier || 'APAESA',
       };
     });
 
@@ -355,6 +356,7 @@ export async function PATCH(request: Request) {
       category,
       unit,
       gender,
+      supplier,
     } = body;
 
     if (typeof stock === 'number') stock = Math.round(stock);
@@ -435,6 +437,7 @@ export async function PATCH(request: Request) {
         ...(typeof brand === 'string' ? { brand } : {}),
         ...(typeof description === 'string' ? { description } : {}),
         ...(typeof gender === 'string' && gender.trim() ? { gender: gender.trim() } : {}),
+        ...(typeof supplier === 'string' && supplier.trim() ? { supplier: supplier.trim() } : {}),
         ...(resolvedCategoryId ? { categoryId: resolvedCategoryId } : {}),
         ...(resolvedUnit ? { unit: resolvedUnit } : {}),
       },
@@ -503,6 +506,7 @@ export async function PATCH(request: Request) {
       description: updated.description || '',
       isAvailableOnline: updated.isAvailableOnline,
       puesto: updated.puesto || '',
+      supplier: (updated as any).supplier || 'APAESA',
     };
 
     try {
@@ -552,6 +556,7 @@ export async function POST(request: Request) {
       puesto,
       officialName,
       imageUrl,
+      supplier,
     } = body;
 
     const catRec = await resolveCategoryRecord(category || 'Esencias para Perfume');
@@ -591,6 +596,7 @@ export async function POST(request: Request) {
         puesto: puesto ? String(puesto).trim() : null,
         officialName: officialName ? String(officialName).trim() : null,
         imageUrl: imageUrl ? String(imageUrl).trim() : null,
+        supplier: supplier ? String(supplier).trim() : 'APAESA',
       },
       include: {
         category: true,
@@ -622,6 +628,7 @@ export async function POST(request: Request) {
       description: created.description || '',
       isAvailableOnline: created.isAvailableOnline,
       puesto: created.puesto || '',
+      supplier: (created as any).supplier || 'APAESA',
     };
 
     try {

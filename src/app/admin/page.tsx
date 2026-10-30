@@ -649,10 +649,64 @@ export default function AdminPage() {
       cost: 1.95,
       stock: 20,
       minStock: 5,
+      supplier: 'APAESA',
       imageUrl: '',
       isAvailableOnline: true
     });
     setIsEditModalOpen(true);
+  };
+
+  const handleDownloadProductsExcel = () => {
+    const headers = [
+      'Código SKU',
+      'Puesto',
+      'Nombre Oficial',
+      'Inspirado en',
+      'Marca',
+      'Proveedor',
+      'Categoría',
+      'Género',
+      'Unidad',
+      'Costo ($)',
+      'Precio 1 Oz ($)',
+      'Precio ½ Oz ($)',
+      'Stock 1 Oz / Un.',
+      'Stock ½ Oz',
+    ];
+    const escapeCsv = (val: unknown) => {
+      const str = String(val ?? '').replace(/"/g, '""');
+      return `"${str}"`;
+    };
+    const rows = filteredProducts.map((p) => {
+      const isEssence = p.category === 'Esencias para Perfume' || !p.category;
+      const halfPriceVal = p.priceHalfOunce != null ? p.priceHalfOunce : Number((p.price / 2).toFixed(2));
+      return [
+        escapeCsv(p.sku),
+        escapeCsv(p.puesto || ''),
+        escapeCsv(p.officialName || ''),
+        escapeCsv(p.name || ''),
+        escapeCsv(p.brand || ''),
+        escapeCsv(p.supplier || 'APAESA'),
+        escapeCsv(p.category || ''),
+        escapeCsv(p.gender || ''),
+        escapeCsv(p.unit || ''),
+        Number(p.cost || 0).toFixed(2),
+        Number(p.price || 0).toFixed(2),
+        isEssence ? halfPriceVal.toFixed(2) : '',
+        Number(p.stock || 0),
+        isEssence ? Number(p.stockHalf || 0) : '',
+      ].join(';');
+    });
+    const csvContent = '\uFEFF' + [headers.map(escapeCsv).join(';'), ...rows].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Catalogo_Productos_Proveedores_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleSaveProduct = async (e: React.FormEvent) => {
@@ -690,6 +744,7 @@ export default function AdminPage() {
           stock: Number(prodToSave.stock || 0),
           stockHalf: Number(prodToSave.stockHalf || 0),
           puesto: prodToSave.puesto || '',
+          supplier: prodToSave.supplier || 'APAESA',
           imageUrl: prodToSave.imageUrl || '',
           isAvailableOnline: prodToSave.isAvailableOnline,
         }),
@@ -1317,7 +1372,15 @@ export default function AdminPage() {
                 <h2 className="text-xl font-black text-slate-800">Catálogo Maestro de Productos</h2>
                 <p className="text-xs text-slate-500 font-medium">Control de precios de venta, costos de compra y existencias</p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={handleDownloadProductsExcel}
+                  className="clay-btn clay-btn-light px-3.5 py-2.5 text-xs flex items-center gap-1.5 font-bold text-emerald-700"
+                  title="Descargar Catálogo de Productos con Proveedor en Excel (CSV)"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Descargar Excel</span>
+                </button>
                 <button
                   onClick={() => {
                     setKardexFilterProduct(null);
@@ -1442,6 +1505,7 @@ export default function AdminPage() {
                       <th className="py-3 px-3">Puesto</th>
                       <th className="py-3 px-3">Nombre Oficial</th>
                       <th className="py-3 px-3">Inspirado en</th>
+                      <th className="py-3 px-3">Proveedor</th>
                       <th className="py-3 px-3">Categoría</th>
                       <th className="py-3 px-3">Costo ($)</th>
                       <th className="py-3 px-3">Precio 1 Oz ($)</th>
@@ -1455,10 +1519,12 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {filteredProducts.slice(0, 100).map((p) => {
+                    {filteredProducts.map((p) => {
                       const margen = p.price - p.cost;
                       const isEssence = p.category === 'Esencias para Perfume' || !p.category;
                       const halfPriceVal = p.priceHalfOunce != null ? p.priceHalfOunce : Number((p.price / 2).toFixed(2));
+                      const supplierName = p.supplier || 'APAESA';
+                      const isAromasCreativos = supplierName.toLowerCase().includes('aromas');
 
                       return (
                         <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
@@ -1510,6 +1576,19 @@ export default function AdminPage() {
                             <div className="text-[10px] text-slate-400 font-medium">
                               Inspirado en {p.brand || 'Marca'}
                             </div>
+                          </td>
+
+                          {/* Proveedor */}
+                          <td className="py-2.5 px-3">
+                            <span
+                              className={`clay-badge text-[10px] font-black py-0.5 px-2.5 border ${
+                                isAromasCreativos
+                                  ? 'bg-fuchsia-50 text-fuchsia-800 border-fuchsia-200'
+                                  : 'bg-indigo-50 text-indigo-700 border-indigo-200/80'
+                              }`}
+                            >
+                              {supplierName}
+                            </span>
                           </td>
 
                           <td className="py-2.5 px-3">
@@ -2698,7 +2777,7 @@ export default function AdminPage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                <div className="sm:col-span-7">
+                <div className="sm:col-span-5">
                   <label className="text-xs font-bold text-slate-700 block mb-1">
                     Marca / Casa Diseñadora
                   </label>
@@ -2710,7 +2789,19 @@ export default function AdminPage() {
                     className="clay-input w-full text-xs"
                   />
                 </div>
-                <div className="sm:col-span-5">
+                <div className="sm:col-span-4">
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Proveedor
+                  </label>
+                  <input
+                    type="text"
+                    value={editingProduct.supplier || 'APAESA'}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, supplier: e.target.value })}
+                    placeholder="Ej. APAESA / Aromas Creativos"
+                    className="clay-input w-full text-xs font-bold text-indigo-900"
+                  />
+                </div>
+                <div className="sm:col-span-3">
                   <label className="text-xs font-bold text-slate-700 block mb-1">
                     Puesto / Estante
                   </label>
@@ -2721,7 +2812,7 @@ export default function AdminPage() {
                     placeholder="Ej. A1"
                     className="clay-input w-full text-xs font-mono font-black text-amber-900 bg-amber-50/40 uppercase"
                   />
-                  <span className="text-[10px] text-slate-400 mt-0.5 block">Ubicación en bodega (A1)</span>
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">Ubicación (A1)</span>
                 </div>
               </div>
 
