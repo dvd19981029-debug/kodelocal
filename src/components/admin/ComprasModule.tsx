@@ -939,7 +939,7 @@ export default function ComprasModule({
       {/* SUBPESTAÑA 2: REGISTRAR ENTRADA DE FACTURA DE COMPRA                     */}
       {/* ========================================================================= */}
       {subTab === 'registrar' && (
-        <div className="clay-card p-6 max-w-4xl mx-auto animate-in fade-in zoom-in-98">
+        <div className="clay-card p-6 max-w-5xl mx-auto animate-in fade-in zoom-in-98">
           
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-4 border-b border-slate-200 mb-5">
             <div>
@@ -1119,15 +1119,15 @@ export default function ComprasModule({
                 </button>
               </div>
 
-              <div className="clay-card overflow-hidden !bg-white/60">
-                <table className="w-full text-left border-collapse">
+              <div className="clay-card overflow-x-auto !bg-white/60">
+                <table className="w-full text-left border-collapse table-fixed min-w-[680px]">
                   <thead>
                     <tr className="border-b border-slate-200 bg-slate-100/70 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                      <th className="py-2.5 px-3" style={{ width: '45%' }}>Producto / Insumo</th>
-                      <th className="py-2.5 px-3" style={{ width: '18%' }}>Cantidad</th>
-                      <th className="py-2.5 px-3" style={{ width: '18%' }}>Costo Unitario ($)</th>
-                      <th className="py-2.5 px-3 text-right" style={{ width: '14%' }}>Subtotal ($)</th>
-                      <th className="py-2.5 px-3 text-center" style={{ width: '5%' }}></th>
+                      <th className="py-2.5 px-3" style={{ width: '40%' }}>Producto / Insumo</th>
+                      <th className="py-2.5 px-2.5" style={{ width: '19%' }}>Cantidad</th>
+                      <th className="py-2.5 px-2.5" style={{ width: '23%' }}>Costo Unitario ($)</th>
+                      <th className="py-2.5 px-3 text-right" style={{ width: '13%' }}>Subtotal ($)</th>
+                      <th className="py-2.5 px-2 text-center" style={{ width: '5%' }}></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-xs">
@@ -1146,11 +1146,8 @@ export default function ComprasModule({
                                     📍{products.find(p => p.id === item.productId)?.puesto}
                                   </span>
                                 )}
-                                <span className="font-black text-xs text-slate-800 truncate max-w-[180px] sm:max-w-[280px]" title={item.productName}>
+                                <span className="font-black text-xs text-slate-800 truncate" title={item.productName}>
                                   {item.productName}
-                                </span>
-                                <span className="text-[10px] text-slate-400 font-medium shrink-0 hidden md:inline">
-                                  [{products.find(p => p.id === item.productId)?.category || item.unit}]
                                 </span>
                               </div>
                               <div className="flex items-center gap-1.5 shrink-0 ml-2">
@@ -1200,8 +1197,8 @@ export default function ComprasModule({
                         </td>
 
                         {/* Cantidad (Inicia en 0, editable a mano) */}
-                        <td className="p-2.5">
-                          <div className="flex items-center gap-1">
+                        <td className="p-2">
+                          <div className="flex items-center gap-1.5">
                             <input
                               type="number"
                               min="0"
@@ -1213,19 +1210,19 @@ export default function ComprasModule({
                                 const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
                                 handleUpdateItemValue(idx, 'quantity', isNaN(val) ? 0 : val);
                               }}
-                              className="clay-input w-full text-xs font-mono font-bold text-center"
+                              className="clay-input !px-2.5 !py-2 w-full min-w-[85px] text-xs font-mono font-black text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               title="Cantidad comprada (ingrésala a mano)"
                             />
-                            <span className="text-[11px] text-slate-500 font-bold whitespace-nowrap min-w-[20px]">
+                            <span className="text-[11px] text-slate-500 font-bold whitespace-nowrap shrink-0">
                               {item.unit === 'Onza' ? 'Oz' : item.unit === 'Galón' ? 'Gal' : 'Un.'}
                             </span>
                           </div>
                         </td>
 
                         {/* Costo Unitario ($) (Editable por centavos) */}
-                        <td className="p-2.5">
-                          <div className="clay-input flex items-center gap-1">
-                            <span className="text-slate-400 font-bold">$</span>
+                        <td className="p-2">
+                          <div className="clay-input !px-2.5 !py-2 flex items-center gap-1 min-w-[135px]">
+                            <span className="text-slate-400 font-bold shrink-0">$</span>
                             <input
                               type="number"
                               min="0"
@@ -1237,7 +1234,7 @@ export default function ComprasModule({
                                 const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
                                 handleUpdateItemValue(idx, 'costPrice', isNaN(val) ? 0 : val);
                               }}
-                              className="bg-transparent border-none outline-none w-full text-xs font-mono font-black text-slate-800"
+                              className="bg-transparent border-none outline-none w-full text-xs font-mono font-black text-slate-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               title="Costo unitario de compra (puedes ajustarlo por centavos)"
                             />
                           </div>
