@@ -1453,7 +1453,7 @@ export default function PlanillaModule() {
       doc.text('Vacación:', 24, boxY + 20.5);
       doc.text(`$${r.vacationAmount.toFixed(2)}`, 101, boxY + 20.5, { align: 'right' });
 
-      doc.text('Otros Ingresos:', 24, boxY + 27);
+      doc.text('Bonos / Ingresos Adic.:', 24, boxY + 27);
       doc.text(`$${r.otherIncome.toFixed(2)}`, 101, boxY + 27, { align: 'right' });
 
       doc.setDrawColor(148, 163, 184);
@@ -1596,7 +1596,7 @@ export default function PlanillaModule() {
           { content: 'No. de\nDocumento', rowSpan: 2 },
           { content: 'No.\nDIAS', rowSpan: 2 },
           { content: 'SALARIO DEL\nPERIODO', rowSpan: 2 },
-          { content: 'VACACION', rowSpan: 2 },
+          { content: totals.otherIncome > 0 ? 'VACACION /\nBONOS' : 'VACACION', rowSpan: 2 },
           { content: 'INGRESO SUJETO\nCOTIZACIONES', rowSpan: 2 },
           { content: 'RETENCIONES LEGALES Y DESCUENTOS', colSpan: 4 },
           { content: 'TOTAL RETENC.\nY DESC.', rowSpan: 2 },
@@ -1611,7 +1611,7 @@ export default function PlanillaModule() {
         r.emp.docNumber,
         r.workedDays.toString(),
         `$${r.ordinarySalary.toFixed(2)}`,
-        `$${r.vacationAmount.toFixed(2)}`,
+        `$${round2(r.vacationAmount + r.otherIncome).toFixed(2)}`,
         `$${r.totalDevengado.toFixed(2)}`,
         `$${r.isssLab.toFixed(2)}`,
         `$${r.afpLab.toFixed(2)}`,
@@ -1626,7 +1626,7 @@ export default function PlanillaModule() {
           '',
           { content: 'TOTALES……………………………………', colSpan: 3, styles: { halign: 'left' } },
           `$${totals.ordinarySalary.toFixed(2)}`,
-          `$${totals.vacationAmount.toFixed(2)}`,
+          `$${round2(totals.vacationAmount + totals.otherIncome).toFixed(2)}`,
           `$${totals.totalDevengado.toFixed(2)}`,
           `$${totals.isssLab.toFixed(2)}`,
           `$${totals.afpLab.toFixed(2)}`,
@@ -2461,8 +2461,8 @@ export default function PlanillaModule() {
                     <th className="py-3 px-2.5 border-b border-slate-700 text-right bg-amber-950/60">
                       Desc. Tardía
                     </th>
-                    <th className="py-3 px-2.5 border-b border-slate-700 text-right">
-                      Otros Ingresos / H.E.
+                    <th className="py-3 px-2.5 border-b border-slate-700 text-right bg-emerald-950/60">
+                      Bonos / Ingresos Adic.
                     </th>
                     <th className="py-3 px-2.5 border-b border-slate-700 text-right bg-indigo-950">
                       Total Devengado
@@ -2559,16 +2559,19 @@ export default function PlanillaModule() {
                         <input
                           type="number"
                           min="0"
-                          max="30"
+                          max="31"
                           step="1"
                           value={r.workedDays}
                           onChange={(e) => {
                             const val = parseInt(e.target.value, 10);
-                            const absence = Math.max(0, defaultCommercialDays - (isNaN(val) ? defaultCommercialDays : val));
-                            updateEmployeeField(r.emp.id, 'absenceDays', absence);
+                            updateEmployeeField(
+                              r.emp.id,
+                              'daysOverride',
+                              isNaN(val) ? null : Math.max(0, Math.min(31, val))
+                            );
                           }}
                           className="w-12 text-center font-mono font-black bg-slate-50 border border-slate-200 rounded px-1 py-0.5"
-                          title="Días laborados en el período (base comercial 15 o 30 días)"
+                          title="Días laborados en el período"
                         />
                       </td>
                       <td className="py-2.5 px-2.5 text-right font-mono font-bold text-slate-800">
@@ -2594,7 +2597,7 @@ export default function PlanillaModule() {
                       <td className="py-2.5 px-2.5 text-right font-mono text-amber-800 bg-amber-50/40">
                         {r.tardyDiscount > 0 ? `-$${r.tardyDiscount.toFixed(2)}` : '$0.00'}
                       </td>
-                      <td className="py-2.5 px-2.5 text-right">
+                      <td className="py-2.5 px-2.5 text-right bg-emerald-50/30">
                         <input
                           type="number"
                           step="0.01"
@@ -2607,7 +2610,8 @@ export default function PlanillaModule() {
                               Math.max(0, parseFloat(e.target.value) || 0)
                             )
                           }
-                          className="w-16 text-right font-mono font-bold bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5"
+                          className="w-20 text-right font-mono font-bold bg-white border border-emerald-300 rounded px-1.5 py-0.5 text-emerald-900 focus:border-emerald-600 focus:outline-none"
+                          title="Bonos, comisiones, horas extras u otros ingresos gravados del período"
                         />
                       </td>
                       <td className="py-2.5 px-2.5 text-right font-mono font-black text-indigo-800 bg-indigo-50/40">

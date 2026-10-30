@@ -91,6 +91,16 @@ type AdminTab =
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab') as AdminTab | null;
+      if (tabParam) {
+        setActiveTab(tabParam);
+      }
+    }
+  }, []);
   
   // Datos
   const [users, setUsers] = useState<UserAccount[]>([]);
