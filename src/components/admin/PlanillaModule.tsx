@@ -162,18 +162,18 @@ const DEFAULT_PARAMETERS: PayrollParameters = {
   tardinessGraceMinutes: 0,
   tardinessMode: 'REDUCE_BASE',
   employerNitDui: '0614-010190-101-1',
-  employerName: 'AROMANIAK / KODELOCAL EL SALVADOR',
+  employerName: 'Grupo KODE S.A.S. de C.V.',
   isssPatronalNumber: 'NP0000123',
   workplaceCorrelative: '001 SUCURSAL PRINCIPAL',
   quincenalBrackets: [
     { tramo: 'I', desde: 0.01, hasta: 275.0, porcentaje: 0, sobreExcesoDe: 0, cuotaFija: 0 },
-    { tramo: 'II', desde: 275.01, hasta: 447.62, porcentaje: 0.1, sobreExcesoDe: 275.0, cuotaFija: 8.83 },
+    { tramo: 'II', desde: 275.01, hasta: 447.62, porcentaje: 0.1, sobreExcesoDe: 341.665, cuotaFija: 8.83 },
     { tramo: 'III', desde: 447.63, hasta: 1019.05, porcentaje: 0.2, sobreExcesoDe: 447.62, cuotaFija: 30.0 },
     { tramo: 'IV', desde: 1019.06, hasta: null, porcentaje: 0.3, sobreExcesoDe: 1019.05, cuotaFija: 144.28 },
   ],
   mensualBrackets: [
     { tramo: 'I', desde: 0.01, hasta: 550.0, porcentaje: 0, sobreExcesoDe: 0, cuotaFija: 0 },
-    { tramo: 'II', desde: 550.01, hasta: 895.24, porcentaje: 0.1, sobreExcesoDe: 550.0, cuotaFija: 17.67 },
+    { tramo: 'II', desde: 550.01, hasta: 895.24, porcentaje: 0.1, sobreExcesoDe: 683.33, cuotaFija: 17.67 },
     { tramo: 'III', desde: 895.25, hasta: 2038.1, porcentaje: 0.2, sobreExcesoDe: 895.24, cuotaFija: 60.0 },
     { tramo: 'IV', desde: 2038.11, hasta: null, porcentaje: 0.3, sobreExcesoDe: 2038.1, cuotaFija: 288.57 },
   ],
@@ -243,23 +243,23 @@ const INITIAL_EMPLOYEES: PayrollEmployee[] = [
     code: '001',
     firstName: 'JORGE',
     secondName: 'LUIS',
-    firstLastName: '',
-    secondLastName: '',
+    firstLastName: 'FUENTES',
+    secondLastName: 'VASQUEZ',
     marriedLastName: '',
-    fullName: 'Jorge Luis',
+    fullName: 'Jorge Luis fuentes Vasquez',
     gender: 'MASCULINO',
-    hireDate: '2023-01-15',
+    hireDate: '2026-10-14',
     position: 'Gerente',
     department: 'ADMINISTRACIÓN',
     jornadaId: 'jor-gerencia',
     docType: '01 DUI',
-    docNumber: '00000001-0',
+    docNumber: '05593529-2',
     isssNumber: 'ISSS00001',
     afpInstitution: 'COF - AFP CONFÍA',
     baseSalaryMonthly: 700.0,
     hoursPerDay: 8,
     workplaceCenter: '001 SUCURSAL PRINCIPAL',
-    obsCode1: '01 Sin cambios con respecto al mes anterior',
+    obsCode1: '08 Ingreso o Reingreso del Trabajador',
     obsCode2: '00 Sin Cambios',
     daysOverride: null,
     absenceDays: 0,
@@ -277,22 +277,22 @@ const INITIAL_EMPLOYEES: PayrollEmployee[] = [
     firstName: 'ERIKA',
     secondName: 'MARIA',
     firstLastName: 'MELGAR',
-    secondLastName: '',
+    secondLastName: 'GARCIA',
     marriedLastName: '',
-    fullName: 'Erika Maria',
+    fullName: 'Erika Maria Melgar Garcia',
     gender: 'FEMENINO',
-    hireDate: '2023-03-01',
+    hireDate: '2026-10-14',
     position: 'Recepción',
     department: 'VENTA',
     jornadaId: 'jor-ventas',
     docType: '01 DUI',
-    docNumber: '00000002-0',
+    docNumber: '06616646-6',
     isssNumber: 'ISSS00002',
     afpInstitution: 'MAX - AFP CRECER',
     baseSalaryMonthly: 450.0,
     hoursPerDay: 8,
     workplaceCenter: '001 SUCURSAL PRINCIPAL',
-    obsCode1: '01 Sin cambios con respecto al mes anterior',
+    obsCode1: '08 Ingreso o Reingreso del Trabajador',
     obsCode2: '00 Sin Cambios',
     daysOverride: null,
     absenceDays: 0,
@@ -308,24 +308,24 @@ const INITIAL_EMPLOYEES: PayrollEmployee[] = [
     id: 'emp-3',
     code: '003',
     firstName: 'RODOLFO',
-    secondName: '',
+    secondName: 'HECTOR',
     firstLastName: 'GUALA',
     secondLastName: '',
     marriedLastName: '',
-    fullName: 'Rodolfo Guala',
+    fullName: 'Rodolfo Hector Guala',
     gender: 'MASCULINO',
-    hireDate: '2023-04-10',
+    hireDate: '2026-10-14',
     position: 'Bodega',
     department: 'BODEGA',
     jornadaId: 'jor-bodega',
-    docType: '01 DUI',
-    docNumber: '00000003-0',
+    docType: '02 PASAPORTE',
+    docNumber: 'AAK778492',
     isssNumber: 'ISSS00003',
     afpInstitution: 'MAX - AFP CRECER',
     baseSalaryMonthly: 425.0,
     hoursPerDay: 8,
     workplaceCenter: '001 SUCURSAL PRINCIPAL',
-    obsCode1: '01 Sin cambios con respecto al mes anterior',
+    obsCode1: '08 Ingreso o Reingreso del Trabajador',
     obsCode2: '00 Sin Cambios',
     daysOverride: null,
     absenceDays: 0,
@@ -341,24 +341,24 @@ const INITIAL_EMPLOYEES: PayrollEmployee[] = [
     id: 'emp-4',
     code: '004',
     firstName: 'DAVID',
-    secondName: '',
+    secondName: 'ANTONIO',
     firstLastName: 'MEJIA',
-    secondLastName: '',
+    secondLastName: 'RAMIREZ',
     marriedLastName: '',
-    fullName: 'David Mejia',
+    fullName: 'David Antonio Mejia Ramirez',
     gender: 'MASCULINO',
-    hireDate: '2023-05-01',
+    hireDate: '2026-10-14',
     position: 'Marketing',
     department: 'MARKETING',
     jornadaId: 'jor-marketing',
     docType: '01 DUI',
-    docNumber: '00000004-0',
+    docNumber: '05785262-8',
     isssNumber: 'ISSS00004',
     afpInstitution: 'COF - AFP CONFÍA',
     baseSalaryMonthly: 425.0,
     hoursPerDay: 8,
     workplaceCenter: '001 SUCURSAL PRINCIPAL',
-    obsCode1: '01 Sin cambios con respecto al mes anterior',
+    obsCode1: '08 Ingreso o Reingreso del Trabajador',
     obsCode2: '00 Sin Cambios',
     daysOverride: null,
     absenceDays: 0,
@@ -374,24 +374,24 @@ const INITIAL_EMPLOYEES: PayrollEmployee[] = [
     id: 'emp-5',
     code: '005',
     firstName: 'LUIS',
-    secondName: '',
-    firstLastName: '',
-    secondLastName: '',
+    secondName: 'ERNESTO',
+    firstLastName: 'GONZALEZ',
+    secondLastName: 'MARTINEZ',
     marriedLastName: '',
-    fullName: 'Luis',
+    fullName: 'Luis Ernesto Gonzalez Martinez',
     gender: 'MASCULINO',
-    hireDate: '2023-05-01',
+    hireDate: '2026-10-14',
     position: 'Marketing',
     department: 'MARKETING',
     jornadaId: 'jor-marketing',
     docType: '01 DUI',
-    docNumber: '00000005-0',
+    docNumber: '06694167-0',
     isssNumber: 'ISSS00005',
     afpInstitution: 'COF - AFP CONFÍA',
     baseSalaryMonthly: 425.0,
     hoursPerDay: 8,
     workplaceCenter: '001 SUCURSAL PRINCIPAL',
-    obsCode1: '01 Sin cambios con respecto al mes anterior',
+    obsCode1: '08 Ingreso o Reingreso del Trabajador',
     obsCode2: '00 Sin Cambios',
     daysOverride: null,
     absenceDays: 0,
@@ -451,20 +451,25 @@ export function computeCommercialDays(startDateStr: string, endDateStr: string):
   const endMonth = parseInt(endMatch[2], 10);
   const endDay = parseInt(endMatch[3], 10);
   const lastDayOfEndMonth = new Date(endYear, endMonth, 0).getDate();
-  const effectiveEndDay = endDay === lastDayOfEndMonth ? 30 : endDay;
-  const days = effectiveEndDay - startDay + 1;
-  return Math.max(0, Math.min(30, days));
+  if (startDay === 1 && endDay === lastDayOfEndMonth) return 30;
+  if (startDay === 16 && endDay === lastDayOfEndMonth) return 15;
+  const days = endDay - startDay + 1;
+  return Math.max(0, Math.min(31, days));
 }
 
-export function calculateIsrFromBrackets(gravable: number, brackets: IsrBracket[]): number {
+export function calculateIsrFromBracketsExact(gravable: number, brackets: IsrBracket[]): number {
   if (gravable <= 0) return 0;
   for (const b of brackets) {
     if (b.hasta === null || gravable <= b.hasta) {
       if (b.porcentaje === 0) return 0;
-      return round2((gravable - b.sobreExcesoDe) * b.porcentaje + b.cuotaFija);
+      return (gravable - b.sobreExcesoDe) * b.porcentaje + b.cuotaFija;
     }
   }
   return 0;
+}
+
+export function calculateIsrFromBrackets(gravable: number, brackets: IsrBracket[]): number {
+  return round2(calculateIsrFromBracketsExact(gravable, brackets));
 }
 
 export function parseTimeMinutes(hhmm: string): number | null {
@@ -605,18 +610,18 @@ export function crossDayPunch(
   };
 }
 
-const STORAGE_KEY = 'kodelocal_planilla_sv_v1';
+const STORAGE_KEY = 'kodelocal_planilla_sv_v2';
 
 export default function PlanillaModule() {
   const [subTab, setSubTab] = useState<'quincenal' | 'jornadas' | 'spu' | 'resumen' | 'parametros'>('quincenal');
-  const [frequency, setFrequency] = useState<PayrollFrequency>('QUINCENAL');
+  const [frequency, setFrequency] = useState<PayrollFrequency>('MENSUAL');
 
   // Doble Calendario (Período de Salario Ordinario vs. Período de Corte de Novedades/Reloj)
-  const [periodStart, setPeriodStart] = useState('2026-10-01');
-  const [periodEnd, setPeriodEnd] = useState('2026-10-15');
-  const [cutoffStart, setCutoffStart] = useState('2026-09-29');
-  const [cutoffEnd, setCutoffEnd] = useState('2026-10-14');
-  const [paymentDate, setPaymentDate] = useState('2026-10-15');
+  const [periodStart, setPeriodStart] = useState('2026-10-14');
+  const [periodEnd, setPeriodEnd] = useState('2026-10-31');
+  const [cutoffStart, setCutoffStart] = useState('2026-10-14');
+  const [cutoffEnd, setCutoffEnd] = useState('2026-10-31');
+  const [paymentDate, setPaymentDate] = useState('2026-10-31');
 
   const [parameters, setParameters] = useState<PayrollParameters>(DEFAULT_PARAMETERS);
   const [employees, setEmployees] = useState<PayrollEmployee[]>(INITIAL_EMPLOYEES);
@@ -827,7 +832,7 @@ export default function PlanillaModule() {
     return parameters.forceIncaf || employees.length >= parameters.incafMinEmployees;
   }, [employees.length, parameters.forceIncaf, parameters.incafMinEmployees]);
 
-  // Cálculo fila por fila exacto al centavo (ROUND(..., 2))
+  // Cálculo fila por fila siguiendo exactamente la fórmula del archivo planillero de Grupo KODE S.A.S. de C.V.
   const computedRows = useMemo(() => {
     const isQuincenal = frequency === 'QUINCENAL';
     const isssCapSalary = isQuincenal
@@ -838,19 +843,26 @@ export default function PlanillaModule() {
     const incafPatMax = round2(isssCapSalary * parameters.incafRate); // $5.00 quincenal / $10.00 mensual
     const brackets = isQuincenal ? parameters.quincenalBrackets : parameters.mensualBrackets;
 
+    const endMatch = String(periodEnd || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const daysInCalendarMonth = endMatch
+      ? new Date(parseInt(endMatch[1], 10), parseInt(endMatch[2], 10), 0).getDate()
+      : 30;
+
     return employees.map((emp, idx) => {
       const baseMonthly = Number(emp.baseSalaryMonthly || 0);
-      const dailySalaryExact = baseMonthly / 30;
-      const dailySalaryDisplay = round2(dailySalaryExact);
-      const minuteRate = baseMonthly / 14400; // Sueldo / 30 / 8 / 60
-
       const basePeriodDays = emp.daysOverride !== null ? emp.daysOverride : defaultCommercialDays;
       const workedDays = Math.max(
         0,
         basePeriodDays - Number(emp.absenceDays || 0) - Number(emp.subsidyDays || 0)
       );
 
-      // Salario ordinario devengado: ROUND((D4/30)*H4, 2)
+      const divisorDays =
+        workedDays === 15 || workedDays === 30 ? 30 : daysInCalendarMonth;
+      const dailySalaryExact = baseMonthly / divisorDays;
+      const dailySalaryDisplay = round2(dailySalaryExact);
+      const minuteRate = baseMonthly / 14400; // Sueldo / 30 / 8 / 60
+
+      // Salario del período devengado (ej. 18 días sobre 31 en octubre: 700/31*18 = 406.45)
       const ordinarySalary = round2(dailySalaryExact * workedDays);
 
       // Llegadas tardías: descuento legal exacto por minuto no laborado
@@ -862,7 +874,7 @@ export default function PlanillaModule() {
       const otherIncome = round2(Number(emp.otherIncome || 0));
       const vacationAmount = round2(Number(emp.vacationAmount || 0));
 
-      // Si el modo de tardías es REDUCE_BASE (estilo Evolution), reduce el Total Devengado (y la base de ISSS/AFP/Renta) sin restar días SPU
+      // Columna G: INGRESO SUJETO COTIZACIONES (=E+F)
       const totalDevengado = round2(
         Math.max(
           0,
@@ -873,29 +885,39 @@ export default function PlanillaModule() {
         )
       );
 
-      const isssLab = round2(
-        Math.min(totalDevengado * parameters.isssLaboralRate, isssLabMax)
-      );
-      const afpLab = round2(totalDevengado * parameters.afpLaboralRate);
-      const baseGravableIsr = round2(Math.max(0, totalDevengado - isssLab - afpLab));
-      const isr = calculateIsrFromBrackets(baseGravableIsr, brackets);
+      // Columnas H, I, J, K, L, M exactas según el archivo Excel del contador
+      const isssLabExact = Math.min(totalDevengado * parameters.isssLaboralRate, isssLabMax);
+      const afpLabExact = totalDevengado * parameters.afpLaboralRate;
+      const baseGravableIsrExact = Math.max(0, totalDevengado - isssLabExact - afpLabExact);
+      const isrExact = calculateIsrFromBracketsExact(baseGravableIsrExact, brackets);
 
       const otherDeductions = round2(
         Number(emp.otherDeductions || 0) +
           (parameters.tardinessMode === 'OTHER_DEDUCTION' ? tardyDiscount : 0)
       );
-      const totalDeducciones = round2(isssLab + afpLab + isr + otherDeductions);
-      const liquidoPagar = round2(totalDevengado - totalDeducciones);
+      const totalDeduccionesExact = isssLabExact + afpLabExact + isrExact + otherDeductions;
+      const liquidoPagarExact = totalDevengado - totalDeduccionesExact;
 
-      const isssPat = round2(
-        Math.min(totalDevengado * parameters.isssPatronalRate, isssPatMax)
-      );
-      const afpPat = round2(totalDevengado * parameters.afpPatronalRate);
-      const incafPat = appliesIncaf
-        ? round2(Math.min(totalDevengado * parameters.incafRate, incafPatMax))
+      const isssLab = round2(isssLabExact);
+      const afpLab = round2(afpLabExact);
+      const baseGravableIsr = round2(baseGravableIsrExact);
+      const isr = round2(isrExact);
+      const totalDeducciones = round2(totalDeduccionesExact);
+      const liquidoPagar = round2(liquidoPagarExact);
+
+      const isssPatExact = Math.min(totalDevengado * parameters.isssPatronalRate, isssPatMax);
+      const afpPatExact = totalDevengado * parameters.afpPatronalRate;
+      const incafPatExact = appliesIncaf
+        ? Math.min(totalDevengado * parameters.incafRate, incafPatMax)
         : 0;
-      const totalPatronal = round2(isssPat + afpPat + incafPat);
-      const costoTotalEmpresa = round2(totalDevengado + totalPatronal);
+      const totalPatronalExact = isssPatExact + afpPatExact + incafPatExact;
+      const costoTotalEmpresaExact = totalDevengado + totalPatronalExact;
+
+      const isssPat = round2(isssPatExact);
+      const afpPat = round2(afpPatExact);
+      const incafPat = round2(incafPatExact);
+      const totalPatronal = round2(totalPatronalExact);
+      const costoTotalEmpresa = round2(costoTotalEmpresaExact);
 
       return {
         index: idx + 1,
@@ -909,6 +931,17 @@ export default function PlanillaModule() {
         otherIncome,
         vacationAmount,
         totalDevengado,
+        isssLabExact,
+        afpLabExact,
+        baseGravableIsrExact,
+        isrExact,
+        totalDeduccionesExact,
+        liquidoPagarExact,
+        isssPatExact,
+        afpPatExact,
+        incafPatExact,
+        totalPatronalExact,
+        costoTotalEmpresaExact,
         isssLab,
         afpLab,
         baseGravableIsr,
@@ -923,30 +956,30 @@ export default function PlanillaModule() {
         costoTotalEmpresa,
       };
     });
-  }, [employees, frequency, parameters, defaultCommercialDays, appliesIncaf]);
+  }, [employees, frequency, parameters, defaultCommercialDays, appliesIncaf, periodEnd]);
 
-  // Sumatorias generales de la planilla
+  // Sumatorias generales de la planilla (suma exacta de celdas como en Excel y redondeo a 2 decimales)
   const totals = useMemo(() => {
-    return computedRows.reduce(
+    const raw = computedRows.reduce(
       (acc, r) => ({
-        baseMonthly: round2(acc.baseMonthly + r.baseMonthly),
-        ordinarySalary: round2(acc.ordinarySalary + r.ordinarySalary),
-        tardyDiscount: round2(acc.tardyDiscount + r.tardyDiscount),
-        otherIncome: round2(acc.otherIncome + r.otherIncome),
-        vacationAmount: round2(acc.vacationAmount + r.vacationAmount),
-        totalDevengado: round2(acc.totalDevengado + r.totalDevengado),
-        isssLab: round2(acc.isssLab + r.isssLab),
-        afpLab: round2(acc.afpLab + r.afpLab),
-        baseGravableIsr: round2(acc.baseGravableIsr + r.baseGravableIsr),
-        isr: round2(acc.isr + r.isr),
-        otherDeductions: round2(acc.otherDeductions + r.otherDeductions),
-        totalDeducciones: round2(acc.totalDeducciones + r.totalDeducciones),
-        liquidoPagar: round2(acc.liquidoPagar + r.liquidoPagar),
-        isssPat: round2(acc.isssPat + r.isssPat),
-        afpPat: round2(acc.afpPat + r.afpPat),
-        incafPat: round2(acc.incafPat + r.incafPat),
-        totalPatronal: round2(acc.totalPatronal + r.totalPatronal),
-        costoTotalEmpresa: round2(acc.costoTotalEmpresa + r.costoTotalEmpresa),
+        baseMonthly: acc.baseMonthly + r.baseMonthly,
+        ordinarySalary: acc.ordinarySalary + r.ordinarySalary,
+        tardyDiscount: acc.tardyDiscount + r.tardyDiscount,
+        otherIncome: acc.otherIncome + r.otherIncome,
+        vacationAmount: acc.vacationAmount + r.vacationAmount,
+        totalDevengado: acc.totalDevengado + r.totalDevengado,
+        isssLab: acc.isssLab + r.isssLabExact,
+        afpLab: acc.afpLab + r.afpLabExact,
+        baseGravableIsr: acc.baseGravableIsr + r.baseGravableIsrExact,
+        isr: acc.isr + r.isrExact,
+        otherDeductions: acc.otherDeductions + r.otherDeductions,
+        totalDeducciones: acc.totalDeducciones + r.totalDeduccionesExact,
+        liquidoPagar: acc.liquidoPagar + r.liquidoPagarExact,
+        isssPat: acc.isssPat + r.isssPatExact,
+        afpPat: acc.afpPat + r.afpPatExact,
+        incafPat: acc.incafPat + r.incafPatExact,
+        totalPatronal: acc.totalPatronal + r.totalPatronalExact,
+        costoTotalEmpresa: acc.costoTotalEmpresa + r.costoTotalEmpresaExact,
       }),
       {
         baseMonthly: 0,
@@ -969,6 +1002,26 @@ export default function PlanillaModule() {
         costoTotalEmpresa: 0,
       }
     );
+    return {
+      baseMonthly: round2(raw.baseMonthly),
+      ordinarySalary: round2(raw.ordinarySalary),
+      tardyDiscount: round2(raw.tardyDiscount),
+      otherIncome: round2(raw.otherIncome),
+      vacationAmount: round2(raw.vacationAmount),
+      totalDevengado: round2(raw.totalDevengado),
+      isssLab: round2(raw.isssLab),
+      afpLab: round2(raw.afpLab),
+      baseGravableIsr: round2(raw.baseGravableIsr),
+      isr: round2(raw.isr),
+      otherDeductions: round2(raw.otherDeductions),
+      totalDeducciones: round2(raw.totalDeducciones),
+      liquidoPagar: round2(raw.liquidoPagar),
+      isssPat: round2(raw.isssPat),
+      afpPat: round2(raw.afpPat),
+      incafPat: round2(raw.incafPat),
+      totalPatronal: round2(raw.totalPatronal),
+      costoTotalEmpresa: round2(raw.costoTotalEmpresa),
+    };
   }, [computedRows]);
 
   // Filas generadas para el Sistema de Planilla Única (SPU - ISSS/AFP)
@@ -1395,6 +1448,139 @@ export default function PlanillaModule() {
         `
           )
           .join('')}
+        <script>window.onload = () => { window.print(); };</script>
+      </body>
+      </html>
+    `;
+    win.document.write(html);
+    win.document.close();
+  };
+
+  // Imprimir Planilla General de Sueldos con Columna de Firma (Formato Grupo KODE S.A.S. de C.V.)
+  const handlePrintOfficialPayrollSheet = () => {
+    const win = window.open('', '_blank', 'width=1150,height=800');
+    if (!win) return;
+
+    const monthsEs = [
+      'ENERO',
+      'FEBRERO',
+      'MARZO',
+      'ABRIL',
+      'MAYO',
+      'JUNIO',
+      'JULIO',
+      'AGOSTO',
+      'SEPTIEMBRE',
+      'OCTUBRE',
+      'NOVIEMBRE',
+      'DICIEMBRE',
+    ];
+    const sMatch = periodStart.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const eMatch = periodEnd.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const periodLabel =
+      sMatch && eMatch
+        ? `PERIODO: DEL ${parseInt(sMatch[3], 10)} AL ${parseInt(eMatch[3], 10)} DE ${
+            monthsEs[parseInt(eMatch[2], 10) - 1] || ''
+          } ${eMatch[1]}`
+        : `PERIODO: ${periodStart} AL ${periodEnd}`;
+
+    const html = `
+      <!DOCTYPE html>
+      <html lang="es">
+      <head>
+        <meta charset="utf-8" />
+        <title>Planilla de Sueldo - ${parameters.employerName}</title>
+        <style>
+          @page { size: landscape; margin: 12mm; }
+          body { font-family: Arial, Helvetica, sans-serif; color: #0f172a; margin: 0; padding: 10px; font-size: 11px; }
+          .head { text-align: center; margin-bottom: 16px; }
+          .head h1 { margin: 0; font-size: 16px; font-weight: 800; }
+          .head h2 { margin: 3px 0; font-size: 13px; font-weight: 800; }
+          .head p { margin: 2px 0 0; font-size: 11.5px; font-weight: 700; }
+          table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+          th, td { border: 1px solid #334155; padding: 6px 5px; }
+          th { background: #f1f5f9; font-weight: 800; text-align: center; text-transform: uppercase; font-size: 9.5px; }
+          .num { text-align: right; font-family: "Courier New", monospace; font-weight: 700; }
+          .ctr { text-align: center; }
+          .tot td { font-weight: 800; background: #f8fafc; }
+          .sig-col { width: 155px; height: 28px; }
+          .foot-sigs { display: flex; justify-content: space-around; margin-top: 55px; font-size: 11px; font-weight: 700; }
+          .foot-line { width: 240px; border-top: 1px solid #0f172a; text-align: center; padding-top: 6px; }
+        </style>
+      </head>
+      <body>
+        <div class="head">
+          <h1>${parameters.employerName}</h1>
+          <h2>PLANILLA DE SUELDO</h2>
+          <p>${periodLabel}</p>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th rowspan="2" style="width:28px;">No.</th>
+              <th rowspan="2">NOMBRE DE EMPLEADO</th>
+              <th rowspan="2">No. de Documento</th>
+              <th rowspan="2" style="width:42px;">No. DIAS</th>
+              <th rowspan="2">SALARIO DEL PERIODO</th>
+              <th rowspan="2">VACACION</th>
+              <th rowspan="2">INGRESO SUJETO COTIZACIONES</th>
+              <th colspan="4">RETENCIONES LEGALES Y DESCUENTOS</th>
+              <th rowspan="2">TOTAL RETENC. Y DESC.</th>
+              <th rowspan="2">VALOR NETO CANCELADO</th>
+              <th rowspan="2" class="sig-col">FIRMA</th>
+            </tr>
+            <tr>
+              <th>ISSS</th>
+              <th>AFP</th>
+              <th>ING. SUJETO A RET. RENTA</th>
+              <th>RENTA</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${computedRows
+              .map(
+                (r) => `
+              <tr>
+                <td class="ctr">${r.index}</td>
+                <td>${r.emp.fullName}</td>
+                <td class="ctr">${r.emp.docNumber}</td>
+                <td class="ctr">${r.workedDays}</td>
+                <td class="num">$${r.ordinarySalary.toFixed(2)}</td>
+                <td class="num">$${r.vacationAmount.toFixed(2)}</td>
+                <td class="num">$${r.totalDevengado.toFixed(2)}</td>
+                <td class="num">$${r.isssLab.toFixed(2)}</td>
+                <td class="num">$${r.afpLab.toFixed(2)}</td>
+                <td class="num">$${r.baseGravableIsr.toFixed(2)}</td>
+                <td class="num">$${r.isr.toFixed(2)}</td>
+                <td class="num">$${r.totalDeducciones.toFixed(2)}</td>
+                <td class="num">$${r.liquidoPagar.toFixed(2)}</td>
+                <td class="sig-col"></td>
+              </tr>
+            `
+              )
+              .join('')}
+          </tbody>
+          <tfoot>
+            <tr class="tot">
+              <td></td>
+              <td colspan="3">TOTALES……………………………………</td>
+              <td class="num">$${totals.ordinarySalary.toFixed(2)}</td>
+              <td class="num">$${totals.vacationAmount.toFixed(2)}</td>
+              <td class="num">$${totals.totalDevengado.toFixed(2)}</td>
+              <td class="num">$${totals.isssLab.toFixed(2)}</td>
+              <td class="num">$${totals.afpLab.toFixed(2)}</td>
+              <td class="num">$${totals.baseGravableIsr.toFixed(2)}</td>
+              <td class="num">$${totals.isr.toFixed(2)}</td>
+              <td class="num">$${totals.totalDeducciones.toFixed(2)}</td>
+              <td class="num">$${totals.liquidoPagar.toFixed(2)}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+        <div class="foot-sigs">
+          <div class="foot-line">ELABORÓ</div>
+          <div class="foot-line">AUTORIZÓ</div>
+        </div>
         <script>window.onload = () => { window.print(); };</script>
       </body>
       </html>
@@ -2039,6 +2225,15 @@ export default function PlanillaModule() {
                 >
                   <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
                   <span>Limpiar Novedades</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePrintOfficialPayrollSheet}
+                  className="clay-btn clay-btn-light px-3 py-1.5 text-xs font-black text-slate-900 flex items-center gap-1.5 cursor-pointer"
+                  title="Imprimir Planilla General con columna de FIRMA (formato Grupo KODE S.A.S. de C.V.)"
+                >
+                  <FileCheck className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Imprimir Planilla (Firmas)</span>
                 </button>
                 <button
                   type="button"

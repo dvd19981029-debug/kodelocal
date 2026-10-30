@@ -23,6 +23,7 @@ import {
   Building, 
   KeyRound, 
   Printer, 
+  Download,
   Droplets, 
   Filter,
   BarChart3,
