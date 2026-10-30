@@ -1524,7 +1524,14 @@ export default function AdminPage() {
                       const isEssence = p.category === 'Esencias para Perfume' || !p.category;
                       const halfPriceVal = p.priceHalfOunce != null ? p.priceHalfOunce : Number((p.price / 2).toFixed(2));
                       const supplierName = p.supplier || 'APAESA';
-                      const isAromasCreativos = supplierName.toLowerCase().includes('aromas');
+                      const supLower = supplierName.toLowerCase();
+                      const supplierBadgeClass = supLower.includes('aromas')
+                        ? 'bg-fuchsia-50 text-fuchsia-800 border-fuchsia-200'
+                        : supLower.includes('caribe')
+                        ? 'bg-cyan-50 text-cyan-800 border-cyan-200'
+                        : supLower.includes('artegrama') || supLower.includes('troqueles')
+                        ? 'bg-amber-50 text-amber-800 border-amber-200'
+                        : 'bg-indigo-50 text-indigo-700 border-indigo-200/80';
 
                       return (
                         <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
@@ -1581,11 +1588,7 @@ export default function AdminPage() {
                           {/* Proveedor */}
                           <td className="py-2.5 px-3">
                             <span
-                              className={`clay-badge text-[10px] font-black py-0.5 px-2.5 border ${
-                                isAromasCreativos
-                                  ? 'bg-fuchsia-50 text-fuchsia-800 border-fuchsia-200'
-                                  : 'bg-indigo-50 text-indigo-700 border-indigo-200/80'
-                              }`}
+                              className={`clay-badge text-[10px] font-black py-0.5 px-2.5 border ${supplierBadgeClass}`}
                             >
                               {supplierName}
                             </span>
