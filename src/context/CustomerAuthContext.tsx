@@ -91,18 +91,19 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
         const raw = localStorage.getItem('aromaniak_customer_session');
         return raw ? JSON.parse(raw) : null;
       })();
-      if (saved?.id && saved?.email && saved?.sessionToken) {
+      if (saved?.id && (saved?.email || saved?.phone)) {
         fetch('/api/customer/auth', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${saved.sessionToken}`,
+            ...(saved.sessionToken ? { 'Authorization': `Bearer ${saved.sessionToken}` } : {}),
           },
           body: JSON.stringify({
             action: 'get_token',
             customerId: saved.id,
-            email: saved.email,
-            sessionToken: saved.sessionToken,
+            email: saved.email || '',
+            phone: saved.phone || '',
+            sessionToken: saved.sessionToken || undefined,
           }),
         })
           .then((r) => r.json())

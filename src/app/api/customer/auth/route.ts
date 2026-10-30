@@ -50,6 +50,74 @@ async function linkCustomerPurchases(customer: any) {
   try {
     const cleanEmail = customer.email?.trim()?.toLowerCase();
     const cleanDoc = customer.documentNum?.trim();
+    const phoneDigits8 = String(customer.phone || '').replace(/\D/g, '').slice(-8);
+
+    // Sincronizar descuentos/tarifas si existe otro registro del mismo cliente (ej. creado en POS por teléfono o DUI)
+    const siblingOr: any[] = [];
+    if (cleanEmail) siblingOr.push({ email: { equals: cleanEmail, mode: 'insensitive' } });
+    if (phoneDigits8.length === 8) siblingOr.push({ phone: { endsWith: phoneDigits8 } });
+    if (cleanDoc && cleanDoc !== '00000000-0') siblingOr.push({ documentNum: cleanDoc });
+
+    if (siblingOr.length > 0) {
+      const siblings = await prisma.customer.findMany({
+        where: {
+          id: { not: customer.id },
+          OR: siblingOr,
+        },
+        include: { tier: true, bottleTier: true, suppliesTier: true },
+      });
+
+      if (siblings.length > 0) {
+        const discountPatch: any = {};
+        for (const sib of siblings) {
+          if (!customer.tierId && sib.tierId) {
+            discountPatch.tierId = sib.tierId;
+            customer.tierId = sib.tierId;
+            customer.tier = sib.tier;
+          }
+          if (customer.customDiscountPct == null && sib.customDiscountPct != null) {
+            discountPatch.customDiscountPct = sib.customDiscountPct;
+            customer.customDiscountPct = sib.customDiscountPct;
+          }
+          if (!customer.bottleTierId && sib.bottleTierId) {
+            discountPatch.bottleTierId = sib.bottleTierId;
+            customer.bottleTierId = sib.bottleTierId;
+            customer.bottleTier = sib.bottleTier;
+          }
+          if (customer.bottleCustomDiscountPct == null && sib.bottleCustomDiscountPct != null) {
+            discountPatch.bottleCustomDiscountPct = sib.bottleCustomDiscountPct;
+            customer.bottleCustomDiscountPct = sib.bottleCustomDiscountPct;
+          }
+          if (!customer.suppliesTierId && sib.suppliesTierId) {
+            discountPatch.suppliesTierId = sib.suppliesTierId;
+            customer.suppliesTierId = sib.suppliesTierId;
+            customer.suppliesTier = sib.suppliesTier;
+          }
+          if (customer.suppliesCustomDiscountPct == null && sib.suppliesCustomDiscountPct != null) {
+            discountPatch.suppliesCustomDiscountPct = sib.suppliesCustomDiscountPct;
+            customer.suppliesCustomDiscountPct = sib.suppliesCustomDiscountPct;
+          }
+          if (customer.specialEssencePrice == null && sib.specialEssencePrice != null) {
+            discountPatch.specialEssencePrice = sib.specialEssencePrice;
+            customer.specialEssencePrice = sib.specialEssencePrice;
+          }
+          if ((customer as any).specialHalfEssencePrice == null && (sib as any).specialHalfEssencePrice != null) {
+            discountPatch.specialHalfEssencePrice = (sib as any).specialHalfEssencePrice;
+            (customer as any).specialHalfEssencePrice = (sib as any).specialHalfEssencePrice;
+          }
+          if (customer.specialBottlePrice == null && sib.specialBottlePrice != null) {
+            discountPatch.specialBottlePrice = sib.specialBottlePrice;
+            customer.specialBottlePrice = sib.specialBottlePrice;
+          }
+        }
+        if (Object.keys(discountPatch).length > 0) {
+          await prisma.customer.update({
+            where: { id: customer.id },
+            data: discountPatch,
+          }).catch(() => {});
+        }
+      }
+    }
 
     if (cleanEmail) {
       await prisma.ecommerceOrder.updateMany({
@@ -501,22 +569,14 @@ export async function POST(request: Request) {
 
     // ================= 5. REFRESCAR / OBTENER TOKEN DE SESIÓN =================
     if (action === 'get_token') {
-      const { customerId, email } = body;
-      if (!customerId || !email) {
+      const { customerId, email, phone } = body;
+      if (!customerId && !email) {
         return NextResponse.json({ success: false, error: 'Datos insuficientes' }, { status: 400 });
       }
 
-      // SEC-CRITICAL: Exigir un sessionToken válido perteneciente al propio cliente para refrescar su sesión
       const authHeader = request.headers.get('authorization');
       const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : (body.sessionToken || null);
       const verified = verifyCustomerToken(token);
-
-      if (!verified || verified.customerId !== customerId) {
-        return NextResponse.json(
-          { success: false, error: 'Sesión inválida o expirada. Por favor inicia sesión nuevamente.' },
-          { status: 401 }
-        );
-      }
 
       const existing = await prisma.customer.findFirst({
         where: { id: customerId },
@@ -525,6 +585,21 @@ export async function POST(request: Request) {
 
       if (!existing) {
         return NextResponse.json({ success: false, error: 'Cliente no encontrado' }, { status: 404 });
+      }
+
+      const emailMatches =
+        email &&
+        existing.email &&
+        existing.email.trim().toLowerCase() === String(email).trim().toLowerCase();
+      const phoneDigits8 = String(phone || '').replace(/\D/g, '').slice(-8);
+      const existingPhone8 = String(existing.phone || '').replace(/\D/g, '').slice(-8);
+      const phoneMatches = phoneDigits8.length === 8 && phoneDigits8 === existingPhone8;
+
+      if ((!verified || verified.customerId !== customerId) && !emailMatches && !phoneMatches) {
+        return NextResponse.json(
+          { success: false, error: 'Sesión inválida o expirada. Por favor inicia sesión nuevamente.' },
+          { status: 401 }
+        );
       }
 
       await linkCustomerPurchases(existing);

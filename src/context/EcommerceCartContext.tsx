@@ -73,7 +73,7 @@ export function applyCustomerProductPricing(
 
   let effectivePrice = originalPrice;
 
-  if (isEssence) {
+  if (isEssence && presentation !== 'KIT_PREPARADO' && presentation !== 'KIT_PREPARADO_PLUS') {
     if (presentation === 'MEDIA_ONZA') {
       if (customer.specialHalfEssencePrice != null && Number(customer.specialHalfEssencePrice) > 0) {
         effectivePrice = Number(Number(customer.specialHalfEssencePrice).toFixed(2));
@@ -664,6 +664,7 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     customer?.suppliesTier?.discountPct,
     customer?.suppliesCustomDiscountPct,
     isMounted,
+    cart.length,
   ]);
 
   const addToCart = useCallback((

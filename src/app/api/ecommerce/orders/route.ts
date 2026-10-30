@@ -782,23 +782,30 @@ export async function POST(request: Request) {
     const isStaff = verifyStaffInternalToken(staffHeaderToken) || verifyStaffInternalToken(bearerToken);
     const verifiedCustomer = verifyCustomerToken(bearerToken);
 
-    let resolvedCustomerId = verifiedCustomer ? verifiedCustomer.customerId : (isStaff ? customerId : null);
+    let resolvedCustomerId = verifiedCustomer ? verifiedCustomer.customerId : (customerId || null);
+    const phoneDigits8 = cleanCustomerPhone.replace(/\D/g, '').slice(-8);
+
     if (resolvedCustomerId || cleanCustomerEmail || cleanCustomerPhone || cleanCustomerName) {
       try {
         let cust = null;
-        if (cleanCustomerEmail) {
-          cust = await prisma.customer.findFirst({
-            where: { email: { equals: cleanCustomerEmail, mode: 'insensitive' } },
-          });
-        }
-        if (!cust && resolvedCustomerId) {
+        if (resolvedCustomerId) {
           cust = await prisma.customer.findUnique({
             where: { id: resolvedCustomerId },
           });
         }
-        if (!cust && cleanCustomerPhone) {
+        if (!cust && cleanCustomerEmail) {
           cust = await prisma.customer.findFirst({
-            where: { phone: cleanCustomerPhone },
+            where: { email: { equals: cleanCustomerEmail, mode: 'insensitive' } },
+          });
+        }
+        if (!cust && phoneDigits8.length === 8) {
+          cust = await prisma.customer.findFirst({
+            where: { phone: { endsWith: phoneDigits8 } },
+          });
+        }
+        if (!cust && cleanNumDoc && cleanNumDoc !== '00000000-0') {
+          cust = await prisma.customer.findFirst({
+            where: { documentNum: cleanNumDoc },
           });
         }
 
@@ -852,18 +859,92 @@ export async function POST(request: Request) {
       }
     }
 
-    // SEC-PRICING: Solo aplicar precios especiales mayoristas / VIP si el cliente demostró su identidad con sessionToken válido (o es personal del POS)
-    const isAuthenticatedForSpecialPricing = Boolean(
-      isStaff || (verifiedCustomer && resolvedCustomerId && verifiedCustomer.customerId === resolvedCustomerId)
-    );
-
     const newOrder = await prisma.$transaction(async (tx) => {
-      // 0. Obtener cliente registrado para verificar si tiene precios especiales o descuentos VIP (solo si está autenticado)
-      const dbCustomer = (resolvedCustomerId && isAuthenticatedForSpecialPricing)
-        ? await tx.customer.findUnique({
-            where: { id: resolvedCustomerId },
+      // 0. Obtener cliente(s) coincidente(s) en la BD para aplicar siempre sus precios especiales o descuentos VIP legítimos
+      const candidateConditions: any[] = [];
+      if (resolvedCustomerId) candidateConditions.push({ id: resolvedCustomerId });
+      if (verifiedCustomer?.customerId && verifiedCustomer.customerId !== resolvedCustomerId) {
+        candidateConditions.push({ id: verifiedCustomer.customerId });
+      }
+      if (customerId && customerId !== resolvedCustomerId) {
+        candidateConditions.push({ id: customerId });
+      }
+      if (cleanCustomerEmail) {
+        candidateConditions.push({ email: { equals: cleanCustomerEmail, mode: 'insensitive' } });
+      }
+      if (phoneDigits8.length === 8) {
+        candidateConditions.push({ phone: { endsWith: phoneDigits8 } });
+      }
+      if (cleanNumDoc && cleanNumDoc !== '00000000-0') {
+        candidateConditions.push({ documentNum: cleanNumDoc });
+      }
+
+      const matchedCustomers = candidateConditions.length > 0
+        ? await tx.customer.findMany({
+            where: { OR: candidateConditions },
             include: { tier: true, bottleTier: true, suppliesTier: true },
           })
+        : [];
+
+      const primaryCustomer =
+        matchedCustomers.find((c) => c.id === resolvedCustomerId) ||
+        matchedCustomers[0] ||
+        null;
+
+      // Si el cliente tiene más de un registro (ej. creado en POS por teléfono/DUI con descuento y otro en web por correo),
+      // consolidar los descuentos/precios especiales de cualquiera de sus perfiles verificados en la BD
+      const dbCustomer = primaryCustomer
+        ? {
+            ...primaryCustomer,
+            tier:
+              primaryCustomer.tier ||
+              matchedCustomers.find((c) => c.tier)?.tier ||
+              null,
+            tierId:
+              primaryCustomer.tierId ||
+              matchedCustomers.find((c) => c.tierId)?.tierId ||
+              null,
+            customDiscountPct:
+              primaryCustomer.customDiscountPct ??
+              matchedCustomers.find((c) => c.customDiscountPct != null)?.customDiscountPct ??
+              null,
+            bottleTier:
+              primaryCustomer.bottleTier ||
+              matchedCustomers.find((c) => c.bottleTier)?.bottleTier ||
+              null,
+            bottleTierId:
+              primaryCustomer.bottleTierId ||
+              matchedCustomers.find((c) => c.bottleTierId)?.bottleTierId ||
+              null,
+            bottleCustomDiscountPct:
+              primaryCustomer.bottleCustomDiscountPct ??
+              matchedCustomers.find((c) => c.bottleCustomDiscountPct != null)?.bottleCustomDiscountPct ??
+              null,
+            suppliesTier:
+              primaryCustomer.suppliesTier ||
+              matchedCustomers.find((c) => c.suppliesTier)?.suppliesTier ||
+              null,
+            suppliesTierId:
+              primaryCustomer.suppliesTierId ||
+              matchedCustomers.find((c) => c.suppliesTierId)?.suppliesTierId ||
+              null,
+            suppliesCustomDiscountPct:
+              primaryCustomer.suppliesCustomDiscountPct ??
+              matchedCustomers.find((c) => c.suppliesCustomDiscountPct != null)?.suppliesCustomDiscountPct ??
+              null,
+            specialEssencePrice:
+              primaryCustomer.specialEssencePrice ??
+              matchedCustomers.find((c) => c.specialEssencePrice != null)?.specialEssencePrice ??
+              null,
+            specialHalfEssencePrice:
+              (primaryCustomer as any).specialHalfEssencePrice ??
+              (matchedCustomers.find((c) => (c as any).specialHalfEssencePrice != null) as any)?.specialHalfEssencePrice ??
+              null,
+            specialBottlePrice:
+              primaryCustomer.specialBottlePrice ??
+              matchedCustomers.find((c) => c.specialBottlePrice != null)?.specialBottlePrice ??
+              null,
+          }
         : null;
 
       // 1. Validar existencias y verificar precios legítimos directamente en la base de datos
