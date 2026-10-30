@@ -446,6 +446,12 @@ export default function CheckoutPage() {
         throw new Error(orderData.error || 'No fue posible confirmar el pedido');
       }
 
+      const finalOrderTotal = Number(orderData.order?.total ?? totalConEnvio);
+      const finalOrderSubtotal = Number(orderData.order?.subtotal ?? subtotal);
+      newOrder.total = finalOrderTotal;
+      newOrder.subtotal = finalOrderSubtotal;
+      newOrder.ivaTotal = Number((finalOrderSubtotal - (finalOrderSubtotal / 1.13)).toFixed(2));
+
       // Propagar inmediatamente el pedido a comanda local (0ms para Bodega abierta en el mismo navegador)
       try {
         const currentSalesRaw = localStorage.getItem('kodelocal_sales');
@@ -484,7 +490,7 @@ export default function CheckoutPage() {
       }));
 
       // Registrar evento estándar Meta Pixel AddPaymentInfo al confirmar el método de pago
-      trackMetaAddPaymentInfo(cart, totalConEnvio, metodoPago);
+      trackMetaAddPaymentInfo(cart, finalOrderTotal, metodoPago);
 
       // Guardar temporalmente los ítems de Meta en sessionStorage para que /checkout/resultado registre Purchase al volver de Wompi
       try {
@@ -492,7 +498,7 @@ export default function CheckoutPage() {
           `aromaniak_pending_meta_order_${finalOrderNumber}`,
           JSON.stringify({
             orderNumber: finalOrderNumber,
-            totalValue: totalConEnvio,
+            totalValue: finalOrderTotal,
             items: metaItems,
           })
         );
@@ -501,8 +507,8 @@ export default function CheckoutPage() {
       saveGuestOrder({
         orderNumber: finalOrderNumber,
         createdAt: now,
-        total: totalConEnvio,
-        subtotal: subtotal,
+        total: finalOrderTotal,
+        subtotal: finalOrderSubtotal,
         shippingCost: shippingCost,
         paymentMethod: metodoPago,
         paymentStatus: metodoPago === 'CARD' ? 'PENDING' : 'PENDING',
@@ -532,7 +538,7 @@ export default function CheckoutPage() {
           body: JSON.stringify({
             orderId: orderData.order?.id,
             orderNumber: orderNumber,
-            amount: totalConEnvio,
+            amount: finalOrderTotal,
             customerEmail: email || customer?.email,
             customerName: nombre,
             customerPhone: telefono,

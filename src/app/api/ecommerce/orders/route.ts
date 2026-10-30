@@ -800,12 +800,25 @@ export async function POST(request: Request) {
         }
         if (!cust && phoneDigits8.length === 8) {
           cust = await prisma.customer.findFirst({
-            where: { phone: { endsWith: phoneDigits8 } },
+            where: {
+              OR: [
+                { phone: { endsWith: phoneDigits8 } },
+                { phone: { endsWith: `${phoneDigits8.slice(0, 4)}-${phoneDigits8.slice(4)}` } },
+              ],
+            },
           });
         }
         if (!cust && cleanNumDoc && cleanNumDoc !== '00000000-0') {
+          const dDigits = cleanNumDoc.replace(/\D/g, '');
+          const docOr: any[] = [{ documentNum: cleanNumDoc }];
+          if (dDigits.length === 9 && !/^(0+|9+|12345678\d*)$/.test(dDigits)) {
+            docOr.push(
+              { documentNum: dDigits },
+              { documentNum: `${dDigits.slice(0, 8)}-${dDigits.slice(8)}` }
+            );
+          }
           cust = await prisma.customer.findFirst({
-            where: { documentNum: cleanNumDoc },
+            where: { OR: docOr },
           });
         }
 
@@ -873,10 +886,20 @@ export async function POST(request: Request) {
         candidateConditions.push({ email: { equals: cleanCustomerEmail, mode: 'insensitive' } });
       }
       if (phoneDigits8.length === 8) {
-        candidateConditions.push({ phone: { endsWith: phoneDigits8 } });
+        candidateConditions.push(
+          { phone: { endsWith: phoneDigits8 } },
+          { phone: { endsWith: `${phoneDigits8.slice(0, 4)}-${phoneDigits8.slice(4)}` } }
+        );
       }
       if (cleanNumDoc && cleanNumDoc !== '00000000-0') {
         candidateConditions.push({ documentNum: cleanNumDoc });
+        const dDigits = cleanNumDoc.replace(/\D/g, '');
+        if (dDigits.length === 9 && !/^(0+|9+|12345678\d*)$/.test(dDigits)) {
+          candidateConditions.push(
+            { documentNum: dDigits },
+            { documentNum: `${dDigits.slice(0, 8)}-${dDigits.slice(8)}` }
+          );
+        }
       }
 
       const matchedCustomers = candidateConditions.length > 0

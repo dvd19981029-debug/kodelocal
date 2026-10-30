@@ -867,8 +867,71 @@ export default function PosPage() {
     return products.find(p => p.category === 'Esencias para Perfume');
   }, [products]);
 
-  // Extraer el cliente activo (si existe y tiene precios especiales)
-  const activeCustomer = customers.find(c => c.id === selectedCustomerId);
+  // Extraer el cliente activo (si existe y tiene precios especiales), consolidando hermanos si existen
+  const activeCustomer = useMemo(() => {
+    const hasDiscountFields = (c?: CustomerRecord | null) =>
+      !!(
+        c &&
+        (c.tierId ||
+          c.customDiscountPct != null ||
+          c.specialEssencePrice != null ||
+          c.specialHalfEssencePrice != null ||
+          c.specialBottlePrice != null ||
+          c.bottleTierId ||
+          c.bottleCustomDiscountPct != null ||
+          c.suppliesTierId ||
+          c.suppliesCustomDiscountPct != null)
+      );
+
+    let primary = customers.find((c) => c.id === selectedCustomerId);
+    if (!primary) {
+      const normMail = clienteEmail.trim().toLowerCase();
+      const normNrc = clienteNrc.replace(/\D/g, '');
+      const normDoc = clienteDoc.replace(/\D/g, '');
+      const normPhone8 = domicilioPhone.replace(/\D/g, '').slice(-8);
+      if (normMail || normNrc || (normDoc && normDoc !== '000000000') || normPhone8.length === 8) {
+        const matches = customers.filter((c) => {
+          if (normMail && c.email && c.email.trim().toLowerCase() === normMail) return true;
+          if (normNrc && c.nrc && c.nrc.replace(/\D/g, '') === normNrc) return true;
+          if (normDoc && normDoc !== '000000000' && c.numDocumento && c.numDocumento.replace(/\D/g, '') === normDoc) return true;
+          if (normPhone8.length === 8 && c.phone && c.phone.replace(/\D/g, '').slice(-8) === normPhone8) return true;
+          return false;
+        });
+        primary = matches.find((m) => hasDiscountFields(m)) || matches[0];
+      }
+    }
+    if (!primary) return undefined;
+
+    const pPhone8 = (primary.phone || '').replace(/\D/g, '').slice(-8);
+    const pEmail = (primary.email || '').trim().toLowerCase();
+    const pDoc = (primary.numDocumento || '').replace(/\D/g, '');
+    const sib = customers.find((other) => {
+      if (other.id === primary!.id || !hasDiscountFields(other)) return false;
+      const oPhone8 = (other.phone || '').replace(/\D/g, '').slice(-8);
+      const oEmail = (other.email || '').trim().toLowerCase();
+      const oDoc = (other.numDocumento || '').replace(/\D/g, '');
+      if (pPhone8.length === 8 && oPhone8 === pPhone8) return true;
+      if (pEmail && oEmail === pEmail) return true;
+      if (pDoc && pDoc !== '000000000' && oDoc === pDoc) return true;
+      return false;
+    });
+    if (!sib) return primary;
+    return {
+      ...primary,
+      specialEssencePrice: primary.specialEssencePrice ?? sib.specialEssencePrice ?? null,
+      specialHalfEssencePrice: primary.specialHalfEssencePrice ?? sib.specialHalfEssencePrice ?? null,
+      specialBottlePrice: primary.specialBottlePrice ?? sib.specialBottlePrice ?? null,
+      tierId: primary.tierId || sib.tierId || null,
+      tier: primary.tier || sib.tier || null,
+      customDiscountPct: primary.customDiscountPct ?? sib.customDiscountPct ?? null,
+      bottleTierId: primary.bottleTierId || sib.bottleTierId || null,
+      bottleTier: primary.bottleTier || sib.bottleTier || null,
+      bottleCustomDiscountPct: primary.bottleCustomDiscountPct ?? sib.bottleCustomDiscountPct ?? null,
+      suppliesTierId: primary.suppliesTierId || sib.suppliesTierId || null,
+      suppliesTier: primary.suppliesTier || sib.suppliesTier || null,
+      suppliesCustomDiscountPct: primary.suppliesCustomDiscountPct ?? sib.suppliesCustomDiscountPct ?? null,
+    };
+  }, [customers, selectedCustomerId, clienteEmail, clienteNrc, clienteDoc, domicilioPhone]);
 
   const activeEssencePrice = activeCustomer?.specialEssencePrice 
     ? Number(activeCustomer.specialEssencePrice) 
@@ -1985,7 +2048,7 @@ export default function PosPage() {
       alert('Agrega al menos una fragancia o producto al pedido para generar la cotización.');
       return;
     }
-    const clientObj = customers.find(c => c.id === selectedCustomerId);
+    const clientObj = activeCustomer || customers.find(c => c.id === selectedCustomerId);
     const ordNum = `COT-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const quoteSale: SaleRecord = {
@@ -1999,13 +2062,13 @@ export default function PosPage() {
       ivaTotal: ivaCalculado,
       tipoComprobante,
       cliente: {
-        nombre: clienteNombre || 'Consumidor Final',
-        numDocumento: clienteDoc || undefined,
-        nrc: clienteNrc || undefined,
-        correo: clienteEmail || undefined,
-        telefono: clientObj?.phone || undefined,
-        direccion: clientObj?.direccion || undefined,
-        actividadEconomica: clienteGiro || undefined,
+        nombre: (clienteNombre && clienteNombre !== 'Consumidor Final') ? clienteNombre : (clientObj?.name || 'Consumidor Final'),
+        numDocumento: clienteDoc || clientObj?.numDocumento || undefined,
+        nrc: clienteNrc || clientObj?.nrc || undefined,
+        correo: clienteEmail || clientObj?.email || undefined,
+        telefono: clientObj?.phone || domicilioPhone || undefined,
+        direccion: clientObj?.direccion || clienteDireccion || undefined,
+        actividadEconomica: clienteGiro || clientObj?.actividadEconomica || undefined,
         categoriaContribuyente: clientObj?.categoriaContribuyente || undefined
       },
       status: 'PREFACTURA',
@@ -2024,6 +2087,7 @@ export default function PosPage() {
           ...(staffToken ? { 'x-staff-token': staffToken } : {}),
         },
         body: JSON.stringify({
+          customerId: clientObj?.id || selectedCustomerId || undefined,
           customerName: quoteSale.cliente.nombre,
           customerDoc: quoteSale.cliente.numDocumento,
           customerNrc: quoteSale.cliente.nrc,
@@ -2043,6 +2107,14 @@ export default function PosPage() {
         quoteSale.orderNumber = data.quote.quoteNumber;
         quoteSale.saleNumber = data.quote.quoteNumber;
         quoteSale.createdAt = data.quote.createdAt;
+        if (typeof data.quote.total === 'number' && data.quote.total > 0) {
+          quoteSale.total = data.quote.total;
+          quoteSale.subtotal = typeof data.quote.subtotal === 'number' ? data.quote.subtotal : quoteSale.subtotal;
+          quoteSale.ivaTotal = typeof data.quote.ivaTotal === 'number' ? data.quote.ivaTotal : quoteSale.ivaTotal;
+        }
+        if (Array.isArray(data.quote.items) && data.quote.items.length > 0) {
+          quoteSale.items = data.quote.items;
+        }
         saved = true;
       }
     } catch (err) {
@@ -2261,23 +2333,35 @@ export default function PosPage() {
     nombre?: string;
   }): CustomerRecord | undefined => {
     const normEmail = p.correo?.toLowerCase().trim();
-    let matched = normEmail
-      ? customers.find(c => c.email && c.email.toLowerCase().trim() === normEmail)
-      : undefined;
-    if (!matched && p.id) matched = customers.find(c => c.id === p.id);
-    if (matched) return matched;
-
     const doc = p.numDocumento?.replace(/\D/g, '');
     const nrc = p.nrc?.replace(/\D/g, '');
-    const phone = p.telefono?.replace(/\D/g, '');
+    const phone = p.telefono?.replace(/\D/g, '').slice(-8);
     const name = p.nombre?.toLowerCase().trim();
-    return customers.find(c => {
+
+    const candidates = customers.filter(c => {
+      if (p.id && c.id === p.id) return true;
+      if (normEmail && c.email && c.email.toLowerCase().trim() === normEmail) return true;
       if (nrc && c.nrc && c.nrc.replace(/\D/g, '') === nrc) return true;
       if (doc && doc !== '000000000' && c.numDocumento && c.numDocumento.replace(/\D/g, '') === doc) return true;
-      if (phone && c.phone && c.phone.replace(/\D/g, '') === phone) return true;
+      if (phone && phone.length === 8 && c.phone && c.phone.replace(/\D/g, '').slice(-8) === phone) return true;
       if (name && name !== 'consumidor final' && c.name && c.name.toLowerCase().trim() === name) return true;
       return false;
     });
+
+    if (candidates.length === 0) return undefined;
+    const withDiscount = candidates.find(
+      c =>
+        c.tierId ||
+        c.customDiscountPct != null ||
+        c.specialEssencePrice != null ||
+        c.specialHalfEssencePrice != null ||
+        c.specialBottlePrice != null ||
+        c.bottleTierId ||
+        c.bottleCustomDiscountPct != null ||
+        c.suppliesTierId ||
+        c.suppliesCustomDiscountPct != null
+    );
+    return withDiscount || candidates[0];
   };
 
   // Cargar una prefactura en el Cotizador para modificarla

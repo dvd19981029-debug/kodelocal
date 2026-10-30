@@ -195,6 +195,7 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const {
+      customerId,
       customerName,
       customerDoc,
       customerNrc,
@@ -214,31 +215,194 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'La cotización requiere al menos un producto' }, { status: 400 });
     }
 
+    // Buscar si el cliente cotizado tiene tarifas especiales o nivel de descuento VIP en la BD
+    const candidateConditions: any[] = [];
+    if (customerId && typeof customerId === 'string' && !customerId.startsWith('cli-')) {
+      candidateConditions.push({ id: customerId });
+    }
+    const cleanEmail = String(customerEmail || '').trim().toLowerCase();
+    if (cleanEmail) {
+      candidateConditions.push({ email: { equals: cleanEmail, mode: 'insensitive' } });
+    }
+    const phoneDigits8 = String(customerPhone || '').replace(/\D/g, '').slice(-8);
+    if (phoneDigits8.length === 8) {
+      candidateConditions.push(
+        { phone: { endsWith: phoneDigits8 } },
+        { phone: { endsWith: `${phoneDigits8.slice(0, 4)}-${phoneDigits8.slice(4)}` } }
+      );
+    }
+    const cleanDoc = String(customerDoc || '').trim();
+    if (cleanDoc && cleanDoc !== '00000000-0') {
+      candidateConditions.push({ documentNum: cleanDoc });
+      const dDigits = cleanDoc.replace(/\D/g, '');
+      if (dDigits.length === 9 && !/^(0+|9+|12345678\d*)$/.test(dDigits)) {
+        candidateConditions.push(
+          { documentNum: dDigits },
+          { documentNum: `${dDigits.slice(0, 8)}-${dDigits.slice(8)}` }
+        );
+      }
+    }
+    const cleanNrc = String(customerNrc || '').trim();
+    if (cleanNrc) {
+      candidateConditions.push({ nrc: cleanNrc });
+    }
+    const cleanName = String(customerName || '').trim();
+    if (cleanName && cleanName.toLowerCase() !== 'consumidor final') {
+      candidateConditions.push({ name: { equals: cleanName, mode: 'insensitive' } });
+    }
+
+    const matchedCustomers = candidateConditions.length > 0
+      ? await prisma.customer.findMany({
+          where: { OR: candidateConditions },
+          include: { tier: true, bottleTier: true, suppliesTier: true },
+        })
+      : [];
+
+    const primaryCust =
+      (customerId ? matchedCustomers.find((c) => c.id === customerId) : null) ||
+      matchedCustomers[0] ||
+      null;
+
+    const dbCustomer = primaryCust
+      ? {
+          ...primaryCust,
+          tier: primaryCust.tier || matchedCustomers.find((c) => c.tier)?.tier || null,
+          customDiscountPct:
+            primaryCust.customDiscountPct ??
+            matchedCustomers.find((c) => c.customDiscountPct != null)?.customDiscountPct ??
+            null,
+          bottleTier: primaryCust.bottleTier || matchedCustomers.find((c) => c.bottleTier)?.bottleTier || null,
+          bottleCustomDiscountPct:
+            primaryCust.bottleCustomDiscountPct ??
+            matchedCustomers.find((c) => c.bottleCustomDiscountPct != null)?.bottleCustomDiscountPct ??
+            null,
+          suppliesTier: primaryCust.suppliesTier || matchedCustomers.find((c) => c.suppliesTier)?.suppliesTier || null,
+          suppliesCustomDiscountPct:
+            primaryCust.suppliesCustomDiscountPct ??
+            matchedCustomers.find((c) => c.suppliesCustomDiscountPct != null)?.suppliesCustomDiscountPct ??
+            null,
+          specialEssencePrice:
+            primaryCust.specialEssencePrice ??
+            matchedCustomers.find((c) => c.specialEssencePrice != null)?.specialEssencePrice ??
+            null,
+          specialHalfEssencePrice:
+            (primaryCust as any).specialHalfEssencePrice ??
+            (matchedCustomers.find((c) => (c as any).specialHalfEssencePrice != null) as any)?.specialHalfEssencePrice ??
+            null,
+          specialBottlePrice:
+            primaryCust.specialBottlePrice ??
+            matchedCustomers.find((c) => c.specialBottlePrice != null)?.specialBottlePrice ??
+            null,
+        }
+      : null;
+
     // El precio de lista vigente al momento de cotizar se toma de la BD (no del cliente),
     // para poder avisar después si cambió.
     const productIds = Array.from(new Set(items.map((it: any) => it.productId).filter(Boolean))) as string[];
     const products = productIds.length
       ? await prisma.product.findMany({
           where: { id: { in: productIds } },
-          select: { id: true, price: true, priceHalfOunce: true },
+          select: { id: true, name: true, category: { select: { name: true } }, unit: true, price: true, priceHalfOunce: true },
         })
       : [];
     const productMap = new Map(products.map((p) => [p.id, p]));
 
     const cleanItems = items.map((it: any) => {
       const prod = it.productId ? productMap.get(it.productId) : null;
+      const qty = Number(it.quantity || 0);
+      let unitPrice = Number(it.price || 0);
+      const catalogListPrice = prod ? currentListPrice(prod, it.presentation) : null;
+
+      if (prod && dbCustomer) {
+        const cat = prod.category?.name || '';
+        const nameLower = String(prod.name || it.name || '').toLowerCase();
+        const isEssence =
+          cat === 'Esencias para Perfume' ||
+          cat === 'Esencias & Fragancias' ||
+          (!cat && prod.unit === 'Onza');
+        const isBottle =
+          !isEssence &&
+          (cat === 'Botes' ||
+            cat === 'Botes & Envases' ||
+            cat === 'Envases & Botes' ||
+            nameLower.startsWith('bote') ||
+            nameLower.includes('frasco'));
+        const isLogistics =
+          cat === 'Logística' ||
+          cat === 'Logistica' ||
+          prod.id === 'ENVIO-DOM' ||
+          prod.unit === 'Servicio';
+
+        let basePrice = catalogListPrice != null ? catalogListPrice : unitPrice;
+        if (isEssence && it.presentation === 'MEDIA_ONZA') {
+          if (dbCustomer.specialHalfEssencePrice != null && Number(dbCustomer.specialHalfEssencePrice) > 0) {
+            basePrice = Number(dbCustomer.specialHalfEssencePrice);
+          }
+        } else if (isEssence) {
+          if (dbCustomer.specialEssencePrice != null && Number(dbCustomer.specialEssencePrice) > 0) {
+            basePrice = Number(dbCustomer.specialEssencePrice);
+          }
+        } else if (isBottle) {
+          if (dbCustomer.specialBottlePrice != null && Number(dbCustomer.specialBottlePrice) > 0) {
+            basePrice = Number(dbCustomer.specialBottlePrice);
+          }
+        }
+
+        const activeCategoryTier = isLogistics
+          ? null
+          : isEssence
+          ? dbCustomer.tier
+          : isBottle
+          ? dbCustomer.bottleTier
+          : dbCustomer.suppliesTier;
+        const activeCategoryCustomPct = isLogistics
+          ? null
+          : isEssence
+          ? dbCustomer.customDiscountPct
+          : isBottle
+          ? dbCustomer.bottleCustomDiscountPct
+          : dbCustomer.suppliesCustomDiscountPct;
+
+        let appliedPct = 0;
+        if (activeCategoryTier) {
+          if (activeCategoryTier.name === 'Personalizado' && activeCategoryCustomPct) {
+            appliedPct = Number(activeCategoryCustomPct);
+          } else if (activeCategoryTier.discountPct) {
+            appliedPct = Number(activeCategoryTier.discountPct);
+          }
+        } else if (activeCategoryCustomPct && Number(activeCategoryCustomPct) > 0) {
+          appliedPct = Number(activeCategoryCustomPct);
+        }
+
+        let customerDiscountedPrice = basePrice;
+        if (appliedPct > 0) {
+          const discAmt = Number((basePrice * (appliedPct / 100)).toFixed(4));
+          customerDiscountedPrice = Number((basePrice - discAmt).toFixed(2));
+        }
+
+        if (customerDiscountedPrice > 0 && customerDiscountedPrice < unitPrice) {
+          unitPrice = customerDiscountedPrice;
+        }
+      }
+
+      const lineTotal = Number((qty * unitPrice).toFixed(2));
       return {
         productId: it.productId || null,
         name: String(it.name || ''),
-        quantity: Number(it.quantity || 0),
-        price: Number(it.price || 0),
-        total: Number(it.total || 0),
+        quantity: qty,
+        price: unitPrice,
+        total: lineTotal,
         unit: it.unit || null,
         presentation: it.presentation || null,
         puesto: it.puesto || null,
-        listPrice: prod ? currentListPrice(prod, it.presentation) : null,
+        listPrice: catalogListPrice,
       };
     });
+
+    const computedTotal = Number(cleanItems.reduce((sum, it) => sum + it.total, 0).toFixed(2));
+    const finalTotal = computedTotal > 0 ? computedTotal : Number(total || 0);
+    const finalSubtotal = computedTotal > 0 ? Number((finalTotal / 1.13).toFixed(2)) : Number(subtotal || 0);
+    const finalIvaTotal = computedTotal > 0 ? Number((finalTotal - finalSubtotal).toFixed(2)) : Number(ivaTotal || 0);
 
     const validUntil = new Date();
     validUntil.setDate(validUntil.getDate() + 15);
@@ -258,9 +422,9 @@ export async function POST(request: Request) {
             customerPhone: customerPhone || null,
             customerAddress: customerAddress || null,
             tipoComprobante: tipoComprobante || null,
-            subtotal: Number(subtotal || 0),
-            ivaTotal: Number(ivaTotal || 0),
-            total: Number(total || 0),
+            subtotal: finalSubtotal,
+            ivaTotal: finalIvaTotal,
+            total: finalTotal,
             sellerName: sellerName || null,
             notes: notes || null,
             validUntil,
@@ -283,6 +447,10 @@ export async function POST(request: Request) {
         quoteNumber: created.quoteNumber,
         createdAt: created.createdAt,
         validUntil: created.validUntil,
+        subtotal: Number(created.subtotal),
+        ivaTotal: Number(created.ivaTotal),
+        total: Number(created.total),
+        items: created.items,
       },
     });
   } catch (error: any) {

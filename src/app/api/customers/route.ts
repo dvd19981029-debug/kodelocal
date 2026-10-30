@@ -22,6 +22,35 @@ export async function GET(request: Request) {
 
     const formatted = customers.map((c) => {
       const resolvedGiro = resolveGiroMH(c.activityDesc, c.activityCode);
+      const cPhone8 = (c.phone || '').replace(/\D/g, '').slice(-8);
+      const cEmail = (c.email || '').trim().toLowerCase();
+      const cDoc = (c.documentNum || '').replace(/\D/g, '');
+      const siblingWithDiscount = customers.find((other) => {
+        if (other.id === c.id) return false;
+        const hasDisc =
+          other.tierId ||
+          other.customDiscountPct != null ||
+          other.specialEssencePrice != null ||
+          (other as any).specialHalfEssencePrice != null ||
+          other.specialBottlePrice != null ||
+          other.bottleTierId ||
+          other.bottleCustomDiscountPct != null ||
+          other.suppliesTierId ||
+          other.suppliesCustomDiscountPct != null;
+        if (!hasDisc) return false;
+        const oPhone8 = (other.phone || '').replace(/\D/g, '').slice(-8);
+        const oEmail = (other.email || '').trim().toLowerCase();
+        const oDoc = (other.documentNum || '').replace(/\D/g, '');
+        if (cPhone8.length === 8 && oPhone8 === cPhone8) return true;
+        if (cEmail && oEmail === cEmail) return true;
+        if (cDoc.length >= 8 && !/^(0+|9+|12345678\d*)$/.test(cDoc) && oDoc === cDoc) return true;
+        return false;
+      });
+
+      const effSpecialEssence = c.specialEssencePrice ?? siblingWithDiscount?.specialEssencePrice ?? null;
+      const effSpecialHalf = (c as any).specialHalfEssencePrice ?? (siblingWithDiscount as any)?.specialHalfEssencePrice ?? null;
+      const effSpecialBottle = c.specialBottlePrice ?? siblingWithDiscount?.specialBottlePrice ?? null;
+
       return {
         id: c.id,
         tipoPersona: (c.nrc || c.documentType === 'NIT' || c.preferredDoc === '03') ? 'JURIDICA' : 'NATURAL',
@@ -40,18 +69,18 @@ export async function GET(request: Request) {
         municipio: c.municipality || 'San Salvador Centro',
         direccion: c.address || '',
         notas: c.notes || '',
-        specialEssencePrice: c.specialEssencePrice ? Number(c.specialEssencePrice) : null,
-        specialHalfEssencePrice: (c as any).specialHalfEssencePrice ? Number((c as any).specialHalfEssencePrice) : null,
-        specialBottlePrice: c.specialBottlePrice ? Number(c.specialBottlePrice) : null,
-        tierId: c.tierId || null,
-        customDiscountPct: c.customDiscountPct || null,
-        tier: c.tier || null,
-        bottleTierId: c.bottleTierId || null,
-        bottleCustomDiscountPct: c.bottleCustomDiscountPct || null,
-        bottleTier: c.bottleTier || null,
-        suppliesTierId: c.suppliesTierId || null,
-        suppliesCustomDiscountPct: c.suppliesCustomDiscountPct || null,
-        suppliesTier: c.suppliesTier || null,
+        specialEssencePrice: effSpecialEssence != null ? Number(effSpecialEssence) : null,
+        specialHalfEssencePrice: effSpecialHalf != null ? Number(effSpecialHalf) : null,
+        specialBottlePrice: effSpecialBottle != null ? Number(effSpecialBottle) : null,
+        tierId: c.tierId || siblingWithDiscount?.tierId || null,
+        customDiscountPct: c.customDiscountPct ?? siblingWithDiscount?.customDiscountPct ?? null,
+        tier: c.tier || siblingWithDiscount?.tier || null,
+        bottleTierId: c.bottleTierId || siblingWithDiscount?.bottleTierId || null,
+        bottleCustomDiscountPct: c.bottleCustomDiscountPct ?? siblingWithDiscount?.bottleCustomDiscountPct ?? null,
+        bottleTier: c.bottleTier || siblingWithDiscount?.bottleTier || null,
+        suppliesTierId: c.suppliesTierId || siblingWithDiscount?.suppliesTierId || null,
+        suppliesCustomDiscountPct: c.suppliesCustomDiscountPct ?? siblingWithDiscount?.suppliesCustomDiscountPct ?? null,
+        suppliesTier: c.suppliesTier || siblingWithDiscount?.suppliesTier || null,
         createdAt: c.createdAt.toISOString(),
       };
     });
@@ -249,8 +278,13 @@ export async function POST(request: Request) {
 
       // Por documento o teléfono solo reutilizar si no son valores genéricos (123456789 / 00000000) y el nombre coincide
       if (!existing && data.documentNum && !isGenericPlaceholderDocument(data.documentNum)) {
+        const docDigits = String(data.documentNum).replace(/\D/g, '');
+        const docVariants = [data.documentNum];
+        if (docDigits.length === 9) {
+          docVariants.push(docDigits, `${docDigits.slice(0, 8)}-${docDigits.slice(8)}`);
+        }
         const byDoc = await prisma.customer.findFirst({
-          where: { documentNum: data.documentNum },
+          where: { documentNum: { in: Array.from(new Set(docVariants)) } },
           include: tierInclude,
         });
         if (byDoc && namesReferToSameCustomer(byDoc.name, data.name)) {
@@ -259,8 +293,16 @@ export async function POST(request: Request) {
       }
 
       if (!existing && data.phone && !isGenericPlaceholderPhone(data.phone)) {
+        const pDigits8 = String(data.phone).replace(/\D/g, '').slice(-8);
+        const phoneOr: any[] = [{ phone: data.phone }];
+        if (pDigits8.length === 8) {
+          phoneOr.push(
+            { phone: { endsWith: pDigits8 } },
+            { phone: { endsWith: `${pDigits8.slice(0, 4)}-${pDigits8.slice(4)}` } }
+          );
+        }
         const byPhone = await prisma.customer.findFirst({
-          where: { phone: data.phone },
+          where: { OR: phoneOr },
           include: tierInclude,
         });
         if (byPhone && namesReferToSameCustomer(byPhone.name, data.name)) {
@@ -279,6 +321,104 @@ export async function POST(request: Request) {
           data,
           include: tierInclude,
         });
+      }
+    }
+
+    // Sincronizar tarifas/descuentos con cualquier registro hermano del mismo cliente (por teléfono de 8 dígitos, correo o documento)
+    if (customer?.id) {
+      try {
+        const siblingOr: any[] = [];
+        if (customer.email && !isGenericPlaceholderEmail(customer.email)) {
+          siblingOr.push({ email: { equals: customer.email, mode: 'insensitive' } });
+        }
+        const pDigits8 = String(customer.phone || '').replace(/\D/g, '').slice(-8);
+        if (pDigits8.length === 8 && !isGenericPlaceholderPhone(pDigits8)) {
+          siblingOr.push(
+            { phone: { endsWith: pDigits8 } },
+            { phone: { endsWith: `${pDigits8.slice(0, 4)}-${pDigits8.slice(4)}` } }
+          );
+        }
+        if (customer.documentNum && !isGenericPlaceholderDocument(customer.documentNum)) {
+          const dDigits = String(customer.documentNum).replace(/\D/g, '');
+          siblingOr.push({ documentNum: customer.documentNum });
+          if (dDigits.length === 9) {
+            siblingOr.push(
+              { documentNum: dDigits },
+              { documentNum: `${dDigits.slice(0, 8)}-${dDigits.slice(8)}` }
+            );
+          }
+        }
+
+        if (siblingOr.length > 0) {
+          const siblings = await prisma.customer.findMany({
+            where: { id: { not: customer.id }, OR: siblingOr },
+            include: tierInclude,
+          });
+
+          if (siblings.length > 0) {
+            const discountFieldsExplicitlySent =
+              specialEssencePrice !== undefined ||
+              specialHalfEssencePrice !== undefined ||
+              specialBottlePrice !== undefined ||
+              tierId !== undefined ||
+              customDiscountPct !== undefined ||
+              bottleTierId !== undefined ||
+              bottleCustomDiscountPct !== undefined ||
+              suppliesTierId !== undefined ||
+              suppliesCustomDiscountPct !== undefined;
+
+            if (discountFieldsExplicitlySent) {
+              // Propagar los descuentos editados en este cliente hacia sus registros hermanos (ej. cuenta web Google)
+              await prisma.customer.updateMany({
+                where: { id: { in: siblings.map((s) => s.id) } },
+                data: {
+                  specialEssencePrice: customer.specialEssencePrice,
+                  specialHalfEssencePrice: (customer as any).specialHalfEssencePrice ?? null,
+                  specialBottlePrice: customer.specialBottlePrice,
+                  tierId: customer.tierId,
+                  customDiscountPct: customer.customDiscountPct,
+                  bottleTierId: customer.bottleTierId,
+                  bottleCustomDiscountPct: customer.bottleCustomDiscountPct,
+                  suppliesTierId: customer.suppliesTierId,
+                  suppliesCustomDiscountPct: customer.suppliesCustomDiscountPct,
+                },
+              });
+            } else {
+              // Si se guardó solo por datos fiscales (ej. al emitir DTE), heredar descuentos de cualquier registro hermano
+              const sibWithDisc = siblings.find(
+                (s) =>
+                  s.tierId ||
+                  s.customDiscountPct != null ||
+                  s.specialEssencePrice != null ||
+                  (s as any).specialHalfEssencePrice != null ||
+                  s.specialBottlePrice != null ||
+                  s.bottleTierId ||
+                  s.bottleCustomDiscountPct != null ||
+                  s.suppliesTierId ||
+                  s.suppliesCustomDiscountPct != null
+              );
+              if (sibWithDisc) {
+                customer = await prisma.customer.update({
+                  where: { id: customer.id },
+                  include: tierInclude,
+                  data: {
+                    tierId: customer.tierId || sibWithDisc.tierId,
+                    customDiscountPct: customer.customDiscountPct ?? sibWithDisc.customDiscountPct,
+                    specialEssencePrice: customer.specialEssencePrice ?? sibWithDisc.specialEssencePrice,
+                    specialHalfEssencePrice: (customer as any).specialHalfEssencePrice ?? (sibWithDisc as any).specialHalfEssencePrice,
+                    specialBottlePrice: customer.specialBottlePrice ?? sibWithDisc.specialBottlePrice,
+                    bottleTierId: customer.bottleTierId || sibWithDisc.bottleTierId,
+                    bottleCustomDiscountPct: customer.bottleCustomDiscountPct ?? sibWithDisc.bottleCustomDiscountPct,
+                    suppliesTierId: customer.suppliesTierId || sibWithDisc.suppliesTierId,
+                    suppliesCustomDiscountPct: customer.suppliesCustomDiscountPct ?? sibWithDisc.suppliesCustomDiscountPct,
+                  },
+                });
+              }
+            }
+          }
+        }
+      } catch (syncErr) {
+        console.error('Error sincronizando descuentos en registros hermanos:', syncErr);
       }
     }
 

@@ -55,8 +55,22 @@ async function linkCustomerPurchases(customer: any) {
     // Sincronizar descuentos/tarifas si existe otro registro del mismo cliente (ej. creado en POS por teléfono o DUI)
     const siblingOr: any[] = [];
     if (cleanEmail) siblingOr.push({ email: { equals: cleanEmail, mode: 'insensitive' } });
-    if (phoneDigits8.length === 8) siblingOr.push({ phone: { endsWith: phoneDigits8 } });
-    if (cleanDoc && cleanDoc !== '00000000-0') siblingOr.push({ documentNum: cleanDoc });
+    if (phoneDigits8.length === 8) {
+      siblingOr.push(
+        { phone: { endsWith: phoneDigits8 } },
+        { phone: { endsWith: `${phoneDigits8.slice(0, 4)}-${phoneDigits8.slice(4)}` } }
+      );
+    }
+    if (cleanDoc && cleanDoc !== '00000000-0') {
+      siblingOr.push({ documentNum: cleanDoc });
+      const dDigits = cleanDoc.replace(/\D/g, '');
+      if (dDigits.length === 9 && !/^(0+|9+|12345678\d*)$/.test(dDigits)) {
+        siblingOr.push(
+          { documentNum: dDigits },
+          { documentNum: `${dDigits.slice(0, 8)}-${dDigits.slice(8)}` }
+        );
+      }
+    }
 
     if (siblingOr.length > 0) {
       const siblings = await prisma.customer.findMany({
