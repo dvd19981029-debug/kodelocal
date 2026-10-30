@@ -1355,112 +1355,7 @@ export default function PlanillaModule() {
     URL.revokeObjectURL(url);
   };
 
-  // Imprimir Boletas de Pago (Recibos Quincenales/Mensuales)
-  const handlePrintPayslips = (singleRow?: (typeof computedRows)[0]) => {
-    const targetRows = singleRow ? [singleRow] : computedRows;
-    const win = window.open('', '_blank', 'width=900,height=750');
-    if (!win) return;
-
-    const html = `
-      <!DOCTYPE html>
-      <html lang="es">
-      <head>
-        <meta charset="utf-8" />
-        <title>Boletas de Pago - ${periodStart} al ${periodEnd}</title>
-        <style>
-          body { font-family: Arial, sans-serif; margin: 20px; color: #0f172a; font-size: 12px; }
-          .slip { border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 14px 18px; margin-bottom: 18px; page-break-inside: avoid; }
-          .header { display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 10px; }
-          .title { font-weight: 800; font-size: 14px; color: #1e1b4b; }
-          .sub { font-size: 11px; color: #475569; }
-          .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-          table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
-          td { padding: 3px 0; }
-          .amt { text-align: right; font-family: monospace; font-weight: 700; }
-          .total-row td { border-top: 1px solid #94a3b8; padding-top: 5px; font-weight: 800; }
-          .net-box { margin-top: 10px; padding: 8px 12px; background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 8px; display: flex; justify-content: space-between; font-weight: 900; font-size: 13px; color: #065f46; }
-          .sigs { display: flex; justify-content: space-between; margin-top: 26px; font-size: 11px; color: #475569; }
-          .sig-line { width: 42%; border-top: 1px solid #64748b; text-align: center; padding-top: 4px; }
-        </style>
-      </head>
-      <body>
-        ${targetRows
-          .map(
-            (r) => `
-          <div class="slip">
-            <div class="header">
-              <div>
-                <div class="title">${parameters.employerName}</div>
-                <div class="sub">Boleta de Pago (${frequency}) • Período: ${periodStart} al ${periodEnd} (Corte: ${cutoffStart} al ${cutoffEnd})</div>
-              </div>
-              <div style="text-align:right">
-                <div class="title">${r.emp.fullName}</div>
-                <div class="sub">${r.emp.position} (${r.emp.department}) • Sueldo Base: $${r.baseMonthly.toFixed(2)}/mes</div>
-              </div>
-            </div>
-            <div class="grid">
-              <div>
-                <strong>INGRESOS DEVENGADOS</strong>
-                <table>
-                  <tr><td>Salario Ordinario (${r.workedDays} días)</td><td class="amt">$${r.ordinarySalary.toFixed(2)}</td></tr>
-                  ${
-                    r.otherIncome > 0
-                      ? `<tr><td>Otros Ingresos / Horas Extras</td><td class="amt">$${r.otherIncome.toFixed(2)}</td></tr>`
-                      : ''
-                  }
-                  ${
-                    r.vacationAmount > 0
-                      ? `<tr><td>Vacaciones (${r.emp.vacationDays} días)</td><td class="amt">$${r.vacationAmount.toFixed(2)}</td></tr>`
-                      : ''
-                  }
-                  ${
-                    parameters.tardinessMode === 'REDUCE_BASE' && r.tardyDiscount > 0
-                      ? `<tr><td>(-) Tiempo no laborado (${r.effectiveTardyMinutes} min)</td><td class="amt">-$${r.tardyDiscount.toFixed(2)}</td></tr>`
-                      : ''
-                  }
-                  <tr class="total-row"><td>TOTAL DEVENGADO</td><td class="amt">$${r.totalDevengado.toFixed(2)}</td></tr>
-                </table>
-              </div>
-              <div>
-                <strong>DEDUCCIONES</strong>
-                <table>
-                  <tr><td>ISSS Laboral (3.00%)</td><td class="amt">$${r.isssLab.toFixed(2)}</td></tr>
-                  <tr><td>AFP Laboral (7.25%)</td><td class="amt">$${r.afpLab.toFixed(2)}</td></tr>
-                  <tr><td>Retención Renta (ISR)</td><td class="amt">$${r.isr.toFixed(2)}</td></tr>
-                  ${
-                    r.otherDeductions > 0
-                      ? `<tr><td>Otras Deducciones / Anticipos</td><td class="amt">$${r.otherDeductions.toFixed(2)}</td></tr>`
-                      : ''
-                  }
-                  <tr class="total-row"><td>TOTAL DEDUCCIONES</td><td class="amt">$${r.totalDeducciones.toFixed(2)}</td></tr>
-                </table>
-              </div>
-            </div>
-            <div class="net-box">
-              <span>LÍQUIDO A RECIBIR / DEPOSITAR:</span>
-              <span>$${r.liquidoPagar.toFixed(2)}</span>
-            </div>
-            <div class="sigs">
-              <div class="sig-line">Firma Patrono / Administración</div>
-              <div class="sig-line">Recibí Conforme: ${r.emp.fullName} (${r.emp.docNumber})</div>
-            </div>
-          </div>
-        `
-          )
-          .join('')}
-        <script>window.onload = () => { window.print(); };</script>
-      </body>
-      </html>
-    `;
-    win.document.write(html);
-    win.document.close();
-  };
-
-  // Imprimir Planilla General de Sueldos con Columna de Firma (Formato Grupo KODE S.A.S. de C.V.)
-  const handlePrintOfficialPayrollSheet = () => {
-    const win = window.open('', '_blank', 'width=1150,height=800');
-    if (!win) return;
-
+  const getFormattedPeriodLabel = () => {
     const monthsEs = [
       'ENERO',
       'FEBRERO',
@@ -1477,116 +1372,305 @@ export default function PlanillaModule() {
     ];
     const sMatch = periodStart.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     const eMatch = periodEnd.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    const periodLabel =
-      sMatch && eMatch
-        ? `PERIODO: DEL ${parseInt(sMatch[3], 10)} AL ${parseInt(eMatch[3], 10)} DE ${
-            monthsEs[parseInt(eMatch[2], 10) - 1] || ''
-          } ${eMatch[1]}`
-        : `PERIODO: ${periodStart} AL ${periodEnd}`;
+    return sMatch && eMatch
+      ? `PERIODO: DEL ${parseInt(sMatch[3], 10)} AL ${parseInt(eMatch[3], 10)} DE ${
+          monthsEs[parseInt(eMatch[2], 10) - 1] || ''
+        } ${eMatch[1]}`
+      : `PERIODO: ${periodStart} AL ${periodEnd}`;
+  };
 
-    const html = `
-      <!DOCTYPE html>
-      <html lang="es">
-      <head>
-        <meta charset="utf-8" />
-        <title>Planilla de Sueldo - ${parameters.employerName}</title>
-        <style>
-          @page { size: landscape; margin: 12mm; }
-          body { font-family: Arial, Helvetica, sans-serif; color: #0f172a; margin: 0; padding: 10px; font-size: 11px; }
-          .head { text-align: center; margin-bottom: 16px; }
-          .head h1 { margin: 0; font-size: 16px; font-weight: 800; }
-          .head h2 { margin: 3px 0; font-size: 13px; font-weight: 800; }
-          .head p { margin: 2px 0 0; font-size: 11.5px; font-weight: 700; }
-          table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
-          th, td { border: 1px solid #334155; padding: 6px 5px; }
-          th { background: #f1f5f9; font-weight: 800; text-align: center; text-transform: uppercase; font-size: 9.5px; }
-          .num { text-align: right; font-family: "Courier New", monospace; font-weight: 700; }
-          .ctr { text-align: center; }
-          .tot td { font-weight: 800; background: #f8fafc; }
-          .sig-col { width: 155px; height: 28px; }
-          .foot-sigs { display: flex; justify-content: space-around; margin-top: 55px; font-size: 11px; font-weight: 700; }
-          .foot-line { width: 240px; border-top: 1px solid #0f172a; text-align: center; padding-top: 6px; }
-        </style>
-      </head>
-      <body>
-        <div class="head">
-          <h1>${parameters.employerName}</h1>
-          <h2>PLANILLA DE SUELDO</h2>
-          <p>${periodLabel}</p>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th rowspan="2" style="width:28px;">No.</th>
-              <th rowspan="2">NOMBRE DE EMPLEADO</th>
-              <th rowspan="2">No. de Documento</th>
-              <th rowspan="2" style="width:42px;">No. DIAS</th>
-              <th rowspan="2">SALARIO DEL PERIODO</th>
-              <th rowspan="2">VACACION</th>
-              <th rowspan="2">INGRESO SUJETO COTIZACIONES</th>
-              <th colspan="4">RETENCIONES LEGALES Y DESCUENTOS</th>
-              <th rowspan="2">TOTAL RETENC. Y DESC.</th>
-              <th rowspan="2">VALOR NETO CANCELADO</th>
-              <th rowspan="2" class="sig-col">FIRMA</th>
-            </tr>
-            <tr>
-              <th>ISSS</th>
-              <th>AFP</th>
-              <th>ING. SUJETO A RET. RENTA</th>
-              <th>RENTA</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${computedRows
-              .map(
-                (r) => `
-              <tr>
-                <td class="ctr">${r.index}</td>
-                <td>${r.emp.fullName}</td>
-                <td class="ctr">${r.emp.docNumber}</td>
-                <td class="ctr">${r.workedDays}</td>
-                <td class="num">$${r.ordinarySalary.toFixed(2)}</td>
-                <td class="num">$${r.vacationAmount.toFixed(2)}</td>
-                <td class="num">$${r.totalDevengado.toFixed(2)}</td>
-                <td class="num">$${r.isssLab.toFixed(2)}</td>
-                <td class="num">$${r.afpLab.toFixed(2)}</td>
-                <td class="num">$${r.baseGravableIsr.toFixed(2)}</td>
-                <td class="num">$${r.isr.toFixed(2)}</td>
-                <td class="num">$${r.totalDeducciones.toFixed(2)}</td>
-                <td class="num">$${r.liquidoPagar.toFixed(2)}</td>
-                <td class="sig-col"></td>
-              </tr>
-            `
-              )
-              .join('')}
-          </tbody>
-          <tfoot>
-            <tr class="tot">
-              <td></td>
-              <td colspan="3">TOTALES……………………………………</td>
-              <td class="num">$${totals.ordinarySalary.toFixed(2)}</td>
-              <td class="num">$${totals.vacationAmount.toFixed(2)}</td>
-              <td class="num">$${totals.totalDevengado.toFixed(2)}</td>
-              <td class="num">$${totals.isssLab.toFixed(2)}</td>
-              <td class="num">$${totals.afpLab.toFixed(2)}</td>
-              <td class="num">$${totals.baseGravableIsr.toFixed(2)}</td>
-              <td class="num">$${totals.isr.toFixed(2)}</td>
-              <td class="num">$${totals.totalDeducciones.toFixed(2)}</td>
-              <td class="num">$${totals.liquidoPagar.toFixed(2)}</td>
-              <td></td>
-            </tr>
-          </tfoot>
-        </table>
-        <div class="foot-sigs">
-          <div class="foot-line">ELABORÓ</div>
-          <div class="foot-line">AUTORIZÓ</div>
-        </div>
-        <script>window.onload = () => { window.print(); };</script>
-      </body>
-      </html>
-    `;
-    win.document.write(html);
-    win.document.close();
+  // Descargar Boletas de Pago en PDF listas para firmar
+  const handlePrintPayslips = async (singleRow?: (typeof computedRows)[0]) => {
+    const targetRows = singleRow ? [singleRow] : computedRows;
+    const { jsPDF } = await import('jspdf');
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
+    const periodLabel = getFormattedPeriodLabel();
+
+    targetRows.forEach((r, idx) => {
+      const slot = idx % 2;
+      if (idx > 0 && slot === 0) {
+        doc.addPage();
+      }
+      const startY = slot === 0 ? 14 : 146;
+
+      // Marco de la boleta
+      doc.setDrawColor(148, 163, 184);
+      doc.setLineWidth(0.4);
+      doc.roundedRect(14, startY, 188, 118, 3, 3);
+
+      // Encabezado
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.setTextColor(15, 23, 42);
+      doc.text(parameters.employerName, 20, startY + 9);
+
+      doc.setFontSize(9.5);
+      doc.setTextColor(71, 85, 105);
+      doc.text(`BOLETA DE PAGO DE SUELDO • ${periodLabel}`, 20, startY + 14.5);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9.5);
+      doc.setTextColor(30, 27, 75);
+      doc.text(`No. ${r.index}`, 196, startY + 9, { align: 'right' });
+
+      // Línea divisoria encabezado
+      doc.setDrawColor(226, 232, 240);
+      doc.line(20, startY + 17.5, 196, startY + 17.5);
+
+      // Datos del Empleado
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(15, 23, 42);
+      doc.text(`EMPLEADO: ${r.emp.fullName}`, 20, startY + 24);
+      doc.text(`DOCUMENTO: ${r.emp.docNumber}`, 196, startY + 24, { align: 'right' });
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(71, 85, 105);
+      doc.text(
+        `Cargo / Depto.: ${r.emp.position} (${r.emp.department})   •   Sueldo Base Mensual: $${r.baseMonthly.toFixed(2)}`,
+        20,
+        startY + 29.5
+      );
+      doc.text(`Días Laborados: ${r.workedDays}`, 196, startY + 29.5, { align: 'right' });
+
+      // Caja Izquierda: Ingresos Devengados
+      const boxY = startY + 34;
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(203, 213, 225);
+      doc.roundedRect(20, boxY, 85, 44, 2, 2, 'FD');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(30, 41, 59);
+      doc.text('INGRESOS Y SUJETO A COTIZACIÓN', 24, boxY + 6.5);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.text(`Salario del Período (${r.workedDays} días):`, 24, boxY + 14);
+      doc.text(`$${r.ordinarySalary.toFixed(2)}`, 101, boxY + 14, { align: 'right' });
+
+      doc.text('Vacación:', 24, boxY + 20.5);
+      doc.text(`$${r.vacationAmount.toFixed(2)}`, 101, boxY + 20.5, { align: 'right' });
+
+      doc.text('Otros Ingresos:', 24, boxY + 27);
+      doc.text(`$${r.otherIncome.toFixed(2)}`, 101, boxY + 27, { align: 'right' });
+
+      doc.setDrawColor(148, 163, 184);
+      doc.line(24, boxY + 32, 101, boxY + 32);
+
+      doc.setFont('helvetica', 'bold');
+      doc.text('INGRESO SUJETO COTIZ.:', 24, boxY + 38.5);
+      doc.text(`$${r.totalDevengado.toFixed(2)}`, 101, boxY + 38.5, { align: 'right' });
+
+      // Caja Derecha: Retenciones Legales y Descuentos
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(203, 213, 225);
+      doc.roundedRect(111, boxY, 85, 44, 2, 2, 'FD');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(30, 41, 59);
+      doc.text('RETENCIONES LEGALES Y DESCUENTOS', 115, boxY + 6.5);
+
+      doc.setFont('helvetica', 'normal');
+      doc.text('ISSS Laboral (3.00%):', 115, boxY + 13.5);
+      doc.text(`$${r.isssLab.toFixed(2)}`, 192, boxY + 13.5, { align: 'right' });
+
+      doc.text('AFP Laboral (7.25%):', 115, boxY + 19.5);
+      doc.text(`$${r.afpLab.toFixed(2)}`, 192, boxY + 19.5, { align: 'right' });
+
+      doc.text('Ing. Sujeto a Ret. Renta:', 115, boxY + 25.5);
+      doc.text(`$${r.baseGravableIsr.toFixed(2)}`, 192, boxY + 25.5, { align: 'right' });
+
+      doc.text('Retención Renta (ISR):', 115, boxY + 31.5);
+      doc.text(`$${r.isr.toFixed(2)}`, 192, boxY + 31.5, { align: 'right' });
+
+      doc.setDrawColor(148, 163, 184);
+      doc.line(115, boxY + 34, 192, boxY + 34);
+
+      doc.setFont('helvetica', 'bold');
+      doc.text('TOTAL RETENC. Y DESC.:', 115, boxY + 39.5);
+      doc.text(`$${r.totalDeducciones.toFixed(2)}`, 192, boxY + 39.5, { align: 'right' });
+
+      // Franja de Valor Neto Cancelado
+      const netY = startY + 82;
+      doc.setFillColor(236, 253, 245);
+      doc.setDrawColor(110, 231, 183);
+      doc.roundedRect(20, netY, 176, 11, 2, 2, 'FD');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10.5);
+      doc.setTextColor(6, 95, 70);
+      doc.text('VALOR NETO CANCELADO / LÍQUIDO A RECIBIR:', 25, netY + 7.2);
+      doc.text(`$${r.liquidoPagar.toFixed(2)}`, 191, netY + 7.2, { align: 'right' });
+
+      // Líneas de Firma
+      const sigY = startY + 108;
+      doc.setDrawColor(71, 85, 105);
+      doc.setLineWidth(0.3);
+      doc.line(25, sigY, 95, sigY);
+      doc.line(115, sigY, 190, sigY);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(51, 65, 85);
+      doc.text(`AUTORIZÓ / ${parameters.employerName}`, 60, sigY + 4.5, { align: 'center' });
+      doc.text(
+        `RECIBÍ CONFORME: ${r.emp.fullName} (${r.emp.docNumber})`,
+        152.5,
+        sigY + 4.5,
+        { align: 'center' }
+      );
+
+      // Línea punteada de corte entre las 2 boletas de la página
+      if (slot === 0 && idx < targetRows.length - 1) {
+        doc.setDrawColor(203, 213, 225);
+        doc.setLineDashPattern([2, 2], 0);
+        doc.line(10, 139, 206, 139);
+        doc.setLineDashPattern([], 0);
+      }
+    });
+
+    const filename = singleRow
+      ? `Boleta_${singleRow.emp.fullName.replace(/\s+/g, '_')}_${periodStart}_al_${periodEnd}.pdf`
+      : `Boletas_de_Pago_Grupo_KODE_${periodStart}_al_${periodEnd}.pdf`;
+    doc.save(filename);
+    showToast(`📄 ${filename} descargado.`);
+  };
+
+  // Descargar Tabla Consolidada de Planilla en PDF con columna de FIRMA
+  const handlePrintOfficialPayrollSheet = async () => {
+    const { jsPDF } = await import('jspdf');
+    const autoTable = (await import('jspdf-autotable')).default;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'letter' });
+    const periodLabel = getFormattedPeriodLabel();
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(15, 23, 42);
+    doc.text(parameters.employerName, 139.7, 16, { align: 'center' });
+
+    doc.setFontSize(11.5);
+    doc.text('PLANILLA DE SUELDO', 139.7, 22, { align: 'center' });
+
+    doc.setFontSize(10);
+    doc.text(periodLabel, 139.7, 27.5, { align: 'center' });
+
+    autoTable(doc, {
+      startY: 33,
+      margin: { left: 10, right: 10 },
+      theme: 'grid',
+      headStyles: {
+        fillColor: [241, 245, 249],
+        textColor: [15, 23, 42],
+        fontStyle: 'bold',
+        fontSize: 7.5,
+        halign: 'center',
+        valign: 'middle',
+        lineColor: [51, 65, 85],
+        lineWidth: 0.25,
+      },
+      bodyStyles: {
+        textColor: [15, 23, 42],
+        fontSize: 8.5,
+        valign: 'middle',
+        minCellHeight: 14,
+        lineColor: [51, 65, 85],
+        lineWidth: 0.25,
+      },
+      footStyles: {
+        fillColor: [248, 250, 252],
+        textColor: [15, 23, 42],
+        fontStyle: 'bold',
+        fontSize: 8.5,
+        valign: 'middle',
+        minCellHeight: 10,
+        lineColor: [51, 65, 85],
+        lineWidth: 0.25,
+      },
+      head: [
+        [
+          { content: 'No.', rowSpan: 2 },
+          { content: 'NOMBRE DE EMPLEADO', rowSpan: 2 },
+          { content: 'No. de\nDocumento', rowSpan: 2 },
+          { content: 'No.\nDIAS', rowSpan: 2 },
+          { content: 'SALARIO DEL\nPERIODO', rowSpan: 2 },
+          { content: 'VACACION', rowSpan: 2 },
+          { content: 'INGRESO SUJETO\nCOTIZACIONES', rowSpan: 2 },
+          { content: 'RETENCIONES LEGALES Y DESCUENTOS', colSpan: 4 },
+          { content: 'TOTAL RETENC.\nY DESC.', rowSpan: 2 },
+          { content: 'VALOR NETO\nCANCELADO', rowSpan: 2 },
+          { content: 'FIRMA', rowSpan: 2 },
+        ],
+        ['ISSS', 'AFP', 'ING. SUJETO A\nRET. RENTA', 'RENTA'],
+      ],
+      body: computedRows.map((r) => [
+        r.index.toString(),
+        r.emp.fullName,
+        r.emp.docNumber,
+        r.workedDays.toString(),
+        `$${r.ordinarySalary.toFixed(2)}`,
+        `$${r.vacationAmount.toFixed(2)}`,
+        `$${r.totalDevengado.toFixed(2)}`,
+        `$${r.isssLab.toFixed(2)}`,
+        `$${r.afpLab.toFixed(2)}`,
+        `$${r.baseGravableIsr.toFixed(2)}`,
+        `$${r.isr.toFixed(2)}`,
+        `$${r.totalDeducciones.toFixed(2)}`,
+        `$${r.liquidoPagar.toFixed(2)}`,
+        '',
+      ]),
+      foot: [
+        [
+          '',
+          { content: 'TOTALES……………………………………', colSpan: 3, styles: { halign: 'left' } },
+          `$${totals.ordinarySalary.toFixed(2)}`,
+          `$${totals.vacationAmount.toFixed(2)}`,
+          `$${totals.totalDevengado.toFixed(2)}`,
+          `$${totals.isssLab.toFixed(2)}`,
+          `$${totals.afpLab.toFixed(2)}`,
+          `$${totals.baseGravableIsr.toFixed(2)}`,
+          `$${totals.isr.toFixed(2)}`,
+          `$${totals.totalDeducciones.toFixed(2)}`,
+          `$${totals.liquidoPagar.toFixed(2)}`,
+          '',
+        ],
+      ],
+      columnStyles: {
+        0: { halign: 'center', cellWidth: 9 },
+        1: { halign: 'left', cellWidth: 46, fontStyle: 'bold' },
+        2: { halign: 'center', cellWidth: 22 },
+        3: { halign: 'center', cellWidth: 11 },
+        4: { halign: 'right', cellWidth: 19 },
+        5: { halign: 'right', cellWidth: 15 },
+        6: { halign: 'right', cellWidth: 21 },
+        7: { halign: 'right', cellWidth: 15 },
+        8: { halign: 'right', cellWidth: 15 },
+        9: { halign: 'right', cellWidth: 20 },
+        10: { halign: 'right', cellWidth: 14 },
+        11: { halign: 'right', cellWidth: 19 },
+        12: { halign: 'right', cellWidth: 21, fontStyle: 'bold' },
+        13: { halign: 'center', cellWidth: 32 },
+      },
+    });
+
+    const finalY = (doc as any).lastAutoTable?.finalY || 140;
+    const sigY = Math.min(195, finalY + 26);
+
+    doc.setDrawColor(15, 23, 42);
+    doc.setLineWidth(0.35);
+    doc.line(45, sigY, 115, sigY);
+    doc.line(165, sigY, 235, sigY);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.text('ELABORÓ', 80, sigY + 5, { align: 'center' });
+    doc.text('AUTORIZÓ', 200, sigY + 5, { align: 'center' });
+
+    const filename = `Planilla_Consolidada_Firmas_Grupo_KODE_${periodStart}_al_${periodEnd}.pdf`;
+    doc.save(filename);
+    showToast(`📄 ${filename} descargado.`);
   };
 
   // Guardar Planilla actual en el Historial
@@ -2230,18 +2314,19 @@ export default function PlanillaModule() {
                   type="button"
                   onClick={handlePrintOfficialPayrollSheet}
                   className="clay-btn clay-btn-light px-3 py-1.5 text-xs font-black text-slate-900 flex items-center gap-1.5 cursor-pointer"
-                  title="Imprimir Planilla General con columna de FIRMA (formato Grupo KODE S.A.S. de C.V.)"
+                  title="Descargar PDF de Tabla Consolidada de Planilla con columna de FIRMA (formato Grupo KODE S.A.S. de C.V.)"
                 >
                   <FileCheck className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Imprimir Planilla (Firmas)</span>
+                  <span>PDF Planilla (Firmas)</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handlePrintPayslips()}
                   className="clay-btn clay-btn-light px-3 py-1.5 text-xs font-bold text-indigo-700 flex items-center gap-1.5 cursor-pointer"
+                  title="Descargar PDF de Boletas de Pago individuales para firma de cada empleado"
                 >
                   <Printer className="w-3.5 h-3.5" />
-                  <span>Imprimir Boletas</span>
+                  <span>PDF Boletas de Pago</span>
                 </button>
                 <button
                   type="button"
