@@ -5,6 +5,7 @@ import { checkRateLimit } from '@/lib/rateLimit';
 import { sanitizeText, sanitizeEmail, sanitizePhone, sanitizeDocument } from '@/lib/sanitize';
 import { supabase } from '@/lib/supabaseClient';
 import { resolveGiroMH, formatGiroOption } from '@/lib/svGirosCat019';
+import { buildCustomerLookupOrConditions, consolidateCustomerDiscounts } from '@/lib/customerDiscounts';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,24 +54,11 @@ async function linkCustomerPurchases(customer: any) {
     const phoneDigits8 = String(customer.phone || '').replace(/\D/g, '').slice(-8);
 
     // Sincronizar descuentos/tarifas si existe otro registro del mismo cliente (ej. creado en POS por teléfono o DUI)
-    const siblingOr: any[] = [];
-    if (cleanEmail) siblingOr.push({ email: { equals: cleanEmail, mode: 'insensitive' } });
-    if (phoneDigits8.length === 8) {
-      siblingOr.push(
-        { phone: { endsWith: phoneDigits8 } },
-        { phone: { endsWith: `${phoneDigits8.slice(0, 4)}-${phoneDigits8.slice(4)}` } }
-      );
-    }
-    if (cleanDoc && cleanDoc !== '00000000-0') {
-      siblingOr.push({ documentNum: cleanDoc });
-      const dDigits = cleanDoc.replace(/\D/g, '');
-      if (dDigits.length === 9 && !/^(0+|9+|12345678\d*)$/.test(dDigits)) {
-        siblingOr.push(
-          { documentNum: dDigits },
-          { documentNum: `${dDigits.slice(0, 8)}-${dDigits.slice(8)}` }
-        );
-      }
-    }
+    const siblingOr = buildCustomerLookupOrConditions({
+      email: cleanEmail,
+      phone: customer.phone,
+      documentNum: cleanDoc,
+    });
 
     if (siblingOr.length > 0) {
       const siblings = await prisma.customer.findMany({
@@ -82,53 +70,54 @@ async function linkCustomerPurchases(customer: any) {
       });
 
       if (siblings.length > 0) {
-        const discountPatch: any = {};
-        for (const sib of siblings) {
-          if (!customer.tierId && sib.tierId) {
-            discountPatch.tierId = sib.tierId;
-            customer.tierId = sib.tierId;
-            customer.tier = sib.tier;
+        const consolidated = consolidateCustomerDiscounts(customer, [customer, ...siblings]);
+        if (consolidated) {
+          const discountPatch: any = {};
+          if (!customer.tierId && consolidated.tierId) {
+            discountPatch.tierId = consolidated.tierId;
+            customer.tierId = consolidated.tierId;
+            customer.tier = consolidated.tier;
           }
-          if (customer.customDiscountPct == null && sib.customDiscountPct != null) {
-            discountPatch.customDiscountPct = sib.customDiscountPct;
-            customer.customDiscountPct = sib.customDiscountPct;
+          if (customer.customDiscountPct == null && consolidated.customDiscountPct != null) {
+            discountPatch.customDiscountPct = consolidated.customDiscountPct;
+            customer.customDiscountPct = consolidated.customDiscountPct;
           }
-          if (!customer.bottleTierId && sib.bottleTierId) {
-            discountPatch.bottleTierId = sib.bottleTierId;
-            customer.bottleTierId = sib.bottleTierId;
-            customer.bottleTier = sib.bottleTier;
+          if (!customer.bottleTierId && consolidated.bottleTierId) {
+            discountPatch.bottleTierId = consolidated.bottleTierId;
+            customer.bottleTierId = consolidated.bottleTierId;
+            customer.bottleTier = consolidated.bottleTier;
           }
-          if (customer.bottleCustomDiscountPct == null && sib.bottleCustomDiscountPct != null) {
-            discountPatch.bottleCustomDiscountPct = sib.bottleCustomDiscountPct;
-            customer.bottleCustomDiscountPct = sib.bottleCustomDiscountPct;
+          if (customer.bottleCustomDiscountPct == null && consolidated.bottleCustomDiscountPct != null) {
+            discountPatch.bottleCustomDiscountPct = consolidated.bottleCustomDiscountPct;
+            customer.bottleCustomDiscountPct = consolidated.bottleCustomDiscountPct;
           }
-          if (!customer.suppliesTierId && sib.suppliesTierId) {
-            discountPatch.suppliesTierId = sib.suppliesTierId;
-            customer.suppliesTierId = sib.suppliesTierId;
-            customer.suppliesTier = sib.suppliesTier;
+          if (!customer.suppliesTierId && consolidated.suppliesTierId) {
+            discountPatch.suppliesTierId = consolidated.suppliesTierId;
+            customer.suppliesTierId = consolidated.suppliesTierId;
+            customer.suppliesTier = consolidated.suppliesTier;
           }
-          if (customer.suppliesCustomDiscountPct == null && sib.suppliesCustomDiscountPct != null) {
-            discountPatch.suppliesCustomDiscountPct = sib.suppliesCustomDiscountPct;
-            customer.suppliesCustomDiscountPct = sib.suppliesCustomDiscountPct;
+          if (customer.suppliesCustomDiscountPct == null && consolidated.suppliesCustomDiscountPct != null) {
+            discountPatch.suppliesCustomDiscountPct = consolidated.suppliesCustomDiscountPct;
+            customer.suppliesCustomDiscountPct = consolidated.suppliesCustomDiscountPct;
           }
-          if (customer.specialEssencePrice == null && sib.specialEssencePrice != null) {
-            discountPatch.specialEssencePrice = sib.specialEssencePrice;
-            customer.specialEssencePrice = sib.specialEssencePrice;
+          if (customer.specialEssencePrice == null && consolidated.specialEssencePrice != null) {
+            discountPatch.specialEssencePrice = consolidated.specialEssencePrice;
+            customer.specialEssencePrice = consolidated.specialEssencePrice;
           }
-          if ((customer as any).specialHalfEssencePrice == null && (sib as any).specialHalfEssencePrice != null) {
-            discountPatch.specialHalfEssencePrice = (sib as any).specialHalfEssencePrice;
-            (customer as any).specialHalfEssencePrice = (sib as any).specialHalfEssencePrice;
+          if ((customer as any).specialHalfEssencePrice == null && (consolidated as any).specialHalfEssencePrice != null) {
+            discountPatch.specialHalfEssencePrice = (consolidated as any).specialHalfEssencePrice;
+            (customer as any).specialHalfEssencePrice = (consolidated as any).specialHalfEssencePrice;
           }
-          if (customer.specialBottlePrice == null && sib.specialBottlePrice != null) {
-            discountPatch.specialBottlePrice = sib.specialBottlePrice;
-            customer.specialBottlePrice = sib.specialBottlePrice;
+          if (customer.specialBottlePrice == null && consolidated.specialBottlePrice != null) {
+            discountPatch.specialBottlePrice = consolidated.specialBottlePrice;
+            customer.specialBottlePrice = consolidated.specialBottlePrice;
           }
-        }
-        if (Object.keys(discountPatch).length > 0) {
-          await prisma.customer.update({
-            where: { id: customer.id },
-            data: discountPatch,
-          }).catch(() => {});
+          if (Object.keys(discountPatch).length > 0) {
+            await prisma.customer.update({
+              where: { id: customer.id },
+              data: discountPatch,
+            }).catch(() => {});
+          }
         }
       }
     }

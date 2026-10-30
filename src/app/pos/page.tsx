@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { INITIAL_PRODUCTS, ProductItem, CartItem, SaleRecord, PERFUME_CATEGORIES, getStoredProducts } from '@/lib/store';
 import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ, HALLOWEEN_PROMO_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
+import { consolidateCustomerDiscounts, hasCustomerDiscountFields } from '@/lib/customerDiscounts';
 import CotizacionModal, { type CotizacionNotices } from '@/components/pos/CotizacionModal';
 import CotizacionesHistoryModal from '@/components/pos/CotizacionesHistoryModal';
 import ThermalTicket from '@/components/pos/ThermalTicket';
@@ -206,8 +207,57 @@ export default function PosPage() {
   const [cartCustomerQuery, setCartCustomerQuery] = useState('');
   const [isCartCustomerDropdownOpen, setIsCartCustomerDropdownOpen] = useState(false);
 
+  const enrichCustomerWithSiblings = (primary?: CustomerRecord | null): CustomerRecord | undefined => {
+    if (!primary) return undefined;
+    const pPhone8 = (primary.phone || '').replace(/\D/g, '').slice(-8);
+    const pEmail = (primary.email || '').trim().toLowerCase();
+    const pDoc = (primary.numDocumento || '').replace(/\D/g, '');
+    const siblings = customers.filter((other) => {
+      if (other.id === primary.id || !hasCustomerDiscountFields(other)) return false;
+      const oPhone8 = (other.phone || '').replace(/\D/g, '').slice(-8);
+      const oEmail = (other.email || '').trim().toLowerCase();
+      const oDoc = (other.numDocumento || '').replace(/\D/g, '');
+      if (pPhone8.length === 8 && oPhone8 === pPhone8) return true;
+      if (pEmail && oEmail === pEmail) return true;
+      if (pDoc && pDoc !== '000000000' && oDoc === pDoc) return true;
+      return false;
+    });
+    return consolidateCustomerDiscounts(primary, [primary, ...siblings]) || primary;
+  };
+
+  // Busca el cliente registrado que corresponde a los datos de una prefactura / comanda / contacto
+  const findCustomerForPerson = (p: {
+    id?: string;
+    correo?: string;
+    numDocumento?: string;
+    nrc?: string;
+    telefono?: string;
+    nombre?: string;
+  }): CustomerRecord | undefined => {
+    const normEmail = p.correo?.toLowerCase().trim();
+    const doc = p.numDocumento?.replace(/\D/g, '');
+    const nrc = p.nrc?.replace(/\D/g, '');
+    const phone = p.telefono?.replace(/\D/g, '').slice(-8);
+    const name = p.nombre?.toLowerCase().trim();
+
+    const candidates = customers.filter(c => {
+      if (p.id && c.id === p.id) return true;
+      if (normEmail && c.email && c.email.toLowerCase().trim() === normEmail) return true;
+      if (nrc && c.nrc && c.nrc.replace(/\D/g, '') === nrc) return true;
+      if (doc && doc !== '000000000' && c.numDocumento && c.numDocumento.replace(/\D/g, '') === doc) return true;
+      if (phone && phone.length === 8 && c.phone && c.phone.replace(/\D/g, '').slice(-8) === phone) return true;
+      if (name && name !== 'consumidor final' && c.name && c.name.toLowerCase().trim() === name) return true;
+      return false;
+    });
+
+    if (candidates.length === 0) return undefined;
+    const primary = candidates.find(c => hasCustomerDiscountFields(c)) || candidates[0];
+    return enrichCustomerWithSiblings(primary);
+  };
+
   const selectedCustomerObj = useMemo(() => {
-    return customers.find(c => c.id === selectedCustomerId);
+    const found = customers.find(c => c.id === selectedCustomerId);
+    return enrichCustomerWithSiblings(found);
   }, [customers, selectedCustomerId]);
 
   const filteredCartCustomers = useMemo(() => {
@@ -869,69 +919,21 @@ export default function PosPage() {
 
   // Extraer el cliente activo (si existe y tiene precios especiales), consolidando hermanos si existen
   const activeCustomer = useMemo(() => {
-    const hasDiscountFields = (c?: CustomerRecord | null) =>
-      !!(
-        c &&
-        (c.tierId ||
-          c.customDiscountPct != null ||
-          c.specialEssencePrice != null ||
-          c.specialHalfEssencePrice != null ||
-          c.specialBottlePrice != null ||
-          c.bottleTierId ||
-          c.bottleCustomDiscountPct != null ||
-          c.suppliesTierId ||
-          c.suppliesCustomDiscountPct != null)
-      );
-
-    let primary = customers.find((c) => c.id === selectedCustomerId);
-    if (!primary) {
-      const normMail = clienteEmail.trim().toLowerCase();
-      const normNrc = clienteNrc.replace(/\D/g, '');
-      const normDoc = clienteDoc.replace(/\D/g, '');
-      const normPhone8 = domicilioPhone.replace(/\D/g, '').slice(-8);
-      if (normMail || normNrc || (normDoc && normDoc !== '000000000') || normPhone8.length === 8) {
-        const matches = customers.filter((c) => {
-          if (normMail && c.email && c.email.trim().toLowerCase() === normMail) return true;
-          if (normNrc && c.nrc && c.nrc.replace(/\D/g, '') === normNrc) return true;
-          if (normDoc && normDoc !== '000000000' && c.numDocumento && c.numDocumento.replace(/\D/g, '') === normDoc) return true;
-          if (normPhone8.length === 8 && c.phone && c.phone.replace(/\D/g, '').slice(-8) === normPhone8) return true;
-          return false;
-        });
-        primary = matches.find((m) => hasDiscountFields(m)) || matches[0];
-      }
+    if (selectedCustomerObj) return selectedCustomerObj;
+    const normMail = clienteEmail.trim().toLowerCase();
+    const normNrc = clienteNrc.replace(/\D/g, '');
+    const normDoc = clienteDoc.replace(/\D/g, '');
+    const normPhone8 = domicilioPhone.replace(/\D/g, '').slice(-8);
+    if (!normMail && !normNrc && (!normDoc || normDoc === '000000000') && normPhone8.length !== 8) {
+      return undefined;
     }
-    if (!primary) return undefined;
-
-    const pPhone8 = (primary.phone || '').replace(/\D/g, '').slice(-8);
-    const pEmail = (primary.email || '').trim().toLowerCase();
-    const pDoc = (primary.numDocumento || '').replace(/\D/g, '');
-    const sib = customers.find((other) => {
-      if (other.id === primary!.id || !hasDiscountFields(other)) return false;
-      const oPhone8 = (other.phone || '').replace(/\D/g, '').slice(-8);
-      const oEmail = (other.email || '').trim().toLowerCase();
-      const oDoc = (other.numDocumento || '').replace(/\D/g, '');
-      if (pPhone8.length === 8 && oPhone8 === pPhone8) return true;
-      if (pEmail && oEmail === pEmail) return true;
-      if (pDoc && pDoc !== '000000000' && oDoc === pDoc) return true;
-      return false;
+    return findCustomerForPerson({
+      correo: normMail || undefined,
+      nrc: normNrc || undefined,
+      numDocumento: normDoc || undefined,
+      telefono: normPhone8.length === 8 ? normPhone8 : undefined,
     });
-    if (!sib) return primary;
-    return {
-      ...primary,
-      specialEssencePrice: primary.specialEssencePrice ?? sib.specialEssencePrice ?? null,
-      specialHalfEssencePrice: primary.specialHalfEssencePrice ?? sib.specialHalfEssencePrice ?? null,
-      specialBottlePrice: primary.specialBottlePrice ?? sib.specialBottlePrice ?? null,
-      tierId: primary.tierId || sib.tierId || null,
-      tier: primary.tier || sib.tier || null,
-      customDiscountPct: primary.customDiscountPct ?? sib.customDiscountPct ?? null,
-      bottleTierId: primary.bottleTierId || sib.bottleTierId || null,
-      bottleTier: primary.bottleTier || sib.bottleTier || null,
-      bottleCustomDiscountPct: primary.bottleCustomDiscountPct ?? sib.bottleCustomDiscountPct ?? null,
-      suppliesTierId: primary.suppliesTierId || sib.suppliesTierId || null,
-      suppliesTier: primary.suppliesTier || sib.suppliesTier || null,
-      suppliesCustomDiscountPct: primary.suppliesCustomDiscountPct ?? sib.suppliesCustomDiscountPct ?? null,
-    };
-  }, [customers, selectedCustomerId, clienteEmail, clienteNrc, clienteDoc, domicilioPhone]);
+  }, [selectedCustomerObj, customers, clienteEmail, clienteNrc, clienteDoc, domicilioPhone]);
 
   const activeEssencePrice = activeCustomer?.specialEssencePrice 
     ? Number(activeCustomer.specialEssencePrice) 
@@ -1236,16 +1238,13 @@ export default function PosPage() {
     window.dispatchEvent(new Event('kodelocal_sales_updated'));
   };
 
-  const handleEditOrderInPos = async (order: SaleRecord) => {
-    const ordNum = order.orderNumber || order.saleNumber;
-    if (!confirm(`¿Devolver la comanda #${ordNum} al Cotizador para modificarla?\nSe cargarán sus productos y cliente en el carrito y se anulará la comanda anterior.`)) {
-      return;
-    }
-
-    // 1. Reconstruir ítems en el carrito del Cotizador
+  const reconstructCartFromItems = (
+    rawItems: Array<{ productId?: string | null; name?: string | null; unit?: string | null; quantity?: number; presentation?: string | null }>,
+    skipOnlineShipping = false
+  ): CartItem[] => {
     const restoredCart: CartItem[] = [];
-    for (const it of order.items || []) {
-      if (it.productId === 'ENVIO-DOM' && order.channel === 'ONLINE') continue;
+    for (const it of rawItems || []) {
+      if (skipOnlineShipping && it.productId === 'ENVIO-DOM') continue;
       const cleanName = String(it.name || '')
         .replace(/\s*\(½\s*Oz\)/gi, '')
         .replace(/\s*\(1\s*Onza\)/gi, '')
@@ -1281,7 +1280,7 @@ export default function PosPage() {
           unitLower.includes('oz'));
       const isHalf =
         isEssence &&
-        ((it as any).presentation === 'MEDIA_ONZA' ||
+        (it.presentation === 'MEDIA_ONZA' ||
           unitLower.includes('media onza') ||
           unitLower.includes('½ onza') ||
           unitLower.includes('½ oz') ||
@@ -1303,6 +1302,17 @@ export default function PosPage() {
         presentation,
       });
     }
+    return restoredCart;
+  };
+
+  const handleEditOrderInPos = async (order: SaleRecord) => {
+    const ordNum = order.orderNumber || order.saleNumber;
+    if (!confirm(`¿Devolver la comanda #${ordNum} al Cotizador para modificarla?\nSe cargarán sus productos y cliente en el carrito y se anulará la comanda anterior.`)) {
+      return;
+    }
+
+    // 1. Reconstruir ítems en el carrito del Cotizador
+    const restoredCart = reconstructCartFromItems(order.items || [], order.channel === 'ONLINE');
 
     if (restoredCart.length === 0) {
       alert('No se pudieron cargar los productos de esta comanda en el catálogo.');
@@ -1312,21 +1322,14 @@ export default function PosPage() {
     setCart(restoredCart);
 
     // 2. Restaurar datos del cliente en el Cotizador
-    const directId = (order.cliente as any)?.id || (order as any).customerId;
-    let matchedCust = directId ? customers.find(c => c.id === directId) : undefined;
-    if (!matchedCust) {
-      const orderDoc = order.cliente?.numDocumento?.replace(/\D/g, '');
-      const orderNrc = order.cliente?.nrc?.replace(/\D/g, '');
-      const cleanPhone = order.cliente?.telefono?.replace(/\D/g, '');
-      const normName = order.cliente?.nombre?.toLowerCase().trim();
-      matchedCust = customers.find(c => {
-        if (orderNrc && c.nrc && c.nrc.replace(/\D/g, '') === orderNrc) return true;
-        if (orderDoc && orderDoc !== '000000000' && c.numDocumento && c.numDocumento.replace(/\D/g, '') === orderDoc) return true;
-        if (cleanPhone && c.phone && c.phone.replace(/\D/g, '') === cleanPhone) return true;
-        if (normName && normName !== 'consumidor final' && c.name && c.name.toLowerCase().trim() === normName) return true;
-        return false;
-      });
-    }
+    const matchedCust = findCustomerForPerson({
+      id: (order.cliente as any)?.id || (order as any).customerId,
+      correo: order.cliente?.correo,
+      numDocumento: order.cliente?.numDocumento,
+      nrc: order.cliente?.nrc,
+      telefono: order.cliente?.telefono,
+      nombre: order.cliente?.nombre,
+    });
 
     if (matchedCust) {
       handleSelectCustomer(matchedCust.id);
@@ -2013,6 +2016,8 @@ export default function PosPage() {
       .catch(err => console.error('Error guardando cliente en Supabase:', err));
 
     if (editingCustomerId) {
+      const targetPhone8 = (customerPayload.phone || '').replace(/\D/g, '').slice(-8);
+      const targetEmail = (customerPayload.email || '').trim().toLowerCase();
       setCustomers(prev => {
         const updated = prev.map(c => {
           if (c.id === editingCustomerId) {
@@ -2020,6 +2025,28 @@ export default function PosPage() {
               ...c,
               ...customerPayload,
               id: c.id,
+            };
+          }
+          const cPhone8 = (c.phone || '').replace(/\D/g, '').slice(-8);
+          const cEmail = (c.email || '').trim().toLowerCase();
+          if (
+            (targetPhone8.length === 8 && cPhone8 === targetPhone8) ||
+            (targetEmail && cEmail === targetEmail)
+          ) {
+            return {
+              ...c,
+              specialEssencePrice: customerPayload.specialEssencePrice,
+              specialHalfEssencePrice: customerPayload.specialHalfEssencePrice,
+              specialBottlePrice: customerPayload.specialBottlePrice,
+              tierId: customerPayload.tierId,
+              tier: customerPayload.tier,
+              customDiscountPct: customerPayload.customDiscountPct,
+              bottleTierId: customerPayload.bottleTierId,
+              bottleTier: customerPayload.bottleTier,
+              bottleCustomDiscountPct: customerPayload.bottleCustomDiscountPct,
+              suppliesTierId: customerPayload.suppliesTierId,
+              suppliesTier: customerPayload.suppliesTier,
+              suppliesCustomDiscountPct: customerPayload.suppliesCustomDiscountPct,
             };
           }
           return c;
@@ -2148,7 +2175,7 @@ export default function PosPage() {
     }
     const ordNum = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
     const cmdNum = `CMD-${Math.floor(1000 + Math.random() * 9000)}`;
-    const clientObj = customers.find(c => c.id === selectedCustomerId);
+    const clientObj = activeCustomer || customers.find(c => c.id === selectedCustomerId);
 
     const resolvedClientName = clientObj?.name || (clienteNombre && clienteNombre !== 'Consumidor Final' ? clienteNombre : (cartCustomerQuery.trim() || 'Consumidor Final'));
     const resolvedClientDoc = clientObj?.numDocumento || clienteDoc || undefined;
@@ -2323,112 +2350,13 @@ export default function PosPage() {
     refreshPrefacturasCount();
   };
 
-  // Busca el cliente registrado que corresponde a los datos de una prefactura / comanda
-  const findCustomerForPerson = (p: {
-    id?: string;
-    correo?: string;
-    numDocumento?: string;
-    nrc?: string;
-    telefono?: string;
-    nombre?: string;
-  }): CustomerRecord | undefined => {
-    const normEmail = p.correo?.toLowerCase().trim();
-    const doc = p.numDocumento?.replace(/\D/g, '');
-    const nrc = p.nrc?.replace(/\D/g, '');
-    const phone = p.telefono?.replace(/\D/g, '').slice(-8);
-    const name = p.nombre?.toLowerCase().trim();
-
-    const candidates = customers.filter(c => {
-      if (p.id && c.id === p.id) return true;
-      if (normEmail && c.email && c.email.toLowerCase().trim() === normEmail) return true;
-      if (nrc && c.nrc && c.nrc.replace(/\D/g, '') === nrc) return true;
-      if (doc && doc !== '000000000' && c.numDocumento && c.numDocumento.replace(/\D/g, '') === doc) return true;
-      if (phone && phone.length === 8 && c.phone && c.phone.replace(/\D/g, '').slice(-8) === phone) return true;
-      if (name && name !== 'consumidor final' && c.name && c.name.toLowerCase().trim() === name) return true;
-      return false;
-    });
-
-    if (candidates.length === 0) return undefined;
-    const withDiscount = candidates.find(
-      c =>
-        c.tierId ||
-        c.customDiscountPct != null ||
-        c.specialEssencePrice != null ||
-        c.specialHalfEssencePrice != null ||
-        c.specialBottlePrice != null ||
-        c.bottleTierId ||
-        c.bottleCustomDiscountPct != null ||
-        c.suppliesTierId ||
-        c.suppliesCustomDiscountPct != null
-    );
-    return withDiscount || candidates[0];
-  };
-
   // Cargar una prefactura en el Cotizador para modificarla
   const handleEditQuoteInPos = (quote: SavedQuote) => {
     if (cart.length > 0 && !confirm('El carrito actual tiene productos. ¿Reemplazarlo con los de la prefactura?')) {
       return;
     }
 
-    const restoredCart: CartItem[] = [];
-    for (const it of quote.items || []) {
-      const cleanName = String(it.name || '')
-        .replace(/\s*\(½\s*Oz\)/gi, '')
-        .replace(/\s*\(1\s*Onza\)/gi, '')
-        .replace(/\s*\(Media\s*Onza\)/gi, '')
-        .trim()
-        .toLowerCase();
-
-      const matchedProd = products.find(
-        p =>
-          p.id === it.productId ||
-          (p.sku && p.sku === it.productId) ||
-          p.name.toLowerCase().trim() === cleanName ||
-          (p.officialName && p.officialName.toLowerCase().trim() === cleanName)
-      );
-      if (!matchedProd) continue;
-
-      const unitLower = String(it.unit || '').toLowerCase();
-      const nameLower = String(it.name || '').toLowerCase();
-      const isNonEssenceOrLitro =
-        nameLower.includes('litro') ||
-        unitLower.includes('litro') ||
-        nameLower.includes('alcohol') ||
-        matchedProd.category === 'Insumos y Materia Prima' ||
-        matchedProd.category === 'Botes' ||
-        matchedProd.category === 'Logística' ||
-        matchedProd.category === 'Otro';
-      const isEssence =
-        !isNonEssenceOrLitro &&
-        (matchedProd.category === 'Esencias para Perfume' ||
-          matchedProd.category === 'Esencias & Fragancias' ||
-          matchedProd.unit === 'Onza' ||
-          unitLower.includes('onza') ||
-          unitLower.includes('oz'));
-      const isHalf =
-        isEssence &&
-        (it.presentation === 'MEDIA_ONZA' ||
-          unitLower.includes('media onza') ||
-          unitLower.includes('½ onza') ||
-          unitLower.includes('½ oz') ||
-          unitLower === 'media' ||
-          unitLower === '½' ||
-          nameLower.includes('media onza') ||
-          nameLower.includes('½ onza') ||
-          nameLower.includes('½ oz'));
-
-      const presentation: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD' = isHalf
-        ? 'MEDIA_ONZA'
-        : isEssence
-        ? 'ONZA_COMPLETA'
-        : 'UNIDAD';
-
-      restoredCart.push({
-        product: matchedProd,
-        quantity: Math.max(1, Number(it.quantity || 1)),
-        presentation,
-      });
-    }
+    const restoredCart = reconstructCartFromItems(quote.items || [], false);
 
     if (restoredCart.length === 0) {
       alert('No se pudieron cargar los productos de esta prefactura en el catálogo.');
@@ -2584,31 +2512,14 @@ export default function PosPage() {
   const handleStartInvoiceOrder = (order: SaleRecord) => {
     setOrderToInvoice(order);
 
-    // 1. Buscar por Correo (prioridad para relacionar con Ecommerce) o ID directo
-    const normEmail = order.cliente?.correo?.toLowerCase().trim();
-    const directId = (order.cliente as any)?.id || (order as any).customerId;
-    let matchedCust = normEmail
-      ? customers.find(c => c.email && c.email.toLowerCase().trim() === normEmail)
-      : undefined;
-    if (!matchedCust && directId) {
-      matchedCust = customers.find(c => c.id === directId);
-    }
-
-    // 2. Si no, buscar por NRC, Documento válido (DUI/NIT), Teléfono o Nombre exacto
-    if (!matchedCust) {
-      const orderDoc = order.cliente?.numDocumento?.replace(/\D/g, '');
-      const orderNrc = order.cliente?.nrc?.replace(/\D/g, '');
-      const cleanPhone = order.cliente?.telefono?.replace(/\D/g, '');
-      const normName = order.cliente?.nombre?.toLowerCase().trim();
-
-      matchedCust = customers.find(c => {
-        if (orderNrc && c.nrc && c.nrc.replace(/\D/g, '') === orderNrc) return true;
-        if (orderDoc && orderDoc !== '000000000' && c.numDocumento && c.numDocumento.replace(/\D/g, '') === orderDoc) return true;
-        if (cleanPhone && c.phone && c.phone.replace(/\D/g, '') === cleanPhone) return true;
-        if (normName && normName !== 'consumidor final' && c.name && c.name.toLowerCase().trim() === normName) return true;
-        return false;
-      });
-    }
+    const matchedCust = findCustomerForPerson({
+      id: (order.cliente as any)?.id || (order as any).customerId,
+      correo: order.cliente?.correo,
+      numDocumento: order.cliente?.numDocumento,
+      nrc: order.cliente?.nrc,
+      telefono: order.cliente?.telefono,
+      nombre: order.cliente?.nombre,
+    });
 
     if (matchedCust) {
       handleSelectCustomer(matchedCust.id);

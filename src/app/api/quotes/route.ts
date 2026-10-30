@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { verifyStaffInternalToken } from '@/lib/customerAuthToken';
 import { prisma } from '@/lib/prisma';
+import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ, HALLOWEEN_PROMO_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
+import { buildCustomerLookupOrConditions, consolidateCustomerDiscounts } from '@/lib/customerDiscounts';
 
 export const dynamic = 'force-dynamic';
 
@@ -216,40 +218,14 @@ export async function POST(request: Request) {
     }
 
     // Buscar si el cliente cotizado tiene tarifas especiales o nivel de descuento VIP en la BD
-    const candidateConditions: any[] = [];
-    if (customerId && typeof customerId === 'string' && !customerId.startsWith('cli-')) {
-      candidateConditions.push({ id: customerId });
-    }
-    const cleanEmail = String(customerEmail || '').trim().toLowerCase();
-    if (cleanEmail) {
-      candidateConditions.push({ email: { equals: cleanEmail, mode: 'insensitive' } });
-    }
-    const phoneDigits8 = String(customerPhone || '').replace(/\D/g, '').slice(-8);
-    if (phoneDigits8.length === 8) {
-      candidateConditions.push(
-        { phone: { endsWith: phoneDigits8 } },
-        { phone: { endsWith: `${phoneDigits8.slice(0, 4)}-${phoneDigits8.slice(4)}` } }
-      );
-    }
-    const cleanDoc = String(customerDoc || '').trim();
-    if (cleanDoc && cleanDoc !== '00000000-0') {
-      candidateConditions.push({ documentNum: cleanDoc });
-      const dDigits = cleanDoc.replace(/\D/g, '');
-      if (dDigits.length === 9 && !/^(0+|9+|12345678\d*)$/.test(dDigits)) {
-        candidateConditions.push(
-          { documentNum: dDigits },
-          { documentNum: `${dDigits.slice(0, 8)}-${dDigits.slice(8)}` }
-        );
-      }
-    }
-    const cleanNrc = String(customerNrc || '').trim();
-    if (cleanNrc) {
-      candidateConditions.push({ nrc: cleanNrc });
-    }
-    const cleanName = String(customerName || '').trim();
-    if (cleanName && cleanName.toLowerCase() !== 'consumidor final') {
-      candidateConditions.push({ name: { equals: cleanName, mode: 'insensitive' } });
-    }
+    const candidateConditions = buildCustomerLookupOrConditions({
+      id: customerId,
+      email: customerEmail,
+      phone: customerPhone,
+      documentNum: customerDoc,
+      nrc: customerNrc,
+      name: customerName,
+    });
 
     const matchedCustomers = candidateConditions.length > 0
       ? await prisma.customer.findMany({
@@ -263,38 +239,7 @@ export async function POST(request: Request) {
       matchedCustomers[0] ||
       null;
 
-    const dbCustomer = primaryCust
-      ? {
-          ...primaryCust,
-          tier: primaryCust.tier || matchedCustomers.find((c) => c.tier)?.tier || null,
-          customDiscountPct:
-            primaryCust.customDiscountPct ??
-            matchedCustomers.find((c) => c.customDiscountPct != null)?.customDiscountPct ??
-            null,
-          bottleTier: primaryCust.bottleTier || matchedCustomers.find((c) => c.bottleTier)?.bottleTier || null,
-          bottleCustomDiscountPct:
-            primaryCust.bottleCustomDiscountPct ??
-            matchedCustomers.find((c) => c.bottleCustomDiscountPct != null)?.bottleCustomDiscountPct ??
-            null,
-          suppliesTier: primaryCust.suppliesTier || matchedCustomers.find((c) => c.suppliesTier)?.suppliesTier || null,
-          suppliesCustomDiscountPct:
-            primaryCust.suppliesCustomDiscountPct ??
-            matchedCustomers.find((c) => c.suppliesCustomDiscountPct != null)?.suppliesCustomDiscountPct ??
-            null,
-          specialEssencePrice:
-            primaryCust.specialEssencePrice ??
-            matchedCustomers.find((c) => c.specialEssencePrice != null)?.specialEssencePrice ??
-            null,
-          specialHalfEssencePrice:
-            (primaryCust as any).specialHalfEssencePrice ??
-            (matchedCustomers.find((c) => (c as any).specialHalfEssencePrice != null) as any)?.specialHalfEssencePrice ??
-            null,
-          specialBottlePrice:
-            primaryCust.specialBottlePrice ??
-            matchedCustomers.find((c) => c.specialBottlePrice != null)?.specialBottlePrice ??
-            null,
-        }
-      : null;
+    const dbCustomer = consolidateCustomerDiscounts(primaryCust, matchedCustomers);
 
     // El precio de lista vigente al momento de cotizar se toma de la BD (no del cliente),
     // para poder avisar después si cambió.
@@ -302,7 +247,16 @@ export async function POST(request: Request) {
     const products = productIds.length
       ? await prisma.product.findMany({
           where: { id: { in: productIds } },
-          select: { id: true, name: true, category: { select: { name: true } }, unit: true, price: true, priceHalfOunce: true },
+          select: {
+            id: true,
+            sku: true,
+            name: true,
+            officialName: true,
+            category: { select: { name: true } },
+            unit: true,
+            price: true,
+            priceHalfOunce: true,
+          },
         })
       : [];
     const productMap = new Map(products.map((p) => [p.id, p]));
@@ -316,10 +270,14 @@ export async function POST(request: Request) {
       if (prod && dbCustomer) {
         const cat = prod.category?.name || '';
         const nameLower = String(prod.name || it.name || '').toLowerCase();
+        const isNonEssenceOrLitro =
+          nameLower.includes('litro') ||
+          nameLower.includes('alcohol');
         const isEssence =
-          cat === 'Esencias para Perfume' ||
-          cat === 'Esencias & Fragancias' ||
-          (!cat && prod.unit === 'Onza');
+          !isNonEssenceOrLitro &&
+          (cat === 'Esencias para Perfume' ||
+            cat === 'Esencias & Fragancias' ||
+            (!cat && prod.unit === 'Onza'));
         const isBottle =
           !isEssence &&
           (cat === 'Botes' ||
@@ -333,55 +291,64 @@ export async function POST(request: Request) {
           prod.id === 'ENVIO-DOM' ||
           prod.unit === 'Servicio';
 
-        let basePrice = catalogListPrice != null ? catalogListPrice : unitPrice;
-        if (isEssence && it.presentation === 'MEDIA_ONZA') {
-          if (dbCustomer.specialHalfEssencePrice != null && Number(dbCustomer.specialHalfEssencePrice) > 0) {
-            basePrice = Number(dbCustomer.specialHalfEssencePrice);
+        const isHalloweenPromo = isEssence && isHalloweenPromoProduct(prod);
+        if (isHalloweenPromo) {
+          const promoPrice =
+            it.presentation === 'MEDIA_ONZA' ? HALLOWEEN_PROMO_PRICE_HALF_OZ : HALLOWEEN_PROMO_PRICE_1OZ;
+          if (promoPrice < unitPrice) {
+            unitPrice = promoPrice;
           }
-        } else if (isEssence) {
-          if (dbCustomer.specialEssencePrice != null && Number(dbCustomer.specialEssencePrice) > 0) {
-            basePrice = Number(dbCustomer.specialEssencePrice);
+        } else {
+          let basePrice = catalogListPrice != null ? catalogListPrice : unitPrice;
+          if (isEssence && it.presentation === 'MEDIA_ONZA') {
+            if (dbCustomer.specialHalfEssencePrice != null && Number(dbCustomer.specialHalfEssencePrice) > 0) {
+              basePrice = Number(dbCustomer.specialHalfEssencePrice);
+            }
+          } else if (isEssence) {
+            if (dbCustomer.specialEssencePrice != null && Number(dbCustomer.specialEssencePrice) > 0) {
+              basePrice = Number(dbCustomer.specialEssencePrice);
+            }
+          } else if (isBottle) {
+            if (dbCustomer.specialBottlePrice != null && Number(dbCustomer.specialBottlePrice) > 0) {
+              basePrice = Number(dbCustomer.specialBottlePrice);
+            }
           }
-        } else if (isBottle) {
-          if (dbCustomer.specialBottlePrice != null && Number(dbCustomer.specialBottlePrice) > 0) {
-            basePrice = Number(dbCustomer.specialBottlePrice);
-          }
-        }
 
-        const activeCategoryTier = isLogistics
-          ? null
-          : isEssence
-          ? dbCustomer.tier
-          : isBottle
-          ? dbCustomer.bottleTier
-          : dbCustomer.suppliesTier;
-        const activeCategoryCustomPct = isLogistics
-          ? null
-          : isEssence
-          ? dbCustomer.customDiscountPct
-          : isBottle
-          ? dbCustomer.bottleCustomDiscountPct
-          : dbCustomer.suppliesCustomDiscountPct;
+          const activeCategoryTier = isLogistics
+            ? null
+            : isEssence
+            ? dbCustomer.tier
+            : isBottle
+            ? dbCustomer.bottleTier
+            : dbCustomer.suppliesTier;
+          const activeCategoryCustomPct = isLogistics
+            ? null
+            : isEssence
+            ? dbCustomer.customDiscountPct
+            : isBottle
+            ? dbCustomer.bottleCustomDiscountPct
+            : dbCustomer.suppliesCustomDiscountPct;
 
-        let appliedPct = 0;
-        if (activeCategoryTier) {
-          if (activeCategoryTier.name === 'Personalizado' && activeCategoryCustomPct) {
+          let appliedPct = 0;
+          if (activeCategoryTier) {
+            if (activeCategoryTier.name === 'Personalizado' && activeCategoryCustomPct) {
+              appliedPct = Number(activeCategoryCustomPct);
+            } else if (activeCategoryTier.discountPct) {
+              appliedPct = Number(activeCategoryTier.discountPct);
+            }
+          } else if (activeCategoryCustomPct && Number(activeCategoryCustomPct) > 0) {
             appliedPct = Number(activeCategoryCustomPct);
-          } else if (activeCategoryTier.discountPct) {
-            appliedPct = Number(activeCategoryTier.discountPct);
           }
-        } else if (activeCategoryCustomPct && Number(activeCategoryCustomPct) > 0) {
-          appliedPct = Number(activeCategoryCustomPct);
-        }
 
-        let customerDiscountedPrice = basePrice;
-        if (appliedPct > 0) {
-          const discAmt = Number((basePrice * (appliedPct / 100)).toFixed(4));
-          customerDiscountedPrice = Number((basePrice - discAmt).toFixed(2));
-        }
+          let customerDiscountedPrice = basePrice;
+          if (appliedPct > 0) {
+            const discAmt = Number((basePrice * (appliedPct / 100)).toFixed(4));
+            customerDiscountedPrice = Number((basePrice - discAmt).toFixed(2));
+          }
 
-        if (customerDiscountedPrice > 0 && customerDiscountedPrice < unitPrice) {
-          unitPrice = customerDiscountedPrice;
+          if (customerDiscountedPrice > 0 && customerDiscountedPrice < unitPrice) {
+            unitPrice = customerDiscountedPrice;
+          }
         }
       }
 

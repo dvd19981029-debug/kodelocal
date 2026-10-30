@@ -2,6 +2,13 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyStaffRequest } from '@/lib/customerAuthToken';
 import { resolveGiroMH, formatGiroOption } from '@/lib/svGirosCat019';
+import {
+  buildCustomerLookupOrConditions,
+  hasCustomerDiscountFields,
+  isGenericDocument,
+  isGenericEmail,
+  isGenericPhone,
+} from '@/lib/customerDiscounts';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,24 +33,13 @@ export async function GET(request: Request) {
       const cEmail = (c.email || '').trim().toLowerCase();
       const cDoc = (c.documentNum || '').replace(/\D/g, '');
       const siblingWithDiscount = customers.find((other) => {
-        if (other.id === c.id) return false;
-        const hasDisc =
-          other.tierId ||
-          other.customDiscountPct != null ||
-          other.specialEssencePrice != null ||
-          (other as any).specialHalfEssencePrice != null ||
-          other.specialBottlePrice != null ||
-          other.bottleTierId ||
-          other.bottleCustomDiscountPct != null ||
-          other.suppliesTierId ||
-          other.suppliesCustomDiscountPct != null;
-        if (!hasDisc) return false;
+        if (other.id === c.id || !hasCustomerDiscountFields(other)) return false;
         const oPhone8 = (other.phone || '').replace(/\D/g, '').slice(-8);
         const oEmail = (other.email || '').trim().toLowerCase();
         const oDoc = (other.documentNum || '').replace(/\D/g, '');
-        if (cPhone8.length === 8 && oPhone8 === cPhone8) return true;
-        if (cEmail && oEmail === cEmail) return true;
-        if (cDoc.length >= 8 && !/^(0+|9+|12345678\d*)$/.test(cDoc) && oDoc === cDoc) return true;
+        if (cPhone8.length === 8 && !isGenericPhone(cPhone8) && oPhone8 === cPhone8) return true;
+        if (cEmail && !isGenericEmail(cEmail) && oEmail === cEmail) return true;
+        if (cDoc.length >= 8 && !isGenericDocument(cDoc) && oDoc === cDoc) return true;
         return false;
       });
 
@@ -92,31 +88,9 @@ export async function GET(request: Request) {
   }
 }
 
-function isGenericPlaceholderEmail(email?: string | null): boolean {
-  if (!email) return true;
-  const e = email.trim().toLowerCase();
-  if (!e) return true;
-  return (
-    /^(cliente|clientes|sin|sincorreo|nocorreo|no|ninguno|na|test|correo|consumidor|final|anonimo|ventas|factura|facturacion)@/.test(e) ||
-    e === 'cliente@gmail.com' ||
-    e === 'sin@correo.com' ||
-    e === 'no@tiene.com'
-  );
-}
-
-function isGenericPlaceholderDocument(doc?: string | null): boolean {
-  if (!doc) return true;
-  const d = doc.trim().replace(/[-\s']/g, '');
-  if (!d) return true;
-  return /^(0+|9+|12345678\d?|123456789\d*|00000000\d?)$/.test(d);
-}
-
-function isGenericPlaceholderPhone(phone?: string | null): boolean {
-  if (!phone) return true;
-  const p = phone.trim().replace(/\D/g, '');
-  if (!p) return true;
-  return /^(0+|7+|9+|2+|12345678)$/.test(p);
-}
+const isGenericPlaceholderEmail = isGenericEmail;
+const isGenericPlaceholderDocument = isGenericDocument;
+const isGenericPlaceholderPhone = isGenericPhone;
 
 export async function POST(request: Request) {
   try {
@@ -327,27 +301,11 @@ export async function POST(request: Request) {
     // Sincronizar tarifas/descuentos con cualquier registro hermano del mismo cliente (por teléfono de 8 dígitos, correo o documento)
     if (customer?.id) {
       try {
-        const siblingOr: any[] = [];
-        if (customer.email && !isGenericPlaceholderEmail(customer.email)) {
-          siblingOr.push({ email: { equals: customer.email, mode: 'insensitive' } });
-        }
-        const pDigits8 = String(customer.phone || '').replace(/\D/g, '').slice(-8);
-        if (pDigits8.length === 8 && !isGenericPlaceholderPhone(pDigits8)) {
-          siblingOr.push(
-            { phone: { endsWith: pDigits8 } },
-            { phone: { endsWith: `${pDigits8.slice(0, 4)}-${pDigits8.slice(4)}` } }
-          );
-        }
-        if (customer.documentNum && !isGenericPlaceholderDocument(customer.documentNum)) {
-          const dDigits = String(customer.documentNum).replace(/\D/g, '');
-          siblingOr.push({ documentNum: customer.documentNum });
-          if (dDigits.length === 9) {
-            siblingOr.push(
-              { documentNum: dDigits },
-              { documentNum: `${dDigits.slice(0, 8)}-${dDigits.slice(8)}` }
-            );
-          }
-        }
+        const siblingOr = buildCustomerLookupOrConditions({
+          email: customer.email,
+          phone: customer.phone,
+          documentNum: customer.documentNum,
+        });
 
         if (siblingOr.length > 0) {
           const siblings = await prisma.customer.findMany({
@@ -385,18 +343,7 @@ export async function POST(request: Request) {
               });
             } else {
               // Si se guardó solo por datos fiscales (ej. al emitir DTE), heredar descuentos de cualquier registro hermano
-              const sibWithDisc = siblings.find(
-                (s) =>
-                  s.tierId ||
-                  s.customDiscountPct != null ||
-                  s.specialEssencePrice != null ||
-                  (s as any).specialHalfEssencePrice != null ||
-                  s.specialBottlePrice != null ||
-                  s.bottleTierId ||
-                  s.bottleCustomDiscountPct != null ||
-                  s.suppliesTierId ||
-                  s.suppliesCustomDiscountPct != null
-              );
+              const sibWithDisc = siblings.find((s) => hasCustomerDiscountFields(s));
               if (sibWithDisc) {
                 customer = await prisma.customer.update({
                   where: { id: customer.id },

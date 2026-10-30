@@ -9,6 +9,7 @@ import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { resolveGiroMH, formatGiroOption } from '@/lib/svGirosCat019';
 import { c807Client } from '@/lib/c807';
 import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ, HALLOWEEN_PROMO_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
+import { buildCustomerLookupOrConditions, consolidateCustomerDiscounts } from '@/lib/customerDiscounts';
 
 export const dynamic = 'force-dynamic';
 
@@ -783,59 +784,54 @@ export async function POST(request: Request) {
     const verifiedCustomer = verifyCustomerToken(bearerToken);
 
     let resolvedCustomerId = verifiedCustomer ? verifiedCustomer.customerId : (customerId || null);
-    const phoneDigits8 = cleanCustomerPhone.replace(/\D/g, '').slice(-8);
+    let dbCustomer: any = null;
 
     if (resolvedCustomerId || cleanCustomerEmail || cleanCustomerPhone || cleanCustomerName) {
       try {
-        let cust = null;
-        if (resolvedCustomerId) {
-          cust = await prisma.customer.findUnique({
-            where: { id: resolvedCustomerId },
-          });
-        }
-        if (!cust && cleanCustomerEmail) {
-          cust = await prisma.customer.findFirst({
-            where: { email: { equals: cleanCustomerEmail, mode: 'insensitive' } },
-          });
-        }
-        if (!cust && phoneDigits8.length === 8) {
-          cust = await prisma.customer.findFirst({
-            where: {
-              OR: [
-                { phone: { endsWith: phoneDigits8 } },
-                { phone: { endsWith: `${phoneDigits8.slice(0, 4)}-${phoneDigits8.slice(4)}` } },
-              ],
-            },
-          });
-        }
-        if (!cust && cleanNumDoc && cleanNumDoc !== '00000000-0') {
-          const dDigits = cleanNumDoc.replace(/\D/g, '');
-          const docOr: any[] = [{ documentNum: cleanNumDoc }];
-          if (dDigits.length === 9 && !/^(0+|9+|12345678\d*)$/.test(dDigits)) {
-            docOr.push(
-              { documentNum: dDigits },
-              { documentNum: `${dDigits.slice(0, 8)}-${dDigits.slice(8)}` }
-            );
-          }
-          cust = await prisma.customer.findFirst({
-            where: { OR: docOr },
-          });
-        }
+        const candidateConditions = buildCustomerLookupOrConditions({
+          id: resolvedCustomerId,
+          extraIds: [verifiedCustomer?.customerId, customerId],
+          email: cleanCustomerEmail,
+          phone: cleanCustomerPhone,
+          documentNum: cleanNumDoc,
+          nrc: cleanNrc,
+        });
 
+        const matchedCustomers = candidateConditions.length > 0
+          ? await prisma.customer.findMany({
+              where: { OR: candidateConditions },
+              include: { tier: true, bottleTier: true, suppliesTier: true },
+            })
+          : [];
+
+        const primaryMatch =
+          (resolvedCustomerId ? matchedCustomers.find((c) => c.id === resolvedCustomerId) : null) ||
+          (cleanCustomerEmail
+            ? matchedCustomers.find((c) => c.email && c.email.trim().toLowerCase() === cleanCustomerEmail)
+            : null) ||
+          matchedCustomers[0] ||
+          null;
+
+        const consolidated = consolidateCustomerDiscounts(primaryMatch, matchedCustomers);
         const isCcfOrder = cleanTipoComprobante === '03' || Boolean(cleanNrc);
 
-        if (cust) {
-          cust = await prisma.customer.update({
-            where: { id: cust.id },
+        if (primaryMatch && consolidated) {
+          const updatedCust = await prisma.customer.update({
+            where: { id: primaryMatch.id },
+            include: { tier: true, bottleTier: true, suppliesTier: true },
             data: {
-              ...(cleanCustomerEmail && !cust.email ? { email: cleanCustomerEmail } : {}),
+              ...(cleanCustomerEmail && !primaryMatch.email ? { email: cleanCustomerEmail } : {}),
               ...(cleanCustomerPhone ? { phone: cleanCustomerPhone } : {}),
               ...(cleanBusinessName ? { businessName: cleanBusinessName, name: cleanBusinessName } : {}),
-              ...(cleanCustomerName && cleanCustomerName !== 'Cliente Online' ? { tradeName: cleanCustomerName } : {}),
-              ...(cleanNumDoc && cleanNumDoc !== '00000000-0' ? {
-                documentNum: cleanNumDoc,
-                documentType: isCcfOrder ? 'NIT' : (cust.documentType || 'DUI'),
-              } : {}),
+              ...(isCcfOrder && cleanCustomerName && cleanCustomerName !== 'Cliente Online'
+                ? { tradeName: cleanCustomerName }
+                : {}),
+              ...(cleanNumDoc && cleanNumDoc !== '00000000-0'
+                ? {
+                    documentNum: cleanNumDoc,
+                    documentType: isCcfOrder ? 'NIT' : (primaryMatch.documentType || 'DUI'),
+                  }
+                : {}),
               ...(cleanNrc ? { nrc: cleanNrc } : {}),
               ...(resolvedActivityCode ? { activityCode: resolvedActivityCode } : {}),
               ...(resolvedActivityDesc ? { activityDesc: resolvedActivityDesc } : {}),
@@ -843,15 +839,41 @@ export async function POST(request: Request) {
               ...(cleanFiscalAddress || cleanShippingAddress ? { address: cleanFiscalAddress || cleanShippingAddress } : {}),
               ...(cleanDepartment ? { department: cleanDepartment } : {}),
               ...(cleanMunicipality ? { municipality: cleanMunicipality } : {}),
+              // Persistir descuentos heredados de registros hermanos si faltaban en el primario
+              ...(!primaryMatch.tierId && consolidated.tierId ? { tierId: consolidated.tierId } : {}),
+              ...(primaryMatch.customDiscountPct == null && consolidated.customDiscountPct != null
+                ? { customDiscountPct: consolidated.customDiscountPct }
+                : {}),
+              ...(!primaryMatch.bottleTierId && consolidated.bottleTierId ? { bottleTierId: consolidated.bottleTierId } : {}),
+              ...(primaryMatch.bottleCustomDiscountPct == null && consolidated.bottleCustomDiscountPct != null
+                ? { bottleCustomDiscountPct: consolidated.bottleCustomDiscountPct }
+                : {}),
+              ...(!primaryMatch.suppliesTierId && consolidated.suppliesTierId
+                ? { suppliesTierId: consolidated.suppliesTierId }
+                : {}),
+              ...(primaryMatch.suppliesCustomDiscountPct == null && consolidated.suppliesCustomDiscountPct != null
+                ? { suppliesCustomDiscountPct: consolidated.suppliesCustomDiscountPct }
+                : {}),
+              ...(primaryMatch.specialEssencePrice == null && consolidated.specialEssencePrice != null
+                ? { specialEssencePrice: consolidated.specialEssencePrice }
+                : {}),
+              ...((primaryMatch as any).specialHalfEssencePrice == null && (consolidated as any).specialHalfEssencePrice != null
+                ? { specialHalfEssencePrice: (consolidated as any).specialHalfEssencePrice }
+                : {}),
+              ...(primaryMatch.specialBottlePrice == null && consolidated.specialBottlePrice != null
+                ? { specialBottlePrice: consolidated.specialBottlePrice }
+                : {}),
             },
           });
-          resolvedCustomerId = cust.id;
+          resolvedCustomerId = updatedCust.id;
+          dbCustomer = consolidateCustomerDiscounts(updatedCust, matchedCustomers);
         } else {
-          cust = await prisma.customer.create({
+          const createdCust = await prisma.customer.create({
+            include: { tier: true, bottleTier: true, suppliesTier: true },
             data: {
               name: cleanBusinessName || cleanCustomerName,
               businessName: cleanBusinessName || (isCcfOrder ? cleanCustomerName : null),
-              tradeName: cleanCustomerName,
+              tradeName: isCcfOrder ? cleanCustomerName : (cleanBusinessName || null),
               email: cleanCustomerEmail || null,
               phone: cleanCustomerPhone || null,
               documentType: isCcfOrder ? 'NIT' : 'DUI',
@@ -865,7 +887,8 @@ export async function POST(request: Request) {
               address: cleanFiscalAddress || cleanShippingAddress || null,
             },
           });
-          resolvedCustomerId = cust.id;
+          resolvedCustomerId = createdCust.id;
+          dbCustomer = createdCust;
         }
       } catch (custErr) {
         console.error('Error asociando cliente a la orden:', custErr);
@@ -873,103 +896,6 @@ export async function POST(request: Request) {
     }
 
     const newOrder = await prisma.$transaction(async (tx) => {
-      // 0. Obtener cliente(s) coincidente(s) en la BD para aplicar siempre sus precios especiales o descuentos VIP legítimos
-      const candidateConditions: any[] = [];
-      if (resolvedCustomerId) candidateConditions.push({ id: resolvedCustomerId });
-      if (verifiedCustomer?.customerId && verifiedCustomer.customerId !== resolvedCustomerId) {
-        candidateConditions.push({ id: verifiedCustomer.customerId });
-      }
-      if (customerId && customerId !== resolvedCustomerId) {
-        candidateConditions.push({ id: customerId });
-      }
-      if (cleanCustomerEmail) {
-        candidateConditions.push({ email: { equals: cleanCustomerEmail, mode: 'insensitive' } });
-      }
-      if (phoneDigits8.length === 8) {
-        candidateConditions.push(
-          { phone: { endsWith: phoneDigits8 } },
-          { phone: { endsWith: `${phoneDigits8.slice(0, 4)}-${phoneDigits8.slice(4)}` } }
-        );
-      }
-      if (cleanNumDoc && cleanNumDoc !== '00000000-0') {
-        candidateConditions.push({ documentNum: cleanNumDoc });
-        const dDigits = cleanNumDoc.replace(/\D/g, '');
-        if (dDigits.length === 9 && !/^(0+|9+|12345678\d*)$/.test(dDigits)) {
-          candidateConditions.push(
-            { documentNum: dDigits },
-            { documentNum: `${dDigits.slice(0, 8)}-${dDigits.slice(8)}` }
-          );
-        }
-      }
-
-      const matchedCustomers = candidateConditions.length > 0
-        ? await tx.customer.findMany({
-            where: { OR: candidateConditions },
-            include: { tier: true, bottleTier: true, suppliesTier: true },
-          })
-        : [];
-
-      const primaryCustomer =
-        matchedCustomers.find((c) => c.id === resolvedCustomerId) ||
-        matchedCustomers[0] ||
-        null;
-
-      // Si el cliente tiene más de un registro (ej. creado en POS por teléfono/DUI con descuento y otro en web por correo),
-      // consolidar los descuentos/precios especiales de cualquiera de sus perfiles verificados en la BD
-      const dbCustomer = primaryCustomer
-        ? {
-            ...primaryCustomer,
-            tier:
-              primaryCustomer.tier ||
-              matchedCustomers.find((c) => c.tier)?.tier ||
-              null,
-            tierId:
-              primaryCustomer.tierId ||
-              matchedCustomers.find((c) => c.tierId)?.tierId ||
-              null,
-            customDiscountPct:
-              primaryCustomer.customDiscountPct ??
-              matchedCustomers.find((c) => c.customDiscountPct != null)?.customDiscountPct ??
-              null,
-            bottleTier:
-              primaryCustomer.bottleTier ||
-              matchedCustomers.find((c) => c.bottleTier)?.bottleTier ||
-              null,
-            bottleTierId:
-              primaryCustomer.bottleTierId ||
-              matchedCustomers.find((c) => c.bottleTierId)?.bottleTierId ||
-              null,
-            bottleCustomDiscountPct:
-              primaryCustomer.bottleCustomDiscountPct ??
-              matchedCustomers.find((c) => c.bottleCustomDiscountPct != null)?.bottleCustomDiscountPct ??
-              null,
-            suppliesTier:
-              primaryCustomer.suppliesTier ||
-              matchedCustomers.find((c) => c.suppliesTier)?.suppliesTier ||
-              null,
-            suppliesTierId:
-              primaryCustomer.suppliesTierId ||
-              matchedCustomers.find((c) => c.suppliesTierId)?.suppliesTierId ||
-              null,
-            suppliesCustomDiscountPct:
-              primaryCustomer.suppliesCustomDiscountPct ??
-              matchedCustomers.find((c) => c.suppliesCustomDiscountPct != null)?.suppliesCustomDiscountPct ??
-              null,
-            specialEssencePrice:
-              primaryCustomer.specialEssencePrice ??
-              matchedCustomers.find((c) => c.specialEssencePrice != null)?.specialEssencePrice ??
-              null,
-            specialHalfEssencePrice:
-              (primaryCustomer as any).specialHalfEssencePrice ??
-              (matchedCustomers.find((c) => (c as any).specialHalfEssencePrice != null) as any)?.specialHalfEssencePrice ??
-              null,
-            specialBottlePrice:
-              primaryCustomer.specialBottlePrice ??
-              matchedCustomers.find((c) => c.specialBottlePrice != null)?.specialBottlePrice ??
-              null,
-          }
-        : null;
-
       // 1. Validar existencias y verificar precios legítimos directamente en la base de datos
       const verifiedItems: {
         productId: string;
