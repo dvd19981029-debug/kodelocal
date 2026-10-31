@@ -4,6 +4,7 @@ import "./globals.css";
 import StorageInitializer from "@/components/StorageInitializer";
 import NavigationWrapper from "@/components/NavigationWrapper";
 import MarketingScripts from "@/components/analytics/MarketingScripts";
+import { Analytics } from "@vercel/analytics/next";
 
 
 const quicksand = Quicksand({
@@ -147,6 +148,7 @@ export default function RootLayout({
         <NavigationWrapper>
           {children}
         </NavigationWrapper>
+        <Analytics />
       </body>
 
     </html>
