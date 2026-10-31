@@ -88,6 +88,13 @@ export interface DailyPunchRecord {
   observacion?: string;
 }
 
+export interface BonusItem {
+  id: string;
+  concept: string;
+  amount: number;
+  taxable: boolean; // true = sujeto a ISSS/AFP/ISR, false = directo al neto
+}
+
 export interface PayrollEmployee {
   id: string;
   code: string;
@@ -120,6 +127,7 @@ export interface PayrollEmployee {
   otherIncome: number; // Horas extras / comisiones / bonificaciones
   otherIncomeNote?: string; // Concepto del bono o ingreso adicional
   otherIncomeTaxable?: boolean; // true (default) = sujeto a ISSS/AFP/ISR, false = directo al neto
+  bonusItems?: BonusItem[]; // Lista detallada de bonos/ingresos adicionales con concepto
   vacationAmount: number; // Monto de vacación
   vacationDays: number; // Días de vacación
   otherDeductions: number; // Anticipos / préstamos / descuentos directos al líquido
@@ -620,6 +628,11 @@ export default function PlanillaModule() {
   const [selectedWorkEmpId, setSelectedWorkEmpId] = useState<string>('emp-1');
   const [showFullEmployerCols, setShowFullEmployerCols] = useState<boolean>(false);
 
+  // Estado temporal para registrar múltiples bonos con conceptos diferentes por colaborador
+  const [draftBonusAmount, setDraftBonusAmount] = useState<string>('');
+  const [draftBonusConcept, setDraftBonusConcept] = useState<string>('');
+  const [draftBonusTaxable, setDraftBonusTaxable] = useState<boolean>(true);
+
   // Doble Calendario (Período de Salario Ordinario vs. Período de Corte de Novedades/Reloj)
   const [periodStart, setPeriodStart] = useState('2026-10-14');
   const [periodEnd, setPeriodEnd] = useState('2026-10-31');
@@ -884,10 +897,35 @@ export default function PlanillaModule() {
         rawTardy > parameters.tardinessGraceMinutes ? rawTardy : 0;
       const tardyDiscount = round2(minuteRate * effectiveTardyMinutes);
 
-      const otherIncome = round2(Number(emp.otherIncome || 0));
-      const isBonusTaxable = emp.otherIncomeTaxable !== false; // Por defecto true (sujeto a cotización)
-      const taxableBonus = isBonusTaxable ? otherIncome : 0;
-      const nonTaxableBonus = isBonusTaxable ? 0 : otherIncome;
+      const bonusItems: BonusItem[] =
+        Array.isArray(emp.bonusItems) && emp.bonusItems.length > 0
+          ? emp.bonusItems
+          : Number(emp.otherIncome || 0) > 0
+          ? [
+              {
+                id: 'legacy-bonus',
+                concept: emp.otherIncomeNote || 'Bono / Ingreso Adicional',
+                amount: round2(Number(emp.otherIncome || 0)),
+                taxable: emp.otherIncomeTaxable !== false,
+              },
+            ]
+          : [];
+
+      const taxableBonus = round2(
+        bonusItems
+          .filter((b) => b.taxable !== false)
+          .reduce((sum, b) => sum + Number(b.amount || 0), 0)
+      );
+      const nonTaxableBonus = round2(
+        bonusItems
+          .filter((b) => b.taxable === false)
+          .reduce((sum, b) => sum + Number(b.amount || 0), 0)
+      );
+      const otherIncome = round2(taxableBonus + nonTaxableBonus);
+      const isBonusTaxable = nonTaxableBonus === 0;
+      const bonusSummaryText = bonusItems
+        .map((b) => `${b.concept} ($${Number(b.amount).toFixed(2)})`)
+        .join(', ');
       const vacationAmount = round2(Number(emp.vacationAmount || 0));
 
       // Columna G: INGRESO SUJETO COTIZACIONES (=E+F)
@@ -945,6 +983,8 @@ export default function PlanillaModule() {
         effectiveTardyMinutes,
         tardyDiscount,
         otherIncome,
+        bonusItems,
+        bonusSummaryText,
         isBonusTaxable,
         taxableBonus,
         nonTaxableBonus,
@@ -1213,8 +1253,98 @@ export default function PlanillaModule() {
     persistState(next, parameters, history);
   };
 
+  const handleAddBonusItem = (empId: string) => {
+    const amt = round2(parseFloat(draftBonusAmount) || 0);
+    if (amt <= 0) {
+      showToast('⚠️ Ingresa un monto mayor a $0.00 para guardar el bono.');
+      return;
+    }
+    const concept = draftBonusConcept.trim() || 'Bono / Ingreso Adicional';
+    const next = employees.map((e) => {
+      if (e.id !== empId) return e;
+      const existing: BonusItem[] =
+        Array.isArray(e.bonusItems) && e.bonusItems.length > 0
+          ? e.bonusItems
+          : Number(e.otherIncome || 0) > 0
+          ? [
+              {
+                id: `bon-legacy-${Date.now()}`,
+                concept: e.otherIncomeNote || 'Bono / Ingreso Adicional',
+                amount: round2(Number(e.otherIncome || 0)),
+                taxable: e.otherIncomeTaxable !== false,
+              },
+            ]
+          : [];
+      const updatedItems: BonusItem[] = [
+        ...existing,
+        {
+          id: `bon-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          concept,
+          amount: amt,
+          taxable: draftBonusTaxable,
+        },
+      ];
+      const totalBonus = round2(updatedItems.reduce((s, b) => s + Number(b.amount || 0), 0));
+      const notes = updatedItems.map((b) => `${b.concept} ($${b.amount.toFixed(2)})`).join(', ');
+      return {
+        ...e,
+        bonusItems: updatedItems,
+        otherIncome: totalBonus,
+        otherIncomeNote: notes,
+        otherIncomeTaxable: draftBonusTaxable,
+      };
+    });
+    setEmployees(next);
+    setDraftBonusAmount('');
+    setDraftBonusConcept('');
+    persistState(next, parameters, history);
+    showToast(`✅ Bono "${concept}" ($${amt.toFixed(2)}) guardado y detallado en la planilla.`);
+  };
+
+  const handleRemoveBonusItem = (empId: string, bonusId: string) => {
+    const next = employees.map((e) => {
+      if (e.id !== empId) return e;
+      const current: BonusItem[] =
+        Array.isArray(e.bonusItems) && e.bonusItems.length > 0
+          ? e.bonusItems
+          : Number(e.otherIncome || 0) > 0
+          ? [
+              {
+                id: 'legacy-bonus',
+                concept: e.otherIncomeNote || 'Bono / Ingreso Adicional',
+                amount: round2(Number(e.otherIncome || 0)),
+                taxable: e.otherIncomeTaxable !== false,
+              },
+            ]
+          : [];
+      const updatedItems = current.filter((b) => b.id !== bonusId);
+      const totalBonus = round2(updatedItems.reduce((s, b) => s + Number(b.amount || 0), 0));
+      const notes = updatedItems.map((b) => `${b.concept} ($${b.amount.toFixed(2)})`).join(', ');
+      return {
+        ...e,
+        bonusItems: updatedItems,
+        otherIncome: totalBonus,
+        otherIncomeNote: notes,
+      };
+    });
+    setEmployees(next);
+    persistState(next, parameters, history);
+    showToast('🗑️ Bono eliminado de la planilla.');
+  };
+
+  const handleClearEmployeeBonuses = (empId: string) => {
+    const next = employees.map((e) =>
+      e.id === empId
+        ? { ...e, bonusItems: [], otherIncome: 0, otherIncomeNote: '' }
+        : e
+    );
+    setEmployees(next);
+    persistState(next, parameters, history);
+    showToast('🧹 Bonos limpiados para este colaborador.');
+  };
+
   const resetPeriodNovelties = () => {
-    if (!confirm('¿Limpiar minutos tarde, ausencias, otros ingresos y anticipos del período actual?')) return;
+    if (!confirm('¿Limpiar minutos tarde, ausencias, bonos y anticipos del período actual?')) return;
     const cleaned = employees.map((e) => ({
       ...e,
       daysOverride: null,
@@ -1223,6 +1353,8 @@ export default function PlanillaModule() {
       subsidyAmount: 0,
       tardyMinutes: 0,
       otherIncome: 0,
+      otherIncomeNote: '',
+      bonusItems: [],
       vacationAmount: 0,
       vacationDays: 0,
       otherDeductions: 0,
@@ -1472,10 +1604,7 @@ export default function PlanillaModule() {
       doc.text('Vacación:', 24, boxY + 20.5);
       doc.text(`$${r.vacationAmount.toFixed(2)}`, 101, boxY + 20.5, { align: 'right' });
 
-      const bonusLabel = r.emp.otherIncomeNote
-        ? `Adic. (${r.emp.otherIncomeNote.slice(0, 18)}):`
-        : 'Bonos / Ingresos Adic.:';
-      doc.text(bonusLabel, 24, boxY + 27);
+      doc.text('Bonos / Ingresos Adic.:', 24, boxY + 27);
       doc.text(`$${r.otherIncome.toFixed(2)}`, 101, boxY + 27, { align: 'right' });
 
       doc.setDrawColor(148, 163, 184);
@@ -1484,6 +1613,17 @@ export default function PlanillaModule() {
       doc.setFont('helvetica', 'bold');
       doc.text('INGRESO SUJETO COTIZ.:', 24, boxY + 38.5);
       doc.text(`$${r.totalDevengado.toFixed(2)}`, 101, boxY + 38.5, { align: 'right' });
+
+      // Detalle de conceptos de bonos debajo de las cajas si tiene bonos registrados
+      if (r.bonusItems && r.bonusItems.length > 0) {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.5);
+        doc.setTextColor(6, 95, 70);
+        const detailStr = `Detalle de Bonos / Adicionales: ${r.bonusItems
+          .map((b) => `${b.concept}: $${Number(b.amount).toFixed(2)}${b.taxable === false ? ' (Neto)' : ''}`)
+          .join('  •  ')}`;
+        doc.text(detailStr.slice(0, 115), 20, startY + 80.8);
+      }
 
       // Caja Derecha: Retenciones Legales y Descuentos
       doc.setFillColor(248, 250, 252);
@@ -1629,7 +1769,11 @@ export default function PlanillaModule() {
       ],
       body: computedRows.map((r) => [
         r.index.toString(),
-        r.emp.fullName,
+        r.bonusItems && r.bonusItems.length > 0
+          ? `${r.emp.fullName}\nBonos: ${r.bonusItems
+              .map((b) => `${b.concept} ($${Number(b.amount).toFixed(2)})`)
+              .join(', ')}`
+          : r.emp.fullName,
         r.emp.docNumber,
         r.workedDays.toString(),
         `$${r.ordinarySalary.toFixed(2)}`,
@@ -2685,28 +2829,26 @@ export default function PlanillaModule() {
                       </div>
                     </div>
 
-                    {/* Bloque 2: Ingresos Adicionales / Bonos (Destacado para Rodolfo, Jorge, etc.) */}
+                    {/* Bloque 2: Ingresos Adicionales / Bonos (Múltiples bonos detallados por concepto) */}
                     <div className="bg-emerald-50/80 p-4 rounded-2xl border-2 border-emerald-300/80 space-y-3">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
                           <span className="text-[10px] font-black uppercase text-emerald-800 block">
-                            ✨ Ingresos Adicionales / Bonos / Comisiones
+                            ✨ Registrar Ingresos Adicionales / Bonos / Comisiones
                           </span>
                           <p className="text-xs text-emerald-900 font-semibold">
-                            Agrega aquí cualquier bono o ingreso adicional para{' '}
+                            Puedes agregar uno o varios bonos con conceptos diferentes para{' '}
                             <strong>{activeRow.emp.firstName}</strong>:
                           </p>
                         </div>
                         <div className="flex items-center gap-1">
-                          {[25, 50, 75, 100].map((amt) => (
+                          {[15, 25, 50, 100].map((amt) => (
                             <button
                               key={amt}
                               type="button"
                               onClick={() =>
-                                updateEmployeeField(
-                                  activeRow.emp.id,
-                                  'otherIncome',
-                                  round2((activeRow.emp.otherIncome || 0) + amt)
+                                setDraftBonusAmount(
+                                  String(round2((parseFloat(draftBonusAmount) || 0) + amt))
                                 )
                               }
                               className="px-2 py-1 rounded-lg bg-white hover:bg-emerald-600 hover:text-white text-emerald-900 border border-emerald-300 text-xs font-mono font-black transition-colors cursor-pointer"
@@ -2714,24 +2856,13 @@ export default function PlanillaModule() {
                               +${amt}
                             </button>
                           ))}
-                          {activeRow.otherIncome > 0 && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                updateEmployeeField(activeRow.emp.id, 'otherIncome', 0)
-                              }
-                              className="px-2 py-1 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-800 text-xs font-bold cursor-pointer"
-                            >
-                               $0
-                            </button>
-                          )}
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
+                        <div className="sm:col-span-4">
                           <label className="text-[10px] font-black text-emerald-900 uppercase block mb-1">
-                            Monto de Ingreso Adicional / Bono ($)
+                            Monto del Bono ($)
                           </label>
                           <div className="relative">
                             <DollarSign className="w-4 h-4 text-emerald-700 absolute left-2.5 top-1/2 -translate-y-1/2" />
@@ -2739,55 +2870,62 @@ export default function PlanillaModule() {
                               type="number"
                               step="0.01"
                               min="0"
-                              value={activeRow.emp.otherIncome ? activeRow.emp.otherIncome : ''}
-                              onChange={(e) =>
-                                updateEmployeeField(
-                                  activeRow.emp.id,
-                                  'otherIncome',
-                                  e.target.value === ''
-                                    ? 0
-                                    : Math.max(0, parseFloat(e.target.value) || 0)
-                                )
-                              }
+                              value={draftBonusAmount}
+                              onChange={(e) => setDraftBonusAmount(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleAddBonusItem(activeRow.emp.id);
+                                }
+                              }}
                               className="w-full pl-8 pr-3 py-2 rounded-xl bg-white border-2 border-emerald-400 text-base font-mono font-black text-emerald-950 placeholder:text-slate-300 focus:outline-none focus:border-emerald-600"
                               placeholder="0.00"
                             />
                           </div>
                         </div>
 
-                        <div>
+                        <div className="sm:col-span-5">
                           <label className="text-[10px] font-black text-emerald-900 uppercase block mb-1">
-                            Concepto / Detalle en Boleta (Opcional)
+                            Concepto / Motivo del Bono
                           </label>
                           <input
                             type="text"
-                            value={activeRow.emp.otherIncomeNote || ''}
-                            onChange={(e) =>
-                              updateEmployeeField(
-                                activeRow.emp.id,
-                                'otherIncomeNote',
-                                e.target.value
-                              )
-                            }
-                            placeholder="Ej. Bono por desempeño, Comisión..."
-                            className="w-full px-3 py-2 rounded-xl bg-white border border-emerald-300 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-600"
+                            value={draftBonusConcept}
+                            onChange={(e) => setDraftBonusConcept(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAddBonusItem(activeRow.emp.id);
+                              }
+                            }}
+                            placeholder="Ej. Bono Transporte, Comisión..."
+                            className="w-full px-3 py-2.5 rounded-xl bg-white border border-emerald-300 text-xs font-bold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600"
                           />
+                        </div>
+
+                        <div className="sm:col-span-3">
+                          <button
+                            type="button"
+                            onClick={() => handleAddBonusItem(activeRow.emp.id)}
+                            className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                          >
+                            <Plus className="w-4 h-4" />
+                            <span>Guardar Bono</span>
+                          </button>
                         </div>
                       </div>
 
-                      {/* Selector de si el Bono suma a cotizaciones ISSS/AFP o va directo al Neto */}
+                      {/* Selector de si el Bono a registrar suma a cotizaciones ISSS/AFP o va directo al Neto */}
                       <div className="pt-1 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
                         <span className="font-bold text-emerald-950 text-[11px]">
-                          ¿Cómo deseas aplicar este ingreso adicional?
+                          Tipo de bono a guardar:
                         </span>
                         <div className="flex flex-wrap gap-1.5">
                           <button
                             type="button"
-                            onClick={() =>
-                              updateEmployeeField(activeRow.emp.id, 'otherIncomeTaxable', true)
-                            }
+                            onClick={() => setDraftBonusTaxable(true)}
                             className={`px-2.5 py-1 rounded-lg text-[11px] font-black border cursor-pointer ${
-                              activeRow.isBonusTaxable
+                              draftBonusTaxable
                                 ? 'bg-emerald-700 text-white border-emerald-700'
                                 : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
                             }`}
@@ -2796,11 +2934,9 @@ export default function PlanillaModule() {
                           </button>
                           <button
                             type="button"
-                            onClick={() =>
-                              updateEmployeeField(activeRow.emp.id, 'otherIncomeTaxable', false)
-                            }
+                            onClick={() => setDraftBonusTaxable(false)}
                             className={`px-2.5 py-1 rounded-lg text-[11px] font-black border cursor-pointer ${
-                              !activeRow.isBonusTaxable
+                              !draftBonusTaxable
                                 ? 'bg-indigo-700 text-white border-indigo-700'
                                 : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
                             }`}
@@ -2809,6 +2945,62 @@ export default function PlanillaModule() {
                           </button>
                         </div>
                       </div>
+
+                      {/* Lista de Bonos Guardados para este colaborador */}
+                      {activeRow.bonusItems.length > 0 && (
+                        <div className="pt-2.5 border-t border-emerald-200/80 space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase text-emerald-900">
+                              Bonos Registrados en Planilla ({activeRow.bonusItems.length}) — Total: $
+                              {activeRow.otherIncome.toFixed(2)}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleClearEmployeeBonuses(activeRow.emp.id)}
+                              className="text-[10px] font-bold text-rose-700 hover:underline cursor-pointer"
+                            >
+                              Borrar todos
+                            </button>
+                          </div>
+                          <div className="space-y-1.5">
+                            {activeRow.bonusItems.map((b, bIdx) => (
+                              <div
+                                key={b.id}
+                                className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-emerald-200 text-xs shadow-2xs"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                                    #{bIdx + 1}
+                                  </span>
+                                  <span className="font-black text-slate-800">{b.concept}</span>
+                                  <span
+                                    className={`text-[9.5px] font-bold px-1.5 py-0.5 rounded ${
+                                      b.taxable !== false
+                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                        : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                                    }`}
+                                  >
+                                    {b.taxable !== false ? 'Sujeto ISSS/AFP' : 'Neto Directo'}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2.5">
+                                  <span className="font-mono font-black text-emerald-800 text-sm">
+                                    +${Number(b.amount).toFixed(2)}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveBonusItem(activeRow.emp.id, b.id)}
+                                    className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
+                                    title="Quitar este bono"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Bloque 3: Vacaciones y Otras Deducciones */}
@@ -2939,6 +3131,21 @@ export default function PlanillaModule() {
                               ${activeRow.otherIncome.toFixed(2)}
                             </span>
                           </div>
+                          {activeRow.bonusItems.length > 0 && (
+                            <div className="pl-2 space-y-0.5 border-l-2 border-emerald-300">
+                              {activeRow.bonusItems.map((b) => (
+                                <div
+                                  key={b.id}
+                                  className="flex justify-between text-[10px] text-emerald-800"
+                                >
+                                  <span className="truncate max-w-[115px]">• {b.concept}:</span>
+                                  <span className="font-mono font-bold">
+                                    ${Number(b.amount).toFixed(2)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                           <div className="flex justify-between">
                             <span className="text-slate-600">Vacación:</span>
                             <span className="font-mono font-bold">
@@ -3154,10 +3361,17 @@ export default function PlanillaModule() {
                             ${r.ordinarySalary.toFixed(2)}
                           </td>
                           <td className="py-3 px-2.5 text-right font-mono font-bold text-emerald-800 bg-emerald-50/40">
-                            ${r.otherIncome.toFixed(2)}
-                            {r.emp.otherIncomeNote && (
-                              <div className="text-[9px] text-emerald-700 font-sans truncate max-w-[110px] ml-auto">
-                                {r.emp.otherIncomeNote}
+                            <div>${r.otherIncome.toFixed(2)}</div>
+                            {r.bonusItems.length > 0 && (
+                              <div className="mt-1 space-y-0.5 text-right">
+                                {r.bonusItems.map((b) => (
+                                  <div
+                                    key={b.id}
+                                    className="text-[9.5px] font-sans font-bold text-emerald-900 bg-emerald-100/80 px-1.5 py-0.5 rounded inline-block ml-1"
+                                  >
+                                    {b.concept}: ${Number(b.amount).toFixed(2)}
+                                  </div>
+                                ))}
                               </div>
                             )}
                           </td>
