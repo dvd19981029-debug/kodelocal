@@ -58,7 +58,7 @@ import {
   applyBodegaReceptionToProducts 
 } from '@/lib/purchases';
 import { getActiveUser, UserAccount, getStaffToken } from '@/lib/auth';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, broadcastOrderSync } from '@/lib/supabaseClient';
 import { getOfflineSalesQueue } from '@/lib/offlineSync';
 import { getOriginalFragranceInfo, parseKitOrderItem, resolveBottleImageInfo } from '@/lib/perfumeNames';
 import { printDispatchTicketPdf, downloadDispatchTicketPdf } from '@/lib/thermalTicketPdf';
@@ -401,43 +401,6 @@ export default function BodegaPage() {
           ]
         }));
 
-        // Detección de nuevos pedidos para alerta sonora y visual inmediata
-        const pendingWeb = webSales.filter(s => s.status === 'PENDING_PREPARATION');
-        if (!isFirstLoadRef.current) {
-          const newOrders = pendingWeb.filter(s => !knownOrderIdsRef.current.has(s.id));
-          if (newOrders.length > 0) {
-            const first = newOrders[0];
-            const clientName = first.cliente?.nombre || (first as any).customerName || 'Cliente';
-            
-            // Construir el texto detallado con pausas usando comas
-            let speechText = `Nuevo pedido, cliente ${clientName}. Lléva: `;
-            if (first.items && first.items.length > 0) {
-              const itemTexts = first.items.map((it: any) => {
-                const orig = getOriginalFragranceInfo(it, products);
-                const origDesc = orig?.originalName ? `, original ${orig.originalName}` : '';
-                return `${it.quantity} ${it.unit === 'Onza' ? (it.quantity === 1 ? 'onza' : 'onzas') : 'unidades'} de ${it.name}${origDesc}, en el estante ${it.puesto || 'A1'}`;
-              });
-              speechText += itemTexts.join(', y ');
-            } else {
-              speechText += 'varios productos, revisar pantalla.';
-            }
-
-            if (soundEnabled) playNewOrderChime(speechText);
-            
-            const notificationTitle = `Nueva comanda #${first.saleNumber}`;
-            const notificationBody = `Cliente: ${clientName} - ${first.items?.length || 0} productos`;
-            
-            showToast(`🔔 ${notificationTitle}`);
-            
-            if ('Notification' in window && Notification.permission === 'granted') {
-              new Notification(notificationTitle, { body: notificationBody, icon: '/icon.png' });
-            }
-          }
-        }
-        isFirstLoadRef.current = false;
-        knownOrderIdsRef.current = new Set(webSales.map(s => s.id));
-        setLastSyncTime(new Date());
-
         // Procesar también ventas y comandas de mostrador descargadas en paralelo
         let posSales: SaleRecord[] = [];
         let posLoaded = false;
@@ -554,6 +517,56 @@ export default function BodegaPage() {
           }
         } catch (_) {}
 
+        // Detección de nuevos pedidos (tanto Web como Comandas POS Mostrador) para alerta sonora y visual inmediata
+        const allPendingOrders = [
+          ...webSales.filter(s => s.status === 'PENDING_PREPARATION'),
+          ...posSales.filter(s => s.status === 'PENDING_PREPARATION'),
+        ];
+        if (!isFirstLoadRef.current) {
+          const newOrders = allPendingOrders.filter(
+            s => !knownOrderIdsRef.current.has(s.saleNumber || s.id) && !knownOrderIdsRef.current.has(s.id)
+          );
+          if (newOrders.length > 0) {
+            const first = newOrders[0];
+            const clientName = first.cliente?.nombre || (first as any).customerName || 'Cliente';
+
+            let speechText = `Nuevo pedido, cliente ${clientName}. Lléva: `;
+            if (first.items && first.items.length > 0) {
+              const itemTexts = first.items.map((it: any) => {
+                const orig = getOriginalFragranceInfo(it, products);
+                const origDesc = orig?.originalName ? `, original ${orig.originalName}` : '';
+                return `${it.quantity} ${it.unit === 'Onza' ? (it.quantity === 1 ? 'onza' : 'onzas') : 'unidades'} de ${it.name}${origDesc}, en el estante ${it.puesto || 'A1'}`;
+              });
+              speechText += itemTexts.join(', y ');
+            } else {
+              speechText += 'varios productos, revisar pantalla.';
+            }
+
+            if (soundEnabled) playNewOrderChime(speechText);
+
+            const notificationTitle = `Nueva comanda #${first.saleNumber}`;
+            const notificationBody = `Cliente: ${clientName} - ${first.items?.length || 0} productos`;
+
+            showToast(`🔔 ${notificationTitle}`);
+
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification(notificationTitle, { body: notificationBody, icon: '/icon.png' });
+            }
+          }
+        }
+        isFirstLoadRef.current = false;
+        const nextKnown = new Set<string>();
+        webSales.forEach(s => {
+          if (s.id) nextKnown.add(s.id);
+          if (s.saleNumber) nextKnown.add(s.saleNumber);
+        });
+        posSales.forEach(s => {
+          if (s.id) nextKnown.add(s.id);
+          if (s.saleNumber) nextKnown.add(s.saleNumber);
+        });
+        knownOrderIdsRef.current = nextKnown;
+        setLastSyncTime(new Date());
+
         setSales(prev => {
           const queuedNumbers = new Set(getOfflineSalesQueue().map(q => q.saleNumber));
           const localNonWeb = prev.filter(s => {
@@ -562,7 +575,7 @@ export default function BodegaPage() {
             if (posSales.some(p => p.saleNumber === s.saleNumber)) return true;
             // Comanda local ausente en BD: solo se conserva si es reciente o sigue en la cola offline
             const isComanda = s.status === 'PENDING_PREPARATION' || s.status === 'READY_AT_WINDOW';
-            const isFresh = Date.now() - new Date(s.createdAt).getTime() < 2 * 60 * 1000;
+            const isFresh = Date.now() - new Date(s.createdAt).getTime() < 30 * 60 * 1000;
             return !isComanda || isFresh || queuedNumbers.has(s.saleNumber);
           });
           const mergedMap = new Map<string, SaleRecord>();
@@ -648,19 +661,28 @@ export default function BodegaPage() {
         }
       });
 
-    // 3. Respaldo ligero cuando la pestaña está activa: cada 15s si Realtime no está conectado, o cada 5 min si está conectado
+    // 2.2 Canal Broadcast directo entre POS y Bodega (0 latencia, no bloqueado por RLS)
+    const channelBroadcast = supabase
+      .channel('kodelocal-live-broadcast')
+      .on('broadcast', { event: 'order_sync' }, () => {
+        lastBodegaSync = Date.now();
+        fetchEcommerceOrders({ silent: true });
+      })
+      .subscribe();
+
+    // 3. Respaldo ligero cuando la pestaña de Bodega está activa y visible en pantalla (0 llamadas en pestañas ocultas)
     const intervalId = setInterval(() => {
       if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
       const elapsed = Date.now() - lastBodegaSync;
-      if (!isRealtimeSub || elapsed >= 5 * 60 * 1000) {
+      if (elapsed >= 15000) {
         lastBodegaSync = Date.now();
         fetchEcommerceOrders({ silent: true });
       }
     }, 15000);
 
-    // 4. Refresco inmediato al volver a la pestaña de Bodega si estuvo oculta más de 15 segundos
+    // 4. Refresco inmediato al volver a la pestaña de Bodega si estuvo oculta más de 10 segundos
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible' && Date.now() - lastBodegaSync > 15000) {
+      if (document.visibilityState === 'visible' && Date.now() - lastBodegaSync > 10000) {
         lastBodegaSync = Date.now();
         fetchEcommerceOrders({ silent: true });
       }
@@ -670,6 +692,7 @@ export default function BodegaPage() {
     return () => {
       supabase.removeChannel(channelWeb);
       supabase.removeChannel(channelSales);
+      supabase.removeChannel(channelBroadcast);
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
@@ -749,6 +772,7 @@ export default function BodegaPage() {
     });
     
     showToast('❌ Comanda cancelada.');
+    broadcastOrderSync({ saleNumber: sales.find(s => s.id === orderId)?.saleNumber, source: 'bodega', action: 'cancelled' });
   };
 
   // Marcar pedido como listo para ventanilla
@@ -800,6 +824,7 @@ export default function BodegaPage() {
       return updated;
     });
     showToast('✅ Pedido preparado y enviado a Ventanilla / Despacho.');
+    broadcastOrderSync({ saleNumber: targetSale?.saleNumber, source: 'bodega', action: 'ready_at_window' });
   };
 
   // Marcar pedido como entregado
@@ -827,6 +852,7 @@ export default function BodegaPage() {
       return updated;
     });
     showToast('📦 Pedido entregado al cliente / repartidor.');
+    broadcastOrderSync({ saleNumber: sales.find(s => s.id === orderId)?.saleNumber, source: 'bodega', action: 'completed' });
   };
 
   // Confirmar pago por transferencia bancaria para empezar a preparar o despachar

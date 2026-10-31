@@ -10,3 +10,45 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
   },
 });
+
+let sharedBroadcastChannel: ReturnType<typeof supabase.channel> | null = null;
+let sharedBroadcastReady: Promise<void> | null = null;
+
+function ensureBroadcastChannel() {
+  if (typeof window === 'undefined') return null;
+  if (!sharedBroadcastChannel) {
+    sharedBroadcastChannel = supabase.channel('kodelocal-live-broadcast', {
+      config: { broadcast: { self: false } },
+    });
+    sharedBroadcastReady = new Promise<void>((resolve) => {
+      sharedBroadcastChannel!.subscribe((status) => {
+        if (status === 'SUBSCRIBED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          resolve();
+        }
+      });
+      setTimeout(resolve, 1500);
+    });
+  }
+  return sharedBroadcastChannel;
+}
+
+export async function broadcastOrderSync(
+  payload: { saleNumber?: string; source?: string; action?: string } = {}
+) {
+  if (typeof window === 'undefined') return;
+  try {
+    const ch = ensureBroadcastChannel();
+    if (!ch) return;
+    if (sharedBroadcastReady) {
+      await sharedBroadcastReady;
+    }
+    await ch.send({
+      type: 'broadcast',
+      event: 'order_sync',
+      payload: { ...payload, ts: Date.now() },
+    });
+  } catch (err) {
+    console.warn('Error enviando broadcast de sincronización:', err);
+  }
+}
+

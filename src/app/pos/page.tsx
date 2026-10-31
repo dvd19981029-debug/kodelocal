@@ -32,9 +32,10 @@ import {
   getMunicipiosByDepartamento 
 } from '@/lib/svTerritory';
 import { getStaffToken, getActiveSessionUI } from '@/lib/auth';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, broadcastOrderSync } from '@/lib/supabaseClient';
 import { 
   syncSaleOnlineOrQueue, 
+  enqueueOfflineSale,
   initOfflineSync, 
   getOfflineQueueCount, 
   getOfflineSalesQueue, 
@@ -749,7 +750,9 @@ export default function PosPage() {
               const queuedNumbers = new Set(getOfflineSalesQueue().map(q => q.saleNumber));
               prev.forEach(p => {
                 if (!mergedMap.has(p.saleNumber)) {
-                  const isFresh = Date.now() - new Date(p.createdAt).getTime() < 2 * 60 * 1000;
+                  const isPendingComanda = p.status === 'PENDING_PREPARATION' || p.status === 'READY_AT_WINDOW';
+                  const maxAgeMs = isPendingComanda ? 30 * 60 * 1000 : 2 * 60 * 1000;
+                  const isFresh = Date.now() - new Date(p.createdAt).getTime() < maxAgeMs;
                   if (p.channel === 'ONLINE' || isFresh || queuedNumbers.has(p.saleNumber)) {
                     mergedMap.set(p.saleNumber, p);
                   }
@@ -848,11 +851,18 @@ export default function PosPage() {
         isRealtimeSub = status === 'SUBSCRIBED';
       });
 
-    // Respaldo ligero solo si Realtime se desconecta (25s activo) o cada 5 min si Realtime está activo
+    const broadcastSub = supabase
+      .channel('kodelocal-live-broadcast')
+      .on('broadcast', { event: 'order_sync' }, () => {
+        scheduleSalesSync();
+      })
+      .subscribe();
+
+    // Respaldo ligero solo cuando la pestaña está visible en pantalla (0 llamadas en pestañas ocultas)
     const intervalId = setInterval(() => {
       if (typeof navigator !== 'undefined' && navigator.onLine && document.visibilityState === 'visible') {
         const elapsed = Date.now() - lastPosSync;
-        if (!isRealtimeSub || elapsed >= 5 * 60 * 1000) {
+        if (elapsed >= 25 * 1000) {
           lastPosSync = Date.now();
           syncSalesFromServer();
         }
@@ -860,7 +870,7 @@ export default function PosPage() {
     }, 25 * 1000);
 
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible' && Date.now() - lastPosSync > 30000) {
+      if (document.visibilityState === 'visible' && Date.now() - lastPosSync > 15000) {
         lastPosSync = Date.now();
         syncSalesFromServer();
         refreshProductsFromServer();
@@ -875,6 +885,7 @@ export default function PosPage() {
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', handleVisibility);
       supabase.removeChannel(channel);
+      supabase.removeChannel(broadcastSub);
     };
   }, [syncSalesFromServer]);
 
@@ -2310,37 +2321,83 @@ export default function PosPage() {
       });
     }
 
-    // Persistir comanda en Supabase para que Bodega en cualquier dispositivo la reciba al instante
-    getStaffToken().then(staffToken => {
-      fetch('/api/sales', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
-        },
-        body: JSON.stringify({
-          saleNumber: cmdNum,
-          channel: 'POS',
-          subtotal: subtotalNeto,
-          ivaTotal: ivaCalculado,
-          total: cartSubtotal,
-          tipoComprobante,
-          paymentMethod: resolvedDomicilioPaymentMethod,
-          paymentStatus: 'PENDING',
-          orderStatus: 'PENDING_PREPARATION',
-          notes: JSON.stringify({
-            desc: effectiveIsDomicilio ? 'Comanda Domicilio POS para Bodega' : 'Comanda mostrador para Bodega',
-            cliente: newOrder.cliente,
-            tipoComprobante,
-            isDomicilio: effectiveIsDomicilio,
-            domicilio: domicilioPayload,
-          }),
-          cashierName: 'Vendedora Mostrador',
-          customerId: clientObj?.id || (selectedCustomerId || null),
-          items: cart.map(formatCartItem),
-        }),
-      }).catch(err => console.error('Error sincronizando comanda con Supabase:', err));
+    // Persistir comanda en Supabase con reintento automático y respaldo en cola offline para que Bodega NUNCA pierda un pedido
+    const formattedItems = cart.map(formatCartItem);
+    const comandaNotes = JSON.stringify({
+      desc: effectiveIsDomicilio ? 'Comanda Domicilio POS para Bodega' : 'Comanda mostrador para Bodega',
+      cliente: newOrder.cliente,
+      tipoComprobante,
+      isDomicilio: effectiveIsDomicilio,
+      domicilio: domicilioPayload,
     });
+    const comandaCustomerId = clientObj?.id || (selectedCustomerId || null);
+
+    (async () => {
+      const payload = {
+        saleNumber: cmdNum,
+        channel: 'POS' as const,
+        subtotal: subtotalNeto,
+        ivaTotal: ivaCalculado,
+        total: cartSubtotal,
+        tipoComprobante,
+        paymentMethod: resolvedDomicilioPaymentMethod,
+        paymentStatus: 'PENDING',
+        orderStatus: 'PENDING_PREPARATION',
+        notes: comandaNotes,
+        cashierName: 'Vendedora Mostrador',
+        customerId: comandaCustomerId || undefined,
+        items: formattedItems,
+      };
+
+      const tryPostComanda = async (forceRefreshToken = false): Promise<boolean> => {
+        const staffToken = await getStaffToken(forceRefreshToken);
+        const res = await fetch('/api/sales', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
+          body: JSON.stringify(payload),
+        });
+        if (res.status === 401 && !forceRefreshToken) {
+          return tryPostComanda(true);
+        }
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && (data.success || data.alreadyExists)) {
+          if (data.sale?.id) {
+            setSales(prev => {
+              const next = prev.map(s => (s.saleNumber === cmdNum ? { ...s, id: data.sale.id } : s));
+              localStorage.setItem('kodelocal_sales', JSON.stringify(next));
+              return next;
+            });
+          }
+          return true;
+        }
+        return false;
+      };
+
+      try {
+        let ok = await tryPostComanda(false);
+        if (!ok) {
+          await new Promise(r => setTimeout(r, 800));
+          ok = await tryPostComanda(true);
+        }
+        if (ok) {
+          broadcastOrderSync({ saleNumber: cmdNum, source: 'pos', action: 'new_comanda' });
+        } else {
+          enqueueOfflineSale({
+            ...payload,
+            requiresDte: false,
+          });
+        }
+      } catch (err) {
+        console.error('Error sincronizando comanda con Supabase, guardando en cola offline:', err);
+        enqueueOfflineSale({
+          ...payload,
+          requiresDte: false,
+        });
+      }
+    })();
 
     const totalQty = cart.reduce((acc, i) => acc + i.quantity, 0);
     clearCart();
@@ -2544,6 +2601,7 @@ export default function PosPage() {
       if (!res.ok || data.success === false) {
         throw new Error(data.error || `Error ${res.status}`);
       }
+      broadcastOrderSync({ saleNumber: cmdNum, source: 'pos', action: 'new_comanda' });
     } catch (err: any) {
       await patchQuote(quote.id, 'release');
       alert(`No se pudo enviar a Bodega: ${err?.message || 'error de conexión'}.\nLa prefactura sigue pendiente.`);

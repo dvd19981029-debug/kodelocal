@@ -7,6 +7,7 @@
  */
 
 import { getStaffToken } from './auth';
+import { broadcastOrderSync } from './supabaseClient';
 
 export interface OfflineSalePayload {
   saleNumber: string;
@@ -15,6 +16,8 @@ export interface OfflineSalePayload {
   ivaTotal: number;
   total: number;
   paymentMethod: string;
+  paymentStatus?: string;
+  orderStatus?: string;
   cashReceived?: number;
   cashChange?: number;
   notes?: string;
@@ -164,7 +167,9 @@ export async function flushOfflineQueue(
   for (const item of queue) {
     try {
       // 1. Si la venta requería DTE fiscal (01 o 03) y aún no tiene código de generación (emitida offline / en contingencia)
-      if ((item.requiresDte || !item.codigoGeneracion) && (item.tipoComprobante === '01' || item.tipoComprobante === '03')) {
+      const isPendingComanda =
+        item.orderStatus === 'PENDING_PREPARATION' || item.orderStatus === 'READY_AT_WINDOW';
+      if (!isPendingComanda && (item.requiresDte || !item.codigoGeneracion) && (item.tipoComprobante === '01' || item.tipoComprobante === '03')) {
         try {
           console.log(`📡 [OfflineSync] Retransmitiendo DTE-${item.tipoComprobante} a Factura Llama para venta #${item.saleNumber}...`);
           const dteRes = await fetch('/api/dte', {
@@ -262,8 +267,8 @@ export async function flushOfflineQueue(
           ivaTotal: item.ivaTotal,
           total: item.total,
           paymentMethod: item.paymentMethod,
-          paymentStatus: 'COMPLETED',
-          orderStatus: 'COMPLETED',
+          paymentStatus: item.paymentStatus || 'COMPLETED',
+          orderStatus: item.orderStatus || 'COMPLETED',
           cashReceived: item.cashReceived,
           cashChange: item.cashChange,
           notes: item.notes,
@@ -331,6 +336,7 @@ export async function flushOfflineQueue(
       }
     } catch (_) {}
     window.dispatchEvent(new Event('kodelocal_sales_updated'));
+    broadcastOrderSync({ source: 'offline_sync', action: 'flushed' });
   }
 
   return { synced, failed, lastError: lastErrorMessage };
