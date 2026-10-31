@@ -655,7 +655,14 @@ export default function EcommerceOrdersPanel() {
                         </span>
                       ) : (
                         <div>
-                          <div className="font-medium text-slate-700 whitespace-nowrap">Domicilio</div>
+                          <div className="font-medium text-slate-700 whitespace-nowrap flex items-center gap-1.5">
+                            <span>Domicilio</span>
+                            {Number(o.shippingCost || 0) > 0 && (
+                              <span className="px-1.5 py-0.2 rounded bg-blue-50 text-blue-800 border border-blue-200 font-mono font-bold text-[10px]">
+                                Envío: {money(o.shippingCost)}
+                              </span>
+                            )}
+                          </div>
                           <div className="text-[11px] text-slate-500 truncate max-w-[150px]" title={o.municipality}>
                             {o.municipality}
                           </div>
@@ -1409,90 +1416,130 @@ function OrderDetailModal({
           </Section>
 
           <div className="md:col-span-2">
-            <Section icon={<Package className="w-3.5 h-3.5" />} title={`Productos (${o.items.length})`}>
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-slate-500 text-left">
-                    <th className="py-1">Producto</th>
-                    <th className="py-1">Presentación</th>
-                    <th className="py-1 text-center">Cant.</th>
-                    <th className="py-1 text-right">P. unit.</th>
-                    <th className="py-1 text-right">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {o.items.map((it) => {
-                    const kitInfo = parseKitOrderItem(it);
-                    return (
-                      <tr key={it.id} className="border-t border-slate-200 align-top">
-                        <td className="py-2 font-bold">
-                          {kitInfo ? (
-                            <div className="space-y-0.5">
-                              <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-900 border border-purple-200">
-                                ✨ Arma tu propio perfume (100 ml)
-                              </span>
-                              <div className="text-slate-900 font-black">
-                                Fragancia: {kitInfo.fragranceName}
-                              </div>
-                              {(kitInfo.originalName || it.inspiredBy) && (
-                                <div className="text-[10.5px] font-bold text-amber-900">
-                                  Original: {kitInfo.originalName || it.inspiredBy}
-                                  {kitInfo.brand ? ` • ${kitInfo.brand}` : ''}
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <>
-                              {it.productName}
-                              {it.inspiredBy && (
-                                <div className="text-[10px] font-medium text-slate-500">Inspirado en: {it.inspiredBy}</div>
-                              )}
-                            </>
-                          )}
-                        </td>
-                        <td className="py-2">
-                          {kitInfo ? (
-                            <div className="space-y-1 text-[11px]">
-                              <div>
-                                <span className="text-slate-500">Concentración: </span>
-                                <strong className={kitInfo.isPlus ? 'text-purple-700 font-black' : 'text-slate-800 font-bold'}>
-                                  {kitInfo.isPlus ? '1.5 Oz PLUS (1 Oz + ½ Oz)' : '1 Oz Estándar'}
-                                </strong>
-                              </div>
-                              <div>
-                                <span className="text-slate-500">Bote 100ml: </span>
-                                <strong className="text-slate-900 font-black">
-                                  {kitInfo.bottleName} (📍 {kitInfo.bottlePuesto})
-                                </strong>
-                              </div>
-                              <div>
-                                <span className="text-slate-500">Etiqueta: </span>
-                                <strong className={kitInfo.hasLabel ? 'text-emerald-700 font-black' : 'text-slate-600 font-bold'}>
-                                  {kitInfo.hasLabel ? 'Con Etiqueta' : 'Sin Etiqueta'}
-                                </strong>
-                              </div>
-                            </div>
-                          ) : (
-                            it.presentation
-                          )}
-                        </td>
-                        <td className="py-2 text-center font-mono">{it.quantity}</td>
-                        <td className="py-2 text-right font-mono">{money(it.unitPrice)}</td>
-                        <td className="py-2 text-right font-mono font-bold">{money(it.total)}</td>
+            {(() => {
+              const hasEnvioRow = o.items.some(
+                (it) =>
+                  String(it.productName || '').toLowerCase().includes('envío a domicilio') ||
+                  String(it.id || '').includes('ENVIO-DOM')
+              );
+              const displayItems: EcoItem[] = [
+                ...o.items,
+                ...(Number(o.shippingCost || 0) > 0 && !hasEnvioRow
+                  ? [
+                      {
+                        id: `${o.id}-ENVIO-DOM`,
+                        productName: 'Envío a Domicilio',
+                        inspiredBy: null,
+                        presentation: 'Servicio',
+                        unitPrice: Number(o.shippingCost),
+                        quantity: 1,
+                        total: Number(o.shippingCost),
+                      },
+                    ]
+                  : []),
+              ];
+              return (
+                <Section icon={<Package className="w-3.5 h-3.5" />} title={`Productos (${displayItems.length})`}>
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="text-slate-500 text-left">
+                        <th className="py-1">Producto</th>
+                        <th className="py-1">Presentación</th>
+                        <th className="py-1 text-center">Cant.</th>
+                        <th className="py-1 text-right">P. unit.</th>
+                        <th className="py-1 text-right">Total</th>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              <div className="border-t border-slate-300 pt-2 mt-2 space-y-0.5">
-                <Row label="Subtotal" value={money(o.subtotal)} />
-                <Row label="Envío" value={money(o.shippingCost)} />
-                <div className="flex justify-between text-sm font-black">
-                  <span>Total</span>
-                  <span>{money(o.total)}</span>
-                </div>
-              </div>
-            </Section>
+                    </thead>
+                    <tbody>
+                      {displayItems.map((it) => {
+                        const kitInfo = parseKitOrderItem(it);
+                        const isShippingRow =
+                          String(it.id || '').includes('ENVIO-DOM') ||
+                          String(it.productName || '').toLowerCase().includes('envío a domicilio');
+                        return (
+                          <tr
+                            key={it.id}
+                            className={`border-t border-slate-200 align-top ${
+                              isShippingRow ? 'bg-blue-50/60 text-blue-950' : ''
+                            }`}
+                          >
+                            <td className="py-2 font-bold">
+                              {kitInfo ? (
+                                <div className="space-y-0.5">
+                                  <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-900 border border-purple-200">
+                                    ✨ Arma tu propio perfume (100 ml)
+                                  </span>
+                                  <div className="text-slate-900 font-black">
+                                    Fragancia: {kitInfo.fragranceName}
+                                  </div>
+                                  {(kitInfo.originalName || it.inspiredBy) && (
+                                    <div className="text-[10.5px] font-bold text-amber-900">
+                                      Original: {kitInfo.originalName || it.inspiredBy}
+                                      {kitInfo.brand ? ` • ${kitInfo.brand}` : ''}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span>{it.productName}</span>
+                                    {isShippingRow && (
+                                      <span className="px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 border border-blue-200 text-[9.5px] font-mono font-black">
+                                        SKU: ENVIO-DOM
+                                      </span>
+                                    )}
+                                  </div>
+                                  {it.inspiredBy && (
+                                    <div className="text-[10px] font-medium text-slate-500">Inspirado en: {it.inspiredBy}</div>
+                                  )}
+                                </>
+                              )}
+                            </td>
+                            <td className="py-2">
+                              {kitInfo ? (
+                                <div className="space-y-1 text-[11px]">
+                                  <div>
+                                    <span className="text-slate-500">Concentración: </span>
+                                    <strong className={kitInfo.isPlus ? 'text-purple-700 font-black' : 'text-slate-800 font-bold'}>
+                                      {kitInfo.isPlus ? '1.5 Oz PLUS (1 Oz + ½ Oz)' : '1 Oz Estándar'}
+                                    </strong>
+                                  </div>
+                                  <div>
+                                    <span className="text-slate-500">Bote 100ml: </span>
+                                    <strong className="text-slate-900 font-black">
+                                      {kitInfo.bottleName} (📍 {kitInfo.bottlePuesto})
+                                    </strong>
+                                  </div>
+                                  <div>
+                                    <span className="text-slate-500">Etiqueta: </span>
+                                    <strong className={kitInfo.hasLabel ? 'text-emerald-700 font-black' : 'text-slate-600 font-bold'}>
+                                      {kitInfo.hasLabel ? 'Con Etiqueta' : 'Sin Etiqueta'}
+                                    </strong>
+                                  </div>
+                                </div>
+                              ) : (
+                                it.presentation
+                              )}
+                            </td>
+                            <td className="py-2 text-center font-mono">{it.quantity}</td>
+                            <td className="py-2 text-right font-mono">{money(it.unitPrice)}</td>
+                            <td className="py-2 text-right font-mono font-bold">{money(it.total)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                  <div className="border-t border-slate-300 pt-2 mt-2 space-y-0.5">
+                    <Row label="Subtotal" value={money(o.subtotal)} />
+                    <Row label="Envío a Domicilio" value={money(o.shippingCost)} />
+                    <div className="flex justify-between text-sm font-black">
+                      <span>Total</span>
+                      <span>{money(o.total)}</span>
+                    </div>
+                  </div>
+                </Section>
+              );
+            })()}
           </div>
 
           {o.notes && (

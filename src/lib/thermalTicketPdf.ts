@@ -514,12 +514,23 @@ function renderDispatchOrderToDoc(doc: any, ticket: SaleRecord, products?: Produ
   }).toLowerCase();
 
   const items = ticket.items || [];
+  const isEnvioItem = (it: any) =>
+    it.productId === 'ENVIO-DOM' || String(it.name || '').toLowerCase().includes('envío a domicilio');
+  const envioItemInList = items.find(isEnvioItem);
   const itemsSubtotal = items.reduce(
     (acc, it) => acc + (Number(it.total) || Number(it.price || 0) * Number(it.quantity || 1)),
     0
   );
-  const shippingAmount = Number(ticket.shippingCost || 0);
-  const resolvedTotal = Number(ticket.total || 0) > 0 ? Number(ticket.total) : itemsSubtotal + shippingAmount;
+  const nonShippingSubtotal = items
+    .filter((it) => !isEnvioItem(it))
+    .reduce((acc, it) => acc + (Number(it.total) || Number(it.price || 0) * Number(it.quantity || 1)), 0);
+  const shippingAmount = envioItemInList
+    ? Number(envioItemInList.total || envioItemInList.price || ticket.shippingCost || 0)
+    : Number(ticket.shippingCost || 0);
+  const resolvedTotal =
+    Number(ticket.total || 0) > 0
+      ? Number(ticket.total)
+      : itemsSubtotal + (envioItemInList ? 0 : shippingAmount);
 
   const customerName = cleanPdfText(ticket.cliente?.nombre || 'Consumidor Final');
   const customerPhone = cleanPdfText(
@@ -742,7 +753,7 @@ function renderDispatchOrderToDoc(doc: any, ticket: SaleRecord, products?: Produ
     doc.setFont('courier', 'normal');
     doc.setFontSize(7.6);
     doc.text('SUBTOTAL PRODUCTOS:', leftM, y);
-    doc.text(`$${itemsSubtotal.toFixed(2)}`, rightM, y, { align: 'right' });
+    doc.text(`$${nonShippingSubtotal.toFixed(2)}`, rightM, y, { align: 'right' });
     y += 3.1;
 
     doc.text('ENVIO A DOMICILIO:', leftM, y);

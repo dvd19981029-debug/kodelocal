@@ -255,20 +255,35 @@ export function mapSaleToDomicilioOrder(s: any): PosDomicilioOrder | null {
     dteStatus: s.dteDocument?.estado || s.dteInfo?.estado || null,
     notesText: pNotes?.desc || null,
     createdAt: s.createdAt,
-    items: itemsRaw.map((it: any, idx: number) => ({
-      id: it.id || `${s.id}-it-${idx}`,
-      productId: it.productId || '',
-      productName: it.productName || it.name || 'Producto',
-      presentation:
-        it.unit && !(String(it.productName || it.name || '').toLowerCase().includes('litro') && it.unit === '½ Onza')
-          ? it.unit
-          : (String(it.productName || it.name || '').toLowerCase().includes('½ oz') || String(it.productName || it.name || '').toLowerCase().includes('media onza')
-              ? '½ Onza'
-              : 'Unidad'),
-      unitPrice: Number(it.unitPrice ?? it.price ?? 0),
-      quantity: Number(it.quantity || 1),
-      total: Number(it.total || 0),
-    })),
+    items: [
+      ...itemsRaw.map((it: any, idx: number) => ({
+        id: it.id || `${s.id}-it-${idx}`,
+        productId: it.productId || '',
+        productName: it.productName || it.name || 'Producto',
+        presentation:
+          it.unit && !(String(it.productName || it.name || '').toLowerCase().includes('litro') && it.unit === '½ Onza')
+            ? it.unit
+            : (String(it.productName || it.name || '').toLowerCase().includes('½ oz') || String(it.productName || it.name || '').toLowerCase().includes('media onza')
+                ? '½ Onza'
+                : 'Unidad'),
+        unitPrice: Number(it.unitPrice ?? it.price ?? 0),
+        quantity: Number(it.quantity || 1),
+        total: Number(it.total || 0),
+      })),
+      ...(!envioItem && shippingCost > 0
+        ? [
+            {
+              id: `${s.id}-ENVIO-DOM`,
+              productId: 'ENVIO-DOM',
+              productName: 'Envío a Domicilio',
+              presentation: 'Servicio',
+              unitPrice: shippingCost,
+              quantity: 1,
+              total: shippingCost,
+            },
+          ]
+        : []),
+    ],
   };
 }
 
@@ -461,7 +476,20 @@ export default function PosDomicilioPanel({ onOrderChanged }: { onOrderChanged?:
                       </span>
                     </div>
                   </td>
-                  <td className="py-2.5 px-3 text-right font-black text-slate-800">{money(o.total)}</td>
+                  <td className="py-2.5 px-3 text-right">
+                    <div className="font-black text-slate-800 font-mono">{money(o.total)}</div>
+                    <div className="mt-0.5">
+                      {o.shippingCost > 0 ? (
+                        <span className="inline-block px-1.5 py-0.2 rounded bg-blue-50 text-blue-800 border border-blue-200 text-[10px] font-mono font-bold">
+                          Envío: {money(o.shippingCost)}
+                        </span>
+                      ) : (
+                        <span className="inline-block px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold">
+                          Envío: $0.00
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td className="py-2.5 px-3 text-center">
                     <span
                       className={`px-2.5 py-0.5 rounded-full text-[10px] font-black ${
@@ -1273,20 +1301,40 @@ function PosDomicilioDetailModal({
                   </tr>
                 </thead>
                 <tbody>
-                  {o.items.map((it) => (
-                    <tr key={it.id} className="border-t border-slate-200">
-                      <td className="py-1.5 font-bold">{it.productName}</td>
-                      <td className="py-1.5">{it.presentation}</td>
-                      <td className="py-1.5 text-center font-mono">{it.quantity}</td>
-                      <td className="py-1.5 text-right font-mono">{money(it.unitPrice)}</td>
-                      <td className="py-1.5 text-right font-mono font-bold">{money(it.total)}</td>
-                    </tr>
-                  ))}
+                  {o.items.map((it) => {
+                    const isShippingRow =
+                      it.productId === 'ENVIO-DOM' ||
+                      String(it.productName || '').toLowerCase().includes('envío a domicilio');
+                    return (
+                      <tr
+                        key={it.id}
+                        className={`border-t border-slate-200 ${
+                          isShippingRow ? 'bg-blue-50/60 text-blue-950' : ''
+                        }`}
+                      >
+                        <td className="py-1.5 font-bold">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span>{it.productName}</span>
+                            {isShippingRow && (
+                              <span className="px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 border border-blue-200 text-[9.5px] font-mono font-black">
+                                SKU: ENVIO-DOM
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-1.5">{it.presentation}</td>
+                        <td className="py-1.5 text-center font-mono">{it.quantity}</td>
+                        <td className="py-1.5 text-right font-mono">{money(it.unitPrice)}</td>
+                        <td className="py-1.5 text-right font-mono font-bold">{money(it.total)}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
               <div className="border-t border-slate-300 pt-2 mt-2 space-y-0.5">
                 <Row label="Subtotal Neto" value={money(o.subtotal)} />
                 <Row label="IVA (13%)" value={money(o.ivaTotal)} />
+                <Row label="Envío a Domicilio cobrado (ENVIO-DOM)" value={money(o.shippingCost)} />
                 <div className="flex justify-between text-sm font-black pt-1">
                   <span>Total</span>
                   <span>{money(o.total)}</span>

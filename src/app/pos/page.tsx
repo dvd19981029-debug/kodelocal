@@ -1535,12 +1535,63 @@ export default function PosPage() {
     productId: string, 
     presentation?: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD'
   ) => {
+    if (productId === 'ENVIO-DOM') {
+      setIsOrderDomicilio(false);
+    }
     setCart(prev => prev.filter(item => {
       if (presentation) {
         return !(item.product.id === productId && (item.presentation || 'ONZA_COMPLETA') === presentation);
       }
       return item.product.id !== productId;
     }));
+  };
+
+  const handleToggleOrderDomicilio = (val: boolean) => {
+    setIsOrderDomicilio(val);
+    if (val) {
+      const envioProd: ProductItem =
+        products.find(
+          (p) =>
+            p.id === 'ENVIO-DOM' ||
+            p.sku === 'ENVIO-DOM' ||
+            p.name.toLowerCase().includes('envío a domicilio')
+        ) || ({
+          id: 'ENVIO-DOM',
+          sku: 'ENVIO-DOM',
+          barcode: '741009000001',
+          name: 'Envío a Domicilio',
+          officialName: 'Envío a Domicilio',
+          brand: 'Logística',
+          gender: 'Unisex',
+          category: 'Logística',
+          unit: 'Servicio',
+          price: 2.9,
+          cost: 0,
+          stock: 999999,
+          minStock: 0,
+          imageUrl: '/images/insumos/envio_domicilio.svg',
+          puesto: 'LOG',
+        } as ProductItem);
+      setCart((prev) => {
+        const alreadyInCart = prev.some(
+          (it) =>
+            it.product.id === 'ENVIO-DOM' ||
+            it.product.sku === 'ENVIO-DOM' ||
+            it.product.name.toLowerCase().includes('envío a domicilio')
+        );
+        if (alreadyInCart) return prev;
+        return [...prev, { product: envioProd, quantity: 1, presentation: 'UNIDAD' }];
+      });
+    } else {
+      setCart((prev) =>
+        prev.filter(
+          (it) =>
+            it.product.id !== 'ENVIO-DOM' &&
+            it.product.sku !== 'ENVIO-DOM' &&
+            !it.product.name.toLowerCase().includes('envío a domicilio')
+        )
+      );
+    }
   };
 
   const setItemPresentation = (
@@ -2359,6 +2410,13 @@ export default function PosPage() {
     }
 
     setCart(restoredCart);
+    const quoteHasEnvio = restoredCart.some(
+      (it) =>
+        it.product.id === 'ENVIO-DOM' ||
+        it.product.sku === 'ENVIO-DOM' ||
+        it.product.name.toLowerCase().includes('envío a domicilio')
+    );
+    setIsOrderDomicilio(quoteHasEnvio);
 
     const matchedCust = findCustomerForPerson({
       correo: quote.customerEmail || undefined,
@@ -2415,6 +2473,11 @@ export default function PosPage() {
       presentation: it.presentation || undefined,
       puesto: it.puesto || undefined,
     }));
+    const quoteIsDomicilio = items.some(
+      (it) =>
+        it.productId === 'ENVIO-DOM' ||
+        String(it.name || '').toLowerCase().includes('envío a domicilio')
+    );
     const cliente = {
       id: clientObj?.id || undefined,
       nombre: clientObj?.name || quote.customerName,
@@ -2423,9 +2486,25 @@ export default function PosPage() {
       correo: clientObj?.email || quote.customerEmail || undefined,
       telefono: clientObj?.phone || quote.customerPhone || undefined,
       direccion: clientObj?.direccion || quote.customerAddress || undefined,
+      departamento: clientObj?.departamento || 'San Salvador',
+      municipio: clientObj?.municipio || 'San Salvador',
       actividadEconomica: clientObj?.actividadEconomica || undefined,
       categoriaContribuyente: clientObj?.categoriaContribuyente || undefined,
     };
+    const quoteDomicilioPayload = quoteIsDomicilio
+      ? {
+          isDomicilio: true,
+          customerName: cliente.nombre || 'Consumidor Final',
+          customerPhone: cliente.telefono || '',
+          customerEmail: cliente.correo || '',
+          department: cliente.departamento || 'San Salvador',
+          municipality: cliente.municipio || 'San Salvador',
+          shippingAddress: cliente.direccion || '',
+          domicilioStatus: 'PENDIENTE' as const,
+          c807PaymentMode: 'CONTRA_ENTREGA' as const,
+          c807ServiceType: 'CCE' as const,
+        }
+      : undefined;
 
     // 2. Crear la comanda en el servidor; si falla, se libera la prefactura
     try {
@@ -2443,14 +2522,18 @@ export default function PosPage() {
           ivaTotal: quote.ivaTotal,
           total: quote.total,
           tipoComprobante: tipo,
-          paymentMethod: 'CASH',
+          paymentMethod: quoteIsDomicilio ? 'CONTRA_ENTREGA' : 'CASH',
           paymentStatus: 'PENDING',
           orderStatus: 'PENDING_PREPARATION',
           notes: JSON.stringify({
-            desc: `Comanda mostrador para Bodega (prefactura ${quote.quoteNumber})`,
+            desc: quoteIsDomicilio
+              ? `Comanda Domicilio POS para Bodega (prefactura ${quote.quoteNumber})`
+              : `Comanda mostrador para Bodega (prefactura ${quote.quoteNumber})`,
             cliente,
             tipoComprobante: tipo,
             quoteNumber: quote.quoteNumber,
+            isDomicilio: quoteIsDomicilio,
+            domicilio: quoteDomicilioPayload,
           }),
           cashierName: 'Vendedora Mostrador',
           customerId: clientObj?.id || null,
@@ -2478,8 +2561,10 @@ export default function PosPage() {
       subtotal: quote.subtotal,
       ivaTotal: quote.ivaTotal,
       tipoComprobante: tipo,
-      paymentMethod: 'CASH',
+      paymentMethod: quoteIsDomicilio ? 'CONTRA_ENTREGA' : 'CASH',
       paymentStatus: 'PENDING',
+      isDomicilio: quoteIsDomicilio,
+      domicilio: quoteDomicilioPayload,
       cliente: cliente as any,
       status: 'PENDING_PREPARATION',
       vendedor: 'Vendedora Mostrador',
@@ -3332,7 +3417,7 @@ export default function PosPage() {
                     setIsCheckoutOpen(true);
                   }}
                   isOrderDomicilio={isOrderDomicilio}
-                  setIsOrderDomicilio={setIsOrderDomicilio}
+                  setIsOrderDomicilio={handleToggleOrderDomicilio}
                   domicilioPhone={domicilioPhone}
                   setDomicilioPhone={setDomicilioPhone}
                   domicilioDepartment={domicilioDepartment}
@@ -3482,7 +3567,7 @@ export default function PosPage() {
                         setIsCheckoutOpen(true);
                       }}
                       isOrderDomicilio={isOrderDomicilio}
-                      setIsOrderDomicilio={setIsOrderDomicilio}
+                      setIsOrderDomicilio={handleToggleOrderDomicilio}
                       domicilioPhone={domicilioPhone}
                       setDomicilioPhone={setDomicilioPhone}
                       domicilioDepartment={domicilioDepartment}

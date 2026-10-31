@@ -356,27 +356,49 @@ export default function BodegaPage() {
             correo: o.customerEmail || o.customer?.email || undefined,
             direccion: `${o.shippingAddress}, ${o.municipality}, ${o.department}`,
           },
-          items: o.items.map((it: any) => {
-            const prod = it.product || products.find((p: any) => p.id === it.productId || p.sku === it.productId);
-            const origInfo = getOriginalFragranceInfo({ ...it, product: prod }, products);
-            const kitParsed = parseKitOrderItem({ ...it, product: prod }, products);
-            return {
-              productId: it.productId,
-              name: kitParsed
-                ? `Arma tu propio perfume: ${kitParsed.fragranceName}`
-                : `${it.productName} (${it.presentation})`,
-              presentation: it.presentation,
-              quantity: it.quantity,
-              price: it.unitPrice,
-              total: it.total,
-              unit: it.presentation,
-              puesto: kitParsed?.essencePuesto || it.product?.puesto || prod?.puesto || 'A1',
-              originalName: kitParsed?.originalName || origInfo?.originalName || it.inspiredBy || undefined,
-              inspiredBy: kitParsed?.originalName || origInfo?.originalName || it.inspiredBy || undefined,
-              brand: kitParsed?.brand || origInfo?.brand || prod?.brand || undefined,
-              product: prod || it.product || undefined,
-            };
-          })
+          items: [
+            ...o.items.map((it: any) => {
+              const prod = it.product || products.find((p: any) => p.id === it.productId || p.sku === it.productId);
+              const origInfo = getOriginalFragranceInfo({ ...it, product: prod }, products);
+              const kitParsed = parseKitOrderItem({ ...it, product: prod }, products);
+              return {
+                productId: it.productId,
+                name: kitParsed
+                  ? `Arma tu propio perfume: ${kitParsed.fragranceName}`
+                  : `${it.productName} (${it.presentation})`,
+                presentation: it.presentation,
+                quantity: it.quantity,
+                price: Number(it.unitPrice || 0),
+                total: Number(it.total || 0),
+                unit: it.presentation,
+                puesto: kitParsed?.essencePuesto || it.product?.puesto || prod?.puesto || 'A1',
+                originalName: kitParsed?.originalName || origInfo?.originalName || it.inspiredBy || undefined,
+                inspiredBy: kitParsed?.originalName || origInfo?.originalName || it.inspiredBy || undefined,
+                brand: kitParsed?.brand || origInfo?.brand || prod?.brand || undefined,
+                product: prod || it.product || undefined,
+              };
+            }),
+            ...(Number(o.shippingCost || 0) > 0 &&
+            !(o.items || []).some(
+              (it: any) =>
+                it.productId === 'ENVIO-DOM' ||
+                String(it.productName || it.name || '').toLowerCase().includes('envío a domicilio')
+            )
+              ? [
+                  {
+                    productId: 'ENVIO-DOM',
+                    name: 'Envío a Domicilio',
+                    presentation: 'Servicio',
+                    quantity: 1,
+                    price: Number(o.shippingCost),
+                    total: Number(o.shippingCost),
+                    unit: 'Servicio',
+                    puesto: 'LOG',
+                    product: products.find((p: any) => p.id === 'ENVIO-DOM' || p.sku === 'ENVIO-DOM'),
+                  },
+                ]
+              : []),
+          ]
         }));
 
         // Detección de nuevos pedidos para alerta sonora y visual inmediata
@@ -440,15 +462,20 @@ export default function BodegaPage() {
 
                 const isCancelledSale = ['CANCELLED', 'CANCELADO', 'ANULADA'].includes(String(s.orderStatus || '').toUpperCase());
                 const hasProcessedDte = s.dteDocument?.estado === 'PROCESADO' && !isCancelledSale;
-                const hasEnvioItem = (s.items || []).some(
+                const envioItemInSale = (s.items || []).find(
                   (it: any) =>
                     it.productId === 'ENVIO-DOM' ||
                     String(it.productName || it.name || '').toLowerCase().includes('envío a domicilio')
                 );
+                const hasEnvioItem = Boolean(envioItemInSale);
+                const resolvedPosShippingCost = envioItemInSale
+                  ? Number(envioItemInSale.total || envioItemInSale.unitPrice || 2.9)
+                  : Number(s.shippingCost || 0);
                 const isDomicilioOrder = Boolean(
                   pNotes?.isDomicilio ||
                     pNotes?.domicilio?.isDomicilio ||
                     hasEnvioItem ||
+                    resolvedPosShippingCost > 0 ||
                     (Array.isArray(s.shipments) && s.shipments.length > 0)
                 );
 
@@ -461,7 +488,7 @@ export default function BodegaPage() {
                   total: Number(s.total || 0),
                   subtotal: Number(s.subtotal || 0),
                   ivaTotal: Number(s.ivaTotal || 0),
-                  shippingCost: 0,
+                  shippingCost: resolvedPosShippingCost,
                   tipoComprobante: resolvedTipo,
                   paymentMethod: s.paymentMethod || 'CASH',
                   paymentStatus: hasProcessedDte
@@ -484,28 +511,44 @@ export default function BodegaPage() {
                     correo: s.customer?.email || pNotes?.cliente?.correo || pNotes?.domicilio?.customerEmail || undefined,
                     direccion: s.customer?.address || pNotes?.cliente?.direccion || pNotes?.domicilio?.shippingAddress || undefined,
                   },
-                  items: (s.items || []).map((it: any) => {
-                    const prod = it.product || products.find((p: any) => p.id === it.productId || p.sku === it.productId);
-                    const origInfo = getOriginalFragranceInfo({ ...it, product: prod }, products);
-                    return {
-                      productId: it.productId,
-                      name: it.productName || it.name,
-                      quantity: it.quantity,
-                      price: Number(it.unitPrice || 0),
-                      total: Number(it.total || 0),
-                      unit:
-                        it.unit && !(String(it.productName || it.name || '').toLowerCase().includes('litro') && it.unit === '½ Onza')
-                          ? it.unit
-                          : (String(it.productName || it.name || '').toLowerCase().includes('½ oz') || String(it.productName || it.name || '').toLowerCase().includes('media onza')
-                              ? '½ Onza'
-                              : (prod?.unit || 'Unidad')),
-                      puesto: it.puesto || prod?.puesto || 'A1',
-                      originalName: origInfo?.originalName || undefined,
-                      inspiredBy: origInfo?.originalName || undefined,
-                      brand: origInfo?.brand || prod?.brand || undefined,
-                      product: prod,
-                    };
-                  })
+                  items: [
+                    ...(s.items || []).map((it: any) => {
+                      const prod = it.product || products.find((p: any) => p.id === it.productId || p.sku === it.productId);
+                      const origInfo = getOriginalFragranceInfo({ ...it, product: prod }, products);
+                      return {
+                        productId: it.productId,
+                        name: it.productName || it.name,
+                        quantity: it.quantity,
+                        price: Number(it.unitPrice || 0),
+                        total: Number(it.total || 0),
+                        unit:
+                          it.unit && !(String(it.productName || it.name || '').toLowerCase().includes('litro') && it.unit === '½ Onza')
+                            ? it.unit
+                            : (String(it.productName || it.name || '').toLowerCase().includes('½ oz') || String(it.productName || it.name || '').toLowerCase().includes('media onza')
+                                ? '½ Onza'
+                                : (prod?.unit || 'Unidad')),
+                        puesto: it.puesto || prod?.puesto || 'A1',
+                        originalName: origInfo?.originalName || undefined,
+                        inspiredBy: origInfo?.originalName || undefined,
+                        brand: origInfo?.brand || prod?.brand || undefined,
+                        product: prod,
+                      };
+                    }),
+                    ...(!hasEnvioItem && resolvedPosShippingCost > 0
+                      ? [
+                          {
+                            productId: 'ENVIO-DOM',
+                            name: 'Envío a Domicilio',
+                            quantity: 1,
+                            price: resolvedPosShippingCost,
+                            total: resolvedPosShippingCost,
+                            unit: 'Servicio',
+                            puesto: 'LOG',
+                            product: products.find((p: any) => p.id === 'ENVIO-DOM' || p.sku === 'ENVIO-DOM'),
+                          },
+                        ]
+                      : []),
+                  ]
                 };
               });
           }
@@ -647,7 +690,10 @@ export default function BodegaPage() {
       (acc, it) => acc + (Number(it.total) || Number(it.price || 0) * Number(it.quantity || 1)),
       0
     );
-    return itemsSum + Number(order.shippingCost || 0);
+    const hasEnvioInItems = (order.items || []).some(
+      it => it.productId === 'ENVIO-DOM' || String(it.name || '').toLowerCase().includes('envío a domicilio')
+    );
+    return itemsSum + (hasEnvioInItems ? 0 : Number(order.shippingCost || 0));
   };
 
   // Cancelar pedido desde bodega
@@ -1958,6 +2004,11 @@ export default function BodegaPage() {
                                       )}
                                       <span className="text-[10.5px] font-bold text-slate-500 block mt-0.5">
                                         Cantidad: <strong className="text-indigo-700">{item.quantity} {/^\d/.test(String(item.unit || '').trim()) ? `× ${item.unit}` : (item.unit || 'Oz')}</strong>
+                                        {(item.productId === 'ENVIO-DOM' || String(item.name || '').toLowerCase().includes('envío a domicilio')) && (
+                                          <span className="ml-2 inline-flex items-center px-1.5 py-0.2 rounded bg-blue-100 text-blue-900 border border-blue-200 font-mono font-black text-[10px]">
+                                            Cobro envío: ${Number(item.total || item.price || order.shippingCost || 2.9).toFixed(2)}
+                                          </span>
+                                        )}
                                       </span>
                                     </div>
                                   </div>
@@ -2432,7 +2483,14 @@ export default function BodegaPage() {
                                     </button>
                                   )}
                                   <div className="truncate min-w-0 flex-1">
-                                    <span className="font-bold text-slate-800 block truncate">{item.name}</span>
+                                    <span className="font-bold text-slate-800 block truncate">
+                                      {item.name}
+                                      {(item.productId === 'ENVIO-DOM' || String(item.name || '').toLowerCase().includes('envío a domicilio')) && (
+                                        <span className="ml-2 inline-flex items-center px-1.5 py-0.2 rounded bg-blue-100 text-blue-900 border border-blue-200 font-mono font-black text-[10px]">
+                                          Cobro envío: ${Number(item.total || item.price || order.shippingCost || 2.9).toFixed(2)}
+                                        </span>
+                                      )}
+                                    </span>
                                     {origInfo?.originalName && (
                                       <span className="text-[10px] text-slate-500 font-medium block truncate mt-0.5">
                                         Original: <strong className="text-slate-900 font-black">{origInfo.originalName}</strong>
