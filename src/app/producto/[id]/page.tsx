@@ -216,11 +216,25 @@ export default function ProductDetailPage() {
 
   // Cálculo de inventario discreto 80/20 para esencias y general para otros productos
   const totalStock = typeof product?.stock === 'number' ? product.stock : 0;
+  const totalStockHalf = typeof product?.stockHalf === 'number' ? product.stockHalf : 0;
 
   const discreteStock = useMemo(() => {
     if (!product || !isEssence) return null;
-    return getEssenceDiscreteStock(totalStock, cart, product.id, undefined, product.stockHalf || 0);
-  }, [product, isEssence, totalStock, cart]);
+    return getEssenceDiscreteStock(totalStock, cart, product.id, undefined, totalStockHalf);
+  }, [product, isEssence, totalStock, totalStockHalf, cart]);
+
+  // Si las onzas completas están agotadas pero quedan medias onzas, preseleccionar MEDIA_ONZA automáticamente
+  useEffect(() => {
+    if (!product || !isEssence || !discreteStock) return;
+    if (
+      selectedPresentation === 'ONZA_COMPLETA' &&
+      discreteStock.available1oz <= 0 &&
+      discreteStock.availableHalfOz > 0 &&
+      !isAlreadyInCart
+    ) {
+      setSelectedPresentation('MEDIA_ONZA');
+    }
+  }, [product?.id, isEssence, discreteStock, selectedPresentation, isAlreadyInCart]);
 
   // Unidades disponibles restantes en bodega para esta presentación específica (descontando lo que ya está en el carrito)
   const availableRemaining = useMemo(() => {
@@ -235,7 +249,8 @@ export default function ProductDetailPage() {
 
   // Límite máximo seleccionable en el contador: lo que ya tiene en carrito + lo que queda disponible en bodega
   const maxSelectable = cartQuantity + availableRemaining;
-  const isOutOfStock = totalStock <= 0 || maxSelectable <= 0;
+  const isProductCompletelyOut = isEssence ? totalStock <= 0 && totalStockHalf <= 0 : totalStock <= 0;
+  const isOutOfStock = isProductCompletelyOut || maxSelectable <= 0;
 
   // Bloqueo inteligente: si la cantidad elegida es exactamente la que ya está en el carrito, se bloquea el botón para evitar duplicar (ej. 6 a 12)
   const isQuantityBlocked = isAlreadyInCart && quantity === cartQuantity;

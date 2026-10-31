@@ -691,7 +691,12 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
       : `${liveProduct.id}-${presentation}`;
 
     const totalStock = typeof liveProduct.stock === 'number' ? liveProduct.stock : 0;
-    if (totalStock <= 0) {
+    const totalStockHalf = typeof liveProduct.stockHalf === 'number' ? liveProduct.stockHalf : 0;
+    if (isEssence) {
+      if (presentation === 'MEDIA_ONZA' ? totalStockHalf <= 0 : totalStock <= 0) {
+        return;
+      }
+    } else if (totalStock <= 0) {
       return;
     }
 

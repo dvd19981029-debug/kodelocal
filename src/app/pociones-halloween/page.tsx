@@ -878,7 +878,11 @@ function PotionEventCard({
 }) {
   const potionInfo = getHalloweenPotionInfo(product)!;
   const presentations = getPresentationsForProduct(product, customer);
-  const [selectedPresentation, setSelectedPresentation] = useState<ProductPresentation>('ONZA_COMPLETA');
+  const totalStock = typeof product.stock === 'number' ? product.stock : 0;
+  const totalStockHalf = typeof product.stockHalf === 'number' ? product.stockHalf : 0;
+  const [selectedPresentation, setSelectedPresentation] = useState<ProductPresentation>(() =>
+    totalStock <= 0 && totalStockHalf > 0 ? 'MEDIA_ONZA' : 'ONZA_COMPLETA'
+  );
   const [justAdded, setJustAdded] = useState(false);
 
   const activeOption = presentations.find((p) => p.id === selectedPresentation) || presentations[0];
@@ -886,17 +890,26 @@ function PotionEventCard({
   const inspiracionPerfumeName = getInspiracionPerfumeName(product);
   const productImage = getProductImage(product);
 
-  const totalStock = typeof product.stock === 'number' ? product.stock : 0;
   const discreteStock = useMemo(
-    () => getEssenceDiscreteStock(totalStock, cart, product.id, undefined, product.stockHalf || 0),
-    [totalStock, cart, product.id, product.stockHalf]
+    () => getEssenceDiscreteStock(totalStock, cart, product.id, undefined, totalStockHalf),
+    [totalStock, totalStockHalf, cart, product.id]
   );
+
+  useEffect(() => {
+    if (
+      selectedPresentation === 'ONZA_COMPLETA' &&
+      discreteStock.available1oz <= 0 &&
+      discreteStock.availableHalfOz > 0
+    ) {
+      setSelectedPresentation('MEDIA_ONZA');
+    }
+  }, [selectedPresentation, discreteStock]);
 
   const availableUnits =
     selectedPresentation === 'MEDIA_ONZA'
       ? discreteStock.availableHalfOz
       : discreteStock.available1oz;
-  const isOutOfStock = totalStock <= 0 || availableUnits <= 0;
+  const isOutOfStock = (totalStock <= 0 && totalStockHalf <= 0) || availableUnits <= 0;
 
   const itemId = `${product.id}-${selectedPresentation}`;
   const matchingItem = cart.find((it) => it.id === itemId && !it.kitDetails);

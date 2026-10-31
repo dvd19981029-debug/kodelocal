@@ -330,12 +330,14 @@ export default function EcommerceHomePage() {
         matchesGender = p.gender ? p.gender.toLowerCase().includes(selectedGender.toLowerCase()) : false;
       }
 
-      // Filtro de disponibilidad / existencias
+      // Filtro de disponibilidad / existencias (para esencias se considera disponible si tiene 1 oz o ½ oz)
+      const hasAnyStock =
+        p.stock > 0 || (p.category === 'Esencias para Perfume' && (p.stockHalf || 0) > 0);
       let matchesStock = true;
       if (selectedStockFilter === 'Disponibles') {
-        matchesStock = p.stock > 0;
+        matchesStock = hasAnyStock;
       } else if (selectedStockFilter === 'Agotados') {
-        matchesStock = !p.stock || p.stock <= 0;
+        matchesStock = !hasAnyStock;
       }
 
       // Filtro de búsqueda seguro

@@ -27,9 +27,15 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
   const presentations = getPresentationsForProduct(product, customer);
   const isHalloweenPromo = isHalloweenPromoProduct(product);
   
-  // Presentación por defecto: 'ONZA_COMPLETA' (1 Onza seleccionada primero)
-  const defaultPres = product.category === 'Esencias para Perfume' 
-    ? 'ONZA_COMPLETA'
+  const isEssence = product.category === 'Esencias para Perfume';
+  const totalStock = typeof product.stock === 'number' ? product.stock : 0;
+  const totalStockHalf = typeof product.stockHalf === 'number' ? product.stockHalf : 0;
+
+  // Presentación por defecto: 'ONZA_COMPLETA' (o 'MEDIA_ONZA' si las onzas completas están agotadas pero aún quedan medias onzas)
+  const defaultPres: ProductPresentation = isEssence
+    ? totalStock <= 0 && totalStockHalf > 0
+      ? 'MEDIA_ONZA'
+      : 'ONZA_COMPLETA'
     : 'UNIDAD';
 
   const [selectedPresentation, setSelectedPresentation] = useState<ProductPresentation>(defaultPres);
@@ -48,13 +54,28 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
   }, [cart, product.id]);
 
   // Cálculo de inventario discreto 80/20 (80% onzas completas, 20% medias onzas)
-  const isEssence = product.category === 'Esencias para Perfume';
-  const totalStock = typeof product.stock === 'number' ? product.stock : 0;
-  const isOutOfStock = totalStock <= 0;
+  const isOutOfStock = isEssence ? totalStock <= 0 && totalStockHalf <= 0 : totalStock <= 0;
 
   const discreteStock = React.useMemo(() => {
-    return isEssence ? getEssenceDiscreteStock(totalStock, relevantCartItems, product.id, undefined, product.stockHalf || 0) : null;
-  }, [isEssence, totalStock, relevantCartItems, product.id]);
+    return isEssence ? getEssenceDiscreteStock(totalStock, relevantCartItems, product.id, undefined, totalStockHalf) : null;
+  }, [isEssence, totalStock, totalStockHalf, relevantCartItems, product.id]);
+
+  // Si se agotan las onzas completas (ya sea en inventario o porque el cliente agregó las últimas al carrito) y quedan medias onzas, pasar automáticamente a MEDIA_ONZA
+  React.useEffect(() => {
+    if (!isEssence || !discreteStock) return;
+    if (
+      selectedPresentation === 'ONZA_COMPLETA' &&
+      discreteStock.available1oz <= 0 &&
+      discreteStock.availableHalfOz > 0
+    ) {
+      const has1ozInCart = relevantCartItems.some(
+        (item) => item.product?.id === product.id && item.presentation === 'ONZA_COMPLETA' && !item.kitDetails && item.quantity > 0
+      );
+      if (!has1ozInCart) {
+        setSelectedPresentation('MEDIA_ONZA');
+      }
+    }
+  }, [isEssence, discreteStock, selectedPresentation, relevantCartItems, product.id]);
 
   // Unidades disponibles según la presentación actualmente seleccionada
   const availableUnits = isEssence
@@ -481,6 +502,7 @@ const ProductCard = React.memo(ProductCardComponent, (prev, next) => {
   return (
     prev.product.id === next.product.id &&
     prev.product.stock === next.product.stock &&
+    prev.product.stockHalf === next.product.stockHalf &&
     prev.product.price === next.product.price &&
     prev.priority === next.priority
   );
