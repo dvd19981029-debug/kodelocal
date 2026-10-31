@@ -163,17 +163,36 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
     ? 'text-[11px] sm:text-xs'
     : 'text-xs sm:text-[13px]';
 
+  const handleProductLinkClick = () => {
+    if (typeof window !== 'undefined' && window.location.pathname === '/') {
+      try {
+        sessionStorage.setItem(
+          'kodelocal_ecommerce_return_scroll_v1',
+          JSON.stringify({
+            scrollY: window.scrollY,
+            productId: product.id,
+            ts: Date.now(),
+          })
+        );
+      } catch {}
+    }
+  };
+
   return (
     <>
-      <div className={`h-full flex flex-col justify-between transition-all duration-300 group relative ${
-        isOutOfStock ? 'opacity-85' : ''
-      }`}>
+      <div
+        id={`product-card-${product.id}`}
+        className={`h-full flex flex-col justify-between transition-all duration-300 group relative ${
+          isOutOfStock ? 'opacity-85' : ''
+        }`}
+      >
         
         {/* Sección Superior: Imagen y Datos del Producto */}
         <div className="flex-1 flex flex-col">
           {/* Contenedor de Imagen de Frasco con estilo Tarjeta Burbuja Claymórfica */}
           <Link 
             href={getProductUrl(product)}
+            onClick={handleProductLinkClick}
             className={`block relative w-full aspect-square @container clay-card overflow-hidden mb-2 sm:mb-2.5 flex items-center justify-center cursor-pointer transition-all duration-300 shrink-0 ${
               isOutOfStock 
                 ? 'opacity-85 border-slate-200/90 bg-[#f8fafc]' 
@@ -268,7 +287,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
           <div className="pl-2.5 pr-1.5 sm:pl-3 sm:pr-2 flex-1 flex flex-col justify-start">
             {/* Nombre Oficial de la Fragancia (Contratipo) */}
             <div className="h-6 sm:h-7 flex items-center">
-              <Link href={getProductUrl(product)} className="block group/title w-full">
+              <Link href={getProductUrl(product)} onClick={handleProductLinkClick} className="block group/title w-full">
                 <h3 className="font-bold text-base sm:text-lg text-slate-900 line-clamp-1 leading-snug group-hover/title:text-purple-700 transition-colors" title={displayName}>
                   {displayName}
                 </h3>

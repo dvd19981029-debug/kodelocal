@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { 
@@ -91,28 +91,155 @@ export default function EcommerceHomePage() {
   // Columnas dinámicas según el tamaño de pantalla para calcular exactamente 7 filas
   const [columns, setColumns] = useState(2);
   const [initialEssenceId, setInitialEssenceId] = useState<string | null>(null);
+  const [isCatalogHydrated, setIsCatalogHydrated] = useState(false);
+  const lastValidScrollYRef = useRef<number>(0);
+  const pendingScrollRestoreRef = useRef<{ scrollY: number; productId?: string } | null>(null);
+  const prevQueryRef = useRef(searchQuery);
 
-  // Leer parámetros de URL para activar "Arma tu perfume" y preseleccionar esencia
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const catParam = params.get('categoria') || params.get('category');
-      const essenceParam = params.get('essenceId') || params.get('esenciaId');
+  // Restaurar estado del catálogo (página, filtros, columnas y posición de scroll) antes del primer pintado al retroceder
+  useLayoutEffect(() => {
+    if (typeof window === 'undefined') return;
 
-      if (catParam === 'Arma tu perfume' || params.get('arma') === 'true' || essenceParam) {
-        setSelectedCategory('Arma tu perfume');
-        if (essenceParam) {
-          setInitialEssenceId(essenceParam);
-        }
-        setTimeout(() => {
-          const el = document.getElementById('seccion-arma-tu-perfume');
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth' });
-          }
-        }, 200);
-      }
+    const nextCols = window.innerWidth >= 1280 ? 4 : window.innerWidth >= 768 ? 3 : 2;
+    setColumns(nextCols);
+
+    const localProds = getStoredProducts();
+    if (localProds && localProds.length > 0) {
+      setProducts(localProds);
     }
+
+    const params = new URLSearchParams(window.location.search);
+    const catParam = params.get('categoria') || params.get('category');
+    const essenceParam = params.get('essenceId') || params.get('esenciaId');
+
+    if (catParam === 'Arma tu perfume' || params.get('arma') === 'true' || essenceParam) {
+      setSelectedCategory('Arma tu perfume');
+      if (essenceParam) {
+        setInitialEssenceId(essenceParam);
+      }
+      setTimeout(() => {
+        const el = document.getElementById('seccion-arma-tu-perfume');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 200);
+    } else {
+      try {
+        const rawState = sessionStorage.getItem('kodelocal_ecommerce_catalog_state_v1');
+        let fallbackScrollY = 0;
+        if (rawState) {
+          const parsed = JSON.parse(rawState);
+          if (parsed.selectedCategory) setSelectedCategory(parsed.selectedCategory);
+          if (parsed.selectedGender) setSelectedGender(parsed.selectedGender);
+          if (parsed.selectedStockFilter) setSelectedStockFilter(parsed.selectedStockFilter);
+          if (typeof parsed.onlyHalloweenPromo === 'boolean') setOnlyHalloweenPromo(parsed.onlyHalloweenPromo);
+          if (typeof parsed.searchQuery === 'string') {
+            prevQueryRef.current = parsed.searchQuery;
+            setSearchQuery(parsed.searchQuery);
+          }
+          if (typeof parsed.currentPage === 'number' && parsed.currentPage >= 1) {
+            setCurrentPage(parsed.currentPage);
+          }
+          if (typeof parsed.scrollY === 'number' && parsed.scrollY > 0) {
+            fallbackScrollY = parsed.scrollY;
+            lastValidScrollYRef.current = parsed.scrollY;
+          }
+        }
+
+        const rawReturn = sessionStorage.getItem('kodelocal_ecommerce_return_scroll_v1');
+        if (rawReturn) {
+          const parsedReturn = JSON.parse(rawReturn);
+          sessionStorage.removeItem('kodelocal_ecommerce_return_scroll_v1');
+          const targetY = typeof parsedReturn.scrollY === 'number' ? parsedReturn.scrollY : fallbackScrollY;
+          pendingScrollRestoreRef.current = {
+            scrollY: targetY,
+            productId: parsedReturn.productId,
+          };
+          lastValidScrollYRef.current = targetY;
+        } else if (fallbackScrollY > 0) {
+          pendingScrollRestoreRef.current = {
+            scrollY: fallbackScrollY,
+          };
+        }
+      } catch {}
+    }
+
+    setIsCatalogHydrated(true);
   }, []);
+
+  // Aplicar posición exacta de scroll inmediatamente después de hidratar la página restaurada (ej. página 6)
+  useLayoutEffect(() => {
+    if (!isCatalogHydrated || !pendingScrollRestoreRef.current || typeof window === 'undefined') return;
+    const { scrollY, productId } = pendingScrollRestoreRef.current;
+    pendingScrollRestoreRef.current = null;
+
+    const applyScroll = () => {
+      if (scrollY > 0) {
+        window.scrollTo({ top: scrollY, behavior: 'instant' as ScrollBehavior });
+      } else if (productId) {
+        const cardEl = document.getElementById(`product-card-${productId}`);
+        if (cardEl) {
+          cardEl.scrollIntoView({ block: 'center', behavior: 'instant' as ScrollBehavior });
+        }
+      }
+    };
+
+    applyScroll();
+    const rafId = window.requestAnimationFrame(applyScroll);
+    const t1 = window.setTimeout(applyScroll, 50);
+    const t2 = window.setTimeout(applyScroll, 150);
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, [isCatalogHydrated]);
+
+  // Persistir página actual, filtros y scroll en sessionStorage para navegación hacia atrás del navegador
+  useEffect(() => {
+    if (!isCatalogHydrated || typeof window === 'undefined') return;
+    try {
+      sessionStorage.setItem(
+        'kodelocal_ecommerce_catalog_state_v1',
+        JSON.stringify({
+          currentPage,
+          selectedCategory,
+          selectedGender,
+          selectedStockFilter,
+          onlyHalloweenPromo,
+          searchQuery,
+          scrollY: lastValidScrollYRef.current,
+        })
+      );
+    } catch {}
+  }, [isCatalogHydrated, currentPage, selectedCategory, selectedGender, selectedStockFilter, onlyHalloweenPromo, searchQuery]);
+
+  useEffect(() => {
+    if (!isCatalogHydrated || typeof window === 'undefined') return;
+    const handleScrollSave = () => {
+      if (window.location.pathname !== '/') return;
+      if (sessionStorage.getItem('kodelocal_ecommerce_return_scroll_v1')) return;
+      lastValidScrollYRef.current = window.scrollY;
+      try {
+        sessionStorage.setItem(
+          'kodelocal_ecommerce_catalog_state_v1',
+          JSON.stringify({
+            currentPage,
+            selectedCategory,
+            selectedGender,
+            selectedStockFilter,
+            onlyHalloweenPromo,
+            searchQuery,
+            scrollY: window.scrollY,
+          })
+        );
+      } catch {}
+    };
+
+    window.addEventListener('scroll', handleScrollSave, { passive: true });
+    return () => window.removeEventListener('scroll', handleScrollSave);
+  }, [isCatalogHydrated, currentPage, selectedCategory, selectedGender, selectedStockFilter, onlyHalloweenPromo, searchQuery]);
 
   // Sincronizar la barra de anuncios para ocultarla en "Arma tu propio perfume" y mostrarla al regresar
   useEffect(() => {
@@ -132,7 +259,12 @@ export default function EcommerceHomePage() {
       setOnlyHalloweenPromo(false);
       setCurrentPage(1);
       setInitialEssenceId(null);
+      lastValidScrollYRef.current = 0;
       if (typeof window !== 'undefined') {
+        try {
+          sessionStorage.removeItem('kodelocal_ecommerce_catalog_state_v1');
+          sessionStorage.removeItem('kodelocal_ecommerce_return_scroll_v1');
+        } catch {}
         if (window.location.hash || window.location.search) {
           window.history.replaceState(null, '', '/');
         }
@@ -251,10 +383,11 @@ export default function EcommerceHomePage() {
 
   // Si se filtran productos y la página actual excede el nuevo total, reajustar a la última válida
   useEffect(() => {
+    if (!isCatalogHydrated) return;
     if (currentPage > totalPages) {
       setCurrentPage(Math.max(1, totalPages));
     }
-  }, [totalPages, currentPage]);
+  }, [totalPages, currentPage, isCatalogHydrated]);
 
   const paginatedProducts = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
@@ -323,7 +456,6 @@ export default function EcommerceHomePage() {
   const isSearching = searchQuery.trim().length > 0;
 
   // Al buscar en modo sticky, llevar al usuario a ver los resultados desde la primera línea
-  const prevQueryRef = useRef(searchQuery);
   useEffect(() => {
     const trimmed = searchQuery.trim();
     const prevTrimmed = prevQueryRef.current.trim();

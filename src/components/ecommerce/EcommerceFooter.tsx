@@ -9,6 +9,12 @@ export default function EcommerceFooter() {
   const pathname = usePathname();
 
   const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.removeItem('kodelocal_ecommerce_catalog_state_v1');
+        sessionStorage.removeItem('kodelocal_ecommerce_return_scroll_v1');
+      } catch {}
+    }
     if (pathname === '/') {
       e.preventDefault();
       window.dispatchEvent(new CustomEvent('reset-home-page'));
