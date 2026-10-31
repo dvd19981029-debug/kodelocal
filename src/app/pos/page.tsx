@@ -505,7 +505,7 @@ export default function PosPage() {
 
   const syncSalesFromServer = React.useCallback(() => {
     getStaffToken().then(staffToken => {
-      fetch('/api/ecommerce/orders', {
+      fetch('/api/ecommerce/orders?skipC807Sync=1&limit=100', {
         headers: {
           ...(staffToken ? { 'x-staff-token': staffToken } : {}),
         },
@@ -626,7 +626,7 @@ export default function PosPage() {
 
     // Cargar historial de ventas y DTEs oficiales registrados en la base de datos Supabase
     getStaffToken().then(staffToken => {
-      fetch('/api/sales?limit=100', {
+      fetch('/api/sales?limit=100&skipC807Sync=1', {
         headers: {
           ...(staffToken ? { 'x-staff-token': staffToken } : {}),
         }
@@ -848,7 +848,7 @@ export default function PosPage() {
         isRealtimeSub = status === 'SUBSCRIBED';
       });
 
-    // Respaldo ligero solo si Realtime se desconecta (o cada 5 min si está visible)
+    // Respaldo ligero solo si Realtime se desconecta (25s activo) o cada 5 min si Realtime está activo
     const intervalId = setInterval(() => {
       if (typeof navigator !== 'undefined' && navigator.onLine && document.visibilityState === 'visible') {
         const elapsed = Date.now() - lastPosSync;
@@ -857,10 +857,10 @@ export default function PosPage() {
           syncSalesFromServer();
         }
       }
-    }, 60 * 1000);
+    }, 25 * 1000);
 
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible' && Date.now() - lastPosSync > 180000) {
+      if (document.visibilityState === 'visible' && Date.now() - lastPosSync > 30000) {
         lastPosSync = Date.now();
         syncSalesFromServer();
         refreshProductsFromServer();

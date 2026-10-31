@@ -129,6 +129,8 @@ export async function GET(request: Request) {
       } catch (_) {}
     }
 
+    const ordersLimit = Math.min(Math.max(parseInt(searchParams.get('limit') || '100', 10), 1), 250);
+
     const orders = await prisma.ecommerceOrder.findMany({
       where: {
         ...(isGuestQuery ? {
@@ -153,7 +155,23 @@ export async function GET(request: Request) {
         customer: true,
         sale: {
           include: {
-            dteDocument: true,
+            dteDocument: {
+              select: {
+                id: true,
+                saleId: true,
+                tipoDte: true,
+                version: true,
+                codigoGeneracion: true,
+                numeroControl: true,
+                selloRecepcion: true,
+                estado: true,
+                fhProcesamiento: true,
+                mensajeRespuesta: true,
+                observaciones: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            },
           },
         },
         items: {
@@ -163,6 +181,7 @@ export async function GET(request: Request) {
         },
       },
       orderBy: { createdAt: 'desc' },
+      take: ordersLimit,
     });
 
     // Sincronizar en tiempo real con C807 cualquier pedido Ecommerce con guía activa

@@ -605,7 +605,7 @@ export default function BodegaPage() {
         }
       });
 
-    // 3. Respaldo ligero solo si Realtime se desconecta (o cada 5 min si está visible)
+    // 3. Respaldo ligero cuando la pestaña está activa: cada 15s si Realtime no está conectado, o cada 5 min si está conectado
     const intervalId = setInterval(() => {
       if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
       const elapsed = Date.now() - lastBodegaSync;
@@ -613,11 +613,11 @@ export default function BodegaPage() {
         lastBodegaSync = Date.now();
         fetchEcommerceOrders({ silent: true });
       }
-    }, 60000);
+    }, 15000);
 
-    // 4. Refresco al volver a la pestaña solo si estuvo inactiva más de 2 minutos
+    // 4. Refresco inmediato al volver a la pestaña de Bodega si estuvo oculta más de 15 segundos
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible' && Date.now() - lastBodegaSync > 120000) {
+      if (document.visibilityState === 'visible' && Date.now() - lastBodegaSync > 15000) {
         lastBodegaSync = Date.now();
         fetchEcommerceOrders({ silent: true });
       }
