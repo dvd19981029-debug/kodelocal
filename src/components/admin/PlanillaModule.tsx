@@ -2606,15 +2606,16 @@ export default function PlanillaModule() {
                         <input
                           type="number"
                           step="0.01"
-                          value={activeRow.emp.baseSalaryMonthly}
+                          value={activeRow.emp.baseSalaryMonthly || ''}
+                          placeholder="0.00"
                           onChange={(e) =>
                             updateEmployeeField(
                               activeRow.emp.id,
                               'baseSalaryMonthly',
-                              parseFloat(e.target.value) || 0
+                              e.target.value === '' ? 0 : parseFloat(e.target.value) || 0
                             )
                           }
-                          className="clay-input w-full py-1.5 px-2.5 text-sm font-mono font-black text-slate-900"
+                          className="clay-input w-full py-1.5 px-2.5 text-sm font-mono font-black text-slate-900 placeholder:text-slate-300"
                         />
                         <span className="text-[10px] text-slate-400 font-semibold mt-1 block">
                           Diario: ${activeRow.dailySalaryDisplay.toFixed(2)}
@@ -2630,8 +2631,13 @@ export default function PlanillaModule() {
                           min="0"
                           max="31"
                           step="1"
-                          value={activeRow.workedDays}
+                          value={activeRow.emp.daysOverride === 0 ? '' : activeRow.workedDays}
+                          placeholder={String(defaultCommercialDays)}
                           onChange={(e) => {
+                            if (e.target.value === '') {
+                              updateEmployeeField(activeRow.emp.id, 'daysOverride', 0);
+                              return;
+                            }
                             const val = parseInt(e.target.value, 10);
                             updateEmployeeField(
                               activeRow.emp.id,
@@ -2639,7 +2645,7 @@ export default function PlanillaModule() {
                               isNaN(val) ? null : Math.max(0, Math.min(31, val))
                             );
                           }}
-                          className="clay-input w-full py-1.5 px-2.5 text-sm font-mono font-black text-indigo-700"
+                          className="clay-input w-full py-1.5 px-2.5 text-sm font-mono font-black text-indigo-700 placeholder:text-slate-300"
                         />
                         <div className="flex items-center gap-1 mt-1.5">
                           <button
@@ -2733,15 +2739,17 @@ export default function PlanillaModule() {
                               type="number"
                               step="0.01"
                               min="0"
-                              value={activeRow.emp.otherIncome || 0}
+                              value={activeRow.emp.otherIncome ? activeRow.emp.otherIncome : ''}
                               onChange={(e) =>
                                 updateEmployeeField(
                                   activeRow.emp.id,
                                   'otherIncome',
-                                  Math.max(0, parseFloat(e.target.value) || 0)
+                                  e.target.value === ''
+                                    ? 0
+                                    : Math.max(0, parseFloat(e.target.value) || 0)
                                 )
                               }
-                              className="w-full pl-8 pr-3 py-2 rounded-xl bg-white border-2 border-emerald-400 text-base font-mono font-black text-emerald-950 focus:outline-none focus:border-emerald-600"
+                              className="w-full pl-8 pr-3 py-2 rounded-xl bg-white border-2 border-emerald-400 text-base font-mono font-black text-emerald-950 placeholder:text-slate-300 focus:outline-none focus:border-emerald-600"
                               placeholder="0.00"
                             />
                           </div>
@@ -2813,15 +2821,18 @@ export default function PlanillaModule() {
                           type="number"
                           step="0.01"
                           min="0"
-                          value={activeRow.emp.vacationAmount || 0}
+                          value={activeRow.emp.vacationAmount ? activeRow.emp.vacationAmount : ''}
+                          placeholder="0.00"
                           onChange={(e) =>
                             updateEmployeeField(
                               activeRow.emp.id,
                               'vacationAmount',
-                              Math.max(0, parseFloat(e.target.value) || 0)
+                              e.target.value === ''
+                                ? 0
+                                : Math.max(0, parseFloat(e.target.value) || 0)
                             )
                           }
-                          className="clay-input w-full py-1 px-2 text-xs font-mono font-bold"
+                          className="clay-input w-full py-1 px-2 text-xs font-mono font-bold placeholder:text-slate-300"
                         />
                       </div>
 
@@ -2833,15 +2844,18 @@ export default function PlanillaModule() {
                           type="number"
                           step="0.01"
                           min="0"
-                          value={activeRow.emp.otherDeductions || 0}
+                          value={activeRow.emp.otherDeductions ? activeRow.emp.otherDeductions : ''}
+                          placeholder="0.00"
                           onChange={(e) =>
                             updateEmployeeField(
                               activeRow.emp.id,
                               'otherDeductions',
-                              Math.max(0, parseFloat(e.target.value) || 0)
+                              e.target.value === ''
+                                ? 0
+                                : Math.max(0, parseFloat(e.target.value) || 0)
                             )
                           }
-                          className="clay-input w-full py-1 px-2 text-xs font-mono font-bold"
+                          className="clay-input w-full py-1 px-2 text-xs font-mono font-bold placeholder:text-slate-300"
                         />
                       </div>
 
@@ -2853,15 +2867,18 @@ export default function PlanillaModule() {
                           type="number"
                           step="1"
                           min="0"
-                          value={activeRow.emp.tardyMinutes || 0}
+                          value={activeRow.emp.tardyMinutes ? activeRow.emp.tardyMinutes : ''}
+                          placeholder="0"
                           onChange={(e) =>
                             updateEmployeeField(
                               activeRow.emp.id,
                               'tardyMinutes',
-                              Math.max(0, parseInt(e.target.value, 10) || 0)
+                              e.target.value === ''
+                                ? 0
+                                : Math.max(0, parseInt(e.target.value, 10) || 0)
                             )
                           }
-                          className="clay-input w-full py-1 px-2 text-xs font-mono font-bold"
+                          className="clay-input w-full py-1 px-2 text-xs font-mono font-bold placeholder:text-slate-300"
                         />
                       </div>
                     </div>
