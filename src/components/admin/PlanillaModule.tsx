@@ -117,7 +117,9 @@ export interface PayrollEmployee {
   subsidyDays: number; // Días de incapacidad ISSS (>3 días genera fila SUBSIDIO en SPU)
   subsidyAmount: number;
   tardyMinutes: number; // Minutos acumulados de llegada tardía en el corte
-  otherIncome: number; // Horas extras / comisiones / bonificaciones gravadas
+  otherIncome: number; // Horas extras / comisiones / bonificaciones
+  otherIncomeNote?: string; // Concepto del bono o ingreso adicional
+  otherIncomeTaxable?: boolean; // true (default) = sujeto a ISSS/AFP/ISR, false = directo al neto
   vacationAmount: number; // Monto de vacación
   vacationDays: number; // Días de vacación
   otherDeductions: number; // Anticipos / préstamos / descuentos directos al líquido
@@ -610,11 +612,13 @@ export function crossDayPunch(
   };
 }
 
-const STORAGE_KEY = 'kodelocal_planilla_sv_v2';
+const STORAGE_KEY = 'kodelocal_planilla_sv_v3';
 
 export default function PlanillaModule() {
   const [subTab, setSubTab] = useState<'quincenal' | 'jornadas' | 'spu' | 'resumen' | 'parametros'>('quincenal');
   const [frequency, setFrequency] = useState<PayrollFrequency>('MENSUAL');
+  const [selectedWorkEmpId, setSelectedWorkEmpId] = useState<string>('emp-1');
+  const [showFullEmployerCols, setShowFullEmployerCols] = useState<boolean>(false);
 
   // Doble Calendario (Período de Salario Ordinario vs. Período de Corte de Novedades/Reloj)
   const [periodStart, setPeriodStart] = useState('2026-10-14');
@@ -764,8 +768,8 @@ export default function PlanillaModule() {
     }
   };
 
-  // Atajos para configurar 1.ª Quincena, 2.ª Quincena o Mes Completo
-  const applyPresetPeriod = (type: 'Q1' | 'Q2' | 'MONTH') => {
+  // Atajos para configurar Período Inicial 18 días (14 al 31 Oct), Mes Completo (30 días), 1.ª o 2.ª Quincena
+  const applyPresetPeriod = (type: 'Q1' | 'Q2' | 'MONTH' | 'OCT_18') => {
     const baseMatch = periodStart.match(/^(\d{4})-(\d{2})/);
     const year = baseMatch ? parseInt(baseMatch[1], 10) : new Date().getFullYear();
     const month = baseMatch ? parseInt(baseMatch[2], 10) : new Date().getMonth() + 1;
@@ -797,15 +801,24 @@ export default function PlanillaModule() {
       cStart = `${prevYear}-${prevMm}-29`;
       cEnd = `${year}-${mm}-28`;
       payDate = `${year}-${mm}-${String(lastDay).padStart(2, '0')}`;
+    } else if (type === 'OCT_18') {
+      nextFreq = 'MENSUAL';
+      pStart = `${year}-${mm}-14`;
+      pEnd = `${year}-${mm}-${String(lastDay).padStart(2, '0')}`;
+      cStart = `${year}-${mm}-14`;
+      cEnd = `${year}-${mm}-${String(lastDay).padStart(2, '0')}`;
+      payDate = `${year}-${mm}-${String(lastDay).padStart(2, '0')}`;
     }
 
+    const resetDaysEmployees = employees.map((e) => ({ ...e, daysOverride: null }));
+    setEmployees(resetDaysEmployees);
     setFrequency(nextFreq);
     setPeriodStart(pStart);
     setPeriodEnd(pEnd);
     setCutoffStart(cStart);
     setCutoffEnd(cEnd);
     setPaymentDate(payDate);
-    persistState(employees, parameters, history, {
+    persistState(resetDaysEmployees, parameters, history, {
       periodStart: pStart,
       periodEnd: pEnd,
       cutoffStart: cStart,
@@ -872,6 +885,9 @@ export default function PlanillaModule() {
       const tardyDiscount = round2(minuteRate * effectiveTardyMinutes);
 
       const otherIncome = round2(Number(emp.otherIncome || 0));
+      const isBonusTaxable = emp.otherIncomeTaxable !== false; // Por defecto true (sujeto a cotización)
+      const taxableBonus = isBonusTaxable ? otherIncome : 0;
+      const nonTaxableBonus = isBonusTaxable ? 0 : otherIncome;
       const vacationAmount = round2(Number(emp.vacationAmount || 0));
 
       // Columna G: INGRESO SUJETO COTIZACIONES (=E+F)
@@ -879,7 +895,7 @@ export default function PlanillaModule() {
         Math.max(
           0,
           ordinarySalary +
-            otherIncome +
+            taxableBonus +
             vacationAmount -
             (parameters.tardinessMode === 'REDUCE_BASE' ? tardyDiscount : 0)
         )
@@ -896,7 +912,7 @@ export default function PlanillaModule() {
           (parameters.tardinessMode === 'OTHER_DEDUCTION' ? tardyDiscount : 0)
       );
       const totalDeduccionesExact = isssLabExact + afpLabExact + isrExact + otherDeductions;
-      const liquidoPagarExact = totalDevengado - totalDeduccionesExact;
+      const liquidoPagarExact = totalDevengado + nonTaxableBonus - totalDeduccionesExact;
 
       const isssLab = round2(isssLabExact);
       const afpLab = round2(afpLabExact);
@@ -911,7 +927,7 @@ export default function PlanillaModule() {
         ? Math.min(totalDevengado * parameters.incafRate, incafPatMax)
         : 0;
       const totalPatronalExact = isssPatExact + afpPatExact + incafPatExact;
-      const costoTotalEmpresaExact = totalDevengado + totalPatronalExact;
+      const costoTotalEmpresaExact = totalDevengado + nonTaxableBonus + totalPatronalExact;
 
       const isssPat = round2(isssPatExact);
       const afpPat = round2(afpPatExact);
@@ -929,6 +945,9 @@ export default function PlanillaModule() {
         effectiveTardyMinutes,
         tardyDiscount,
         otherIncome,
+        isBonusTaxable,
+        taxableBonus,
+        nonTaxableBonus,
         vacationAmount,
         totalDevengado,
         isssLabExact,
@@ -1453,7 +1472,10 @@ export default function PlanillaModule() {
       doc.text('Vacación:', 24, boxY + 20.5);
       doc.text(`$${r.vacationAmount.toFixed(2)}`, 101, boxY + 20.5, { align: 'right' });
 
-      doc.text('Bonos / Ingresos Adic.:', 24, boxY + 27);
+      const bonusLabel = r.emp.otherIncomeNote
+        ? `Adic. (${r.emp.otherIncomeNote.slice(0, 18)}):`
+        : 'Bonos / Ingresos Adic.:';
+      doc.text(bonusLabel, 24, boxY + 27);
       doc.text(`$${r.otherIncome.toFixed(2)}`, 101, boxY + 27, { align: 'right' });
 
       doc.setDrawColor(148, 163, 184);
@@ -2247,500 +2269,992 @@ export default function PlanillaModule() {
       </div>
 
       {/* ================= SUBPESTAÑA 1: PLANILLA QUINCENAL / MENSUAL ================= */}
-      {subTab === 'quincenal' && (
-        <div className="space-y-4">
-          {/* Barra de Doble Calendario (Período Ordinario + Corte 14/28) y Controles */}
-          <div className="clay-card p-4 space-y-3 bg-white">
-            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3 pb-3 border-b border-slate-100">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-black text-slate-700 flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4 text-indigo-600" />
-                  <span>Cortes Rápidos (Mes Comercial 30 días):</span>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => applyPresetPeriod('Q1')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black border transition-all cursor-pointer ${
-                    frequency === 'QUINCENAL' && periodStart.endsWith('-01')
-                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                  }`}
-                >
-                  1.ª Quincena (01 al 15 • Corte día 14)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => applyPresetPeriod('Q2')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black border transition-all cursor-pointer ${
-                    frequency === 'QUINCENAL' && periodStart.endsWith('-16')
-                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                  }`}
-                >
-                  2.ª Quincena (16 a Fin de Mes • Corte día 28)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => applyPresetPeriod('MONTH')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black border transition-all cursor-pointer ${
-                    frequency === 'MENSUAL'
-                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                  }`}
-                >
-                  Planilla Mensual (30 días)
-                </button>
-              </div>
+      {subTab === 'quincenal' && (() => {
+        const activeIdx = Math.max(
+          0,
+          computedRows.findIndex((r) => r.emp.id === selectedWorkEmpId)
+        );
+        const activeRow = computedRows[activeIdx] || computedRows[0];
 
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleOpenNewEmployee}
-                  className="clay-btn clay-btn-primary px-3 py-1.5 text-xs font-black flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Agregar Empleado</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={resetPeriodNovelties}
-                  className="clay-btn clay-btn-light px-3 py-1.5 text-xs font-bold text-slate-700 flex items-center gap-1.5 cursor-pointer"
-                  title="Reiniciar tardías, horas extras y anticipos para nueva quincena"
-                >
-                  <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Limpiar Novedades</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handlePrintOfficialPayrollSheet}
-                  className="clay-btn clay-btn-light px-3 py-1.5 text-xs font-black text-slate-900 flex items-center gap-1.5 cursor-pointer"
-                  title="Descargar PDF de Tabla Consolidada de Planilla con columna de FIRMA (formato Grupo KODE S.A.S. de C.V.)"
-                >
-                  <FileCheck className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>PDF Planilla (Firmas)</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handlePrintPayslips()}
-                  className="clay-btn clay-btn-light px-3 py-1.5 text-xs font-bold text-indigo-700 flex items-center gap-1.5 cursor-pointer"
-                  title="Descargar PDF de Boletas de Pago individuales para firma de cada empleado"
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>PDF Boletas de Pago</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleExportAccountingCsv}
-                  className="clay-btn clay-btn-light px-3 py-1.5 text-xs font-bold text-emerald-700 flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Exportar CSV</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveSnapshot}
-                  className="clay-btn clay-btn-success px-3.5 py-1.5 text-xs font-black flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Save className="w-3.5 h-3.5" />
-                  <span>Guardar Quincena</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Fechas del Doble Calendario (Período Ordinario vs Corte de Reloj/Novedades) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
-              <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
-                <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">
-                  Inicio Período Salario (F)
-                </label>
-                <input
-                  type="date"
-                  value={periodStart}
-                  onChange={(e) => {
-                    setPeriodStart(e.target.value);
-                    persistState(employees, parameters, history, {
-                      periodStart: e.target.value,
-                      periodEnd,
-                      cutoffStart,
-                      cutoffEnd,
-                      paymentDate,
-                      frequency,
-                    });
-                  }}
-                  className="clay-input w-full py-1 px-2 text-xs font-mono font-bold"
-                />
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
-                <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">
-                  Fin Período Salario (G)
-                </label>
-                <input
-                  type="date"
-                  value={periodEnd}
-                  onChange={(e) => {
-                    setPeriodEnd(e.target.value);
-                    persistState(employees, parameters, history, {
-                      periodStart,
-                      periodEnd: e.target.value,
-                      cutoffStart,
-                      cutoffEnd,
-                      paymentDate,
-                      frequency,
-                    });
-                  }}
-                  className="clay-input w-full py-1 px-2 text-xs font-mono font-bold"
-                />
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-amber-50/60 border border-amber-200/80">
-                <label className="text-[10px] font-black text-amber-800 uppercase block mb-1">
-                  Inicio Corte Novedades/Tardías
-                </label>
-                <input
-                  type="date"
-                  value={cutoffStart}
-                  onChange={(e) => setCutoffStart(e.target.value)}
-                  className="clay-input w-full py-1 px-2 text-xs font-mono font-bold"
-                />
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-amber-50/60 border border-amber-200/80">
-                <label className="text-[10px] font-black text-amber-800 uppercase block mb-1">
-                  Fin Corte Novedades (14 o 28)
-                </label>
-                <input
-                  type="date"
-                  value={cutoffEnd}
-                  onChange={(e) => setCutoffEnd(e.target.value)}
-                  className="clay-input w-full py-1 px-2 text-xs font-mono font-bold"
-                />
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-indigo-50/60 border border-indigo-200/80 flex flex-col justify-between">
-                <span className="text-[10px] font-black text-indigo-800 uppercase block">
-                  Fórmula Días Comerciales (H)
-                </span>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-lg font-black font-mono text-indigo-700">
-                    {defaultCommercialDays} días
+        return (
+          <div className="space-y-4">
+            {/* Barra de Período y Botones Principales de Generación de Documentos */}
+            <div className="clay-card p-4 space-y-3 bg-white">
+              <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3 pb-3 border-b border-slate-100">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-black text-slate-700 flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4 text-indigo-600" />
+                    <span>Período de Planilla:</span>
                   </span>
-                  <span className="text-[10px] font-mono bg-white px-2 py-0.5 rounded border border-indigo-200 text-indigo-900 font-bold">
-                    SPU: {spuPeriodCode}
+                  <button
+                    type="button"
+                    onClick={() => applyPresetPeriod('OCT_18')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black border transition-all cursor-pointer ${
+                      frequency === 'MENSUAL' && periodStart.endsWith('-14')
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                        : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                    }`}
+                  >
+                    Planilla 14 al 31 Oct (18 días • Tabla Base)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPresetPeriod('MONTH')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black border transition-all cursor-pointer ${
+                      frequency === 'MENSUAL' && periodStart.endsWith('-01')
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    Planilla Mensual (30 días)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPresetPeriod('Q1')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black border transition-all cursor-pointer ${
+                      frequency === 'QUINCENAL' && periodStart.endsWith('-01')
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    1.ª Quincena (01 al 15)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPresetPeriod('Q2')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black border transition-all cursor-pointer ${
+                      frequency === 'QUINCENAL' && periodStart.endsWith('-16')
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    2.ª Quincena (16 a Fin de Mes)
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handlePrintOfficialPayrollSheet}
+                    className="clay-btn clay-btn-primary px-3.5 py-2 text-xs font-black flex items-center gap-1.5 cursor-pointer"
+                    title="Descargar PDF de Tabla Consolidada de Planilla con columna de FIRMA (formato Grupo KODE S.A.S. de C.V.)"
+                  >
+                    <FileCheck className="w-4 h-4" />
+                    <span>PDF Planilla Consolidada (Firmas)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handlePrintPayslips()}
+                    className="clay-btn clay-btn-success px-3.5 py-2 text-xs font-black flex items-center gap-1.5 cursor-pointer"
+                    title="Descargar PDF de todas las Boletas de Pago listas para firmar"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span>PDF Boletas de Pago ({computedRows.length})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleOpenNewEmployee}
+                    className="clay-btn clay-btn-light px-3 py-1.5 text-xs font-bold text-slate-700 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Agregar Empleado</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetPeriodNovelties}
+                    className="clay-btn clay-btn-light px-3 py-1.5 text-xs font-bold text-slate-700 flex items-center gap-1.5 cursor-pointer"
+                    title="Reiniciar bonos, tardías y anticipos a cero"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Limpiar Adicionales</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveSnapshot}
+                    className="clay-btn clay-btn-light px-3 py-1.5 text-xs font-bold text-indigo-700 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    <span>Guardar en Historial</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Fechas del Período */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                  <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">
+                    Inicio Período Salario (F)
+                  </label>
+                  <input
+                    type="date"
+                    value={periodStart}
+                    onChange={(e) => {
+                      setPeriodStart(e.target.value);
+                      persistState(employees, parameters, history, {
+                        periodStart: e.target.value,
+                        periodEnd,
+                        cutoffStart,
+                        cutoffEnd,
+                        paymentDate,
+                        frequency,
+                      });
+                    }}
+                    className="clay-input w-full py-1 px-2 text-xs font-mono font-bold"
+                  />
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                  <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">
+                    Fin Período Salario (G)
+                  </label>
+                  <input
+                    type="date"
+                    value={periodEnd}
+                    onChange={(e) => {
+                      setPeriodEnd(e.target.value);
+                      persistState(employees, parameters, history, {
+                        periodStart,
+                        periodEnd: e.target.value,
+                        cutoffStart,
+                        cutoffEnd,
+                        paymentDate,
+                        frequency,
+                      });
+                    }}
+                    className="clay-input w-full py-1 px-2 text-xs font-mono font-bold"
+                  />
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-amber-50/60 border border-amber-200/80">
+                  <label className="text-[10px] font-black text-amber-800 uppercase block mb-1">
+                    Inicio Corte Novedades/Tardías
+                  </label>
+                  <input
+                    type="date"
+                    value={cutoffStart}
+                    onChange={(e) => setCutoffStart(e.target.value)}
+                    className="clay-input w-full py-1 px-2 text-xs font-mono font-bold"
+                  />
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-amber-50/60 border border-amber-200/80">
+                  <label className="text-[10px] font-black text-amber-800 uppercase block mb-1">
+                    Fin Corte Novedades
+                  </label>
+                  <input
+                    type="date"
+                    value={cutoffEnd}
+                    onChange={(e) => setCutoffEnd(e.target.value)}
+                    className="clay-input w-full py-1 px-2 text-xs font-mono font-bold"
+                  />
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-indigo-50/60 border border-indigo-200/80 flex flex-col justify-between">
+                  <span className="text-[10px] font-black text-indigo-800 uppercase block">
+                    Días del Período
+                  </span>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-lg font-black font-mono text-indigo-700">
+                      {defaultCommercialDays} días
+                    </span>
+                    <span className="text-[10px] font-mono bg-white px-2 py-0.5 rounded border border-indigo-200 text-indigo-900 font-bold">
+                      SPU: {spuPeriodCode}
+                    </span>
+                  </div>
+                  <span className="text-[9.5px] text-indigo-700 font-medium">
+                    {getFormattedPeriodLabel()}
                   </span>
                 </div>
-                <span className="text-[9.5px] text-indigo-700 font-medium">
-                  =IF(G=EOMONTH(G,0),30,DAY(G))-DAY(F)+1
-                </span>
               </div>
             </div>
-          </div>
 
-          {/* Tabla Principal de Planilla Quincenal / Mensual */}
-          <div className="clay-card p-0 overflow-hidden bg-white border border-slate-200">
-            <div
-              tabIndex={0}
-              role="region"
-              aria-label="Tabla de Planilla Salarial El Salvador"
-              className="overflow-auto max-w-full max-h-[72vh]"
-            >
-              <table className="w-full text-left border-separate border-spacing-0 text-xs">
-                <thead className="sticky top-0 z-20 bg-slate-900 text-white text-[10px] uppercase tracking-wider">
-                  <tr>
-                    <th className="py-3 px-2.5 border-b border-slate-700 text-center">#</th>
-                    <th className="py-3 px-3 border-b border-slate-700 sticky left-0 z-30 bg-slate-900 min-w-[170px]">
-                      Empleado / Cargo
-                    </th>
-                    <th className="py-3 px-2.5 border-b border-slate-700 text-right">Base Mensual</th>
-                    <th className="py-3 px-2.5 border-b border-slate-700 text-right">Salario Diario</th>
-                    <th className="py-3 px-2.5 border-b border-slate-700 text-center">Días Lab.</th>
-                    <th className="py-3 px-2.5 border-b border-slate-700 text-right">Salario Ord.</th>
-                    <th className="py-3 px-2.5 border-b border-slate-700 text-center bg-amber-950/60">
-                      Min. Tarde
-                    </th>
-                    <th className="py-3 px-2.5 border-b border-slate-700 text-right bg-amber-950/60">
-                      Desc. Tardía
-                    </th>
-                    <th className="py-3 px-2.5 border-b border-slate-700 text-right bg-emerald-950/60">
-                      Bonos / Ingresos Adic.
-                    </th>
-                    <th className="py-3 px-2.5 border-b border-slate-700 text-right bg-indigo-950">
-                      Total Devengado
-                    </th>
-                    <th className="py-3 px-2.5 border-b border-slate-700 text-right">
-                      ISSS Lab (3%)
-                    </th>
-                    <th className="py-3 px-2.5 border-b border-slate-700 text-right">
-                      AFP Lab (7.25%)
-                    </th>
-                    <th className="py-3 px-2.5 border-b border-slate-700 text-right">
-                      Base Grav. ISR
-                    </th>
-                    <th className="py-3 px-2.5 border-b border-slate-700 text-right bg-rose-950/80">
-                      Renta (ISR)
-                    </th>
-                    <th className="py-3 px-2.5 border-b border-slate-700 text-right">
-                      Otras Deduc.
-                    </th>
-                    <th className="py-3 px-2.5 border-b border-slate-700 text-right">
-                      Total Deduc.
-                    </th>
-                    <th className="py-3 px-3 border-b border-slate-700 text-right bg-emerald-900">
-                      Líquido a Pagar
-                    </th>
-                    <th className="py-3 px-2.5 border-b border-slate-700 text-right bg-slate-800">
-                      ISSS Pat (7.5%)
-                    </th>
-                    <th className="py-3 px-2.5 border-b border-slate-700 text-right bg-slate-800">
-                      AFP Pat (8.75%)
-                    </th>
-                    <th className="py-3 px-2.5 border-b border-slate-700 text-right bg-slate-800">
-                      Total Patronal
-                    </th>
-                    <th className="py-3 px-2.5 border-b border-slate-700 text-right bg-purple-950">
-                      Costo Empresa
-                    </th>
-                    <th className="py-3 px-2.5 border-b border-slate-700 text-center">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {computedRows.map((r) => (
-                    <tr key={r.emp.id} className="hover:bg-slate-50/90 transition-colors">
-                      <td className="py-2.5 px-2.5 text-center font-mono font-bold text-slate-400">
-                        {r.index}
-                      </td>
-                      <th
-                        scope="row"
-                        className="py-2.5 px-3 sticky left-0 z-10 bg-white border-r border-slate-100 text-left font-normal"
+            {/* ================= PASO 1: TRABAJAR COLABORADOR UNO POR UNO ================= */}
+            {activeRow && (
+              <div className="clay-card p-5 bg-white border-2 border-indigo-100 space-y-4">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-3 border-b border-slate-100">
+                  <div>
+                    <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-black uppercase tracking-wider">
+                      Paso 1 • Trabajar Planilla Individual ({activeIdx + 1} de {computedRows.length})
+                    </span>
+                    <h3 className="text-base font-black text-slate-900 mt-1">
+                      Selecciona cada colaborador para ajustar días, bonos o ingresos adicionales
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const prevIdx =
+                          (activeIdx - 1 + computedRows.length) % computedRows.length;
+                        setSelectedWorkEmpId(computedRows[prevIdx].emp.id);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black cursor-pointer"
+                    >
+                      ◀ Anterior
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const nextIdx = (activeIdx + 1) % computedRows.length;
+                        setSelectedWorkEmpId(computedRows[nextIdx].emp.id);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black cursor-pointer"
+                    >
+                      Siguiente Colaborador ▶
+                    </button>
+                  </div>
+                </div>
+
+                {/* Pestañas / Tarjetas de los 5 Colaboradores */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+                  {computedRows.map((r) => {
+                    const isSelected = r.emp.id === activeRow.emp.id;
+                    return (
+                      <button
+                        key={r.emp.id}
+                        type="button"
+                        onClick={() => setSelectedWorkEmpId(r.emp.id)}
+                        className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                          isSelected
+                            ? 'bg-indigo-950 text-white border-indigo-900 shadow-md ring-2 ring-indigo-500/40'
+                            : 'bg-slate-50/90 hover:bg-slate-100 text-slate-800 border-slate-200'
+                        }`}
                       >
-                        <div className="font-black text-slate-800 text-xs">{r.emp.fullName}</div>
-                        <div className="text-[10px] text-slate-500 font-semibold">
-                          {r.emp.position} • <span className="text-indigo-600">{r.emp.department}</span>
+                        <div>
+                          <div className="flex items-center justify-between gap-1">
+                            <span
+                              className={`text-[10px] font-mono font-black px-1.5 py-0.5 rounded ${
+                                isSelected
+                                  ? 'bg-indigo-800 text-indigo-200'
+                                  : 'bg-slate-200 text-slate-700'
+                              }`}
+                            >
+                              #{r.index} • {r.workedDays}d
+                            </span>
+                            {r.otherIncome > 0 && (
+                              <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500 text-white">
+                                +${r.otherIncome.toFixed(2)} Bono
+                              </span>
+                            )}
+                          </div>
+                          <div className="font-black text-xs mt-1.5 truncate">{r.emp.fullName}</div>
+                          <div
+                            className={`text-[10px] font-semibold ${
+                              isSelected ? 'text-slate-300' : 'text-slate-500'
+                            }`}
+                          >
+                            {r.emp.position} • Base ${r.baseMonthly.toFixed(0)}
+                          </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const empJor =
-                              jornadas.find((j) => j.id === r.emp.jornadaId) || jornadas[0];
-                            if (empJor) setSelectedJornadaId(empJor.id);
-                            setSelectedPunchEmpId(r.emp.id);
-                            setSubTab('jornadas');
-                          }}
-                          className="mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-cyan-50 text-cyan-800 border border-cyan-200 text-[9.5px] font-bold hover:bg-cyan-100 cursor-pointer"
-                          title="Ver jornada asignada y cruzar marcaciones"
-                        >
-                          <Clock className="w-2.5 h-2.5 text-cyan-600" />
-                          <span>
-                            Jornada:{' '}
-                            {(jornadas.find((j) => j.id === r.emp.jornadaId) || jornadas[0])?.name ||
-                              'Gerencia'}
+                        <div className="mt-2.5 pt-2 border-t border-slate-200/30 flex items-center justify-between">
+                          <span
+                            className={`text-[10px] font-bold ${
+                              isSelected ? 'text-emerald-300' : 'text-slate-500'
+                            }`}
+                          >
+                            Neto a Pagar:
                           </span>
-                        </button>
-                      </th>
-                      <td className="py-2.5 px-2.5 text-right font-mono font-bold text-slate-800">
+                          <span
+                            className={`text-sm font-mono font-black ${
+                              isSelected ? 'text-emerald-300' : 'text-emerald-700'
+                            }`}
+                          >
+                            ${r.liquidoPagar.toFixed(2)}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Panel de Edición del Colaborador Seleccionado + Vista Previa de su Boleta */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 pt-2">
+                  {/* Columna Izquierda (7 cols): Formulario Intuitivo de Ingresos Adicionales, Días y Descuentos */}
+                  <div className="lg:col-span-7 space-y-4 bg-slate-50/70 p-4 rounded-2xl border border-slate-200/90">
+                    <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-200">
+                      <div>
+                        <span className="text-[10px] font-black uppercase text-indigo-600 block">
+                          Editando Colaborador #{activeRow.index}
+                        </span>
+                        <h4 className="text-lg font-black text-slate-900">
+                          {activeRow.emp.fullName}
+                        </h4>
+                        <span className="text-xs text-slate-500 font-semibold">
+                          Documento: <strong className="font-mono">{activeRow.emp.docNumber}</strong> • Cargo:{' '}
+                          <strong>{activeRow.emp.position}</strong> ({activeRow.emp.department})
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingEmp({ ...activeRow.emp });
+                          setIsEmpModalOpen(true);
+                        }}
+                        className="px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Editar Datos Personales / DUI</span>
+                      </button>
+                    </div>
+
+                    {/* Bloque 1: Sueldo Base y Días Trabajados */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="bg-white p-3 rounded-xl border border-slate-200">
+                        <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">
+                          Sueldo Base Mensual ($)
+                        </label>
                         <input
                           type="number"
                           step="0.01"
-                          value={r.emp.baseSalaryMonthly}
+                          value={activeRow.emp.baseSalaryMonthly}
                           onChange={(e) =>
                             updateEmployeeField(
-                              r.emp.id,
+                              activeRow.emp.id,
                               'baseSalaryMonthly',
                               parseFloat(e.target.value) || 0
                             )
                           }
-                          className="w-20 text-right font-mono font-bold bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 focus:border-indigo-500 focus:outline-none"
+                          className="clay-input w-full py-1.5 px-2.5 text-sm font-mono font-black text-slate-900"
                         />
-                      </td>
-                      <td className="py-2.5 px-2.5 text-right font-mono text-slate-500">
-                        ${r.dailySalaryDisplay.toFixed(2)}
-                      </td>
-                      <td className="py-2.5 px-2.5 text-center">
+                        <span className="text-[10px] text-slate-400 font-semibold mt-1 block">
+                          Diario: ${activeRow.dailySalaryDisplay.toFixed(2)}
+                        </span>
+                      </div>
+
+                      <div className="bg-white p-3 rounded-xl border border-slate-200">
+                        <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">
+                          No. Días Trabajados
+                        </label>
                         <input
                           type="number"
                           min="0"
                           max="31"
                           step="1"
-                          value={r.workedDays}
+                          value={activeRow.workedDays}
                           onChange={(e) => {
                             const val = parseInt(e.target.value, 10);
                             updateEmployeeField(
-                              r.emp.id,
+                              activeRow.emp.id,
                               'daysOverride',
                               isNaN(val) ? null : Math.max(0, Math.min(31, val))
                             );
                           }}
-                          className="w-12 text-center font-mono font-black bg-slate-50 border border-slate-200 rounded px-1 py-0.5"
-                          title="Días laborados en el período"
+                          className="clay-input w-full py-1.5 px-2.5 text-sm font-mono font-black text-indigo-700"
                         />
-                      </td>
-                      <td className="py-2.5 px-2.5 text-right font-mono font-bold text-slate-800">
-                        ${r.ordinarySalary.toFixed(2)}
-                      </td>
-                      <td className="py-2.5 px-2.5 text-center bg-amber-50/40">
-                        <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={r.emp.tardyMinutes || 0}
-                          onChange={(e) =>
-                            updateEmployeeField(
-                              r.emp.id,
-                              'tardyMinutes',
-                              Math.max(0, parseInt(e.target.value, 10) || 0)
-                            )
-                          }
-                          className="w-14 text-center font-mono font-bold bg-white border border-amber-200 rounded px-1 py-0.5 text-amber-900"
-                          title="Minutos acumulados de llegada tardía en el corte (Sueldo / 14,400 por minuto)"
-                        />
-                      </td>
-                      <td className="py-2.5 px-2.5 text-right font-mono text-amber-800 bg-amber-50/40">
-                        {r.tardyDiscount > 0 ? `-$${r.tardyDiscount.toFixed(2)}` : '$0.00'}
-                      </td>
-                      <td className="py-2.5 px-2.5 text-right bg-emerald-50/30">
+                        <div className="flex items-center gap-1 mt-1.5">
+                          <button
+                            type="button"
+                            onClick={() => updateEmployeeField(activeRow.emp.id, 'daysOverride', 18)}
+                            className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-indigo-100 text-[10px] font-bold text-slate-700 cursor-pointer"
+                          >
+                            18d (Oct)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => updateEmployeeField(activeRow.emp.id, 'daysOverride', 15)}
+                            className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-indigo-100 text-[10px] font-bold text-slate-700 cursor-pointer"
+                          >
+                            15d
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => updateEmployeeField(activeRow.emp.id, 'daysOverride', 30)}
+                            className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-indigo-100 text-[10px] font-bold text-slate-700 cursor-pointer"
+                          >
+                            30d
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="bg-indigo-50/70 p-3 rounded-xl border border-indigo-200 flex flex-col justify-between">
+                        <span className="text-[10px] font-black text-indigo-800 uppercase block">
+                          Salario del Período
+                        </span>
+                        <span className="text-xl font-black font-mono text-indigo-900">
+                          ${activeRow.ordinarySalary.toFixed(2)}
+                        </span>
+                        <span className="text-[10px] text-indigo-700 font-semibold">
+                          Por {activeRow.workedDays} días laborados
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Bloque 2: Ingresos Adicionales / Bonos (Destacado para Rodolfo, Jorge, etc.) */}
+                    <div className="bg-emerald-50/80 p-4 rounded-2xl border-2 border-emerald-300/80 space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <span className="text-[10px] font-black uppercase text-emerald-800 block">
+                            ✨ Ingresos Adicionales / Bonos / Comisiones
+                          </span>
+                          <p className="text-xs text-emerald-900 font-semibold">
+                            Agrega aquí cualquier bono o ingreso adicional para{' '}
+                            <strong>{activeRow.emp.firstName}</strong>:
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {[25, 50, 75, 100].map((amt) => (
+                            <button
+                              key={amt}
+                              type="button"
+                              onClick={() =>
+                                updateEmployeeField(
+                                  activeRow.emp.id,
+                                  'otherIncome',
+                                  round2((activeRow.emp.otherIncome || 0) + amt)
+                                )
+                              }
+                              className="px-2 py-1 rounded-lg bg-white hover:bg-emerald-600 hover:text-white text-emerald-900 border border-emerald-300 text-xs font-mono font-black transition-colors cursor-pointer"
+                            >
+                              +${amt}
+                            </button>
+                          ))}
+                          {activeRow.otherIncome > 0 && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateEmployeeField(activeRow.emp.id, 'otherIncome', 0)
+                              }
+                              className="px-2 py-1 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-800 text-xs font-bold cursor-pointer"
+                            >
+                               $0
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[10px] font-black text-emerald-900 uppercase block mb-1">
+                            Monto de Ingreso Adicional / Bono ($)
+                          </label>
+                          <div className="relative">
+                            <DollarSign className="w-4 h-4 text-emerald-700 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={activeRow.emp.otherIncome || 0}
+                              onChange={(e) =>
+                                updateEmployeeField(
+                                  activeRow.emp.id,
+                                  'otherIncome',
+                                  Math.max(0, parseFloat(e.target.value) || 0)
+                                )
+                              }
+                              className="w-full pl-8 pr-3 py-2 rounded-xl bg-white border-2 border-emerald-400 text-base font-mono font-black text-emerald-950 focus:outline-none focus:border-emerald-600"
+                              placeholder="0.00"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] font-black text-emerald-900 uppercase block mb-1">
+                            Concepto / Detalle en Boleta (Opcional)
+                          </label>
+                          <input
+                            type="text"
+                            value={activeRow.emp.otherIncomeNote || ''}
+                            onChange={(e) =>
+                              updateEmployeeField(
+                                activeRow.emp.id,
+                                'otherIncomeNote',
+                                e.target.value
+                              )
+                            }
+                            placeholder="Ej. Bono por desempeño, Comisión..."
+                            className="w-full px-3 py-2 rounded-xl bg-white border border-emerald-300 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-600"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Selector de si el Bono suma a cotizaciones ISSS/AFP o va directo al Neto */}
+                      <div className="pt-1 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
+                        <span className="font-bold text-emerald-950 text-[11px]">
+                          ¿Cómo deseas aplicar este ingreso adicional?
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateEmployeeField(activeRow.emp.id, 'otherIncomeTaxable', true)
+                            }
+                            className={`px-2.5 py-1 rounded-lg text-[11px] font-black border cursor-pointer ${
+                              activeRow.isBonusTaxable
+                                ? 'bg-emerald-700 text-white border-emerald-700'
+                                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                            }`}
+                          >
+                            Sujeto a ISSS / AFP / Renta (Columna Planilla)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateEmployeeField(activeRow.emp.id, 'otherIncomeTaxable', false)
+                            }
+                            className={`px-2.5 py-1 rounded-lg text-[11px] font-black border cursor-pointer ${
+                              !activeRow.isBonusTaxable
+                                ? 'bg-indigo-700 text-white border-indigo-700'
+                                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                            }`}
+                          >
+                            Bono Neto Directo (No altera ISSS/AFP de la tabla)
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bloque 3: Vacaciones y Otras Deducciones */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="bg-white p-3 rounded-xl border border-slate-200">
+                        <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">
+                          Vacación ($)
+                        </label>
                         <input
                           type="number"
                           step="0.01"
                           min="0"
-                          value={r.emp.otherIncome || 0}
+                          value={activeRow.emp.vacationAmount || 0}
                           onChange={(e) =>
                             updateEmployeeField(
-                              r.emp.id,
-                              'otherIncome',
+                              activeRow.emp.id,
+                              'vacationAmount',
                               Math.max(0, parseFloat(e.target.value) || 0)
                             )
                           }
-                          className="w-20 text-right font-mono font-bold bg-white border border-emerald-300 rounded px-1.5 py-0.5 text-emerald-900 focus:border-emerald-600 focus:outline-none"
-                          title="Bonos, comisiones, horas extras u otros ingresos gravados del período"
+                          className="clay-input w-full py-1 px-2 text-xs font-mono font-bold"
                         />
-                      </td>
-                      <td className="py-2.5 px-2.5 text-right font-mono font-black text-indigo-800 bg-indigo-50/40">
-                        ${r.totalDevengado.toFixed(2)}
-                      </td>
-                      <td className="py-2.5 px-2.5 text-right font-mono text-slate-700">
-                        ${r.isssLab.toFixed(2)}
-                      </td>
-                      <td className="py-2.5 px-2.5 text-right font-mono text-slate-700">
-                        ${r.afpLab.toFixed(2)}
-                      </td>
-                      <td className="py-2.5 px-2.5 text-right font-mono text-slate-600">
-                        ${r.baseGravableIsr.toFixed(2)}
-                      </td>
-                      <td className="py-2.5 px-2.5 text-right font-mono font-black text-rose-700 bg-rose-50/40">
-                        ${r.isr.toFixed(2)}
-                      </td>
-                      <td className="py-2.5 px-2.5 text-right">
+                      </div>
+
+                      <div className="bg-white p-3 rounded-xl border border-slate-200">
+                        <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">
+                          Anticipos / Otros Desc. ($)
+                        </label>
                         <input
                           type="number"
                           step="0.01"
                           min="0"
-                          value={r.emp.otherDeductions || 0}
+                          value={activeRow.emp.otherDeductions || 0}
                           onChange={(e) =>
                             updateEmployeeField(
-                              r.emp.id,
+                              activeRow.emp.id,
                               'otherDeductions',
                               Math.max(0, parseFloat(e.target.value) || 0)
                             )
                           }
-                          className="w-16 text-right font-mono font-bold bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5"
-                          title="Anticipos de sueldo, préstamos u otras deducciones directas al líquido"
+                          className="clay-input w-full py-1 px-2 text-xs font-mono font-bold"
                         />
-                      </td>
-                      <td className="py-2.5 px-2.5 text-right font-mono font-bold text-slate-800">
-                        ${r.totalDeducciones.toFixed(2)}
-                      </td>
-                      <td className="py-2.5 px-3 text-right font-mono font-black text-sm text-emerald-800 bg-emerald-50/70">
-                        ${r.liquidoPagar.toFixed(2)}
-                      </td>
-                      <td className="py-2.5 px-2.5 text-right font-mono text-slate-600 bg-slate-50/60">
-                        ${r.isssPat.toFixed(2)}
-                      </td>
-                      <td className="py-2.5 px-2.5 text-right font-mono text-slate-600 bg-slate-50/60">
-                        ${r.afpPat.toFixed(2)}
-                      </td>
-                      <td className="py-2.5 px-2.5 text-right font-mono font-bold text-slate-700 bg-slate-50/60">
-                        ${r.totalPatronal.toFixed(2)}
-                      </td>
-                      <td className="py-2.5 px-2.5 text-right font-mono font-black text-purple-800 bg-purple-50/40">
-                        ${r.costoTotalEmpresa.toFixed(2)}
-                      </td>
-                      <td className="py-2.5 px-2.5 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => handlePrintPayslips(r)}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 cursor-pointer"
-                            title="Imprimir boleta individual"
-                          >
-                            <Printer className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingEmp({ ...r.emp });
-                              setIsEmpModalOpen(true);
-                            }}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 cursor-pointer"
-                            title="Editar ficha completa y datos SPU del empleado"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteEmployee(r.emp.id)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
-                            title="Eliminar empleado"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                      </div>
+
+                      <div className="bg-white p-3 rounded-xl border border-slate-200">
+                        <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">
+                          Minutos Tarde en el Corte
+                        </label>
+                        <input
+                          type="number"
+                          step="1"
+                          min="0"
+                          value={activeRow.emp.tardyMinutes || 0}
+                          onChange={(e) =>
+                            updateEmployeeField(
+                              activeRow.emp.id,
+                              'tardyMinutes',
+                              Math.max(0, parseInt(e.target.value, 10) || 0)
+                            )
+                          }
+                          className="clay-input w-full py-1 px-2 text-xs font-mono font-bold"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Columna Derecha (5 cols): Vista Previa en Vivo de la Boleta de Pago Individual */}
+                  <div className="lg:col-span-5 bg-white p-4 rounded-2xl border-2 border-slate-200 shadow-xs flex flex-col justify-between space-y-3">
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <div>
+                          <div className="text-xs font-black text-slate-900 uppercase">
+                            {parameters.employerName}
+                          </div>
+                          <div className="text-[10px] font-bold text-slate-500">
+                            VISTA PREVIA DE BOLETA • {getFormattedPeriodLabel()}
+                          </div>
                         </div>
-                      </td>
+                        <span className="px-2 py-0.5 rounded bg-slate-100 font-mono text-xs font-black text-slate-800">
+                          No. {activeRow.index}
+                        </span>
+                      </div>
+
+                      <div className="text-xs space-y-1 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
+                        <div className="flex justify-between">
+                          <span className="text-slate-500 font-semibold">Empleado:</span>
+                          <span className="font-black text-slate-900">{activeRow.emp.fullName}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500 font-semibold">Documento:</span>
+                          <span className="font-mono font-bold text-slate-800">
+                            {activeRow.emp.docNumber}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500 font-semibold">Días Laborados:</span>
+                          <span className="font-mono font-bold text-indigo-700">
+                            {activeRow.workedDays} días
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                        <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                          <div className="text-[10px] font-black text-slate-700 uppercase border-b border-slate-200 pb-1">
+                            Ingresos
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Salario Período:</span>
+                            <span className="font-mono font-bold">
+                              ${activeRow.ordinarySalary.toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-emerald-700 font-semibold">
+                              Bonos / Adic.:
+                            </span>
+                            <span className="font-mono font-bold text-emerald-700">
+                              ${activeRow.otherIncome.toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Vacación:</span>
+                            <span className="font-mono font-bold">
+                              ${activeRow.vacationAmount.toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between pt-1 border-t border-slate-200 font-black text-indigo-900">
+                            <span>Sujeto Cotiz.:</span>
+                            <span className="font-mono">${activeRow.totalDevengado.toFixed(2)}</span>
+                          </div>
+                        </div>
+
+                        <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                          <div className="text-[10px] font-black text-slate-700 uppercase border-b border-slate-200 pb-1">
+                            Retenciones
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">ISSS (3%):</span>
+                            <span className="font-mono font-bold">
+                              ${activeRow.isssLab.toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">AFP (7.25%):</span>
+                            <span className="font-mono font-bold">
+                              ${activeRow.afpLab.toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Renta (ISR):</span>
+                            <span className="font-mono font-bold text-rose-700">
+                              ${activeRow.isr.toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between pt-1 border-t border-slate-200 font-black text-rose-900">
+                            <span>Total Retenc.:</span>
+                            <span className="font-mono">
+                              ${activeRow.totalDeducciones.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-emerald-50 border-2 border-emerald-300 flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] font-black text-emerald-800 uppercase block">
+                            Valor Neto Cancelado / A Recibir
+                          </span>
+                          <span className="text-[11px] text-emerald-700 font-semibold">
+                            Listo para firma en boleta y planilla
+                          </span>
+                        </div>
+                        <span className="text-2xl font-mono font-black text-emerald-800">
+                          ${activeRow.liquidoPagar.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handlePrintPayslips(activeRow)}
+                      className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                    >
+                      <Printer className="w-4 h-4" />
+                      <span>Descargar Boleta PDF de {activeRow.emp.firstName}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ================= PASO 2: TABLA CONSOLIDADA OFICIAL (IDÉNTICA AL EXCEL PARA FIRMAS) ================= */}
+            <div className="clay-card p-0 overflow-hidden bg-white border border-slate-200">
+              <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase tracking-wider">
+                    Paso 2 • Tabla Consolidada de Planilla de Sueldo
+                  </span>
+                  <h3 className="text-sm font-black text-slate-900 mt-1">
+                    {parameters.employerName} — {getFormattedPeriodLabel()}
+                  </h3>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowFullEmployerCols(!showFullEmployerCols)}
+                    className="px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold cursor-pointer"
+                  >
+                    {showFullEmployerCols
+                      ? 'Ocultar Aportes Patronales'
+                      : 'Ver Aportes Patronales (ISSS/AFP Patronal)'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handlePrintOfficialPayrollSheet}
+                    className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <FileCheck className="w-4 h-4 text-emerald-400" />
+                    <span>Descargar PDF Planilla Consolidada (Firmas)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handlePrintPayslips()}
+                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span>Descargar Todas las Boletas PDF ({computedRows.length})</span>
+                  </button>
+                </div>
+              </div>
+
+              <div
+                tabIndex={0}
+                role="region"
+                aria-label="Tabla Consolidada de Planilla Salarial"
+                className="overflow-auto max-w-full"
+              >
+                <table className="w-full text-left border-separate border-spacing-0 text-xs">
+                  <thead className="sticky top-0 z-20 bg-slate-900 text-white text-[10px] uppercase tracking-wider">
+                    <tr>
+                      <th className="py-3 px-2.5 border-b border-slate-700 text-center">No.</th>
+                      <th className="py-3 px-3 border-b border-slate-700 min-w-[180px]">
+                        Nombre de Empleado
+                      </th>
+                      <th className="py-3 px-2.5 border-b border-slate-700 text-center">
+                        No. Documento
+                      </th>
+                      <th className="py-3 px-2.5 border-b border-slate-700 text-center">
+                        No. Días
+                      </th>
+                      <th className="py-3 px-2.5 border-b border-slate-700 text-right">
+                        Salario del Período
+                      </th>
+                      <th className="py-3 px-2.5 border-b border-slate-700 text-right bg-emerald-950/70">
+                        Bonos / Adicionales
+                      </th>
+                      <th className="py-3 px-2.5 border-b border-slate-700 text-right">
+                        Vacación
+                      </th>
+                      <th className="py-3 px-2.5 border-b border-slate-700 text-right bg-indigo-950">
+                        Ingreso Sujeto Cotizaciones
+                      </th>
+                      <th className="py-3 px-2.5 border-b border-slate-700 text-right">
+                        ISSS (3%)
+                      </th>
+                      <th className="py-3 px-2.5 border-b border-slate-700 text-right">
+                        AFP (7.25%)
+                      </th>
+                      <th className="py-3 px-2.5 border-b border-slate-700 text-right">
+                        Ing. Sujeto a Ret. Renta
+                      </th>
+                      <th className="py-3 px-2.5 border-b border-slate-700 text-right bg-rose-950/80">
+                        Renta
+                      </th>
+                      <th className="py-3 px-2.5 border-b border-slate-700 text-right">
+                        Total Retenc. y Desc.
+                      </th>
+                      <th className="py-3 px-3 border-b border-slate-700 text-right bg-emerald-900">
+                        Valor Neto Cancelado
+                      </th>
+                      {showFullEmployerCols && (
+                        <>
+                          <th className="py-3 px-2.5 border-b border-slate-700 text-right bg-slate-800">
+                            ISSS Pat (7.5%)
+                          </th>
+                          <th className="py-3 px-2.5 border-b border-slate-700 text-right bg-slate-800">
+                            AFP Pat (8.75%)
+                          </th>
+                          <th className="py-3 px-2.5 border-b border-slate-700 text-right bg-purple-950">
+                            Costo Empresa
+                          </th>
+                        </>
+                      )}
+                      <th className="py-3 px-2.5 border-b border-slate-700 text-center">
+                        Boleta / Editar
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-                <tfoot className="bg-slate-900 text-white font-mono font-black text-xs sticky bottom-0 z-20">
-                  <tr>
-                    <td className="py-3 px-2.5 text-center">—</td>
-                    <th scope="row" className="py-3 px-3 sticky left-0 z-30 bg-slate-900 text-left">
-                      TOTALES ({computedRows.length})
-                    </th>
-                    <td className="py-3 px-2.5 text-right">${totals.baseMonthly.toFixed(2)}</td>
-                    <td className="py-3 px-2.5 text-right">—</td>
-                    <td className="py-3 px-2.5 text-center">—</td>
-                    <td className="py-3 px-2.5 text-right">${totals.ordinarySalary.toFixed(2)}</td>
-                    <td className="py-3 px-2.5 text-center">—</td>
-                    <td className="py-3 px-2.5 text-right text-amber-300">
-                      ${totals.tardyDiscount.toFixed(2)}
-                    </td>
-                    <td className="py-3 px-2.5 text-right">${totals.otherIncome.toFixed(2)}</td>
-                    <td className="py-3 px-2.5 text-right text-indigo-200">
-                      ${totals.totalDevengado.toFixed(2)}
-                    </td>
-                    <td className="py-3 px-2.5 text-right">${totals.isssLab.toFixed(2)}</td>
-                    <td className="py-3 px-2.5 text-right">${totals.afpLab.toFixed(2)}</td>
-                    <td className="py-3 px-2.5 text-right">${totals.baseGravableIsr.toFixed(2)}</td>
-                    <td className="py-3 px-2.5 text-right text-rose-300">
-                      ${totals.isr.toFixed(2)}
-                    </td>
-                    <td className="py-3 px-2.5 text-right">${totals.otherDeductions.toFixed(2)}</td>
-                    <td className="py-3 px-2.5 text-right">${totals.totalDeducciones.toFixed(2)}</td>
-                    <td className="py-3 px-3 text-right text-emerald-300 text-sm">
-                      ${totals.liquidoPagar.toFixed(2)}
-                    </td>
-                    <td className="py-3 px-2.5 text-right">${totals.isssPat.toFixed(2)}</td>
-                    <td className="py-3 px-2.5 text-right">${totals.afpPat.toFixed(2)}</td>
-                    <td className="py-3 px-2.5 text-right">${totals.totalPatronal.toFixed(2)}</td>
-                    <td className="py-3 px-2.5 text-right text-purple-300">
-                      ${totals.costoTotalEmpresa.toFixed(2)}
-                    </td>
-                    <td className="py-3 px-2.5"></td>
-                  </tr>
-                </tfoot>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {computedRows.map((r) => {
+                      const isSelected = activeRow && r.emp.id === activeRow.emp.id;
+                      return (
+                        <tr
+                          key={r.emp.id}
+                          onClick={() => setSelectedWorkEmpId(r.emp.id)}
+                          className={`transition-colors cursor-pointer ${
+                            isSelected ? 'bg-indigo-50/70' : 'hover:bg-slate-50/90'
+                          }`}
+                        >
+                          <td className="py-3 px-2.5 text-center font-mono font-bold text-slate-500">
+                            {r.index}
+                          </td>
+                          <td className="py-3 px-3">
+                            <div className="font-black text-slate-900 text-xs flex items-center gap-1.5">
+                              <span>{r.emp.fullName}</span>
+                              {isSelected && (
+                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-indigo-600 text-white font-black uppercase">
+                                  Seleccionado
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[10px] text-slate-500 font-semibold">
+                              Base: ${r.baseMonthly.toFixed(2)} • {r.emp.position}
+                            </div>
+                          </td>
+                          <td className="py-3 px-2.5 text-center font-mono font-semibold text-slate-700">
+                            {r.emp.docNumber}
+                          </td>
+                          <td className="py-3 px-2.5 text-center font-mono font-black text-slate-900">
+                            {r.workedDays}
+                          </td>
+                          <td className="py-3 px-2.5 text-right font-mono font-bold text-slate-900">
+                            ${r.ordinarySalary.toFixed(2)}
+                          </td>
+                          <td className="py-3 px-2.5 text-right font-mono font-bold text-emerald-800 bg-emerald-50/40">
+                            ${r.otherIncome.toFixed(2)}
+                            {r.emp.otherIncomeNote && (
+                              <div className="text-[9px] text-emerald-700 font-sans truncate max-w-[110px] ml-auto">
+                                {r.emp.otherIncomeNote}
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-3 px-2.5 text-right font-mono text-slate-700">
+                            ${r.vacationAmount.toFixed(2)}
+                          </td>
+                          <td className="py-3 px-2.5 text-right font-mono font-black text-indigo-900 bg-indigo-50/40">
+                            ${r.totalDevengado.toFixed(2)}
+                          </td>
+                          <td className="py-3 px-2.5 text-right font-mono text-slate-800">
+                            ${r.isssLab.toFixed(2)}
+                          </td>
+                          <td className="py-3 px-2.5 text-right font-mono text-slate-800">
+                            ${r.afpLab.toFixed(2)}
+                          </td>
+                          <td className="py-3 px-2.5 text-right font-mono text-slate-700">
+                            ${r.baseGravableIsr.toFixed(2)}
+                          </td>
+                          <td className="py-3 px-2.5 text-right font-mono font-black text-rose-700 bg-rose-50/40">
+                            ${r.isr.toFixed(2)}
+                          </td>
+                          <td className="py-3 px-2.5 text-right font-mono font-bold text-slate-900">
+                            ${r.totalDeducciones.toFixed(2)}
+                          </td>
+                          <td className="py-3 px-3 text-right font-mono font-black text-sm text-emerald-800 bg-emerald-50/70">
+                            ${r.liquidoPagar.toFixed(2)}
+                          </td>
+                          {showFullEmployerCols && (
+                            <>
+                              <td className="py-3 px-2.5 text-right font-mono text-slate-600">
+                                ${r.isssPat.toFixed(2)}
+                              </td>
+                              <td className="py-3 px-2.5 text-right font-mono text-slate-600">
+                                ${r.afpPat.toFixed(2)}
+                              </td>
+                              <td className="py-3 px-2.5 text-right font-mono font-black text-purple-800">
+                                ${r.costoTotalEmpresa.toFixed(2)}
+                              </td>
+                            </>
+                          )}
+                          <td
+                            className="py-3 px-2.5 text-center"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handlePrintPayslips(r)}
+                                className="px-2 py-1 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold text-[10px] flex items-center gap-1 cursor-pointer"
+                                title="Descargar Boleta PDF de este colaborador"
+                              >
+                                <Printer className="w-3 h-3" />
+                                <span>Boleta</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot className="bg-slate-900 text-white font-mono font-black text-xs sticky bottom-0 z-20">
+                    <tr>
+                      <td className="py-3.5 px-2.5 text-center">—</td>
+                      <th scope="row" className="py-3.5 px-3 text-left" colSpan={3}>
+                        TOTALES ({computedRows.length} Colaboradores)
+                      </th>
+                      <td className="py-3.5 px-2.5 text-right">
+                        ${totals.ordinarySalary.toFixed(2)}
+                      </td>
+                      <td className="py-3.5 px-2.5 text-right text-emerald-300">
+                        ${totals.otherIncome.toFixed(2)}
+                      </td>
+                      <td className="py-3.5 px-2.5 text-right">
+                        ${totals.vacationAmount.toFixed(2)}
+                      </td>
+                      <td className="py-3.5 px-2.5 text-right text-indigo-200">
+                        ${totals.totalDevengado.toFixed(2)}
+                      </td>
+                      <td className="py-3.5 px-2.5 text-right">${totals.isssLab.toFixed(2)}</td>
+                      <td className="py-3.5 px-2.5 text-right">${totals.afpLab.toFixed(2)}</td>
+                      <td className="py-3.5 px-2.5 text-right">
+                        ${totals.baseGravableIsr.toFixed(2)}
+                      </td>
+                      <td className="py-3.5 px-2.5 text-right text-rose-300">
+                        ${totals.isr.toFixed(2)}
+                      </td>
+                      <td className="py-3.5 px-2.5 text-right">
+                        ${totals.totalDeducciones.toFixed(2)}
+                      </td>
+                      <td className="py-3.5 px-3 text-right text-emerald-300 text-sm">
+                        ${totals.liquidoPagar.toFixed(2)}
+                      </td>
+                      {showFullEmployerCols && (
+                        <>
+                          <td className="py-3.5 px-2.5 text-right">
+                            ${totals.isssPat.toFixed(2)}
+                          </td>
+                          <td className="py-3.5 px-2.5 text-right">
+                            ${totals.afpPat.toFixed(2)}
+                          </td>
+                          <td className="py-3.5 px-2.5 text-right text-purple-300">
+                            ${totals.costoTotalEmpresa.toFixed(2)}
+                          </td>
+                        </>
+                      )}
+                      <td className="py-3.5 px-2.5"></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ================= SUBPESTAÑA 1.5: JORNADAS & CRUCE DE MARCACIONES (ESTILO ASEINFO EVOLUTION) ================= */}
       {subTab === 'jornadas' && (
