@@ -35,7 +35,10 @@ export function Navbar() {
     );
     if (!isOperationalPage) return;
 
-    const syncSession = () => {
+    const syncSession = (force = false) => {
+      const lastSync = Number(sessionStorage.getItem('kodelocal_last_session_sync') || 0);
+      if (!force && Date.now() - lastSync < 25 * 60 * 1000) return;
+      sessionStorage.setItem('kodelocal_last_session_sync', String(Date.now()));
       getStaffToken(true).then(() => {
         const refreshedUser = getActiveUser();
         if (refreshedUser) setCurrentUser(refreshedUser);
@@ -43,10 +46,10 @@ export function Navbar() {
     };
 
     syncSession();
-    const interval = setInterval(syncSession, 10 * 60 * 1000); // Cada 10 minutos
+    const interval = setInterval(() => syncSession(true), 30 * 60 * 1000); // Cada 30 minutos
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
-        syncSession();
+        syncSession(false);
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);

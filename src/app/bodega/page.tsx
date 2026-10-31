@@ -563,6 +563,8 @@ export default function BodegaPage() {
   // SUSCRIPCIÓN EN TIEMPO REAL (Supabase WebSocket + Heartbeat inteligente en segundo plano)
   useEffect(() => {
     // 1. Carga inicial
+    let lastBodegaSync = Date.now();
+    let isRealtimeSub = false;
     fetchEcommerceOrders({ silent: false });
 
     // 2. Canal Supabase Realtime vía WebSocket instantáneo (pedidos web EcommerceOrder)
@@ -573,10 +575,12 @@ export default function BodegaPage() {
         { event: '*', schema: 'public', table: 'EcommerceOrder' },
         (payload) => {
           console.log('⚡ [Bodega Realtime] Evento de pedido web recibido:', payload.eventType);
+          lastBodegaSync = Date.now();
           fetchEcommerceOrders({ silent: true });
         }
       )
       .subscribe((status) => {
+        isRealtimeSub = status === 'SUBSCRIBED';
         if (status === 'SUBSCRIBED') {
           console.log('🟢 [Bodega Realtime] Conectado en vivo al canal de pedidos web');
         }
@@ -590,25 +594,31 @@ export default function BodegaPage() {
         { event: '*', schema: 'public', table: 'Sale' },
         (payload) => {
           console.log('⚡ [Bodega Realtime] Evento de comanda/despacho mostrador recibido:', payload.eventType);
+          lastBodegaSync = Date.now();
           fetchEcommerceOrders({ silent: true });
         }
       )
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
+          isRealtimeSub = true;
           console.log('🟢 [Bodega Realtime] Conectado en vivo a despachos y comandas de recepción');
         }
       });
 
-    // 3. Heartbeat silencioso de respaldo cada 20 segundos (solo cuando la pestaña está visible)
+    // 3. Respaldo ligero solo si Realtime se desconecta (o cada 5 min si está visible)
     const intervalId = setInterval(() => {
-      if (typeof document === 'undefined' || document.visibilityState === 'visible') {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+      const elapsed = Date.now() - lastBodegaSync;
+      if (!isRealtimeSub || elapsed >= 5 * 60 * 1000) {
+        lastBodegaSync = Date.now();
         fetchEcommerceOrders({ silent: true });
       }
-    }, 20000);
+    }, 60000);
 
-    // 4. Reconexión y refresco silencioso al volver al navegador / pestaña activa
+    // 4. Refresco al volver a la pestaña solo si estuvo inactiva más de 2 minutos
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible' && Date.now() - lastBodegaSync > 120000) {
+        lastBodegaSync = Date.now();
         fetchEcommerceOrders({ silent: true });
       }
     };

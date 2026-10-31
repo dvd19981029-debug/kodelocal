@@ -358,23 +358,7 @@ export default function PosPage() {
   }, []);
 
 
-  // Auto-Sincronización Silenciosa cada 3 minutos (Evita ceguera ante Ecommerce)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (typeof navigator !== 'undefined' && navigator.onLine) {
-        fetch('/api/products')
-          .then(res => res.json())
-          .then(data => {
-            if (data.success && Array.isArray(data.products)) {
-              setProducts(data.products);
-              localStorage.setItem('kodelocal_products', JSON.stringify(data.products));
-            }
-          })
-          .catch(() => {});
-      }
-    }, 3 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
+  // Sincronización de catálogo gestionada por Supabase Realtime (pos-realtime-channel) sin polling constante
 
 
   useEffect(() => {
@@ -837,10 +821,14 @@ export default function PosPage() {
         .catch(() => {});
     };
 
+    let lastPosSync = Date.now();
+    let isRealtimeSub = false;
+
     // Agrupa ráfagas de eventos (una venta toca varias filas) en una sola recarga
     const scheduleSalesSync = () => {
       if (debounceTimer) clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
+        lastPosSync = Date.now();
         syncSalesFromServer();
         refreshCustomers();
       }, 600);
@@ -856,17 +844,24 @@ export default function PosPage() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'EcommerceOrder' }, scheduleSalesSync)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'Customer' }, () => refreshCustomers())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'Product' }, scheduleProductsSync)
-      .subscribe();
+      .subscribe((status) => {
+        isRealtimeSub = status === 'SUBSCRIBED';
+      });
 
-    // Respaldo cada 30 s por si Realtime se desconecta o la tabla no está publicada
+    // Respaldo ligero solo si Realtime se desconecta (o cada 5 min si está visible)
     const intervalId = setInterval(() => {
       if (typeof navigator !== 'undefined' && navigator.onLine && document.visibilityState === 'visible') {
-        syncSalesFromServer();
+        const elapsed = Date.now() - lastPosSync;
+        if (!isRealtimeSub || elapsed >= 5 * 60 * 1000) {
+          lastPosSync = Date.now();
+          syncSalesFromServer();
+        }
       }
-    }, 30 * 1000);
+    }, 60 * 1000);
 
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible' && Date.now() - lastPosSync > 180000) {
+        lastPosSync = Date.now();
         syncSalesFromServer();
         refreshProductsFromServer();
         refreshCustomers();

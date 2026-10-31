@@ -177,13 +177,24 @@ export const PosWompiLinksDashboard: React.FC = () => {
     fetchEnlaces(false, true);
   }, [fetchEnlaces]);
 
-  // Monitoreo automático cada 8 segundos para avisar en cuanto un cliente pague
+  // Monitoreo inteligente: solo consulta si la pestaña está visible y existe algún enlace PENDIENTE por cobrar
+  const hasPendingLinks = useMemo(
+    () =>
+      enlaces.some((e) => e.estado === 'PENDIENTE') ||
+      enlaceReciente?.estado === 'PENDIENTE' ||
+      qrModalEnlace?.estado === 'PENDIENTE',
+    [enlaces, enlaceReciente, qrModalEnlace]
+  );
+
   useEffect(() => {
+    if (!hasPendingLinks) return;
     const interval = setInterval(() => {
-      fetchEnlaces(true, true);
-    }, 8000);
+      if (typeof document === 'undefined' || document.visibilityState === 'visible') {
+        fetchEnlaces(true, true);
+      }
+    }, 20000);
     return () => clearInterval(interval);
-  }, [fetchEnlaces]);
+  }, [fetchEnlaces, hasPendingLinks]);
 
   const handleGenerarEnlace = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -377,11 +377,27 @@ export default function KodeSystemPage() {
     fetchClientes();
     cargarComprasLocal();
 
+    // Refrescar solo cuando la pestaña está activa (cada 2 minutos o al volver a la pestaña tras >60s)
+    let lastKodeFetch = Date.now();
     const interval = setInterval(() => {
-      fetchPedidos();
-    }, 6000);
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        lastKodeFetch = Date.now();
+        fetchPedidos();
+      }
+    }, 120000);
 
-    return () => clearInterval(interval);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && Date.now() - lastKodeFetch > 60000) {
+        lastKodeFetch = Date.now();
+        fetchPedidos();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [currentUser]);
 
   // Directorio consolidado de clientes (base de datos + pedidos históricos)
