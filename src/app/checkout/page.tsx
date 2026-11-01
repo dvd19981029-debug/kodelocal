@@ -909,46 +909,86 @@ export default function CheckoutPage() {
         </div>
       )}
 
-      {/* Símbolos de Pago Seguro, Visa, Mastercard y Wompi · Bancoagrícola */}
-      <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 py-1">
-        {/* 1. Símbolo de Pago Seguro */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200/80 text-slate-800 text-xs font-bold shadow-2xs h-[34px]">
-          <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span>Pago 100% Seguro</span>
+      {/* Barra Unificada de Respaldo Bancario y Pago Seguro */}
+      <div className="clay-card px-4 py-3 sm:px-5 sm:py-3.5 bg-white/95 border border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center shrink-0">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          </div>
+          <div className="text-left">
+            <span className="text-xs font-black text-slate-900 block leading-tight">
+              Pago 100% Seguro y Protegido
+            </span>
+            <span className="text-[10.5px] font-semibold text-slate-500 block">
+              Pasarela oficial 3D Secure y cuentas empresariales verificadas
+            </span>
+          </div>
         </div>
 
-        {/* 2. Símbolo de Visa */}
-        <div className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-white border border-slate-200/80 shadow-2xs h-[34px]" title="Visa">
-          <svg className="h-3.5 sm:h-4 w-auto" viewBox="0 0 66 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M24.5 1.5L16.2 18.5H10.8L6.6 4.8C6.3 3.8 6.1 3.4 5.3 3C4.1 2.3 2.1 1.7 0.5 1.4L0.6 0.8H9.2C10.3 0.8 11.3 1.5 11.5 2.8L13.6 13.7L18.8 0.8H24.5V1.5ZM45.8 12.8C45.8 8 39 7.7 39 5.5C39 4.8 39.7 4.1 41.1 3.9C41.8 3.8 43.8 3.7 45.8 4.7L46.6 0.9C45.5 0.5 44 0 42.2 0C37.1 0 33.5 2.7 33.5 6.6C33.5 9.5 36.1 11.1 38 12.1C40 13.1 40.7 13.7 40.7 14.6C40.7 15.9 39.1 16.5 37.7 16.5C35.1 16.5 33.5 15.8 32.3 15.2L31.4 19.3C32.7 19.9 35 20.4 37.3 20.4C42.8 20.4 45.8 17.7 45.8 12.8ZM59.5 18.5H64.3L60.1 0.8H55.9C54.9 0.8 54.1 1.4 53.8 2.2L46 18.5H51.2L52.2 15.7H58.6L59.5 18.5ZM53.6 11.8L56.3 4.5L57.8 11.8H53.6ZM32.4 0.8L28.2 18.5H23.3L27.5 0.8H32.4Z" fill="#1434CB"/>
-          </svg>
-        </div>
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5">
+          {/* Visa */}
+          <div
+            className="h-8 px-3 rounded-xl bg-slate-50 border border-slate-200/80 inline-flex items-center justify-center"
+            title="Visa"
+          >
+            <svg className="h-3.5 w-auto" viewBox="0 0 66 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M24.5 1.5L16.2 18.5H10.8L6.6 4.8C6.3 3.8 6.1 3.4 5.3 3C4.1 2.3 2.1 1.7 0.5 1.4L0.6 0.8H9.2C10.3 0.8 11.3 1.5 11.5 2.8L13.6 13.7L18.8 0.8H24.5V1.5ZM45.8 12.8C45.8 8 39 7.7 39 5.5C39 4.8 39.7 4.1 41.1 3.9C41.8 3.8 43.8 3.7 45.8 4.7L46.6 0.9C45.5 0.5 44 0 42.2 0C37.1 0 33.5 2.7 33.5 6.6C33.5 9.5 36.1 11.1 38 12.1C40 13.1 40.7 13.7 40.7 14.6C40.7 15.9 39.1 16.5 37.7 16.5C35.1 16.5 33.5 15.8 32.3 15.2L31.4 19.3C32.7 19.9 35 20.4 37.3 20.4C42.8 20.4 45.8 17.7 45.8 12.8ZM59.5 18.5H64.3L60.1 0.8H55.9C54.9 0.8 54.1 1.4 53.8 2.2L46 18.5H51.2L52.2 15.7H58.6L59.5 18.5ZM53.6 11.8L56.3 4.5L57.8 11.8H53.6ZM32.4 0.8L28.2 18.5H23.3L27.5 0.8H32.4Z"
+                fill="#1434CB"
+              />
+            </svg>
+          </div>
 
-        {/* 3. Símbolo de Mastercard */}
-        <div className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-white border border-slate-200/80 shadow-2xs h-[34px]" title="Mastercard">
-          <svg className="h-4 sm:h-5 w-auto" viewBox="0 0 36 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="10" fill="#EB001B"/>
-            <circle cx="24" cy="12" r="10" fill="#F79E1B"/>
-            <path d="M18 4.8A9.95 9.95 0 0 0 14.5 12c0 2.8 1.1 5.3 2.9 7.1a9.95 9.95 0 0 0 7.1-7.1c0-2.8-1.1-5.3-2.9-7.1C18.4 4.6 18.2 4.7 18 4.8Z" fill="#FF5F00"/>
-          </svg>
-        </div>
+          {/* Mastercard */}
+          <div
+            className="h-8 px-3 rounded-xl bg-slate-50 border border-slate-200/80 inline-flex items-center justify-center"
+            title="Mastercard"
+          >
+            <svg className="h-[18px] w-auto" viewBox="0 0 36 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" fill="#EB001B" />
+              <circle cx="24" cy="12" r="10" fill="#F79E1B" />
+              <path
+                d="M18 4.8A9.95 9.95 0 0 0 14.5 12c0 2.8 1.1 5.3 2.9 7.1a9.95 9.95 0 0 0 7.1-7.1c0-2.8-1.1-5.3-2.9-7.1C18.4 4.6 18.2 4.7 18 4.8Z"
+                fill="#FF5F00"
+              />
+            </svg>
+          </div>
 
-        {/* 4. Logos Oficiales Wompi · Bancoagrícola */}
-        <div
-          className="inline-flex items-center gap-2.5 px-3 py-1 rounded-xl bg-white border border-slate-200/80 shadow-2xs h-[34px]"
-          title="Wompi · Bancoagrícola"
-        >
-          <img
-            src="/images/banks/wompi.svg"
-            alt="Wompi El Salvador"
-            className="h-4 sm:h-[18px] w-auto object-contain"
-          />
-          <span className="h-3.5 w-px bg-slate-300" aria-hidden="true" />
-          <img
-            src="/images/banks/bancoagricola.svg"
-            alt="Bancoagrícola"
-            className="h-3.5 sm:h-4 w-auto object-contain"
-          />
+          {/* Wompi */}
+          <div
+            className="h-8 px-3 rounded-xl bg-slate-50 border border-slate-200/80 inline-flex items-center justify-center"
+            title="Wompi El Salvador"
+          >
+            <img
+              src="/images/banks/wompi.svg"
+              alt="Wompi El Salvador"
+              className="h-4 sm:h-[18px] w-auto object-contain"
+            />
+          </div>
+
+          {/* Bancoagrícola */}
+          <div
+            className="h-8 px-3.5 rounded-xl bg-slate-50 border border-slate-200/80 inline-flex items-center justify-center"
+            title="Bancoagrícola"
+          >
+            <img
+              src="/images/banks/bancoagricola.svg"
+              alt="Bancoagrícola"
+              className="h-4 sm:h-[18px] w-auto object-contain"
+            />
+          </div>
+
+          {/* BAC Credomatic */}
+          <div
+            className="h-8 px-3 rounded-xl bg-slate-50 border border-slate-200/80 inline-flex items-center justify-center"
+            title="BAC Credomatic"
+          >
+            <img
+              src="/images/banks/bac.svg"
+              alt="BAC Credomatic"
+              className="h-3.5 sm:h-4 w-auto object-contain"
+            />
+          </div>
         </div>
       </div>
 
@@ -1300,22 +1340,34 @@ export default function CheckoutPage() {
                       )}
                     </div>
                   </div>
-                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                    Pasarela segura de <strong className="text-slate-800 font-bold">Wompi / Banco Agrícola</strong> con protección 3D Secure.
-                  </p>
-                  <div className="flex items-center gap-2.5 pt-1 border-t border-slate-200/60">
-                    <img
-                      src="/images/banks/wompi.svg"
-                      alt="Wompi El Salvador"
-                      className="h-3.5 w-auto object-contain"
-                    />
-                    <span className="h-3 w-px bg-slate-300" aria-hidden="true" />
-                    <img
-                      src="/images/banks/bancoagricola.svg"
-                      alt="Bancoagrícola"
-                      className="h-3 w-auto object-contain"
-                    />
+                  <div className="rounded-xl bg-white border border-slate-200/80 px-3 py-2 flex items-center justify-between gap-2 shadow-2xs">
+                    <div className="flex items-center gap-2.5">
+                      <img
+                        src="/images/banks/wompi.svg"
+                        alt="Wompi El Salvador"
+                        className="h-4 sm:h-[18px] w-auto object-contain"
+                      />
+                      <span className="h-3.5 w-px bg-slate-200" aria-hidden="true" />
+                      <img
+                        src="/images/banks/bancoagricola.svg"
+                        alt="Bancoagrícola"
+                        className="h-4 sm:h-[18px] w-auto object-contain"
+                      />
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <svg className="h-3 w-auto" viewBox="0 0 66 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24.5 1.5L16.2 18.5H10.8L6.6 4.8C6.3 3.8 6.1 3.4 5.3 3C4.1 2.3 2.1 1.7 0.5 1.4L0.6 0.8H9.2C10.3 0.8 11.3 1.5 11.5 2.8L13.6 13.7L18.8 0.8H24.5V1.5ZM45.8 12.8C45.8 8 39 7.7 39 5.5C39 4.8 39.7 4.1 41.1 3.9C41.8 3.8 43.8 3.7 45.8 4.7L46.6 0.9C45.5 0.5 44 0 42.2 0C37.1 0 33.5 2.7 33.5 6.6C33.5 9.5 36.1 11.1 38 12.1C40 13.1 40.7 13.7 40.7 14.6C40.7 15.9 39.1 16.5 37.7 16.5C35.1 16.5 33.5 15.8 32.3 15.2L31.4 19.3C32.7 19.9 35 20.4 37.3 20.4C42.8 20.4 45.8 17.7 45.8 12.8ZM59.5 18.5H64.3L60.1 0.8H55.9C54.9 0.8 54.1 1.4 53.8 2.2L46 18.5H51.2L52.2 15.7H58.6L59.5 18.5ZM53.6 11.8L56.3 4.5L57.8 11.8H53.6ZM32.4 0.8L28.2 18.5H23.3L27.5 0.8H32.4Z" fill="#1434CB"/>
+                      </svg>
+                      <svg className="h-3.5 w-auto" viewBox="0 0 36 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" fill="#EB001B"/>
+                        <circle cx="24" cy="12" r="10" fill="#F79E1B"/>
+                        <path d="M18 4.8A9.95 9.95 0 0 0 14.5 12c0 2.8 1.1 5.3 2.9 7.1a9.95 9.95 0 0 0 7.1-7.1c0-2.8-1.1-5.3-2.9-7.1C18.4 4.6 18.2 4.7 18 4.8Z" fill="#FF5F00"/>
+                      </svg>
+                    </div>
                   </div>
+                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                    Pasarela segura de <strong className="text-slate-800 font-bold">Wompi / Bancoagrícola</strong> con protección 3D Secure.
+                  </p>
                 </button>
 
                 {/* Botón Transferencia Bancaria */}
@@ -1342,7 +1394,7 @@ export default function CheckoutPage() {
                       </div>
                       <div>
                         <span className="font-black text-slate-900 text-xs block">Transferencia Bancaria</span>
-                        <span className="text-[10px] font-bold text-indigo-600">Banco Agrícola • BAC Credomatic</span>
+                        <span className="text-[10px] font-bold text-indigo-600">Cuentas Corrientes Oficiales</span>
                       </div>
                     </div>
 
@@ -1357,22 +1409,22 @@ export default function CheckoutPage() {
                       )}
                     </div>
                   </div>
-                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                    Envía tu comprobante por <strong className="text-slate-800 font-bold">WhatsApp al 6043-7496</strong> o súbelo en la página de tu orden.
-                  </p>
-                  <div className="flex items-center gap-2.5 pt-1 border-t border-slate-200/60">
+                  <div className="rounded-xl bg-white border border-slate-200/80 px-3 py-2 flex items-center justify-between gap-3 shadow-2xs">
                     <img
                       src="/images/banks/bancoagricola.svg"
                       alt="Bancoagrícola"
-                      className="h-3.5 w-auto object-contain"
+                      className="h-4 sm:h-[18px] w-auto object-contain"
                     />
-                    <span className="h-3 w-px bg-slate-300" aria-hidden="true" />
+                    <span className="h-3.5 w-px bg-slate-200" aria-hidden="true" />
                     <img
                       src="/images/banks/bac.svg"
                       alt="BAC Credomatic"
-                      className="h-3 w-auto object-contain"
+                      className="h-3.5 sm:h-4 w-auto object-contain"
                     />
                   </div>
+                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                    Envía tu comprobante por <strong className="text-slate-800 font-bold">WhatsApp al 6043-7496</strong> o súbelo en la página de tu orden.
+                  </p>
                 </button>
               </div>
 

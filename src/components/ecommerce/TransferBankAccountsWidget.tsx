@@ -46,30 +46,27 @@ export function BankAccountsCardsList({ compact = false }: BankAccountsCardsList
             compact ? 'p-3 space-y-2' : 'p-4 space-y-2.5'
           } shadow-xs`}
         >
-          {/* Encabezado del Banco con Logo Oficial */}
+          {/* Encabezado del Banco con Logo Oficial sin duplicar texto */}
           <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div
-                className={`px-2.5 py-1.5 rounded-xl flex items-center justify-center border ${acc.badgeBg} bg-white shrink-0`}
-              >
-                <img
-                  src={acc.logoUrl}
-                  alt={acc.bankName}
-                  className={acc.id === 'agricola' ? 'h-4 sm:h-[18px] w-auto object-contain' : 'h-3.5 sm:h-4 w-auto object-contain'}
-                />
-              </div>
-              <div className="min-w-0">
-                <span className="text-xs font-black text-slate-900 block leading-tight truncate">
-                  {acc.bankName}
-                </span>
-                <span className="text-[10.5px] font-bold text-slate-500 block">
-                  {acc.accountType}
-                </span>
-              </div>
+              <img
+                src={acc.logoUrl}
+                alt={acc.bankName}
+                className={
+                  acc.id === 'agricola'
+                    ? 'h-5 sm:h-[22px] w-auto object-contain shrink-0'
+                    : 'h-4 sm:h-[18px] w-auto object-contain shrink-0'
+                }
+              />
             </div>
-            <span className="px-2 py-0.5 rounded-full text-[9.5px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200 shrink-0">
-              {acc.personType}
-            </span>
+            <div className="text-right shrink-0">
+              <span className="text-[10.5px] font-extrabold text-slate-800 block leading-tight">
+                {acc.accountType}
+              </span>
+              <span className="text-[9.5px] font-bold text-slate-500 block">
+                {acc.personType}
+              </span>
+            </div>
           </div>
 
           {/* Número de Cuenta Destacado con Botón Copiar */}
