@@ -48,65 +48,119 @@ export async function GET(request: Request) {
 
     const whereDate = dateCondition ? { createdAt: dateCondition } : {};
 
-    // 1. Consultas simultáneas a Prisma
-    const [orders, sales, purchases, products, dteCount, blogPosts] = await Promise.all([
-      prisma.ecommerceOrder.findMany({
-        where: whereDate,
-        include: { items: true },
-        orderBy: { createdAt: 'desc' },
-      }),
-      prisma.sale.findMany({
-        where: whereDate,
-        include: { items: true },
-        orderBy: { createdAt: 'desc' },
-      }),
-      prisma.purchase.findMany({
-        where: whereDate,
-        include: { items: true },
-        orderBy: { createdAt: 'desc' },
-      }),
-      prisma.product.findMany({
-        select: {
-          id: true,
-          name: true,
-          officialName: true,
-          unit: true,
-          stock: true,
-          stockHalf: true,
-          minStock: true,
-          price: true,
-          cost: true,
-          supplier: true,
-          gender: true,
-        },
-      }),
-      prisma.dteDocument.count({
-        where: dateCondition ? { createdAt: dateCondition } : {},
-      }),
-      prisma.blogPost.findMany({
-        where: { isPublished: true },
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-          category: true,
-          readingTimeMin: true,
-          viewsCount: true,
-          publishedAt: true,
-          createdAt: true,
-        },
-        orderBy: { viewsCount: 'desc' },
-      }),
-    ]);
+    const productionStartDate = new Date('2026-10-14T00:00:00-06:00');
+
+    // 1. Consultas simultáneas a Prisma (período + histórico ligero para LTV, colas activas y logística)
+    const [orders, sales, purchases, products, dteCount, blogPosts, allHistoricalOrders, allHistoricalSales] =
+      await Promise.all([
+        prisma.ecommerceOrder.findMany({
+          where: whereDate,
+          include: { items: true },
+          orderBy: { createdAt: 'desc' },
+        }),
+        prisma.sale.findMany({
+          where: whereDate,
+          include: { items: true, customer: true },
+          orderBy: { createdAt: 'desc' },
+        }),
+        prisma.purchase.findMany({
+          where: whereDate,
+          include: { items: true },
+          orderBy: { createdAt: 'desc' },
+        }),
+        prisma.product.findMany({
+          where: { isActive: true },
+          select: {
+            id: true,
+            name: true,
+            officialName: true,
+            description: true,
+            unit: true,
+            stock: true,
+            stockHalf: true,
+            minStock: true,
+            price: true,
+            priceHalfOunce: true,
+            cost: true,
+            supplier: true,
+            gender: true,
+          },
+        }),
+        prisma.dteDocument.count({
+          where: dateCondition ? { createdAt: dateCondition } : {},
+        }),
+        prisma.blogPost.findMany({
+          where: { isPublished: true },
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            category: true,
+            readingTimeMin: true,
+            viewsCount: true,
+            publishedAt: true,
+            createdAt: true,
+          },
+          orderBy: { viewsCount: 'desc' },
+        }),
+        prisma.ecommerceOrder.findMany({
+          where: { createdAt: { gte: productionStartDate } },
+          select: {
+            id: true,
+            orderNumber: true,
+            customerName: true,
+            customerPhone: true,
+            customerEmail: true,
+            department: true,
+            total: true,
+            paymentMethod: true,
+            paymentStatus: true,
+            orderStatus: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        }),
+        prisma.sale.findMany({
+          where: { createdAt: { gte: productionStartDate } },
+          select: {
+            id: true,
+            saleNumber: true,
+            total: true,
+            paymentMethod: true,
+            paymentStatus: true,
+            orderStatus: true,
+            createdAt: true,
+            customer: {
+              select: {
+                id: true,
+                name: true,
+                phone: true,
+                email: true,
+                department: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+        }),
+      ]);
+
+    // Excluir productos virtuales/servicios (como ENVIO-DOM con stock 999999)
+    const physicalProducts = products.filter(
+      (p) => p.id !== 'ENVIO-DOM' && (p.unit || '').toLowerCase() !== 'servicio'
+    );
 
     // Crear mapa de costos de productos para cálculo exacto de margen
     const productCostMap = new Map<string, number>();
-    products.forEach((p) => {
+    physicalProducts.forEach((p) => {
       productCostMap.set(p.id, Number(p.cost || 1.95));
       productCostMap.set(p.name.toLowerCase().trim(), Number(p.cost || 1.95));
+      if (p.officialName) {
+        productCostMap.set(p.officialName.toLowerCase().trim(), Number(p.cost || 1.95));
+      }
     });
 
-    // 2. Agregaciones de Ventas (solo órdenes completadas y sin duplicar pedidos web cobrados en POS)
+    // 2. Agregaciones de Ventas (solo órdenes válidas y sin duplicar pedidos web cobrados en POS)
     const validOrders = orders.filter(
       (o) => o.orderStatus !== 'CANCELADO' && (o.paymentMethod !== 'CARD' || o.paymentStatus === 'COMPLETED')
     );
@@ -120,28 +174,60 @@ export async function GET(request: Request) {
       return true;
     });
 
+    // Histórico global válido (para LTV real, colas operativas activas y tiempos logísticos reales)
+    const allValidHistoricalOrders = allHistoricalOrders.filter(
+      (o) => o.orderStatus !== 'CANCELADO' && (o.paymentMethod !== 'CARD' || o.paymentStatus === 'COMPLETED')
+    );
+    const allEcomOrderNumbers = new Set(allValidHistoricalOrders.map((o) => o.orderNumber));
+    const allValidHistoricalSales = allHistoricalSales.filter((s) => {
+      const st = String(s.orderStatus || '').toUpperCase();
+      if (st === 'CANCELADO' || st === 'CANCELLED' || st === 'ANULADA') return false;
+      if (st === 'PENDING_PREPARATION' || st === 'READY_AT_WINDOW') return false;
+      if (s.paymentStatus !== 'COMPLETED' && st !== 'COMPLETED') return false;
+      if (allEcomOrderNumbers.has(s.saleNumber)) return false;
+      return true;
+    });
+
     const ecommerceTotal = validOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
     const posTotal = validSales.reduce((sum, s) => sum + Number(s.total || 0), 0);
     const totalVentas = ecommerceTotal + posTotal;
 
     // 3. Gastos de Insumos y Costos
     const purchasesTotal = purchases.reduce((sum, p) => sum + Number(p.total || 0), 0);
-    
+
     // Cálculo de Costo de Mercancía Vendida (COGS)
     let cogsTotal = 0;
     let onzasVendidas = 0;
     const productAgg: Record<string, { name: string; quantity: number; revenue: number; ounces: number }> = {};
 
-    const processItem = (it: { productName: string; presentation?: string | null; unit?: string | null; quantity: number; total: any; productId?: string | null }) => {
-      const qty = it.quantity || 1;
-      const rev = Number(it.total || 0);
+    const processItem = (it: {
+      productName: string;
+      presentation?: string | null;
+      unit?: string | null;
+      quantity: number;
+      total: any;
+      productId?: string | null;
+    }) => {
       const rawName = it.productName || 'Producto';
       const rawLower = rawName.toLowerCase();
+      const pres = String(it.presentation || it.unit || '').toLowerCase();
+
+      // Ignorar cargos de envío como producto
+      if (
+        it.productId === 'ENVIO-DOM' ||
+        pres === 'servicio' ||
+        rawLower.includes('servicio de envío') ||
+        rawLower.includes('envío a domicilio')
+      ) {
+        return;
+      }
+
+      const qty = it.quantity || 1;
+      const rev = Number(it.total || 0);
       // Limpiar sufijos como "(1 Onza)" o "(½ Oz)"
       const cleanName = rawName.replace(/\s*\([^)]*\)/g, '').trim();
 
       let oz = 0;
-      const pres = String(it.presentation || it.unit || '').toLowerCase();
       const nameLower = cleanName.toLowerCase();
       const isNonEssenceOrLitro =
         nameLower.includes('litro') ||
@@ -149,14 +235,21 @@ export async function GET(request: Request) {
         rawLower.includes('litro') ||
         nameLower.includes('alcohol') ||
         nameLower.includes('bote') ||
-        nameLower.includes('caja');
+        nameLower.includes('caja') ||
+        (it.productId ? it.productId.startsWith('bote-') || it.productId.startsWith('alcohol-') : false);
 
       if (!isNonEssenceOrLitro) {
-        if (pres.includes('½') || pres.includes('0.5') || pres.includes('media') || rawLower.includes('½') || rawLower.includes('media onza')) {
+        if (
+          pres.includes('½') ||
+          pres.includes('0.5') ||
+          pres.includes('media') ||
+          rawLower.includes('½') ||
+          rawLower.includes('media onza')
+        ) {
           oz = 0.5 * qty;
         } else if (pres.includes('1.5')) {
           oz = 1.5 * qty;
-        } else if (pres.includes('onza') || pres.includes('1 oz') || nameLower.includes('onza')) {
+        } else if (pres.includes('onza') || pres.includes('1 oz') || nameLower.includes('onza') || (it.productId && it.productId.startsWith('esencia'))) {
           oz = 1.0 * qty;
         } else if (nameLower.includes('arma tu propio perfume')) {
           oz = pres.includes('plus') ? 1.5 * qty : 1.0 * qty;
@@ -168,15 +261,18 @@ export async function GET(request: Request) {
       const baseUnitCost =
         (it.productId && productCostMap.get(it.productId)) ||
         productCostMap.get(cleanName.toLowerCase()) ||
-        (oz > 0 ? 1.95 : rev * 0.45);
+        (oz > 0 ? 1.65 : rev * 0.45);
       cogsTotal += oz > 0 ? baseUnitCost * oz : baseUnitCost * qty;
 
-      if (!productAgg[cleanName]) {
-        productAgg[cleanName] = { name: cleanName, quantity: 0, revenue: 0, ounces: 0 };
+      // En Top Fragancias & Esencias solo rankear esencias y perfumes preparados (no botes vacíos ni alcohol)
+      if (!isNonEssenceOrLitro) {
+        if (!productAgg[cleanName]) {
+          productAgg[cleanName] = { name: cleanName, quantity: 0, revenue: 0, ounces: 0 };
+        }
+        productAgg[cleanName].quantity += qty;
+        productAgg[cleanName].revenue += rev;
+        productAgg[cleanName].ounces += oz;
       }
-      productAgg[cleanName].quantity += qty;
-      productAgg[cleanName].revenue += rev;
-      productAgg[cleanName].ounces += oz;
     };
 
     validOrders.forEach((o) => o.items.forEach(processItem));
@@ -190,25 +286,27 @@ export async function GET(request: Request) {
     const totalPedidos = validOrders.length + validSales.length;
     const ticketPromedio = totalPedidos > 0 ? Number((totalVentas / totalPedidos).toFixed(2)) : 0;
 
-    // 4. Pedidos por Estado (Logística Aromaniak)
-    const nuevosOrders = orders.filter((o) => o.orderStatus === 'NUEVO');
-    const prepOrders = orders.filter((o) => o.orderStatus === 'CONFIRMADO' || o.orderStatus === 'EN_PREPARACION');
-    const rutaOrders = orders.filter((o) => o.orderStatus === 'EN_RUTA');
-    const entregadosOrders = orders.filter((o) => o.orderStatus === 'ENTREGADO');
+    // 4. Pedidos por Estado (Logística Aromaniak: Colas activas en vivo + Entregados/Cancelados del período)
+    const liveNuevosOrders = allValidHistoricalOrders.filter((o) => o.orderStatus === 'NUEVO');
+    const livePrepOrders = allValidHistoricalOrders.filter(
+      (o) => o.orderStatus === 'CONFIRMADO' || o.orderStatus === 'EN_PREPARACION'
+    );
+    const liveRutaOrders = allValidHistoricalOrders.filter((o) => o.orderStatus === 'EN_RUTA');
+    const entregadosOrders = validOrders.filter((o) => o.orderStatus === 'ENTREGADO');
     const canceladosOrders = orders.filter((o) => o.orderStatus === 'CANCELADO');
 
     const pedidosEstado = {
       nuevos: {
-        count: nuevosOrders.length,
-        total: Number(nuevosOrders.reduce((acc, o) => acc + Number(o.total || 0), 0).toFixed(2)),
+        count: liveNuevosOrders.length,
+        total: Number(liveNuevosOrders.reduce((acc, o) => acc + Number(o.total || 0), 0).toFixed(2)),
       },
       enPreparacion: {
-        count: prepOrders.length,
-        total: Number(prepOrders.reduce((acc, o) => acc + Number(o.total || 0), 0).toFixed(2)),
+        count: livePrepOrders.length,
+        total: Number(livePrepOrders.reduce((acc, o) => acc + Number(o.total || 0), 0).toFixed(2)),
       },
       enRuta: {
-        count: rutaOrders.length,
-        total: Number(rutaOrders.reduce((acc, o) => acc + Number(o.total || 0), 0).toFixed(2)),
+        count: liveRutaOrders.length,
+        total: Number(liveRutaOrders.reduce((acc, o) => acc + Number(o.total || 0), 0).toFixed(2)),
       },
       entregados: {
         count: entregadosOrders.length + validSales.length, // Las ventas en mostrador se consideran entregadas de inmediato
@@ -318,52 +416,86 @@ export async function GET(request: Request) {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
-    // 9. Inventario & Bodega
-    const essenceProducts = products.filter((p) => (p.unit || '').toLowerCase() === 'onza');
-    const totalStockOnzas = essenceProducts.reduce((acc, p) => acc + (p.stock || 0), 0);
+    // 9. Inventario & Bodega (excluyendo servicios virtuales como ENVIO-DOM y sumando medias onzas reales)
+    const essenceProducts = physicalProducts.filter(
+      (p) => (p.unit || '').toLowerCase() === 'onza' || p.id.startsWith('esencia')
+    );
+    const totalStockOnzas = Number(
+      essenceProducts
+        .reduce((acc, p) => acc + Math.max(0, p.stock || 0) + Math.max(0, p.stockHalf || 0) * 0.5, 0)
+        .toFixed(1)
+    );
     const valorInventarioPvp = Number(
-      products.reduce((acc, p) => acc + Number(p.price || 0) * (p.stock || 0), 0).toFixed(2)
+      physicalProducts
+        .reduce((acc, p) => {
+          const isEss = (p.unit || '').toLowerCase() === 'onza' || p.id.startsWith('esencia');
+          const fullVal = Math.max(0, p.stock || 0) * Number(p.price || 0);
+          const halfPrice = Number(p.priceHalfOunce || Number(p.price || 0) * 0.5);
+          const halfVal = isEss ? Math.max(0, p.stockHalf || 0) * halfPrice : 0;
+          return acc + fullVal + halfVal;
+        }, 0)
+        .toFixed(2)
     );
     const valorInventarioCosto = Number(
-      products.reduce((acc, p) => acc + Number(p.cost || 0) * (p.stock || 0), 0).toFixed(2)
+      physicalProducts
+        .reduce((acc, p) => {
+          const isEss = (p.unit || '').toLowerCase() === 'onza' || p.id.startsWith('esencia');
+          const effectiveUnits = isEss
+            ? Math.max(0, p.stock || 0) + Math.max(0, p.stockHalf || 0) * 0.5
+            : Math.max(0, p.stock || 0);
+          return acc + effectiveUnits * Number(p.cost || 0);
+        }, 0)
+        .toFixed(2)
     );
     const gananciaPotencial = Number((valorInventarioPvp - valorInventarioCosto).toFixed(2));
 
-    const stockCritico = products
-      .filter((p) => p.stock <= (p.minStock || 10))
-      .slice(0, 6)
-      .map((p) => ({
-        id: p.id,
-        name: p.name,
-        stock: p.stock,
-        minStock: p.minStock,
-        price: Number(p.price || 0),
-        cost: Number(p.cost || 0),
-      }));
+    const stockCritico = physicalProducts
+      .map((p) => {
+        const isEss = (p.unit || '').toLowerCase() === 'onza' || p.id.startsWith('esencia');
+        const effectiveStock = isEss
+          ? Number((Math.max(0, p.stock || 0) + Math.max(0, p.stockHalf || 0) * 0.5).toFixed(1))
+          : Math.max(0, p.stock || 0);
+        return {
+          id: p.id,
+          name: p.officialName ? `${p.officialName} (${p.name})` : p.name,
+          stock: effectiveStock,
+          minStock: p.minStock || 10,
+          price: Number(p.price || 0),
+          cost: Number(p.cost || 0),
+          unit: p.unit || 'Onza',
+        };
+      })
+      .filter((p) => p.stock <= p.minStock)
+      .sort((a, b) => a.stock - b.stock)
+      .slice(0, 6);
 
-    // 10. Tráfico y Visitas Web Reales (Sin estimaciones inventadas)
+    // 10. Tráfico y Visitas Web Reales (Sin estimaciones ni placeholders)
     const visitMetrics = await getVisitMetricsForPeriod(period, validOrders.length);
 
-    // Fuentes reales registradas a partir de referencias web
+    // Fuentes reales registradas a partir de referencias web, ordenadas de mayor a menor
     const totalSourcesCount = Object.values(visitMetrics.fuentes).reduce((a, b) => a + b, 0);
-    const fuentesList = Object.entries(visitMetrics.fuentes).map(([name, visits]) => ({
-      name,
-      visits,
-      percentage: totalSourcesCount > 0 ? Number(((visits / totalSourcesCount) * 100).toFixed(1)) : 0,
-    }));
+    const fuentesList = Object.entries(visitMetrics.fuentes)
+      .map(([name, visits]) => ({
+        name,
+        visits,
+        percentage: totalSourcesCount > 0 ? Number(((visits / totalSourcesCount) * 100).toFixed(1)) : 0,
+      }))
+      .sort((a, b) => b.visits - a.visits);
 
-    // Si aún no hay referencias externas registradas, mostrar tráfico directo
     const fuentesFinal =
       fuentesList.length > 0
         ? fuentesList
-        : [{ name: 'Tráfico Directo / Navegador', visits: visitMetrics.totalVisitas, percentage: 100 }];
+        : visitMetrics.totalVisitas > 0
+        ? [{ name: 'Tráfico Directo', visits: visitMetrics.totalVisitas, percentage: 100 }]
+        : [];
 
-    // Dispositivos reales registrados
+    // Dispositivos reales registrados en DailyVisit (con conteo real y porcentaje real)
     const totalDevicesCount =
       visitMetrics.dispositivos.mobile + visitMetrics.dispositivos.desktop + visitMetrics.dispositivos.tablet;
     const dispositivosList = [
       {
-        device: 'Móviles (iOS & Android)',
+        device: 'Smartphones (Móvil)',
+        count: visitMetrics.dispositivos.mobile,
         percentage:
           totalDevicesCount > 0
             ? Number(((visitMetrics.dispositivos.mobile / totalDevicesCount) * 100).toFixed(1))
@@ -371,6 +503,7 @@ export async function GET(request: Request) {
       },
       {
         device: 'Computadoras (Desktop)',
+        count: visitMetrics.dispositivos.desktop,
         percentage:
           totalDevicesCount > 0
             ? Number(((visitMetrics.dispositivos.desktop / totalDevicesCount) * 100).toFixed(1))
@@ -378,6 +511,7 @@ export async function GET(request: Request) {
       },
       {
         device: 'Tablets & iPads',
+        count: visitMetrics.dispositivos.tablet,
         percentage:
           totalDevicesCount > 0
             ? Number(((visitMetrics.dispositivos.tablet / totalDevicesCount) * 100).toFixed(1))
@@ -385,15 +519,22 @@ export async function GET(request: Request) {
       },
     ];
 
-    // Zonas de clientes calculadas 100% de las direcciones reales de los pedidos
-    const totalOrdersDept = validOrders.length || 1;
-    const zonasPrincipales =
-      topDepartamentos.length > 0
-        ? topDepartamentos.slice(0, 5).map((d) => ({
-            zone: d.department,
-            share: Number(((d.count / totalOrdersDept) * 100).toFixed(1)),
-          }))
-        : [{ zone: 'San Salvador', share: 100 }];
+    // Zonas de compradores calculadas de los pedidos reales (si el período actual aún no tiene pedidos, usa el histórico real sin inventar 100% San Salvador)
+    const ordersForGeo = validOrders.length > 0 ? validOrders : allValidHistoricalOrders;
+    const geoDeptMap: Record<string, number> = {};
+    ordersForGeo.forEach((o) => {
+      const d = (o.department || 'San Salvador').trim();
+      geoDeptMap[d] = (geoDeptMap[d] || 0) + 1;
+    });
+    const totalGeoOrders = ordersForGeo.length || 1;
+    const zonasPrincipales = Object.entries(geoDeptMap)
+      .map(([zone, count]) => ({
+        zone,
+        count,
+        share: Number(((count / totalGeoOrders) * 100).toFixed(1)),
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
 
     const traficoDetalle = {
       fuentes: fuentesFinal,
@@ -467,7 +608,7 @@ export async function GET(request: Request) {
     };
 
     // 11.5 Tracking de Promoción de Halloween (Pociones de la Bruja: $3.30 1 Oz / $1.85 ½ Oz)
-    const productByIdMap = new Map(products.map((p) => [p.id, p]));
+    const productByIdMap = new Map(physicalProducts.map((p) => [p.id, p]));
     const halloweenOrderNumbers = new Set<string>();
     let totalPocionesUnidades = 0;
     let totalOnzasPromo = 0;
@@ -601,7 +742,7 @@ export async function GET(request: Request) {
       compradores: compradoresHalloween.slice(0, 15),
     };
 
-    // 12. Clientes Más Valiosos (Ranking de Compradores)
+    // 12. Clientes Más Valiosos (Ranking de Compradores — E-commerce + Mostrador POS identificados)
     const customerAggMap: Record<
       string,
       {
@@ -616,7 +757,9 @@ export async function GET(request: Request) {
     > = {};
 
     validOrders.forEach((o) => {
-      const key = o.customerPhone ? o.customerPhone.trim() : o.customerName.trim();
+      const cleanPhone = (o.customerPhone || '').replace(/\D/g, '');
+      const key = cleanPhone || (o.customerName || '').trim().toLowerCase();
+      if (!key) return;
       if (!customerAggMap[key]) {
         customerAggMap[key] = {
           name: o.customerName || 'Cliente Online',
@@ -632,6 +775,31 @@ export async function GET(request: Request) {
       customerAggMap[key].totalSpent += Number(o.total || 0);
       if (new Date(o.createdAt).getTime() > new Date(customerAggMap[key].lastOrderDate).getTime()) {
         customerAggMap[key].lastOrderDate = o.createdAt.toISOString();
+      }
+    });
+
+    validSales.forEach((s) => {
+      if (!s.customer) return;
+      const cName = (s.customer.name || '').trim();
+      const lowerName = cName.toLowerCase();
+      if (!cName || lowerName.includes('consumidor final') || lowerName.includes('mostrador')) return;
+      const cleanPhone = (s.customer.phone || '').replace(/\D/g, '');
+      const key = cleanPhone || lowerName;
+      if (!customerAggMap[key]) {
+        customerAggMap[key] = {
+          name: cName,
+          phone: s.customer.phone || 'N/A',
+          email: s.customer.email || null,
+          department: s.customer.department || 'San Salvador',
+          ordersCount: 0,
+          totalSpent: 0,
+          lastOrderDate: s.createdAt.toISOString(),
+        };
+      }
+      customerAggMap[key].ordersCount += 1;
+      customerAggMap[key].totalSpent += Number(s.total || 0);
+      if (new Date(s.createdAt).getTime() > new Date(customerAggMap[key].lastOrderDate).getTime()) {
+        customerAggMap[key].lastOrderDate = s.createdAt.toISOString();
       }
     });
 
@@ -671,7 +839,10 @@ export async function GET(request: Request) {
         const qty = it.quantity || 1;
         let oz = qty;
         const pres = (it.presentation || '').toLowerCase();
-        const isLitroOrAlcohol = pres.includes('litro') || (it.productName || '').toLowerCase().includes('litro') || (it.productName || '').toLowerCase().includes('alcohol');
+        const isLitroOrAlcohol =
+          pres.includes('litro') ||
+          (it.productName || '').toLowerCase().includes('litro') ||
+          (it.productName || '').toLowerCase().includes('alcohol');
         if (!isLitroOrAlcohol && (pres.includes('½') || pres.includes('0.5'))) oz = 0.5 * qty;
         else if (!isLitroOrAlcohol && pres.includes('1.5')) oz = 1.5 * qty;
 
@@ -708,7 +879,7 @@ export async function GET(request: Request) {
       });
     });
 
-    const proyeccionAgotamiento = products
+    const proyeccionAgotamiento = physicalProducts
       .map((p) => {
         const usage =
           productUsageById[p.id] ||
@@ -746,22 +917,39 @@ export async function GET(request: Request) {
       .filter((p) => p.totalSold > 0 || p.stock <= p.minStock)
       .sort((a, b) => a.daysLeft - b.daysLeft);
 
-    // 15. Embudo de Conversión & Carritos Abandonados
-    const abandonedOrders = orders.filter(
-      (o) => o.orderStatus === 'CANCELADO' || (o.paymentStatus === 'PENDING' && o.paymentMethod === 'CARD')
+    // 15. Embudo de Conversión & Carritos Abandonados (SOLO checkouts con pago pendiente que NO completaron orden después; NUNCA órdenes canceladas)
+    const allPaidCustomerKeys = new Set<string>();
+    allValidHistoricalOrders.forEach((o) => {
+      const k = (o.customerPhone || '').replace(/\D/g, '') || (o.customerName || '').trim().toLowerCase();
+      if (k) allPaidCustomerKeys.add(k);
+    });
+
+    const pendingCheckoutCandidates = orders.filter(
+      (o) => o.orderStatus !== 'CANCELADO' && o.paymentMethod === 'CARD' && o.paymentStatus === 'PENDING'
     );
-    const checkoutsIniciados = orders.length;
+    const deduplicatedAbandonedMap = new Map<string, (typeof orders)[number]>();
+    pendingCheckoutCandidates.forEach((o) => {
+      const k = (o.customerPhone || '').replace(/\D/g, '') || (o.customerName || '').trim().toLowerCase() || o.id;
+      if (!allPaidCustomerKeys.has(k) && !deduplicatedAbandonedMap.has(k)) {
+        deduplicatedAbandonedMap.set(k, o);
+      }
+    });
+    const trulyAbandonedOrders = Array.from(deduplicatedAbandonedMap.values());
+
     const pedidosPagados = validOrders.length;
+    const checkoutsIniciados = pedidosPagados + trulyAbandonedOrders.length;
     const tasaAbandono =
-      checkoutsIniciados > 0 ? Number(((abandonedOrders.length / checkoutsIniciados) * 100).toFixed(1)) : 0;
+      checkoutsIniciados > 0
+        ? Number(((trulyAbandonedOrders.length / checkoutsIniciados) * 100).toFixed(1))
+        : 0;
 
     const embudoCarritos = {
       visitas: visitMetrics.totalVisitas,
       checkoutsIniciados,
       pedidosPagados,
-      carritosAbandonados: abandonedOrders.length,
+      carritosAbandonados: trulyAbandonedOrders.length,
       tasaAbandono,
-      listaAbandonados: abandonedOrders.slice(0, 6).map((o) => ({
+      listaAbandonados: trulyAbandonedOrders.slice(0, 6).map((o) => ({
         orderNumber: o.orderNumber,
         customerName: o.customerName || 'Cliente Online',
         customerPhone: o.customerPhone || 'N/A',
@@ -771,14 +959,28 @@ export async function GET(request: Request) {
       })),
     };
 
-    // 16. Retención de Clientes & LTV
+    // 16. Retención de Clientes & LTV (Calculado sobre la cartera real histórica E-commerce + POS identificados)
     const custRetentionMap: Record<string, { orders: number; total: number }> = {};
-    validOrders.forEach((o) => {
-      const k = o.customerPhone ? o.customerPhone.trim() : o.customerName.trim();
+    const ordersForLtv = validOrders.length > 0 && period !== 'hoy' ? validOrders : allValidHistoricalOrders;
+    const salesForLtv = validSales.length > 0 && period !== 'hoy' ? validSales : allValidHistoricalSales;
+
+    ordersForLtv.forEach((o) => {
+      const k = (o.customerPhone || '').replace(/\D/g, '') || (o.customerName || '').trim().toLowerCase();
+      if (!k) return;
       if (!custRetentionMap[k]) custRetentionMap[k] = { orders: 0, total: 0 };
       custRetentionMap[k].orders += 1;
       custRetentionMap[k].total += Number(o.total || 0);
     });
+    salesForLtv.forEach((s) => {
+      if (!s.customer) return;
+      const cName = (s.customer.name || '').trim().toLowerCase();
+      if (!cName || cName.includes('consumidor final') || cName.includes('mostrador')) return;
+      const k = (s.customer.phone || '').replace(/\D/g, '') || cName;
+      if (!custRetentionMap[k]) custRetentionMap[k] = { orders: 0, total: 0 };
+      custRetentionMap[k].orders += 1;
+      custRetentionMap[k].total += Number(s.total || 0);
+    });
+
     const uniqueCustomers = Object.keys(custRetentionMap).length;
     const repeatCustomers = Object.values(custRetentionMap).filter((c) => c.orders >= 2).length;
     const tasaRecompra =
@@ -793,98 +995,132 @@ export async function GET(request: Request) {
       ltvPromedio,
     };
 
-    // 17. Rendimiento por Género y Familias Olfativas
-    const productGenderMap = new Map<string, string>();
-    products.forEach((p) => {
-      productGenderMap.set(p.id, p.gender || 'Unisex');
-      productGenderMap.set(p.name.toLowerCase().trim(), p.gender || 'Unisex');
-      if (p.officialName) productGenderMap.set(p.officialName.toLowerCase().trim(), p.gender || 'Unisex');
+    // 17. Rendimiento por Género y Familias Olfativas (E-commerce + POS, exclusivamente sobre fragancias/perfumes, sin placeholders)
+    const productMetaMap = new Map<
+      string,
+      { gender: string; name: string; officialName: string; description: string; isEssence: boolean }
+    >();
+    physicalProducts.forEach((p) => {
+      const isEss = (p.unit || '').toLowerCase() === 'onza' || p.id.startsWith('esencia');
+      const meta = {
+        gender: p.gender || 'Unisex',
+        name: p.name || '',
+        officialName: p.officialName || '',
+        description: p.description || '',
+        isEssence: isEss,
+      };
+      productMetaMap.set(p.id, meta);
+      productMetaMap.set(p.name.toLowerCase().trim(), meta);
+      if (p.officialName) productMetaMap.set(p.officialName.toLowerCase().trim(), meta);
     });
 
     let caballeroRev = 0,
       damaRev = 0,
       unisexRev = 0;
-    validOrders.forEach((o) => {
-      o.items.forEach((it) => {
-        const rev = Number(it.total || 0);
-        const g =
-          (it.productId && productGenderMap.get(it.productId)) ||
-          productGenderMap.get(it.productName.toLowerCase().trim()) ||
-          'Caballero';
-        if (g === 'Caballero') caballeroRev += rev;
-        else if (g === 'Dama') damaRev += rev;
-        else unisexRev += rev;
-      });
-    });
-    const totalGen = caballeroRev + damaRev + unisexRev || 1;
-    const distribucionGenero = {
-      caballero: {
-        total: Number(caballeroRev.toFixed(2)),
-        percentage: Number(((caballeroRev / totalGen) * 100).toFixed(1)),
-      },
-      dama: {
-        total: Number(damaRev.toFixed(2)),
-        percentage: Number(((damaRev / totalGen) * 100).toFixed(1)),
-      },
-      unisex: {
-        total: Number(unisexRev.toFixed(2)),
-        percentage: Number(((unisexRev / totalGen) * 100).toFixed(1)),
-      },
-    };
 
-    // Familias Olfativas calculadas dinámicamente de los productos reales vendidos
     const familyCounts: Record<string, number> = {
-      'Amaderada / Cuero': 0,
-      'Acuática / Cítrica': 0,
-      'Ámbar / Especiada': 0,
+      'Amaderada / Aromática': 0,
+      'Cítrica / Acuática': 0,
+      'Oriental / Ámbar / Dulce': 0,
       'Floral / Frutal': 0,
     };
     let totalCategorizedOunces = 0;
 
-    validOrders.forEach((o) => {
-      o.items.forEach((it) => {
-        const name = (it.productName || '').toLowerCase();
-        const qty = it.quantity || 1;
-        let oz = qty;
-        const pres = (it.presentation || '').toLowerCase();
-        const isLitroOrAlcohol = pres.includes('litro') || (it.productName || '').toLowerCase().includes('litro') || (it.productName || '').toLowerCase().includes('alcohol');
-        if (!isLitroOrAlcohol && (pres.includes('½') || pres.includes('0.5'))) oz = 0.5 * qty;
-        else if (!isLitroOrAlcohol && pres.includes('1.5')) oz = 1.5 * qty;
+    const classifyFragranceSaleItem = (it: {
+      productId?: string | null;
+      productName: string;
+      presentation?: string | null;
+      unit?: string | null;
+      quantity: number;
+      total: any;
+    }) => {
+      const rawName = (it.productName || '').trim();
+      const rawLower = rawName.toLowerCase();
+      const presLower = String(it.presentation || it.unit || '').toLowerCase();
 
-        totalCategorizedOunces += oz;
-        if (
-          name.includes('sauvage') ||
-          name.includes('fiera') ||
-          name.includes('aventus') ||
-          name.includes('santal') ||
-          name.includes('million') ||
-          name.includes('cuero') ||
-          name.includes('wood')
-        ) {
-          familyCounts['Amaderada / Cuero'] += oz;
-        } else if (
-          name.includes('bleu') ||
-          name.includes('marino') ||
-          name.includes('acqua') ||
-          name.includes('aqua') ||
-          name.includes('nautica') ||
-          name.includes('citrus')
-        ) {
-          familyCounts['Acuática / Cítrica'] += oz;
-        } else if (
-          name.includes('roma') ||
-          name.includes('euroboy') ||
-          name.includes('spice') ||
-          name.includes('amber') ||
-          name.includes('vanille') ||
-          name.includes('khamrah')
-        ) {
-          familyCounts['Ámbar / Especiada'] += oz;
-        } else {
-          familyCounts['Floral / Frutal'] += oz;
-        }
-      });
-    });
+      if (
+        it.productId === 'ENVIO-DOM' ||
+        presLower === 'servicio' ||
+        rawLower.includes('litro') ||
+        presLower.includes('litro') ||
+        rawLower.includes('alcohol') ||
+        rawLower.includes('bote') ||
+        rawLower.includes('caja') ||
+        (it.productId ? it.productId.startsWith('bote-') || it.productId.startsWith('alcohol-') : false)
+      ) {
+        return;
+      }
+
+      const cleanFragranceName = rawName
+        .replace(/Arma tu propio perfume:\s*/i, '')
+        .replace(/Arma tu propio perfume/i, '')
+        .replace(/\s*\([^)]*\)/g, '')
+        .trim();
+
+      const meta =
+        (it.productId ? productMetaMap.get(it.productId) : undefined) ||
+        productMetaMap.get(cleanFragranceName.toLowerCase()) ||
+        productMetaMap.get(rawLower);
+
+      const rev = Number(it.total || 0);
+      const gender = meta?.gender || (cleanFragranceName.endsWith(' F') ? 'Dama' : cleanFragranceName.endsWith(' H') ? 'Caballero' : 'Unisex');
+
+      if (gender === 'Caballero') caballeroRev += rev;
+      else if (gender === 'Dama') damaRev += rev;
+      else unisexRev += rev;
+
+      const qty = it.quantity || 1;
+      let oz = 1.0 * qty;
+      if (presLower.includes('½') || presLower.includes('0.5') || presLower.includes('media') || rawLower.includes('½')) {
+        oz = 0.5 * qty;
+      } else if (presLower.includes('1.5') || presLower.includes('plus')) {
+        oz = 1.5 * qty;
+      }
+
+      totalCategorizedOunces += oz;
+      const searchCorpus = `${cleanFragranceName} ${meta?.officialName || ''} ${meta?.description || ''}`.toLowerCase();
+
+      if (
+        /sauvage|fiera|aventus|explorador|santal|wood|cedro|vetiver|terre|invictus|king|bleu|polo|boss|legend|club de nuit|videoclub|cuero|leather|oud|fahk|assad|most wanted/i.test(
+          searchCorpus
+        )
+      ) {
+        familyCounts['Amaderada / Aromática'] += oz;
+      } else if (
+        /acqua|aqua|ocean|marino|nautica|light blue|mandarin|citric|hawas|allure sport|lacoste|cool water|bergamota|limon|fresh|verano|silver mountain/i.test(
+          searchCorpus
+        )
+      ) {
+        familyCounts['Cítrica / Acuática'] += oz;
+      } else if (
+        /khamrah|yara|vainilla|vanilla|vanille|amber|ambar|spice|eros|atrevido|million|bad boy|good girl|scandal|jean paul|ultra male|le male|black xs|phantom|roma|coffee|cacao|oud|baccarat|rojo/i.test(
+          searchCorpus
+        )
+      ) {
+        familyCounts['Oriental / Ámbar / Dulce'] += oz;
+      } else {
+        familyCounts['Floral / Frutal'] += oz;
+      }
+    };
+
+    validOrders.forEach((o) => o.items.forEach(classifyFragranceSaleItem));
+    validSales.forEach((s) => s.items.forEach(classifyFragranceSaleItem));
+
+    const totalGenRev = caballeroRev + damaRev + unisexRev;
+    const distribucionGenero = {
+      caballero: {
+        total: Number(caballeroRev.toFixed(2)),
+        percentage: totalGenRev > 0 ? Number(((caballeroRev / totalGenRev) * 100).toFixed(1)) : 0,
+      },
+      dama: {
+        total: Number(damaRev.toFixed(2)),
+        percentage: totalGenRev > 0 ? Number(((damaRev / totalGenRev) * 100).toFixed(1)) : 0,
+      },
+      unisex: {
+        total: Number(unisexRev.toFixed(2)),
+        percentage: totalGenRev > 0 ? Number(((unisexRev / totalGenRev) * 100).toFixed(1)) : 0,
+      },
+    };
 
     const familiasOlfativas = Object.entries(familyCounts)
       .map(([name, oz]) => ({
@@ -896,40 +1132,48 @@ export async function GET(request: Request) {
 
     const distribucionGeneroFinal = {
       ...distribucionGenero,
-      familiasOlfativas:
-        familiasOlfativas.length > 0
-          ? familiasOlfativas
-          : [{ name: 'Amaderada / Fresca', percentage: 100 }],
+      familiasOlfativas,
     };
 
-    // 18. Tiempos Logísticos Reales
-    const deliveredOrders = orders.filter((o) => o.orderStatus === 'ENTREGADO');
+    // 18. Tiempos Logísticos Reales (calculado sobre entregas reales y paquetes activos en ruta hoy)
+    const periodDelivered = validOrders.filter((o) => o.orderStatus === 'ENTREGADO');
+    const allHistoricalDelivered = allValidHistoricalOrders.filter((o) => o.orderStatus === 'ENTREGADO');
+    const deliveredSource = periodDelivered.length > 0 ? periodDelivered : allHistoricalDelivered;
+
     let tiempoPromedioHoras = 0;
-    if (deliveredOrders.length > 0) {
-      const totalDeliveryMs = deliveredOrders.reduce(
-        (sum, o) => sum + (new Date(o.updatedAt).getTime() - new Date(o.createdAt).getTime()),
+    if (deliveredSource.length > 0) {
+      const totalDeliveryMs = deliveredSource.reduce(
+        (sum, o) => sum + Math.max(0, new Date(o.updatedAt).getTime() - new Date(o.createdAt).getTime()),
         0
       );
-      tiempoPromedioHoras = Math.max(1, Math.round(totalDeliveryMs / (deliveredOrders.length * 3600000)));
-    } else {
-      tiempoPromedioHoras = 24; // Referencia estándar hasta registrar primera entrega
+      tiempoPromedioHoras = Math.max(1, Math.round(totalDeliveryMs / (deliveredSource.length * 3600000)));
     }
 
-    const completedOrInTransit = orders.filter(
-      (o) => o.orderStatus === 'ENTREGADO' || o.orderStatus === 'EN_RUTA' || o.orderStatus === 'EN_PREPARACION'
-    ).length;
+    // Efectividad de entrega real: órdenes entregadas o en curso vs órdenes canceladas (excluyendo intentos de tarjeta Wompi no completados)
+    const realOrdersPool =
+      validOrders.length > 0
+        ? orders.filter((o) => !(o.paymentMethod === 'CARD' && o.paymentStatus === 'PENDING'))
+        : allHistoricalOrders.filter((o) => !(o.paymentMethod === 'CARD' && o.paymentStatus === 'PENDING'));
+
+    const successfulOrActivePool = realOrdersPool.filter((o) => o.orderStatus !== 'CANCELADO').length;
     const tasaEfectividad =
-      orders.length > 0 ? Number(((completedOrInTransit / orders.length) * 100).toFixed(1)) : 100;
+      realOrdersPool.length > 0
+        ? Number(((successfulOrActivePool / realOrdersPool.length) * 100).toFixed(1))
+        : 100;
 
     const tiemposLogistica = {
       tiempoPromedioHoras,
       tasaEfectividad,
-      pedidosEnRuta: rutaOrders.length,
-      courierPrincipal: 'C807 Express El Salvador',
+      pedidosEnRuta: liveRutaOrders.length,
+      entregasCompletadas: allHistoricalDelivered.length,
+      courierPrincipal: 'C807 Express / Mensajero Propio',
     };
 
-    // 19. Movimientos Recientes Mixtos (Ecommerce + POS)
-    const recentEcommerce = orders.slice(0, 5).map((o) => ({
+    // 19. Movimientos Recientes Mixtos (Ecommerce + POS, excluyendo intentos de tarjeta no pagados)
+    const realOrdersForRecent = orders.filter(
+      (o) => !(o.paymentMethod === 'CARD' && o.paymentStatus === 'PENDING' && o.orderStatus === 'NUEVO')
+    );
+    const recentEcommerce = realOrdersForRecent.slice(0, 5).map((o) => ({
       id: o.id,
       number: o.orderNumber,
       customer: o.customerName || 'Cliente Online',
@@ -943,7 +1187,7 @@ export async function GET(request: Request) {
     const recentPos = validSales.slice(0, 5).map((s) => ({
       id: s.id,
       number: s.saleNumber,
-      customer: s.cashierName ? `Mostrador (${s.cashierName})` : 'Mostrador Local',
+      customer: s.customer?.name || (s.cashierName ? `Mostrador (${s.cashierName})` : 'Mostrador Local'),
       type: 'POS' as const,
       status: s.orderStatus || 'COMPLETED',
       total: Number(s.total || 0),
@@ -960,9 +1204,10 @@ export async function GET(request: Request) {
     const postsSeo = {
       totalPosts: blogPosts.length,
       totalVistas: totalBlogViews,
-      promedioTiempoLecturaMin: blogPosts.length > 0
-        ? Math.round(blogPosts.reduce((acc, p) => acc + (p.readingTimeMin || 3), 0) / blogPosts.length)
-        : 3,
+      promedioTiempoLecturaMin:
+        blogPosts.length > 0
+          ? Math.round(blogPosts.reduce((acc, p) => acc + (p.readingTimeMin || 3), 0) / blogPosts.length)
+          : 3,
       posts: blogPosts.map((p) => ({
         id: p.id,
         title: p.title,
@@ -1005,7 +1250,7 @@ export async function GET(request: Request) {
       topFragancias,
       topDepartamentos,
       inventario: {
-        totalProductos: products.length,
+        totalProductos: physicalProducts.length,
         totalStockOnzas,
         valorInventarioPvp,
         valorInventarioCosto,

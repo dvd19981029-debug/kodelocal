@@ -94,8 +94,8 @@ export interface AromaniakDashboardData {
   };
   traficoDetalle?: {
     fuentes: Array<{ name: string; visits: number; percentage: number }>;
-    dispositivos: Array<{ device: string; percentage: number }>;
-    zonasPrincipales: Array<{ zone: string; share: number }>;
+    dispositivos: Array<{ device: string; count?: number; percentage: number }>;
+    zonasPrincipales: Array<{ zone: string; count?: number; share: number }>;
   };
   armaTuPropioPerfume?: {
     totalArmados: number;
@@ -265,7 +265,7 @@ export default function AromaniakDashboardModule({
   activeEssencePrice = 3.25,
   activeEssenceCost = 1.95,
 }: AromaniakDashboardModuleProps) {
-  const [period, setPeriod] = useState<DashboardPeriod>('hoy');
+  const [period, setPeriod] = useState<DashboardPeriod>('7d');
   const [data, setData] = useState<AromaniakDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string>('');
@@ -399,10 +399,10 @@ export default function AromaniakDashboardModule({
     familiasOlfativas: [],
   };
   const tiemposLogistica = data?.tiemposLogistica || {
-    tiempoPromedioHoras: 28,
-    tasaEfectividad: 96.8,
+    tiempoPromedioHoras: 0,
+    tasaEfectividad: 100,
     pedidosEnRuta: 0,
-    courierPrincipal: 'C807 Express El Salvador',
+    courierPrincipal: 'C807 Express / Mensajero Propio',
   };
 
   const postsSeo = data?.postsSeo || {
@@ -723,36 +723,42 @@ export default function AromaniakDashboardModule({
           {/* Lista de Carritos Recuperables */}
           <div className="space-y-1.5 pt-1">
             <span className="text-[11px] font-black text-slate-500 uppercase block">
-              Carritos Pendientes / No Completados:
+              Checkouts Pendientes de Pago (Sin Completar):
             </span>
             <div className="space-y-1.5 max-h-[140px] overflow-y-auto">
-              {embudoCarritos.listaAbandonados.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="p-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs"
-                >
-                  <div>
-                    <span className="font-bold text-slate-800 block">{item.customerName}</span>
-                    <span className="text-[10px] text-slate-400 font-mono">{item.customerPhone}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono font-black text-slate-900">${item.total.toFixed(2)}</span>
-                    {item.customerPhone && item.customerPhone !== 'N/A' && (
-                      <a
-                        href={`https://wa.me/503${item.customerPhone.replace(/\D/g, '')}?text=Hola%20${encodeURIComponent(
-                          item.customerName
-                        )},%20vimos%20que%20dejaste%20tu%20pedido%20en%20Aromaniak.%20%C2%BFTe%20podemos%20ayudar%20a%20finalizarlo%3F`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-1 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
-                        title="Contactar por WhatsApp para recuperar carrito"
-                      >
-                        <MessageCircle className="w-3.5 h-3.5" />
-                      </a>
-                    )}
-                  </div>
+              {embudoCarritos.listaAbandonados.length === 0 ? (
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-400 italic text-center">
+                  No hay checkouts abandonados pendientes de recuperar en este período.
                 </div>
-              ))}
+              ) : (
+                embudoCarritos.listaAbandonados.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="p-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs"
+                  >
+                    <div>
+                      <span className="font-bold text-slate-800 block">{item.customerName}</span>
+                      <span className="text-[10px] text-slate-400 font-mono">{item.customerPhone}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-black text-slate-900">${item.total.toFixed(2)}</span>
+                      {item.customerPhone && item.customerPhone !== 'N/A' && (
+                        <a
+                          href={`https://wa.me/503${item.customerPhone.replace(/\D/g, '')}?text=Hola%20${encodeURIComponent(
+                            item.customerName
+                          )},%20vimos%20que%20dejaste%20tu%20pedido%20en%20Aromaniak.%20%C2%BFTe%20podemos%20ayudar%20a%20finalizarlo%3F`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
+                          title="Contactar por WhatsApp para recuperar carrito"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -767,7 +773,7 @@ export default function AromaniakDashboardModule({
               <Droplets className="w-4 h-4 text-purple-600" />
               <span>Rendimiento por Género & Familia Olfativa</span>
             </h3>
-            <span className="text-xs font-bold text-slate-400">Preferencias</span>
+            <span className="text-xs font-bold text-slate-400">Online + POS</span>
           </div>
 
           {/* Barras de Género */}
@@ -821,14 +827,20 @@ export default function AromaniakDashboardModule({
           {/* Familias Olfativas */}
           <div className="pt-2 border-t border-slate-100 space-y-2">
             <span className="text-[11px] font-black text-slate-500 uppercase block">Familias Olfativas Líderes:</span>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              {distribucionGenero.familiasOlfativas.map((fam, idx) => (
-                <div key={idx} className="p-2 rounded-xl bg-slate-50 border border-slate-100 flex justify-between items-center">
-                  <span className="font-medium text-slate-700 truncate pr-1">{fam.name}</span>
-                  <span className="font-black font-mono text-indigo-700">{fam.percentage}%</span>
-                </div>
-              ))}
-            </div>
+            {distribucionGenero.familiasOlfativas.length === 0 ? (
+              <p className="text-xs text-slate-400 italic py-1">
+                Sin ventas de fragancias registradas en este período.
+              </p>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                {distribucionGenero.familiasOlfativas.map((fam, idx) => (
+                  <div key={idx} className="p-2 rounded-xl bg-slate-50 border border-slate-100 flex justify-between items-center">
+                    <span className="font-medium text-slate-700 truncate pr-1">{fam.name}</span>
+                    <span className="font-black font-mono text-indigo-700">{fam.percentage}%</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -1063,51 +1075,69 @@ export default function AromaniakDashboardModule({
             </div>
           </div>
 
-          {/* Dispositivos de Visita */}
+          {/* Dispositivos de Visita Reales */}
           <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-3">
             <span className="text-xs font-black text-slate-700 uppercase tracking-wider block">
               Dispositivos de Acceso
             </span>
             <div className="space-y-3 pt-1">
-              <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-100 text-xs">
-                <div className="flex items-center gap-2 text-slate-700 font-bold">
-                  <Smartphone className="w-4 h-4 text-blue-600" />
-                  <span>Smartphones (Móvil)</span>
-                </div>
-                <span className="font-mono font-black text-blue-700">82%</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-100 text-xs">
-                <div className="flex items-center gap-2 text-slate-700 font-bold">
-                  <Laptop className="w-4 h-4 text-purple-600" />
-                  <span>Computadoras (Desktop)</span>
-                </div>
-                <span className="font-mono font-black text-purple-700">16%</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-100 text-xs">
-                <div className="flex items-center gap-2 text-slate-700 font-bold">
-                  <Tablet className="w-4 h-4 text-emerald-600" />
-                  <span>Tablets & iPads</span>
-                </div>
-                <span className="font-mono font-black text-emerald-700">2%</span>
-              </div>
+              {traficoDetalle.dispositivos.map((dev, idx) => {
+                const isMobile = idx === 0 || dev.device.toLowerCase().includes('móvil') || dev.device.toLowerCase().includes('smart');
+                const isDesktop = idx === 1 || dev.device.toLowerCase().includes('compu') || dev.device.toLowerCase().includes('desktop');
+                return (
+                  <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-100 text-xs">
+                    <div className="flex items-center gap-2 text-slate-700 font-bold">
+                      {isMobile ? (
+                        <Smartphone className="w-4 h-4 text-blue-600" />
+                      ) : isDesktop ? (
+                        <Laptop className="w-4 h-4 text-purple-600" />
+                      ) : (
+                        <Tablet className="w-4 h-4 text-emerald-600" />
+                      )}
+                      <span>{dev.device}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {typeof dev.count === 'number' && (
+                        <span className="text-[10px] font-mono text-slate-400">({dev.count})</span>
+                      )}
+                      <span
+                        className={`font-mono font-black ${
+                          isMobile ? 'text-blue-700' : isDesktop ? 'text-purple-700' : 'text-emerald-700'
+                        }`}
+                      >
+                        {dev.percentage}%
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          {/* Zonas y Territorio */}
+          {/* Departamentos de Compradores */}
           <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-3">
             <span className="text-xs font-black text-slate-700 uppercase tracking-wider block">
-              Zonas Geográficas
+              Departamentos de Compradores
             </span>
             <div className="space-y-2 text-xs">
-              {traficoDetalle.zonasPrincipales.map((z, idx) => (
-                <div key={idx} className="flex items-center justify-between py-1 border-b border-slate-100 last:border-0">
-                  <span className="text-slate-600 font-medium flex items-center gap-1.5">
-                    <MapPin className="w-3 h-3 text-rose-500" />
-                    {z.zone}
-                  </span>
-                  <span className="font-black font-mono text-slate-800">{z.share}%</span>
-                </div>
-              ))}
+              {traficoDetalle.zonasPrincipales.length === 0 ? (
+                <p className="text-xs text-slate-400 italic py-2">Sin envíos registrados.</p>
+              ) : (
+                traficoDetalle.zonasPrincipales.map((z, idx) => (
+                  <div key={idx} className="flex items-center justify-between py-1 border-b border-slate-100 last:border-0">
+                    <span className="text-slate-600 font-medium flex items-center gap-1.5">
+                      <MapPin className="w-3 h-3 text-rose-500" />
+                      {z.zone}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {typeof z.count === 'number' && (
+                        <span className="text-[10px] font-mono text-slate-400">({z.count} ped.)</span>
+                      )}
+                      <span className="font-black font-mono text-slate-800">{z.share}%</span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -1127,7 +1157,7 @@ export default function AromaniakDashboardModule({
               </span>
             </div>
             <p className="text-xs text-slate-500 font-medium">
-              Vistas reales, tiempo de lectura y estado de posicionamiento en Google
+              Lecturas acumuladas, tiempo de lectura y fecha de publicación en el blog
             </p>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
@@ -1187,8 +1217,8 @@ export default function AromaniakDashboardModule({
                     </td>
                     <td className="py-3 px-3 text-center">
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Indexado
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        Publicado
                       </span>
                     </td>
                     <td className="py-3 px-3 text-right">
