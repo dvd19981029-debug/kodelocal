@@ -93,6 +93,19 @@ export function TransferReceiptButton({
                       #{resolvedOrderNum}
                     </span>
                   )}
+                  <span className="inline-flex items-center gap-2 px-2 py-0.5 rounded-md bg-white border border-slate-200">
+                    <img
+                      src="/images/banks/bancoagricola.svg"
+                      alt="Bancoagrícola"
+                      className="h-3 w-auto object-contain"
+                    />
+                    <span className="h-2.5 w-px bg-slate-200" />
+                    <img
+                      src="/images/banks/bac.svg"
+                      alt="BAC Credomatic"
+                      className="h-2.5 w-auto object-contain"
+                    />
+                  </span>
                 </div>
                 <p className="text-xs font-bold text-slate-800 truncate mt-1">
                   {resolvedCustomer}

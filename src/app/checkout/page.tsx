@@ -933,30 +933,22 @@ export default function CheckoutPage() {
           </svg>
         </div>
 
-        {/* 4. Símbolo Unificado Wompi · Bancoagrícola */}
+        {/* 4. Logos Oficiales Wompi · Bancoagrícola */}
         <div
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-white border border-slate-200/80 shadow-2xs h-[34px]"
+          className="inline-flex items-center gap-2.5 px-3 py-1 rounded-xl bg-white border border-slate-200/80 shadow-2xs h-[34px]"
           title="Wompi · Bancoagrícola"
         >
-          <svg className="h-4 sm:h-[18px] w-auto" viewBox="0 0 218 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-            {/* Wompi mark + wordmark */}
-            <rect x="0" y="3" width="22" height="22" rx="6" fill="#0B2240" />
-            <path d="M4.6 10.2L7.3 18.2L10.8 11.4L14.3 18.2L17.1 10.2" stroke="#FFFFFF" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx="18.2" cy="8.2" r="1.7" fill="#00C8FF" />
-            <text x="27" y="19" fill="#0B2240" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="900" fontSize="14.5" letterSpacing="-0.4">
-              wompi
-            </text>
-            <circle cx="74.5" cy="17.2" r="1.8" fill="#00C8FF" />
-            {/* Connector */}
-            <line x1="83" y1="6" x2="83" y2="22" stroke="#CBD5E1" strokeWidth="1.2" />
-            {/* Bancoagrícola emblem + wordmark */}
-            <circle cx="95.5" cy="14" r="7.5" fill="#FFCC00" />
-            <path d="M91.5 16.2C93.2 11.8 97.8 11.8 99.5 16.2" stroke="#0B2240" strokeWidth="2" strokeLinecap="round" />
-            <circle cx="95.5" cy="11.2" r="1.4" fill="#0B2240" />
-            <text x="107" y="18.5" fill="#0B2240" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="800" fontSize="13" letterSpacing="-0.3">
-              Bancoagrícola
-            </text>
-          </svg>
+          <img
+            src="/images/banks/wompi.svg"
+            alt="Wompi El Salvador"
+            className="h-4 sm:h-[18px] w-auto object-contain"
+          />
+          <span className="h-3.5 w-px bg-slate-300" aria-hidden="true" />
+          <img
+            src="/images/banks/bancoagricola.svg"
+            alt="Bancoagrícola"
+            className="h-3.5 sm:h-4 w-auto object-contain"
+          />
         </div>
       </div>
 
@@ -1311,6 +1303,19 @@ export default function CheckoutPage() {
                   <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
                     Pasarela segura de <strong className="text-slate-800 font-bold">Wompi / Banco Agrícola</strong> con protección 3D Secure.
                   </p>
+                  <div className="flex items-center gap-2.5 pt-1 border-t border-slate-200/60">
+                    <img
+                      src="/images/banks/wompi.svg"
+                      alt="Wompi El Salvador"
+                      className="h-3.5 w-auto object-contain"
+                    />
+                    <span className="h-3 w-px bg-slate-300" aria-hidden="true" />
+                    <img
+                      src="/images/banks/bancoagricola.svg"
+                      alt="Bancoagrícola"
+                      className="h-3 w-auto object-contain"
+                    />
+                  </div>
                 </button>
 
                 {/* Botón Transferencia Bancaria */}
@@ -1355,6 +1360,19 @@ export default function CheckoutPage() {
                   <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
                     Envía tu comprobante por <strong className="text-slate-800 font-bold">WhatsApp al 6043-7496</strong> o súbelo en la página de tu orden.
                   </p>
+                  <div className="flex items-center gap-2.5 pt-1 border-t border-slate-200/60">
+                    <img
+                      src="/images/banks/bancoagricola.svg"
+                      alt="Bancoagrícola"
+                      className="h-3.5 w-auto object-contain"
+                    />
+                    <span className="h-3 w-px bg-slate-300" aria-hidden="true" />
+                    <img
+                      src="/images/banks/bac.svg"
+                      alt="BAC Credomatic"
+                      className="h-3 w-auto object-contain"
+                    />
+                  </div>
                 </button>
               </div>
 

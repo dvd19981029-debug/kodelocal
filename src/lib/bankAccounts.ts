@@ -4,6 +4,7 @@ export interface BankAccountInfo {
   id: 'agricola' | 'bac';
   bankName: string;
   shortName: string;
+  logoUrl: string;
   accountType: string;
   accountNumber: string;
   holderName: string;
@@ -20,6 +21,7 @@ export const OFFICIAL_BANK_ACCOUNTS: BankAccountInfo[] = [
     id: 'agricola',
     bankName: 'Banco Agrícola',
     shortName: 'Banco Agrícola',
+    logoUrl: '/images/banks/bancoagricola.svg',
     accountType: 'Cuenta Corriente',
     accountNumber: '5520052467',
     holderName: 'Grupo Kode SaS De Cv',
@@ -34,6 +36,7 @@ export const OFFICIAL_BANK_ACCOUNTS: BankAccountInfo[] = [
     id: 'bac',
     bankName: 'BAC Credomatic',
     shortName: 'BAC',
+    logoUrl: '/images/banks/bac.svg',
     accountType: 'Cuenta Corriente',
     accountNumber: '201670668',
     holderName: 'Grupo Kode SaS De Cv',
