@@ -217,14 +217,20 @@ export default function AdminPage() {
   
 
   useEffect(() => {
-    fetch('/api/products')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.products) && data.products.length > 0) {
-          setProducts(data.products);
-        }
+    getStaffToken().then(staffToken => {
+      fetch('/api/products?fresh=true', {
+        headers: {
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
       })
-      .catch(err => console.error('Error sincronizando productos con Supabase:', err));
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.products) && data.products.length > 0) {
+            setProducts(data.products);
+          }
+        })
+        .catch(err => console.error('Error sincronizando productos con Supabase:', err));
+    });
 
     fetch('/api/categories')
       .then(res => res.json())
@@ -369,11 +375,51 @@ export default function AdminPage() {
     setKardexMovements(prev => [movement, ...prev]);
   };
 
-  // Cálculos Financieros
-  const totalEsencias = useMemo(() => products.filter(p => p.category === 'Esencias para Perfume').length, [products]);
-  const totalStockOnzas = useMemo(() => products.filter(p => p.category === 'Esencias para Perfume').reduce((a, b) => a + Number(b.stock || 0), 0), [products]);
-  const valorVentaTotal = useMemo(() => products.reduce((acc, p) => acc + (Number(p.price || 0) * Number(p.stock || 0)), 0), [products]);
-  const valorCostoTotal = useMemo(() => products.reduce((acc, p) => acc + (Number(p.cost || 0) * Number(p.stock || 0)), 0), [products]);
+  // Cálculos Financieros (basados únicamente en productos disponibles e inventariados con existencia física)
+  const inventoriedProducts = useMemo(
+    () =>
+      products.filter(
+        (p) =>
+          p.id !== 'ENVIO-DOM' &&
+          (p.unit || '').toLowerCase() !== 'servicio' &&
+          p.isAvailableOnline !== false &&
+          (Math.max(0, Number(p.stock || 0)) > 0 || Math.max(0, Number(p.stockHalf || 0)) > 0)
+      ),
+    [products]
+  );
+  const totalEsencias = useMemo(
+    () => inventoriedProducts.filter((p) => p.category === 'Esencias para Perfume').length,
+    [inventoriedProducts]
+  );
+  const totalStockOnzas = useMemo(
+    () =>
+      inventoriedProducts
+        .filter((p) => p.category === 'Esencias para Perfume')
+        .reduce((a, b) => a + Math.max(0, Number(b.stock || 0)) + Math.max(0, Number(b.stockHalf || 0)) * 0.5, 0),
+    [inventoriedProducts]
+  );
+  const valorVentaTotal = useMemo(
+    () =>
+      inventoriedProducts.reduce((acc, p) => {
+        const isEss = p.category === 'Esencias para Perfume' || (p.unit || '').toLowerCase() === 'onza';
+        const fullVal = Math.max(0, Number(p.stock || 0)) * Number(p.price || 0);
+        const halfPrice = Number(p.priceHalfOunce ?? Number(p.price || 0) * 0.5);
+        const halfVal = isEss ? Math.max(0, Number(p.stockHalf || 0)) * halfPrice : 0;
+        return acc + fullVal + halfVal;
+      }, 0),
+    [inventoriedProducts]
+  );
+  const valorCostoTotal = useMemo(
+    () =>
+      inventoriedProducts.reduce((acc, p) => {
+        const isEss = p.category === 'Esencias para Perfume' || (p.unit || '').toLowerCase() === 'onza';
+        const effectiveUnits = isEss
+          ? Math.max(0, Number(p.stock || 0)) + Math.max(0, Number(p.stockHalf || 0)) * 0.5
+          : Math.max(0, Number(p.stock || 0));
+        return acc + effectiveUnits * Number(p.cost || 0);
+      }, 0),
+    [inventoriedProducts]
+  );
   const gananciaPotencial = valorVentaTotal - valorCostoTotal;
   const margenPorcentual = valorVentaTotal > 0 ? ((gananciaPotencial / valorVentaTotal) * 100) : 0;
 

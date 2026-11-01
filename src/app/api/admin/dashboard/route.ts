@@ -84,6 +84,8 @@ export async function GET(request: Request) {
             cost: true,
             supplier: true,
             gender: true,
+            isAvailableOnline: true,
+            puesto: true,
           },
         }),
         prisma.dteDocument.count({
@@ -416,8 +418,13 @@ export async function GET(request: Request) {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
-    // 9. Inventario & Bodega (excluyendo servicios virtuales como ENVIO-DOM y sumando medias onzas reales)
-    const essenceProducts = physicalProducts.filter(
+    // 9. Inventario & Bodega (basado exclusivamente en productos disponibles e inventariados con existencia física)
+    const inventoriedProducts = physicalProducts.filter(
+      (p) =>
+        p.isAvailableOnline !== false &&
+        (Math.max(0, p.stock || 0) > 0 || Math.max(0, p.stockHalf || 0) > 0)
+    );
+    const essenceProducts = inventoriedProducts.filter(
       (p) => (p.unit || '').toLowerCase() === 'onza' || p.id.startsWith('esencia')
     );
     const totalStockOnzas = Number(
@@ -426,7 +433,7 @@ export async function GET(request: Request) {
         .toFixed(1)
     );
     const valorInventarioPvp = Number(
-      physicalProducts
+      inventoriedProducts
         .reduce((acc, p) => {
           const isEss = (p.unit || '').toLowerCase() === 'onza' || p.id.startsWith('esencia');
           const fullVal = Math.max(0, p.stock || 0) * Number(p.price || 0);
@@ -437,7 +444,7 @@ export async function GET(request: Request) {
         .toFixed(2)
     );
     const valorInventarioCosto = Number(
-      physicalProducts
+      inventoriedProducts
         .reduce((acc, p) => {
           const isEss = (p.unit || '').toLowerCase() === 'onza' || p.id.startsWith('esencia');
           const effectiveUnits = isEss
@@ -449,7 +456,7 @@ export async function GET(request: Request) {
     );
     const gananciaPotencial = Number((valorInventarioPvp - valorInventarioCosto).toFixed(2));
 
-    const stockCritico = physicalProducts
+    const stockCritico = inventoriedProducts
       .map((p) => {
         const isEss = (p.unit || '').toLowerCase() === 'onza' || p.id.startsWith('esencia');
         const effectiveStock = isEss
@@ -879,7 +886,7 @@ export async function GET(request: Request) {
       });
     });
 
-    const proyeccionAgotamiento = physicalProducts
+    const proyeccionAgotamiento = inventoriedProducts
       .map((p) => {
         const usage =
           productUsageById[p.id] ||
@@ -1250,7 +1257,7 @@ export async function GET(request: Request) {
       topFragancias,
       topDepartamentos,
       inventario: {
-        totalProductos: physicalProducts.length,
+        totalProductos: inventoriedProducts.length,
         totalStockOnzas,
         valorInventarioPvp,
         valorInventarioCosto,
