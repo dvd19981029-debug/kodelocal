@@ -129,7 +129,9 @@ export default function EcommerceHomePage() {
         let fallbackScrollY = 0;
         if (rawState) {
           const parsed = JSON.parse(rawState);
-          if (parsed.selectedCategory) setSelectedCategory(parsed.selectedCategory);
+          if (parsed.selectedCategory && parsed.selectedCategory !== 'Pociones de la Bruja') {
+            setSelectedCategory(parsed.selectedCategory);
+          }
           if (parsed.selectedGender) setSelectedGender(parsed.selectedGender);
           if (parsed.selectedStockFilter) setSelectedStockFilter(parsed.selectedStockFilter);
           if (typeof parsed.onlyHalloweenPromo === 'boolean') setOnlyHalloweenPromo(parsed.onlyHalloweenPromo);

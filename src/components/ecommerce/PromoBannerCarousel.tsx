@@ -79,18 +79,7 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
     },
   ];
 
-  const slides: PromoSlide[] = halloweenActive
-    ? [
-        {
-          id: 'promo-bruja-halloween',
-          imageAlt: '¡La bruja Aromaniaka trajo pociones para ti! 10 Esencias a $3.30 la onza y $1.85 la media onza',
-          action: 'bruja-halloween',
-          customRender: true,
-        },
-        ...blogSlides,
-        ...baseSlides,
-      ]
-    : [...blogSlides, ...baseSlides];
+  const slides: PromoSlide[] = [...blogSlides, ...baseSlides];
 
   // Diapositivas extendidas con clones en ambos extremos para bucle infinito 100% continuo
   const extendedSlides = [
