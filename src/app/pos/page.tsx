@@ -64,6 +64,7 @@ import {
   PosSidebar
 } from './components';
 import { Store, ShoppingCart, X } from 'lucide-react';
+import { extractTransferReceiptUrl } from '@/lib/bankAccounts';
 
 export default function PosPage() {
   const router = useRouter();
@@ -554,6 +555,7 @@ export default function PosPage() {
               paymentMethod: o.paymentMethod || 'CARD',
               paymentStatus: o.paymentStatus || 'PENDING',
               notes: o.notes || undefined,
+              transferReceiptUrl: o.transferReceiptUrl || extractTransferReceiptUrl(o) || undefined,
               deliveryNotes: o.deliveryReference ? `Entrega: ${o.shippingAddress} (Ref: ${o.deliveryReference})` : `Entrega: ${o.shippingAddress}`,
               status: o.orderStatus === 'NUEVO' || o.orderStatus === 'EN_PREPARACION'
                 ? 'PENDING_PREPARATION'
@@ -686,6 +688,8 @@ export default function PosPage() {
                 paymentStatus: hasProcessedDte
                   ? 'COMPLETED'
                   : (s.paymentStatus || (s.orderStatus === 'PENDING_PREPARATION' || s.orderStatus === 'READY_AT_WINDOW' ? 'PENDING' : 'COMPLETED')),
+                notes: s.notes || undefined,
+                transferReceiptUrl: extractTransferReceiptUrl(s) || undefined,
                 status: hasProcessedDte ? 'COMPLETED' : (s.orderStatus || 'COMPLETED'),
                 tipoComprobante: resolvedTipo,
                 cajero: s.cashierName || getActiveSessionUI().name,

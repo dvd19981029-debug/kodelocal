@@ -18,6 +18,7 @@ import {
 import { CustomerRecord } from '@/lib/customers';
 import { SaleRecord, ProductItem, getOrderPaymentDisplayInfo } from '@/lib/store';
 import { getOriginalFragranceInfo, parseKitOrderItem, resolveBottleImageInfo } from '@/lib/perfumeNames';
+import { TransferReceiptButton } from '@/components/common/TransferReceiptModal';
 
 export interface PosBodegaModuleProps {
   sales: SaleRecord[];
@@ -373,6 +374,7 @@ export const PosBodegaModule: React.FC<PosBodegaModuleProps> = React.memo(({
                             ? `Pagado: $${Number(order.total || 0).toFixed(2)}`
                             : `Por cobrar: $${Number(order.total || 0).toFixed(2)}`}
                         </span>
+                        <TransferReceiptButton order={order} />
                         {String(order.paymentMethod || '').toUpperCase().startsWith('TRANSFER') &&
                           order.status !== 'COMPLETED' && (
                             !paymentInfo.isPaid ? (

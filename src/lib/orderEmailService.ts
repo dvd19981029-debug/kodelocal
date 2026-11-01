@@ -211,11 +211,15 @@ export function buildOrderConfirmationHtml(data: OrderEmailData): string {
                 <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 16px; background-color: #fffbeb; border: 1px solid #fef3c7; border-radius: 16px; padding: 14px;">
                   <tr>
                     <td>
-                      <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #b45309; letter-spacing: 0.05em; margin-bottom: 4px;">
-                        🏦 Transferencia Banco Agrícola
+                      <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #b45309; letter-spacing: 0.05em; margin-bottom: 6px;">
+                        🏦 Cuentas Corrientes para Transferencia (${data.total ? `$${data.total.toFixed(2)}` : ''})
                       </div>
-                      <div style="font-size: 11.5px; color: #92400e; margin-bottom: 8px;">
-                        Titular: <strong>Aromaniak El Salvador</strong> &bull; Monto: <strong>$${data.total.toFixed(2)}</strong>
+                      <div style="font-size: 11.5px; color: #92400e; margin-bottom: 4px;">
+                        &bull; <strong>Banco Agrícola (Cuenta Corriente):</strong> <span style="font-family: monospace; font-weight: 800;">5520052467</span><br>
+                        &bull; <strong>BAC Credomatic (Cuenta Corriente):</strong> <span style="font-family: monospace; font-weight: 800;">201670668</span>
+                      </div>
+                      <div style="font-size: 11px; color: #78350f; margin-bottom: 8px;">
+                        Titular: <strong>Grupo Kode SaS De Cv</strong> (Persona jurídica) &bull; Correo: <strong>ventas@forbiddensoluciones.com</strong>
                       </div>
                       <div style="margin-top: 10px;">
                         <a href="${whatsappUrl}" target="_blank" style="display: inline-block; padding: 8px 16px; background-color: #16a34a; color: #ffffff; text-decoration: none; font-size: 11.5px; font-weight: 800; border-radius: 10px;">

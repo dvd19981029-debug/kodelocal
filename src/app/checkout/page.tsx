@@ -43,6 +43,7 @@ import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { saveGuestOrder, saveGuestShippingProfile, getGuestShippingProfile } from '@/lib/guestOrderStorage';
 import { GiroSearchSelect } from '@/components/common/GiroSearchSelect';
 import { isHalloweenPromoProduct } from '@/lib/halloweenPromo';
+import { BankAccountsCardsList, OrderTransferReceiptSection } from '@/components/ecommerce/TransferBankAccountsWidget';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -692,7 +693,7 @@ export default function CheckoutPage() {
             <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto font-medium leading-relaxed">
               {isTransfer ? (
                 <>
-                  Transfiere <strong className="text-indigo-700 font-black">${completedOrder.total.toFixed(2)}</strong> y envía tu comprobante por WhatsApp para preparar y despachar tu orden.
+                  Transfiere <strong className="text-indigo-700 font-black">${completedOrder.total.toFixed(2)}</strong> a cualquiera de nuestras cuentas autorizadas y envía tu comprobante por <strong>WhatsApp (6043-7496)</strong> o súbelo aquí mismo.
                 </>
               ) : (
                 <>
@@ -702,19 +703,40 @@ export default function CheckoutPage() {
             </p>
           </div>
 
-          {/* BOTÓN DE WHATSAPP ARRIBA - CENTRADO Y CON ESTILO CLAYMORFISTA */}
-          <div className="pt-2 pb-1 flex flex-col items-center justify-center gap-2">
-            {isTransfer ? (
-              <a
-                href={`https://wa.me/50360437496?text=${whatsappTransferMessage}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="clay-btn clay-btn-success px-7 py-3 rounded-2xl font-black text-xs sm:text-sm active:scale-95 transition-all flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg cursor-pointer"
-              >
-                <Send className="w-4 h-4" />
-                <span>ENVIAR COMPROBANTE POR WHATSAPP</span>
-              </a>
-            ) : (
+          {isTransfer ? (
+            <div className="pt-2 space-y-4 text-left">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between px-0.5">
+                  <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                    <Building className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>Cuentas Bancarias Autorizadas para Depósito / Transferencia</span>
+                  </span>
+                </div>
+                <BankAccountsCardsList />
+              </div>
+
+              <OrderTransferReceiptSection
+                orderId={completedOrder.id}
+                orderNumber={completedOrder.saleNumber}
+                total={completedOrder.total}
+                customerName={completedOrder.cliente.nombre}
+                initialReceiptUrl={completedOrder.transferReceiptUrl}
+                orderNotes={completedOrder.notes}
+              />
+
+              <div className="pt-1 flex flex-col items-center justify-center">
+                <button
+                  type="button"
+                  onClick={() => openDrawer('orders')}
+                  className="clay-btn clay-btn-primary px-7 py-2.5 rounded-2xl font-black text-xs sm:text-sm active:scale-95 transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer w-full max-w-sm"
+                >
+                  <Package className="w-4 h-4" />
+                  <span>Ver Mi Pedido y Envío</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="pt-2 pb-1 flex flex-col items-center justify-center gap-2">
               <a
                 href={`https://wa.me/50360437496?text=${whatsappCardMessage}`}
                 target="_blank"
@@ -724,34 +746,17 @@ export default function CheckoutPage() {
                 <Send className="w-4 h-4" />
                 <span>Notificar por WhatsApp (6043-7496)</span>
               </a>
-            )}
-            {/* Botón de Seguimiento Inmediato (Drawer de Pedidos en Modo Invitado o Usuario) */}
-            <button
-              type="button"
-              onClick={() => openDrawer('orders')}
-              className="clay-btn clay-btn-primary px-7 py-2.5 rounded-2xl font-black text-xs sm:text-sm active:scale-95 transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer w-full max-w-sm"
-            >
-              <Package className="w-4 h-4" />
-              <span>Ver Mi Pedido y Envío</span>
-            </button>
-
-            <p className="text-[11px] text-slate-500 font-medium">
-              WhatsApp oficial de validación: <strong className="text-slate-700 font-bold">6043-7496</strong>
-            </p>
-          </div>
-
-          {/* Cuenta Bancaria Disponible si es transferencia */}
-          {isTransfer && (
-            <div className="pt-3 border-t border-slate-100 text-left space-y-2.5">
-              <div className="flex items-center justify-between px-0.5">
-                <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">
-                  <Building className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Transferencia Banco Agrícola</span>
-                </span>
-                <span className="text-[10.5px] font-bold text-slate-500">
-                  Titular: <strong className="text-slate-800">Aromaniak El Salvador</strong>
-                </span>
-              </div>
+              <button
+                type="button"
+                onClick={() => openDrawer('orders')}
+                className="clay-btn clay-btn-primary px-7 py-2.5 rounded-2xl font-black text-xs sm:text-sm active:scale-95 transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer w-full max-w-sm"
+              >
+                <Package className="w-4 h-4" />
+                <span>Ver Mi Pedido y Envío</span>
+              </button>
+              <p className="text-[11px] text-slate-500 font-medium">
+                WhatsApp oficial de validación: <strong className="text-slate-700 font-bold">6043-7496</strong>
+              </p>
             </div>
           )}
 
@@ -1332,7 +1337,7 @@ export default function CheckoutPage() {
                       </div>
                       <div>
                         <span className="font-black text-slate-900 text-xs block">Transferencia Bancaria</span>
-                        <span className="text-[10px] font-bold text-indigo-600">Banco Agrícola</span>
+                        <span className="text-[10px] font-bold text-indigo-600">Banco Agrícola • BAC Credomatic</span>
                       </div>
                     </div>
 
@@ -1348,7 +1353,7 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                   <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                    Envía tu comprobante por <strong className="text-slate-800 font-bold">WhatsApp al 6043-7496</strong> para procesar.
+                    Envía tu comprobante por <strong className="text-slate-800 font-bold">WhatsApp al 6043-7496</strong> o súbelo en la página de tu orden.
                   </p>
                 </button>
               </div>
@@ -1361,11 +1366,14 @@ export default function CheckoutPage() {
                   </p>
                 </div>
               ) : (
-                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/90 border border-slate-200/80 text-[11px] text-slate-600 leading-relaxed">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <p>
-                    Realiza tu transferencia a nuestra cuenta de <strong className="font-bold text-slate-800">Bancoagrícola</strong> y comparte tu comprobante por WhatsApp para validar tu pedido.
-                  </p>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/90 border border-slate-200/80 text-[11px] text-slate-600 leading-relaxed">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <p>
+                      Realiza tu depósito o transferencia a cualquiera de nuestras cuentas corrientes (<strong className="font-bold text-slate-800">Banco Agrícola</strong> o <strong className="font-bold text-slate-800">BAC Credomatic</strong>). Al confirmar tu pedido podrás enviar el comprobante por WhatsApp o subir el archivo directamente en la página o desde tu menú de órdenes.
+                    </p>
+                  </div>
+                  <BankAccountsCardsList />
                 </div>
               )}
             </div>

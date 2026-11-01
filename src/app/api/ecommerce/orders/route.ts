@@ -10,6 +10,7 @@ import { resolveGiroMH, formatGiroOption } from '@/lib/svGirosCat019';
 import { c807Client } from '@/lib/c807';
 import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ, HALLOWEEN_PROMO_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
 import { buildCustomerLookupOrConditions, consolidateCustomerDiscounts } from '@/lib/customerDiscounts';
+import { extractTransferReceiptUrl, stripTransferReceiptTag, upsertTransferReceiptInNotes } from '@/lib/bankAccounts';
 
 export const dynamic = 'force-dynamic';
 
@@ -241,7 +242,8 @@ export async function GET(request: Request) {
       trackingNumber: o.trackingNumber,
       courierName: o.courierName,
       whatsappNotified: o.whatsappNotified,
-      notes: o.notes,
+      notes: stripTransferReceiptTag(o.notes) || null,
+      transferReceiptUrl: extractTransferReceiptUrl(o),
       createdAt: o.createdAt.toISOString(),
       updatedAt: o.updatedAt.toISOString(),
       customer: isStaff ? o.customer : undefined,
@@ -325,7 +327,8 @@ export async function GET(request: Request) {
           whatsappNotified: false,
           channel: 'POS',
           origin: 'Tienda Física (POS)',
-          notes: s.notes || (s.tipoComprobante === '03' ? 'Crédito Fiscal (CCF)' : 'Factura (FC)'),
+          notes: stripTransferReceiptTag(s.notes) || (s.tipoComprobante === '03' ? 'Crédito Fiscal (CCF)' : 'Factura (FC)'),
+          transferReceiptUrl: extractTransferReceiptUrl(s),
           createdAt: s.createdAt.toISOString(),
           updatedAt: s.createdAt.toISOString(),
           sale: s,
@@ -373,7 +376,11 @@ export async function PATCH(request: Request) {
       municipality,
       shippingAddress,
       deliveryReference,
+      transferReceiptUrl: rawTransferReceiptUrl,
     } = body;
+    const transferReceiptUrl = typeof rawTransferReceiptUrl === 'string' && rawTransferReceiptUrl.trim()
+      ? rawTransferReceiptUrl.trim()
+      : undefined;
 
     if (!orderId && !orderNumber) {
       return NextResponse.json({ success: false, error: 'orderId o orderNumber es requerido' }, { status: 400 });
@@ -647,6 +654,14 @@ export async function PATCH(request: Request) {
     const safePaymentStatus = (paymentStatus === 'REJECTED' || paymentStatus === 'CANCELLED' || isCancelling) ? 'CANCELLED' : paymentStatus;
     const safeOrderStatus = resolvedOrderStatus;
 
+    let mergedNotes = order.notes || null;
+    if (notes) {
+      mergedNotes = [mergedNotes, notes].filter(Boolean).join(' ');
+    }
+    if (transferReceiptUrl) {
+      mergedNotes = upsertTransferReceiptInNotes(mergedNotes, transferReceiptUrl);
+    }
+
     const updated = await prisma.ecommerceOrder.update({
       where: { id: order.id },
       data: {
@@ -658,7 +673,7 @@ export async function PATCH(request: Request) {
         ...(cleanMunicipality ? { municipality: cleanMunicipality } : {}),
         ...(cleanShippingAddress ? { shippingAddress: cleanShippingAddress } : {}),
         ...(cleanDeliveryReference !== undefined ? { deliveryReference: cleanDeliveryReference } : {}),
-        ...(notes ? { notes: [order.notes, notes].filter(Boolean).join(' ') } : {}),
+        ...(notes || transferReceiptUrl ? { notes: mergedNotes } : {}),
       },
       include: {
         items: {
@@ -724,7 +739,14 @@ export async function PATCH(request: Request) {
       }
     }
 
-    return NextResponse.json({ success: true, order: updated });
+    return NextResponse.json({
+      success: true,
+      order: {
+        ...updated,
+        notes: stripTransferReceiptTag(updated.notes) || null,
+        transferReceiptUrl: extractTransferReceiptUrl(updated),
+      },
+    });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

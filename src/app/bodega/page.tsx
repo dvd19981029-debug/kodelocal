@@ -62,6 +62,8 @@ import { supabase, broadcastOrderSync } from '@/lib/supabaseClient';
 import { getOfflineSalesQueue } from '@/lib/offlineSync';
 import { getOriginalFragranceInfo, parseKitOrderItem, resolveBottleImageInfo } from '@/lib/perfumeNames';
 import { printDispatchTicketPdf, downloadDispatchTicketPdf } from '@/lib/thermalTicketPdf';
+import { TransferReceiptButton } from '@/components/common/TransferReceiptModal';
+import { extractTransferReceiptUrl } from '@/lib/bankAccounts';
 
 // Singleton para el AudioContext
 let globalAudioCtx: AudioContext | null = null;
@@ -343,6 +345,7 @@ export default function BodegaPage() {
           paymentStatus: o.paymentStatus || 'PENDING',
           tipoComprobante: o.sale?.tipoComprobante || (o.notes?.includes('Doc: 03') || o.customer?.nrc ? '03' : o.notes?.includes('Doc: TICKET') ? 'TICKET' : '01'),
           notes: o.notes || undefined,
+          transferReceiptUrl: o.transferReceiptUrl || extractTransferReceiptUrl(o) || undefined,
           deliveryNotes: o.deliveryReference ? `Entrega: ${o.shippingAddress} (Ref: ${o.deliveryReference})` : `Entrega: ${o.shippingAddress}`,
           status: o.orderStatus === 'NUEVO' || o.orderStatus === 'EN_PREPARACION'
             ? 'PENDING_PREPARATION'
@@ -458,6 +461,7 @@ export default function BodegaPage() {
                     ? 'COMPLETED'
                     : (s.paymentStatus || (s.orderStatus === 'PENDING_PREPARATION' || s.orderStatus === 'READY_AT_WINDOW' ? 'PENDING' : 'COMPLETED')),
                   notes: s.notes || undefined,
+                  transferReceiptUrl: pNotes?.transferReceiptUrl || extractTransferReceiptUrl(s) || undefined,
                   deliveryNotes: isDomicilioOrder && pNotes?.domicilio?.shippingAddress
                     ? `Entrega: ${pNotes.domicilio.shippingAddress}, ${pNotes.domicilio.municipality || ''}, ${pNotes.domicilio.department || ''}${pNotes.domicilio.deliveryReference ? ` (Ref: ${pNotes.domicilio.deliveryReference})` : ''}`
                     : undefined,
@@ -1827,6 +1831,7 @@ export default function BodegaPage() {
                                     ? `Pagado: $${resolveOrderTotal(order).toFixed(2)}`
                                     : `Por cobrar: $${resolveOrderTotal(order).toFixed(2)}`}
                                 </span>
+                                <TransferReceiptButton order={order} />
                                 {!paymentInfo.isPaid &&
                                   String(order.paymentMethod || '').toUpperCase().startsWith('TRANSFER') && (
                                     <button
@@ -2410,6 +2415,7 @@ export default function BodegaPage() {
                                   ? `Pagado: $${resolveOrderTotal(order).toFixed(2)}`
                                   : `Por cobrar: $${resolveOrderTotal(order).toFixed(2)}`}
                               </span>
+                              <TransferReceiptButton order={order} />
                               {!paymentInfo.isPaid &&
                                 String(order.paymentMethod || '').toUpperCase().startsWith('TRANSFER') && (
                                   <button

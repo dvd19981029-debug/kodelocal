@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { getStaffToken } from '@/lib/auth';
 import { parseKitOrderItem } from '@/lib/perfumeNames';
+import { TransferReceiptButton } from '@/components/common/TransferReceiptModal';
 import {
   DEPARTAMENTOS_CATALOG,
   MUNICIPIOS_CATALOG,
@@ -60,6 +61,7 @@ interface EcoOrder {
   courierName?: string | null;
   whatsappNotified?: boolean;
   notes?: string | null;
+  transferReceiptUrl?: string | null;
   createdAt: string;
   customer?: {
     documentType?: string | null;
@@ -688,19 +690,22 @@ export default function EcommerceOrdersPanel() {
                           {PAYMENT_STATUS_LABELS[o.paymentStatus] || o.paymentStatus}
                         </span>
                       </div>
-                      {(o.paymentMethod === 'TRANSFER' || o.paymentMethod === 'TRANSFERENCIA') &&
-                        o.paymentStatus !== 'COMPLETED' &&
-                        o.orderStatus !== 'CANCELADO' && (
-                          <button
-                            type="button"
-                            disabled={verifyingId === o.id}
-                            onClick={() => handleConfirmTransfer(o)}
-                            className="mt-1 px-2 py-0.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold inline-flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-50"
-                          >
-                            <Check className="w-3 h-3" />
-                            <span>{verifyingId === o.id ? 'Confirmando...' : 'Confirmar pago'}</span>
-                          </button>
-                        )}
+                      <div className="flex flex-wrap items-center gap-1 mt-1">
+                        <TransferReceiptButton order={o} />
+                        {(o.paymentMethod === 'TRANSFER' || o.paymentMethod === 'TRANSFERENCIA') &&
+                          o.paymentStatus !== 'COMPLETED' &&
+                          o.orderStatus !== 'CANCELADO' && (
+                            <button
+                              type="button"
+                              disabled={verifyingId === o.id}
+                              onClick={() => handleConfirmTransfer(o)}
+                              className="px-2 py-0.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold inline-flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-50"
+                            >
+                              <Check className="w-3 h-3" />
+                              <span>{verifyingId === o.id ? 'Confirmando...' : 'Confirmar pago'}</span>
+                            </button>
+                          )}
+                      </div>
                     </td>
                     <td className="py-3 px-3 align-middle text-right font-mono font-bold text-slate-900 whitespace-nowrap">
                       {money(o.total)}
@@ -1206,10 +1211,11 @@ function OrderDetailModal({
                 </span>
               }
             />
-            {(o.paymentMethod === 'TRANSFER' || o.paymentMethod === 'TRANSFERENCIA') &&
-              o.paymentStatus !== 'COMPLETED' &&
-              o.orderStatus !== 'CANCELADO' && (
-                <div className="pt-1.5">
+            <div className="pt-1.5 flex flex-wrap items-center gap-2">
+              <TransferReceiptButton order={o} size="sm" />
+              {(o.paymentMethod === 'TRANSFER' || o.paymentMethod === 'TRANSFERENCIA') &&
+                o.paymentStatus !== 'COMPLETED' &&
+                o.orderStatus !== 'CANCELADO' && (
                   <button
                     type="button"
                     onClick={async () => {
@@ -1261,13 +1267,13 @@ function OrderDetailModal({
                         alert(`Error de conexión: ${err?.message || 'Error desconocido'}`);
                       }
                     }}
-                    className="w-full py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black inline-flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                    className="py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black inline-flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
                   >
                     <Check className="w-3.5 h-3.5" />
                     <span>Confirmar Transferencia Verificada</span>
                   </button>
-                </div>
               )}
+            </div>
             <Row
               label="Comprobante"
               value={o.sale?.tipoComprobante ? (isCcf ? 'Crédito Fiscal (CCF)' : 'Factura (FC)') : undefined}

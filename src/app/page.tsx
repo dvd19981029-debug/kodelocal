@@ -935,7 +935,7 @@ export default function EcommerceHomePage() {
                 </li>
                 <li className="flex items-start gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>Transferencia Bancaria:</strong> Cuenta oficial en Banco Agrícola.</span>
+                  <span><strong>Transferencia Bancaria:</strong> Cuentas oficiales en Banco Agrícola y BAC Credomatic.</span>
                 </li>
               </ul>
             </div>

@@ -21,6 +21,7 @@ import {
   getMunicipiosByDepartamento 
 } from '@/lib/svTerritory';
 import { GiroSearchSelect } from '@/components/common/GiroSearchSelect';
+import { TransferReceiptButton } from '@/components/common/TransferReceiptModal';
 import { PaymentMethod, TipoComprobante } from '../../types';
 
 export interface PosCheckoutModalProps {
@@ -155,14 +156,17 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
         {/* Resumen de items si se factura orden de ventanilla */}
         {orderToInvoice && (
           <div className="mb-4 p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200">
-            <div className="flex items-center justify-between text-xs font-bold text-emerald-900 mb-1.5">
+            <div className="flex items-center justify-between text-xs font-bold text-emerald-900 mb-1.5 flex-wrap gap-1.5">
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 <span>Items preparados en comanda ({orderToInvoice.items.length})</span>
               </span>
-              <span className="font-mono font-black text-emerald-800">
-                Total: ${orderToInvoice.total.toFixed(2)}
-              </span>
+              <div className="flex items-center gap-2">
+                <TransferReceiptButton order={orderToInvoice} size="xs" />
+                <span className="font-mono font-black text-emerald-800">
+                  Total: ${orderToInvoice.total.toFixed(2)}
+                </span>
+              </div>
             </div>
             <div className="space-y-1 max-h-28 overflow-y-auto divide-y divide-emerald-100/80 text-[11px]">
               {orderToInvoice.items.map((it: any, idx: number) => (

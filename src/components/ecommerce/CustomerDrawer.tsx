@@ -27,6 +27,7 @@ import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { DEPARTAMENTOS_CATALOG, getMunicipiosByDepartamento } from '@/lib/svTerritory';
 import { getGuestOrders, addGuestOrderNumber, getGuestShippingProfile, saveGuestShippingProfile } from '@/lib/guestOrderStorage';
 import { GiroSearchSelect } from '@/components/common/GiroSearchSelect';
+import { BankAccountsCardsList, OrderTransferReceiptSection } from '@/components/ecommerce/TransferBankAccountsWidget';
 
 export default function CustomerDrawer() {
   const { 
@@ -641,6 +642,37 @@ export default function CustomerDrawer() {
                             ${(order.total || 0).toFixed(2)}
                           </span>
                         </div>
+
+                        {/* Cuentas Bancarias y Subida de Comprobante para órdenes por Transferencia */}
+                        {(order.paymentMethod === 'TRANSFER' || order.paymentMethod === 'TRANSFERENCIA') &&
+                          order.orderStatus !== 'CANCELADO' &&
+                          order.paymentStatus !== 'CANCELLED' && (
+                            <div className="p-3 rounded-2xl bg-slate-50/90 border border-slate-200/80 space-y-3">
+                              <div className="flex items-center gap-1.5 text-[11px] font-black text-slate-800">
+                                <Building2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                                <span>Cuentas para Depósito / Transferencia</span>
+                              </div>
+                              <BankAccountsCardsList compact />
+                              <OrderTransferReceiptSection
+                                orderId={order.id}
+                                orderNumber={order.orderNumber}
+                                total={Number(order.total || 0)}
+                                customerName={order.customerName}
+                                initialReceiptUrl={order.transferReceiptUrl}
+                                orderNotes={order.notes}
+                                compact
+                                onReceiptSaved={(newUrl) => {
+                                  setOrders((prev) =>
+                                    prev.map((o) =>
+                                      o.id === order.id || o.orderNumber === order.orderNumber
+                                        ? { ...o, transferReceiptUrl: newUrl }
+                                        : o
+                                    )
+                                  );
+                                }}
+                              />
+                            </div>
+                          )}
 
                         {/* Ficha de Envío y Destino */}
                         {(order.department || order.shippingAddress || order.customerName) && (

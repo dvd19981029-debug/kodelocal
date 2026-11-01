@@ -1123,7 +1123,7 @@ export default function ProductDetailPage() {
                 ⏰ <strong>Horarios de entrega:</strong> Pedidos en horario laboral se despachan de inmediato. Como la paquetera y nosotros no laboramos domingos, pedidos enviados el sábado llegan a partir de lunes; pedidos de domingo se despachan lunes y llegan desde martes.
               </p>
               <p className="text-slate-600 font-medium pt-0.5">
-                💳 Formas de pago disponibles: <strong>Tarjeta de Crédito / Débito</strong> o <strong>Transferencia bancaria</strong> (Banco Agrícola, BAC Credomatic, Banco Cuscatlán).
+                💳 Formas de pago disponibles: <strong>Tarjeta de Crédito / Débito</strong> o <strong>Transferencia bancaria</strong> (Banco Agrícola y BAC Credomatic).
               </p>
             </div>
           </div>

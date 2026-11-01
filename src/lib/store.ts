@@ -43,6 +43,7 @@ export interface SaleRecord {
   paymentMethod?: 'CASH' | 'CARD' | 'TRANSFER' | 'WOMPI' | 'CONTRA_ENTREGA' | 'BITCOIN';
   paymentStatus?: string;
   notes?: string;
+  transferReceiptUrl?: string | null;
   cashReceived?: number;
   cashChange?: number;
   tipoComprobante?: 'TICKET' | '01' | '03';

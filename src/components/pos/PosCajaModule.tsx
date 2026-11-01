@@ -42,6 +42,7 @@ import {
 import { PosCorteZ } from './PosCorteZ';
 import { PosWompiLinksDashboard } from './PosWompiLinksDashboard';
 import PosDomicilioPanel from './PosDomicilioPanel';
+import { TransferReceiptButton } from '@/components/common/TransferReceiptModal';
 
 export interface PosCajaModuleProps {
   cajaSubTab: 'listas_facturar' | 'ventas_dia' | 'dtes_emitidos' | 'corte_z' | 'enlaces_pago' | 'domicilio';
@@ -659,6 +660,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                           >
                             {paymentInfo.badgeText}
                           </span>
+                          <TransferReceiptButton order={order} />
                           {String(order.paymentMethod || '').toUpperCase().startsWith('TRANSFER') && (
                             !paymentInfo.isPaid ? (
                               <button
@@ -1359,6 +1361,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                           </td>
                           <td className="py-2.5 px-3 text-center whitespace-nowrap">
                             <div className="flex items-center justify-center gap-1.5">
+                              <TransferReceiptButton order={sale} />
                               <button
                                 type="button"
                                 onClick={() => setSelectedSaleDetail(sale)}
