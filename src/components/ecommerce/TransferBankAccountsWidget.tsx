@@ -99,10 +99,25 @@ export function BankAccountsCardsList({ compact = false }: BankAccountsCardsList
           </div>
 
           {/* Datos del Titular y Correo */}
-          <div className="space-y-1 text-[11px] pt-0.5">
+          <div className="space-y-1.5 text-[11px] pt-0.5">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-slate-500 font-medium">Titular:</span>
-              <span className="font-extrabold text-slate-800 text-right">{acc.holderName}</span>
+              <span className="text-slate-500 font-medium shrink-0">Titular:</span>
+              <button
+                type="button"
+                onClick={() => handleCopy(acc.holderName, `${acc.id}-holder`)}
+                className="font-extrabold text-slate-800 hover:text-indigo-700 text-right inline-flex items-center gap-1.5 px-2 py-0.5 -mr-1 rounded-md hover:bg-indigo-50/80 transition-colors cursor-pointer"
+                title="Copiar nombre del titular"
+              >
+                <span>{acc.holderName}</span>
+                {copiedKey === `${acc.id}-holder` ? (
+                  <span className="inline-flex items-center gap-0.5 text-[10px] font-extrabold text-emerald-600 shrink-0">
+                    <Check className="w-3 h-3" />
+                    Copiado
+                  </span>
+                ) : (
+                  <Copy className="w-3 h-3 text-slate-400 hover:text-indigo-600 shrink-0" />
+                )}
+              </button>
             </div>
             <div className="flex items-center justify-between gap-2">
               <span className="text-slate-500 font-medium">Tipo:</span>
