@@ -153,7 +153,7 @@ export default async function BlogIndexPage() {
           Secretos Olfativos, Guías & Alta Fijación
         </h1>
         <p className="mt-3 text-sm sm:text-base text-slate-600 max-w-3xl leading-relaxed font-medium">
-          Aprende a elegir tu fragancia ideal, maximizar su duración y conocer nuestras inspiraciones olfativas en esencias 100% puras con retiro en nuestra sucursal en Centro Comercial El Rosal o entregas a domicilio a todo El Salvador.
+          Aprende a elegir tu fragancia ideal, maximizar su duración y conocer nuestras inspiraciones olfativas en esencias 100% puras con retiro en nuestra sucursal en Centro Comercial El Rosal o entregas a domicilio ($2.90) a todo El Salvador.
         </p>
       </header>
 
@@ -177,7 +177,7 @@ export default async function BlogIndexPage() {
             Fragancias con 4 a 8 horas de fijación según sus notas
           </h3>
           <p className="text-slate-600 text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed font-medium">
-            Conoce nuestras esencias 100% puras importadas sin diluir para formular perfumes de alta gama. Visítanos en nuestra sucursal en Centro Comercial El Rosal, Calle El Progreso, San Salvador (<a href="https://maps.app.goo.gl/shtetXTGcPZQpBwY6" target="_blank" rel="noopener noreferrer" className="text-purple-700 font-bold underline">ver en Google Maps</a>), o pide en línea con envíos a los 14 departamentos de El Salvador.
+            Conoce nuestras esencias 100% puras importadas sin diluir para formular perfumes de alta gama. Visítanos en nuestra sucursal en Centro Comercial El Rosal, Calle El Progreso, San Salvador (<a href="https://maps.app.goo.gl/shtetXTGcPZQpBwY6" target="_blank" rel="noopener noreferrer" className="text-purple-700 font-bold underline">ver en Google Maps</a>), o pide en línea con envíos por $2.90 a los 14 departamentos de El Salvador.
           </p>
         </div>
         <Link

@@ -279,7 +279,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
         unit: p.unit || 'Onza',
         price: Number(p.price),
         priceHalfOunce: p.priceHalfOunce != null ? Number(p.priceHalfOunce) : (p.category?.name === 'Esencias para Perfume' || !p.category?.name ? Number((Number(p.price) / 2).toFixed(2)) : undefined),
-        finishedPerfumePrice: p.finishedPerfumePrice != null ? Number(p.finishedPerfumePrice) : (p.category?.name === 'Esencias para Perfume' || !p.category?.name ? 15.00 : undefined),
+        finishedPerfumePrice: p.finishedPerfumePrice != null ? Number(p.finishedPerfumePrice) : (p.category?.name === 'Esencias para Perfume' || !p.category?.name ? 10.00 : undefined),
         cost: Number(p.cost || 0),
         stock: p.stock,
         stockHalf: (p as any).stockHalf ?? 0,
@@ -406,7 +406,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
         <div className="relative aspect-16/9 sm:aspect-21/9 rounded-3xl overflow-hidden mb-10 shadow-md border border-slate-200/60 bg-gradient-to-br from-indigo-50 via-purple-50 to-slate-100 flex flex-col items-center justify-center text-center p-6 text-slate-800">
           <span className="clay-badge text-[10px] font-black uppercase text-indigo-700 bg-white/90 px-3 py-1 rounded-lg shadow-2xs mb-2">Aromaniak SV</span>
           <h3 className="text-lg font-black text-slate-900">Perfumería Fina de Inspiración Olfativa</h3>
-          <p className="text-xs text-slate-500 mt-1 font-medium">Esencias 100% puras de inspiración olfativa sin diluir • Retiro en local o envíos a todo El Salvador</p>
+          <p className="text-xs text-slate-500 mt-1 font-medium">Esencias 100% puras de inspiración olfativa sin diluir • Retiro en local o envíos ($2.90) a todo El Salvador</p>
         </div>
       )}
 
@@ -479,7 +479,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-6 text-xs font-semibold text-slate-700">
               <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/70 p-3 rounded-2xl shadow-2xs">
                 <Truck className="w-4 h-4 text-indigo-600 shrink-0" />
-                <span>Retiro en local o envíos a todo El Salvador</span>
+                <span>Retiro en local o envíos ($2.90) a todo El Salvador</span>
               </div>
               <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/70 p-3 rounded-2xl shadow-2xs">
                 <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />

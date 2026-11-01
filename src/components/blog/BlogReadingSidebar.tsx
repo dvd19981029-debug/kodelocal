@@ -11,6 +11,7 @@ import { PostRecommendations } from '@/lib/recommendations';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getBottleLabelConfig } from '@/lib/perfumeNames';
 import { useLiveProducts } from '@/hooks/useLiveProducts';
+import { useEcommerceCart } from '@/context/EcommerceCartContext';
 
 interface BlogReadingSidebarProps {
   product?: ProductItem;
@@ -30,6 +31,7 @@ export default function BlogReadingSidebar({
   catalog,
 }: BlogReadingSidebarProps) {
   const [activeTab, setActiveTab] = React.useState<'esencia' | 'bote' | 'insumo'>('esencia');
+  const { kitConfig } = useEcommerceCart();
   const liveProducts = useLiveProducts(catalog);
   const liveProductMap = React.useMemo(() => new Map(liveProducts.map(p => [p.id, p])), [liveProducts]);
 
@@ -311,7 +313,7 @@ export default function BlogReadingSidebar({
             </span>
             <span className="flex items-center gap-1 text-slate-600">
               <Truck className="w-3.5 h-3.5 shrink-0 text-indigo-600" />
-              Retiro en local o envíos a todo El Salvador
+              Retiro en local o envíos ($2.90) a todo El Salvador
             </span>
           </div>
         </div>
@@ -332,7 +334,12 @@ export default function BlogReadingSidebar({
             className="w-full clay-btn clay-btn-primary py-2.5 px-3 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all active:scale-95"
           >
             <Wand2 className="w-3.5 h-3.5" />
-            Armar mi Perfume ($15.00)
+            Armar mi Perfume ($
+            {(currentEssence?.finishedPerfumePrice != null
+              ? Number(currentEssence.finishedPerfumePrice)
+              : (kitConfig?.basePrice ?? 10.00)
+            ).toFixed(2)}
+            )
           </Link>
         </div>
 
