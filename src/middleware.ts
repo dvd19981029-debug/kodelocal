@@ -132,16 +132,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Ruta pública de Kiosco de Asistencia QR (aromaniaksv.com/Marcador o /marcador)
-  if (pathname.toLowerCase() === '/marcador' || pathname.toLowerCase().startsWith('/marcador/')) {
-    const targetUrl = request.nextUrl.clone();
-    targetUrl.pathname = '/marcador';
-    const res =
-      pathname === '/marcador' ? NextResponse.next() : NextResponse.rewrite(targetUrl);
-    res.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet');
-    return res;
-  }
-
   const isKodeSubdomain = host.startsWith('kode.') || host.includes('kode.aromaniaksv.com');
   if (isKodeSubdomain) {
     if (pathname === '/') {
@@ -154,6 +144,23 @@ export async function middleware(request: NextRequest) {
 
   const isPosSubdomain = host.startsWith('pos.');
   const isCustomerDomain = host.includes('aromaniaksv.com') && !isPosSubdomain && !isKodeSubdomain;
+
+  // Ruta de Kiosco de Asistencia QR exclusiva de pos.aromaniaksv.com/Marcador (o /marcador)
+  if (pathname.toLowerCase() === '/marcador' || pathname.toLowerCase().startsWith('/marcador/')) {
+    if (isCustomerDomain) {
+      const redirectRes = NextResponse.redirect(
+        new URL(`https://pos.aromaniaksv.com${pathname}${request.nextUrl.search}`, request.url)
+      );
+      redirectRes.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet');
+      return redirectRes;
+    }
+    const targetUrl = request.nextUrl.clone();
+    targetUrl.pathname = '/marcador';
+    const res =
+      pathname === '/marcador' ? NextResponse.next() : NextResponse.rewrite(targetUrl);
+    res.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet');
+    return res;
+  }
 
   const isOperational = OPERATIONAL_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`)

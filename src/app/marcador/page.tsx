@@ -136,7 +136,7 @@ function playSuccessBeep() {
 export default function MarcadorPage() {
   const [viewMode, setViewMode] = useState<'kiosk' | 'phone'>('kiosk');
   const [scannedToken, setScannedToken] = useState<string>('');
-  const [originUrl, setOriginUrl] = useState<string>('https://aromaniaksv.com');
+  const [originUrl, setOriginUrl] = useState<string>('https://pos.aromaniaksv.com');
 
   // Estado del Monitor Kiosco
   const [kioskToken, setKioskToken] = useState<string>('');
@@ -903,7 +903,7 @@ export default function MarcadorPage() {
 
       {/* Pie del Monitor */}
       <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 border-t border-slate-900 pt-3">
-        <span>aromaniaksv.com/Marcador • Sincronizado en vivo con Planilla Salarial</span>
+        <span>pos.aromaniaksv.com/Marcador • Sincronizado en vivo con Planilla Salarial</span>
         <span>Cada código QR caduca en 15 segundos o al primer escaneo</span>
       </div>
     </div>
