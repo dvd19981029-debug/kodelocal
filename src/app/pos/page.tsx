@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { INITIAL_PRODUCTS, ProductItem, CartItem, SaleRecord, PERFUME_CATEGORIES, getStoredProducts } from '@/lib/store';
 import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ, HALLOWEEN_PROMO_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
@@ -195,6 +195,12 @@ export default function PosPage() {
   const [clienteMunicipio, setClienteMunicipio] = useState('San Salvador Centro');
   const [clienteDireccion, setClienteDireccion] = useState('');
   const [isTransmittingDteId, setIsTransmittingDteId] = useState<string | null>(null);
+
+  // Candados síncronos (useRef) contra doble clic rápido en Cobrar / Facturar, Transmitir DTE y Enviar Comanda
+  const invoicingLockRef = useRef(false);
+  const transmittingDteLockRef = useRef<Set<string>>(new Set());
+  const sendingComandaLockRef = useRef(false);
+  const savingQuoteLockRef = useRef(false);
 
   // Estado de Envío a Domicilio en Orden Actual POS
   const [isOrderDomicilio, setIsOrderDomicilio] = useState(false);
@@ -2132,108 +2138,119 @@ export default function PosPage() {
 
   // Iniciar cotización en PDF / Prefactura
   const handleOpenQuoteModal = async () => {
+    if (savingQuoteLockRef.current) return;
     if (cart.length === 0) {
       alert('Agrega al menos una fragancia o producto al pedido para generar la cotización.');
       return;
     }
-    const clientObj = activeCustomer || customers.find(c => c.id === selectedCustomerId);
-    const ordNum = `COT-${Math.floor(1000 + Math.random() * 9000)}`;
-
-    const quoteSale: SaleRecord = {
-      id: `quote-${Date.now()}`,
-      orderNumber: ordNum,
-      saleNumber: ordNum,
-      createdAt: new Date().toISOString(),
-      cotizacionDate: new Date().toLocaleDateString('es-SV', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-      total: cartSubtotal,
-      subtotal: subtotalNeto,
-      ivaTotal: ivaCalculado,
-      tipoComprobante,
-      cliente: {
-        nombre: (clienteNombre && clienteNombre !== 'Consumidor Final') ? clienteNombre : (clientObj?.name || 'Consumidor Final'),
-        numDocumento: clienteDoc || clientObj?.numDocumento || undefined,
-        nrc: clienteNrc || clientObj?.nrc || undefined,
-        correo: clienteEmail || clientObj?.email || undefined,
-        telefono: clientObj?.phone || domicilioPhone || undefined,
-        direccion: clientObj?.direccion || clienteDireccion || undefined,
-        actividadEconomica: clienteGiro || clientObj?.actividadEconomica || undefined,
-        categoriaContribuyente: clientObj?.categoriaContribuyente || undefined
-      },
-      status: 'PREFACTURA',
-      vendedor: 'Vendedora Mostrador',
-      items: cart.map(formatCartItem)
-    };
-
-    // Guardar la prefactura (cotización) en la base de datos
-    let saved = false;
+    savingQuoteLockRef.current = true;
     try {
-      const staffToken = await getStaffToken();
-      const res = await fetch('/api/quotes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+      const clientObj = activeCustomer || customers.find(c => c.id === selectedCustomerId);
+      const ordNum = `COT-${Math.floor(1000 + Math.random() * 9000)}`;
+
+      const quoteSale: SaleRecord = {
+        id: `quote-${Date.now()}`,
+        orderNumber: ordNum,
+        saleNumber: ordNum,
+        createdAt: new Date().toISOString(),
+        cotizacionDate: new Date().toLocaleDateString('es-SV', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+        total: cartSubtotal,
+        subtotal: subtotalNeto,
+        ivaTotal: ivaCalculado,
+        tipoComprobante,
+        cliente: {
+          nombre: (clienteNombre && clienteNombre !== 'Consumidor Final') ? clienteNombre : (clientObj?.name || 'Consumidor Final'),
+          numDocumento: clienteDoc || clientObj?.numDocumento || undefined,
+          nrc: clienteNrc || clientObj?.nrc || undefined,
+          correo: clienteEmail || clientObj?.email || undefined,
+          telefono: clientObj?.phone || domicilioPhone || undefined,
+          direccion: clientObj?.direccion || clienteDireccion || undefined,
+          actividadEconomica: clienteGiro || clientObj?.actividadEconomica || undefined,
+          categoriaContribuyente: clientObj?.categoriaContribuyente || undefined
         },
-        body: JSON.stringify({
-          customerId: clientObj?.id || selectedCustomerId || undefined,
-          customerName: quoteSale.cliente.nombre,
-          customerDoc: quoteSale.cliente.numDocumento,
-          customerNrc: quoteSale.cliente.nrc,
-          customerEmail: quoteSale.cliente.correo,
-          customerPhone: quoteSale.cliente.telefono,
-          customerAddress: quoteSale.cliente.direccion,
-          tipoComprobante: quoteSale.tipoComprobante,
-          subtotal: quoteSale.subtotal,
-          ivaTotal: quoteSale.ivaTotal,
-          total: quoteSale.total,
-          sellerName: quoteSale.vendedor,
-          items: quoteSale.items,
-        }),
-      });
-      const data = await res.json();
-      if (data.success && data.quote) {
-        quoteSale.orderNumber = data.quote.quoteNumber;
-        quoteSale.saleNumber = data.quote.quoteNumber;
-        quoteSale.createdAt = data.quote.createdAt;
-        if (typeof data.quote.total === 'number' && data.quote.total > 0) {
-          quoteSale.total = data.quote.total;
-          quoteSale.subtotal = typeof data.quote.subtotal === 'number' ? data.quote.subtotal : quoteSale.subtotal;
-          quoteSale.ivaTotal = typeof data.quote.ivaTotal === 'number' ? data.quote.ivaTotal : quoteSale.ivaTotal;
-        }
-        if (Array.isArray(data.quote.items) && data.quote.items.length > 0) {
-          quoteSale.items = data.quote.items;
-        }
-        saved = true;
-      }
-    } catch (err) {
-      console.error('No se pudo guardar la prefactura:', err);
-    }
+        status: 'PREFACTURA',
+        vendedor: 'Vendedora Mostrador',
+        items: cart.map(formatCartItem)
+      };
 
-    if (saved) {
-      // Si se estaba editando una prefactura, la anterior queda reemplazada
-      if (editingQuote) {
-        await patchQuote(editingQuote.id, 'cancel', { reason: `Reemplazada por ${quoteSale.saleNumber}` });
+      // Guardar la prefactura (cotización) en la base de datos
+      let saved = false;
+      try {
+        const staffToken = await getStaffToken();
+        const res = await fetch('/api/quotes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
+          body: JSON.stringify({
+            customerId: clientObj?.id || selectedCustomerId || undefined,
+            customerName: quoteSale.cliente.nombre,
+            customerDoc: quoteSale.cliente.numDocumento,
+            customerNrc: quoteSale.cliente.nrc,
+            customerEmail: quoteSale.cliente.correo,
+            customerPhone: quoteSale.cliente.telefono,
+            customerAddress: quoteSale.cliente.direccion,
+            tipoComprobante: quoteSale.tipoComprobante,
+            subtotal: quoteSale.subtotal,
+            ivaTotal: quoteSale.ivaTotal,
+            total: quoteSale.total,
+            sellerName: quoteSale.vendedor,
+            items: quoteSale.items,
+          }),
+        });
+        const data = await res.json();
+        if (data.success && data.quote) {
+          quoteSale.orderNumber = data.quote.quoteNumber;
+          quoteSale.saleNumber = data.quote.quoteNumber;
+          quoteSale.createdAt = data.quote.createdAt;
+          if (typeof data.quote.total === 'number' && data.quote.total > 0) {
+            quoteSale.total = data.quote.total;
+            quoteSale.subtotal = typeof data.quote.subtotal === 'number' ? data.quote.subtotal : quoteSale.subtotal;
+            quoteSale.ivaTotal = typeof data.quote.ivaTotal === 'number' ? data.quote.ivaTotal : quoteSale.ivaTotal;
+          }
+          if (Array.isArray(data.quote.items) && data.quote.items.length > 0) {
+            quoteSale.items = data.quote.items;
+          }
+          saved = true;
+        }
+      } catch (err) {
+        console.error('No se pudo guardar la prefactura:', err);
       }
-      clearCart();
-      bumpPrefacturas();
-    } else {
-      alert(
-        'No se pudo guardar la prefactura en el sistema (sin conexión o sesión vencida).\n' +
-        'Se muestra el PDF para compartirlo, pero NO quedará en "Prefacturas". Tu carrito sigue intacto.'
-      );
-    }
 
-    setActiveQuoteNotices(null);
-    setActiveQuoteSale(quoteSale);
-    setIsQuoteModalOpen(true);
+      if (saved) {
+        // Si se estaba editando una prefactura, la anterior queda reemplazada
+        if (editingQuote) {
+          await patchQuote(editingQuote.id, 'cancel', { reason: `Reemplazada por ${quoteSale.saleNumber}` });
+        }
+        clearCart();
+        bumpPrefacturas();
+      } else {
+        alert(
+          'No se pudo guardar la prefactura en el sistema (sin conexión o sesión vencida).\n' +
+          'Se muestra el PDF para compartirlo, pero NO quedará en "Prefacturas". Tu carrito sigue intacto.'
+        );
+      }
+
+      setActiveQuoteNotices(null);
+      setActiveQuoteSale(quoteSale);
+      setIsQuoteModalOpen(true);
+    } finally {
+      savingQuoteLockRef.current = false;
+    }
   };
 
   // Enviar comanda a Bodega para preparación física
   const handleSendOrderToBodega = () => {
+    if (sendingComandaLockRef.current) return;
     if (cart.length === 0) {
       alert('Agrega al menos una fragancia o producto al pedido para enviar a Bodega.');
       return;
     }
+    sendingComandaLockRef.current = true;
+    setTimeout(() => {
+      sendingComandaLockRef.current = false;
+    }, 1500);
     const ordNum = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
     const cmdNum = `CMD-${Math.floor(1000 + Math.random() * 9000)}`;
     const clientObj = activeCustomer || customers.find(c => c.id === selectedCustomerId);
@@ -2744,6 +2761,8 @@ export default function PosPage() {
 
   // Finalizar venta, emitir DTE oficial ante Hacienda y descontar stock
   const handleCompleteSale = async () => {
+    if (invoicingLockRef.current || isProcessing) return;
+
     const isOrderFromWindow = !!orderToInvoice;
     const isOrderAlreadyPaid = isOrderFromWindow && orderToInvoice.paymentStatus === 'COMPLETED' && paymentMethod !== 'CASH';
     const itemsToBill = isOrderFromWindow ? orderToInvoice.items : cart.map(formatCartItem);
@@ -2761,7 +2780,9 @@ export default function PosPage() {
       }
     }
 
+    invoicingLockRef.current = true;
     setIsProcessing(true);
+    try {
 
     const parsedCash = paymentMethod === 'CASH' ? parseFloat(cashAmount) : undefined;
     const changeAmount = parsedCash ? parsedCash - totalToBill : undefined;
@@ -3190,10 +3211,22 @@ export default function PosPage() {
         }
       });
     }
+    } finally {
+      invoicingLockRef.current = false;
+      setIsProcessing(false);
+    }
   };
 
   // Transmitir un DTE pendiente desde la tabla de Caja a Factura Llama / MH
   const handleTransmitDte = async (sale: SaleRecord) => {
+    const saleKey = String(sale.saleNumber || sale.id || '').trim();
+    if (!saleKey || transmittingDteLockRef.current.has(saleKey)) return;
+    if (sale.dteInfo?.estado === 'PROCESADO' && sale.dteInfo?.codigoGeneracion) {
+      alert(`Este pedido ya tiene un DTE PROCESADO (${sale.dteInfo.codigoGeneracion}).`);
+      return;
+    }
+
+    transmittingDteLockRef.current.add(saleKey);
     setIsTransmittingDteId(sale.id || sale.saleNumber);
     try {
       const staffToken = await getStaffToken().catch(() => null);
@@ -3281,6 +3314,7 @@ export default function PosPage() {
     } catch (err: any) {
       alert(`Error al transmitir DTE: ${err?.message || 'Fallo de conexión'}`);
     } finally {
+      transmittingDteLockRef.current.delete(saleKey);
       setIsTransmittingDteId(null);
     }
   };

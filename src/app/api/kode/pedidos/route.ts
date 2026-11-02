@@ -288,6 +288,33 @@ export async function POST(request: Request) {
     const envio = parseFloat(costo_envio) || 0;
     const total = Math.max(0, subtotal - descuento) + envio;
 
+    // 2.5 Idempotencia anti-doble-clic: si este mismo cliente registró un pedido por el mismo total hace menos de 10 segundos, devolverlo sin duplicar
+    const recentDup = await client.query(
+      `SELECT id, numero_pedido, estado_pedido, total
+       FROM public.pedidos
+       WHERE cliente_id = $1
+         AND ABS(total - $2) < 0.01
+         AND created_at >= NOW() - INTERVAL '10 seconds'
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [clienteId, total]
+    );
+    if (recentDup.rowCount && recentDup.rowCount > 0) {
+      await client.query('COMMIT');
+      const dupRow = recentDup.rows[0];
+      return NextResponse.json({
+        success: true,
+        alreadyExists: true,
+        message: 'Pedido ya registrado (protección anti-doble-clic)',
+        pedido: {
+          id: dupRow.id,
+          numero_pedido: dupRow.numero_pedido,
+          estado: dupRow.estado_pedido || 'Registrado',
+          total: Number(dupRow.total),
+        },
+      });
+    }
+
     // Procesar lista de pagos (soporte multi-pago / mixto)
     interface PagoInputItem {
       forma_pago_id: string;

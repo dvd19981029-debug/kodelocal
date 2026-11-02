@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   CheckCircle2,
   AlertCircle,
@@ -606,7 +606,13 @@ export default function KodeSystemPage() {
     setVentasView('nuevo_pedido');
   };
 
+  const savingPedidoLockRef = useRef(false);
+  const generandoGuiaLockRef = useRef<Set<string>>(new Set());
+  const emitiendoDteLockRef = useRef<Set<string>>(new Set());
+
   const handleGuardarPedido = async (payload: any) => {
+    if (savingPedidoLockRef.current) return;
+    savingPedidoLockRef.current = true;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 25000);
     const isEdit = Boolean(payload?.id);
@@ -650,6 +656,7 @@ export default function KodeSystemPage() {
       }
     } finally {
       clearTimeout(timeoutId);
+      savingPedidoLockRef.current = false;
       setLoading(false);
     }
   };
@@ -718,6 +725,9 @@ export default function KodeSystemPage() {
   };
 
   const handleGenerarGuiaDirecta = async (pedido: Pedido) => {
+    const key = String(pedido.id || '');
+    if (!key || generandoGuiaLockRef.current.has(key)) return;
+    generandoGuiaLockRef.current.add(key);
     try {
       setGenerandoGuiaPedidoId(pedido.id);
       const res = await fetch('/api/kode/guia', {
@@ -753,12 +763,16 @@ export default function KodeSystemPage() {
     } catch (e: any) {
       showToast(e.message || 'Error de conexión', 'error');
     } finally {
+      generandoGuiaLockRef.current.delete(key);
       setGenerandoGuiaPedidoId(null);
     }
   };
 
   const handleGenerarGuiaAutomaticaC807 = async () => {
     if (!guiaModalPedido) return;
+    const key = String(guiaModalPedido.id || '');
+    if (!key || generandoGuiaLockRef.current.has(key)) return;
+    generandoGuiaLockRef.current.add(key);
 
     try {
       setGenerandoGuia(true);
@@ -790,11 +804,15 @@ export default function KodeSystemPage() {
     } catch (e: any) {
       showToast(e.message, 'error');
     } finally {
+      generandoGuiaLockRef.current.delete(key);
       setGenerandoGuia(false);
     }
   };
 
   const handleEmitirDte = async (pedido: Pedido) => {
+    const key = String(pedido.id || '');
+    if (!key || emitiendoDteLockRef.current.has(key)) return;
+    emitiendoDteLockRef.current.add(key);
     try {
       setEmitiendoDteId(pedido.id);
       const res = await fetch('/api/kode/dte', {
@@ -813,6 +831,7 @@ export default function KodeSystemPage() {
     } catch (e: any) {
       showToast(e.message || 'Error de conexión con Factura Llama', 'error');
     } finally {
+      emitiendoDteLockRef.current.delete(key);
       setEmitiendoDteId(null);
     }
   };

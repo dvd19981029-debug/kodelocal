@@ -508,6 +508,62 @@ export async function POST(request: Request) {
       }
     }
 
+    // 0.1 Idempotencia por DTE (codigoGeneracion) o ventana anti-doble-clic (8 segundos con mismo cajero, total y artículos)
+    const incomingCodGen = String(codigoGeneracion || dteInfo?.codigoGeneracion || '').trim();
+    if (incomingCodGen) {
+      const existingDteDoc = await prisma.dteDocument.findUnique({
+        where: { codigoGeneracion: incomingCodGen },
+        include: {
+          sale: {
+            include: { items: true, customer: true, dteDocument: true, payments: true },
+          },
+        },
+      });
+      if (existingDteDoc?.sale) {
+        return NextResponse.json({
+          success: true,
+          alreadyExists: true,
+          sale: existingDteDoc.sale,
+          message: `Esta factura (DTE ${incomingCodGen}) ya estaba registrada en la venta #${existingDteDoc.sale.saleNumber}.`,
+        });
+      }
+    }
+
+    if (Array.isArray(items) && items.length > 0) {
+      const eightSecondsAgo = new Date(Date.now() - 8000);
+      const recentDuplicateCandidate = await prisma.sale.findFirst({
+        where: {
+          createdAt: { gte: eightSecondsAgo },
+          total: Number(total || 0),
+          orderStatus: targetOrderStatus,
+          ...(cashierName ? { cashierName } : {}),
+          ...(customerId ? { customerId } : {}),
+        },
+        include: { items: true, customer: true, dteDocument: true, payments: true },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (
+        recentDuplicateCandidate &&
+        recentDuplicateCandidate.items.length === items.length &&
+        recentDuplicateCandidate.items.every((dbIt, idx) => {
+          const reqIt = items[idx];
+          return (
+            reqIt &&
+            Number(dbIt.quantity) === Number(reqIt.quantity) &&
+            Math.abs(Number(dbIt.unitPrice) - Number(reqIt.price || reqIt.unitPrice || 0)) < 0.01
+          );
+        })
+      ) {
+        return NextResponse.json({
+          success: true,
+          alreadyExists: true,
+          sale: recentDuplicateCandidate,
+          message: `Transacción idéntica detectada en ventana anti-doble-clic (#${recentDuplicateCandidate.saleNumber}).`,
+        });
+      }
+    }
+
     // Pre-validar y resolver productos en DB con precisión (por ID, SKU, código de barras o nombre)
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ success: false, error: 'Venta Fantasma Detectada: La orden no puede ser procesada sin artículos.' }, { status: 400 });

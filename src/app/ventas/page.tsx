@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
+import { getStaffToken } from '@/lib/auth';
 import { 
   Store,
   ReceiptText, 
@@ -186,13 +187,27 @@ export default function VentasPage() {
     });
   }, [sales, searchQuery, filterTab]);
 
+  const transmittingLockRef = useRef<Set<string>>(new Set());
+
   // Transmitir un DTE individual pendiente a Factura Llama / Ministerio de Hacienda
   const handleTransmitDte = async (sale: SaleRecord) => {
+    const saleKey = String(sale.saleNumber || sale.id || '').trim();
+    if (!saleKey || transmittingLockRef.current.has(saleKey)) return;
+    if (sale.dteInfo?.estado === 'PROCESADO' && sale.dteInfo?.codigoGeneracion) {
+      alert(`Este pedido ya tiene un DTE PROCESADO (${sale.dteInfo.codigoGeneracion}).`);
+      return;
+    }
+
+    transmittingLockRef.current.add(saleKey);
     setTransmittingId(sale.id);
     try {
+      const staffToken = await getStaffToken().catch(() => null);
       const res = await fetch('/api/dte', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
         body: JSON.stringify({
           tipoDte: sale.tipoComprobante === '03' ? '03' : '01',
           saleId: sale.saleNumber || sale.id,
@@ -257,6 +272,7 @@ export default function VentasPage() {
     } catch (err: any) {
       alert(`Error al conectar con el servicio DTE: ${err?.message || 'Fallo de conexión'}`);
     } finally {
+      transmittingLockRef.current.delete(saleKey);
       setTransmittingId(null);
     }
   };
