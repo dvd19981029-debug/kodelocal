@@ -180,7 +180,11 @@ async function savePlanillaData(recordId: string | null, data: any) {
   }
 }
 
-async function loadKioskState(): Promise<{ recordId: string | null; state: KioskStateData }> {
+async function loadKioskState(): Promise<{
+  recordId: string | null;
+  isNewRecord: boolean;
+  state: KioskStateData;
+}> {
   const rec = await prisma.mirandaBusinessMemory.findFirst({
     where: {
       category: PLANILLA_CATEGORY,
@@ -203,9 +207,10 @@ async function loadKioskState(): Promise<{ recordId: string | null; state: Kiosk
   if (rec?.instruction) {
     try {
       const parsed = JSON.parse(rec.instruction);
-      if (parsed && typeof parsed === 'object') {
+      if (parsed && typeof parsed === 'object' && parsed.currentToken) {
         return {
           recordId: rec.id,
+          isNewRecord: false,
           state: {
             ...defaultState,
             ...parsed,
@@ -218,7 +223,7 @@ async function loadKioskState(): Promise<{ recordId: string | null; state: Kiosk
     } catch {}
   }
 
-  return { recordId: rec?.id || null, state: defaultState };
+  return { recordId: rec?.id || null, isNewRecord: true, state: defaultState };
 }
 
 async function saveKioskState(recordId: string | null, state: KioskStateData) {
@@ -261,14 +266,15 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const deviceToken = searchParams.get('deviceToken') || '';
+    const forceRotate = searchParams.get('rotate') === '1';
 
-    const [{ recordId: kioskRecId, state }, { data: planilla }] = await Promise.all([
+    const [{ recordId: kioskRecId, isNewRecord, state }, { data: planilla }] = await Promise.all([
       loadKioskState(),
       loadPlanillaData(),
     ]);
 
     const svNow = getElSalvadorNow();
-    let dirty = rotateTokenIfNeeded(state, false);
+    let dirty = isNewRecord || rotateTokenIfNeeded(state, forceRotate);
 
     // Filtrar logs solo del día actual en El Salvador
     const filteredLogs = (state.todayLogs || []).filter((l) => l.dateStr === svNow.dateStr);

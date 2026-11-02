@@ -140,7 +140,6 @@ export default function MarcadorPage() {
 
   // Estado del Monitor Kiosco
   const [kioskToken, setKioskToken] = useState<string>('');
-  const [tokenExpiresAt, setTokenExpiresAt] = useState<number>(Date.now() + 15000);
   const [secondsLeft, setSecondsLeft] = useState<number>(15);
   const [svTimeStr, setSvTimeStr] = useState<string>('');
   const [svDateStr, setSvDateStr] = useState<string>('');
@@ -148,6 +147,9 @@ export default function MarcadorPage() {
   const [todayLogs, setTodayLogs] = useState<ScanEventRecord[]>([]);
   const [employees, setEmployees] = useState<EmployeeSummary[]>([]);
   const lastCelebratedIdRef = useRef<string | null>(null);
+  const lastTokenRef = useRef<string>('');
+  const localExpiresAtRef = useRef<number>(Date.now() + 15000);
+  const isRotatingRef = useRef<boolean>(false);
 
   // Estado del Celular (Enrolamiento y Escaneo)
   const [deviceToken, setDeviceToken] = useState<string>('');
@@ -183,7 +185,62 @@ export default function MarcadorPage() {
     }
   }, []);
 
-  // Reloj en vivo de El Salvador cada segundo + cuenta regresiva de 15s del QR
+  // Cargar estado inicial y polling en modo Kiosco
+  const fetchMarcadorState = useCallback(
+    async (forceRotate = false) => {
+      try {
+        const devTok = deviceToken || getOrCreateDeviceToken();
+        const rotateParam = forceRotate ? '&rotate=1' : '';
+        const res = await fetch(
+          `/api/marcador?deviceToken=${encodeURIComponent(devTok)}${rotateParam}&_=${Date.now()}`,
+          { cache: 'no-store' }
+        );
+        const data = await res.json();
+        if (!data.success) return;
+
+        if (data.kiosk) {
+          if (data.kiosk.token && data.kiosk.token !== lastTokenRef.current) {
+            lastTokenRef.current = data.kiosk.token;
+            setKioskToken(data.kiosk.token);
+            const rem =
+              typeof data.kiosk.remainingMs === 'number' && data.kiosk.remainingMs > 1000
+                ? data.kiosk.remainingMs
+                : 15000;
+            localExpiresAtRef.current = Date.now() + rem;
+            setSecondsLeft(Math.ceil(rem / 1000));
+            isRotatingRef.current = false;
+          }
+          setTodayLogs(data.kiosk.todayLogs || []);
+
+          const celeb = data.kiosk.activeCelebration as ScanEventRecord | null;
+          setActiveCelebration(celeb);
+          if (celeb && celeb.id !== lastCelebratedIdRef.current) {
+            lastCelebratedIdRef.current = celeb.id;
+            playSuccessBeep();
+          }
+        }
+
+        if (Array.isArray(data.employees)) {
+          setEmployees(data.employees);
+          if (!selectedEnrollEmpId && data.employees.length > 0) {
+            const firstUnenrolled =
+              data.employees.find((e: EmployeeSummary) => !e.isEnrolled) || data.employees[0];
+            setSelectedEnrollEmpId(firstUnenrolled.id);
+          }
+        }
+
+        if (data.myEnrolledEmployee) {
+          setMyEmployee(data.myEnrolledEmployee);
+        }
+      } catch {
+      } finally {
+        setIsLoadingPhone(false);
+      }
+    },
+    [deviceToken, selectedEnrollEmpId]
+  );
+
+  // Reloj en vivo de El Salvador cada segundo + cuenta regresiva exacta de 15s a 0s
   useEffect(() => {
     const updateClock = () => {
       const now = new Date();
@@ -204,14 +261,21 @@ export default function MarcadorPage() {
       setSvTimeStr(timeFmt.format(now));
       setSvDateStr(dateFmt.format(now));
 
-      const remMs = Math.max(0, tokenExpiresAt - Date.now());
-      setSecondsLeft(Math.ceil(remMs / 1000));
+      const remMs = Math.max(0, localExpiresAtRef.current - Date.now());
+      const secs = Math.ceil(remMs / 1000);
+      setSecondsLeft(secs);
+
+      if (remMs <= 0 && viewMode === 'kiosk' && !isRotatingRef.current) {
+        isRotatingRef.current = true;
+        localExpiresAtRef.current = Date.now() + 15000;
+        fetchMarcadorState(true);
+      }
     };
 
     updateClock();
     const timer = setInterval(updateClock, 250);
     return () => clearInterval(timer);
-  }, [tokenExpiresAt]);
+  }, [viewMode, fetchMarcadorState]);
 
   // Ejecutar marcación desde el celular
   const executePhoneScan = useCallback(
@@ -252,52 +316,10 @@ export default function MarcadorPage() {
     []
   );
 
-  // Cargar estado inicial y polling en modo Kiosco
-  const fetchMarcadorState = useCallback(async () => {
-    try {
-      const devTok = deviceToken || getOrCreateDeviceToken();
-      const res = await fetch(
-        `/api/marcador?deviceToken=${encodeURIComponent(devTok)}&_=${Date.now()}`,
-        { cache: 'no-store' }
-      );
-      const data = await res.json();
-      if (!data.success) return;
-
-      if (data.kiosk) {
-        setKioskToken(data.kiosk.token);
-        setTokenExpiresAt(data.kiosk.tokenExpiresAt);
-        setTodayLogs(data.kiosk.todayLogs || []);
-
-        const celeb = data.kiosk.activeCelebration as ScanEventRecord | null;
-        setActiveCelebration(celeb);
-        if (celeb && celeb.id !== lastCelebratedIdRef.current) {
-          lastCelebratedIdRef.current = celeb.id;
-          playSuccessBeep();
-        }
-      }
-
-      if (Array.isArray(data.employees)) {
-        setEmployees(data.employees);
-        if (!selectedEnrollEmpId && data.employees.length > 0) {
-          const firstUnenrolled =
-            data.employees.find((e: EmployeeSummary) => !e.isEnrolled) || data.employees[0];
-          setSelectedEnrollEmpId(firstUnenrolled.id);
-        }
-      }
-
-      if (data.myEnrolledEmployee) {
-        setMyEmployee(data.myEnrolledEmployee);
-      }
-    } catch {
-    } finally {
-      setIsLoadingPhone(false);
-    }
-  }, [deviceToken, selectedEnrollEmpId]);
-
   useEffect(() => {
-    fetchMarcadorState();
+    fetchMarcadorState(false);
     const interval = setInterval(
-      fetchMarcadorState,
+      () => fetchMarcadorState(false),
       viewMode === 'kiosk' ? 1500 : 5000
     );
     return () => clearInterval(interval);
