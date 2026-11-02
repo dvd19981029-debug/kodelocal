@@ -290,7 +290,7 @@ export async function POST(request: Request) {
 
     // 2.5 Idempotencia anti-doble-clic: si este mismo cliente registró un pedido por el mismo total hace menos de 10 segundos, devolverlo sin duplicar
     const recentDup = await client.query(
-      `SELECT id, numero_pedido, estado_pedido, total
+      `SELECT id, numero_pedido, estado, total
        FROM public.pedidos
        WHERE cliente_id = $1
          AND ABS(total - $2) < 0.01
@@ -309,7 +309,7 @@ export async function POST(request: Request) {
         pedido: {
           id: dupRow.id,
           numero_pedido: dupRow.numero_pedido,
-          estado: dupRow.estado_pedido || 'Registrado',
+          estado: dupRow.estado || 'Registrado',
           total: Number(dupRow.total),
         },
       });

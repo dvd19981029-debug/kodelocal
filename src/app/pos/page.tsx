@@ -1418,6 +1418,17 @@ export default function PosPage() {
   const handleMarkOrderDeliveredFromPos = async (orderId: string) => {
     const targetSale = sales.find(s => s.id === orderId || s.saleNumber === orderId);
 
+    // Si es una comanda de mostrador que aún no ha sido cobrada/facturada en Caja, abrir el modal de cobro en lugar de cerrarla sin pago ni DTE
+    if (
+      targetSale &&
+      targetSale.channel !== 'ONLINE' &&
+      targetSale.paymentStatus !== 'COMPLETED' &&
+      !targetSale.dteInfo?.codigoGeneracion
+    ) {
+      handleStartInvoiceOrder(targetSale);
+      return;
+    }
+
     // 1. Sincronizar en la base de datos Supabase para que Bodega en cualquier dispositivo lo vea al instante
     try {
       const staffToken = await getStaffToken();
