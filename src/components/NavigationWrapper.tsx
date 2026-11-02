@@ -52,12 +52,12 @@ export default function NavigationWrapper({ children }: { children: React.ReactN
           {!isKodeRoute && !isMarcadorRoute && <EcommerceLazyOverlays />}
         </div>
 
-      {isKodeRoute || isMarcadorRoute ? (
-        // En KODE y en Marcador QR: Vista independiente de pantalla completa sin barra de Ecommerce
+      {isKodeRoute ? (
+        // En KODE: Sistema totalmente independiente (marca paralela sin mezclar con Aromaniak)
         <main className="flex-1 w-full min-h-screen bg-slate-950 text-slate-100">{children}</main>
-      ) : isLoginPage ? (
-        // En login solo se muestra el contenido limpio
-        <main className="flex-1 w-full">{children}</main>
+      ) : isMarcadorRoute || isLoginPage ? (
+        // En Marcador QR y Login: Vista limpia blanca sin barras ni cabeceras
+        <main className="flex-1 w-full min-h-screen bg-white text-slate-800">{children}</main>
       ) : isOperationalRoute ? (
         // En rutas operativas se muestra la barra de navegación administrativa de empleados
         <>
