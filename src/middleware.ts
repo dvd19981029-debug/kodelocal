@@ -132,6 +132,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Ruta pública de Kiosco de Asistencia QR (aromaniaksv.com/Marcador o /marcador)
+  if (pathname.toLowerCase() === '/marcador' || pathname.toLowerCase().startsWith('/marcador/')) {
+    const targetUrl = request.nextUrl.clone();
+    targetUrl.pathname = '/marcador';
+    const res =
+      pathname === '/marcador' ? NextResponse.next() : NextResponse.rewrite(targetUrl);
+    res.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet');
+    return res;
+  }
+
   const isKodeSubdomain = host.startsWith('kode.') || host.includes('kode.aromaniaksv.com');
   if (isKodeSubdomain) {
     if (pathname === '/') {

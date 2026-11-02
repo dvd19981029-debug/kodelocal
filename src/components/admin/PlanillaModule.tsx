@@ -649,6 +649,9 @@ export default function PlanillaModule() {
   const [punchRecords, setPunchRecords] = useState<Record<string, DailyPunchRecord>>({});
   const [bulkPunchCsvText, setBulkPunchCsvText] = useState<string>('');
   const [showBulkPunchModal, setShowBulkPunchModal] = useState<boolean>(false);
+  const [enrolledDevicesMap, setEnrolledDevicesMap] = useState<
+    Record<string, { isEnrolled: boolean; deviceLabel: string | null }>
+  >({});
 
   const [history, setHistory] = useState<SavedPayrollSnapshot[]>([]);
   const [isSavingServer, setIsSavingServer] = useState(false);
@@ -661,6 +664,43 @@ export default function PlanillaModule() {
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3500);
+  };
+
+  const refreshMarcadorDevicesAndPunches = async () => {
+    try {
+      const [planRes, marcRes] = await Promise.all([
+        fetch('/api/admin/planilla').then((r) => r.json()),
+        fetch('/api/marcador').then((r) => r.json()),
+      ]);
+      if (planRes?.success && planRes.data?.punchRecords) {
+        setPunchRecords(planRes.data.punchRecords);
+      }
+      if (marcRes?.success && Array.isArray(marcRes.employees)) {
+        const nextMap: Record<string, { isEnrolled: boolean; deviceLabel: string | null }> = {};
+        for (const e of marcRes.employees) {
+          nextMap[e.id] = {
+            isEnrolled: Boolean(e.isEnrolled),
+            deviceLabel: e.enrolledDeviceLabel || null,
+          };
+        }
+        setEnrolledDevicesMap(nextMap);
+      }
+    } catch {}
+  };
+
+  const handleResetEnrolledDevice = async (empId: string, empName: string) => {
+    try {
+      const res = await fetch('/api/marcador', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reset_device', empId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`📱 Celular de ${empName} liberado para nuevo enrolamiento.`);
+        await refreshMarcadorDevicesAndPunches();
+      }
+    } catch {}
   };
 
   // Cargar datos de localStorage y Supabase al iniciar
@@ -2285,7 +2325,10 @@ export default function PlanillaModule() {
 
             <button
               type="button"
-              onClick={() => setSubTab('jornadas')}
+              onClick={() => {
+                setSubTab('jornadas');
+                refreshMarcadorDevicesAndPunches();
+              }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
                 subTab === 'jornadas'
                   ? 'bg-cyan-600 text-white shadow-md'
@@ -3514,19 +3557,41 @@ export default function PlanillaModule() {
                 </div>
               </div>
 
-              {/* Asignación de Jornada a cada Colaborador */}
+              {/* Asignación de Jornada y Enrolamiento QR por Colaborador */}
               <div className="clay-card p-4 bg-white space-y-3">
-                <div className="border-b border-slate-100 pb-2">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2 gap-2">
                   <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                     <Users className="w-3.5 h-3.5 text-indigo-600" />
-                    <span>Asignación de Jornada por Colaborador</span>
+                    <span>Jornada y Celular QR</span>
                   </h3>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        refreshMarcadorDevicesAndPunches();
+                        showToast('🔄 Marcaciones QR sincronizadas.');
+                      }}
+                      className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[10.5px] font-bold text-slate-700 cursor-pointer"
+                      title="Sincronizar marcaciones escaneadas con QR"
+                    >
+                      Sincronizar QR
+                    </button>
+                    <a
+                      href="/Marcador"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-black cursor-pointer"
+                    >
+                      Abrir /Marcador ↗
+                    </a>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
                   {employees.map((emp) => {
                     const summary = crossedSummaryByEmp[emp.id];
                     const isEmpSelected = selectedPunchEmp?.id === emp.id;
+                    const devInfo = enrolledDevicesMap[emp.id];
                     return (
                       <div
                         key={emp.id}
@@ -3576,6 +3641,27 @@ export default function PlanillaModule() {
                           {summary && summary.totalMinutosDescuento > 0 && (
                             <span className="shrink-0 px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-mono font-black text-[10px]">
                               {summary.totalMinutosDescuento}m (-${summary.totalMontoDescuento.toFixed(2)})
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mt-1.5 pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-[10.5px]">
+                          {devInfo?.isEnrolled ? (
+                            <>
+                              <span className="text-emerald-700 font-bold truncate">
+                                📱 {devInfo.deviceLabel || 'Celular vinculado'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleResetEnrolledDevice(emp.id, emp.fullName)}
+                                className="text-rose-600 hover:underline font-bold cursor-pointer shrink-0 ml-2"
+                              >
+                                Liberar celular
+                              </button>
+                            </>
+                          ) : (
+                            <span className="text-slate-400 font-medium">
+                              📱 Sin celular enrolado en /Marcador
                             </span>
                           )}
                         </div>
