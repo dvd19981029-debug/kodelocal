@@ -166,21 +166,27 @@ export default function MarcadorPage() {
   const [isSubmittingEnroll, setIsSubmittingEnroll] = useState<boolean>(false);
   const autoScannedRef = useRef<boolean>(false);
 
-  // Inicializar modo según parámetros de URL (?t=... o ?mode=celular)
+  // Inicializar modo según parámetros de URL (?t=... o ?mode=celular) o dispositivo móvil
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    setOriginUrl(window.location.origin);
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      setOriginUrl(window.location.origin);
+    } else {
+      setOriginUrl('https://pos.aromaniaksv.com');
+    }
+
     const devTok = getOrCreateDeviceToken();
     setDeviceToken(devTok);
 
     const params = new URLSearchParams(window.location.search);
     const t = params.get('t') || '';
     const mode = params.get('mode') || '';
+    const isMobileUa = /iPhone|Android|Mobile/i.test(navigator.userAgent || '');
 
     if (t) {
       setScannedToken(t);
       setViewMode('phone');
-    } else if (mode === 'celular' || mode === 'phone') {
+    } else if (mode === 'celular' || mode === 'phone' || isMobileUa) {
       setViewMode('phone');
     }
   }, []);

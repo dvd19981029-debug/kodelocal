@@ -9,7 +9,9 @@ const OPERATIONAL_ROUTES = [
   '/inventario',
   '/logistica',
   '/login',
-  '/kode'
+  '/kode',
+  '/marcador',
+  '/Marcador',
 ];
 
 const OPERATIONAL_API_ROUTES = [

@@ -41,6 +41,7 @@ export default function NavigationWrapper({ children }: { children: React.ReactN
     pathname.startsWith('/logistica');
 
   const isKodeRoute = pathname.startsWith('/kode');
+  const isMarcadorRoute = pathname.toLowerCase().startsWith('/marcador');
   const isLoginPage = pathname === '/login';
   const isBlogRoute = pathname.startsWith('/blog');
 
@@ -48,11 +49,11 @@ export default function NavigationWrapper({ children }: { children: React.ReactN
     <CustomerAuthProvider>
       <EcommerceCartProvider>
         <div>
-          {!isKodeRoute && <EcommerceLazyOverlays />}
+          {!isKodeRoute && !isMarcadorRoute && <EcommerceLazyOverlays />}
         </div>
 
-      {isKodeRoute ? (
-        // En KODE: Sistema totalmente independiente (marca paralela sin mezclar con Aromaniak)
+      {isKodeRoute || isMarcadorRoute ? (
+        // En KODE y en Marcador QR: Vista independiente de pantalla completa sin barra de Ecommerce
         <main className="flex-1 w-full min-h-screen bg-slate-950 text-slate-100">{children}</main>
       ) : isLoginPage ? (
         // En login solo se muestra el contenido limpio
