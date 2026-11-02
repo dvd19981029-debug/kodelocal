@@ -623,7 +623,9 @@ export function crossDayPunch(
 const STORAGE_KEY = 'kodelocal_planilla_sv_v3';
 
 export default function PlanillaModule() {
-  const [subTab, setSubTab] = useState<'quincenal' | 'jornadas' | 'spu' | 'resumen' | 'parametros'>('quincenal');
+  const [subTab, setSubTab] = useState<'quincenal' | 'marcaciones' | 'jornadas' | 'spu' | 'resumen' | 'parametros'>('quincenal');
+  const [marcacionesEmpFilter, setMarcacionesEmpFilter] = useState<string>('ALL');
+  const [marcacionesOnlyRecorded, setMarcacionesOnlyRecorded] = useState<boolean>(false);
   const [frequency, setFrequency] = useState<PayrollFrequency>('MENSUAL');
   const [selectedWorkEmpId, setSelectedWorkEmpId] = useState<string>('emp-1');
   const [showFullEmployerCols, setShowFullEmployerCols] = useState<boolean>(false);
@@ -2326,6 +2328,22 @@ export default function PlanillaModule() {
             <button
               type="button"
               onClick={() => {
+                setSubTab('marcaciones');
+                refreshMarcadorDevicesAndPunches();
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                subTab === 'marcaciones'
+                  ? 'bg-teal-600 text-white shadow-md'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
+              }`}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Marcaciones</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
                 setSubTab('jornadas');
                 refreshMarcadorDevicesAndPunches();
               }}
@@ -2336,7 +2354,7 @@ export default function PlanillaModule() {
               }`}
             >
               <Clock className="w-3.5 h-3.5" />
-              <span>Jornadas & Marcaciones</span>
+              <span>Jornadas</span>
             </button>
 
             <button
@@ -3481,6 +3499,337 @@ export default function PlanillaModule() {
                 </table>
               </div>
             </div>
+          </div>
+        );
+      })()}
+
+      {/* ================= SUBPESTAÑA MARCACIONES: REPORTE POR ASESOR Y FECHA (4 MARCADAS DEL DÍA) ================= */}
+      {subTab === 'marcaciones' && (() => {
+        const extraDatesSet = new Set<string>(cutoffDates);
+        for (const k of Object.keys(punchRecords)) {
+          const parts = k.split('_');
+          const dStr = parts[parts.length - 1];
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dStr)) {
+            extraDatesSet.add(dStr);
+          }
+        }
+        const allDatesSorted = Array.from(extraDatesSet).sort();
+
+        const filteredEmps =
+          marcacionesEmpFilter === 'ALL'
+            ? employees
+            : employees.filter((e) => e.id === marcacionesEmpFilter);
+
+        return (
+          <div className="space-y-4">
+            <div className="clay-card p-4 bg-white flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <h3 className="text-sm font-black text-slate-900">
+                  Tabla de Marcaciones por Asesor y Fecha
+                </h3>
+                <select
+                  aria-label="Filtrar por asesor"
+                  value={marcacionesEmpFilter}
+                  onChange={(e) => setMarcacionesEmpFilter(e.target.value)}
+                  className="clay-input py-1.5 px-3 text-xs font-black text-slate-800"
+                >
+                  <option value="ALL">Todos los asesores ({employees.length})</option>
+                  {employees.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.fullName} ({e.position})
+                    </option>
+                  ))}
+                </select>
+
+                <label className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={marcacionesOnlyRecorded}
+                    onChange={(e) => setMarcacionesOnlyRecorded(e.target.checked)}
+                    className="rounded text-teal-600"
+                  />
+                  <span>Solo días con marcación</span>
+                </label>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1.5 text-xs">
+                  <span className="font-bold text-slate-500">Desde:</span>
+                  <input
+                    type="date"
+                    value={cutoffStart}
+                    onChange={(e) => setCutoffStart(e.target.value)}
+                    className="clay-input py-1 px-2 text-xs font-mono font-bold"
+                  />
+                  <span className="font-bold text-slate-500">Hasta:</span>
+                  <input
+                    type="date"
+                    value={cutoffEnd}
+                    onChange={(e) => setCutoffEnd(e.target.value)}
+                    className="clay-input py-1 px-2 text-xs font-mono font-bold"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    refreshMarcadorDevicesAndPunches();
+                    showToast('🔄 Marcaciones actualizadas.');
+                  }}
+                  className="clay-btn clay-btn-light px-3 py-1.5 text-xs font-bold text-slate-700 cursor-pointer"
+                >
+                  Actualizar QR
+                </button>
+
+                <a
+                  href="/Marcador"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="clay-btn clay-btn-primary px-3 py-1.5 text-xs font-black cursor-pointer"
+                >
+                  Abrir /Marcador ↗
+                </a>
+              </div>
+            </div>
+
+            {filteredEmps.map((emp) => {
+              const empJor =
+                jornadas.find((j) => j.id === emp.jornadaId) ||
+                jornadas[0] ||
+                DEFAULT_JORNADAS[0];
+              const empSummary = crossedSummaryByEmp[emp.id] || {
+                totalMinutosDescuento: 0,
+                totalMontoDescuento: 0,
+              };
+
+              const rowsForEmp = allDatesSorted.filter((dateStr) => {
+                if (!marcacionesOnlyRecorded) return true;
+                const p = punchRecords[`${emp.id}_${dateStr}`];
+                return Boolean(
+                  p &&
+                    (p.marcacionEntrada ||
+                      p.marcacionSalidaAlmuerzo ||
+                      p.marcacionEntradaAlmuerzo ||
+                      p.marcacionSalidaTurno)
+                );
+              });
+
+              return (
+                <div
+                  key={emp.id}
+                  className="clay-card p-0 overflow-hidden bg-white border border-slate-200"
+                >
+                  <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className="px-2 py-0.5 rounded-lg bg-slate-900 text-white font-mono text-xs font-black">
+                        {emp.code}
+                      </span>
+                      <div>
+                        <h4 className="text-sm font-black text-slate-900">{emp.fullName}</h4>
+                        <span className="text-[11px] font-semibold text-slate-500">
+                          {emp.position} • {emp.department} • Jornada: {empJor.name}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-xs">
+                      {enrolledDevicesMap[emp.id]?.isEnrolled ? (
+                        <span className="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-[11px]">
+                          📱 {enrolledDevicesMap[emp.id]?.deviceLabel || 'Celular enrolado'}
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-500 font-semibold text-[11px]">
+                          📱 Sin celular enrolado
+                        </span>
+                      )}
+                      {empSummary.totalMinutosDescuento > 0 && (
+                        <span className="px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 font-mono font-black text-[11px]">
+                          Tardías: {empSummary.totalMinutosDescuento} min (-$
+                          {empSummary.totalMontoDescuento.toFixed(2)})
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-separate border-spacing-0 text-xs">
+                      <thead className="bg-slate-900 text-white text-[10px] uppercase tracking-wider">
+                        <tr>
+                          <th className="py-2.5 px-3 border-b border-slate-700">Asesor</th>
+                          <th className="py-2.5 px-3 border-b border-slate-700">Fecha / Día</th>
+                          <th className="py-2.5 px-3 border-b border-slate-700 text-center bg-emerald-950">
+                            1. Entrada de Turno
+                          </th>
+                          <th className="py-2.5 px-3 border-b border-slate-700 text-center bg-amber-950/80">
+                            2. Salida Almuerzo
+                          </th>
+                          <th className="py-2.5 px-3 border-b border-slate-700 text-center bg-amber-950/80">
+                            3. Regreso Almuerzo
+                          </th>
+                          <th className="py-2.5 px-3 border-b border-slate-700 text-center bg-indigo-950">
+                            4. Salida de Turno
+                          </th>
+                          <th className="py-2.5 px-3 border-b border-slate-700 text-right">
+                            Estado / Min. Tardía
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {rowsForEmp.length === 0 ? (
+                          <tr>
+                            <td colSpan={7} className="py-4 text-center text-slate-400 font-semibold">
+                              Sin marcaciones registradas en este filtro.
+                            </td>
+                          </tr>
+                        ) : (
+                          rowsForEmp.map((dateStr) => {
+                            const dt = new Date(`${dateStr}T00:00:00`);
+                            const dow = dt.getDay();
+                            const daySched = empJor.days.find((d) => d.dayOfWeek === dow);
+                            const isWork = Boolean(daySched?.isWorkDay);
+                            const punch = punchRecords[`${emp.id}_${dateStr}`] || {
+                              marcacionEntrada: '',
+                              marcacionSalidaAlmuerzo: '',
+                              marcacionEntradaAlmuerzo: '',
+                              marcacionSalidaTurno: '',
+                            };
+                            const cross = crossDayPunch(
+                              daySched,
+                              punch,
+                              empJor.graceMinutesEntrada,
+                              empJor.graceMinutesAlmuerzo,
+                              empJor.lunchEvaluationMode || 'DURATION'
+                            );
+                            const hasAnyPunch = Boolean(
+                              punch.marcacionEntrada ||
+                                punch.marcacionSalidaAlmuerzo ||
+                                punch.marcacionEntradaAlmuerzo ||
+                                punch.marcacionSalidaTurno
+                            );
+
+                            return (
+                              <tr
+                                key={`${emp.id}-${dateStr}`}
+                                className={
+                                  hasAnyPunch
+                                    ? 'bg-emerald-50/20 hover:bg-emerald-50/40'
+                                    : isWork
+                                    ? 'bg-white hover:bg-slate-50'
+                                    : 'bg-slate-50/70 text-slate-400'
+                                }
+                              >
+                                <td className="py-2 px-3 font-bold text-slate-800 whitespace-nowrap">
+                                  {emp.fullName}
+                                </td>
+                                <td className="py-2 px-3 whitespace-nowrap">
+                                  <span className="font-mono font-bold text-slate-900">{dateStr}</span>
+                                  <span className="ml-1.5 text-[11px] font-semibold text-slate-500">
+                                    ({daySched?.dayName || ''})
+                                  </span>
+                                </td>
+                                <td className="py-2 px-3 text-center">
+                                  <input
+                                    type="time"
+                                    aria-label={`Entrada ${emp.fullName} ${dateStr}`}
+                                    value={punch.marcacionEntrada}
+                                    onChange={(e) =>
+                                      updatePunchField(
+                                        emp.id,
+                                        dateStr,
+                                        'marcacionEntrada',
+                                        e.target.value
+                                      )
+                                    }
+                                    className={`clay-input py-1 px-2 text-xs font-mono font-bold ${
+                                      punch.marcacionEntrada
+                                        ? 'border-emerald-300 bg-emerald-50/60 text-emerald-900 font-black'
+                                        : ''
+                                    }`}
+                                  />
+                                </td>
+                                <td className="py-2 px-3 text-center">
+                                  <input
+                                    type="time"
+                                    aria-label={`Salida almuerzo ${emp.fullName} ${dateStr}`}
+                                    value={punch.marcacionSalidaAlmuerzo}
+                                    onChange={(e) =>
+                                      updatePunchField(
+                                        emp.id,
+                                        dateStr,
+                                        'marcacionSalidaAlmuerzo',
+                                        e.target.value
+                                      )
+                                    }
+                                    className={`clay-input py-1 px-2 text-xs font-mono font-bold ${
+                                      punch.marcacionSalidaAlmuerzo
+                                        ? 'border-amber-300 bg-amber-50/60 text-amber-900 font-black'
+                                        : ''
+                                    }`}
+                                  />
+                                </td>
+                                <td className="py-2 px-3 text-center">
+                                  <input
+                                    type="time"
+                                    aria-label={`Regreso almuerzo ${emp.fullName} ${dateStr}`}
+                                    value={punch.marcacionEntradaAlmuerzo}
+                                    onChange={(e) =>
+                                      updatePunchField(
+                                        emp.id,
+                                        dateStr,
+                                        'marcacionEntradaAlmuerzo',
+                                        e.target.value
+                                      )
+                                    }
+                                    className={`clay-input py-1 px-2 text-xs font-mono font-bold ${
+                                      punch.marcacionEntradaAlmuerzo
+                                        ? 'border-amber-300 bg-amber-50/60 text-amber-900 font-black'
+                                        : ''
+                                    }`}
+                                  />
+                                </td>
+                                <td className="py-2 px-3 text-center">
+                                  <input
+                                    type="time"
+                                    aria-label={`Salida turno ${emp.fullName} ${dateStr}`}
+                                    value={punch.marcacionSalidaTurno}
+                                    onChange={(e) =>
+                                      updatePunchField(
+                                        emp.id,
+                                        dateStr,
+                                        'marcacionSalidaTurno',
+                                        e.target.value
+                                      )
+                                    }
+                                    className={`clay-input py-1 px-2 text-xs font-mono font-bold ${
+                                      punch.marcacionSalidaTurno
+                                        ? 'border-indigo-300 bg-indigo-50/60 text-indigo-900 font-black'
+                                        : ''
+                                    }`}
+                                  />
+                                </td>
+                                <td className="py-2 px-3 text-right font-mono font-bold whitespace-nowrap">
+                                  {!isWork ? (
+                                    <span className="text-slate-400">Descanso</span>
+                                  ) : cross.totalMinutosDescuento > 0 ? (
+                                    <span className="text-rose-700 font-black">
+                                      +{cross.totalMinutosDescuento} min
+                                    </span>
+                                  ) : hasAnyPunch ? (
+                                    <span className="text-emerald-700 font-black">Puntual</span>
+                                  ) : (
+                                    <span className="text-slate-300">—</span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         );
       })()}
