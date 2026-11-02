@@ -2251,99 +2251,88 @@ export default function PlanillaModule() {
         </div>
       )}
 
-      {/* Encabezado Principal Estilo Mecanic OS */}
+      {/* Encabezado Principal */}
       <div
-        className="clay-card-dark p-5 text-white relative overflow-hidden shadow-xl"
+        className="clay-card-dark px-5 py-3.5 text-white relative overflow-hidden shadow-xl"
         style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #0f172a 100%)' }}
       >
-        <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10.5px] font-black uppercase tracking-wider">
-                🇸🇻 Legislación Laboral & Tributaria Vigente (D.L. N.° 10)
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-200 border border-indigo-400/30 text-[10.5px] font-bold">
-                Mes Comercial 30 Días • SPU ISSS/AFP
-              </span>
-              {isSavingServer && (
-                <span className="text-[10px] text-amber-300 font-bold animate-pulse">
-                  Guardando cambios...
-                </span>
-              )}
-            </div>
-            <h2 className="text-xl md:text-2xl font-black text-white tracking-tight">
-              Planilla Salarial Automatizada & Planilla Única (SPU)
+        <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg md:text-xl font-black text-white tracking-tight">
+              Planilla Salarial
             </h2>
-            <p className="text-xs text-slate-300 mt-0.5">
-              Cálculo exacto al centavo (`ROUND 2`) de ISSS (3% / 7.5%), AFP (7.25% / 8.75%), ISR vigente (exento hasta $275 quincenal / $550 mensual), llegadas tardías y generador CSV oficial SPU.
-            </p>
+            {isSavingServer && (
+              <span className="text-[10px] text-amber-300 font-bold animate-pulse">
+                Guardando...
+              </span>
+            )}
           </div>
 
           {/* Selector de Subpestañas */}
-          <div className="flex flex-wrap bg-slate-800/90 p-1.5 rounded-2xl border border-slate-700/80 gap-1">
+          <div className="flex flex-wrap bg-slate-800/90 p-1 rounded-xl border border-slate-700/80 gap-1">
             <button
               type="button"
               onClick={() => setSubTab('quincenal')}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
                 subTab === 'quincenal'
                   ? 'bg-emerald-500 text-white shadow-md'
                   : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
               }`}
             >
-              <Calculator className="w-4 h-4" />
+              <Calculator className="w-3.5 h-3.5" />
               <span>Planilla {frequency === 'QUINCENAL' ? 'Quincenal' : 'Mensual'}</span>
             </button>
 
             <button
               type="button"
               onClick={() => setSubTab('jornadas')}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
                 subTab === 'jornadas'
                   ? 'bg-cyan-600 text-white shadow-md'
                   : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
               }`}
             >
-              <Clock className="w-4 h-4" />
+              <Clock className="w-3.5 h-3.5" />
               <span>Jornadas & Marcaciones</span>
             </button>
 
             <button
               type="button"
               onClick={() => setSubTab('spu')}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
                 subTab === 'spu'
                   ? 'bg-indigo-600 text-white shadow-md'
                   : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
               }`}
             >
-              <FileSpreadsheet className="w-4 h-4" />
-              <span>Planilla Única (SPU CSV)</span>
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>SPU CSV</span>
             </button>
 
             <button
               type="button"
               onClick={() => setSubTab('resumen')}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
                 subTab === 'resumen'
                   ? 'bg-purple-600 text-white shadow-md'
                   : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
               }`}
             >
-              <Building2 className="w-4 h-4" />
-              <span>Depto. & Historial ({history.length})</span>
+              <Building2 className="w-3.5 h-3.5" />
+              <span>Historial ({history.length})</span>
             </button>
 
             <button
               type="button"
               onClick={() => setSubTab('parametros')}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
                 subTab === 'parametros'
                   ? 'bg-amber-600 text-white shadow-md'
                   : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
               }`}
             >
-              <Sliders className="w-4 h-4" />
-              <span>Tablas y Parámetros</span>
+              <Sliders className="w-3.5 h-3.5" />
+              <span>Parámetros</span>
             </button>
           </div>
         </div>
@@ -2351,63 +2340,45 @@ export default function PlanillaModule() {
 
       {/* Tarjetas de Resumen Ejecutivo */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="clay-card p-3.5 border-l-4 border-slate-700">
-          <span className="text-[10px] font-bold text-slate-400 uppercase block">Base Mensual ({employees.length} emp.)</span>
+        <div className="clay-card p-3 border-l-4 border-slate-700">
+          <span className="text-[10px] font-bold text-slate-400 uppercase block">Base Mensual ({employees.length})</span>
           <span className="text-lg font-black font-mono text-slate-800 mt-0.5 block">
             ${totals.baseMonthly.toFixed(2)}
           </span>
-          <span className="text-[10px] text-slate-500 font-semibold">
-            INCAF 1%: {appliesIncaf ? 'Activo (≥10 emp)' : 'Exento (<10 emp)'}
-          </span>
         </div>
 
-        <div className="clay-card p-3.5 border-l-4 border-indigo-500">
+        <div className="clay-card p-3 border-l-4 border-indigo-500">
           <span className="text-[10px] font-bold text-slate-400 uppercase block">Total Devengado</span>
           <span className="text-lg font-black font-mono text-indigo-700 mt-0.5 block">
             ${totals.totalDevengado.toFixed(2)}
           </span>
-          <span className="text-[10px] text-slate-500 font-semibold">
-            {defaultCommercialDays} días comerciales (base 30)
-          </span>
         </div>
 
-        <div className="clay-card p-3.5 border-l-4 border-amber-500">
+        <div className="clay-card p-3 border-l-4 border-amber-500">
           <span className="text-[10px] font-bold text-slate-400 uppercase block">ISSS + AFP Laboral</span>
           <span className="text-lg font-black font-mono text-amber-700 mt-0.5 block">
             ${round2(totals.isssLab + totals.afpLab).toFixed(2)}
           </span>
-          <span className="text-[10px] text-slate-500 font-semibold">
-            ISSS: ${totals.isssLab.toFixed(2)} • AFP: ${totals.afpLab.toFixed(2)}
-          </span>
         </div>
 
-        <div className="clay-card p-3.5 border-l-4 border-rose-500">
-          <span className="text-[10px] font-bold text-slate-400 uppercase block">Retención Renta (ISR)</span>
+        <div className="clay-card p-3 border-l-4 border-rose-500">
+          <span className="text-[10px] font-bold text-slate-400 uppercase block">Retención ISR</span>
           <span className="text-lg font-black font-mono text-rose-700 mt-0.5 block">
             ${totals.isr.toFixed(2)}
           </span>
-          <span className="text-[10px] text-slate-500 font-semibold">
-            Total Deduc.: ${totals.totalDeducciones.toFixed(2)}
-          </span>
         </div>
 
-        <div className="clay-card p-3.5 border-l-4 border-emerald-500 bg-emerald-50/40">
-          <span className="text-[10px] font-black text-emerald-800 uppercase block">Líquido a Depositar</span>
-          <span className="text-xl font-black font-mono text-emerald-700 mt-0.5 block">
+        <div className="clay-card p-3 border-l-4 border-emerald-500 bg-emerald-50/40">
+          <span className="text-[10px] font-black text-emerald-800 uppercase block">Líquido a Pagar</span>
+          <span className="text-lg font-black font-mono text-emerald-700 mt-0.5 block">
             ${totals.liquidoPagar.toFixed(2)}
           </span>
-          <span className="text-[10px] text-emerald-800 font-bold">
-            Pago neto a empleados
-          </span>
         </div>
 
-        <div className="clay-card p-3.5 border-l-4 border-purple-600">
-          <span className="text-[10px] font-bold text-slate-400 uppercase block">Costo Total Empresa</span>
+        <div className="clay-card p-3 border-l-4 border-purple-600">
+          <span className="text-[10px] font-bold text-slate-400 uppercase block">Costo Empresa</span>
           <span className="text-lg font-black font-mono text-purple-700 mt-0.5 block">
             ${totals.costoTotalEmpresa.toFixed(2)}
-          </span>
-          <span className="text-[10px] text-slate-500 font-semibold">
-            Patronal: ${totals.totalPatronal.toFixed(2)} (ISSS ${totals.isssPat.toFixed(2)} / AFP ${totals.afpPat.toFixed(2)})
           </span>
         </div>
       </div>
@@ -2616,14 +2587,9 @@ export default function PlanillaModule() {
             {activeRow && (
               <div className="clay-card p-5 bg-white border-2 border-indigo-100 space-y-4">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-3 border-b border-slate-100">
-                  <div>
-                    <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-black uppercase tracking-wider">
-                      Paso 1 • Trabajar Planilla Individual ({activeIdx + 1} de {computedRows.length})
-                    </span>
-                    <h3 className="text-base font-black text-slate-900 mt-1">
-                      Selecciona cada colaborador para ajustar días, bonos o ingresos adicionales
-                    </h3>
-                  </div>
+                  <h3 className="text-sm font-black text-slate-900">
+                    Colaborador ({activeIdx + 1} de {computedRows.length})
+                  </h3>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -2829,18 +2795,12 @@ export default function PlanillaModule() {
                       </div>
                     </div>
 
-                    {/* Bloque 2: Ingresos Adicionales / Bonos (Múltiples bonos detallados por concepto) */}
+                    {/* Bloque 2: Ingresos Adicionales / Bonos */}
                     <div className="bg-emerald-50/80 p-4 rounded-2xl border-2 border-emerald-300/80 space-y-3">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                          <span className="text-[10px] font-black uppercase text-emerald-800 block">
-                            ✨ Registrar Ingresos Adicionales / Bonos / Comisiones
-                          </span>
-                          <p className="text-xs text-emerald-900 font-semibold">
-                            Puedes agregar uno o varios bonos con conceptos diferentes para{' '}
-                            <strong>{activeRow.emp.firstName}</strong>:
-                          </p>
-                        </div>
+                        <span className="text-xs font-black uppercase text-emerald-800 block">
+                          Ingresos Adicionales / Bonos
+                        </span>
                         <div className="flex items-center gap-1">
                           {[15, 25, 50, 100].map((amt) => (
                             <button
@@ -3220,14 +3180,9 @@ export default function PlanillaModule() {
             {/* ================= PASO 2: TABLA CONSOLIDADA OFICIAL (IDÉNTICA AL EXCEL PARA FIRMAS) ================= */}
             <div className="clay-card p-0 overflow-hidden bg-white border border-slate-200">
               <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div>
-                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase tracking-wider">
-                    Paso 2 • Tabla Consolidada de Planilla de Sueldo
-                  </span>
-                  <h3 className="text-sm font-black text-slate-900 mt-1">
-                    {parameters.employerName} — {getFormattedPeriodLabel()}
-                  </h3>
-                </div>
+                <h3 className="text-sm font-black text-slate-900">
+                  {parameters.employerName} — {getFormattedPeriodLabel()}
+                </h3>
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
@@ -3496,15 +3451,10 @@ export default function PlanillaModule() {
             <div className="xl:col-span-4 space-y-4">
               <div className="clay-card p-4 bg-white space-y-3">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                  <div>
-                    <h3 className="text-sm font-black text-slate-800 flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-cyan-600" />
-                      <span>Catálogo de Jornadas (Evolution)</span>
-                    </h3>
-                    <p className="text-[11px] text-slate-500">
-                      Selecciona una jornada para editar sus horarios de Lunes a Domingo o crea una nueva.
-                    </p>
-                  </div>
+                  <h3 className="text-sm font-black text-slate-800 flex items-center gap-1.5">
+                    <Clock className="w-4 h-4 text-cyan-600" />
+                    <span>Catálogo de Jornadas</span>
+                  </h3>
                   <button
                     type="button"
                     onClick={handleCreateJornada}
@@ -3571,9 +3521,6 @@ export default function PlanillaModule() {
                     <Users className="w-3.5 h-3.5 text-indigo-600" />
                     <span>Asignación de Jornada por Colaborador</span>
                   </h3>
-                  <p className="text-[11px] text-slate-500">
-                    Define qué jornada rige el cruce de marcaciones de cada empleado.
-                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -4420,15 +4367,10 @@ export default function PlanillaModule() {
         <div className="space-y-4">
           <div className="clay-card p-4 bg-white space-y-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-3 border-b border-slate-100">
-              <div>
-                <h3 className="text-sm font-black text-slate-800 flex items-center gap-2">
-                  <FileSpreadsheet className="w-4 h-4 text-indigo-600" />
-                  <span>Generador Oficial de Planilla Única SPU (ISSS / AFP - OVISSS / SEPP)</span>
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Exporta las 21 columnas oficiales separadas por punto y coma (`;`), con período fijo `MMYYYY` ({spuPeriodCode}), base comercial de 30 días y descuento proporcional automático en incapacidades/vacaciones.
-                </p>
-              </div>
+              <h3 className="text-sm font-black text-slate-800 flex items-center gap-2">
+                <FileSpreadsheet className="w-4 h-4 text-indigo-600" />
+                <span>Planilla Única SPU (ISSS / AFP)</span>
+              </h3>
               <button
                 type="button"
                 onClick={handleExportSpuCsv}
