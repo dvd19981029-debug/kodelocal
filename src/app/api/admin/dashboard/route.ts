@@ -86,6 +86,9 @@ export async function GET(request: Request) {
             gender: true,
             isAvailableOnline: true,
             puesto: true,
+            category: {
+              select: { name: true },
+            },
           },
         }),
         prisma.dteDocument.count({
@@ -430,36 +433,65 @@ export async function GET(request: Request) {
         p.isAvailableOnline !== false &&
         (Math.max(0, p.stock || 0) > 0 || Math.max(0, p.stockHalf || 0) > 0)
     );
-    const essenceProducts = inventoriedProducts.filter(
-      (p) => (p.unit || '').toLowerCase() === 'onza' || p.id.startsWith('esencia')
-    );
+
+    const isEssenceProd = (p: (typeof inventoriedProducts)[number]) =>
+      (p.unit || '').toLowerCase() === 'onza' ||
+      p.id.startsWith('esencia') ||
+      (p.category?.name || '').toLowerCase().includes('esencia');
+
+    const isBottleProd = (p: (typeof inventoriedProducts)[number]) =>
+      !isEssenceProd(p) &&
+      ((p.category?.name || '').toLowerCase() === 'botes' ||
+        p.id.startsWith('bote-') ||
+        p.name.toLowerCase().startsWith('bote '));
+
+    const essenceProducts = inventoriedProducts.filter(isEssenceProd);
+    const bottleProducts = inventoriedProducts.filter(isBottleProd);
+    const supplyProducts = inventoriedProducts.filter((p) => !isEssenceProd(p) && !isBottleProd(p));
+
+    const calcGroupPvp = (list: typeof inventoriedProducts) =>
+      Number(
+        list
+          .reduce((acc, p) => {
+            const isEss = isEssenceProd(p);
+            const fullVal = Math.max(0, p.stock || 0) * Number(p.price || 0);
+            const halfPrice = Number(p.priceHalfOunce || Number(p.price || 0) * 0.5);
+            const halfVal = isEss ? Math.max(0, p.stockHalf || 0) * halfPrice : 0;
+            return acc + fullVal + halfVal;
+          }, 0)
+          .toFixed(2)
+      );
+
+    const calcGroupCosto = (list: typeof inventoriedProducts) =>
+      Number(
+        list
+          .reduce((acc, p) => {
+            const isEss = isEssenceProd(p);
+            const effectiveUnits = isEss
+              ? Math.max(0, p.stock || 0) + Math.max(0, p.stockHalf || 0) * 0.5
+              : Math.max(0, p.stock || 0);
+            return acc + effectiveUnits * Number(p.cost || 0);
+          }, 0)
+          .toFixed(2)
+      );
+
     const totalStockOnzas = Number(
       essenceProducts
         .reduce((acc, p) => acc + Math.max(0, p.stock || 0) + Math.max(0, p.stockHalf || 0) * 0.5, 0)
         .toFixed(1)
     );
-    const valorInventarioPvp = Number(
-      inventoriedProducts
-        .reduce((acc, p) => {
-          const isEss = (p.unit || '').toLowerCase() === 'onza' || p.id.startsWith('esencia');
-          const fullVal = Math.max(0, p.stock || 0) * Number(p.price || 0);
-          const halfPrice = Number(p.priceHalfOunce || Number(p.price || 0) * 0.5);
-          const halfVal = isEss ? Math.max(0, p.stockHalf || 0) * halfPrice : 0;
-          return acc + fullVal + halfVal;
-        }, 0)
-        .toFixed(2)
-    );
-    const valorInventarioCosto = Number(
-      inventoriedProducts
-        .reduce((acc, p) => {
-          const isEss = (p.unit || '').toLowerCase() === 'onza' || p.id.startsWith('esencia');
-          const effectiveUnits = isEss
-            ? Math.max(0, p.stock || 0) + Math.max(0, p.stockHalf || 0) * 0.5
-            : Math.max(0, p.stock || 0);
-          return acc + effectiveUnits * Number(p.cost || 0);
-        }, 0)
-        .toFixed(2)
-    );
+    const totalStockBotes = bottleProducts.reduce((acc, p) => acc + Math.max(0, p.stock || 0), 0);
+    const totalStockInsumos = supplyProducts.reduce((acc, p) => acc + Math.max(0, p.stock || 0), 0);
+
+    const esenciasPvp = calcGroupPvp(essenceProducts);
+    const esenciasCosto = calcGroupCosto(essenceProducts);
+    const botesPvp = calcGroupPvp(bottleProducts);
+    const botesCosto = calcGroupCosto(bottleProducts);
+    const insumosPvp = calcGroupPvp(supplyProducts);
+    const insumosCosto = calcGroupCosto(supplyProducts);
+
+    const valorInventarioPvp = Number((esenciasPvp + botesPvp + insumosPvp).toFixed(2));
+    const valorInventarioCosto = Number((esenciasCosto + botesCosto + insumosCosto).toFixed(2));
     const gananciaPotencial = Number((valorInventarioPvp - valorInventarioCosto).toFixed(2));
 
     const stockCritico = inventoriedProducts
@@ -1273,6 +1305,29 @@ export async function GET(request: Request) {
         valorInventarioPvp,
         valorInventarioCosto,
         gananciaPotencial,
+        desglose: {
+          esencias: {
+            skus: essenceProducts.length,
+            onzas: totalStockOnzas,
+            pvp: esenciasPvp,
+            costo: esenciasCosto,
+            ganancia: Number((esenciasPvp - esenciasCosto).toFixed(2)),
+          },
+          botes: {
+            skus: bottleProducts.length,
+            unidades: totalStockBotes,
+            pvp: botesPvp,
+            costo: botesCosto,
+            ganancia: Number((botesPvp - botesCosto).toFixed(2)),
+          },
+          insumos: {
+            skus: supplyProducts.length,
+            unidades: totalStockInsumos,
+            pvp: insumosPvp,
+            costo: insumosCosto,
+            ganancia: Number((insumosPvp - insumosCosto).toFixed(2)),
+          },
+        },
         stockCritico,
       },
       recientes,

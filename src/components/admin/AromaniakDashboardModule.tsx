@@ -229,6 +229,11 @@ export interface AromaniakDashboardData {
     valorInventarioPvp: number;
     valorInventarioCosto: number;
     gananciaPotencial: number;
+    desglose?: {
+      esencias: { skus: number; onzas: number; pvp: number; costo: number; ganancia: number };
+      botes: { skus: number; unidades: number; pvp: number; costo: number; ganancia: number };
+      insumos: { skus: number; unidades: number; pvp: number; costo: number; ganancia: number };
+    };
     stockCritico: Array<{
       id: string;
       name: string;
@@ -1940,21 +1945,70 @@ export default function AromaniakDashboardModule({
             <span className="text-xs font-bold text-slate-400">{inventario.totalProductos} SKUs</span>
           </div>
 
-          <div className="space-y-3 pt-1">
-            <div className="flex justify-between items-center text-xs p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span className="text-slate-600 font-medium">Onzas de Esencia en Existencia:</span>
-              <span className="font-black text-slate-900 font-mono text-sm">{inventario.totalStockOnzas} Oz</span>
-            </div>
+          <div className="space-y-2.5 pt-1">
+            {inventario.desglose ? (
+              <div className="space-y-2 pb-2 border-b border-slate-100">
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-bold text-slate-800">Esencias ({inventario.desglose.esencias.onzas} Oz)</span>
+                    <span className="font-black text-indigo-700 font-mono text-xs">
+                      PVP: ${inventario.desglose.esencias.pvp.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-[11px] text-slate-500">
+                    <span>{inventario.desglose.esencias.skus} SKUs</span>
+                    <span className="font-mono font-semibold text-slate-600">
+                      Costo: ${inventario.desglose.esencias.costo.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-bold text-slate-800">Botes ({inventario.desglose.botes.unidades} u.)</span>
+                    <span className="font-black text-indigo-700 font-mono text-xs">
+                      PVP: ${inventario.desglose.botes.pvp.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-[11px] text-slate-500">
+                    <span>{inventario.desglose.botes.skus} SKUs</span>
+                    <span className="font-mono font-semibold text-slate-600">
+                      Costo: ${inventario.desglose.botes.costo.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-bold text-slate-800">Insumos ({inventario.desglose.insumos.unidades} u.)</span>
+                    <span className="font-black text-indigo-700 font-mono text-xs">
+                      PVP: ${inventario.desglose.insumos.pvp.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-[11px] text-slate-500">
+                    <span>{inventario.desglose.insumos.skus} SKUs</span>
+                    <span className="font-mono font-semibold text-slate-600">
+                      Costo: ${inventario.desglose.insumos.costo.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex justify-between items-center text-xs p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                <span className="text-slate-600 font-medium">Onzas de Esencia en Existencia:</span>
+                <span className="font-black text-slate-900 font-mono text-sm">{inventario.totalStockOnzas} Oz</span>
+              </div>
+            )}
 
             <div className="flex justify-between items-center text-xs p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span className="text-slate-600 font-medium">Valor Total Inventario (PVP):</span>
+              <span className="text-slate-700 font-bold">Sumatoria Total (PVP):</span>
               <span className="font-black text-indigo-700 font-mono text-sm">
                 ${inventario.valorInventarioPvp.toFixed(2)}
               </span>
             </div>
 
             <div className="flex justify-between items-center text-xs p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span className="text-slate-600 font-medium">Costo de Inversión (Proveedor):</span>
+              <span className="text-slate-700 font-bold">Costo Total Inversión (Proveedor):</span>
               <span className="font-black text-slate-700 font-mono text-sm">
                 ${inventario.valorInventarioCosto.toFixed(2)}
               </span>
