@@ -5,7 +5,11 @@ import { emitirDteKode, buildKodeDteItemsFromPedido } from '@/lib/facturalamaKod
 
 export const dynamic = 'force-dynamic';
 
+const inFlightKodeGuia = new Map<string, number>();
+const GUIA_LOCK_TTL_MS = 45000;
+
 export async function POST(request: Request) {
+  let lockedPedidoId: string | null = null;
   try {
     const body = await request.json();
     const {
@@ -22,6 +26,17 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    const nowMs = Date.now();
+    const existingLock = inFlightKodeGuia.get(String(pedido_id));
+    if (existingLock && nowMs - existingLock < GUIA_LOCK_TTL_MS) {
+      return NextResponse.json(
+        { success: false, error: 'Generación de guía y DTE ya en curso para este pedido. Por favor espera unos segundos.' },
+        { status: 409 }
+      );
+    }
+    inFlightKodeGuia.set(String(pedido_id), nowMs);
+    lockedPedidoId = String(pedido_id);
 
     // 1. Obtener datos completos del pedido y cliente
     const pedidoRes = await queryKode(
@@ -102,13 +117,34 @@ export async function POST(request: Request) {
     // 2. MODO AUTOMÁTICO: Conexión directa con la API de C807 Express
     if (modo === 'automatico' || !finalGuia) {
       // Validar si ya tiene una guía asignada para no duplicar en C807
-      if (pedido.c807_guia_numero && pedido.c807_guia_numero !== 'PENDIENTE') {
+      if (pedido.c807_guia_numero && pedido.c807_guia_numero !== 'PENDIENTE' && pedido.c807_guia_numero !== 'GENERANDO') {
         return NextResponse.json({
           success: false,
           error: `Este pedido ya tiene una guía generada: ${pedido.c807_guia_numero}`,
           guia_existente: pedido.c807_guia_numero,
           link_rastreo: pedido.c807_link_rastreo,
         }, { status: 409 });
+      }
+
+      // Reclamo atómico en base de datos para evitar doble generación entre instancias serverless
+      const claimRes = await queryKode(
+        `UPDATE public.pedidos
+         SET c807_guia_numero = 'GENERANDO', updated_at = NOW()
+         WHERE id = $1
+           AND (
+             c807_guia_numero IS NULL
+             OR c807_guia_numero = ''
+             OR c807_guia_numero = 'PENDIENTE'
+             OR (c807_guia_numero = 'GENERANDO' AND updated_at < NOW() - INTERVAL '45 seconds')
+           )
+         RETURNING id`,
+        [pedido_id]
+      );
+      if (claimRes.rowCount === 0) {
+        return NextResponse.json(
+          { success: false, error: 'Otra petición ya está generando o ya generó la guía para este pedido.' },
+          { status: 409 }
+        );
       }
 
       const c807Result = await c807KodeClient.generarGuia({
@@ -125,6 +161,10 @@ export async function POST(request: Request) {
       });
 
       if (!c807Result.success) {
+        await queryKode(
+          `UPDATE public.pedidos SET c807_guia_numero = NULL, updated_at = NOW() WHERE id = $1 AND c807_guia_numero = 'GENERANDO'`,
+          [pedido_id]
+        );
         return NextResponse.json({
           success: false,
           error: c807Result.error || 'Error al generar la guía en C807 Express',
@@ -217,7 +257,17 @@ export async function POST(request: Request) {
       rawResponse: rawC807Response,
     });
   } catch (error: any) {
+    if (lockedPedidoId) {
+      await queryKode(
+        `UPDATE public.pedidos SET c807_guia_numero = NULL, updated_at = NOW() WHERE id = $1 AND c807_guia_numero = 'GENERANDO'`,
+        [lockedPedidoId]
+      ).catch(() => {});
+    }
     console.error('Error procesando guía C807:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } finally {
+    if (lockedPedidoId) {
+      inFlightKodeGuia.delete(lockedPedidoId);
+    }
   }
 }

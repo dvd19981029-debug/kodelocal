@@ -208,6 +208,9 @@ export async function POST(request: Request) {
     let clienteId: string;
     const cleanPhone = clientPhone.toString().replace(/\D/g, '');
 
+    // Bloqueo transaccional por teléfono del cliente para serializar peticiones concurrentes
+    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [cleanPhone]);
+
     const existingClient = await client.query(
       'SELECT id FROM public.clientes WHERE telefono_whatsapp = $1 LIMIT 1',
       [cleanPhone]
@@ -288,13 +291,14 @@ export async function POST(request: Request) {
     const envio = parseFloat(costo_envio) || 0;
     const total = Math.max(0, subtotal - descuento) + envio;
 
-    // 2.5 Idempotencia anti-doble-clic: si este mismo cliente registró un pedido por el mismo total hace menos de 10 segundos, devolverlo sin duplicar
+    // 2.5 Idempotencia anti-doble-clic: si este mismo cliente registró un pedido por el mismo total hace menos de 60 segundos (en estado Registrado), devolverlo sin duplicar
     const recentDup = await client.query(
       `SELECT id, numero_pedido, estado, total
        FROM public.pedidos
        WHERE cliente_id = $1
          AND ABS(total - $2) < 0.01
-         AND created_at >= NOW() - INTERVAL '10 seconds'
+         AND estado = 'Registrado'
+         AND created_at >= NOW() - INTERVAL '60 seconds'
        ORDER BY created_at DESC
        LIMIT 1`,
       [clienteId, total]
