@@ -30,78 +30,7 @@ async function generateAromaniakCatalog() {
     }
   });
 
-  const BEST_SELLER_ORDER = [
-    '49', // Sauvage Elixir (FIERA ELIXIR)
-    '1',  // Sauvage (FIERA)
-    '2',  // Bleu (MARINO)
-    '3',  // Acqua Di Gio (DAVID OCEAN)
-    '4',  // Club De Nuit Intense (VIDEOCLUB)
-    '5',  // Aventus (EXPLORADOR)
-    '6',  // La Vie Est Belle (ELLA ES LINDA)
-    '8',  // Eros (ATREVIDO)
-    '10', // Santal 33 (NICHO Y PAPIRO)
-    '60', // Baccarat Rouge 540 (CRISTAL ROUGE)
-    '58', // Good Girl (FEMME FATALE)
-    '12', // Erba Pura (HIEDRAFRAIS)
-    '13', // Coco Mademoiselle (PINK LADY)
-    '43', // Black Opium (AROMA ADDICT)
-    '20', // One Million (RICHRICH)
-    '16', // Invictus (KICKBOX)
-    '23', // 9PM (HABIBI)
-    '28', // Bad Boy (IRRESISTIBLE)
-    '52', // Le Male Elixir (THE MAN ELIXIR)
-    '11', // Born in Roma Intense (EUROBOY INTENSE)
-    '32', // Born In Roma Donna (EURO GIRL)
-    '50', // Born in Roma Uomo (EUROBOY)
-    '53', // Stronger With You (ALWAYS WITH YOU)
-    '61', // Fahrenheit (KELVIN)
-    '18', // 212 VIP Rosé (MANEATER)
-    '34', // 212 VIP (WIFE MATERIAL)
-    '54', // 212 Men (MANHATTAN)
-    '7',  // Odyssey Mandarin Sky (CITRIC HEAVEN)
-    '9',  // L'Eau d'Issey (NIPPON)
-    '14', // Light Blue (OCEAN LORD)
-    '15', // Boss Bottled (WALLSTREET WOLF)
-    '17', // Burberry Her (EURO HEIRESS)
-    '19', // Polo Blue (ELITE)
-    '21', // Coco (LADY MONEY)
-    '22', // Chance (NEW YORK LADY)
-    '24', // Le Male (THE MAN)
-    '25', // J'adore (MAGNOLIA)
-    '26', // Tommy (AMERICAN BOY)
-    '27', // Chanel N° 5 (OBERLIN)
-    '29', // Be Delicious (CHARLI APPLE)
-    '30', // Lost Cherry (MON CHERRY)
-    '31', // Scandal (PARTYBOY)
-    '33', // L'Immensité (KING LUIS)
-    '35', // Swiss Army (EURO SAMURAI)
-    '36', // Blanc L.12.12 (BASIC WHITE)
-    '37', // Acqua Di Gio F (GEORGIA ICON)
-    '38', // Polo Black (NIGHT SKY)
-    '39', // Ralph (COWBOY GIRL)
-    '40', // Yara (DUBAI)
-    '41', // Yara Tous (BURJ KHALIFA)
-    '42', // Flowerbomb (ATOMIC FLOWER)
-    '44', // Homme Sport (EMPERADOR)
-    '45', // CK One (CLASSIC MAN)
-    '46', // 360 Red (ENGLAND PHONE)
-    '47', // Green Tea (ENGLAND FOREST)
-    '48', // Vera Wang Princess (ROMANOV)
-    '51', // Acqua Di Gio Profondo (DEEP OCEAN)
-    '55', // Man In Black (BLACK VOLCANO)
-    '56', // Acqua Di Gio Profumo (BLACK OCEAN)
-    '57', // La Bomba (SWEET BOMB)
-    '59'  // Toy Boy (BLACK BEAR)
-  ];
-
-  allFragrances.sort((a, b) => {
-    const idxA = BEST_SELLER_ORDER.indexOf(a.sku);
-    const idxB = BEST_SELLER_ORDER.indexOf(b.sku);
-    const orderA = idxA === -1 ? 999 : idxA;
-    const orderB = idxB === -1 ? 999 : idxB;
-    if (orderA !== orderB) return orderA - orderB;
-    return Number(a.sku) - Number(b.sku);
-  });
+  allFragrances.sort((a, b) => Number(a.sku) - Number(b.sku));
 
   // Base64 del logo de Aromaniak
   const logoPath = path.join(__dirname, '../public/images/aromaniak_black_logo.png');
@@ -304,37 +233,30 @@ async function generateAromaniakCatalog() {
       letter-spacing: 0.5px;
     }
 
-    /* Grid de tarjetas para páginas 1 a 7 */
+    /* Grid de tarjetas (4 filas que abarcan toda la página) */
     .grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       grid-template-rows: repeat(4, 1fr);
-      gap: 8px;
+      gap: 9px;
       flex: 1;
-    }
-
-    /* Grid de la última página (3 filas exactas y balanceadas) */
-    .grid-last {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      grid-auto-rows: calc((297mm - 21mm - 56px) / 4);
-      gap: 8px;
+      min-height: 0;
     }
 
     /* Tarjeta de Producto Aromaniak - Diseño Limpio y Sofisticado */
     .product-card {
       border: 1.2px solid #581c87;
       border-radius: 4px;
-      padding: 7px 9px;
+      padding: 9px 11px;
       display: flex;
-      gap: 9px;
+      gap: 10px;
       background-color: #ffffff;
       align-items: stretch;
       min-height: 0;
     }
 
     .bottle-col {
-      width: 50px;
+      width: 58px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -342,12 +264,12 @@ async function generateAromaniakCatalog() {
       background: #faf5ff;
       border-radius: 3px;
       border: 1px solid #f3e8ff;
-      padding: 2px;
+      padding: 4px;
     }
 
     .bottle-img {
-      max-width: 46px;
-      max-height: 86px;
+      max-width: 50px;
+      max-height: 112px;
       object-fit: contain;
     }
 
@@ -537,7 +459,7 @@ async function generateAromaniakCatalog() {
 
     return `
     <div class="catalog-page">
-      <div>
+      <div style="display: flex; flex-direction: column; flex: 1; min-height: 0; margin-bottom: 8px;">
         <div class="page-header">
           <div class="brand-section">
             <img src="${logoUri}" class="brand-logo-img" alt="Aromaniak" />
@@ -546,13 +468,9 @@ async function generateAromaniakCatalog() {
               <span class="brand-sub">Esencias Calidad AAA+ • Perfumería Fina</span>
             </div>
           </div>
-          <div class="header-status-badge">
-            <div class="header-status-title">${items.length} Contratipos Oficiales</div>
-            <div class="header-status-sub">Disponibilidad en Tienda y Próximos Ingresos</div>
-          </div>
         </div>
 
-        <div class="${isLastPage ? 'grid-last' : 'grid'}">
+        <div class="grid">
           ${pageItems.map(item => {
             const hasNotes = item.topNotes.length > 0 || item.heartNotes.length > 0 || item.baseNotes.length > 0;
             const genderClass = item.gender.toLowerCase().includes('dama') || item.gender.toLowerCase().includes('mujer')
@@ -598,7 +516,7 @@ async function generateAromaniakCatalog() {
             `;
           }).join('')}
 
-          ${isLastPage ? `
+          ${isLastPage && pageItems.length < ITEMS_PER_PAGE ? `
             <div class="brand-closing-card">
               <div class="title">AROMANIAK SV</div>
               <div class="desc">

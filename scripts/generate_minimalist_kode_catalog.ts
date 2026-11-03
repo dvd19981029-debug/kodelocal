@@ -15,78 +15,7 @@ async function generateMinimalistCatalog() {
     }
   });
 
-  const BEST_SELLER_ORDER = [
-    '49', // Sauvage Elixir (Primero)
-    '1',  // Sauvage
-    '2',  // Bleu
-    '3',  // Acqua Di Gio
-    '4',  // Club De Nuit Intense
-    '5',  // Aventus
-    '6',  // La Vie Est Belle
-    '8',  // Eros
-    '10', // Santal 33
-    '60', // Baccarat Rouge 540
-    '58', // Good Girl
-    '12', // Erba Pura
-    '13', // Coco Mademoiselle
-    '43', // Black Opium
-    '20', // One Million
-    '16', // Invictus
-    '23', // 9PM
-    '28', // Bad Boy
-    '52', // Le Male Elixir
-    '11', // Born in Roma Intense
-    '32', // Born In Roma Donna
-    '50', // Born in Roma Uomo
-    '53', // Stronger With You
-    '61', // Fahrenheit
-    '18', // 212 VIP Rosé
-    '34', // 212 VIP
-    '54', // 212 Men
-    '7',  // Odyssey Mandarin Sky
-    '9',  // L'Eau d'Issey
-    '14', // Light Blue
-    '15', // Boss Bottled
-    '17', // Burberry Her
-    '19', // Polo Blue
-    '21', // Coco
-    '22', // Chance
-    '24', // Le Male
-    '25', // J'adore
-    '26', // Tommy
-    '27', // Chanel N° 5
-    '29', // Be Delicious
-    '30', // Lost Cherry
-    '31', // Scandal
-    '33', // L'Immensité
-    '35', // Swiss Army
-    '36', // Blanc L.12.12
-    '37', // Acqua Di Gio F
-    '38', // Polo Black
-    '39', // Ralph
-    '40', // Yara
-    '41', // Yara Tous
-    '42', // Flowerbomb
-    '44', // Homme Sport
-    '45', // CK One
-    '46', // 360 Red
-    '47', // Green Tea
-    '48', // Vera Wang Princess
-    '51', // Acqua Di Gio Profondo
-    '55', // Man In Black
-    '56', // Acqua Di Gio Profumo
-    '57', // La Bomba
-    '59'  // Toy Boy
-  ];
-
-  allFragrances.sort((a, b) => {
-    const idxA = BEST_SELLER_ORDER.indexOf(a.sku);
-    const idxB = BEST_SELLER_ORDER.indexOf(b.sku);
-    const orderA = idxA === -1 ? 999 : idxA;
-    const orderB = idxB === -1 ? 999 : idxB;
-    if (orderA !== orderB) return orderA - orderB;
-    return Number(a.sku) - Number(b.sku);
-  });
+  allFragrances.sort((a, b) => Number(a.sku) - Number(b.sku));
 
   const items = allFragrances.map(p => {
     const prof = getFragranceProfile(p as any);
@@ -243,36 +172,29 @@ async function generateMinimalistCatalog() {
       background-color: #000000;
     }
 
-    /* Grid de tarjetas para páginas 1 a 7 */
+    /* Grid de tarjetas (4 filas que abarcan toda la página) */
     .grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       grid-template-rows: repeat(4, 1fr);
-      gap: 8px;
+      gap: 9px;
       flex: 1;
-    }
-
-    /* Grid de la última página (3 filas exactas y balanceadas) */
-    .grid-last {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      grid-auto-rows: calc((297mm - 21mm - 55px) / 4);
-      gap: 8px;
+      min-height: 0;
     }
 
     /* Tarjeta de Producto */
     .product-card {
       border: 1px solid #000000;
-      padding: 7px 9px;
+      padding: 9px 11px;
       display: flex;
-      gap: 9px;
+      gap: 10px;
       background-color: #ffffff;
       align-items: stretch;
       min-height: 0;
     }
 
     .bottle-col {
-      width: 48px;
+      width: 56px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -282,8 +204,8 @@ async function generateMinimalistCatalog() {
     }
 
     .bottle-img {
-      max-width: 42px;
-      max-height: 85px;
+      max-width: 48px;
+      max-height: 110px;
       object-fit: contain;
     }
 
@@ -423,16 +345,15 @@ async function generateMinimalistCatalog() {
 
     return `
     <div class="catalog-page">
-      <div>
+      <div style="display: flex; flex-direction: column; flex: 1; min-height: 0; margin-bottom: 8px;">
         <div class="page-header">
           <div class="brand-section">
             <span class="brand-logo">K O D E</span>
             <span class="brand-tagline">Colección Oficial de Fragancias</span>
           </div>
-          <div class="header-status">${items.length} Fragancias Oficiales</div>
         </div>
 
-        <div class="${isLastPage ? 'grid-last' : 'grid'}">
+        <div class="grid">
           ${pageItems.map(item => {
             const hasNotes = item.topNotes.length > 0 || item.heartNotes.length > 0 || item.baseNotes.length > 0;
             return `
@@ -469,7 +390,7 @@ async function generateMinimalistCatalog() {
             `;
           }).join('')}
 
-          ${isLastPage ? `
+          ${isLastPage && pageItems.length < ITEMS_PER_PAGE ? `
             <div class="brand-closing-card">
               <div class="title">K O D E</div>
               <div class="desc">
