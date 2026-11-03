@@ -233,6 +233,7 @@ export interface AromaniakDashboardData {
       esencias: { skus: number; onzas: number; pvp: number; costo: number; ganancia: number };
       botes: { skus: number; unidades: number; pvp: number; costo: number; ganancia: number };
       insumos: { skus: number; unidades: number; pvp: number; costo: number; ganancia: number };
+      stickers?: { skus: number; unidades: number; pvp: number; costo: number; ganancia: number };
     };
     stockCritico: Array<{
       id: string;
@@ -1992,6 +1993,23 @@ export default function AromaniakDashboardModule({
                     </span>
                   </div>
                 </div>
+
+                {inventario.desglose.stickers && (
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-slate-800">Stickers ({inventario.desglose.stickers.unidades} u.)</span>
+                      <span className="font-black text-indigo-700 font-mono text-xs">
+                        PVP: ${inventario.desglose.stickers.pvp.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px] text-slate-500">
+                      <span>{inventario.desglose.stickers.skus} SKUs</span>
+                      <span className="font-mono font-semibold text-slate-600">
+                        Costo: ${inventario.desglose.stickers.costo.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex justify-between items-center text-xs p-2.5 rounded-xl bg-slate-50 border border-slate-100">

@@ -445,9 +445,19 @@ export async function GET(request: Request) {
         p.id.startsWith('bote-') ||
         p.name.toLowerCase().startsWith('bote '));
 
+    const isStickerProd = (p: (typeof inventoriedProducts)[number]) =>
+      !isEssenceProd(p) &&
+      !isBottleProd(p) &&
+      ((p.category?.name || '').toLowerCase() === 'stickers' ||
+        p.id.startsWith('sticker-') ||
+        p.name.toLowerCase().startsWith('sticker '));
+
     const essenceProducts = inventoriedProducts.filter(isEssenceProd);
     const bottleProducts = inventoriedProducts.filter(isBottleProd);
-    const supplyProducts = inventoriedProducts.filter((p) => !isEssenceProd(p) && !isBottleProd(p));
+    const stickerProducts = inventoriedProducts.filter(isStickerProd);
+    const supplyProducts = inventoriedProducts.filter(
+      (p) => !isEssenceProd(p) && !isBottleProd(p) && !isStickerProd(p)
+    );
 
     const calcGroupPvp = (list: typeof inventoriedProducts) =>
       Number(
@@ -482,6 +492,7 @@ export async function GET(request: Request) {
     );
     const totalStockBotes = bottleProducts.reduce((acc, p) => acc + Math.max(0, p.stock || 0), 0);
     const totalStockInsumos = supplyProducts.reduce((acc, p) => acc + Math.max(0, p.stock || 0), 0);
+    const totalStockStickers = stickerProducts.reduce((acc, p) => acc + Math.max(0, p.stock || 0), 0);
 
     const esenciasPvp = calcGroupPvp(essenceProducts);
     const esenciasCosto = calcGroupCosto(essenceProducts);
@@ -489,9 +500,11 @@ export async function GET(request: Request) {
     const botesCosto = calcGroupCosto(bottleProducts);
     const insumosPvp = calcGroupPvp(supplyProducts);
     const insumosCosto = calcGroupCosto(supplyProducts);
+    const stickersPvp = calcGroupPvp(stickerProducts);
+    const stickersCosto = calcGroupCosto(stickerProducts);
 
-    const valorInventarioPvp = Number((esenciasPvp + botesPvp + insumosPvp).toFixed(2));
-    const valorInventarioCosto = Number((esenciasCosto + botesCosto + insumosCosto).toFixed(2));
+    const valorInventarioPvp = Number((esenciasPvp + botesPvp + insumosPvp + stickersPvp).toFixed(2));
+    const valorInventarioCosto = Number((esenciasCosto + botesCosto + insumosCosto + stickersCosto).toFixed(2));
     const gananciaPotencial = Number((valorInventarioPvp - valorInventarioCosto).toFixed(2));
 
     const stockCritico = inventoriedProducts
@@ -1326,6 +1339,13 @@ export async function GET(request: Request) {
             pvp: insumosPvp,
             costo: insumosCosto,
             ganancia: Number((insumosPvp - insumosCosto).toFixed(2)),
+          },
+          stickers: {
+            skus: stickerProducts.length,
+            unidades: totalStockStickers,
+            pvp: stickersPvp,
+            costo: stickersCosto,
+            ganancia: Number((stickersPvp - stickersCosto).toFixed(2)),
           },
         },
         stockCritico,
