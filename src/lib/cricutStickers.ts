@@ -2207,6 +2207,160 @@ export const CRICUT_STICKERS_CATALOG: CricutStickerCatalogEntry[] = [
       "Pachulí",
       "Vetiver de Haití"
     ]
+  },
+  {
+    "sku": "83",
+    "contratipo": "NUBE ROSA",
+    "nombre": "Cloud Pink",
+    "genero": "F",
+    "marca": "Ariana Grande",
+    "anio": "2023",
+    "familia": "Ámbar Vainilla",
+    "fraseOlfativa": "Dulzura soñadora de frutos exóticos, agua de coco y praliné.",
+    "topNotes": [
+      "Pitahaya",
+      "Frutos rojos",
+      "Piña"
+    ],
+    "heartNotes": [
+      "Agua de coco",
+      "Orquídea de vainilla",
+      "Ambreta"
+    ],
+    "baseNotes": [
+      "Praliné",
+      "Almizcle",
+      "Amberwood",
+      "Musgo"
+    ]
+  },
+  {
+    "sku": "84",
+    "contratipo": "BOSQUE DE OUD",
+    "nombre": "Oud Wood",
+    "genero": "U",
+    "marca": "Tom Ford",
+    "anio": "2007",
+    "familia": "Ámbar Amaderada",
+    "fraseOlfativa": "Maderas exóticas de oud y sándalo con especias de Oriente.",
+    "topNotes": [
+      "Cardamomo",
+      "Palo de rosa",
+      "Pimienta de Sichuan"
+    ],
+    "heartNotes": [
+      "Madera de oud",
+      "Sándalo",
+      "Vetiver"
+    ],
+    "baseNotes": [
+      "Haba tonka",
+      "Vainilla",
+      "Ámbar"
+    ]
+  },
+  {
+    "sku": "85",
+    "contratipo": "SOMBRA DE CUERO",
+    "nombre": "Ombré Leather",
+    "genero": "H",
+    "marca": "Tom Ford",
+    "anio": "2018",
+    "familia": "Cuero",
+    "fraseOlfativa": "Cuero negro profundo con cardamomo y calidez de ámbar.",
+    "topNotes": [
+      "Cardamomo",
+      "Azafrán",
+      "Pimienta negra"
+    ],
+    "heartNotes": [
+      "Cuero negro",
+      "Jazmín Sambac",
+      "Hojas de violeta"
+    ],
+    "baseNotes": [
+      "Ámbar",
+      "Musgo de roble",
+      "Pachulí"
+    ]
+  },
+  {
+    "sku": "86",
+    "contratipo": "CAPITÁN AZUL",
+    "nombre": "Nautica Voyage",
+    "genero": "H",
+    "marca": "Nautica",
+    "anio": "2006",
+    "familia": "Amaderada Acuática",
+    "fraseOlfativa": "Brisa marina limpia con manzana verde y flor de loto.",
+    "topNotes": [
+      "Manzana verde",
+      "Hojas verdes",
+      "Bergamota"
+    ],
+    "heartNotes": [
+      "Flor de loto",
+      "Mimosa",
+      "Notas marinas"
+    ],
+    "baseNotes": [
+      "Almizcle",
+      "Cedro",
+      "Musgo de roble",
+      "Ámbar"
+    ]
+  },
+  {
+    "sku": "87",
+    "contratipo": "ALPHA PARIS",
+    "nombre": "Y Eau de Parfum",
+    "genero": "H",
+    "marca": "Yves Saint Laurent",
+    "anio": "2018",
+    "familia": "Aromática Fougère",
+    "fraseOlfativa": "Frescura de manzana y jengibre sobre maderas aromáticas.",
+    "topNotes": [
+      "Manzana verde",
+      "Jengibre",
+      "Bergamota"
+    ],
+    "heartNotes": [
+      "Salvia",
+      "Bayas de enebro",
+      "Geranio"
+    ],
+    "baseNotes": [
+      "Amberwood",
+      "Haba tonka",
+      "Cedro",
+      "Vetiver",
+      "Olíbano"
+    ]
+  },
+  {
+    "sku": "88",
+    "contratipo": "EL MÁS BUSCADO",
+    "nombre": "The Most Wanted",
+    "genero": "H",
+    "marca": "Azzaro",
+    "anio": "2021",
+    "familia": "Ámbar Especiada",
+    "fraseOlfativa": "Cardamomo vibrante fundido con caramelo tibio y maderas.",
+    "topNotes": [
+      "Cardamomo",
+      "Jengibre",
+      "Bergamota"
+    ],
+    "heartNotes": [
+      "Caramelo",
+      "Lavanda",
+      "Canela"
+    ],
+    "baseNotes": [
+      "Amberwood",
+      "Vainilla Bourbon",
+      "Vetiver"
+    ]
   }
 ];
 

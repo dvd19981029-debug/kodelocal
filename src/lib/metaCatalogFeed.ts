@@ -40,7 +40,7 @@ function sanitizeMetaInspiration(rawInsp: string): string {
 
 function sanitizeMetaText(text: string): string {
   return text
-    .replace(/\b(Dior|Chanel|Giorgio\s+Armani|Armani|Creed|Versace|Tom\s+Ford|Carolina\s+Herrera|Paco\s+Rabanne|Jean\s+Paul\s+Gaultier|Le\s+Labo|Lattafa|Xerjoff|Givenchy|Thierry\s+Mugler|Mugler|Billie\s+Eilish|Prada|Tommy\s+Hilfiger|Herm[eè]s|Calvin\s+Klein|Davidoff|Guy\s+Laroche|Issey\s+Miyake|Montblanc|Valentino|Lanc[oô]me|Armaf|Hugo\s+Boss|Dolce\s*&\s*Gabbana|Afnan|DKNY|Louis\s+Vuitton|Victorinox|Lacoste|Ralph\s+Lauren|Viktor\s*&\s*Rolf|Yves\s+Saint\s+Laurent|YSL|Perry\s+Ellis|Elizabeth\s+Arden|Vera\s+Wang|Bvlgari|Moschino|Maison\s+Francis\s+Kurkdjian|MFK|Jes[uú]s\s+del\s+Pozo|Bharara)\b/gi, '')
+    .replace(/\b(Dior|Chanel|Giorgio\s+Armani|Armani|Creed|Versace|Tom\s+Ford|Carolina\s+Herrera|Paco\s+Rabanne|Jean\s+Paul\s+Gaultier|Le\s+Labo|Lattafa|Xerjoff|Givenchy|Thierry\s+Mugler|Mugler|Billie\s+Eilish|Prada|Tommy\s+Hilfiger|Herm[eè]s|Calvin\s+Klein|Davidoff|Guy\s+Laroche|Issey\s+Miyake|Montblanc|Valentino|Lanc[oô]me|Armaf|Hugo\s+Boss|Dolce\s*&\s*Gabbana|Afnan|DKNY|Louis\s+Vuitton|Victorinox|Lacoste|Ralph\s+Lauren|Viktor\s*&\s*Rolf|Yves\s+Saint\s+Laurent|YSL|Perry\s+Ellis|Elizabeth\s+Arden|Vera\s+Wang|Bvlgari|Moschino|Maison\s+Francis\s+Kurkdjian|MFK|Jes[uú]s\s+del\s+Pozo|Bharara|Ariana\s+Grande|Nautica|Azzaro)\b/gi, '')
     .replace(/\(\s*\)/g, '')
     .replace(/\s+[HFMU]\./g, '.')
     .replace(/\s+M\s+F\b/g, ' F')

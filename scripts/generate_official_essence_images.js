@@ -4,7 +4,8 @@ const sharp = require('sharp');
 
 const storeFile = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'store.ts'), 'utf8');
 const prodsMatch = storeFile.match(/INITIAL_PRODUCTS: ProductItem\[\] = \[([\s\S]*?)\];/);
-const items = eval('[' + prodsMatch[1] + ']').filter(p => p.category === 'Esencias para Perfume');
+const rawItemsBlock = prodsMatch[1].replace(/\.\.\.INITIAL_STICKER_PRODUCTS\s*,?/g, '');
+const items = eval('[' + rawItemsBlock + ']').filter(p => p.category === 'Esencias para Perfume');
 
 function escapeXml(unsafe) {
   return (unsafe || '').replace(/[<>&'"]/g, (c) => {

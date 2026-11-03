@@ -53,35 +53,31 @@
     "contratipo": "Azzaro Most Wanted",
     "marca": "Azzaro",
     "genero": "Caballero",
-    "officialName": "Azzaro",
+    "officialName": "The Most Wanted",
     "brand": "Azzaro",
-    "family": "AMADERADO floral blanco",
+    "family": "Ámbar Especiada",
     "accords": [
+      "cálido especiado",
+      "caramelo",
+      "dulce",
+      "ámbar",
       "amaderado",
-      "floral blanco",
-      "balsámico",
-      "terroso",
-      "afrutado",
-      "dulce"
+      "aromático"
     ],
     "topNotes": [
-      "Aldehídos",
-      "Gardenia",
-      "Fruity Notes"
+      "Cardamomo",
+      "Jengibre",
+      "Bergamota"
     ],
     "heartNotes": [
-      "Lirio",
-      "Jazmín",
-      "Ylang-Ylang",
-      "Rosa"
+      "Caramelo",
+      "Lavanda",
+      "Canela"
     ],
     "baseNotes": [
-      "Ámbar",
-      "Pachulí",
-      "Musgo de roble",
-      "Vetiver",
-      "Benjuí",
-      "Styrax"
+      "Amberwood",
+      "Vainilla Bourbon",
+      "Vetiver"
     ],
     "source": "fragrantica"
   },
@@ -959,6 +955,213 @@
       "Tabaco",
       "Pachulí",
       "Vetiver de Haití"
+    ],
+    "source": "fragrantica"
+  },
+  "83": {
+    "kodigo": "83",
+    "contratipo": "Nube Rosa F",
+    "marca": "Ariana Grande",
+    "genero": "Dama",
+    "officialName": "Cloud Pink",
+    "brand": "Ariana Grande",
+    "family": "Ámbar Vainilla",
+    "accords": [
+      "dulce",
+      "afrutado",
+      "avainillado",
+      "ámbar",
+      "almizclado",
+      "coco",
+      "atalcado"
+    ],
+    "topNotes": [
+      "Pitahaya",
+      "Frutos rojos",
+      "Piña"
+    ],
+    "heartNotes": [
+      "Agua de coco",
+      "Orquídea de vainilla",
+      "Ambreta"
+    ],
+    "baseNotes": [
+      "Praliné",
+      "Almizcle",
+      "Amberwood",
+      "Musgo"
+    ],
+    "source": "fragrantica"
+  },
+  "84": {
+    "kodigo": "84",
+    "contratipo": "Bosque de Oud U",
+    "marca": "Tom Ford",
+    "genero": "Unisex",
+    "officialName": "Oud Wood",
+    "brand": "Tom Ford",
+    "family": "Ámbar Amaderada",
+    "accords": [
+      "amaderado",
+      "oud",
+      "cálido especiado",
+      "aromático",
+      "avainillado",
+      "ámbar",
+      "balsámico"
+    ],
+    "topNotes": [
+      "Cardamomo",
+      "Palo de rosa",
+      "Pimienta de Sichuan"
+    ],
+    "heartNotes": [
+      "Madera de oud",
+      "Sándalo",
+      "Vetiver"
+    ],
+    "baseNotes": [
+      "Haba tonka",
+      "Vainilla",
+      "Ámbar"
+    ],
+    "source": "fragrantica"
+  },
+  "85": {
+    "kodigo": "85",
+    "contratipo": "Sombra de Cuero H",
+    "marca": "Tom Ford",
+    "genero": "Caballero",
+    "officialName": "Ombré Leather",
+    "brand": "Tom Ford",
+    "family": "Cuero",
+    "accords": [
+      "cuero",
+      "cálido especiado",
+      "floral blanco",
+      "ámbar",
+      "pachulí",
+      "ahumado",
+      "musgoso"
+    ],
+    "topNotes": [
+      "Cardamomo",
+      "Azafrán",
+      "Pimienta negra"
+    ],
+    "heartNotes": [
+      "Cuero negro",
+      "Jazmín Sambac",
+      "Hojas de violeta"
+    ],
+    "baseNotes": [
+      "Ámbar",
+      "Musgo de roble",
+      "Pachulí"
+    ],
+    "source": "fragrantica"
+  },
+  "86": {
+    "kodigo": "86",
+    "contratipo": "Capitán Azul H",
+    "marca": "Nautica",
+    "genero": "Caballero",
+    "officialName": "Nautica Voyage",
+    "brand": "Nautica",
+    "family": "Amaderada Acuática",
+    "accords": [
+      "verde",
+      "afrutado",
+      "acuático",
+      "floral",
+      "fresco",
+      "almizclado",
+      "amaderado"
+    ],
+    "topNotes": [
+      "Manzana verde",
+      "Hojas verdes",
+      "Bergamota"
+    ],
+    "heartNotes": [
+      "Flor de loto",
+      "Mimosa",
+      "Notas marinas"
+    ],
+    "baseNotes": [
+      "Almizcle",
+      "Cedro",
+      "Musgo de roble",
+      "Ámbar"
+    ],
+    "source": "fragrantica"
+  },
+  "87": {
+    "kodigo": "87",
+    "contratipo": "Alpha Paris H",
+    "marca": "Yves Saint Laurent",
+    "genero": "Caballero",
+    "officialName": "Y Eau de Parfum",
+    "brand": "Yves Saint Laurent",
+    "family": "Aromática Fougère",
+    "accords": [
+      "aromático",
+      "fresco especiado",
+      "amaderado",
+      "afrutado",
+      "ámbar",
+      "cítrico",
+      "verde"
+    ],
+    "topNotes": [
+      "Manzana verde",
+      "Jengibre",
+      "Bergamota"
+    ],
+    "heartNotes": [
+      "Salvia",
+      "Bayas de enebro",
+      "Geranio"
+    ],
+    "baseNotes": [
+      "Amberwood",
+      "Haba tonka",
+      "Cedro",
+      "Vetiver",
+      "Olíbano"
+    ],
+    "source": "fragrantica"
+  },
+  "88": {
+    "kodigo": "88",
+    "contratipo": "El Más Buscado H",
+    "marca": "Azzaro",
+    "genero": "Caballero",
+    "officialName": "The Most Wanted",
+    "brand": "Azzaro",
+    "family": "Ámbar Especiada",
+    "accords": [
+      "cálido especiado",
+      "caramelo",
+      "dulce",
+      "ámbar",
+      "amaderado",
+      "aromático"
+    ],
+    "topNotes": [
+      "Cardamomo",
+      "Jengibre",
+      "Bergamota"
+    ],
+    "heartNotes": [
+      "Caramelo",
+      "Lavanda",
+      "Canela"
+    ],
+    "baseNotes": [
+      "Amberwood",
+      "Vainilla Bourbon",
+      "Vetiver"
     ],
     "source": "fragrantica"
   },
@@ -2715,35 +2918,31 @@
     "contratipo": "Azzaro most wanted Intense H",
     "marca": "Azzaro",
     "genero": "Caballero",
-    "officialName": "Azzaro",
+    "officialName": "The Most Wanted",
     "brand": "Azzaro",
-    "family": "AMADERADO floral blanco",
+    "family": "Ámbar Especiada",
     "accords": [
+      "cálido especiado",
+      "caramelo",
+      "dulce",
+      "ámbar",
       "amaderado",
-      "floral blanco",
-      "balsámico",
-      "terroso",
-      "afrutado",
-      "dulce"
+      "aromático"
     ],
     "topNotes": [
-      "Aldehídos",
-      "Gardenia",
-      "Fruity Notes"
+      "Cardamomo",
+      "Jengibre",
+      "Bergamota"
     ],
     "heartNotes": [
-      "Lirio",
-      "Jazmín",
-      "Ylang-Ylang",
-      "Rosa"
+      "Caramelo",
+      "Lavanda",
+      "Canela"
     ],
     "baseNotes": [
-      "Ámbar",
-      "Pachulí",
-      "Musgo de roble",
-      "Vetiver",
-      "Benjuí",
-      "Styrax"
+      "Amberwood",
+      "Vainilla Bourbon",
+      "Vetiver"
     ],
     "source": "fragrantica"
   },
@@ -7524,28 +7723,31 @@
     "genero": "Caballero",
     "officialName": "Nautica Voyage",
     "brand": "Nautica",
-    "family": "VERDE floral",
+    "family": "Amaderada Acuática",
     "accords": [
       "verde",
-      "floral",
       "afrutado",
-      "fresco",
       "acuático",
+      "floral",
+      "fresco",
+      "almizclado",
       "amaderado"
     ],
     "topNotes": [
-      "Green Leaves",
-      "Manzana"
+      "Manzana verde",
+      "Hojas verdes",
+      "Bergamota"
     ],
     "heartNotes": [
+      "Flor de loto",
       "Mimosa",
-      "Flor de loto"
+      "Notas marinas"
     ],
     "baseNotes": [
-      "Ámbar",
       "Almizcle",
+      "Cedro",
       "Musgo de roble",
-      "Cedro"
+      "Ámbar"
     ],
     "source": "fragrantica"
   },
@@ -12084,20 +12286,33 @@
     "genero": "Dama",
     "officialName": "Cloud Pink",
     "brand": "Ariana Grande",
-    "family": "DULCE",
+    "family": "Ámbar Vainilla",
     "accords": [
-      "dulce"
+      "dulce",
+      "afrutado",
+      "avainillado",
+      "ámbar",
+      "almizclado",
+      "coco",
+      "atalcado"
     ],
     "topNotes": [
-      "Fruity"
+      "Pitahaya",
+      "Frutos rojos",
+      "Piña"
     ],
     "heartNotes": [
-      "Synthetic"
+      "Agua de coco",
+      "Orquídea de vainilla",
+      "Ambreta"
     ],
     "baseNotes": [
-      "Gourmand"
+      "Praliné",
+      "Almizcle",
+      "Amberwood",
+      "Musgo"
     ],
-    "source": "parfumo"
+    "source": "fragrantica"
   },
   "450": {
     "kodigo": "450",
@@ -19062,21 +19277,34 @@
     "kodigo": "674",
     "contratipo": "Ombre Leather",
     "marca": "Tom Ford",
-    "genero": "Unisex",
-    "officialName": "Ombre Leather 16",
+    "genero": "Caballero",
+    "officialName": "Ombré Leather",
     "brand": "Tom Ford",
-    "family": "CUERO almizclado",
+    "family": "Cuero",
     "accords": [
       "cuero",
-      "almizclado",
-      "terroso",
-      "ozónico",
       "cálido especiado",
-      "pachulí"
+      "floral blanco",
+      "ámbar",
+      "pachulí",
+      "ahumado",
+      "musgoso"
     ],
-    "topNotes": [],
-    "heartNotes": [],
-    "baseNotes": [],
+    "topNotes": [
+      "Cardamomo",
+      "Azafrán",
+      "Pimienta negra"
+    ],
+    "heartNotes": [
+      "Cuero negro",
+      "Jazmín Sambac",
+      "Hojas de violeta"
+    ],
+    "baseNotes": [
+      "Ámbar",
+      "Musgo de roble",
+      "Pachulí"
+    ],
     "source": "fragrantica"
   },
   "675": {
@@ -19147,17 +19375,31 @@
     "genero": "Unisex",
     "officialName": "Oud Wood",
     "brand": "Tom Ford",
-    "family": "AMADERADO cálido especiado",
+    "family": "Ámbar Amaderada",
     "accords": [
       "amaderado",
-      "cálido especiado",
-      "balsámico",
       "oud",
-      "aromático"
+      "cálido especiado",
+      "aromático",
+      "avainillado",
+      "ámbar",
+      "balsámico"
     ],
-    "topNotes": [],
-    "heartNotes": [],
-    "baseNotes": [],
+    "topNotes": [
+      "Cardamomo",
+      "Palo de rosa",
+      "Pimienta de Sichuan"
+    ],
+    "heartNotes": [
+      "Madera de oud",
+      "Sándalo",
+      "Vetiver"
+    ],
+    "baseNotes": [
+      "Haba tonka",
+      "Vainilla",
+      "Ámbar"
+    ],
     "source": "fragrantica"
   },
   "678": {
@@ -19564,43 +19806,34 @@
     "contratipo": "Y Eau de Parfum H",
     "marca": "Yves Saint Laurent",
     "genero": "Caballero",
-    "officialName": "Y",
+    "officialName": "Y Eau de Parfum",
     "brand": "Yves Saint Laurent",
-    "family": "VERDE amaderado",
+    "family": "Aromática Fougère",
     "accords": [
-      "verde",
+      "aromático",
+      "fresco especiado",
       "amaderado",
-      "floral blanco",
-      "terroso",
-      "floral",
-      "aldehídico"
+      "afrutado",
+      "ámbar",
+      "cítrico",
+      "verde"
     ],
     "topNotes": [
-      "Aldehídos",
-      "Miel",
-      "Gardenia",
-      "Notas verdes",
-      "Melocotón",
-      "Ciruela",
-      "Galbanum"
+      "Manzana verde",
+      "Jengibre",
+      "Bergamota"
     ],
     "heartNotes": [
-      "Tuberosa",
-      "Lirio",
-      "Jazmín",
-      "Hiacynth",
-      "Ylang-Ylang",
-      "Rosa búlgara"
+      "Salvia",
+      "Bayas de enebro",
+      "Geranio"
     ],
     "baseNotes": [
-      "Sándalo",
-      "Ámbar",
-      "Pachulí",
-      "Benjuí",
-      "Civet",
-      "Musgo de roble",
+      "Amberwood",
+      "Haba tonka",
+      "Cedro",
       "Vetiver",
-      "Styrax"
+      "Olíbano"
     ],
     "source": "fragrantica"
   },

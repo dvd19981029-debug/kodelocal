@@ -88,7 +88,13 @@ export const CATALOG_DESCRIPTIONS_48: Record<string, string> = {
   '79': 'Energía atlética y frescura impecable. Menta helada, aldehídos, mandarina y lavanda se combinan con notas marinas y jengibre sobre una base limpia de almizcle, sándalo y cedro.',
   '80': 'La pureza cristalina de los manantiales alpinos suizos. Bergamota y mandarina abren paso a un acorde vigorizante de té verde puro y grosellas negras sobre almizcle blanco, petit grain y sándalo.',
   '81': 'Lujo indómito, sensual y profundamente sofisticado. La dulzura inesperada de la frambuesa y el azafrán ilumina un acorde magistral de cuero toscano fino, gamuza aterciopelada, olíbano ahumado y ámbar.',
-  '82': 'La energía dorada del atardecer en Roma. Manzana roja crujiente y cardamomo contrastan con lavanda aromática y geranio, culminando en una estela adictiva y cálida de hoja de tabaco, pachulí y vetiver.'
+  '82': 'La energía dorada del atardecer en Roma. Manzana roja crujiente y cardamomo contrastan con lavanda aromática y geranio, culminando en una estela adictiva y cálida de hoja de tabaco, pachulí y vetiver.',
+  '83': 'Una nube soñadora, dulce y luminosa. Pitahaya exótica, frutos rojos y piña jugosa se funden con agua de coco y orquídea de vainilla sobre una base adictiva de praliné cremoso, almizcle y amberwood.',
+  '84': 'La quintaesencia de la perfumería nicho amaderada. Madera de oud exótica y palo de rosa se entrelazan con el picor elegante del cardamomo y la pimienta de Sichuan sobre sándalo cremoso, vetiver, haba tonka y ámbar.',
+  '85': 'Textura táctil, sensual e imponente como el desierto al anochecer. El cardamomo especiado abre paso a un corazón magnético de cuero negro profundo y jazmín Sambac, sellado con pachulí, musgo de roble y ámbar cálido.',
+  '86': 'La brisa fresca de un velero en alta mar. Hojas verdes recién cortadas y manzana crujiente despiertan un corazón acuático de flor de loto y mimosa sobre una estela limpia de cedro, musgo de roble, almizcle y ámbar.',
+  '87': 'Sofisticación parisina, moderna y arrolladora. Manzana verde ácida, jengibre picante y bergamota iluminan un corazón aromático de salvia y bayas de enebro, reposando sobre amberwood, haba tonka, cedro y olíbano.',
+  '88': 'El arma definitiva de seducción nocturna. Un disparo vibrante de cardamomo picante se funde con el calor irresistible del caramelo toffee derretido, cerrando sobre una base intensa y magnética de amberwood y vainilla Bourbon.'
 };
 
 /**

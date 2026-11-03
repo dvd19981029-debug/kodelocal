@@ -87,7 +87,13 @@ export const INSPIRACION_PERFUME_MAP: Record<string, string> = {
   '79': 'Polo Sport H',
   '80': 'Silver Mountain Water H',
   '81': 'Tuscan Leather',
-  '82': 'Born in Roma Coral Fantasy H'
+  '82': 'Born in Roma Coral Fantasy H',
+  '83': 'Cloud Pink F',
+  '84': 'Oud Wood',
+  '85': 'Ombré Leather H',
+  '86': 'Nautica Voyage H',
+  '87': 'Y Eau de Parfum H',
+  '88': 'The Most Wanted H'
 };
 
 export const INSPIRACION_BRAND_MAP: Record<string, string> = {
@@ -172,12 +178,19 @@ export const INSPIRACION_BRAND_MAP: Record<string, string> = {
   '79': 'Ralph Lauren',
   '80': 'Creed',
   '81': 'Tom Ford',
-  '82': 'Valentino'
+  '82': 'Valentino',
+  '83': 'Ariana Grande',
+  '84': 'Tom Ford',
+  '85': 'Tom Ford',
+  '86': 'Nautica',
+  '87': 'Yves Saint Laurent',
+  '88': 'Azzaro'
 };
 
 export const INCOMING_ESSENCE_SKUS = new Set([
   '62', '63', '64', '65', '66', '67', '68', '69', '70', '71',
-  '72', '73', '74', '75', '76', '77', '78', '79', '80', '81', '82'
+  '72', '73', '74', '75', '76', '77', '78', '79', '80', '81', '82',
+  '83', '84', '85', '86', '87', '88'
 ]);
 
 export function isIncomingEssence(product: { id?: string | null; sku?: string | null; category?: string | null } | null | undefined): boolean {
@@ -204,7 +217,8 @@ const FAMOUS_BRANDS = [
   'MONTBLANC', 'MONT BLANC', 'BURBERRY', 'VICTORINOX', 'GIVENCHY', 'DAVIDOFF',
   'LACOSTE', 'LATTAFA', 'BHARARA', 'BVLGARI', 'MOSCHINO', 'CHANEL',
   'XERJOFF', 'LE LABO', 'HERMÈS', 'HERMES', 'MUGLER', 'CREED', 'VERSACE',
-  'ARMAF', 'AFNAN', 'PRADA', 'DKNY', 'DIOR', 'HUGO BOSS', 'BOSS'
+  'ARMAF', 'AFNAN', 'PRADA', 'DKNY', 'DIOR', 'HUGO BOSS', 'BOSS',
+  'ARIANA GRANDE', 'NAUTICA', 'AZZARO', 'YSL'
 ];
 
 /**
@@ -545,6 +559,14 @@ export const OFFICIAL_TO_ORIGINAL_MAP: Record<string, { originalName: string; br
   'CUMBRE DE PLATA': { originalName: 'Silver Mountain Water H', brand: 'Creed', sku: '80' },
   'CUERO TOSCANO': { originalName: 'Tuscan Leather', brand: 'Tom Ford', sku: '81' },
   'EUROBOY CORAL': { originalName: 'Born in Roma Coral Fantasy H', brand: 'Valentino', sku: '82' },
+  'NUBE ROSA': { originalName: 'Cloud Pink F', brand: 'Ariana Grande', sku: '83' },
+  'BOSQUE DE OUD': { originalName: 'Oud Wood', brand: 'Tom Ford', sku: '84' },
+  'SOMBRA DE CUERO': { originalName: 'Ombré Leather H', brand: 'Tom Ford', sku: '85' },
+  'CAPITAN AZUL': { originalName: 'Nautica Voyage H', brand: 'Nautica', sku: '86' },
+  'CAPITÁN AZUL': { originalName: 'Nautica Voyage H', brand: 'Nautica', sku: '86' },
+  'ALPHA PARIS': { originalName: 'Y Eau de Parfum H', brand: 'Yves Saint Laurent', sku: '87' },
+  'EL MAS BUSCADO': { originalName: 'The Most Wanted H', brand: 'Azzaro', sku: '88' },
+  'EL MÁS BUSCADO': { originalName: 'The Most Wanted H', brand: 'Azzaro', sku: '88' },
 };
 
 // Generar variaciones con sufijos H / F / M / U para match instantáneo

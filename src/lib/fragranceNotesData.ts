@@ -127,7 +127,7 @@ const NOTE_RULES: Array<{ pattern: RegExp; file: string }> = [
   { pattern: /mel[óo]n|pepino|papaya|guayaba|mango/i, file: 'melon' },
   { pattern: /ruibarbo/i, file: 'ruibarbo' },
   { pattern: /granada/i, file: 'granada' },
-  { pattern: /maracuy[áa]/i, file: 'maracuya' },
+  { pattern: /maracuy[áa]|pitahaya/i, file: 'maracuya' },
   { pattern: /lichi/i, file: 'lichi' },
   { pattern: /higo/i, file: 'higo' },
   { pattern: /frut/i, file: 'frutos-rojos' },

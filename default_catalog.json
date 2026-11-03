@@ -338,5 +338,35 @@
     "id_proveedor": "NP 129026",
     "name": "VALENTINO BORN IN ROMA CORAL FANTASY",
     "price_per_kg": 54.93
+  },
+  {
+    "id_proveedor": "APAE-8301",
+    "name": "CLOUD PINK M",
+    "price_per_kg": 75.22
+  },
+  {
+    "id_proveedor": "APAE-8401",
+    "name": "OUD WOOD",
+    "price_per_kg": 105.0
+  },
+  {
+    "id_proveedor": "APAE-8501",
+    "name": "OMBRÉ LEATHER H",
+    "price_per_kg": 79.65
+  },
+  {
+    "id_proveedor": "APAE-8601",
+    "name": "NAUTICA VOYAGE H",
+    "price_per_kg": 75.22
+  },
+  {
+    "id_proveedor": "APAE-8701",
+    "name": "Y BY YSL H",
+    "price_per_kg": 79.65
+  },
+  {
+    "id_proveedor": "APAE-8801",
+    "name": "AZZARO THE MOST WANTED H",
+    "price_per_kg": 77.88
   }
 ]

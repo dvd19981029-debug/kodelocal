@@ -830,6 +830,66 @@ export const CATALOG_PROFILES_48: Record<string, StaticProfile> = {
     occasion: 'Citas románticas, fiestas al atardecer y salidas con estilo italiano',
     intensity: 'Intensa'
   },
+  '83': {
+    family: 'Ámbar Vainilla',
+    accords: ['dulce', 'afrutado', 'avainillado', 'ámbar', 'almizclado', 'coco', 'atalcado'],
+    topNotes: ['Pitahaya', 'Frutos rojos', 'Piña'],
+    heartNotes: ['Agua de coco', 'Orquídea de vainilla', 'Ambreta'],
+    baseNotes: ['Praliné', 'Almizcle', 'Amberwood', 'Musgo'],
+    season: 'Todo el año / Primavera y Verano',
+    occasion: 'Salidas casuales, citas románticas, uso diario dulce y juvenil',
+    intensity: 'Moderada'
+  },
+  '84': {
+    family: 'Ámbar Amaderada',
+    accords: ['amaderado', 'oud', 'cálido especiado', 'aromático', 'avainillado', 'ámbar', 'balsámico'],
+    topNotes: ['Cardamomo', 'Palo de rosa', 'Pimienta de Sichuan'],
+    heartNotes: ['Madera de oud', 'Sándalo', 'Vetiver'],
+    baseNotes: ['Haba tonka', 'Vainilla', 'Ámbar'],
+    season: 'Otoño / Invierno / Noche',
+    occasion: 'Eventos de etiqueta, reuniones ejecutivas, cenas de lujo y firma nicho',
+    intensity: 'Intensa'
+  },
+  '85': {
+    family: 'Cuero',
+    accords: ['cuero', 'cálido especiado', 'floral blanco', 'ámbar', 'pachulí', 'ahumado', 'musgoso'],
+    topNotes: ['Cardamomo', 'Azafrán', 'Pimienta negra'],
+    heartNotes: ['Cuero negro', 'Jazmín Sambac', 'Hojas de violeta'],
+    baseNotes: ['Ámbar', 'Musgo de roble', 'Pachulí'],
+    season: 'Otoño / Invierno / Noche',
+    occasion: 'Salidas nocturnas, citas de alto impacto, chaqueta de cuero y eventos elegantes',
+    intensity: 'Intensa'
+  },
+  '86': {
+    family: 'Amaderada Acuática',
+    accords: ['verde', 'afrutado', 'acuático', 'floral', 'fresco', 'almizclado', 'amaderado'],
+    topNotes: ['Manzana verde', 'Hojas verdes', 'Bergamota'],
+    heartNotes: ['Flor de loto', 'Mimosa', 'Notas marinas'],
+    baseNotes: ['Almizcle', 'Cedro', 'Musgo de roble', 'Ámbar'],
+    season: 'Primavera / Verano / Calor',
+    occasion: 'Uso diario, playa, gimnasio, universidad y días calurosos',
+    intensity: 'Moderada'
+  },
+  '87': {
+    family: 'Aromática Fougère',
+    accords: ['aromático', 'fresco especiado', 'amaderado', 'afrutado', 'ámbar', 'cítrico', 'verde'],
+    topNotes: ['Manzana verde', 'Jengibre', 'Bergamota'],
+    heartNotes: ['Salvia', 'Bayas de enebro', 'Geranio'],
+    baseNotes: ['Amberwood', 'Haba tonka', 'Cedro', 'Vetiver', 'Olíbano'],
+    season: 'Todo el año / Versátil',
+    occasion: 'Oficina, salidas nocturnas, citas y fragancia firma todoterreno',
+    intensity: 'Intensa'
+  },
+  '88': {
+    family: 'Ámbar Especiada',
+    accords: ['cálido especiado', 'caramelo', 'dulce', 'ámbar', 'amaderado', 'aromático'],
+    topNotes: ['Cardamomo', 'Jengibre', 'Bergamota'],
+    heartNotes: ['Caramelo', 'Lavanda', 'Canela'],
+    baseNotes: ['Amberwood', 'Vainilla Bourbon', 'Vetiver'],
+    season: 'Otoño / Invierno / Noche',
+    occasion: 'Citas románticas, fiestas nocturnas, eventos sociales y seducción',
+    intensity: 'Intensa'
+  },
   'APAE-2154': {
     family: 'Floral Frutal',
     accords: ['floral', 'afrutado', 'fresco', 'dulce', 'acuático'],
