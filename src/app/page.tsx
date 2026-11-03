@@ -917,6 +917,44 @@ export default function EcommerceHomePage() {
 
             {/* ================= PAGINACIÓN INFERIOR ================= */}
             {renderPagination('bottom')}
+
+            {/* ================= TAMBIÉN TE PODRÍA INTERESAR (STICKERS EN LA SUB-PESTAÑA INSUMOS) ================= */}
+            {(selectedCategory === 'Insumos' || selectedCategory === 'Alcohol y Materiales') &&
+              selectedInsumoSubTab === 'Insumos' &&
+              !isSearching && (
+                <div className="pt-8 mt-4 border-t border-slate-200/80 space-y-4">
+                  <div className="flex items-center justify-between gap-2 px-1">
+                    <div>
+                      <h3 className="text-base sm:text-xl font-black text-slate-900 tracking-tight">
+                        También te podría interesar
+                      </h3>
+                      <p className="text-xs text-slate-500 font-medium">
+                        Stickers adhesivos con notas olfativas y casa inspirada (5.3 × 5.0 cm • $0.35 c/u)
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedInsumoSubTab('Stickers');
+                        setCurrentPage(1);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="text-xs sm:text-sm font-black text-purple-700 hover:text-purple-900 cursor-pointer shrink-0"
+                    >
+                      Ver todos los stickers →
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 sm:gap-x-4 md:gap-x-5 gap-y-10 sm:gap-y-12">
+                    {products
+                      .filter((p) => p.category === 'Stickers' && isEcommerceEligible(p))
+                      .slice(0, 8)
+                      .map((stickerProd) => (
+                        <ProductCard key={`insumo-suggest-${stickerProd.id}`} product={stickerProd} />
+                      ))}
+                  </div>
+                </div>
+              )}
           </>
         )}
 

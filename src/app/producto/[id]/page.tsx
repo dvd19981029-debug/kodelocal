@@ -230,6 +230,11 @@ export default function ProductDetailPage() {
         .slice(0, matchingEssence ? 3 : 4);
       return matchingEssence ? [matchingEssence, ...otherStickers] : otherStickers;
     }
+    if (!isEssence) {
+      return onlineOnly
+        .filter((p) => p.category === 'Stickers')
+        .slice(0, 4);
+    }
     const matchingSticker = onlineOnly.find(
       (p) => p.category === 'Stickers' && String(p.sku || '').replace(/^STK-/i, '') === String(product.sku || '')
     );
@@ -237,7 +242,7 @@ export default function ProductDetailPage() {
       .filter(p => p.category === 'Esencias para Perfume' && (p.gender === product.gender || p.gender === 'Unisex'))
       .slice(0, matchingSticker ? 3 : 4);
     return matchingSticker ? [...otherEssences, matchingSticker] : otherEssences;
-  }, [products, product, isBottle, isSticker, stickerEntry]);
+  }, [products, product, isEssence, isBottle, isSticker, stickerEntry]);
 
   // Cálculo de inventario discreto 80/20 para esencias y general para otros productos
   const totalStock = typeof product?.stock === 'number' ? product.stock : 0;
@@ -1438,7 +1443,7 @@ export default function ProductDetailPage() {
         <section className="space-y-3.5 pt-2">
           <div className="flex items-center justify-between px-1">
             <h3 className="text-base sm:text-lg font-black text-slate-900">
-              {isBottle ? 'Otros modelos de frascos disponibles' : 'También te podría gustar'}
+              {isBottle ? 'Otros modelos de frascos disponibles' : 'También te podría interesar'}
             </h3>
             <Link
               href="/"
