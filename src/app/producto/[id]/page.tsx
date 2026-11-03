@@ -28,7 +28,13 @@ import { getFragranceProfile, getFragranceAccordBars } from '@/lib/fragranceProf
 import ProductCard from '@/components/ecommerce/ProductCard';
 import FragranceNotesVisual from '@/components/ecommerce/FragranceNotesVisual';
 import { getInspiracionPerfumeName, formatPerfumeDisplayName, getBottleLabelConfig, isIncomingEssence } from '@/lib/perfumeNames';
-import { getCricutStickerEntryForProduct, getStickerFooterClassification } from '@/lib/cricutStickers';
+import {
+  getCricutStickerEntryForProduct,
+  getStickerFooterClassification,
+  CRICUT_STICKER_SPECS,
+  STICKER_BOTTLE_MOCKUPS,
+} from '@/lib/cricutStickers';
+import StickerBottlePreview from '@/components/ecommerce/StickerBottlePreview';
 import { getFragranceDescription } from '@/lib/fragranceDescriptions';
 import { resolveTargetProductId } from '@/lib/productUrl';
 import { isHalloweenPromoProduct, getHalloweenPotionInfo, HALLOWEEN_ORIGINAL_PRICE_1OZ, HALLOWEEN_ORIGINAL_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
@@ -44,6 +50,7 @@ export default function ProductDetailPage() {
   const [selectedPresentation, setSelectedPresentation] = useState<ProductPresentation>('ONZA_COMPLETA');
   const [quantity, setQuantity] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
+  const [selectedStickerBottleId, setSelectedStickerBottleId] = useState<string | null>(null);
 
   const { cart, addToCart, updateQuantity } = useEcommerceCart();
   const { customer } = useCustomerAuth();
@@ -164,6 +171,7 @@ export default function ProductDetailPage() {
 
   // Sincronizar presentación por defecto si cambia de categoría
   useEffect(() => {
+    setSelectedStickerBottleId(null);
     if (!product) return;
     if (product.category !== 'Esencias para Perfume' && selectedPresentation !== 'UNIDAD') {
       setSelectedPresentation('UNIDAD');
@@ -321,6 +329,10 @@ export default function ProductDetailPage() {
   const displayName = formatPerfumeDisplayName(product);
   const potionInfo = getHalloweenPotionInfo(product);
   const isHalloweenPromo = Boolean(potionInfo);
+  const activeStickerBottle =
+    isSticker && selectedStickerBottleId
+      ? STICKER_BOTTLE_MOCKUPS.find((b) => b.id === selectedStickerBottleId) || null
+      : null;
 
   const handleAddToCart = () => {
     if (!product || isOutOfStock || maxSelectable <= 0 || isQuantityBlocked) return;
@@ -410,22 +422,31 @@ export default function ProductDetailPage() {
             <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-amber-100/30 blur-2xl pointer-events-none" />
 
             <div className="relative aspect-square w-full @container rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center">
-              
-              <img
-                src={productImage}
-                alt={displayName}
-                loading="eager"
-                fetchPriority="high"
-                decoding="async"
-                onError={(e) => {
-                  e.currentTarget.src = isBottle 
-                    ? '/images/botes/bote_100ml_degrade_azul_noche.jpg'
-                    : '/images/essence_bottle_blank.webp';
-                }}
-                className={`w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105 ${
-                  isOutOfStock ? 'grayscale-[35%]' : ''
-                }`}
-              />
+              {activeStickerBottle ? (
+                <div className="w-full h-full">
+                  <StickerBottlePreview
+                    stickerImageUrl={productImage}
+                    bottleConfig={activeStickerBottle}
+                    alt={`${displayName} aplicada en ${activeStickerBottle.name}`}
+                  />
+                </div>
+              ) : (
+                <img
+                  src={productImage}
+                  alt={displayName}
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
+                  onError={(e) => {
+                    e.currentTarget.src = isBottle 
+                      ? '/images/botes/bote_100ml_degrade_azul_noche.jpg'
+                      : '/images/essence_bottle_blank.webp';
+                  }}
+                  className={`w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105 ${
+                    isOutOfStock && !isSticker ? 'grayscale-[35%]' : ''
+                  }`}
+                />
+              )}
               
               {/* Overlay CSS para el nombre dinámico del bote de esencia */}
               {productImage === '/images/essence_bottle_blank.webp' && (() => {
@@ -459,7 +480,14 @@ export default function ProductDetailPage() {
                     100 ML • Vidrio
                   </span>
                 ) : (
-                  getGenderBadge(product.gender)
+                  <>
+                    {getGenderBadge(product.gender)}
+                    {isSticker && (
+                      <span className="bg-white/95 backdrop-blur-xs text-slate-900 border border-slate-200 text-[10.5px] font-black px-2.5 py-1 rounded-xl shadow-2xs">
+                        Medida Cricut: 5.3 × 5.0 cm
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -478,8 +506,8 @@ export default function ProductDetailPage() {
               </div>
 
               {/* Sello de pureza / calidad de frasco */}
-              <div className="absolute bottom-3 left-3 z-10">
-                <span className="bg-white/90 backdrop-blur-xs text-slate-800 border border-slate-200 text-[10.5px] font-black py-1 px-2.5 rounded-lg shadow-xs flex items-center gap-1.5">
+              <div className="absolute bottom-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2">
+                <span className="bg-white/95 backdrop-blur-xs text-slate-800 border border-slate-200 text-[10.5px] font-black py-1 px-2.5 rounded-lg shadow-xs flex items-center gap-1.5">
                   {isBottle ? (
                     <>
                       <Sparkles className="w-3.5 h-3.5 text-amber-500" />
@@ -490,6 +518,15 @@ export default function ProductDetailPage() {
                       <Droplets className="w-3.5 h-3.5 text-indigo-600" />
                       <span>100% Esencia NO diluida</span>
                     </>
+                  ) : isSticker ? (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>
+                        {activeStickerBottle
+                          ? `Ejemplo real en ${activeStickerBottle.name}`
+                          : 'Etiqueta 5.3 × 5.0 cm (Corte Cricut 5.6 × 5.3 cm)'}
+                      </span>
+                    </>
                   ) : (
                     <>
                       <Sparkles className="w-3.5 h-3.5 text-amber-500" />
@@ -497,8 +534,81 @@ export default function ProductDetailPage() {
                     </>
                   )}
                 </span>
+
+                {activeStickerBottle && (
+                  <Link
+                    href={`/producto/${activeStickerBottle.productId}`}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white text-[10.5px] font-black py-1 px-2.5 rounded-lg shadow-md transition-colors"
+                  >
+                    Ver este bote →
+                  </Link>
+                )}
               </div>
             </div>
+
+            {/* Galería interactiva para Stickers: Etiqueta individual + Ejemplos reales en los botes que vendemos */}
+            {isSticker && (
+              <div className="pt-3 space-y-2">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider">
+                    Previsualizar esta etiqueta en nuestros botes de 100 ml:
+                  </span>
+                  <span className="text-[10.5px] font-bold text-indigo-600">
+                    Escala real 1:1 (5.3 × 5.0 cm)
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedStickerBottleId(null)}
+                    className={`flex flex-col items-center p-1.5 rounded-xl border text-center transition-all cursor-pointer ${
+                      selectedStickerBottleId === null
+                        ? 'border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-400/40 shadow-xs'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="w-full aspect-square rounded-lg overflow-hidden bg-slate-100 mb-1">
+                      <img
+                        src={productImage}
+                        alt={displayName}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <span className="text-[9.5px] font-black text-slate-800 leading-tight line-clamp-1">
+                      Etiqueta
+                    </span>
+                  </button>
+
+                  {STICKER_BOTTLE_MOCKUPS.map((b) => {
+                    const isSelected = selectedStickerBottleId === b.id;
+                    return (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => setSelectedStickerBottleId(b.id)}
+                        className={`flex flex-col items-center p-1.5 rounded-xl border text-center transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-400/40 shadow-xs'
+                            : 'border-slate-200 bg-white hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="w-full aspect-square rounded-lg overflow-hidden bg-white mb-1">
+                          <StickerBottlePreview
+                            stickerImageUrl={productImage}
+                            bottleConfig={b}
+                            alt={`${displayName} en ${b.name}`}
+                          />
+                        </div>
+                        <span className="text-[9.5px] font-bold text-slate-700 leading-tight line-clamp-1">
+                          {b.shortName.replace(/^Bote\s+/i, '').replace(/\s+100ml$/i, '')}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* ================= SECCIÓN DE COMPRA DIRECTAMENTE ABAJO DE LA IMAGEN (PARA TODOS LOS PRODUCTOS) ================= */}
@@ -1012,52 +1122,121 @@ export default function ProductDetailPage() {
                   </div>
                 </>
               ) : isSticker && stickerEntry ? (
-                <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-4 shadow-xs">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                    <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-amber-500" />
-                      <span>Contenido y Especificaciones del Sticker</span>
-                    </h3>
-                    <span className="text-[10.5px] font-bold text-slate-400 font-mono">
-                      {product.sku || 'STICKER'}
-                    </span>
+                <div className="space-y-4">
+                  <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-4 shadow-xs">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                      <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-amber-500" />
+                        <span>Contenido y Medidas Cricut del Sticker</span>
+                      </h3>
+                      <span className="text-[10.5px] font-bold text-slate-400 font-mono">
+                        {product.sku || 'STICKER'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Inspirado en</span>
+                        <strong className="text-xs sm:text-sm font-bold text-slate-900">{stickerEntry.nombre.toUpperCase()}</strong>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Casa Inspirada</span>
+                        <strong className="text-xs sm:text-sm font-bold text-slate-800">{stickerEntry.marca} · {stickerEntry.anio}</strong>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-indigo-50/60 border border-indigo-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-indigo-500">Medida Etiqueta</span>
+                        <strong className="text-xs sm:text-sm font-black text-indigo-900">5.3 × 5.0 cm</strong>
+                        <span className="text-[10px] font-semibold text-indigo-700">53.0 × 50.0 mm</span>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-indigo-50/60 border border-indigo-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-indigo-500">Corte Total Cricut</span>
+                        <strong className="text-xs sm:text-sm font-black text-indigo-900">5.6 × 5.3 cm</strong>
+                        <span className="text-[10px] font-semibold text-indigo-700">56 × 53 mm (borde 1.5 mm)</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col gap-0.5">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Notas de Salida</span>
+                        <strong className="text-xs sm:text-sm font-bold text-slate-800">{stickerEntry.topNotes.join(', ')}</strong>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col gap-0.5">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Notas de Corazón</span>
+                        <strong className="text-xs sm:text-sm font-bold text-slate-800">{stickerEntry.heartNotes.join(', ')}</strong>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col gap-0.5">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Notas de Fondo</span>
+                        <strong className="text-xs sm:text-sm font-bold text-slate-800">{stickerEntry.baseNotes.join(', ')}</strong>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div className="p-3 rounded-2xl bg-indigo-50/50 border border-indigo-100 flex flex-col gap-0.5">
+                        <span className="text-[10px] font-black uppercase text-indigo-500">Descripción Impresa</span>
+                        <strong className="text-xs font-bold text-slate-800">{stickerEntry.fraseOlfativa}</strong>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col justify-between gap-1">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Clasificación & Impresión Cricut</span>
+                        <strong className="text-xs font-bold text-indigo-700">{getStickerFooterClassification(stickerEntry.genero)}</strong>
+                        <span className="text-[11px] font-semibold text-slate-500">304.8 DPI • Esquinas redondeadas • Listo para pegar</span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
-                      <span className="text-[10px] font-black uppercase text-slate-400">Inspirado en</span>
-                      <strong className="text-xs sm:text-sm font-bold text-slate-900">{stickerEntry.nombre.toUpperCase()}</strong>
+                  {/* Tarjeta con Ejemplos Reales de esta misma etiqueta en nuestros Botes de 100 ml */}
+                  <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-3.5 shadow-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                      <div>
+                        <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-indigo-600" />
+                          <span>Así se ve esta etiqueta en los botes que vendemos</span>
+                        </h3>
+                        <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                          Proporción real de la etiqueta Cricut (5.3 × 5.0 cm / corte 5.6 × 5.3 cm) aplicada sobre nuestros frascos de 100 ml
+                        </p>
+                      </div>
                     </div>
-                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
-                      <span className="text-[10px] font-black uppercase text-slate-400">Casa Inspirada</span>
-                      <strong className="text-xs sm:text-sm font-bold text-slate-800">{stickerEntry.marca} · {stickerEntry.anio}</strong>
-                    </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col gap-0.5">
-                      <span className="text-[10px] font-black uppercase text-slate-400">Notas de Salida</span>
-                      <strong className="text-xs sm:text-sm font-bold text-slate-800">{stickerEntry.topNotes.join(', ')}</strong>
-                    </div>
-                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col gap-0.5">
-                      <span className="text-[10px] font-black uppercase text-slate-400">Notas de Corazón</span>
-                      <strong className="text-xs sm:text-sm font-bold text-slate-800">{stickerEntry.heartNotes.join(', ')}</strong>
-                    </div>
-                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col gap-0.5">
-                      <span className="text-[10px] font-black uppercase text-slate-400">Notas de Fondo</span>
-                      <strong className="text-xs sm:text-sm font-bold text-slate-800">{stickerEntry.baseNotes.join(', ')}</strong>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <div className="p-3 rounded-2xl bg-indigo-50/50 border border-indigo-100 flex flex-col gap-0.5">
-                      <span className="text-[10px] font-black uppercase text-indigo-500">Descripción Impresa</span>
-                      <strong className="text-xs font-bold text-slate-800">{stickerEntry.fraseOlfativa}</strong>
-                    </div>
-                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col justify-between gap-1">
-                      <span className="text-[10px] font-black uppercase text-slate-400">Clasificación & Medida</span>
-                      <strong className="text-xs font-bold text-indigo-700">{getStickerFooterClassification(stickerEntry.genero)}</strong>
-                      <span className="text-[11px] font-semibold text-slate-500">5.3 × 5.0 cm • Adhesivo listo para pegar</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {STICKER_BOTTLE_MOCKUPS.slice(0, 6).map((b) => (
+                        <div
+                          key={`showcase-${b.id}`}
+                          onClick={() => setSelectedStickerBottleId(b.id)}
+                          className={`group/bottle rounded-2xl border p-2.5 bg-white transition-all cursor-pointer flex flex-col justify-between ${
+                            selectedStickerBottleId === b.id
+                              ? 'border-indigo-600 ring-2 ring-indigo-400/30 shadow-sm'
+                              : 'border-slate-200/90 hover:border-indigo-300 hover:shadow-xs'
+                          }`}
+                        >
+                          <div className="w-full aspect-square rounded-xl overflow-hidden bg-white mb-2">
+                            <StickerBottlePreview
+                              stickerImageUrl={productImage}
+                              bottleConfig={b}
+                              alt={`${displayName} aplicada en ${b.name}`}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <div className="text-[11px] sm:text-xs font-black text-slate-900 line-clamp-1 group-hover/bottle:text-indigo-700 transition-colors">
+                              {b.name}
+                            </div>
+                            <p className="text-[10px] text-slate-500 line-clamp-1">
+                              {b.subtitle}
+                            </p>
+                            <div className="pt-1 flex items-center justify-between">
+                              <span className="text-[9.5px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded-md">
+                                5.3 × 5.0 cm
+                              </span>
+                              <Link
+                                href={`/producto/${b.productId}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-[10px] font-black text-slate-700 hover:text-indigo-600 underline"
+                              >
+                                Ver bote →
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -1153,12 +1332,12 @@ export default function ProductDetailPage() {
           ) : isSticker ? (
             <div className="grid grid-cols-3 gap-2 pt-1 text-center">
               <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
-                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Medida</span>
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Medida Etiqueta</span>
                 <span className="text-xs font-bold text-slate-800">5.3 × 5.0 cm</span>
               </div>
               <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
-                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Material</span>
-                <span className="text-xs font-bold text-slate-800">Adhesivo Corte Fino</span>
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Corte Cricut</span>
+                <span className="text-xs font-bold text-slate-800">5.6 × 5.3 cm</span>
               </div>
               <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
                 <span className="text-[9.5px] font-black uppercase text-slate-400 block">Diseño</span>

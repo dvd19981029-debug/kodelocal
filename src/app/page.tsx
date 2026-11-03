@@ -599,6 +599,7 @@ export default function EcommerceHomePage() {
     setSelectedCategory(cat);
     if (cat === 'Botes' || cat === 'Insumos' || cat === 'Arma tu perfume') {
       setSelectedGender('Todos');
+      setSelectedStockFilter('Todos');
     }
     setCurrentPage(1);
 
@@ -760,7 +761,7 @@ export default function EcommerceHomePage() {
                       : selectedCategory === 'Botes' 
                         ? 'Botes y Frascos' 
                         : selectedCategory === 'Insumos' || selectedCategory === 'Alcohol y Materiales'
-                          ? (selectedInsumoSubTab === 'Stickers' ? 'Stickers para Perfumes ($0.35 c/u)' : 'Insumos y Materiales')
+                          ? (selectedInsumoSubTab === 'Stickers' ? 'Stickers para Perfumes • 5.3 × 5.0 cm ($0.35 c/u)' : 'Insumos y Materiales')
                           : selectedCategory}
                   </span>
                 </h2>

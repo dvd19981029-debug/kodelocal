@@ -2241,6 +2241,116 @@ export function getCricutStickerEntryForProduct(
   return CRICUT_STICKERS_CATALOG.find((item) => String(item.sku) === numSku) || null;
 }
 
+export const CRICUT_STICKER_SPECS = {
+  labelWidthCm: 5.3,
+  labelHeightCm: 5.0,
+  labelWidthMm: 53.0,
+  labelHeightMm: 50.0,
+  cutWidthCm: 5.6,
+  cutHeightCm: 5.3,
+  cutWidthMm: 56.0,
+  cutHeightMm: 53.0,
+  borderMarginMm: 1.5,
+  dpi: 304.8,
+  shortBadge: '5.3 × 5.0 cm (53 × 50 mm)',
+  fullMeasureText: 'Etiqueta 5.3 × 5.0 cm (53 × 50 mm) · Corte total Cricut 5.6 × 5.3 cm (56 × 53 mm con borde de 1.5 mm)',
+};
+
+export interface StickerBottleMockupConfig {
+  id: string;
+  productId: string;
+  name: string;
+  shortName: string;
+  subtitle: string;
+  bottleImageUrl: string;
+  cx: number;
+  cy: number;
+  targetWidth: number;
+  targetHeight: number;
+  sagitta: number;
+}
+
+export const STICKER_BOTTLE_MOCKUPS: StickerBottleMockupConfig[] = [
+  {
+    id: 'rey-luis',
+    productId: 'bote-100ml-rey-luis',
+    name: 'Bote Rey Luis 100ml Rosca',
+    shortName: 'Bote Rey Luis 100ml',
+    subtitle: 'Cilíndrico vidrio cristalino • Tapa escalonada negra',
+    bottleImageUrl: '/images/botes/bote_100ml_rey_luis.jpg',
+    cx: 401,
+    cy: 495,
+    targetWidth: 224,
+    targetHeight: 211,
+    sagitta: 2.8,
+  },
+  {
+    id: 'goliat',
+    productId: 'bote-100ml-goliat',
+    name: 'Bote Goliat 100ml Rosca',
+    shortName: 'Bote Goliat 100ml',
+    subtitle: 'Vidrio pesado base gruesa • Tapa negra brillante',
+    bottleImageUrl: '/images/botes/bote_100ml_goliat.jpg',
+    cx: 400,
+    cy: 492,
+    targetWidth: 242,
+    targetHeight: 228,
+    sagitta: 1.4,
+  },
+  {
+    id: 'wolf',
+    productId: 'bote-100ml-wolf',
+    name: 'Bote Wolf 100ml Rosca',
+    shortName: 'Bote Wolf 100ml',
+    subtitle: 'Cilíndrico tipo campana • Tapa metálica plateada',
+    bottleImageUrl: '/images/botes/bote_100ml_wolf.jpg',
+    cx: 400,
+    cy: 500,
+    targetWidth: 236,
+    targetHeight: 223,
+    sagitta: 2.6,
+  },
+  {
+    id: 'golf-club',
+    productId: 'bote-100ml-golf-club',
+    name: 'Bote Golf Club 100ml Rosca',
+    shortName: 'Bote Golf Club 100ml',
+    subtitle: 'Rectangular contorneado • Tapa metálica plateada',
+    bottleImageUrl: '/images/botes/bote_100ml_golf_club.jpg',
+    cx: 400,
+    cy: 502,
+    targetWidth: 248,
+    targetHeight: 234,
+    sagitta: 1.2,
+  },
+  {
+    id: 'nicho-oro',
+    productId: 'bote-100ml-santal-oro',
+    name: 'Bote Nicho 100ml Rosca',
+    shortName: 'Bote Nicho 100ml',
+    subtitle: 'Cilíndrico transparente • Tapa oro moleteado',
+    bottleImageUrl: '/images/botes/bote_100ml_cilindrico_tapa_oro.jpg',
+    cx: 400,
+    cy: 512,
+    targetWidth: 228,
+    targetHeight: 215,
+    sagitta: 2.6,
+  },
+  {
+    id: 'man-beige',
+    productId: 'bote-100ml-frosted-cilindro-madera-clara',
+    name: 'Bote Man Beige 100ml Rosca',
+    shortName: 'Bote Man Beige 100ml',
+    subtitle: 'Vidrio esmerilado satinado • Tapa madera clara',
+    bottleImageUrl: '/images/botes/bote_100ml_frosted_cilindro_madera_clara.jpg',
+    cx: 400,
+    cy: 526,
+    targetWidth: 218,
+    targetHeight: 206,
+    sagitta: 2.6,
+  },
+];
+
 export const INITIAL_STICKER_PRODUCTS: ProductItem[] = CRICUT_STICKERS_CATALOG.map((item) => {
   const paddedSku = String(item.sku).padStart(3, '0');
   const genderName = getStickerGenderName(item.genero);
@@ -2260,11 +2370,11 @@ export const INITIAL_STICKER_PRODUCTS: ProductItem[] = CRICUT_STICKERS_CATALOG.m
     unit: 'Unidad',
     price: 0.35,
     cost: 0.05,
-    stock: 25,
+    stock: 0,
     stockHalf: 0,
     minStock: 5,
     imageUrl: `/images/stickers/sticker_${item.sku}.webp`,
-    description: `Sticker genérico con las notas de tu perfume (Salida: ${topStr} · Corazón: ${heartStr} · Fondo: ${baseStr}), la casa inspirada (${item.marca} · ${item.anio}) y el nombre inspirado en ${item.nombre} (${item.contratipo}). "${item.fraseOlfativa}"`,
+    description: `Sticker genérico medida Cricut 5.3 × 5.0 cm (53 × 50 mm; corte total 5.6 × 5.3 cm con borde de 1.5 mm) con las notas de tu perfume (Salida: ${topStr} · Corazón: ${heartStr} · Fondo: ${baseStr}), la casa inspirada (${item.marca} · ${item.anio}) y el nombre inspirado en ${item.nombre} (${item.contratipo}). "${item.fraseOlfativa}"`,
     isAvailableOnline: true,
     puesto: 'C3',
     supplier: 'Aromaniak Cricut',

@@ -14,6 +14,8 @@ import {
   HALLOWEEN_ORIGINAL_PRICE_1OZ,
   HALLOWEEN_ORIGINAL_PRICE_HALF_OZ,
 } from '@/lib/halloweenPromo';
+import { CRICUT_STICKER_SPECS, STICKER_BOTTLE_MOCKUPS } from '@/lib/cricutStickers';
+import StickerBottlePreview from '@/components/ecommerce/StickerBottlePreview';
 
 interface ProductCardProps {
   product: ProductItem;
@@ -138,6 +140,11 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
   const isBottle = product.category === 'Botes' || product.category === 'Botes & Envases';
   const isSticker = product.category === 'Stickers' || String(product.id || '').startsWith('sticker-');
   const isIncoming = isBottle || (isEssence && isIncomingEssence(product));
+  const [stickerBottleIdx, setStickerBottleIdx] = useState<number | null>(null);
+  const activeStickerBottle =
+    isSticker && stickerBottleIdx !== null
+      ? STICKER_BOTTLE_MOCKUPS[stickerBottleIdx % STICKER_BOTTLE_MOCKUPS.length]
+      : null;
 
   const getGenderBadge = (gender?: string) => {
     if (isBottle) {
@@ -225,21 +232,31 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                 : 'hover:scale-[1.015] hover:shadow-[4px_8px_16px_rgba(88,28,135,0.15)]'
             }`}
           >
-            <img
-              src={productImage}
-              alt={displayName}
-              loading={priority ? 'eager' : 'lazy'}
-              fetchPriority={priority ? 'high' : undefined}
-              decoding="async"
-              onError={(e) => {
-                e.currentTarget.src = product.category === 'Botes' 
-                  ? '/images/botes/bote_100ml_degrade_azul_noche.jpg'
-                  : '/images/essence_bottle_blank.webp';
-              }}
-              className={`w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-108 ${
-                isOutOfStock ? 'grayscale-[35%]' : ''
-              }`}
-            />
+            {activeStickerBottle ? (
+              <div className="w-full h-full transition-transform duration-500 group-hover:scale-105">
+                <StickerBottlePreview
+                  stickerImageUrl={productImage}
+                  bottleConfig={activeStickerBottle}
+                  alt={`${displayName} en ${activeStickerBottle.name}`}
+                />
+              </div>
+            ) : (
+              <img
+                src={productImage}
+                alt={displayName}
+                loading={priority ? 'eager' : 'lazy'}
+                fetchPriority={priority ? 'high' : undefined}
+                decoding="async"
+                onError={(e) => {
+                  e.currentTarget.src = product.category === 'Botes' 
+                    ? '/images/botes/bote_100ml_degrade_azul_noche.jpg'
+                    : '/images/essence_bottle_blank.webp';
+                }}
+                className={`w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-108 ${
+                  isOutOfStock && !isSticker ? 'grayscale-[35%]' : ''
+                }`}
+              />
+            )}
             {/* Texto superpuesto dinámico mediante HTML/CSS para esencias */}
             {productImage === '/images/essence_bottle_blank.webp' && (() => {
               const { lines, fontSize } = getBottleLabelConfig(displayName);
@@ -268,7 +285,46 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
             {/* Badge de género limpio sobre la foto */}
             <div className="absolute top-2 left-2 z-10 flex flex-col items-start gap-1 max-w-[85%]">
               {getGenderBadge(product.gender)}
+              {isSticker && (
+                <span className="bg-white/95 backdrop-blur-xs text-slate-900 border border-slate-200 text-[8px] sm:text-[9px] font-black py-0.5 px-1.5 rounded-md shadow-xs shrink-0 tracking-tight">
+                  5.3 × 5.0 CM
+                </span>
+              )}
             </div>
+
+            {/* Selector rápido en tarjeta de Sticker para previsualizar en nuestros botes */}
+            {isSticker && (
+              <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setStickerBottleIdx((prev) =>
+                      prev === null ? 0 : prev + 1 < 4 ? prev + 1 : null
+                    );
+                  }}
+                  className="bg-slate-900/90 hover:bg-purple-700 text-white text-[8.5px] sm:text-[9.5px] font-black py-1 px-2 rounded-lg shadow-md transition-colors cursor-pointer"
+                >
+                  {activeStickerBottle
+                    ? `${activeStickerBottle.shortName} (${(stickerBottleIdx ?? 0) + 1}/4)`
+                    : 'Ver en bote'}
+                </button>
+                {activeStickerBottle && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setStickerBottleIdx(null);
+                    }}
+                    className="bg-white/95 hover:bg-slate-100 text-slate-800 border border-slate-300 text-[8.5px] sm:text-[9.5px] font-extrabold py-1 px-1.5 rounded-lg shadow-md transition-colors cursor-pointer"
+                  >
+                    Etiqueta
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Badge Agotado / En camino en esquina superior derecha */}
             {isOutOfStock && (
@@ -367,7 +423,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                 <span className="text-[10.5px] sm:text-xs text-slate-500 font-normal truncate">Frasco de Vidrio • Cierre de Rosca</span>
               ) : isSticker ? (
                 <p className="text-[10px] sm:text-[11px] text-slate-600 font-medium line-clamp-2 leading-tight" title={product.description}>
-                  Sticker genérico con notas, casa inspirada ({product.brand || 'Autor'}) y nombre inspirado en {(product.officialName || product.name || '').replace(/^Sticker\s+(?:Inspirado\s+en\s+)?/i, '')}
+                  Medida Cricut 5.3 × 5.0 cm • Notas, casa ({product.brand || 'Autor'}) e inspirado en {(product.officialName || product.name || '').replace(/^Sticker\s+(?:Inspirado\s+en\s+)?/i, '')}
                 </p>
               ) : (
                 <span className="text-[10.5px] sm:text-xs text-slate-700 font-semibold line-clamp-2 leading-tight">{product.description || `${product.unit || 'Unidad'} • Disponible`}</span>
@@ -412,7 +468,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
               </div>
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-slate-50/70 rounded-xl border border-slate-100 px-2 text-center text-[10px] sm:text-[11px] font-bold text-slate-500">
-                <span className="truncate">{isSticker ? 'Sticker adhesivo con notas • Unidad' : (presentations[0]?.description || 'Presentación única')}</span>
+                <span className="truncate">{isSticker ? 'Cricut 5.3 × 5.0 cm (Corte 5.6 × 5.3 cm)' : (presentations[0]?.description || 'Presentación única')}</span>
               </div>
             )}
           </div>
