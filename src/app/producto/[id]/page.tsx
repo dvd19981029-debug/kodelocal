@@ -863,11 +863,11 @@ export default function ProductDetailPage() {
                     <strong className="text-amber-700 font-black">
                       {isEssence
                         ? selectedPresentation === 'MEDIA_ONZA'
-                          ? availableRemaining === 1 ? '¡Solo queda 1 media onza!' : `¡Solo quedan ${availableRemaining} medias onzas!`
-                          : availableRemaining === 1 ? '¡Solo queda 1 onza!' : `¡Solo quedan ${availableRemaining} onzas!`
+                          ? availableRemaining === 1 ? '¡Solo queda 1 media onza, hay más en camino!' : `¡Solo quedan ${availableRemaining} medias onzas, hay más en camino!`
+                          : availableRemaining === 1 ? '¡Solo queda 1 onza, hay más en camino!' : `¡Solo quedan ${availableRemaining} onzas, hay más en camino!`
                         : isBottle
-                        ? availableRemaining === 1 ? '¡Solo queda 1 unidad!' : `¡Solo quedan ${availableRemaining} unidades!`
-                        : availableRemaining === 1 ? `¡Solo queda 1 ${product.unit || 'unidad'}!` : `¡Solo quedan ${availableRemaining} ${product.unit || 'unidades'}!`}
+                        ? availableRemaining === 1 ? '¡Solo queda 1 unidad, hay más en camino!' : `¡Solo quedan ${availableRemaining} unidades, hay más en camino!`
+                        : availableRemaining === 1 ? `¡Solo queda 1 ${product.unit || 'unidad'}, hay más en camino!` : `¡Solo quedan ${availableRemaining} ${product.unit || 'unidades'}, hay más en camino!`}
                     </strong>
                   ) : (
                     <span>

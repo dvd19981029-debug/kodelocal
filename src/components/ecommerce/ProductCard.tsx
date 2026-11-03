@@ -400,9 +400,9 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                   : isBelowMinAlert
                   ? isEssence
                     ? selectedPresentation === 'MEDIA_ONZA'
-                      ? availableUnits === 1 ? '¡Solo queda 1 media onza!' : `¡Solo quedan ${availableUnits} medias onzas!`
-                      : availableUnits === 1 ? '¡Solo queda 1 onza!' : `¡Solo quedan ${availableUnits} onzas!`
-                    : availableUnits === 1 ? '¡Solo queda 1 unidad!' : `¡Solo quedan ${availableUnits} unidades!`
+                      ? availableUnits === 1 ? '¡Solo queda 1 media onza, hay más en camino!' : `¡Solo quedan ${availableUnits} medias onzas, hay más en camino!`
+                      : availableUnits === 1 ? '¡Solo queda 1 onza, hay más en camino!' : `¡Solo quedan ${availableUnits} onzas, hay más en camino!`
+                    : availableUnits === 1 ? '¡Solo queda 1 unidad, hay más en camino!' : `¡Solo quedan ${availableUnits} unidades, hay más en camino!`
                   : 'Disponible'}
               </span>
             </div>
