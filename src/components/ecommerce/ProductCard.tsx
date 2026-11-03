@@ -423,7 +423,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                 <span className="text-[10.5px] sm:text-xs text-slate-500 font-normal truncate">Frasco de Vidrio • Cierre de Rosca</span>
               ) : isSticker ? (
                 <p className="text-[10px] sm:text-[11px] text-slate-600 font-medium line-clamp-2 leading-tight" title={product.description}>
-                  Medida Cricut 5.3 × 5.0 cm • Notas, casa ({product.brand || 'Autor'}) e inspirado en {(product.officialName || product.name || '').replace(/^Sticker\s+(?:Inspirado\s+en\s+)?/i, '')}
+                  Medida 5.3 × 5.0 cm • Notas, casa ({product.brand || 'Autor'}) e inspirado en {(product.officialName || product.name || '').replace(/^Sticker\s+(?:Inspirado\s+en\s+)?/i, '')}
                 </p>
               ) : (
                 <span className="text-[10.5px] sm:text-xs text-slate-700 font-semibold line-clamp-2 leading-tight">{product.description || `${product.unit || 'Unidad'} • Disponible`}</span>
@@ -468,7 +468,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
               </div>
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-slate-50/70 rounded-xl border border-slate-100 px-2 text-center text-[10px] sm:text-[11px] font-bold text-slate-500">
-                <span className="truncate">{isSticker ? 'Cricut 5.3 × 5.0 cm (Corte 5.6 × 5.3 cm)' : (presentations[0]?.description || 'Presentación única')}</span>
+                <span className="truncate">{isSticker ? 'Medida 5.3 × 5.0 cm • Unidad' : (presentations[0]?.description || 'Presentación única')}</span>
               </div>
             )}
           </div>

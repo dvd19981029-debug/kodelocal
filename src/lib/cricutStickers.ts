@@ -2253,7 +2253,7 @@ export const CRICUT_STICKER_SPECS = {
   borderMarginMm: 1.5,
   dpi: 304.8,
   shortBadge: '5.3 × 5.0 cm (53 × 50 mm)',
-  fullMeasureText: 'Etiqueta 5.3 × 5.0 cm (53 × 50 mm) · Corte total Cricut 5.6 × 5.3 cm (56 × 53 mm con borde de 1.5 mm)',
+  fullMeasureText: 'Etiqueta 5.3 × 5.0 cm (53 × 50 mm)',
 };
 
 export interface StickerBottleMockupConfig {
@@ -2374,9 +2374,9 @@ export const INITIAL_STICKER_PRODUCTS: ProductItem[] = CRICUT_STICKERS_CATALOG.m
     stockHalf: 0,
     minStock: 5,
     imageUrl: `/images/stickers/sticker_${item.sku}.webp`,
-    description: `Sticker genérico medida Cricut 5.3 × 5.0 cm (53 × 50 mm; corte total 5.6 × 5.3 cm con borde de 1.5 mm) con las notas de tu perfume (Salida: ${topStr} · Corazón: ${heartStr} · Fondo: ${baseStr}), la casa inspirada (${item.marca} · ${item.anio}) y el nombre inspirado en ${item.nombre} (${item.contratipo}). "${item.fraseOlfativa}"`,
+    description: `Sticker genérico medida 5.3 × 5.0 cm (53 × 50 mm) con las notas de tu perfume (Salida: ${topStr} · Corazón: ${heartStr} · Fondo: ${baseStr}), la casa inspirada (${item.marca} · ${item.anio}) y el nombre inspirado en ${item.nombre} (${item.contratipo}). "${item.fraseOlfativa}"`,
     isAvailableOnline: true,
     puesto: 'C3',
-    supplier: 'Aromaniak Cricut',
+    supplier: 'Aromaniak',
   };
 });

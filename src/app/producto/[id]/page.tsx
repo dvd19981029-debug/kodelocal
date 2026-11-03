@@ -489,7 +489,7 @@ export default function ProductDetailPage() {
                     {getGenderBadge(product.gender)}
                     {isSticker && (
                       <span className="bg-white/95 backdrop-blur-xs text-slate-900 border border-slate-200 text-[10.5px] font-black px-2.5 py-1 rounded-xl shadow-2xs">
-                        Medida Cricut: 5.3 × 5.0 cm
+                        5.3 × 5.0 cm
                       </span>
                     )}
                   </>
@@ -529,7 +529,7 @@ export default function ProductDetailPage() {
                       <span>
                         {activeStickerBottle
                           ? `Ejemplo real en ${activeStickerBottle.name}`
-                          : 'Etiqueta 5.3 × 5.0 cm (Corte Cricut 5.6 × 5.3 cm)'}
+                          : 'Etiqueta 5.3 × 5.0 cm'}
                       </span>
                     </>
                   ) : (
@@ -1132,14 +1132,14 @@ export default function ProductDetailPage() {
                     <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                       <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                         <Sparkles className="w-4 h-4 text-amber-500" />
-                        <span>Contenido y Medidas Cricut del Sticker</span>
+                        <span>Contenido y Especificaciones del Sticker</span>
                       </h3>
                       <span className="text-[10.5px] font-bold text-slate-400 font-mono">
                         {product.sku || 'STICKER'}
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                       <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
                         <span className="text-[10px] font-black uppercase text-slate-400">Inspirado en</span>
                         <strong className="text-xs sm:text-sm font-bold text-slate-900">{stickerEntry.nombre.toUpperCase()}</strong>
@@ -1148,15 +1148,10 @@ export default function ProductDetailPage() {
                         <span className="text-[10px] font-black uppercase text-slate-400">Casa Inspirada</span>
                         <strong className="text-xs sm:text-sm font-bold text-slate-800">{stickerEntry.marca} · {stickerEntry.anio}</strong>
                       </div>
-                      <div className="p-3 rounded-2xl bg-indigo-50/60 border border-indigo-100 flex flex-col">
-                        <span className="text-[10px] font-black uppercase text-indigo-500">Medida Etiqueta</span>
+                      <div className="p-3 rounded-2xl bg-indigo-50/60 border border-indigo-100 flex flex-col col-span-2 sm:col-span-1">
+                        <span className="text-[10px] font-black uppercase text-indigo-500">Medida</span>
                         <strong className="text-xs sm:text-sm font-black text-indigo-900">5.3 × 5.0 cm</strong>
                         <span className="text-[10px] font-semibold text-indigo-700">53.0 × 50.0 mm</span>
-                      </div>
-                      <div className="p-3 rounded-2xl bg-indigo-50/60 border border-indigo-100 flex flex-col">
-                        <span className="text-[10px] font-black uppercase text-indigo-500">Corte Total Cricut</span>
-                        <strong className="text-xs sm:text-sm font-black text-indigo-900">5.6 × 5.3 cm</strong>
-                        <span className="text-[10px] font-semibold text-indigo-700">56 × 53 mm (borde 1.5 mm)</span>
                       </div>
                     </div>
 
@@ -1181,9 +1176,9 @@ export default function ProductDetailPage() {
                         <strong className="text-xs font-bold text-slate-800">{stickerEntry.fraseOlfativa}</strong>
                       </div>
                       <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col justify-between gap-1">
-                        <span className="text-[10px] font-black uppercase text-slate-400">Clasificación & Impresión Cricut</span>
+                        <span className="text-[10px] font-black uppercase text-slate-400">Clasificación & Medida</span>
                         <strong className="text-xs font-bold text-indigo-700">{getStickerFooterClassification(stickerEntry.genero)}</strong>
-                        <span className="text-[11px] font-semibold text-slate-500">304.8 DPI • Esquinas redondeadas • Listo para pegar</span>
+                        <span className="text-[11px] font-semibold text-slate-500">5.3 × 5.0 cm • Esquinas redondeadas • Listo para pegar</span>
                       </div>
                     </div>
                   </div>
@@ -1197,7 +1192,7 @@ export default function ProductDetailPage() {
                           <span>Así se ve esta etiqueta en los botes que vendemos</span>
                         </h3>
                         <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-                          Proporción real de la etiqueta Cricut (5.3 × 5.0 cm / corte 5.6 × 5.3 cm) aplicada sobre nuestros frascos de 100 ml
+                          Proporción real de la etiqueta (5.3 × 5.0 cm) aplicada sobre nuestros frascos de 100 ml
                         </p>
                       </div>
                     </div>
@@ -1337,12 +1332,12 @@ export default function ProductDetailPage() {
           ) : isSticker ? (
             <div className="grid grid-cols-3 gap-2 pt-1 text-center">
               <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
-                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Medida Etiqueta</span>
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Medida</span>
                 <span className="text-xs font-bold text-slate-800">5.3 × 5.0 cm</span>
               </div>
               <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
-                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Corte Cricut</span>
-                <span className="text-xs font-bold text-slate-800">5.6 × 5.3 cm</span>
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Material</span>
+                <span className="text-xs font-bold text-slate-800">Adhesivo Corte Fino</span>
               </div>
               <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
                 <span className="text-[9.5px] font-black uppercase text-slate-400 block">Diseño</span>
