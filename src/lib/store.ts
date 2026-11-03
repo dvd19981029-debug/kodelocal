@@ -1,4 +1,5 @@
 // src/lib/store.ts
+import { INITIAL_STICKER_PRODUCTS } from './cricutStickers';
 
 export interface ProductItem {
   id: string;
@@ -275,6 +276,7 @@ export function getOrderPaymentDisplayInfo(order: SaleRecord): OrderPaymentDispl
 export const PERFUME_CATEGORIES = [
   "Esencias para Perfume",
   "Insumos y Materia Prima",
+  "Stickers",
   "Botes",
   "Otro",
   "Empaque",
@@ -2647,10 +2649,11 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "puesto": "LOG",
     "stockHalf": 0,
     "priceHalfOunce": 1.45
-  }
+  },
+  ...INITIAL_STICKER_PRODUCTS
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v36_bottle_stock_sync";
+export const DATA_VERSION = "2026_oficial_real_v37_cricut_stickers";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;

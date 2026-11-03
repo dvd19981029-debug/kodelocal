@@ -575,6 +575,7 @@ export default function InventarioPage() {
                     >
                       <option value="Esencias para Perfume">Esencias (Esencias para Perfume)</option>
                       <option value="Insumos y Materia Prima">Insumos (Insumos y Materia Prima)</option>
+                      <option value="Stickers">Stickers ($0.35)</option>
                       <option value="Botes">Botes</option>
                       <option value="Otro">Otro</option>
                       <option value="Empaque">Empaque</option>

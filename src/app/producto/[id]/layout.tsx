@@ -34,6 +34,7 @@ async function getProductForSEO(id: string): Promise<ProductItem | null> {
           gender: dbProd.gender || undefined,
           description: dbProd.description || undefined,
           puesto: (dbProd as any).puesto || undefined,
+          supplier: (dbProd as any).supplier || undefined,
           imageUrl: dbProd.imageUrl || '/images/logo.png',
           minStock: Number(dbProd.minStock || 0),
           isAvailableOnline: Boolean(dbProd.isAvailableOnline),
@@ -86,10 +87,13 @@ export async function generateMetadata({
     : '';
 
   const displayName = product.officialName?.trim() || product.name;
-  const isBottle = product.category?.toLowerCase().includes('bote') || product.name.toLowerCase().includes('bote');
+  const isSticker = product.category === 'Stickers' || String(product.id || '').startsWith('sticker-');
+  const isBottle = !isSticker && (product.category?.toLowerCase().includes('bote') || product.name.toLowerCase().includes('bote'));
   const isEssence = product.category === 'Esencias para Perfume';
 
-  const title = isBottle
+  const title = isSticker
+    ? `${product.name} - Etiqueta Adhesiva para Frasco de Perfume`
+    : isBottle
     ? `${displayName} - Frasco de Vidrio para Perfume`
     : isEssence
     ? `${displayName} - Esencia de Perfumería Fina`
@@ -97,14 +101,18 @@ export async function generateMetadata({
 
   const fullSocialTitle = `${title} | Aromaniak SV`;
 
-  const description = isBottle
+  const description = isSticker
+    ? (product.description || `${product.name} con notas olfativas, casa inspirada y nombre inspirado en ${displayName}. Etiqueta adhesiva de 5.3 x 5.0 cm para frasco de perfume.`)
+    : isBottle
     ? `${displayName} con atomizador para envasado y perfumería. Envases de vidrio disponibles en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.`
     : isEssence
     ? `Esencia concentrada ${displayName} para elaboración de fragancias y perfumería fina. ${notesText}Venta por onza y media onza. Entregas a domicilio a todo El Salvador o retiro en local.`
     : `${displayName} - Insumos para elaboración de perfumería fina en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.`;
 
   const canonical = `https://aromaniaksv.com${getProductUrl(product)}`;
-  const imageUrl = `https://aromaniaksv.com/images/meta/${encodeURIComponent(product.id)}.jpg?v=5`;
+  const imageUrl = isSticker && product.imageUrl
+    ? `https://aromaniaksv.com${product.imageUrl}`
+    : `https://aromaniaksv.com/images/meta/${encodeURIComponent(product.id)}.jpg?v=5`;
 
   return {
     title,
@@ -155,8 +163,9 @@ export default async function ProductLayout({
   const { id } = await params;
   const product = await getProductForSEO(id);
 
-  const displayName = product ? (product.officialName?.trim() || product.name) : '';
-  const isBottle = product ? (product.category?.toLowerCase().includes('bote') || product.name.toLowerCase().includes('bote')) : false;
+  const isSticker = product ? (product.category === 'Stickers' || String(product.id || '').startsWith('sticker-')) : false;
+  const displayName = product ? (isSticker ? product.name : (product.officialName?.trim() || product.name)) : '';
+  const isBottle = product && !isSticker ? (product.category?.toLowerCase().includes('bote') || product.name.toLowerCase().includes('bote')) : false;
 
   const jsonLd = product ? {
     '@context': 'https://schema.org',
@@ -166,10 +175,14 @@ export default async function ProductLayout({
     sku: product.id,
     mpn: product.sku || product.id,
     name: displayName,
-    description: isBottle
+    description: isSticker
+      ? (product.description || `${product.name} adhesivo para frasco de perfume en El Salvador.`)
+      : isBottle
       ? `${displayName} con atomizador para elaboración y envasado de perfumes. Entregas a domicilio a todo El Salvador o retiro en local.`
       : `Esencia concentrada ${displayName} para elaboración de perfumería fina en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.`,
-    image: `https://aromaniaksv.com/images/meta/${encodeURIComponent(product.id)}.jpg?v=5`,
+    image: isSticker && product.imageUrl
+      ? `https://aromaniaksv.com${product.imageUrl}`
+      : `https://aromaniaksv.com/images/meta/${encodeURIComponent(product.id)}.jpg?v=5`,
     brand: {
       '@type': 'Brand',
       name: 'Aromaniak',

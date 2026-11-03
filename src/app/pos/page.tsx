@@ -902,7 +902,7 @@ export default function PosPage() {
   // Filtrado de productos
   const filteredProducts = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    return products.filter(product => {
+    const list = products.filter(product => {
       const matchesCat =
         selectedCategory === 'Todos' ||
         product.category === selectedCategory ||
@@ -922,10 +922,21 @@ export default function PosPage() {
 
       return matchesCat && matchesGender && matchesQuery;
     });
+
+    if (q.length > 0) {
+      const getCatRank = (cat?: string) => {
+        if (cat === 'Esencias para Perfume') return 0;
+        if (cat === 'Stickers') return 2;
+        return 1;
+      };
+      list.sort((a, b) => getCatRank(a.category) - getCatRank(b.category));
+    }
+
+    return list;
   }, [products, selectedCategory, selectedGender, searchQuery]);
 
   const displayedProducts = useMemo(() => {
-    return filteredProducts.slice(0, 60);
+    return filteredProducts.slice(0, 100);
   }, [filteredProducts]);
 
   // Precios dinámicos de esencias en POS
@@ -1283,7 +1294,9 @@ export default function PosPage() {
         nameLower.includes('litro') ||
         unitLower.includes('litro') ||
         nameLower.includes('alcohol') ||
+        nameLower.includes('sticker') ||
         matchedProd.category === 'Insumos y Materia Prima' ||
+        matchedProd.category === 'Stickers' ||
         matchedProd.category === 'Botes' ||
         matchedProd.category === 'Logística' ||
         matchedProd.category === 'Otro';
@@ -1682,7 +1695,7 @@ export default function PosPage() {
     const nextSku = numericSkus.length > 0 ? String(Math.max(...numericSkus) + 1) : String(products.length + 1);
     const defaultCat =
       selectedCategory &&
-      ['Esencias para Perfume', 'Insumos y Materia Prima', 'Botes', 'Otro'].includes(selectedCategory)
+      ['Esencias para Perfume', 'Insumos y Materia Prima', 'Stickers', 'Botes', 'Otro'].includes(selectedCategory)
         ? selectedCategory
         : 'Esencias para Perfume';
     const isEssenceDefault = defaultCat === 'Esencias para Perfume';

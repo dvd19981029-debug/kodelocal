@@ -125,6 +125,9 @@ async function resolveCategoryRecord(rawCategory?: string) {
   } else if (lower === 'insumos' || lower === 'insumo' || lower === 'insumos y materia prima') {
     canonicalName = 'Insumos y Materia Prima';
     canonicalSlug = 'insumos-materia-prima';
+  } else if (lower === 'stickers' || lower === 'sticker' || lower === 'etiquetas') {
+    canonicalName = 'Stickers';
+    canonicalSlug = 'stickers';
   } else if (lower === 'botes' || lower === 'bote' || lower === 'botes & envases') {
     canonicalName = 'Botes';
     canonicalSlug = 'botes';

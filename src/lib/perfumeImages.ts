@@ -7,6 +7,12 @@ export const getProductImage = (product: Product | undefined | null): string => 
     return product.imageUrl || '/images/botes/bote_100ml_degrade_azul_noche.jpg';
   }
 
+  if (product.category === 'Stickers' || String(product.id || '').startsWith('sticker-')) {
+    if (product.imageUrl) return product.imageUrl;
+    const skuNum = String(product.sku || '').replace(/^STK-/i, '') || String(product.id || '').replace(/^sticker-/, '');
+    return `/images/stickers/sticker_${skuNum || '1'}.webp`;
+  }
+
   if (product.category !== 'Esencias para Perfume' && product.imageUrl) {
     return product.imageUrl;
   }

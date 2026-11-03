@@ -136,6 +136,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
   };
 
   const isBottle = product.category === 'Botes' || product.category === 'Botes & Envases';
+  const isSticker = product.category === 'Stickers' || String(product.id || '').startsWith('sticker-');
   const isIncoming = isBottle || (isEssence && isIncomingEssence(product));
 
   const getGenderBadge = (gender?: string) => {
@@ -364,6 +365,10 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                 </p>
               ) : isBottle ? (
                 <span className="text-[10.5px] sm:text-xs text-slate-500 font-normal truncate">Frasco de Vidrio • Cierre de Rosca</span>
+              ) : isSticker ? (
+                <p className="text-[10px] sm:text-[11px] text-slate-600 font-medium line-clamp-2 leading-tight" title={product.description}>
+                  Sticker genérico con notas, casa inspirada ({product.brand || 'Autor'}) y nombre inspirado en {(product.officialName || product.name || '').replace(/^Sticker\s+(?:Inspirado\s+en\s+)?/i, '')}
+                </p>
               ) : (
                 <span className="text-[10.5px] sm:text-xs text-slate-700 font-semibold line-clamp-2 leading-tight">{product.description || `${product.unit || 'Unidad'} • Disponible`}</span>
               )}
@@ -407,7 +412,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
               </div>
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-slate-50/70 rounded-xl border border-slate-100 px-2 text-center text-[10px] sm:text-[11px] font-bold text-slate-500">
-                <span className="truncate">{presentations[0]?.description || 'Presentación única'}</span>
+                <span className="truncate">{isSticker ? 'Sticker adhesivo con notas • Unidad' : (presentations[0]?.description || 'Presentación única')}</span>
               </div>
             )}
           </div>

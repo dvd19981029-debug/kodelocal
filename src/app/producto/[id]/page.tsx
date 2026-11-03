@@ -28,6 +28,7 @@ import { getFragranceProfile, getFragranceAccordBars } from '@/lib/fragranceProf
 import ProductCard from '@/components/ecommerce/ProductCard';
 import FragranceNotesVisual from '@/components/ecommerce/FragranceNotesVisual';
 import { getInspiracionPerfumeName, formatPerfumeDisplayName, getBottleLabelConfig, isIncomingEssence } from '@/lib/perfumeNames';
+import { getCricutStickerEntryForProduct, getStickerFooterClassification } from '@/lib/cricutStickers';
 import { getFragranceDescription } from '@/lib/fragranceDescriptions';
 import { resolveTargetProductId } from '@/lib/productUrl';
 import { isHalloweenPromoProduct, getHalloweenPotionInfo, HALLOWEEN_ORIGINAL_PRICE_1OZ, HALLOWEEN_ORIGINAL_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
@@ -128,6 +129,8 @@ export default function ProductDetailPage() {
 
   const isEssence = product?.category === 'Esencias para Perfume';
   const isBottle = product?.category === 'Botes' || product?.category === 'Botes & Envases';
+  const isSticker = product?.category === 'Stickers' || String(product?.id || '').startsWith('sticker-');
+  const stickerEntry = useMemo(() => (isSticker ? getCricutStickerEntryForProduct(product) : null), [product, isSticker]);
   const isIncoming = isBottle || (isEssence && isIncomingEssence(product));
 
   const presentations = useMemo(() => {
@@ -194,7 +197,7 @@ export default function ProductDetailPage() {
     });
   }, [product?.id]);
 
-  // Productos relacionados (esencias con esencias, botes con botes)
+  // Productos relacionados (esencias con esencias, botes con botes, stickers con su esencia y stickers)
   const relatedProducts = useMemo(() => {
     if (!product) return [];
     const onlineOnly = products.filter(
@@ -209,10 +212,24 @@ export default function ProductDetailPage() {
         .filter(p => p.category === 'Botes' || p.category === 'Botes & Envases')
         .slice(0, 4);
     }
-    return onlineOnly
+    if (isSticker) {
+      const targetSku = stickerEntry?.sku || String(product.sku || '').replace(/^STK-/i, '');
+      const matchingEssence = onlineOnly.find(
+        (p) => p.category === 'Esencias para Perfume' && String(p.sku || '') === targetSku
+      );
+      const otherStickers = onlineOnly
+        .filter((p) => p.category === 'Stickers' && p.gender === product.gender)
+        .slice(0, matchingEssence ? 3 : 4);
+      return matchingEssence ? [matchingEssence, ...otherStickers] : otherStickers;
+    }
+    const matchingSticker = onlineOnly.find(
+      (p) => p.category === 'Stickers' && String(p.sku || '').replace(/^STK-/i, '') === String(product.sku || '')
+    );
+    const otherEssences = onlineOnly
       .filter(p => p.category === 'Esencias para Perfume' && (p.gender === product.gender || p.gender === 'Unisex'))
-      .slice(0, 4);
-  }, [products, product, isBottle]);
+      .slice(0, matchingSticker ? 3 : 4);
+    return matchingSticker ? [...otherEssences, matchingSticker] : otherEssences;
+  }, [products, product, isBottle, isSticker, stickerEntry]);
 
   // Cálculo de inventario discreto 80/20 para esencias y general para otros productos
   const totalStock = typeof product?.stock === 'number' ? product.stock : 0;
@@ -516,11 +533,15 @@ export default function ProductDetailPage() {
 
               {!isEssence && !isBottle && (
                 <div className="text-xs sm:text-sm text-slate-600 font-medium flex items-center gap-1.5 flex-wrap pt-0.5">
-                  <span className="text-slate-400">Categoría:</span>
-                  <strong className="text-slate-900 font-black">Insumos de Perfumería</strong>
+                  <span className="text-slate-400">{isSticker ? 'Inspirado en:' : 'Categoría:'}</span>
+                  <strong className="text-slate-900 font-black">
+                    {isSticker && stickerEntry
+                      ? `${stickerEntry.nombre} (${stickerEntry.marca} · ${stickerEntry.anio})`
+                      : 'Insumos de Perfumería'}
+                  </strong>
                   <span className="text-slate-300">•</span>
                   <span className="text-indigo-700 font-bold bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg text-xs">
-                    {product.unit || 'Alta Pureza'}
+                    {isSticker ? 'Sticker 5.3 × 5.0 cm' : (product.unit || 'Alta Pureza')}
                   </span>
                 </div>
               )}
@@ -990,6 +1011,56 @@ export default function ProductDetailPage() {
                     </div>
                   </div>
                 </>
+              ) : isSticker && stickerEntry ? (
+                <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-4 shadow-xs">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                    <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-500" />
+                      <span>Contenido y Especificaciones del Sticker</span>
+                    </h3>
+                    <span className="text-[10.5px] font-bold text-slate-400 font-mono">
+                      {product.sku || 'STICKER'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Inspirado en</span>
+                      <strong className="text-xs sm:text-sm font-bold text-slate-900">{stickerEntry.nombre.toUpperCase()}</strong>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Casa Inspirada</span>
+                      <strong className="text-xs sm:text-sm font-bold text-slate-800">{stickerEntry.marca} · {stickerEntry.anio}</strong>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col gap-0.5">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Notas de Salida</span>
+                      <strong className="text-xs sm:text-sm font-bold text-slate-800">{stickerEntry.topNotes.join(', ')}</strong>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col gap-0.5">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Notas de Corazón</span>
+                      <strong className="text-xs sm:text-sm font-bold text-slate-800">{stickerEntry.heartNotes.join(', ')}</strong>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col gap-0.5">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Notas de Fondo</span>
+                      <strong className="text-xs sm:text-sm font-bold text-slate-800">{stickerEntry.baseNotes.join(', ')}</strong>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div className="p-3 rounded-2xl bg-indigo-50/50 border border-indigo-100 flex flex-col gap-0.5">
+                      <span className="text-[10px] font-black uppercase text-indigo-500">Descripción Impresa</span>
+                      <strong className="text-xs font-bold text-slate-800">{stickerEntry.fraseOlfativa}</strong>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col justify-between gap-1">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Clasificación & Medida</span>
+                      <strong className="text-xs font-bold text-indigo-700">{getStickerFooterClassification(stickerEntry.genero)}</strong>
+                      <span className="text-[11px] font-semibold text-slate-500">5.3 × 5.0 cm • Adhesivo listo para pegar</span>
+                    </div>
+                  </div>
+                </div>
               ) : (
                 <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-4 shadow-xs">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
@@ -1077,6 +1148,21 @@ export default function ProductDetailPage() {
               <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
                 <span className="text-[9.5px] font-black uppercase text-slate-400 block">Grado</span>
                 <span className="text-xs font-bold text-indigo-700">Perfumería</span>
+              </div>
+            </div>
+          ) : isSticker ? (
+            <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Medida</span>
+                <span className="text-xs font-bold text-slate-800">5.3 × 5.0 cm</span>
+              </div>
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Material</span>
+                <span className="text-xs font-bold text-slate-800">Adhesivo Corte Fino</span>
+              </div>
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Diseño</span>
+                <span className="text-xs font-bold text-indigo-700">Con Notas y Casa</span>
               </div>
             </div>
           ) : (

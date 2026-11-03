@@ -85,6 +85,7 @@ export default function EcommerceHomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGender, setSelectedGender] = useState<'Todos' | 'Caballero' | 'Dama' | 'Unisex'>('Todos');
   const [selectedCategory, setSelectedCategory] = useState<string>('Esencias para Perfume');
+  const [selectedInsumoSubTab, setSelectedInsumoSubTab] = useState<'Insumos' | 'Stickers'>('Insumos');
   const [selectedStockFilter, setSelectedStockFilter] = useState<'Todos' | 'Disponibles' | 'Agotados'>('Todos');
   const [onlyHalloweenPromo, setOnlyHalloweenPromo] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -123,6 +124,9 @@ export default function EcommerceHomePage() {
           el.scrollIntoView({ behavior: 'smooth' });
         }
       }, 200);
+    } else if (catParam === 'Stickers' || params.get('sub') === 'Stickers') {
+      setSelectedCategory('Insumos');
+      setSelectedInsumoSubTab('Stickers');
     } else {
       try {
         const rawState = sessionStorage.getItem('kodelocal_ecommerce_catalog_state_v1');
@@ -131,6 +135,9 @@ export default function EcommerceHomePage() {
           const parsed = JSON.parse(rawState);
           if (parsed.selectedCategory && parsed.selectedCategory !== 'Pociones de la Bruja') {
             setSelectedCategory(parsed.selectedCategory);
+          }
+          if (parsed.selectedInsumoSubTab === 'Insumos' || parsed.selectedInsumoSubTab === 'Stickers') {
+            setSelectedInsumoSubTab(parsed.selectedInsumoSubTab);
           }
           if (parsed.selectedGender) setSelectedGender(parsed.selectedGender);
           if (parsed.selectedStockFilter) setSelectedStockFilter(parsed.selectedStockFilter);
@@ -207,6 +214,7 @@ export default function EcommerceHomePage() {
         JSON.stringify({
           currentPage,
           selectedCategory,
+          selectedInsumoSubTab,
           selectedGender,
           selectedStockFilter,
           onlyHalloweenPromo,
@@ -215,7 +223,7 @@ export default function EcommerceHomePage() {
         })
       );
     } catch {}
-  }, [isCatalogHydrated, currentPage, selectedCategory, selectedGender, selectedStockFilter, onlyHalloweenPromo, searchQuery]);
+  }, [isCatalogHydrated, currentPage, selectedCategory, selectedInsumoSubTab, selectedGender, selectedStockFilter, onlyHalloweenPromo, searchQuery]);
 
   useEffect(() => {
     if (!isCatalogHydrated || typeof window === 'undefined') return;
@@ -229,6 +237,7 @@ export default function EcommerceHomePage() {
           JSON.stringify({
             currentPage,
             selectedCategory,
+            selectedInsumoSubTab,
             selectedGender,
             selectedStockFilter,
             onlyHalloweenPromo,
@@ -241,7 +250,7 @@ export default function EcommerceHomePage() {
 
     window.addEventListener('scroll', handleScrollSave, { passive: true });
     return () => window.removeEventListener('scroll', handleScrollSave);
-  }, [isCatalogHydrated, currentPage, selectedCategory, selectedGender, selectedStockFilter, onlyHalloweenPromo, searchQuery]);
+  }, [isCatalogHydrated, currentPage, selectedCategory, selectedInsumoSubTab, selectedGender, selectedStockFilter, onlyHalloweenPromo, searchQuery]);
 
   // Sincronizar la barra de anuncios para ocultarla en "Arma tu propio perfume" y mostrarla al regresar
   useEffect(() => {
@@ -306,19 +315,49 @@ export default function EcommerceHomePage() {
     return () => window.removeEventListener('resize', updateColumns);
   }, []);
 
-  // Filtrado reactivo de productos (con prioridad para el Top 10 de la Promoción de Halloween)
+  // Filtrado reactivo de productos (con prioridad para Esencias antes de Stickers al buscar)
   const filteredProducts = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     const list = products.filter((p) => {
       if (!isEcommerceEligible(p)) return false;
       // Filtro de categoría
       let matchesCategory = true;
-      if (selectedCategory === 'Insumos' || selectedCategory === 'Alcohol y Materiales') {
-        matchesCategory = p.category === 'Insumos y Materia Prima' || p.category === 'Empaque' || p.category === 'Insumos';
-      } else if (selectedCategory === 'Arma tu perfume') {
-        matchesCategory = p.category === 'Botes' || p.category === 'Esencias para Perfume';
-      } else if (selectedCategory !== 'Todos') {
-        matchesCategory = p.category === selectedCategory;
+      if (q.length > 0) {
+        // Al buscar en el buscador, si el usuario está en Esencias o Insumos, mostrar primero los perfumes/insumos y después los stickers correspondientes
+        if (selectedCategory === 'Esencias para Perfume') {
+          matchesCategory = p.category === 'Esencias para Perfume' || p.category === 'Stickers';
+        } else if (selectedCategory === 'Insumos' || selectedCategory === 'Alcohol y Materiales') {
+          if (selectedInsumoSubTab === 'Stickers') {
+            matchesCategory = p.category === 'Stickers';
+          } else {
+            matchesCategory =
+              p.category === 'Insumos y Materia Prima' ||
+              p.category === 'Empaque' ||
+              p.category === 'Insumos' ||
+              p.category === 'Stickers';
+          }
+        } else if (selectedCategory === 'Arma tu perfume') {
+          matchesCategory = p.category === 'Botes' || p.category === 'Esencias para Perfume';
+        } else if (selectedCategory !== 'Todos') {
+          matchesCategory = p.category === selectedCategory;
+        }
+      } else {
+        if (selectedCategory === 'Insumos' || selectedCategory === 'Alcohol y Materiales') {
+          if (selectedInsumoSubTab === 'Stickers') {
+            matchesCategory = p.category === 'Stickers';
+          } else {
+            matchesCategory =
+              p.category === 'Insumos y Materia Prima' ||
+              p.category === 'Empaque' ||
+              p.category === 'Insumos';
+          }
+        } else if (selectedCategory === 'Stickers') {
+          matchesCategory = p.category === 'Stickers';
+        } else if (selectedCategory === 'Arma tu perfume') {
+          matchesCategory = p.category === 'Botes' || p.category === 'Esencias para Perfume';
+        } else if (selectedCategory !== 'Todos') {
+          matchesCategory = p.category === selectedCategory;
+        }
       }
 
       // Filtro de Promo Halloween
@@ -373,8 +412,21 @@ export default function EcommerceHomePage() {
       return matchesCategory && matchesGender && matchesStock && matchesSearch;
     });
 
+    if (q.length > 0) {
+      const getCategorySearchRank = (cat?: string) => {
+        if (cat === 'Esencias para Perfume') return 0;
+        if (cat === 'Stickers') return 2;
+        return 1;
+      };
+      list.sort((a, b) => {
+        const rankDiff = getCategorySearchRank(a.category) - getCategorySearchRank(b.category);
+        if (rankDiff !== 0) return rankDiff;
+        return 0;
+      });
+    }
+
     return list;
-  }, [products, searchQuery, selectedGender, selectedCategory, selectedStockFilter, onlyHalloweenPromo]);
+  }, [products, searchQuery, selectedGender, selectedCategory, selectedInsumoSubTab, selectedStockFilter, onlyHalloweenPromo]);
 
   // Paginación: Exactamente 7 filas por página según el número de columnas del dispositivo
   const targetRows = 7;
@@ -708,15 +760,52 @@ export default function EcommerceHomePage() {
                       : selectedCategory === 'Botes' 
                         ? 'Botes y Frascos' 
                         : selectedCategory === 'Insumos' || selectedCategory === 'Alcohol y Materiales'
-                          ? 'Insumos y Materiales'
+                          ? (selectedInsumoSubTab === 'Stickers' ? 'Stickers para Perfumes ($0.35 c/u)' : 'Insumos y Materiales')
                           : selectedCategory}
                   </span>
                 </h2>
                 <span className="clay-badge text-[10px] sm:text-xs bg-purple-50 text-purple-900 border border-purple-200 px-2.5 py-0.5 rounded-lg font-black">
-                  {filteredProducts.length} {selectedCategory === 'Esencias para Perfume' ? 'fragancias' : 'productos'}
+                  {filteredProducts.length} {selectedCategory === 'Esencias para Perfume' && !isSearching ? 'fragancias' : (selectedCategory === 'Insumos' && selectedInsumoSubTab === 'Stickers' && !isSearching) ? 'stickers' : 'productos'}
                 </span>
               </div>
             </div>
+
+            {/* ================= SUB-PESTAÑAS EN INSUMOS: INSUMOS / STICKERS ================= */}
+            {(selectedCategory === 'Insumos' || selectedCategory === 'Alcohol y Materiales') && (
+              <div className="w-full">
+                <div className="clay-tabs-track max-w-md mx-auto flex items-stretch gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedInsumoSubTab('Insumos');
+                      setCurrentPage(1);
+                    }}
+                    className={`clay-tab-item py-1.5 sm:py-2 px-3 sm:px-5 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
+                      selectedInsumoSubTab === 'Insumos'
+                        ? 'clay-tab-active flex-[1.2]'
+                        : 'clay-tab-inactive flex-1'
+                    }`}
+                  >
+                    <span>Insumos</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedInsumoSubTab('Stickers');
+                      setCurrentPage(1);
+                    }}
+                    className={`clay-tab-item py-1.5 sm:py-2 px-3 sm:px-5 text-xs sm:text-sm tracking-tight cursor-pointer transition-all duration-300 ${
+                      selectedInsumoSubTab === 'Stickers'
+                        ? 'clay-tab-active flex-[1.2]'
+                        : 'clay-tab-inactive flex-1'
+                    }`}
+                  >
+                    <span>Stickers</span>
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* ================= FILTRO CLAYMÓRFICO: TODAS / HOMBRE / DAMA / UNISEX ================= */}
             {selectedCategory === 'Esencias para Perfume' && (

@@ -238,7 +238,13 @@ export async function GET(request: Request) {
         nameLower.includes('alcohol') ||
         nameLower.includes('bote') ||
         nameLower.includes('caja') ||
-        (it.productId ? it.productId.startsWith('bote-') || it.productId.startsWith('alcohol-') : false);
+        nameLower.includes('sticker') ||
+        rawLower.includes('sticker') ||
+        (it.productId
+          ? it.productId.startsWith('bote-') ||
+            it.productId.startsWith('alcohol-') ||
+            it.productId.startsWith('sticker-')
+          : false);
 
       if (!isNonEssenceOrLitro) {
         if (
@@ -1053,7 +1059,12 @@ export async function GET(request: Request) {
         rawLower.includes('alcohol') ||
         rawLower.includes('bote') ||
         rawLower.includes('caja') ||
-        (it.productId ? it.productId.startsWith('bote-') || it.productId.startsWith('alcohol-') : false)
+        rawLower.includes('sticker') ||
+        (it.productId
+          ? it.productId.startsWith('bote-') ||
+            it.productId.startsWith('alcohol-') ||
+            it.productId.startsWith('sticker-')
+          : false)
       ) {
         return;
       }

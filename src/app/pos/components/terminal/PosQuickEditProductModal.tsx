@@ -15,6 +15,7 @@ export interface PosQuickEditProductModalProps {
 const POS_CATEGORY_OPTIONS = [
   { label: 'Esencias', value: 'Esencias para Perfume', defaultUnit: 'Onza' },
   { label: 'Insumos', value: 'Insumos y Materia Prima', defaultUnit: 'Unidad' },
+  { label: 'Stickers', value: 'Stickers', defaultUnit: 'Unidad' },
   { label: 'Botes', value: 'Botes', defaultUnit: 'Unidad' },
   { label: 'Otro', value: 'Otro', defaultUnit: 'Unidad' },
 ] as const;
@@ -81,7 +82,7 @@ export const PosQuickEditProductModal: React.FC<PosQuickEditProductModalProps> =
               <label className="text-xs font-bold text-slate-700 block mb-1.5">
                 Tipo de Producto <span className="text-rose-500">*</span>
               </label>
-              <div className="grid grid-cols-4 gap-1.5">
+              <div className="grid grid-cols-5 gap-1.5">
                 {POS_CATEGORY_OPTIONS.map((opt) => {
                   const isSelected =
                     currentCategory === opt.value ||

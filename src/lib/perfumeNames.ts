@@ -267,11 +267,14 @@ export function formatWithGenderSuffix(name: string | null | undefined, gender: 
 /**
  * Devuelve el nombre comercial / oficial del producto con el sufijo H o F correspondiente.
  */
-export function formatPerfumeDisplayName(product: { officialName?: string | null; name?: string | null; gender?: string | null } | null | undefined): string {
+export function formatPerfumeDisplayName(product: { officialName?: string | null; name?: string | null; gender?: string | null; category?: string | null } | null | undefined): string {
   if (!product) return '';
   const baseName = (product.officialName && product.officialName.trim()) 
     ? product.officialName.trim() 
     : (product.name ? product.name.trim() : '');
+  if (product.category === 'Stickers' || baseName.toLowerCase().startsWith('sticker ')) {
+    return baseName;
+  }
   return formatWithGenderSuffix(baseName, product.gender);
 }
 
