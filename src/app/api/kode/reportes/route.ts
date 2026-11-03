@@ -49,17 +49,15 @@ export async function GET() {
         COALESCE(u.comision_porcentaje, 5.00)::float AS comision_porcentaje,
         COUNT(DISTINCT p.id) AS pedidos_totales,
         COUNT(DISTINCT p.id) FILTER (WHERE p.estado IN ('Entregado', 'ENTREGADO')) AS pedidos_entregados,
-        COALESCE(SUM(DISTINCT p.total), 0) AS ventas_totales,
-        -- REGLA DE NEGOCIO: La comisión de venta se calcula línea por línea y solo se acumula cuando el pedido está ENTREGADO
+        COALESCE(
+          SUM(GREATEST(0, COALESCE(p.total, 0) - COALESCE(p.costo_envio, 0))) FILTER (WHERE p.estado IN ('Entregado', 'ENTREGADO')),
+          0
+        )::float AS ventas_totales,
+        -- REGLA DE NEGOCIO: La comisión de venta se calcula sobre el precio real entregado con descuento aplicado
         COALESCE(
           (
             SELECT SUM(
-              COALESCE(
-                (SELECT SUM(pi.subtotal) FROM public.pedido_items pi WHERE pi.pedido_id = ped.id),
-                ped.subtotal,
-                ped.total,
-                0
-              ) * (COALESCE(u.comision_porcentaje, 5.00) / 100.0)
+              GREATEST(0, COALESCE(ped.total, 0) - COALESCE(ped.costo_envio, 0)) * (COALESCE(u.comision_porcentaje, 5.00) / 100.0)
             )
             FROM public.pedidos ped
             WHERE ped.vendedora_id = u.id

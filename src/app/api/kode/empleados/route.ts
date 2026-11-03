@@ -33,34 +33,31 @@ export async function GET() {
         u.created_at,
         COUNT(DISTINCT p.id) FILTER (WHERE p.id IS NOT NULL) AS total_pedidos,
         COUNT(DISTINCT p.id) FILTER (WHERE p.estado IN ('Entregado', 'ENTREGADO')) AS pedidos_entregados,
-        COALESCE(SUM(DISTINCT p.total) FILTER (WHERE p.id IS NOT NULL), 0) AS total_ventas,
-        -- REGLA DE NEGOCIO: La comisión se calcula línea por línea (cada ítem vendido) según el % asignado
+        COALESCE(
+          (
+            SELECT SUM(GREATEST(0, COALESCE(ped.total, 0) - COALESCE(ped.costo_envio, 0)))
+            FROM public.pedidos ped
+            WHERE ped.vendedora_id = u.id
+              AND ped.estado IN ('Entregado', 'ENTREGADO')
+          ), 0
+        )::float AS total_ventas,
+        -- REGLA DE NEGOCIO: La comisión se calcula sobre el monto neto entregado con descuento aplicado (ej. 3 Plus = $65)
         -- SOLO se liquida y acumula cuando el pedido está ENTREGADO
         COALESCE(
           (
             SELECT SUM(
-              COALESCE(
-                (SELECT SUM(pi.subtotal) FROM public.pedido_items pi WHERE pi.pedido_id = ped.id),
-                ped.subtotal,
-                ped.total,
-                0
-              ) * (COALESCE(u.comision_porcentaje, 5.00) / 100.0)
+              GREATEST(0, COALESCE(ped.total, 0) - COALESCE(ped.costo_envio, 0)) * (COALESCE(u.comision_porcentaje, 5.00) / 100.0)
             )
             FROM public.pedidos ped
             WHERE ped.vendedora_id = u.id
               AND ped.estado IN ('Entregado', 'ENTREGADO')
           ), 0
         )::float AS total_comisiones,
-        -- Comisiones de pedidos en curso pendientes de ser entregados
+        -- Comisiones de pedidos en curso pendientes de ser entregados (con descuento ya aplicado)
         COALESCE(
           (
             SELECT SUM(
-              COALESCE(
-                (SELECT SUM(pi.subtotal) FROM public.pedido_items pi WHERE pi.pedido_id = ped.id),
-                ped.subtotal,
-                ped.total,
-                0
-              ) * (COALESCE(u.comision_porcentaje, 5.00) / 100.0)
+              GREATEST(0, COALESCE(ped.total, 0) - COALESCE(ped.costo_envio, 0)) * (COALESCE(u.comision_porcentaje, 5.00) / 100.0)
             )
             FROM public.pedidos ped
             WHERE ped.vendedora_id = u.id
