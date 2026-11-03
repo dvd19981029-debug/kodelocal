@@ -2210,7 +2210,7 @@ export const CRICUT_STICKERS_CATALOG: CricutStickerCatalogEntry[] = [
   },
   {
     "sku": "83",
-    "contratipo": "NUBE ROSA",
+    "contratipo": "PINK HEAVEN",
     "nombre": "Cloud Pink",
     "genero": "F",
     "marca": "Ariana Grande",
@@ -2236,7 +2236,7 @@ export const CRICUT_STICKERS_CATALOG: CricutStickerCatalogEntry[] = [
   },
   {
     "sku": "84",
-    "contratipo": "BOSQUE DE OUD",
+    "contratipo": "NICHO OUD",
     "nombre": "Oud Wood",
     "genero": "U",
     "marca": "Tom Ford",
@@ -2261,7 +2261,7 @@ export const CRICUT_STICKERS_CATALOG: CricutStickerCatalogEntry[] = [
   },
   {
     "sku": "85",
-    "contratipo": "SOMBRA DE CUERO",
+    "contratipo": "BLACK LEATHER",
     "nombre": "Ombré Leather",
     "genero": "H",
     "marca": "Tom Ford",
@@ -2286,7 +2286,7 @@ export const CRICUT_STICKERS_CATALOG: CricutStickerCatalogEntry[] = [
   },
   {
     "sku": "86",
-    "contratipo": "CAPITÁN AZUL",
+    "contratipo": "BLUE OCEAN",
     "nombre": "Nautica Voyage",
     "genero": "H",
     "marca": "Nautica",
@@ -2312,7 +2312,7 @@ export const CRICUT_STICKERS_CATALOG: CricutStickerCatalogEntry[] = [
   },
   {
     "sku": "87",
-    "contratipo": "ALPHA PARIS",
+    "contratipo": "STARBOY",
     "nombre": "Y Eau de Parfum",
     "genero": "H",
     "marca": "Yves Saint Laurent",
@@ -2339,7 +2339,7 @@ export const CRICUT_STICKERS_CATALOG: CricutStickerCatalogEntry[] = [
   },
   {
     "sku": "88",
-    "contratipo": "EL MÁS BUSCADO",
+    "contratipo": "PLAYBOY",
     "nombre": "The Most Wanted",
     "genero": "H",
     "marca": "Azzaro",

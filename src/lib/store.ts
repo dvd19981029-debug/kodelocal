@@ -2634,7 +2634,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "sku": "83",
     "barcode": "741001000083",
     "name": "Cloud Pink F",
-    "officialName": "Nube Rosa F",
+    "officialName": "Pink Heaven F",
     "brand": "Ariana Grande",
     "gender": "Dama",
     "category": "Esencias para Perfume",
@@ -2656,7 +2656,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "sku": "84",
     "barcode": "741001000084",
     "name": "Oud Wood",
-    "officialName": "Bosque de Oud",
+    "officialName": "Nicho Oud",
     "brand": "Tom Ford",
     "gender": "Unisex",
     "category": "Esencias para Perfume",
@@ -2678,7 +2678,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "sku": "85",
     "barcode": "741001000085",
     "name": "Ombré Leather H",
-    "officialName": "Sombra de Cuero H",
+    "officialName": "Black Leather H",
     "brand": "Tom Ford",
     "gender": "Caballero",
     "category": "Esencias para Perfume",
@@ -2700,7 +2700,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "sku": "86",
     "barcode": "741001000086",
     "name": "Nautica Voyage H",
-    "officialName": "Capitán Azul H",
+    "officialName": "Blue Ocean H",
     "brand": "Nautica",
     "gender": "Caballero",
     "category": "Esencias para Perfume",
@@ -2722,7 +2722,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "sku": "87",
     "barcode": "741001000087",
     "name": "Y Eau de Parfum H",
-    "officialName": "Alpha Paris H",
+    "officialName": "Starboy H",
     "brand": "Yves Saint Laurent",
     "gender": "Caballero",
     "category": "Esencias para Perfume",
@@ -2744,7 +2744,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "sku": "88",
     "barcode": "741001000088",
     "name": "The Most Wanted H",
-    "officialName": "El Más Buscado H",
+    "officialName": "Playboy H",
     "brand": "Azzaro",
     "gender": "Caballero",
     "category": "Esencias para Perfume",
@@ -2785,7 +2785,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   ...INITIAL_STICKER_PRODUCTS
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v40_esencias_83_88";
+export const DATA_VERSION = "2026_oficial_real_v41_esencias_83_88_names";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;

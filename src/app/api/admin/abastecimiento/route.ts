@@ -99,12 +99,12 @@ const DEFAULT_APAESA_CATALOG: SupplierCatalogEntry[] = [
   { sku: '80', id_proveedor: 'APAE-3839', name: 'SILVER MOUNTAIN WATER CREED', contratipo: 'CUMBRE DE PLATA', price_per_kg: 125.76 },
   { sku: '81', id_proveedor: 'APAE 4817', name: 'TUSCAN LEATHER BY TOM FORD', contratipo: 'CUERO TOSCANO', price_per_kg: 127.38 },
   { sku: '82', id_proveedor: 'NP 129026', name: 'VALENTINO BORN IN ROMA CORAL FANTASY', contratipo: 'EUROBOY CORAL', price_per_kg: 54.93 },
-  { sku: '83', id_proveedor: 'APAE-8301', name: 'CLOUD PINK M', contratipo: 'NUBE ROSA', price_per_kg: 75.22 },
-  { sku: '84', id_proveedor: 'APAE-8401', name: 'OUD WOOD', contratipo: 'BOSQUE DE OUD', price_per_kg: 105.00 },
-  { sku: '85', id_proveedor: 'APAE-8501', name: 'OMBRÉ LEATHER H', contratipo: 'SOMBRA DE CUERO', price_per_kg: 79.65 },
-  { sku: '86', id_proveedor: 'APAE-8601', name: 'NAUTICA VOYAGE H', contratipo: 'CAPITÁN AZUL', price_per_kg: 75.22 },
-  { sku: '87', id_proveedor: 'APAE-8701', name: 'Y BY YSL H', contratipo: 'ALPHA PARIS', price_per_kg: 79.65 },
-  { sku: '88', id_proveedor: 'APAE-8801', name: 'AZZARO THE MOST WANTED H', contratipo: 'EL MÁS BUSCADO', price_per_kg: 77.88 },
+  { sku: '83', id_proveedor: 'APAE-8301', name: 'CLOUD PINK M', contratipo: 'PINK HEAVEN', price_per_kg: 75.22 },
+  { sku: '84', id_proveedor: 'APAE-8401', name: 'OUD WOOD', contratipo: 'NICHO OUD', price_per_kg: 105.00 },
+  { sku: '85', id_proveedor: 'APAE-8501', name: 'OMBRÉ LEATHER H', contratipo: 'BLACK LEATHER', price_per_kg: 79.65 },
+  { sku: '86', id_proveedor: 'APAE-8601', name: 'NAUTICA VOYAGE H', contratipo: 'BLUE OCEAN', price_per_kg: 75.22 },
+  { sku: '87', id_proveedor: 'APAE-8701', name: 'Y BY YSL H', contratipo: 'STARBOY', price_per_kg: 79.65 },
+  { sku: '88', id_proveedor: 'APAE-8801', name: 'AZZARO THE MOST WANTED H', contratipo: 'PLAYBOY', price_per_kg: 77.88 },
 ];
 
 function checkStaffAuth(request: Request): boolean {

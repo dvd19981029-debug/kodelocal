@@ -559,14 +559,12 @@ export const OFFICIAL_TO_ORIGINAL_MAP: Record<string, { originalName: string; br
   'CUMBRE DE PLATA': { originalName: 'Silver Mountain Water H', brand: 'Creed', sku: '80' },
   'CUERO TOSCANO': { originalName: 'Tuscan Leather', brand: 'Tom Ford', sku: '81' },
   'EUROBOY CORAL': { originalName: 'Born in Roma Coral Fantasy H', brand: 'Valentino', sku: '82' },
-  'NUBE ROSA': { originalName: 'Cloud Pink F', brand: 'Ariana Grande', sku: '83' },
-  'BOSQUE DE OUD': { originalName: 'Oud Wood', brand: 'Tom Ford', sku: '84' },
-  'SOMBRA DE CUERO': { originalName: 'Ombré Leather H', brand: 'Tom Ford', sku: '85' },
-  'CAPITAN AZUL': { originalName: 'Nautica Voyage H', brand: 'Nautica', sku: '86' },
-  'CAPITÁN AZUL': { originalName: 'Nautica Voyage H', brand: 'Nautica', sku: '86' },
-  'ALPHA PARIS': { originalName: 'Y Eau de Parfum H', brand: 'Yves Saint Laurent', sku: '87' },
-  'EL MAS BUSCADO': { originalName: 'The Most Wanted H', brand: 'Azzaro', sku: '88' },
-  'EL MÁS BUSCADO': { originalName: 'The Most Wanted H', brand: 'Azzaro', sku: '88' },
+  'PINK HEAVEN': { originalName: 'Cloud Pink F', brand: 'Ariana Grande', sku: '83' },
+  'NICHO OUD': { originalName: 'Oud Wood', brand: 'Tom Ford', sku: '84' },
+  'BLACK LEATHER': { originalName: 'Ombré Leather H', brand: 'Tom Ford', sku: '85' },
+  'BLUE OCEAN': { originalName: 'Nautica Voyage H', brand: 'Nautica', sku: '86' },
+  'STARBOY': { originalName: 'Y Eau de Parfum H', brand: 'Yves Saint Laurent', sku: '87' },
+  'PLAYBOY': { originalName: 'The Most Wanted H', brand: 'Azzaro', sku: '88' },
 };
 
 // Generar variaciones con sufijos H / F / M / U para match instantáneo
