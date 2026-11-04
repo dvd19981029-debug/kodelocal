@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { validateWompiWebhook } from '@/lib/wompi';
+import { validateWompiWebhookAsync } from '@/lib/wompi';
 import { sendOrderConfirmationEmail } from '@/lib/orderEmailService';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Firma requerida' }, { status: 401 });
     }
 
-    const isValid = validateWompiWebhook(rawBody, hashHeader);
+    const isValid = await validateWompiWebhookAsync(rawBody, hashHeader);
     if (!isValid) {
       console.warn('⚠️ Webhook de Wompi descartado por firma inválida');
       return NextResponse.json({ success: false, error: 'Firma inválida' }, { status: 401 });

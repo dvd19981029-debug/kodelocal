@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { queryKode } from '@/lib/kodeDb';
-import { createWompiPaymentLink, getWompiTransaction } from '@/lib/wompi';
+import { createWompiPaymentLink, getWompiPaymentLinkDetails } from '@/lib/wompi';
 
 export const dynamic = 'force-dynamic';
 
@@ -142,7 +142,7 @@ export async function POST(request: Request) {
     const nombreCliente = clienteNombre?.trim() || 'Cliente KÖDE';
     const conceptoProducto = concepto?.trim() || 'Perfumes Kode';
 
-    // Generar enlace oficial en Wompi SV
+    // Generar enlace oficial en Wompi SV (Aplicativo exclusivo de KÖDE)
     const link = await createWompiPaymentLink({
       orderNumber,
       amount: Number(parsedMonto.toFixed(2)),
@@ -153,6 +153,7 @@ export async function POST(request: Request) {
       redirectUrl: `${baseUrl}/checkout/resultado`,
       returnUrl: `${baseUrl}/kode`,
       webhookUrl: `${baseUrl}/api/wompi/webhook`,
+      brand: 'kode',
     });
 
     // Guardar en la base de datos de KÖDE
@@ -225,13 +226,51 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: true, enlace: updated.rows[0] });
     }
 
-    // Si es verificación automática, consultar registro
+    // Si es verificación automática, consultar registro y sincronizar con Wompi (KÖDE)
     const current = await queryKode('SELECT * FROM public.wompi_enlaces WHERE id = $1', [id]);
     if (current.rowCount === 0) {
       return NextResponse.json({ success: false, error: 'Enlace no encontrado' }, { status: 404 });
     }
 
     const row = current.rows[0];
+    if (row && row.estado !== 'PAGADO' && row.id_enlace) {
+      try {
+        const details = await getWompiPaymentLinkDetails(Number(row.id_enlace), 'kode');
+        const txs: any[] =
+          details?.transaccionesCompra ||
+          details?.TransaccionesCompra ||
+          (details?.transaccionCompra ? [details.transaccionCompra] : []) ||
+          [];
+        const approvedTx = Array.isArray(txs)
+          ? txs.find(
+              (t: any) =>
+                t?.resultadoTransaccion === 'ExitosaAprobada' ||
+                t?.ResultadoTransaccion === 'ExitosaAprobada' ||
+                t?.esAprobada === true
+            )
+          : null;
+        if (approvedTx) {
+          const txId = String(approvedTx.idTransaccion || approvedTx.IdTransaccion || '');
+          const authCode = String(approvedTx.codigoAutorizacion || approvedTx.CodigoAutorizacion || '');
+          const updated = await queryKode(
+            `UPDATE public.wompi_enlaces
+             SET estado = 'PAGADO',
+                 transaccion_id = COALESCE($1, transaccion_id),
+                 codigo_autorizacion = COALESCE($2, codigo_autorizacion),
+                 fecha_pago = COALESCE(fecha_pago, NOW()),
+                 updated_at = NOW()
+             WHERE id = $3
+             RETURNING *`,
+            [txId || null, authCode || null, id]
+          );
+          if (updated.rows[0]) {
+            return NextResponse.json({ success: true, enlace: updated.rows[0] });
+          }
+        }
+      } catch {
+        // Silencioso si Wompi no reporta transacciones aún
+      }
+    }
     return NextResponse.json({ success: true, enlace: row });
   } catch (error: any) {
     console.error('Error actualizando enlace Wompi:', error);

@@ -44,6 +44,7 @@ export async function POST(request: Request) {
       redirectUrl: `${baseUrl}/checkout/resultado`,
       returnUrl: `${baseUrl}/kode`,
       webhookUrl: `${baseUrl}/api/wompi/webhook`,
+      brand: 'kode',
     });
 
     return NextResponse.json({

@@ -1,4 +1,7 @@
 import crypto from 'crypto';
+import { queryKode } from './kodeDb';
+
+export type WompiBrand = 'aromaniak' | 'kode';
 
 interface WompiTokenCache {
   token: string;
@@ -6,7 +9,8 @@ interface WompiTokenCache {
   appId: string;
 }
 
-let tokenCache: WompiTokenCache | null = null;
+const tokenCacheByAppId = new Map<string, WompiTokenCache>();
+let cachedKodeDbCreds: { appId: string; apiSecret: string } | null = null;
 
 const WOMPI_AUTH_URL = (process.env.WOMPI_AUTH_URL || 'https://id.wompi.sv').trim().replace(/^["']+|["']+$/g, '');
 const WOMPI_API_URL = (process.env.WOMPI_API_URL || 'https://api.wompi.sv').trim().replace(/^["']+|["']+$/g, '');
@@ -15,7 +19,15 @@ function cleanEnvValue(val?: string): string {
   return (val || '').trim().replace(/^["']+|["']+$/g, '').trim();
 }
 
-function ensureWompiConfig(): { appId: string; apiSecret: string } {
+function ensureWompiConfig(brand: WompiBrand = 'aromaniak'): { appId: string; apiSecret: string } {
+  if (brand === 'kode') {
+    const kodeAppId = cleanEnvValue(process.env.KODE_WOMPI_APP_ID) || cachedKodeDbCreds?.appId || '';
+    const kodeSecret = cleanEnvValue(process.env.KODE_WOMPI_API_SECRET) || cachedKodeDbCreds?.apiSecret || '';
+    if (kodeAppId && kodeSecret) {
+      return { appId: kodeAppId, apiSecret: kodeSecret };
+    }
+  }
+
   const appId = cleanEnvValue(process.env.WOMPI_APP_ID);
   const apiSecret = cleanEnvValue(process.env.WOMPI_API_SECRET);
   if (!appId || !apiSecret) {
@@ -24,17 +36,47 @@ function ensureWompiConfig(): { appId: string; apiSecret: string } {
   return { appId, apiSecret };
 }
 
+async function resolveWompiConfigAsync(brand: WompiBrand = 'aromaniak'): Promise<{ appId: string; apiSecret: string }> {
+  if (brand === 'kode') {
+    const envAppId = cleanEnvValue(process.env.KODE_WOMPI_APP_ID);
+    const envSecret = cleanEnvValue(process.env.KODE_WOMPI_API_SECRET);
+    if (envAppId && envSecret) {
+      return { appId: envAppId, apiSecret: envSecret };
+    }
+    if (cachedKodeDbCreds?.appId && cachedKodeDbCreds?.apiSecret) {
+      return cachedKodeDbCreds;
+    }
+    try {
+      const res = await queryKode(
+        `SELECT value FROM public.kode_config WHERE key = 'wompi_credentials' LIMIT 1;`
+      );
+      const val = res?.rows?.[0]?.value;
+      const dbAppId = cleanEnvValue(val?.appId);
+      const dbSecret = cleanEnvValue(val?.apiSecret);
+      if (dbAppId && dbSecret) {
+        cachedKodeDbCreds = { appId: dbAppId, apiSecret: dbSecret };
+        return cachedKodeDbCreds;
+      }
+    } catch (err) {
+      console.warn('Aviso: No se pudo cargar wompi_credentials de public.kode_config:', err);
+    }
+    throw new Error('Configuración de Wompi KÖDE incompleta: defina KODE_WOMPI_APP_ID y KODE_WOMPI_API_SECRET.');
+  }
+
+  return ensureWompiConfig('aromaniak');
+}
+
 /**
  * Obtiene el token de autenticación OAuth 2.0 de Wompi El Salvador.
- * El token se almacena en memoria y se reutiliza hasta que esté próximo a expirar (8 horas de vigencia).
+ * El token se almacena en memoria por App ID y se reutiliza hasta que esté próximo a expirar.
  */
-export async function getWompiToken(): Promise<string> {
-  const { appId, apiSecret } = ensureWompiConfig();
+export async function getWompiToken(brand: WompiBrand = 'aromaniak'): Promise<string> {
+  const { appId, apiSecret } = await resolveWompiConfigAsync(brand);
   const now = Date.now();
 
-  // Si tenemos token válido en caché con más de 2 minutos de margen, lo reutilizamos
-  if (tokenCache && tokenCache.appId === appId && tokenCache.expiresAt > now + 120 * 1000) {
-    return tokenCache.token;
+  const cached = tokenCacheByAppId.get(appId);
+  if (cached && cached.appId === appId && cached.expiresAt > now + 120 * 1000) {
+    return cached.token;
   }
 
   const params = new URLSearchParams();
@@ -59,13 +101,13 @@ export async function getWompiToken(): Promise<string> {
   const data = await res.json();
   const expiresInSeconds = data.expires_in || 3600;
 
-  tokenCache = {
+  tokenCacheByAppId.set(appId, {
     token: data.access_token,
     expiresAt: now + expiresInSeconds * 1000,
     appId,
-  };
+  });
 
-  return tokenCache.token;
+  return data.access_token;
 }
 
 export interface CreatePaymentLinkParams {
@@ -79,6 +121,7 @@ export interface CreatePaymentLinkParams {
   redirectUrl: string;
   returnUrl: string;
   webhookUrl?: string;
+  brand?: WompiBrand;
 }
 
 export interface WompiLinkResponse {
@@ -93,7 +136,8 @@ export interface WompiLinkResponse {
  * Crea un Enlace de Pago seguro en Wompi SV con monto bloqueado y opciones bancarias.
  */
 export async function createWompiPaymentLink(params: CreatePaymentLinkParams): Promise<WompiLinkResponse> {
-  const token = await getWompiToken();
+  const brand: WompiBrand = params.brand || 'aromaniak';
+  const token = await getWompiToken(brand);
 
   const payload: any = {
     identificadorEnlaceComercio: params.orderNumber,
@@ -152,25 +196,42 @@ export async function createWompiPaymentLink(params: CreatePaymentLinkParams): P
   return data as WompiLinkResponse;
 }
 
+function verifyHmacWithSecret(rawBody: string, receivedHash: string, secret: string): boolean {
+  if (!secret) return false;
+  try {
+    const hmac = crypto.createHmac('sha256', secret);
+    hmac.update(rawBody, 'utf8');
+    const calculatedHash = hmac.digest('hex');
+    const a = Buffer.from(calculatedHash.toLowerCase());
+    const b = Buffer.from(receivedHash.toLowerCase());
+    if (a.length !== b.length) return false;
+    return crypto.timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
+}
+
 /**
- * Valida el sello de seguridad criptográfico enviado por Wompi en el Webhook.
- * Calcula HMAC-SHA256 del cuerpo crudo con el API Secret de Wompi.
+ * Valida el sello de seguridad criptográfico enviado por Wompi en el Webhook (Aromaniak o KÖDE).
  */
 export function validateWompiWebhook(rawBody: string, receivedHash?: string | null): boolean {
   if (!receivedHash) return false;
-  const { apiSecret } = ensureWompiConfig();
+  const aroSecret = cleanEnvValue(process.env.WOMPI_API_SECRET);
+  const kodeSecret = cleanEnvValue(process.env.KODE_WOMPI_API_SECRET) || cachedKodeDbCreds?.apiSecret || '';
 
+  return (
+    verifyHmacWithSecret(rawBody, receivedHash, aroSecret) ||
+    verifyHmacWithSecret(rawBody, receivedHash, kodeSecret)
+  );
+}
+
+export async function validateWompiWebhookAsync(rawBody: string, receivedHash?: string | null): Promise<boolean> {
+  if (!receivedHash) return false;
+  if (validateWompiWebhook(rawBody, receivedHash)) return true;
   try {
-    const hmac = crypto.createHmac('sha256', apiSecret);
-    hmac.update(rawBody, 'utf8');
-    const calculatedHash = hmac.digest('hex');
-
-    return crypto.timingSafeEqual(
-      Buffer.from(calculatedHash.toLowerCase()),
-      Buffer.from(receivedHash.toLowerCase())
-    );
-  } catch (err) {
-    console.error('Error validando hash de Wompi:', err);
+    const kodeCfg = await resolveWompiConfigAsync('kode');
+    return verifyHmacWithSecret(rawBody, receivedHash, kodeCfg.apiSecret);
+  } catch {
     return false;
   }
 }
@@ -178,8 +239,8 @@ export function validateWompiWebhook(rawBody: string, receivedHash?: string | nu
 /**
  * Consulta el estado y detalle de una transacción directamente en Wompi por su IdTransaccion.
  */
-export async function getWompiTransaction(transactionId: string): Promise<any> {
-  const token = await getWompiToken();
+export async function getWompiTransaction(transactionId: string, brand: WompiBrand = 'aromaniak'): Promise<any> {
+  const token = await getWompiToken(brand);
 
   const res = await fetch(`${WOMPI_API_URL}/TransaccionCompra/${transactionId}`, {
     method: 'GET',
@@ -200,8 +261,8 @@ export async function getWompiTransaction(transactionId: string): Promise<any> {
 /**
  * Consulta un Enlace de Pago por su idEnlace en Wompi SV para verificar si tiene transacciones aprobadas.
  */
-export async function getWompiPaymentLinkDetails(idEnlace: number | string): Promise<any> {
-  const token = await getWompiToken();
+export async function getWompiPaymentLinkDetails(idEnlace: number | string, brand: WompiBrand = 'aromaniak'): Promise<any> {
+  const token = await getWompiToken(brand);
 
   const res = await fetch(`${WOMPI_API_URL}/EnlacePago/${idEnlace}`, {
     method: 'GET',
