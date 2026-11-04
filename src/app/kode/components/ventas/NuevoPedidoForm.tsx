@@ -99,7 +99,7 @@ function ModalPerfumeForm({
 
   const filteredCatalog = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    if (!q) return catalogo.slice(0, 60);
+    if (!q) return catalogo.filter((p) => p.activo !== false).slice(0, 150);
     return catalogo
       .filter((p) => {
         if (p.activo === false) return false;
@@ -110,7 +110,7 @@ function ModalPerfumeForm({
           (p.genero && p.genero.toLowerCase().includes(q))
         );
       })
-      .slice(0, 60);
+      .slice(0, 150);
   }, [catalogo, searchQuery]);
 
   const selectedLabel = draft.contratipo

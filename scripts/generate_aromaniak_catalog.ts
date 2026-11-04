@@ -114,7 +114,7 @@ async function generateAromaniakCatalog() {
       baseNotes: prof?.baseNotes || [],
       description: cleanDesc,
       bottleUri,
-      isIncoming: Number(p.stock || 0) <= 0
+      isIncoming: Number(p.stock || 0) <= 0 && Number(p.stockHalf || 0) <= 0
     };
   });
 
