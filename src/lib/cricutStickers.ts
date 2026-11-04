@@ -2361,6 +2361,59 @@ export const CRICUT_STICKERS_CATALOG: CricutStickerCatalogEntry[] = [
       "Vainilla Bourbon",
       "Vetiver"
     ]
+  },
+  {
+    "sku": "89",
+    "contratipo": "BEVERLY BOY",
+    "nombre": "Paris Hilton",
+    "genero": "H",
+    "marca": "Paris Hilton",
+    "anio": "2005",
+    "familia": "Aromática Frutal",
+    "fraseOlfativa": "Mango jugoso, hojas de higuera y brisa fresca sobre maderas.",
+    "topNotes": [
+      "Mango",
+      "Hojas de higuera",
+      "Aire de montaña"
+    ],
+    "heartNotes": [
+      "Salvia blanca",
+      "Bayas de enebro",
+      "Albahaca"
+    ],
+    "baseNotes": [
+      "Pepino",
+      "Cedro",
+      "Almizcle",
+      "Ámbar"
+    ]
+  },
+  {
+    "sku": "90",
+    "contratipo": "ROCKSTAR",
+    "nombre": "Black XS",
+    "genero": "H",
+    "marca": "Paco Rabanne",
+    "anio": "2005",
+    "familia": "Ámbar Amaderada",
+    "fraseOlfativa": "Limón vibrante, praliné dulce y canela sobre ámbar negro.",
+    "topNotes": [
+      "Limón",
+      "Salvia",
+      "Caléndula"
+    ],
+    "heartNotes": [
+      "Praliné",
+      "Canela",
+      "Cardamomo negro",
+      "Bálsamo de Tolú"
+    ],
+    "baseNotes": [
+      "Ámbar negro",
+      "Pachulí",
+      "Palo de rosa",
+      "Ébano"
+    ]
   }
 ];
 

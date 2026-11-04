@@ -890,6 +890,26 @@ export const CATALOG_PROFILES_48: Record<string, StaticProfile> = {
     occasion: 'Citas románticas, fiestas nocturnas, eventos sociales y seducción',
     intensity: 'Intensa'
   },
+  '89': {
+    family: 'Aromática Frutal',
+    accords: ['afrutado', 'acuático', 'verde', 'aromático', 'fresco', 'ozónico', 'amaderado'],
+    topNotes: ['Mango', 'Hojas de higuera', 'Aire de montaña'],
+    heartNotes: ['Salvia blanca', 'Bayas de enebro', 'Albahaca'],
+    baseNotes: ['Pepino', 'Cedro', 'Almizcle', 'Ámbar'],
+    season: 'Primavera / Verano / Todo el año',
+    occasion: 'Uso diario juvenil, salidas casuales, días soleados y citas frescas',
+    intensity: 'Moderada'
+  },
+  '90': {
+    family: 'Ámbar Amaderada',
+    accords: ['dulce', 'cálido especiado', 'cítrico', 'aromático', 'canela', 'balsámico', 'ámbar'],
+    topNotes: ['Limón', 'Salvia', 'Caléndula'],
+    heartNotes: ['Praliné', 'Canela', 'Cardamomo negro', 'Bálsamo de Tolú'],
+    baseNotes: ['Ámbar negro', 'Pachulí', 'Palo de rosa', 'Ébano'],
+    season: 'Otoño / Invierno / Noche',
+    occasion: 'Fiestas nocturnas, conciertos, citas magnéticas y estilo rebelde',
+    intensity: 'Intensa'
+  },
   'APAE-2154': {
     family: 'Floral Frutal',
     accords: ['floral', 'afrutado', 'fresco', 'dulce', 'acuático'],

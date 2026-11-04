@@ -15,8 +15,12 @@ async function generateMinimalistCatalog() {
     }
   });
 
+  const ALWAYS_INCLUDE_KODE_SKUS = new Set(['89', '90']);
   const availableFragrances = allFragrances.filter(
-    p => Number(p.stock || 0) > 0 || Number(p.stockHalf || 0) > 0
+    p =>
+      Number(p.stock || 0) > 0 ||
+      Number(p.stockHalf || 0) > 0 ||
+      ALWAYS_INCLUDE_KODE_SKUS.has(String(p.sku).trim())
   );
 
   availableFragrances.sort((a, b) => Number(a.sku) - Number(b.sku));

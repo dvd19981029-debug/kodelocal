@@ -93,7 +93,9 @@ export const INSPIRACION_PERFUME_MAP: Record<string, string> = {
   '85': 'Ombré Leather H',
   '86': 'Nautica Voyage H',
   '87': 'Y Eau de Parfum H',
-  '88': 'The Most Wanted H'
+  '88': 'The Most Wanted H',
+  '89': 'Paris Hilton H',
+  '90': 'Black XS H'
 };
 
 export const INSPIRACION_BRAND_MAP: Record<string, string> = {
@@ -184,13 +186,15 @@ export const INSPIRACION_BRAND_MAP: Record<string, string> = {
   '85': 'Tom Ford',
   '86': 'Nautica',
   '87': 'Yves Saint Laurent',
-  '88': 'Azzaro'
+  '88': 'Azzaro',
+  '89': 'Paris Hilton',
+  '90': 'Paco Rabanne'
 };
 
 export const INCOMING_ESSENCE_SKUS = new Set([
   '62', '63', '64', '65', '66', '67', '68', '69', '70', '71',
   '72', '73', '74', '75', '76', '77', '78', '79', '80', '81', '82',
-  '83', '84', '85', '86', '87', '88'
+  '83', '84', '85', '86', '87', '88', '89', '90'
 ]);
 
 export function isIncomingEssence(product: { id?: string | null; sku?: string | null; category?: string | null } | null | undefined): boolean {
@@ -218,7 +222,7 @@ const FAMOUS_BRANDS = [
   'LACOSTE', 'LATTAFA', 'BHARARA', 'BVLGARI', 'MOSCHINO', 'CHANEL',
   'XERJOFF', 'LE LABO', 'HERMÈS', 'HERMES', 'MUGLER', 'CREED', 'VERSACE',
   'ARMAF', 'AFNAN', 'PRADA', 'DKNY', 'DIOR', 'HUGO BOSS', 'BOSS',
-  'ARIANA GRANDE', 'NAUTICA', 'AZZARO', 'YSL'
+  'ARIANA GRANDE', 'NAUTICA', 'AZZARO', 'YSL', 'PARIS HILTON'
 ];
 
 /**
@@ -565,6 +569,8 @@ export const OFFICIAL_TO_ORIGINAL_MAP: Record<string, { originalName: string; br
   'BLUE OCEAN': { originalName: 'Nautica Voyage H', brand: 'Nautica', sku: '86' },
   'STARBOY': { originalName: 'Y Eau de Parfum H', brand: 'Yves Saint Laurent', sku: '87' },
   'PLAYBOY': { originalName: 'The Most Wanted H', brand: 'Azzaro', sku: '88' },
+  'BEVERLY BOY': { originalName: 'Paris Hilton H', brand: 'Paris Hilton', sku: '89' },
+  'ROCKSTAR': { originalName: 'Black XS H', brand: 'Paco Rabanne', sku: '90' },
 };
 
 // Generar variaciones con sufijos H / F / M / U para match instantáneo

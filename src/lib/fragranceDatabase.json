@@ -1165,6 +1165,77 @@
     ],
     "source": "fragrantica"
   },
+  "89": {
+    "kodigo": "89",
+    "contratipo": "Beverly Boy H",
+    "marca": "Paris Hilton",
+    "genero": "Caballero",
+    "officialName": "Paris Hilton",
+    "brand": "Paris Hilton",
+    "family": "Aromática Frutal",
+    "accords": [
+      "afrutado",
+      "acuático",
+      "verde",
+      "aromático",
+      "fresco",
+      "ozónico",
+      "amaderado"
+    ],
+    "topNotes": [
+      "Mango",
+      "Hojas de higuera",
+      "Aire de montaña"
+    ],
+    "heartNotes": [
+      "Salvia blanca",
+      "Bayas de enebro",
+      "Albahaca"
+    ],
+    "baseNotes": [
+      "Pepino",
+      "Cedro",
+      "Almizcle",
+      "Ámbar"
+    ],
+    "source": "fragrantica"
+  },
+  "90": {
+    "kodigo": "90",
+    "contratipo": "Rockstar H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "officialName": "Black XS",
+    "brand": "Paco Rabanne",
+    "family": "Ámbar Amaderada",
+    "accords": [
+      "dulce",
+      "cálido especiado",
+      "cítrico",
+      "aromático",
+      "canela",
+      "balsámico",
+      "ámbar"
+    ],
+    "topNotes": [
+      "Limón",
+      "Salvia",
+      "Caléndula"
+    ],
+    "heartNotes": [
+      "Praliné",
+      "Canela",
+      "Cardamomo negro",
+      "Bálsamo de Tolú"
+    ],
+    "baseNotes": [
+      "Ámbar negro",
+      "Pachulí",
+      "Palo de rosa",
+      "Ébano"
+    ],
+    "source": "fragrantica"
+  },
   "100": {
     "kodigo": "100",
     "contratipo": "1 Million Elixir H",

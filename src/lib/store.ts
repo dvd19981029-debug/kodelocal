@@ -2762,6 +2762,50 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "stockHalf": 0
   },
   {
+    "id": "esencia-apae-089",
+    "sku": "89",
+    "barcode": "741001000089",
+    "name": "Paris Hilton H",
+    "officialName": "Beverly Boy H",
+    "brand": "Paris Hilton",
+    "gender": "Caballero",
+    "category": "Esencias para Perfume",
+    "unit": "Onza",
+    "price": 3.75,
+    "priceHalfOunce": 1.9,
+    "finishedPerfumePrice": 15,
+    "cost": 2.13,
+    "stock": 0,
+    "minStock": 15,
+    "imageUrl": "/images/esencias/esencia_89.webp?v=aroma_official_v4",
+    "description": "Inspirado en PARIS HILTON FOR MEN",
+    "isAvailableOnline": true,
+    "puesto": "A1",
+    "stockHalf": 0
+  },
+  {
+    "id": "esencia-apae-090",
+    "sku": "90",
+    "barcode": "741001000090",
+    "name": "Black XS H",
+    "officialName": "Rockstar H",
+    "brand": "Paco Rabanne",
+    "gender": "Caballero",
+    "category": "Esencias para Perfume",
+    "unit": "Onza",
+    "price": 3.75,
+    "priceHalfOunce": 1.9,
+    "finishedPerfumePrice": 15,
+    "cost": 2.21,
+    "stock": 0,
+    "minStock": 15,
+    "imageUrl": "/images/esencias/esencia_90.webp?v=aroma_official_v4",
+    "description": "Inspirado en BLACK XS PACO RABANNE",
+    "isAvailableOnline": true,
+    "puesto": "A1",
+    "stockHalf": 0
+  },
+  {
     "id": "ENVIO-DOM",
     "sku": "ENVIO-DOM",
     "barcode": "741009000001",
@@ -2785,7 +2829,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   ...INITIAL_STICKER_PRODUCTS
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v41_esencias_83_88_names";
+export const DATA_VERSION = "2026_oficial_real_v42_esencias_89_90";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;

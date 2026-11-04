@@ -94,7 +94,9 @@ export const CATALOG_DESCRIPTIONS_48: Record<string, string> = {
   '85': 'Textura táctil, sensual e imponente como el desierto al anochecer. El cardamomo especiado abre paso a un corazón magnético de cuero negro profundo y jazmín Sambac, sellado con pachulí, musgo de roble y ámbar cálido.',
   '86': 'La brisa fresca de un velero en alta mar. Hojas verdes recién cortadas y manzana crujiente despiertan un corazón acuático de flor de loto y mimosa sobre una estela limpia de cedro, musgo de roble, almizcle y ámbar.',
   '87': 'Sofisticación parisina, moderna y arrolladora. Manzana verde ácida, jengibre picante y bergamota iluminan un corazón aromático de salvia y bayas de enebro, reposando sobre amberwood, haba tonka, cedro y olíbano.',
-  '88': 'El arma definitiva de seducción nocturna. Un disparo vibrante de cardamomo picante se funde con el calor irresistible del caramelo toffee derretido, cerrando sobre una base intensa y magnética de amberwood y vainilla Bourbon.'
+  '88': 'El arma definitiva de seducción nocturna. Un disparo vibrante de cardamomo picante se funde con el calor irresistible del caramelo toffee derretido, cerrando sobre una base intensa y magnética de amberwood y vainilla Bourbon.',
+  '89': 'Frescura californiana magnética, frutal y juvenil. Una apertura jugosa de mango tropical, hojas de higuera y aire puro de montaña que se une a salvia blanca, enebro y albahaca sobre un fondo limpio de pepino, cedro, almizcle y ámbar.',
+  '90': 'Rebeldía magnética y sensualidad rockstar. Limón vibrante, salvia y caléndula abren paso a un corazón adictivo de praliné dulce, canela, cardamomo negro y bálsamo de Tolú sobre una base profunda de ámbar negro, pachulí, palo de rosa y ébano.'
 };
 
 /**

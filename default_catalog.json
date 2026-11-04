@@ -368,5 +368,15 @@
     "id_proveedor": "APAE-8801",
     "name": "AZZARO THE MOST WANTED H",
     "price_per_kg": 77.88
+  },
+  {
+    "id_proveedor": "APAE-8901",
+    "name": "PARIS HILTON FOR MEN H",
+    "price_per_kg": 75.22
+  },
+  {
+    "id_proveedor": "APAE-9001",
+    "name": "BLACK XS PACO RABANNE H",
+    "price_per_kg": 77.88
   }
 ]

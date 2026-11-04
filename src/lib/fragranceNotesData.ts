@@ -182,7 +182,7 @@ const NOTE_RULES: Array<{ pattern: RegExp; file: string }> = [
   { pattern: /gardenia/i, file: 'gardenia' },
   { pattern: /peon[íi]a/i, file: 'peonia' },
   { pattern: /orqu[íi]dea/i, file: 'orquidea' },
-  { pattern: /ylang|tagetes/i, file: 'ylang-ylang' },
+  { pattern: /ylang|tagetes|cal[ée]ndula/i, file: 'ylang-ylang' },
   { pattern: /magnolia/i, file: 'magnolia' },
   { pattern: /loto|nen[úu]far/i, file: 'flor-loto' },
   { pattern: /campanilla|osmanto|espino|tr[ée]bol/i, file: 'jazmin' },
@@ -198,7 +198,7 @@ const NOTE_RULES: Array<{ pattern: RegExp; file: string }> = [
   { pattern: /abedul/i, file: 'abedul' },
   { pattern: /musgo/i, file: 'musgo-roble' },
   { pattern: /caoba|palo\s*de\s*rosa|olivo|papiro/i, file: 'cedro' },
-  { pattern: /madera/i, file: 'maderas' },
+  { pattern: /madera|[ée]bano/i, file: 'maderas' },
 
   // Resinas y Bálsamos
   { pattern: /[áa]mbar/i, file: 'ambar' },
@@ -238,7 +238,7 @@ const NOTE_RULES: Array<{ pattern: RegExp; file: string }> = [
   { pattern: /sal\s*de\s*mar|\bsal\b/i, file: 'sal-marina' },
   { pattern: /marina|mar|aquozone|calone|acu[áa]tic|algas/i, file: 'notas-marinas' },
   { pattern: /mineral/i, file: 'notas-minerales' },
-  { pattern: /oz[óo]nic/i, file: 'notas-ozonicas' },
+  { pattern: /oz[óo]nic|aire\s*de\s*monta[ñn]a/i, file: 'notas-ozonicas' },
   { pattern: /verde/i, file: 'notas-verdes' },
   { pattern: /helad|vodka|ginebra|ron|licor|champ[áa]n/i, file: 'ginebra-helada' },
   { pattern: /aldeh[íi]d/i, file: 'aldehidos' }

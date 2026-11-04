@@ -105,6 +105,8 @@ const DEFAULT_APAESA_CATALOG: SupplierCatalogEntry[] = [
   { sku: '86', id_proveedor: 'APAE-8601', name: 'NAUTICA VOYAGE H', contratipo: 'BLUE OCEAN', price_per_kg: 75.22 },
   { sku: '87', id_proveedor: 'APAE-8701', name: 'Y BY YSL H', contratipo: 'STARBOY', price_per_kg: 79.65 },
   { sku: '88', id_proveedor: 'APAE-8801', name: 'AZZARO THE MOST WANTED H', contratipo: 'PLAYBOY', price_per_kg: 77.88 },
+  { sku: '89', id_proveedor: 'APAE-8901', name: 'PARIS HILTON FOR MEN H', contratipo: 'BEVERLY BOY', price_per_kg: 75.22 },
+  { sku: '90', id_proveedor: 'APAE-9001', name: 'BLACK XS PACO RABANNE H', contratipo: 'ROCKSTAR', price_per_kg: 77.88 },
 ];
 
 function checkStaffAuth(request: Request): boolean {

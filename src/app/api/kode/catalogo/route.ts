@@ -19,8 +19,13 @@ async function syncWithAromaniakEssences(): Promise<string[]> {
       },
     });
 
+    const ALWAYS_INCLUDE_KODE_SKUS = new Set(['89', '90']);
     const availableEssences = essences.filter(
-      (e) => e.sku && (Number(e.stock || 0) > 0 || Number(e.stockHalf || 0) > 0)
+      (e) =>
+        e.sku &&
+        (Number(e.stock || 0) > 0 ||
+          Number(e.stockHalf || 0) > 0 ||
+          ALWAYS_INCLUDE_KODE_SKUS.has(String(e.sku).trim()))
     );
     const availableSkus = availableEssences.map((e) => String(e.sku).trim());
 
