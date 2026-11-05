@@ -1864,6 +1864,26 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "stockHalf": 0
   },
   {
+    "id": "bote-100ml-rey-luis-2",
+    "sku": "BOT-100-REY-2",
+    "barcode": "741002000026",
+    "name": "Bote Rey Luis 100ml Rosca",
+    "officialName": "Rey Luis",
+    "brand": "",
+    "gender": "Unisex",
+    "category": "Botes",
+    "unit": "Unidad",
+    "price": 1.45,
+    "cost": 0.55,
+    "stock": 0,
+    "minStock": 15,
+    "imageUrl": "/images/botes/bote_100ml_rey_luis_2.jpg",
+    "description": "Frasco cilíndrico de vidrio transparente 100ml con base gruesa, cierre de rosca y tapa cilíndrica metálica plateada anillada.",
+    "isAvailableOnline": true,
+    "puesto": "B6",
+    "stockHalf": 0
+  },
+  {
     "id": "alcohol-perfumero-fijador-1l",
     "sku": "INS-ALC-1L",
     "barcode": "741999000INS-ALC-1L",
@@ -2849,7 +2869,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   ...INITIAL_STICKER_PRODUCTS
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v43_bote_cosmo";
+export const DATA_VERSION = "2026_oficial_real_v44_bote_rey_luis_2";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;

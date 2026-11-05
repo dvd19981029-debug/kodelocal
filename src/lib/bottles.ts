@@ -431,5 +431,23 @@ export const MOCK_100ML_BOTTLES: ProductItem[] = [
     imageUrl: '/images/botes/bote_100ml_cosmo.jpg',
     isAvailableOnline: true,
     puesto: 'B6',
+  },
+  {
+    id: 'bote-100ml-rey-luis-2',
+    sku: 'BOT-100-REY-2',
+    barcode: '741002000026',
+    name: 'Bote Rey Luis 100ml Rosca',
+    officialName: 'Rey Luis',
+    brand: '',
+    gender: 'Unisex',
+    category: 'Botes',
+    unit: 'Unidad',
+    price: 1.45,
+    cost: 0.55,
+    stock: 0,
+    minStock: 15,
+    imageUrl: '/images/botes/bote_100ml_rey_luis_2.jpg',
+    isAvailableOnline: true,
+    puesto: 'B6',
   }
 ];
