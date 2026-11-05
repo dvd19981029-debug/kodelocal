@@ -1844,6 +1844,26 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "stockHalf": 0
   },
   {
+    "id": "bote-100ml-cosmo",
+    "sku": "BOT-100-COS",
+    "barcode": "741002000025",
+    "name": "Bote Cosmo 100ml Rosca",
+    "officialName": "Cosmo",
+    "brand": "",
+    "gender": "Unisex",
+    "category": "Botes",
+    "unit": "Unidad",
+    "price": 1.45,
+    "cost": 0.55,
+    "stock": 0,
+    "minStock": 15,
+    "imageUrl": "/images/botes/bote_100ml_cosmo.jpg",
+    "description": "Frasco cuadrado de vidrio pesado transparente 100ml con base gruesa, cierre de rosca y tapa cilíndrica metálica plateada cromada.",
+    "isAvailableOnline": true,
+    "puesto": "B6",
+    "stockHalf": 0
+  },
+  {
     "id": "alcohol-perfumero-fijador-1l",
     "sku": "INS-ALC-1L",
     "barcode": "741999000INS-ALC-1L",
@@ -2829,7 +2849,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   ...INITIAL_STICKER_PRODUCTS
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v42_esencias_89_90";
+export const DATA_VERSION = "2026_oficial_real_v43_bote_cosmo";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;

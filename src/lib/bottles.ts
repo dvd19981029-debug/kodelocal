@@ -413,5 +413,23 @@ export const MOCK_100ML_BOTTLES: ProductItem[] = [
     imageUrl: '/images/botes/bote_100ml_golf_club.jpg',
     isAvailableOnline: true,
     puesto: 'B6',
+  },
+  {
+    id: 'bote-100ml-cosmo',
+    sku: 'BOT-100-COS',
+    barcode: '741002000025',
+    name: 'Bote Cosmo 100ml Rosca',
+    officialName: 'Cosmo',
+    brand: '',
+    gender: 'Unisex',
+    category: 'Botes',
+    unit: 'Unidad',
+    price: 1.45,
+    cost: 0.55,
+    stock: 0,
+    minStock: 15,
+    imageUrl: '/images/botes/bote_100ml_cosmo.jpg',
+    isAvailableOnline: true,
+    puesto: 'B6',
   }
 ];
