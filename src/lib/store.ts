@@ -1864,11 +1864,11 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "stockHalf": 0
   },
   {
-    "id": "bote-100ml-rey-luis-2",
-    "sku": "BOT-100-REY-2",
+    "id": "bote-100ml-rey-jorge",
+    "sku": "BOT-100-REY-J",
     "barcode": "741002000026",
-    "name": "Bote Rey Luis 100ml Rosca",
-    "officialName": "Rey Luis",
+    "name": "Bote Rey Jorge 100ml Rosca",
+    "officialName": "Rey Jorge",
     "brand": "",
     "gender": "Unisex",
     "category": "Botes",
@@ -1877,7 +1877,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "cost": 0.55,
     "stock": 0,
     "minStock": 15,
-    "imageUrl": "/images/botes/bote_100ml_rey_luis_2.jpg",
+    "imageUrl": "/images/botes/bote_100ml_rey_jorge.jpg",
     "description": "Frasco cilíndrico de vidrio transparente 100ml con base gruesa, cierre de rosca y tapa cilíndrica metálica plateada anillada.",
     "isAvailableOnline": true,
     "puesto": "B6",
@@ -2869,7 +2869,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   ...INITIAL_STICKER_PRODUCTS
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v44_bote_rey_luis_2";
+export const DATA_VERSION = "2026_oficial_real_v45_bote_rey_jorge";
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;
