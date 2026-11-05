@@ -15,17 +15,9 @@ async function generateMinimalistCatalog() {
     }
   });
 
-  const ALWAYS_INCLUDE_KODE_SKUS = new Set(['89', '90']);
-  const availableFragrances = allFragrances.filter(
-    p =>
-      Number(p.stock || 0) > 0 ||
-      Number(p.stockHalf || 0) > 0 ||
-      ALWAYS_INCLUDE_KODE_SKUS.has(String(p.sku).trim())
-  );
+  allFragrances.sort((a, b) => Number(a.sku) - Number(b.sku));
 
-  availableFragrances.sort((a, b) => Number(a.sku) - Number(b.sku));
-
-  const items = availableFragrances.map(p => {
+  const items = allFragrances.map(p => {
     const prof = getFragranceProfile(p as any);
     const desc = getFragranceDescription(p as any, prof);
 
@@ -69,7 +61,7 @@ async function generateMinimalistCatalog() {
       heartNotes: prof?.heartNotes || [],
       baseNotes: prof?.baseNotes || [],
       description: cleanDesc,
-      isIncoming: Number(p.stock || 0) <= 0 && Number(p.stockHalf || 0) <= 0
+      isIncoming: Number(p.stock || 0) <= 0
     };
   });
 

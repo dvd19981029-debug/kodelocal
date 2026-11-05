@@ -1,81 +1,7 @@
 import { NextResponse } from 'next/server';
 import { queryKode } from '@/lib/kodeDb';
-import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
-
-async function syncWithAromaniakEssences(): Promise<string[]> {
-  try {
-    const essences = await prisma.product.findMany({
-      where: { category: { name: 'Esencias para Perfume' } },
-      select: {
-        sku: true,
-        name: true,
-        brand: true,
-        gender: true,
-        stock: true,
-        stockHalf: true,
-        imageUrl: true,
-      },
-    });
-
-    const ALWAYS_INCLUDE_KODE_SKUS = new Set(['89', '90']);
-    const availableEssences = essences.filter(
-      (e) =>
-        e.sku &&
-        (Number(e.stock || 0) > 0 ||
-          Number(e.stockHalf || 0) > 0 ||
-          ALWAYS_INCLUDE_KODE_SKUS.has(String(e.sku).trim()))
-    );
-    const availableSkus = availableEssences.map((e) => String(e.sku).trim());
-
-    if (availableSkus.length > 0) {
-      const existingRes = await queryKode(
-        'SELECT codigo, contratipo, marca_inspirada, genero, imagen_url FROM public.catalogo WHERE codigo = ANY($1::text[])',
-        [availableSkus]
-      );
-      const existingMap = new Map<string, any>();
-      for (const row of existingRes.rows) {
-        existingMap.set(String(row.codigo).trim(), row);
-      }
-
-      for (const e of availableEssences) {
-        const sku = String(e.sku).trim();
-        const existing = existingMap.get(sku);
-        if (!existing) {
-          await queryKode(
-            `INSERT INTO public.catalogo (codigo, contratipo, marca_inspirada, genero, precio_normal, precio_extra_shot, activo, imagen_url)
-             VALUES ($1, $2, $3, $4, 20.00, 25.00, TRUE, $5)
-             ON CONFLICT (codigo) DO UPDATE
-             SET contratipo = EXCLUDED.contratipo,
-                 marca_inspirada = EXCLUDED.marca_inspirada,
-                 genero = EXCLUDED.genero,
-                 activo = TRUE,
-                 imagen_url = EXCLUDED.imagen_url`,
-            [sku, e.name, e.brand || '', e.gender || 'Unisex', e.imageUrl]
-          );
-        } else if (
-          existing.contratipo !== e.name ||
-          (existing.marca_inspirada || '') !== (e.brand || '') ||
-          (existing.genero || 'Unisex') !== (e.gender || 'Unisex') ||
-          (existing.imagen_url || '') !== (e.imageUrl || '')
-        ) {
-          await queryKode(
-            `UPDATE public.catalogo
-             SET contratipo = $2, marca_inspirada = $3, genero = $4, imagen_url = $5
-             WHERE codigo = $1`,
-            [sku, e.name, e.brand || '', e.gender || 'Unisex', e.imageUrl]
-          );
-        }
-      }
-    }
-
-    return availableSkus;
-  } catch (err) {
-    console.error('Error syncing KODE catalog with Aromaniak:', err);
-    return [];
-  }
-}
 
 export async function GET(request: Request) {
   try {
@@ -84,17 +10,8 @@ export async function GET(request: Request) {
     const genero = searchParams.get('genero')?.trim() || '';
     const incluirTodos = searchParams.get('all') === 'true' || searchParams.get('incluirInactivos') === 'true';
 
-    const availableSkus = await syncWithAromaniakEssences();
-
-    const conditions: string[] = [
-      `NOT (codigo LIKE 'HIST-%' OR codigo LIKE 'OLD-%')`,
-    ];
+    const conditions: string[] = [];
     const params: any[] = [];
-
-    if (availableSkus.length > 0) {
-      params.push(availableSkus);
-      conditions.push(`codigo = ANY($${params.length}::text[])`);
-    }
 
     if (!incluirTodos) {
       conditions.push('activo = TRUE');
@@ -119,7 +36,7 @@ export async function GET(request: Request) {
       sql += ` WHERE ` + conditions.join(' AND ');
     }
 
-    sql += ` ORDER BY CASE WHEN codigo ~ '^[0-9]+$' THEN CAST(codigo AS INTEGER) ELSE 999999 END ASC, contratipo ASC`;
+    sql += ` ORDER BY contratipo ASC`;
 
     const result = await queryKode(sql, params);
     return NextResponse.json({ success: true, perfumes: result.rows });
