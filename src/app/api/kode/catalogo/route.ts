@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     const genero = searchParams.get('genero')?.trim() || '';
     const incluirTodos = searchParams.get('all') === 'true' || searchParams.get('incluirInactivos') === 'true';
 
-    const conditions: string[] = [];
+    const conditions: string[] = ['LENGTH(codigo) >= 3'];
     const params: any[] = [];
 
     if (!incluirTodos) {
