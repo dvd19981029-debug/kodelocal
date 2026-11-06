@@ -2271,7 +2271,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "imageUrl": "/images/esencias/esencia_64.webp?v=aroma_official_v4",
     "description": "Inspirado en EILISH BILLIE EILISH",
     "isAvailableOnline": true,
-    "puesto": "A1",
+    "puesto": "B6",
     "stockHalf": 0
   },
   {
