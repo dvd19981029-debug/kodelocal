@@ -253,7 +253,7 @@ export default function AdminPage() {
       .catch(err => console.error('Error cargando roles desde Supabase:', err));
 
     getStaffToken().then(staffToken => {
-      fetch('/api/sales?limit=1000&skipC807Sync=1', {
+      fetch('/api/sales?limit=5000&skipC807Sync=1', {
         headers: {
           ...(staffToken ? { 'x-staff-token': staffToken } : {}),
         },
