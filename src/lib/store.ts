@@ -2359,7 +2359,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "imageUrl": "/images/esencias/esencia_68.webp?v=aroma_official_v4",
     "description": "Inspirado en TOMMY GIRL TOMMY HILFIGER",
     "isAvailableOnline": true,
-    "puesto": "A1",
+    "puesto": "B7",
     "stockHalf": 0
   },
   {
