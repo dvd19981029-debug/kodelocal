@@ -464,19 +464,6 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
 
             <button
               type="button"
-              onClick={() => setCajaSubTab('corte_z')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                cajaSubTab === 'corte_z'
-                  ? 'bg-amber-600 text-white shadow-lg shadow-amber-950/50 ring-1 ring-amber-300'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
-              }`}
-            >
-              <Calculator className="w-4 h-4" />
-              <span>Cierre de Caja / Turno</span>
-            </button>
-
-            <button
-              type="button"
               onClick={() => setCajaSubTab('domicilio')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                 cajaSubTab === 'domicilio'
