@@ -205,13 +205,14 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
   // Estado para Modal de Retiro o Abono de Caja
   const [isCashMovementModalOpen, setIsCashMovementModalOpen] = useState(false);
   const [movementType, setMovementType] = useState<'INGRESO' | 'RETIRO'>('RETIRO');
-  const [movementPerformedBy, setMovementPerformedBy] = useState(() => getActiveSessionUI().name || '');
+  const [movementPerformedBy, setMovementPerformedBy] = useState('');
   const [movementAuthorizedBy, setMovementAuthorizedBy] = useState('');
   const [movementAmount, setMovementAmount] = useState('');
   const [movementObservation, setMovementObservation] = useState('');
   const [isSavingMovement, setIsSavingMovement] = useState(false);
   const [todayMovements, setTodayMovements] = useState<any[]>([]);
   const [adminStaffList, setAdminStaffList] = useState<Array<{ id: string; name: string }>>([]);
+  const [isPerformedByDropdownOpen, setIsPerformedByDropdownOpen] = useState(false);
   const [isAuthDropdownOpen, setIsAuthDropdownOpen] = useState(false);
 
   const todayMovementTotals = useMemo(() => {
@@ -304,8 +305,11 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
       if (data.success) {
         setIsCashMovementModalOpen(false);
         setMovementAmount('');
+        setMovementPerformedBy('');
         setMovementAuthorizedBy('');
         setMovementObservation('');
+        setIsPerformedByDropdownOpen(false);
+        setIsAuthDropdownOpen(false);
         fetchTodayMovements();
       } else {
         alert(data.error || 'No se pudo registrar el movimiento');
@@ -1928,23 +1932,79 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                 </div>
               </div>
 
-              <div>
+              <div className="relative">
                 <label className="text-xs font-bold text-slate-700 block mb-1">Quién lo hace</label>
-                <input
-                  type="text"
-                  required
-                  value={movementPerformedBy}
-                  onChange={(e) => setMovementPerformedBy(e.target.value)}
-                  placeholder="Nombre de quien realiza el movimiento"
-                  className="clay-input w-full text-xs"
-                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPerformedByDropdownOpen((prev) => !prev);
+                    setIsAuthDropdownOpen(false);
+                  }}
+                  className="clay-input w-full text-xs flex items-center justify-between px-3 py-2.5 text-left cursor-pointer"
+                >
+                  {movementPerformedBy ? (
+                    <span className="flex items-center gap-2 font-bold text-slate-800">
+                      <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px] font-black shrink-0">
+                        {movementPerformedBy.charAt(0).toUpperCase()}
+                      </span>
+                      <span>{movementPerformedBy}</span>
+                    </span>
+                  ) : (
+                    <span className="text-slate-400">Seleccionar quién realiza el movimiento...</span>
+                  )}
+                  <ChevronDown
+                    className={`w-4 h-4 text-slate-400 transition-transform duration-150 ${
+                      isPerformedByDropdownOpen ? 'rotate-180 text-indigo-600' : ''
+                    }`}
+                  />
+                </button>
+
+                {isPerformedByDropdownOpen && (
+                  <div className="absolute left-0 right-0 mt-1.5 z-50 rounded-2xl bg-white border border-slate-200/90 shadow-xl p-1.5 space-y-1 animate-in fade-in zoom-in-95 duration-100">
+                    {adminStaffList.map((adm) => {
+                      const isSelected = movementPerformedBy === adm.name;
+                      return (
+                        <button
+                          key={adm.id}
+                          type="button"
+                          onClick={() => {
+                            setMovementPerformedBy(adm.name);
+                            setIsPerformedByDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-indigo-600 text-white shadow-xs'
+                              : 'text-slate-700 hover:bg-indigo-50 hover:text-indigo-700'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2.5">
+                            <span
+                              className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${
+                                isSelected
+                                  ? 'bg-white/20 text-white'
+                                  : 'bg-indigo-100 text-indigo-700'
+                              }`}
+                            >
+                              {adm.name.charAt(0).toUpperCase()}
+                            </span>
+                            <span>{adm.name}</span>
+                          </span>
+                          {isSelected && <CheckCircle2 className="w-4 h-4 text-white shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <div className="relative">
                 <label className="text-xs font-bold text-slate-700 block mb-1">Quién autoriza</label>
                 <button
                   type="button"
-                  onClick={() => setIsAuthDropdownOpen((prev) => !prev)}
+                  onClick={() => {
+                    setIsAuthDropdownOpen((prev) => !prev);
+                    setIsPerformedByDropdownOpen(false);
+                  }}
                   className="clay-input w-full text-xs flex items-center justify-between px-3 py-2.5 text-left cursor-pointer"
                 >
                   {movementAuthorizedBy ? (
