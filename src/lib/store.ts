@@ -2469,7 +2469,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "imageUrl": "/images/esencias/esencia_73.webp?v=aroma_official_v4",
     "description": "Inspirado en DRAKKAR NOIR GUY LAROCHE",
     "isAvailableOnline": true,
-    "puesto": "A1",
+    "puesto": "B7",
     "stockHalf": 0
   },
   {
