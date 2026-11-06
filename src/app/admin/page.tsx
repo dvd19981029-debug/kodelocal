@@ -57,6 +57,7 @@ import KardexModule from '@/components/admin/KardexModule';
 import ConfiguracionKodeModule from '@/components/admin/ConfiguracionKodeModule';
 import { AbastecimientoModule } from "@/components/admin/AbastecimientoModule";
 import PlanillaModule from '@/components/admin/PlanillaModule';
+import EnvasarKgModal from '@/components/inventory/EnvasarKgModal';
 
 import AromaniakDashboardModule from '@/components/admin/AromaniakDashboardModule';
 import {
@@ -92,6 +93,8 @@ type AdminTab =
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
+  const [envasarProduct, setEnvasarProduct] = useState<ProductItem | null>(null);
+  const [isEnvasarModalOpen, setIsEnvasarModalOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -1522,6 +1525,17 @@ export default function AdminPage() {
                   <span>Kárdex General</span>
                 </button>
                 <button
+                  onClick={() => {
+                    setEnvasarProduct(null);
+                    setIsEnvasarModalOpen(true);
+                  }}
+                  className="clay-btn clay-btn-primary px-3.5 py-2.5 text-xs flex items-center gap-1.5 font-black !bg-amber-600"
+                  title="Envasar Kg de esencia en Onzas (1 Oz) y Medias Onzas (½ Oz)"
+                >
+                  <Droplets className="w-3.5 h-3.5" />
+                  <span>🧪 Envasar Kg</span>
+                </button>
+                <button
                   onClick={handleOpenNewProduct}
                   className="clay-btn clay-btn-light px-4 py-2.5 text-xs flex items-center gap-1.5 font-bold"
                 >
@@ -1762,10 +1776,36 @@ export default function AdminPage() {
                             </div>
                           </td>
                           <td className="py-2.5 px-3 font-mono font-bold text-slate-700">
-                            {p.stock} {p.unit === 'Onza' ? 'Oz' : 'Un.'}
+                            <div className="flex flex-col gap-0.5">
+                              <span>
+                                {p.stock} {p.unit === 'Onza' ? 'Oz' : 'Un.'}
+                                {isEssence && (
+                                  <span className="text-purple-700 text-[10.5px] ml-1.5">
+                                    • {p.stockHalf || 0} ½ Oz
+                                  </span>
+                                )}
+                              </span>
+                              {isEssence && Number(p.stockKg || 0) > 0 && (
+                                <span className="text-[10px] font-black text-amber-900 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded w-fit">
+                                  🛢️ Garrafa: {p.stockKg} Kg
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="py-2.5 px-3 text-right">
                             <div className="flex items-center justify-end gap-1.5">
+                              {isEssence && (
+                                <button
+                                  onClick={() => {
+                                    setEnvasarProduct(p);
+                                    setIsEnvasarModalOpen(true);
+                                  }}
+                                  className="px-2 py-1 rounded-lg bg-amber-100 hover:bg-amber-600 text-amber-900 hover:text-white font-black transition-all inline-flex items-center gap-1 shadow-sm active:scale-95 text-[11px]"
+                                  title={`Envasar Kg de ${p.name} a Onzas y ½ Onzas`}
+                                >
+                                  <span>🧪 Envasar</span>
+                                </button>
+                              )}
                               <button
                                 onClick={() => {
                                   setKardexFilterProduct(p.id);
@@ -3375,6 +3415,31 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
+      <EnvasarKgModal
+        isOpen={isEnvasarModalOpen}
+        onClose={() => {
+          setIsEnvasarModalOpen(false);
+          setEnvasarProduct(null);
+        }}
+        product={envasarProduct}
+        allProducts={products}
+        defaultUserName="Administrador"
+        onSuccess={(updatedProd, summary) => {
+          setProducts(prev => prev.map(p => (p.id === updatedProd.id ? { ...p, ...updatedProd } : p)));
+          fetch('/api/kardex')
+            .then(r => r.json())
+            .then(kData => {
+              if (kData.success && Array.isArray(kData.movements)) {
+                setKardexMovements(kData.movements);
+              }
+            })
+            .catch(() => {});
+          showToast(
+            `🧪 Envasado aplicado: +${summary.addedOz} Oz y +${summary.addedHalf} ½ Oz (${summary.equivOz} oz equiv.) en ${updatedProd.name}`
+          );
+        }}
+      />
 
     </div>
   );

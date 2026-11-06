@@ -15,8 +15,12 @@ export interface ProductItem {
   priceHalfOunce?: number; // Precio Media Onza (mostrado en ecommerce)
   finishedPerfumePrice?: number; // Precio Perfume Terminado 100ml ("Arma tu propio perfume")
   cost: number;
+  costPerKg?: number; // Costo de compra por Kg a granel
   stock: number;
   stockHalf?: number; // Frascos de media onza envasados (stock = frascos de 1 onza)
+  stockKg?: number; // Kg en garrafa sin envasar aún
+  yieldOzPerKg?: number; // Estimación base de 1 Oz por Kg (default 32)
+  yieldHalfPerKg?: number; // Estimación base de ½ Oz por Kg (default 8)
   minStock: number;
   imageUrl: string;
   description?: string;

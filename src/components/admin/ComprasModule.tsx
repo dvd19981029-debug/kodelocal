@@ -207,12 +207,14 @@ export default function ComprasModule({
     setFormItems(prev => {
       const copy = [...prev];
       const qty = copy[index].quantity;
-      const cost = prod.cost || 0;
+      const isEssence = prod.category === 'Esencias para Perfume' || prod.unit === 'Onza';
+      const defaultPurchaseUnit = isEssence ? 'Kg' : (prod.unit || 'Unidad');
+      const cost = isEssence ? (prod.costPerKg || 0) : (prod.cost || 0);
       copy[index] = {
         productId: prod.id,
         productName: prod.name,
         productSku: prod.sku,
-        unit: prod.unit,
+        unit: defaultPurchaseUnit,
         quantity: qty,
         costPrice: cost,
         subtotal: parseFloat((qty * cost).toFixed(2))
@@ -236,13 +238,14 @@ export default function ComprasModule({
     });
   };
 
-  // Manejo de cambio de cantidad o costo
-  const handleUpdateItemValue = (index: number, field: 'quantity' | 'costPrice', value: number) => {
+  // Manejo de cambio de cantidad, costo o unidad de compra
+  const handleUpdateItemValue = (index: number, field: 'quantity' | 'costPrice' | 'unit', value: number | string) => {
     setFormItems(prev => {
       const copy = [...prev];
       const item = { ...copy[index] };
-      if (field === 'quantity') item.quantity = value;
-      if (field === 'costPrice') item.costPrice = value;
+      if (field === 'quantity') item.quantity = Number(value);
+      if (field === 'costPrice') item.costPrice = Number(value);
+      if (field === 'unit') item.unit = String(value);
       item.subtotal = parseFloat((item.quantity * item.costPrice).toFixed(2));
       copy[index] = item;
       return copy;
@@ -352,6 +355,14 @@ export default function ComprasModule({
     const updatedProductsWithCosts = products.map(prod => {
       const it = newPurchase.items.find(item => item.productId === prod.id);
       if (it && it.costPrice > 0) {
+        if (it.unit === 'Kg') {
+          const estEquivOz = Number((prod.yieldOzPerKg ?? 32) + (prod.yieldHalfPerKg ?? 8) * 0.5) || 36;
+          return {
+            ...prod,
+            costPerKg: it.costPrice,
+            cost: Number((it.costPrice / estEquivOz).toFixed(2)),
+          };
+        }
         return { ...prod, cost: it.costPrice };
       }
       return prod;
@@ -365,9 +376,13 @@ export default function ComprasModule({
     onUpdatePurchases([newPurchase, ...purchases]);
 
     // 3.1 Sincronizar en tiempo real con Supabase (ingreso a tabla Purchase, actualización de stock y Kardex)
+    const token = getStaffToken();
     fetch('/api/purchases', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}`, 'x-staff-token': token } : {}),
+      },
       body: JSON.stringify({
         purchaseNumber: newPurchase.purchaseNumber,
         tipoDte: newPurchase.tipoDte,
@@ -1213,9 +1228,17 @@ export default function ComprasModule({
                               className="clay-input !px-2.5 !py-2 w-full min-w-[85px] text-xs font-mono font-black text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               title="Cantidad comprada (ingrésala a mano)"
                             />
-                            <span className="text-[11px] text-slate-500 font-bold whitespace-nowrap shrink-0">
-                              {item.unit === 'Onza' ? 'Oz' : item.unit === 'Galón' ? 'Gal' : 'Un.'}
-                            </span>
+                            <select
+                              value={item.unit || 'Kg'}
+                              onChange={(e) => handleUpdateItemValue(idx, 'unit', e.target.value)}
+                              className="clay-input !px-2 !py-2 text-[11px] text-indigo-800 font-black bg-indigo-50/50 border-indigo-200 shrink-0 cursor-pointer"
+                              title="Unidad de compra (Kg para esencias a granel, Oz o Un.)"
+                            >
+                              <option value="Kg">Kg</option>
+                              <option value="Onza">Oz</option>
+                              <option value="Unidad">Un.</option>
+                              <option value="Galón">Gal</option>
+                            </select>
                           </div>
                         </td>
 
@@ -1528,7 +1551,7 @@ export default function ComprasModule({
                         {it.productSku && <span className="text-[10px] text-slate-400 font-mono ml-1.5">#{it.productSku}</span>}
                       </td>
                       <td className="p-2.5 text-center font-mono font-bold text-indigo-700">
-                        {it.quantity} {it.unit === 'Onza' ? 'Oz' : 'Un.'}
+                        {it.quantity} {it.unit === 'Onza' ? 'Oz' : it.unit === 'Kg' ? 'Kg' : 'Un.'}
                       </td>
                       <td className="p-2.5 text-right font-mono text-slate-700">
                         ${Number(it.costPrice || 0).toFixed(2)}

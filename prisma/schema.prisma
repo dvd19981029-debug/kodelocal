@@ -45,6 +45,10 @@ model Product {
   finishedPerfumePrice Decimal?             @db.Decimal(10, 2)
   priceHalfOunce       Decimal?             @db.Decimal(10, 2)
   stockHalf            Int                  @default(0)
+  stockKg              Decimal              @default(0) @db.Decimal(10, 3)
+  costPerKg            Decimal              @default(0) @db.Decimal(10, 2)
+  yieldOzPerKg         Int                  @default(32)
+  yieldHalfPerKg       Int                  @default(8)
   ecommerceItems       EcommerceOrderItem[]
   category             Category?            @relation(fields: [categoryId], references: [id])
   reviews              ProductReview[]

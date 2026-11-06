@@ -64,6 +64,7 @@ import { getOriginalFragranceInfo, parseKitOrderItem, resolveBottleImageInfo } f
 import { printDispatchTicketPdf, downloadDispatchTicketPdf } from '@/lib/thermalTicketPdf';
 import { TransferReceiptButton } from '@/components/common/TransferReceiptModal';
 import { extractTransferReceiptUrl } from '@/lib/bankAccounts';
+import EnvasarKgModal from '@/components/inventory/EnvasarKgModal';
 
 // Singleton para el AudioContext
 let globalAudioCtx: AudioContext | null = null;
@@ -187,6 +188,8 @@ export default function BodegaPage() {
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [expandedOrderIds, setExpandedOrderIds] = useState<Record<string, boolean>>({});
   const [zoomedBottle, setZoomedBottle] = useState<{ imageUrl: string; name: string; puesto?: string } | null>(null);
+  const [envasarProduct, setEnvasarProduct] = useState<ProductItem | null>(null);
+  const [isEnvasarModalOpen, setIsEnvasarModalOpen] = useState<boolean>(false);
 
   const toggleOrderExpanded = useCallback((orderId: string) => {
     setExpandedOrderIds(prev => ({ ...prev, [orderId]: !prev[orderId] }));
@@ -1046,9 +1049,13 @@ export default function BodegaPage() {
     saveStoredPurchases(updatedPurchases);
 
     // 2.1 Sincronizar recepción física con Supabase (ingreso a inventario y Kardex oficial)
+    const token = getStaffToken();
     fetch('/api/purchases', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}`, 'x-staff-token': token } : {}),
+      },
       body: JSON.stringify({
         purchaseId: activeConfrontationPurchase.id,
         action: 'receive',
@@ -1056,6 +1063,7 @@ export default function BodegaPage() {
         receivedNotes: receptionNotes.trim() || 'Ingreso verificado y aplicado en bodega',
         items: activeConfrontationPurchase.items.map(it => ({
           productId: it.productId,
+          unit: it.unit,
           quantity: it.quantity,
           receivedQty: receivedQuantities[it.productId] ?? it.quantity,
           costPrice: it.costPrice,
@@ -1093,15 +1101,20 @@ export default function BodegaPage() {
 
   // Simular una compra de prueba pendiente para probar de inmediato la confrontación
   const handleSimulatePendingPurchase = () => {
-    const sampleItems = products.slice(0, 3).map((p, idx) => ({
-      productId: p.id,
-      productName: p.name,
-      productSku: p.sku,
-      unit: p.unit || 'Onza',
-      quantity: idx === 0 ? 16 : idx === 1 ? 32 : 10,
-      costPrice: p.cost || 1.95,
-      subtotal: (idx === 0 ? 16 : idx === 1 ? 32 : 10) * (p.cost || 1.95)
-    }));
+    const sampleItems = products.slice(0, 3).map((p, idx) => {
+      const isEssence = p.category === 'Esencias para Perfume' || p.unit === 'Onza';
+      const simQty = isEssence ? (idx === 0 ? 1 : 2) : 10;
+      const simCost = isEssence ? (p.costPerKg || 45.00) : (p.cost || 1.95);
+      return {
+        productId: p.id,
+        productName: p.name,
+        productSku: p.sku,
+        unit: isEssence ? 'Kg' : (p.unit || 'Unidad'),
+        quantity: simQty,
+        costPrice: simCost,
+        subtotal: simQty * simCost
+      };
+    });
 
     const newSamplePurchase: PurchaseRecord = {
       id: `pur-sim-${Date.now()}`,
@@ -2740,8 +2753,20 @@ export default function BodegaPage() {
                     </p>
                   </div>
 
-                  {/* Filtro rápido de existencia */}
-                  <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+                  {/* Filtro rápido de existencia y botón de Envasado de Kg */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEnvasarProduct(null);
+                        setIsEnvasarModalOpen(true);
+                      }}
+                      className="clay-btn clay-btn-primary px-3 py-1.5 text-xs font-black flex items-center gap-1.5 !bg-indigo-600 shadow-sm"
+                    >
+                      <Droplets className="w-3.5 h-3.5" />
+                      <span>🧪 Envasar Kg</span>
+                    </button>
+                    <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
                     <button
                       onClick={() => setStockFilterType('ALL')}
                       className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all ${
@@ -2766,6 +2791,7 @@ export default function BodegaPage() {
                     >
                       Stock Cero (0)
                     </button>
+                    </div>
                   </div>
                 </div>
 
@@ -2888,15 +2914,44 @@ export default function BodegaPage() {
                               </span>
                             </td>
                             <td className="py-2 px-3 text-right">
-                              <span className={`font-mono font-black text-xs px-2 py-0.5 rounded-lg ${
-                                prod.stock <= 0 
-                                  ? 'bg-rose-100 text-rose-800' 
-                                  : prod.stock <= prod.minStock
-                                  ? 'bg-amber-100 text-amber-800'
-                                  : 'bg-emerald-100 text-emerald-800'
-                              }`}>
-                                {prod.stock} {prod.unit === 'Onza' ? 'Oz' : prod.unit}
-                              </span>
+                              <div className="flex flex-col items-end gap-1">
+                                <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                                  <span className={`font-mono font-black text-xs px-2 py-0.5 rounded-lg ${
+                                    prod.stock <= 0 
+                                      ? 'bg-rose-100 text-rose-800' 
+                                      : prod.stock <= prod.minStock
+                                      ? 'bg-amber-100 text-amber-800'
+                                      : 'bg-emerald-100 text-emerald-800'
+                                  }`}>
+                                    {prod.stock} {prod.unit === 'Onza' ? 'Oz' : prod.unit}
+                                  </span>
+                                  {(prod.category === 'Esencias para Perfume' || prod.unit === 'Onza') && (
+                                    <span className="font-mono font-black text-[11px] px-2 py-0.5 rounded-lg bg-indigo-100 text-indigo-800">
+                                      {prod.stockHalf || 0} ½ Oz
+                                    </span>
+                                  )}
+                                </div>
+                                {(prod.category === 'Esencias para Perfume' || prod.unit === 'Onza') && (
+                                  <div className="flex items-center gap-1.5">
+                                    {Number(prod.stockKg || 0) > 0 && (
+                                      <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
+                                        🛢️ Garrafa: {prod.stockKg} Kg
+                                      </span>
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setEnvasarProduct(prod);
+                                        setIsEnvasarModalOpen(true);
+                                      }}
+                                      className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 transition-colors cursor-pointer"
+                                      title="Envasar Kg a Onzas (1 Oz y ½ Oz)"
+                                    >
+                                      🧪 Envasar Kg
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         ))
@@ -3394,6 +3449,25 @@ export default function BodegaPage() {
           </div>
         </div>
       )}
+
+      <EnvasarKgModal
+        isOpen={isEnvasarModalOpen}
+        onClose={() => {
+          setIsEnvasarModalOpen(false);
+          setEnvasarProduct(null);
+        }}
+        product={envasarProduct}
+        allProducts={products}
+        defaultUserName={currentUser?.name || receivedByPerson || 'Bodega'}
+        onSuccess={(updatedProd, summary) => {
+          const next = products.map(p => (p.id === updatedProd.id ? { ...p, ...updatedProd } : p));
+          setProducts(next);
+          saveStoredProducts(next);
+          showToast(
+            `🧪 Envasado aplicado: +${summary.addedOz} Oz y +${summary.addedHalf} ½ Oz (${summary.equivOz} oz equiv.) en ${updatedProd.name}`
+          );
+        }}
+      />
 
     </div>
   );

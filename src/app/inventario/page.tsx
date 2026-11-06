@@ -20,9 +20,12 @@ import {
 } from 'lucide-react';
 import { INITIAL_PRODUCTS, ProductItem, getStoredProducts } from '@/lib/store';
 import { getStaffToken } from '@/lib/auth';
+import EnvasarKgModal from '@/components/inventory/EnvasarKgModal';
 
 export default function InventarioPage() {
   const [products, setProducts] = useState<ProductItem[]>([]);
+  const [envasarProduct, setEnvasarProduct] = useState<ProductItem | null>(null);
+  const [isEnvasarModalOpen, setIsEnvasarModalOpen] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
@@ -422,34 +425,50 @@ export default function InventarioPage() {
 
                     {/* Stock y Ajuste Rápido */}
                     <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <span className={`clay-badge text-xs py-1 px-2.5 font-bold ${
-                          isOut 
-                            ? 'bg-rose-50 text-rose-700 border border-rose-200' 
-                            : isLow 
-                            ? 'bg-amber-50 text-amber-700 border border-amber-200' 
-                            : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        }`}>
-                          {p.stock} un.
-                        </span>
-                        
-                        {/* Botones de ajuste +/- */}
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => handleAdjustStock(p.id, -1)}
-                            className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 text-xs font-bold active:scale-95"
-                            title="Restar 1"
-                          >
-                            -
-                          </button>
-                          <button
-                            onClick={() => handleAdjustStock(p.id, 5)}
-                            className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 text-xs font-bold active:scale-95"
-                            title="Sumar 5"
-                          >
-                            +5
-                          </button>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`clay-badge text-xs py-1 px-2.5 font-bold ${
+                            isOut 
+                              ? 'bg-rose-50 text-rose-700 border border-rose-200' 
+                              : isLow 
+                              ? 'bg-amber-50 text-amber-700 border border-amber-200' 
+                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          }`}>
+                            {p.stock} {p.unit === 'Onza' ? 'Oz' : 'un.'}
+                          </span>
+
+                          {(p.category === 'Esencias para Perfume' || p.unit === 'Onza') && (
+                            <span className="clay-badge text-xs py-1 px-2 font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                              {p.stockHalf || 0} ½ Oz
+                            </span>
+                          )}
+                          
+                          {/* Botones de ajuste +/- */}
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleAdjustStock(p.id, -1)}
+                              className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 text-xs font-bold active:scale-95"
+                              title="Restar 1"
+                            >
+                              -
+                            </button>
+                            <button
+                              onClick={() => handleAdjustStock(p.id, 5)}
+                              className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 text-xs font-bold active:scale-95"
+                              title="Sumar 5"
+                            >
+                              +5
+                            </button>
+                          </div>
                         </div>
+
+                        {(p.category === 'Esencias para Perfume' || p.unit === 'Onza') && Number(p.stockKg || 0) > 0 && (
+                          <div>
+                            <span className="inline-block text-[10px] font-mono font-black px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
+                              🛢️ Garrafa: {p.stockKg} Kg
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </td>
 
@@ -467,6 +486,19 @@ export default function InventarioPage() {
                     {/* Acciones */}
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        {(p.category === 'Esencias para Perfume' || p.unit === 'Onza') && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEnvasarProduct(p);
+                              setIsEnvasarModalOpen(true);
+                            }}
+                            className="px-2.5 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-600 text-amber-900 hover:text-white text-xs font-black transition-colors shadow-2xs"
+                            title="Envasar Kg a Onzas (1 Oz y ½ Oz)"
+                          >
+                            🧪 Envasar
+                          </button>
+                        )}
                         <button
                           onClick={() => {
                             setEditingProduct(p);
@@ -672,6 +704,19 @@ export default function InventarioPage() {
           </div>
         </div>
       )}
+
+      <EnvasarKgModal
+        isOpen={isEnvasarModalOpen}
+        onClose={() => {
+          setIsEnvasarModalOpen(false);
+          setEnvasarProduct(null);
+        }}
+        product={envasarProduct}
+        allProducts={products}
+        onSuccess={(updatedProd) => {
+          setProducts(prev => prev.map(p => (p.id === updatedProd.id ? { ...p, ...updatedProd } : p)));
+        }}
+      />
 
     </div>
   );

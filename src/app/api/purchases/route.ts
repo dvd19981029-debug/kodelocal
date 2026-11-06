@@ -4,6 +4,22 @@ import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
+let bulkColumnsEnsured = false;
+async function ensureBulkKgColumns() {
+  if (bulkColumnsEnsured) return;
+  try {
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE public."Product" ADD COLUMN IF NOT EXISTS "stockKg" NUMERIC(10,3) NOT NULL DEFAULT 0;
+      ALTER TABLE public."Product" ADD COLUMN IF NOT EXISTS "costPerKg" NUMERIC(10,2) NOT NULL DEFAULT 0;
+      ALTER TABLE public."Product" ADD COLUMN IF NOT EXISTS "yieldOzPerKg" INTEGER NOT NULL DEFAULT 32;
+      ALTER TABLE public."Product" ADD COLUMN IF NOT EXISTS "yieldHalfPerKg" INTEGER NOT NULL DEFAULT 8;
+    `);
+    bulkColumnsEnsured = true;
+  } catch (e) {
+    console.warn('Aviso al asegurar columnas de Kg en Product:', e);
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const authHeader = request.headers.get('authorization') || '';
@@ -99,6 +115,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
+    await ensureBulkKgColumns();
     const {
       purchaseNumber,
       tipoDte,
@@ -169,31 +186,63 @@ export async function POST(request: Request) {
           if (it.productId) {
             const product = await tx.product.findUnique({ where: { id: it.productId } });
             if (product) {
-              const prevStock = product.stock;
-              const addedQty = Math.round(Number(it.quantity || 0));
-              const newStock = prevStock + addedQty;
-              const newCost = Number(it.costPrice) > 0 ? Number(it.costPrice) : Number(product.cost);
+              const isKgUnit = String(it.unit || '').trim().toLowerCase() === 'kg' || String(it.unit || '').trim().toLowerCase() === 'kilogramo';
+              if (isKgUnit) {
+                const prevStockKg = Number((product as any).stockKg || 0);
+                const addedKg = Math.max(0, Number(it.quantity || 0));
+                const newStockKg = Number((prevStockKg + addedKg).toFixed(3));
+                const kgCost = Number(it.costPrice) > 0 ? Number(it.costPrice) : Number((product as any).costPerKg || 0);
+                const estEquivOz = Number(((product as any).yieldOzPerKg ?? 32) + ((product as any).yieldHalfPerKg ?? 8) * 0.5) || 36;
+                const estUnitCostOz = kgCost > 0 ? Number((kgCost / estEquivOz).toFixed(2)) : Number(product.cost || 0);
 
-              await tx.product.update({
-                where: { id: product.id },
-                data: {
-                  stock: newStock,
-                  cost: newCost,
-                },
-              });
+                await tx.product.update({
+                  where: { id: product.id },
+                  data: {
+                    stockKg: newStockKg,
+                    costPerKg: kgCost,
+                    cost: estUnitCostOz,
+                  },
+                });
 
-              // Registrar movimiento en el Kardex
-              await tx.stockMovement.create({
-                data: {
-                  productId: product.id,
-                  type: 'IN_PURCHASE',
-                  quantity: addedQty,
-                  previousStock: prevStock,
-                  newStock: newStock,
-                  reference: `Compra #${createdPurchase.purchaseNumber} (Doc: ${createdPurchase.docNumber})`,
-                  notes: `Ingreso por compra a ${createdPurchase.supplierName}`,
-                },
-              });
+                await tx.stockMovement.create({
+                  data: {
+                    productId: product.id,
+                    type: 'IN_PURCHASE',
+                    quantity: Math.max(1, Math.round(addedKg)),
+                    previousStock: product.stock,
+                    newStock: product.stock,
+                    costPrice: kgCost,
+                    reference: `Compra en Kg #${createdPurchase.purchaseNumber} (Doc: ${createdPurchase.docNumber})`,
+                    notes: `🛢️ Ingreso a Garrafa por compra a ${createdPurchase.supplierName}: +${addedKg} Kg (Garrafa: ${prevStockKg} Kg → ${newStockKg} Kg | Pendiente de envasar)`,
+                  },
+                });
+              } else {
+                const prevStock = product.stock;
+                const addedQty = Math.round(Number(it.quantity || 0));
+                const newStock = prevStock + addedQty;
+                const newCost = Number(it.costPrice) > 0 ? Number(it.costPrice) : Number(product.cost);
+
+                await tx.product.update({
+                  where: { id: product.id },
+                  data: {
+                    stock: newStock,
+                    cost: newCost,
+                  },
+                });
+
+                // Registrar movimiento en el Kardex
+                await tx.stockMovement.create({
+                  data: {
+                    productId: product.id,
+                    type: 'IN_PURCHASE',
+                    quantity: addedQty,
+                    previousStock: prevStock,
+                    newStock: newStock,
+                    reference: `Compra #${createdPurchase.purchaseNumber} (Doc: ${createdPurchase.docNumber})`,
+                    notes: `Ingreso por compra a ${createdPurchase.supplierName}`,
+                  },
+                });
+              }
             }
           }
         }
@@ -201,10 +250,25 @@ export async function POST(request: Request) {
         // Si queda PENDIENTE de bodega, actualizamos solo el costo de compra en catálogo
         for (const it of items) {
           if (it.productId && Number(it.costPrice) > 0) {
-            await tx.product.update({
-              where: { id: it.productId },
-              data: { cost: Number(it.costPrice) },
-            });
+            const product = await tx.product.findUnique({ where: { id: it.productId } });
+            const isKgUnit = String(it.unit || '').trim().toLowerCase() === 'kg' || String(it.unit || '').trim().toLowerCase() === 'kilogramo';
+            if (isKgUnit && product) {
+              const kgCost = Number(it.costPrice);
+              const estEquivOz = Number(((product as any).yieldOzPerKg ?? 32) + ((product as any).yieldHalfPerKg ?? 8) * 0.5) || 36;
+              const estUnitCostOz = Number((kgCost / estEquivOz).toFixed(2));
+              await tx.product.update({
+                where: { id: it.productId },
+                data: {
+                  costPerKg: kgCost,
+                  cost: estUnitCostOz,
+                },
+              });
+            } else {
+              await tx.product.update({
+                where: { id: it.productId },
+                data: { cost: Number(it.costPrice) },
+              });
+            }
           }
         }
       }
@@ -238,6 +302,7 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json();
+    await ensureBulkKgColumns();
     const { purchaseId, purchaseNumber, action, receivedBy, receivedNotes, items, amount, date, paymentMethod, reference, notes } = body;
 
     if (!purchaseId && !purchaseNumber) {
@@ -330,32 +395,67 @@ export async function PATCH(request: Request) {
           if (prodId) {
             const product = await tx.product.findUnique({ where: { id: prodId } });
             if (product) {
-              const prevStock = product.stock;
-              const addedQty = Number(it.receivedQty ?? it.quantity ?? 0);
-              const newStock = prevStock + addedQty;
-              const costPrice = Number(it.costPrice || product.cost || 0);
+              const origItem = purchase.items.find((pi) => pi.productId === prodId);
+              const itemUnit = String(it.unit || origItem?.unit || '').trim();
+              const isKgUnit = itemUnit.toLowerCase() === 'kg' || itemUnit.toLowerCase() === 'kilogramo';
 
-              await tx.product.update({
-                where: { id: product.id },
-                data: {
-                  stock: newStock,
-                  ...(costPrice > 0 ? { cost: costPrice } : {}),
-                },
-              });
+              if (isKgUnit) {
+                const prevStockKg = Number((product as any).stockKg || 0);
+                const addedKg = Math.max(0, Number(it.receivedQty ?? it.quantity ?? 0));
+                const newStockKg = Number((prevStockKg + addedKg).toFixed(3));
+                const kgCost = Number(it.costPrice || origItem?.costPrice || (product as any).costPerKg || 0);
+                const estEquivOz = Number(((product as any).yieldOzPerKg ?? 32) + ((product as any).yieldHalfPerKg ?? 8) * 0.5) || 36;
+                const estUnitCostOz = kgCost > 0 ? Number((kgCost / estEquivOz).toFixed(2)) : Number(product.cost || 0);
 
-              await tx.stockMovement.create({
-                data: {
-                  productId: product.id,
-                  type: 'IN_PURCHASE',
-                  quantity: addedQty,
-                  previousStock: prevStock,
-                  newStock: newStock,
-                  costPrice: costPrice,
-                  userName: receivedBy || 'Bodeguero',
-                  reference: `Ingreso a Bodega #${purchase.purchaseNumber} (Doc: ${purchase.docNumber})`,
-                  notes: `Confrontado y recibido físicamente por ${receivedBy || 'Bodeguero'}`,
-                },
-              });
+                await tx.product.update({
+                  where: { id: product.id },
+                  data: {
+                    stockKg: newStockKg,
+                    ...(kgCost > 0 ? { costPerKg: kgCost, cost: estUnitCostOz } : {}),
+                  },
+                });
+
+                await tx.stockMovement.create({
+                  data: {
+                    productId: product.id,
+                    type: 'IN_PURCHASE',
+                    quantity: Math.max(1, Math.round(addedKg)),
+                    previousStock: product.stock,
+                    newStock: product.stock,
+                    costPrice: kgCost,
+                    userName: receivedBy || 'Bodeguero',
+                    reference: `Ingreso a Garrafa #${purchase.purchaseNumber} (Doc: ${purchase.docNumber})`,
+                    notes: `🛢️ Confrontado y recibido en Garrafa por ${receivedBy || 'Bodeguero'}: +${addedKg} Kg (Garrafa: ${prevStockKg} Kg → ${newStockKg} Kg | Pendiente de envasar)`,
+                  },
+                });
+              } else {
+                const prevStock = product.stock;
+                const addedQty = Math.round(Number(it.receivedQty ?? it.quantity ?? 0));
+                const newStock = prevStock + addedQty;
+                const costPrice = Number(it.costPrice || product.cost || 0);
+
+                await tx.product.update({
+                  where: { id: product.id },
+                  data: {
+                    stock: newStock,
+                    ...(costPrice > 0 ? { cost: costPrice } : {}),
+                  },
+                });
+
+                await tx.stockMovement.create({
+                  data: {
+                    productId: product.id,
+                    type: 'IN_PURCHASE',
+                    quantity: addedQty,
+                    previousStock: prevStock,
+                    newStock: newStock,
+                    costPrice: costPrice,
+                    userName: receivedBy || 'Bodeguero',
+                    reference: `Ingreso a Bodega #${purchase.purchaseNumber} (Doc: ${purchase.docNumber})`,
+                    notes: `Confrontado y recibido físicamente por ${receivedBy || 'Bodeguero'}`,
+                  },
+                });
+              }
             }
           }
         }

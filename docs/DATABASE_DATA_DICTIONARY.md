@@ -290,7 +290,12 @@ Control de gastos e insumos de laboratorio.
 | `priceHalfOunce` | `Decimal(10,2)`| SÍ | - | Precio venta ½ onza ecommerce |
 | `finishedPerfumePrice`| `Decimal(10,2)`| SÍ | - | Precio terminado "Arma tu perfume" (ej. $15.00) |
 | `cost` | `Decimal(10,2)`| SÍ | Default `1.95` | Costo compra por onza |
-| `stock` | `Int` | NO | Default `50` | Existencia física actual |
+| `costPerKg` | `Decimal(10,2)`| NO | Default `0.00` | Costo de compra por Kg a granel |
+| `stock` | `Int` | NO | Default `50` | Existencia física actual (1 Onza) |
+| `stockHalf` | `Int` | NO | Default `0` | Existencia física actual (½ Onza) |
+| `stockKg` | `Decimal(10,3)`| NO | Default `0.000` | Existencia a granel en garrafa en Kg (pendiente de envasar) |
+| `yieldOzPerKg` | `Int` | NO | Default `32` | Rendimiento estimado de onzas (1 Oz) por Kg |
+| `yieldHalfPerKg` | `Int` | NO | Default `8` | Rendimiento estimado de medias onzas (½ Oz) por Kg |
 | `minStock` | `Int` | NO | Default `10` | Nivel mínimo de alerta de inventario |
 | `imageUrl` | `String` | SÍ | - | Foto del producto |
 | `puesto` | `String` | SÍ | - | Ubicación en estantería (ej. `A1`, `B3`) |

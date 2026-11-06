@@ -190,6 +190,23 @@ export function applyPurchaseToProducts(purchase: PurchaseRecord, currentProduct
     const matchedItem = purchase.items.find(it => it.productId === prod.id);
     if (!matchedItem) return prod;
 
+    const isKgUnit = String(matchedItem.unit || '').trim().toLowerCase() === 'kg';
+    if (isKgUnit) {
+      const currentKg = Number(prod.stockKg || 0);
+      const newStockKg = isNC
+        ? Math.max(0, Number((currentKg - matchedItem.quantity).toFixed(3)))
+        : Number((currentKg + matchedItem.quantity).toFixed(3));
+      const newCostPerKg = !isNC && matchedItem.costPrice > 0 ? matchedItem.costPrice : (prod.costPerKg || 0);
+      const estEquivOz = Number((prod.yieldOzPerKg ?? 32) + (prod.yieldHalfPerKg ?? 8) * 0.5) || 36;
+      const newCostOz = newCostPerKg > 0 ? Number((newCostPerKg / estEquivOz).toFixed(2)) : prod.cost;
+      return {
+        ...prod,
+        stockKg: newStockKg,
+        costPerKg: newCostPerKg,
+        cost: newCostOz,
+      };
+    }
+
     const newStock = isNC 
       ? Math.max(0, prod.stock - matchedItem.quantity)
       : prod.stock + matchedItem.quantity;
@@ -222,6 +239,23 @@ export function applyBodegaReceptionToProducts(
     if (receivedQuantities[prod.id] !== undefined) {
       const qtyReceived = receivedQuantities[prod.id];
       const matchedItem = purchase.items.find(it => it.productId === prod.id);
+      const isKgUnit = String(matchedItem?.unit || '').trim().toLowerCase() === 'kg';
+
+      if (isKgUnit) {
+        const currentKg = Number(prod.stockKg || 0);
+        const newStockKg = isNC
+          ? Math.max(0, Number((currentKg - qtyReceived).toFixed(3)))
+          : Number((currentKg + qtyReceived).toFixed(3));
+        const newCostPerKg = !isNC && matchedItem && matchedItem.costPrice > 0 ? matchedItem.costPrice : (prod.costPerKg || 0);
+        const estEquivOz = Number((prod.yieldOzPerKg ?? 32) + (prod.yieldHalfPerKg ?? 8) * 0.5) || 36;
+        const newCostOz = newCostPerKg > 0 ? Number((newCostPerKg / estEquivOz).toFixed(2)) : prod.cost;
+        return {
+          ...prod,
+          stockKg: newStockKg,
+          costPerKg: newCostPerKg,
+          cost: newCostOz,
+        };
+      }
 
       const newStock = isNC
         ? Math.max(0, (prod.stock || 0) - qtyReceived)
