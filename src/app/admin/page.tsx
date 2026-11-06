@@ -76,6 +76,7 @@ import {
 type AdminTab = 
   | 'dashboard' 
   | 'productos' 
+  | 'alerta-inventario'
   | 'categorias' 
   | 'kardex'
   | 'ventas-dia' 
@@ -134,7 +135,6 @@ export default function AdminPage() {
   // Modales
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isBulkPriceModalOpen, setIsBulkPriceModalOpen] = useState(false);
-  const [isInventoryAlertOpen, setIsInventoryAlertOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isMobileAdminMenuOpen, setIsMobileAdminMenuOpen] = useState(false);
@@ -950,6 +950,7 @@ export default function AdminPage() {
               <span className="text-xs font-black text-slate-800 truncate block">
                 {activeTab === 'dashboard' && 'Dashboard Ejecutivo'}
                 {activeTab === 'productos' && `Catálogo (${products.length})`}
+                {activeTab === 'alerta-inventario' && `Alerta Inventario (${lowStockEssences.length})`}
                 {activeTab === 'categorias' && `Categorías (${categories.length})`}
                 {activeTab === 'kardex' && 'Kárdex General'}
                 {activeTab === 'compras' && 'Compras & Proveedores'}
@@ -1445,7 +1446,7 @@ export default function AdminPage() {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <button
-                  onClick={() => setIsInventoryAlertOpen(true)}
+                  onClick={() => setActiveTab('alerta-inventario')}
                   className="clay-btn clay-btn-light px-3.5 py-2.5 text-xs flex items-center gap-1.5 font-bold text-amber-700"
                 >
                   <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
@@ -1746,6 +1747,62 @@ export default function AdminPage() {
               </p>
             </div>
 
+          </div>
+        )}
+
+        {/* ================= TAB: ALERTA INVENTARIO ================= */}
+        {activeTab === 'alerta-inventario' && (
+          <div className="space-y-5 animate-in fade-in duration-150">
+            <div className="clay-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h2 className="text-xl font-black text-slate-800">Alerta Inventario</h2>
+                <p className="text-xs text-slate-500 font-medium">
+                  Esencias por debajo del mínimo de 15 onzas ({lowStockEssences.length})
+                </p>
+              </div>
+              <button
+                onClick={() => setActiveTab('productos')}
+                className="clay-btn clay-btn-light px-4 py-2.5 text-xs flex items-center gap-1.5 font-bold text-slate-700"
+              >
+                <Package className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Volver a Productos</span>
+              </button>
+            </div>
+
+            <div className="clay-card p-4 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-200/80 text-slate-400 font-bold text-[10px] uppercase tracking-wider">
+                      <th className="py-3 px-4">Fragancia</th>
+                      <th className="py-3 px-4 text-right">Unidades Restantes</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {lowStockEssences.length === 0 ? (
+                      <tr>
+                        <td colSpan={2} className="py-8 text-center text-xs text-slate-400">
+                          No hay esencias por debajo de 15 onzas.
+                        </td>
+                      </tr>
+                    ) : (
+                      lowStockEssences.map((item) => (
+                        <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="py-3 px-4 font-bold text-slate-800">
+                            {item.name}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <span className="font-mono font-black text-rose-700 bg-rose-50 px-2.5 py-1 rounded-md border border-rose-200/80">
+                              {Number(item.stock || 0)} Oz
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         )}
 
@@ -2498,49 +2555,6 @@ export default function AdminPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* ================= MODAL: ALERTA INVENTARIO ================= */}
-      {isInventoryAlertOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="clay-card w-full max-w-md p-6 relative animate-in fade-in zoom-in-95 flex flex-col max-h-[80vh]">
-            <button
-              onClick={() => setIsInventoryAlertOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <h3 className="text-xl font-black text-slate-800 mb-1">Alerta Inventario</h3>
-            <p className="text-xs text-slate-500 mb-4">
-              Esencias por debajo del mínimo de 15 onzas ({lowStockEssences.length})
-            </p>
-
-            <div className="overflow-y-auto flex-1 rounded-xl border border-slate-200/80 divide-y divide-slate-100 bg-white">
-              <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 text-[11px] font-black text-slate-500 uppercase tracking-wider sticky top-0">
-                <span>Fragancia</span>
-                <span>Unidades Restantes</span>
-              </div>
-              {lowStockEssences.length === 0 ? (
-                <div className="p-6 text-center text-xs text-slate-400">
-                  No hay esencias por debajo de 15 onzas.
-                </div>
-              ) : (
-                lowStockEssences.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between px-4 py-2.5 text-xs hover:bg-slate-50/80"
-                  >
-                    <span className="font-bold text-slate-800 pr-3">{item.name}</span>
-                    <span className="font-mono font-black text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-md border border-rose-200/80 shrink-0">
-                      {Number(item.stock || 0)} Oz
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
           </div>
         </div>
       )}
