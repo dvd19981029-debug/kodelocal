@@ -51,6 +51,7 @@ export interface PosDomicilioOrder {
   ivaTotal: number;
   shippingCost: number;
   total: number;
+  codAmount: number;
   paymentMethod: string;
   paymentStatus: string;
   c807PaymentMode: 'CONTRA_ENTREGA' | 'TARJETA' | 'TRANSFERENCIA';
@@ -203,8 +204,16 @@ export function mapSaleToDomicilioOrder(s: any): PosDomicilioOrder | null {
   const explicitC807Mode = String(dom.c807PaymentMode || '').toUpperCase();
   const explicitC807Service = String(dom.c807ServiceType || '').toUpperCase();
 
+  const contraEntregaPartSum = Array.isArray(s.payments)
+    ? s.payments
+        .filter((p: any) => String(p.paymentMethod || '').toUpperCase() === 'CONTRA_ENTREGA')
+        .reduce((acc: number, p: any) => acc + Number(p.amount || 0), 0)
+    : 0;
+
   let c807PaymentMode: 'CONTRA_ENTREGA' | 'TARJETA' | 'TRANSFERENCIA' = 'CONTRA_ENTREGA';
-  if (explicitC807Mode === 'TARJETA' || explicitC807Mode === 'YA_PAGADO_TARJETA') {
+  if (contraEntregaPartSum > 0) {
+    c807PaymentMode = 'CONTRA_ENTREGA';
+  } else if (explicitC807Mode === 'TARJETA' || explicitC807Mode === 'YA_PAGADO_TARJETA') {
     c807PaymentMode = 'TARJETA';
   } else if (explicitC807Mode === 'TRANSFERENCIA' || explicitC807Mode === 'YA_PAGADO_TRANSFERENCIA') {
     c807PaymentMode = 'TRANSFERENCIA';
@@ -221,6 +230,8 @@ export function mapSaleToDomicilioOrder(s: any): PosDomicilioOrder | null {
   }
 
   const c807ServiceType: 'CCE' | 'SER' = c807PaymentMode === 'CONTRA_ENTREGA' ? 'CCE' : 'SER';
+  const codAmount =
+    contraEntregaPartSum > 0 ? Number(contraEntregaPartSum.toFixed(2)) : Number(s.total || 0);
 
   return {
     id: s.id,
@@ -239,6 +250,7 @@ export function mapSaleToDomicilioOrder(s: any): PosDomicilioOrder | null {
     ivaTotal: Number(s.ivaTotal || 0),
     shippingCost,
     total: Number(s.total || 0),
+    codAmount,
     paymentMethod: s.paymentMethod || 'CASH',
     paymentStatus: s.dteDocument?.estado === 'PROCESADO' ? 'COMPLETED' : (s.paymentStatus || 'PENDING'),
     c807PaymentMode,
@@ -464,7 +476,7 @@ export default function PosDomicilioPanel({ onOrderChanged }: { onOrderChanged?:
                     <div className="text-[11px] font-bold flex items-center gap-1.5 mt-0.5 flex-wrap">
                       {o.c807ServiceType === 'CCE' ? (
                         <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300 text-[9.5px] font-black">
-                          💵 C807 Contra Entrega (CCE · {money(o.total)})
+                          💵 C807 Contra Entrega (CCE · {money(o.codAmount)})
                         </span>
                       ) : (
                         <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300 text-[9.5px] font-black">
@@ -1182,7 +1194,7 @@ function PosDomicilioDetailModal({
                     <span className={`font-mono font-black text-[11px] px-2 py-0.5 rounded ${
                       editC807Mode === 'CONTRA_ENTREGA' ? 'bg-amber-700/60 text-white' : 'bg-amber-100 text-amber-900'
                     }`}>
-                      Cobrar {money(o.total)}
+                      Cobrar {money(o.codAmount)}
                     </span>
                   </button>
                   <div className="grid grid-cols-2 gap-1.5">

@@ -1002,7 +1002,7 @@ export async function PATCH(request: Request) {
           ...(saleNumber ? [{ saleNumber }] : []),
         ],
       },
-      include: { items: true, customer: true, shipments: true } // NECESARIO PARA RESTAURAR INVENTARIO, FACTURAR Y GENERAR GUÍA C807
+      include: { items: true, customer: true, shipments: true, payments: true } // NECESARIO PARA RESTAURAR INVENTARIO, FACTURAR Y GENERAR GUÍA C807
     });
 
     if (!sale) {
@@ -1504,6 +1504,23 @@ export async function PATCH(request: Request) {
         resolvedServiceType = 'CCE';
       }
 
+      const contraEntregaLinesTotal = Array.isArray((sale as any).payments)
+        ? (sale as any).payments
+            .filter((p: any) => String(p.paymentMethod || '').toUpperCase() === 'CONTRA_ENTREGA')
+            .reduce((acc: number, p: any) => acc + Number(p.amount || 0), 0)
+        : 0;
+
+      if (contraEntregaLinesTotal > 0 && !rawPaymentMode) {
+        resolvedTipoPagoC807 = 'CONTRAENTREGA';
+        resolvedPaymentMode = 'CONTRA_ENTREGA';
+        resolvedServiceType = 'CCE';
+      }
+
+      const c807TotalToCollect =
+        resolvedTipoPagoC807 === 'CONTRAENTREGA' && contraEntregaLinesTotal > 0
+          ? Number(contraEntregaLinesTotal.toFixed(2))
+          : Number(sale.total || 0);
+
       const c807Res = await c807Client.generarGuia({
         numero_pedido: sale.saleNumber,
         cliente_nombre: customerName,
@@ -1514,7 +1531,7 @@ export async function PATCH(request: Request) {
         cliente_municipio: municipality,
         cliente_referencia: deliveryReference,
         tipo_pago: resolvedTipoPagoC807,
-        total: Number(sale.total || 0),
+        total: c807TotalToCollect,
         observaciones: `Pedido POS Aromaniak #${sale.saleNumber}`,
       });
 

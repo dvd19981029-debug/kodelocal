@@ -3209,14 +3209,18 @@ export default function PosPage() {
       const effectiveDirectDomicilio =
         isOrderDomicilio ||
         itemsToBill.some(it => it.productId === 'ENVIO-DOM' || String(it.name || '').toLowerCase().includes('envío a domicilio'));
-      const effectiveC807Mode: 'CONTRA_ENTREGA' | 'TARJETA' | 'TRANSFERENCIA' =
-        paymentMethod === 'CARD'
-          ? 'TARJETA'
-          : paymentMethod === 'TRANSFER'
-          ? 'TRANSFERENCIA'
-          : paymentMethod === 'CONTRA_ENTREGA'
-          ? 'CONTRA_ENTREGA'
-          : domicilioPaymentMode;
+      const hasContraEntregaLine = Boolean(
+        resolvedPayments?.some((p) => p.paymentMethod === 'CONTRA_ENTREGA' && p.amount > 0)
+      );
+      const effectiveC807Mode: 'CONTRA_ENTREGA' | 'TARJETA' | 'TRANSFERENCIA' = hasContraEntregaLine
+        ? 'CONTRA_ENTREGA'
+        : effectiveMainPaymentMethod === 'CARD'
+        ? 'TARJETA'
+        : effectiveMainPaymentMethod === 'TRANSFER'
+        ? 'TRANSFERENCIA'
+        : effectiveMainPaymentMethod === 'CONTRA_ENTREGA'
+        ? 'CONTRA_ENTREGA'
+        : domicilioPaymentMode;
       const directDomicilioPayload = effectiveDirectDomicilio
         ? {
             isDomicilio: true,
