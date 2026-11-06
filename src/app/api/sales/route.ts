@@ -93,7 +93,7 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '100', 10), 1), 250);
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '100', 10), 1), 1000);
     const page = Math.max(parseInt(searchParams.get('page') || '1', 10), 1);
     const skip = (page - 1) * limit;
     const startDate = searchParams.get('startDate');

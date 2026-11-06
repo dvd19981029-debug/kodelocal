@@ -253,7 +253,7 @@ export default function AdminPage() {
       .catch(err => console.error('Error cargando roles desde Supabase:', err));
 
     getStaffToken().then(staffToken => {
-      fetch('/api/sales?limit=500', {
+      fetch('/api/sales?limit=1000&skipC807Sync=1', {
         headers: {
           ...(staffToken ? { 'x-staff-token': staffToken } : {}),
         },
@@ -392,19 +392,6 @@ export default function AdminPage() {
     () => inventoriedProducts.filter((p) => p.category === 'Esencias para Perfume').length,
     [inventoriedProducts]
   );
-  const lowStockEssences = useMemo(
-    () =>
-      products
-        .filter(
-          (p) =>
-            (p.category === 'Esencias para Perfume' || !p.category) &&
-            p.id !== 'ENVIO-DOM' &&
-            (p.unit || '').toLowerCase() !== 'servicio' &&
-            Number(p.stock || 0) < 15
-        )
-        .sort((a, b) => Number(a.stock || 0) - Number(b.stock || 0)),
-    [products]
-  );
   const monthlySalesByProduct = useMemo(() => {
     const map = new Map<string, { ozPerMonth: number; kgPerMonth: number }>();
     if (!sales.length) return map;
@@ -445,6 +432,30 @@ export default function AdminPage() {
 
     return map;
   }, [sales]);
+  const lowStockEssences = useMemo(
+    () =>
+      products
+        .filter(
+          (p) =>
+            (p.category === 'Esencias para Perfume' || !p.category) &&
+            p.id !== 'ENVIO-DOM' &&
+            (p.unit || '').toLowerCase() !== 'servicio' &&
+            Number(p.stock || 0) < 15
+        )
+        .sort((a, b) => {
+          const aActive =
+            Number(a.stock || 0) > 0 ||
+            Number(a.stockHalf || 0) > 0 ||
+            (monthlySalesByProduct.get(a.id)?.ozPerMonth || 0) > 0;
+          const bActive =
+            Number(b.stock || 0) > 0 ||
+            Number(b.stockHalf || 0) > 0 ||
+            (monthlySalesByProduct.get(b.id)?.ozPerMonth || 0) > 0;
+          if (aActive !== bActive) return aActive ? -1 : 1;
+          return Number(a.stock || 0) - Number(b.stock || 0);
+        }),
+    [products, monthlySalesByProduct]
+  );
   const totalStockOnzas = useMemo(
     () =>
       inventoriedProducts
