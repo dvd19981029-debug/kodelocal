@@ -1828,13 +1828,14 @@ export default function AdminPage() {
                       <th className="py-3 px-4">Fragancia</th>
                       <th className="py-3 px-4 text-right">Unidades Restantes (1 Oz)</th>
                       <th className="py-3 px-4 text-right">Medias Onzas Restantes (½ Oz)</th>
-                      <th className="py-3 px-4 text-right">Ventas Promedio / Mes</th>
+                      <th className="py-3 px-4 text-right">Ventas Promedio / Mes (Oz)</th>
+                      <th className="py-3 px-4 text-right">Ventas Promedio / Mes (Kg)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {lowStockEssences.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="py-8 text-center text-xs text-slate-400">
+                        <td colSpan={5} className="py-8 text-center text-xs text-slate-400">
                           No hay esencias por debajo de 15 onzas.
                         </td>
                       </tr>
@@ -1857,7 +1858,10 @@ export default function AdminPage() {
                               </span>
                             </td>
                             <td className="py-3 px-4 text-right font-mono font-bold text-slate-700">
-                              {stats.ozPerMonth.toFixed(1)} Oz <span className="text-indigo-600">({stats.kgPerMonth.toFixed(2)} Kg)</span>
+                              {stats.ozPerMonth.toFixed(1)} Oz
+                            </td>
+                            <td className="py-3 px-4 text-right font-mono font-bold text-indigo-600">
+                              {stats.kgPerMonth.toFixed(2)} Kg
                             </td>
                           </tr>
                         );
