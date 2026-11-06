@@ -1858,7 +1858,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "cost": 0.55,
     "stock": 0,
     "minStock": 15,
-    "imageUrl": "/images/botes/bote_100ml_cosmo.jpg",
+    "imageUrl": "/images/botes/bote_100ml_cosmo.jpg?v=2",
     "description": "Frasco cuadrado de vidrio pesado transparente 100ml con base gruesa, cierre de rosca y tapa cilíndrica metálica plateada cromada.",
     "isAvailableOnline": true,
     "puesto": "B6",

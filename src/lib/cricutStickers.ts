@@ -2536,7 +2536,7 @@ export const STICKER_BOTTLE_MOCKUPS: StickerBottleMockupConfig[] = [
     name: 'Bote Cosmo 100ml Rosca',
     shortName: 'Bote Cosmo 100ml',
     subtitle: 'Cuadrado vidrio pesado • Tapa cilíndrica plateada',
-    bottleImageUrl: '/images/botes/bote_100ml_cosmo.jpg',
+    bottleImageUrl: '/images/botes/bote_100ml_cosmo.jpg?v=2',
     cx: 400,
     cy: 495,
     targetWidth: 248,
