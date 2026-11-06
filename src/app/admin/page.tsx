@@ -78,6 +78,7 @@ type AdminTab =
   | 'dashboard' 
   | 'productos' 
   | 'alerta-inventario'
+  | 'inventario-kg'
   | 'categorias' 
   | 'kardex'
   | 'ventas-dia' 
@@ -95,6 +96,8 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const [envasarProduct, setEnvasarProduct] = useState<ProductItem | null>(null);
   const [isEnvasarModalOpen, setIsEnvasarModalOpen] = useState(false);
+  const [kgSearchQuery, setKgSearchQuery] = useState('');
+  const [showAllEssencesInKgView, setShowAllEssencesInKgView] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -1004,6 +1007,7 @@ export default function AdminPage() {
               <span className="text-xs font-black text-slate-800 truncate block">
                 {activeTab === 'dashboard' && 'Dashboard Ejecutivo'}
                 {activeTab === 'productos' && `Catálogo (${products.length})`}
+                {activeTab === 'inventario-kg' && 'Inventario de Kg (Garrafas)'}
                 {activeTab === 'alerta-inventario' && `Alerta Inventario (${lowStockEssences.length})`}
                 {activeTab === 'categorias' && `Categorías (${categories.length})`}
                 {activeTab === 'kardex' && 'Kárdex General'}
@@ -1065,6 +1069,17 @@ export default function AdminPage() {
               >
                 <Package className="w-3.5 h-3.5 shrink-0" />
                 <span className="truncate">Productos</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setActiveTab('inventario-kg'); setIsMobileAdminMenuOpen(false); }}
+                className={`p-2.5 rounded-xl text-xs font-bold text-left flex items-center gap-2 transition-all ${
+                  activeTab === 'inventario-kg' ? 'clay-btn-primary !bg-amber-600' : 'bg-amber-50 text-amber-900 hover:bg-amber-100'
+                }`}
+              >
+                <Droplets className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Inventario de Kg</span>
               </button>
 
               <button
@@ -1257,6 +1272,23 @@ export default function AdminPage() {
                 </div>
                 <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-100/50 text-indigo-700">
                   {products.length}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('inventario-kg')}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+                  activeTab === 'inventario-kg'
+                    ? 'clay-btn-primary !bg-amber-600 !shadow-[3px_4px_10px_rgba(217,119,6,0.35)]'
+                    : 'text-amber-900 bg-amber-50/70 hover:bg-amber-100/80'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Droplets className="w-4 h-4" />
+                  <span>🛢️ Inventario de Kg</span>
+                </div>
+                <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-200/80 text-amber-950 font-mono font-black">
+                  {products.filter(p => Number(p.stockKg || 0) > 0).length}
                 </span>
               </button>
 
@@ -1499,6 +1531,13 @@ export default function AdminPage() {
                 <p className="text-xs text-slate-500 font-medium">Control de precios de venta, costos de compra y existencias</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setActiveTab('inventario-kg')}
+                  className="clay-btn clay-btn-light px-3.5 py-2.5 text-xs flex items-center gap-1.5 font-black text-amber-900 bg-amber-50 border border-amber-300"
+                >
+                  <Droplets className="w-3.5 h-3.5 text-amber-600" />
+                  <span>🛢️ Inventario de Kg ({products.filter(p => Number(p.stockKg || 0) > 0).length})</span>
+                </button>
                 <button
                   onClick={() => setActiveTab('alerta-inventario')}
                   className="clay-btn clay-btn-light px-3.5 py-2.5 text-xs flex items-center gap-1.5 font-bold text-amber-700"
@@ -1838,6 +1877,255 @@ export default function AdminPage() {
               </p>
             </div>
 
+          </div>
+        )}
+
+        {/* ================= TAB: INVENTARIO DE KG (GARRAFAS POR ENVASAR) ================= */}
+        {activeTab === 'inventario-kg' && (
+          <div className="space-y-5 animate-in fade-in duration-150">
+            <div className="clay-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-xl font-black text-slate-800">🛢️ Inventario de Kg (Garrafas en Bodega)</h2>
+                  <span className="clay-badge bg-amber-100 text-amber-900 text-xs font-black px-2.5 py-0.5 border border-amber-300">
+                    {products.filter(p => Number(p.stockKg || 0) > 0).length} con Kg disponibles
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
+                  Control de esencias compradas en Kg pendientes de envasar a presentaciones de 1 Oz y ½ Oz
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => {
+                    setEnvasarProduct(null);
+                    setIsEnvasarModalOpen(true);
+                  }}
+                  className="clay-btn clay-btn-primary px-4 py-2.5 text-xs flex items-center gap-1.5 font-black !bg-amber-600"
+                >
+                  <Droplets className="w-4 h-4" />
+                  <span>🧪 Envasar Kg a Onzas</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('productos')}
+                  className="clay-btn clay-btn-light px-4 py-2.5 text-xs flex items-center gap-1.5 font-bold text-slate-700"
+                >
+                  <Package className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Ver Catálogo Completo</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Tarjetas de Resumen de Kilos */}
+            {(() => {
+              const essencesWithKg = products.filter(p => Number(p.stockKg || 0) > 0);
+              const totalKg = essencesWithKg.reduce((acc, p) => acc + Number(p.stockKg || 0), 0);
+              const estTotalOz = essencesWithKg.reduce(
+                (acc, p) => acc + Math.round(Number(p.stockKg || 0) * Number(p.yieldOzPerKg ?? 32)),
+                0
+              );
+              const estTotalHalf = essencesWithKg.reduce(
+                (acc, p) => acc + Math.round(Number(p.stockKg || 0) * Number(p.yieldHalfPerKg ?? 8)),
+                0
+              );
+              return (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="clay-card p-4 border-l-4 border-amber-500">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                      Total en Garrafas Sin Envasar
+                    </span>
+                    <span className="text-2xl font-black text-amber-800 font-mono mt-1 block">
+                      {totalKg.toFixed(2)} Kg
+                    </span>
+                    <span className="text-[11px] text-slate-500">
+                      En {essencesWithKg.length} fragancias distintas
+                    </span>
+                  </div>
+                  <div className="clay-card p-4 border-l-4 border-indigo-500">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                      Proyección Estimada (1 Oz)
+                    </span>
+                    <span className="text-2xl font-black text-indigo-700 font-mono mt-1 block">
+                      +{estTotalOz} Onzas
+                    </span>
+                    <span className="text-[11px] text-slate-500">
+                      Basado en ~32 onzas por Kg
+                    </span>
+                  </div>
+                  <div className="clay-card p-4 border-l-4 border-purple-500">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                      Proyección Estimada (½ Oz)
+                    </span>
+                    <span className="text-2xl font-black text-purple-700 font-mono mt-1 block">
+                      +{estTotalHalf} Medias Oz
+                    </span>
+                    <span className="text-[11px] text-slate-500">
+                      Basado en ~8 medias onzas por Kg
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Buscador y Selector de Vista */}
+            <div className="clay-card p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={kgSearchQuery}
+                  onChange={(e) => setKgSearchQuery(e.target.value)}
+                  placeholder="Buscar esencia por nombre, SKU (#73, #77) o puesto (B6, B7)..."
+                  className="clay-input has-icon w-full py-2 text-xs font-bold"
+                />
+              </div>
+              <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShowAllEssencesInKgView(false)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                    !showAllEssencesInKgView
+                      ? 'bg-amber-600 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  🛢️ Con Kg en Garrafa ({products.filter(p => Number(p.stockKg || 0) > 0).length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAllEssencesInKgView(true)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    showAllEssencesInKgView
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  📋 Todas las Esencias
+                </button>
+              </div>
+            </div>
+
+            {/* Tabla de Inventario de Kg */}
+            <div className="clay-card p-4 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-200/80 text-slate-400 font-bold text-[10px] uppercase tracking-wider">
+                      <th className="py-3 px-3">SKU</th>
+                      <th className="py-3 px-3">Puesto</th>
+                      <th className="py-3 px-3">Esencia / Fragancia</th>
+                      <th className="py-3 px-3 text-center">En Garrafa (Kg)</th>
+                      <th className="py-3 px-3 text-center">Estimación Base / Kg</th>
+                      <th className="py-3 px-3 text-center">En Estante (1 Oz / ½ Oz)</th>
+                      <th className="py-3 px-3 text-right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {(() => {
+                      const q = kgSearchQuery.toLowerCase().trim();
+                      const list = products.filter(p => {
+                        const isEssence = p.category === 'Esencias para Perfume' || p.unit === 'Onza';
+                        if (!isEssence) return false;
+                        if (!showAllEssencesInKgView && !q && Number(p.stockKg || 0) <= 0) return false;
+                        if (!q) return true;
+                        return (
+                          p.name.toLowerCase().includes(q) ||
+                          (p.officialName || '').toLowerCase().includes(q) ||
+                          (p.sku || '').toLowerCase().includes(q) ||
+                          (p.puesto || '').toLowerCase().includes(q)
+                        );
+                      });
+
+                      if (list.length === 0) {
+                        return (
+                          <tr>
+                            <td colSpan={7} className="py-10 text-center text-slate-400">
+                              <p className="font-bold text-slate-600 mb-1">
+                                No hay esencias con Kg en garrafa pendientes de envasar en este momento.
+                              </p>
+                              <p className="text-[11px] text-slate-400 mb-3">
+                                Cuando registres una compra en Kg y Bodega la reciba, aparecerá aquí automáticamente, o puedes ver todas las esencias para envasar un lote directo.
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => setShowAllEssencesInKgView(true)}
+                                className="clay-btn clay-btn-light px-3.5 py-1.5 text-xs font-bold text-indigo-700"
+                              >
+                                Ver todas las esencias del catálogo
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      }
+
+                      return list.slice(0, 100).map((item) => {
+                        const kgVal = Number(item.stockKg || 0);
+                        const baseOz = Number(item.yieldOzPerKg ?? 32);
+                        const baseHalf = Number(item.yieldHalfPerKg ?? 8);
+                        return (
+                          <tr key={item.id} className="hover:bg-amber-50/30 transition-colors">
+                            <td className="py-3 px-3 font-mono font-bold text-indigo-600">
+                              #{item.sku}
+                            </td>
+                            <td className="py-3 px-3">
+                              {item.puesto ? (
+                                <span className="clay-badge bg-amber-50 text-amber-900 border border-amber-200 font-mono font-black text-xs py-0.5 px-2">
+                                  📍 {item.puesto}
+                                </span>
+                              ) : (
+                                <span className="text-slate-300">-</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-3">
+                              <span className="font-bold text-slate-800 block">{item.name}</span>
+                              {item.officialName && (
+                                <span className="text-[10.5px] text-slate-400">{item.officialName}</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-3 text-center">
+                              <span
+                                className={`font-mono font-black text-xs px-2.5 py-1 rounded-lg border ${
+                                  kgVal > 0
+                                    ? 'bg-amber-100 text-amber-950 border-amber-300'
+                                    : 'bg-slate-100 text-slate-500 border-slate-200'
+                                }`}
+                              >
+                                🛢️ {kgVal} Kg
+                              </span>
+                            </td>
+                            <td className="py-3 px-3 text-center font-mono text-[11px] text-slate-600">
+                              <strong>{baseOz} Oz</strong> + <strong>{baseHalf} ½ Oz</strong>{' '}
+                              <span className="text-slate-400">({baseOz + baseHalf * 0.5} oz/Kg)</span>
+                            </td>
+                            <td className="py-3 px-3 text-center font-mono">
+                              <span className="font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 mr-1.5">
+                                {item.stock} Oz
+                              </span>
+                              <span className="font-black text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                                {item.stockHalf || 0} ½ Oz
+                              </span>
+                            </td>
+                            <td className="py-3 px-3 text-right">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEnvasarProduct(item);
+                                  setIsEnvasarModalOpen(true);
+                                }}
+                                className="clay-btn clay-btn-primary px-3 py-1.5 text-xs font-black !bg-amber-600 inline-flex items-center gap-1.5"
+                              >
+                                <Droplets className="w-3.5 h-3.5" />
+                                <span>🧪 Envasar Kg</span>
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      });
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         )}
 

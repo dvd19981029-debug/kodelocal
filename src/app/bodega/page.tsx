@@ -170,7 +170,7 @@ export default function BodegaPage() {
   const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
   const [stockSearch, setStockSearch] = useState('');
   const [selectedStockCategory, setSelectedStockCategory] = useState('Todos');
-  const [stockFilterType, setStockFilterType] = useState<'ALL' | 'IN_STOCK' | 'OUT_OF_STOCK'>('ALL');
+  const [stockFilterType, setStockFilterType] = useState<'ALL' | 'IN_STOCK' | 'OUT_OF_STOCK' | 'IN_GARRAFA'>('ALL');
 
   // 3. Compras registradas en el sistema (para recepción y confrontación en Bodega)
   const [purchases, setPurchases] = useState<PurchaseRecord[]>(() => getStoredPurchases());
@@ -969,6 +969,7 @@ export default function BodegaPage() {
 
       if (stockFilterType === 'IN_STOCK' && (p.stock || 0) <= 0) return false;
       if (stockFilterType === 'OUT_OF_STOCK' && (p.stock || 0) > 0) return false;
+      if (stockFilterType === 'IN_GARRAFA' && Number(p.stockKg || 0) <= 0) return false;
 
       if (!q) return true;
       return (
@@ -2790,6 +2791,16 @@ export default function BodegaPage() {
                       }`}
                     >
                       Stock Cero (0)
+                    </button>
+                    <button
+                      onClick={() => setStockFilterType('IN_GARRAFA')}
+                      className={`px-2.5 py-1 text-[11px] font-black rounded-lg transition-all flex items-center gap-1 ${
+                        stockFilterType === 'IN_GARRAFA'
+                          ? 'bg-amber-600 text-white shadow-sm'
+                          : 'text-amber-900 bg-amber-100/80 hover:bg-amber-200'
+                      }`}
+                    >
+                      <span>🛢️ Inventario de Kg ({products.filter(p => Number(p.stockKg || 0) > 0).length})</span>
                     </button>
                     </div>
                   </div>
