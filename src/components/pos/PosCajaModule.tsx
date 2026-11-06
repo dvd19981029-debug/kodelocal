@@ -1095,6 +1095,9 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
               >
                 <Calculator className="w-4 h-4 shrink-0" />
                 <span>Conteo Efectivo</span>
+                <span className="px-2 py-0.5 rounded-md bg-white/90 text-sky-800 font-mono text-[11px] font-black">
+                  ${cashCountTotal.toFixed(2)}
+                </span>
               </button>
             </div>
 
@@ -1159,18 +1162,15 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
             >
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-black text-emerald-700 uppercase tracking-wider">
-                  Efectivo Hoy (+ En Caja)
+                  Ventas Efectivo Hoy
                 </span>
                 <Banknote className="w-4 h-4 text-emerald-600" />
               </div>
               <div className="text-xl font-black text-emerald-700 font-mono mt-1">
-                ${(initialCashFondo + todayMetrics.cashTotal + todayMovementTotals.netAdjustment).toFixed(2)}
+                +${todayMetrics.cashTotal.toFixed(2)}
               </div>
               <span className="text-[10.5px] text-emerald-800 font-bold block mt-0.5">
-                {initialCashFondo > 0 && `Fondo: $${initialCashFondo.toFixed(2)} | `}
-                {todayMetrics.cashCount} {todayMetrics.cashCount === 1 ? 'venta' : 'ventas'} (+${todayMetrics.cashTotal.toFixed(2)})
-                {todayMovementTotals.ingresos > 0 && ` | Abonos: +$${todayMovementTotals.ingresos.toFixed(2)}`}
-                {todayMovementTotals.retiros > 0 && ` | Retiros: -$${todayMovementTotals.retiros.toFixed(2)}`}
+                {todayMetrics.cashCount} {todayMetrics.cashCount === 1 ? 'venta' : 'ventas'} | Saldo en Caja: ${cashCountTotal.toFixed(2)}
               </span>
             </div>
 
@@ -1306,7 +1306,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                   <span>Retiros y Abonos de Caja Hoy ({todayMovements.length})</span>
                 </h3>
                 <span className="text-xs font-mono font-black text-slate-700">
-                  Neto en Caja: ${(initialCashFondo + todayMetrics.cashTotal + todayMovementTotals.netAdjustment).toFixed(2)}
+                  Saldo en Caja: ${cashCountTotal.toFixed(2)}
                 </span>
               </div>
               <div className="overflow-x-auto rounded-xl border border-slate-200/80">
@@ -2295,10 +2295,10 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
               <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200">
                 <div>
                   <span className="text-[11px] font-black uppercase tracking-wider text-emerald-800 block leading-tight">
-                    Total Conteo
+                    Total Conteo en Caja
                   </span>
                   <span className="text-[10px] font-bold text-emerald-700 leading-tight">
-                    Esperado en caja: ${(initialCashFondo + todayMetrics.cashTotal + todayMovementTotals.netAdjustment).toFixed(2)}
+                    Ventas efectivo hoy: +${todayMetrics.cashTotal.toFixed(2)}
                   </span>
                 </div>
                 <span className="text-lg font-black font-mono text-emerald-700 leading-tight">
