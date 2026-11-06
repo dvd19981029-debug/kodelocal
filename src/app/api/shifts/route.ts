@@ -78,7 +78,36 @@ export async function GET(request: Request) {
       };
     }
 
-    return NextResponse.json({ success: true, shift: activeShift, todayMovements, todayCashCount });
+    // Último conteo de un día anterior (sencillo que quedó como fondo inicial de caja)
+    const previousCashCountRecord = await prisma.cashMovement.findFirst({
+      where: {
+        type: 'CONTEO',
+        createdAt: { lt: startOfTodaySv },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    let previousCashCount = null;
+    if (previousCashCountRecord) {
+      let counts: Record<string, string> = {};
+      try {
+        counts = JSON.parse(previousCashCountRecord.reason || '{}');
+      } catch {}
+      previousCashCount = {
+        id: previousCashCountRecord.id,
+        total: Number(previousCashCountRecord.amount || 0),
+        counts,
+        performedBy: previousCashCountRecord.performedBy,
+        updatedAt: previousCashCountRecord.createdAt,
+      };
+    }
+
+    return NextResponse.json({
+      success: true,
+      shift: activeShift,
+      todayMovements,
+      todayCashCount,
+      previousCashCount,
+    });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

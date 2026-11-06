@@ -219,6 +219,8 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
   const [isCashCountModalOpen, setIsCashCountModalOpen] = useState(false);
   const [cashCounts, setCashCounts] = useState<Record<string, string>>({});
   const [isSavingCashCount, setIsSavingCashCount] = useState(false);
+  const [initialCashFondo, setInitialCashFondo] = useState(0);
+  const [isRemesaWithdrawal, setIsRemesaWithdrawal] = useState(false);
 
   const CASH_DENOMINATIONS = [
     { key: 'b100', label: 'Billetes de 100', value: 100 },
@@ -234,12 +236,36 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
     { key: 'm001', label: 'Moneda de 0.01', value: 0.01 },
   ] as const;
 
-  const cashCountTotal = useMemo(() => {
-    return CASH_DENOMINATIONS.reduce((sum, d) => {
+  const cashCountBreakdown = useMemo(() => {
+    let total = 0;
+    let remesaTotal = 0;
+    let fondoCajaTotal = 0;
+    const remesaParts: string[] = [];
+
+    for (const d of CASH_DENOMINATIONS) {
       const qty = parseInt(cashCounts[d.key] || '0', 10);
-      return sum + (isNaN(qty) || qty < 0 ? 0 : qty * d.value);
-    }, 0);
+      const validQty = isNaN(qty) || qty < 0 ? 0 : qty;
+      const sub = validQty * d.value;
+      total += sub;
+      if (d.value >= 10) {
+        remesaTotal += sub;
+        if (validQty > 0) {
+          remesaParts.push(`${validQty}x$${d.value}`);
+        }
+      } else {
+        fondoCajaTotal += sub;
+      }
+    }
+
+    return {
+      total,
+      remesaTotal,
+      fondoCajaTotal,
+      remesaDetail: remesaParts.join(', '),
+    };
   }, [cashCounts]);
+
+  const cashCountTotal = cashCountBreakdown.total;
 
   const todayMovementTotals = useMemo(() => {
     let ingresos = 0;
@@ -267,8 +293,13 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
       if (data.success && Array.isArray(data.todayMovements)) {
         setTodayMovements(data.todayMovements);
       }
-      if (data.success && data.todayCashCount?.counts) {
-        setCashCounts(data.todayCashCount.counts);
+      if (data.success) {
+        setInitialCashFondo(Number(data.previousCashCount?.total || 0));
+        if (data.todayCashCount?.counts) {
+          setCashCounts(data.todayCashCount.counts);
+        } else if (data.previousCashCount?.counts) {
+          setCashCounts(data.previousCashCount.counts);
+        }
       }
     } catch (e) {
       console.error('Error cargando movimientos de caja:', e);
@@ -365,7 +396,35 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
       });
       const data = await res.json();
       if (data.success) {
+        if (isRemesaWithdrawal && movementType === 'RETIRO') {
+          const remainingCounts: Record<string, string> = {
+            ...cashCounts,
+            b100: '0',
+            b50: '0',
+            b20: '0',
+            b10: '0',
+          };
+          const remainingTotal = CASH_DENOMINATIONS.reduce((sum, d) => {
+            const qty = parseInt(remainingCounts[d.key] || '0', 10);
+            return sum + (isNaN(qty) || qty < 0 ? 0 : qty * d.value);
+          }, 0);
+          setCashCounts(remainingCounts);
+          await fetch('/api/shifts', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+            },
+            body: JSON.stringify({
+              action: 'cash_count',
+              counts: remainingCounts,
+              total: remainingTotal,
+              performedBy: movementPerformedBy.trim(),
+            }),
+          });
+        }
         setIsCashMovementModalOpen(false);
+        setIsRemesaWithdrawal(false);
         setMovementAmount('');
         setMovementPerformedBy('');
         setMovementAuthorizedBy('');
@@ -1105,9 +1164,10 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                 <Banknote className="w-4 h-4 text-emerald-600" />
               </div>
               <div className="text-xl font-black text-emerald-700 font-mono mt-1">
-                ${(todayMetrics.cashTotal + todayMovementTotals.netAdjustment).toFixed(2)}
+                ${(initialCashFondo + todayMetrics.cashTotal + todayMovementTotals.netAdjustment).toFixed(2)}
               </div>
               <span className="text-[10.5px] text-emerald-800 font-bold block mt-0.5">
+                {initialCashFondo > 0 && `Fondo: $${initialCashFondo.toFixed(2)} | `}
                 {todayMetrics.cashCount} {todayMetrics.cashCount === 1 ? 'venta' : 'ventas'} (+${todayMetrics.cashTotal.toFixed(2)})
                 {todayMovementTotals.ingresos > 0 && ` | Abonos: +$${todayMovementTotals.ingresos.toFixed(2)}`}
                 {todayMovementTotals.retiros > 0 && ` | Retiros: -$${todayMovementTotals.retiros.toFixed(2)}`}
@@ -1246,7 +1306,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                   <span>Retiros y Abonos de Caja Hoy ({todayMovements.length})</span>
                 </h3>
                 <span className="text-xs font-mono font-black text-slate-700">
-                  Neto en Caja: ${(todayMetrics.cashTotal + todayMovementTotals.netAdjustment).toFixed(2)}
+                  Neto en Caja: ${(initialCashFondo + todayMetrics.cashTotal + todayMovementTotals.netAdjustment).toFixed(2)}
                 </span>
               </div>
               <div className="overflow-x-auto rounded-xl border border-slate-200/80">
@@ -2231,13 +2291,60 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
               })}
             </div>
 
-            <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-emerald-50 border border-emerald-200">
-              <span className="text-xs font-black uppercase tracking-wider text-emerald-800">
-                Total Conteo
-              </span>
-              <span className="text-xl font-black font-mono text-emerald-700">
-                ${cashCountTotal.toFixed(2)}
-              </span>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-emerald-50 border border-emerald-200">
+                <div>
+                  <span className="text-xs font-black uppercase tracking-wider text-emerald-800 block">
+                    Total Conteo
+                  </span>
+                  <span className="text-[10.5px] font-bold text-emerald-700">
+                    Esperado en caja: ${(initialCashFondo + todayMetrics.cashTotal + todayMovementTotals.netAdjustment).toFixed(2)}
+                  </span>
+                </div>
+                <span className="text-xl font-black font-mono text-emerald-700">
+                  ${cashCountTotal.toFixed(2)}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="px-3 py-2.5 rounded-xl bg-amber-50 border border-amber-200">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 block">
+                    Monto a Remesar (&ge; $10)
+                  </span>
+                  <span className="text-sm font-black font-mono text-amber-700 mt-0.5 block">
+                    ${cashCountBreakdown.remesaTotal.toFixed(2)}
+                  </span>
+                </div>
+
+                <div className="px-3 py-2.5 rounded-xl bg-sky-50 border border-sky-200">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-sky-800 block">
+                    Queda en Caja (&le; $5)
+                  </span>
+                  <span className="text-sm font-black font-mono text-sky-700 mt-0.5 block">
+                    ${cashCountBreakdown.fondoCajaTotal.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
+              {cashCountBreakdown.remesaTotal > 0 && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await handleSaveCashCount();
+                    setMovementType('RETIRO');
+                    setMovementAmount(cashCountBreakdown.remesaTotal.toFixed(2));
+                    setMovementObservation(
+                      `Remesa de billetes mayores a $5 (${cashCountBreakdown.remesaDetail}) — Queda en caja: $${cashCountBreakdown.fondoCajaTotal.toFixed(2)}`
+                    );
+                    setIsRemesaWithdrawal(true);
+                    setIsCashMovementModalOpen(true);
+                  }}
+                  className="w-full py-2.5 px-3 rounded-xl text-xs font-black bg-amber-500 hover:bg-amber-600 text-white border border-amber-600 shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Banknote className="w-4 h-4 shrink-0" />
+                  <span>Generar Retiro de Remesa (${cashCountBreakdown.remesaTotal.toFixed(2)})</span>
+                </button>
+              )}
             </div>
 
             <div className="flex gap-2.5 pt-1">
