@@ -77,12 +77,12 @@ export default function NavigationWrapper({ children }: { children: React.ReactN
         </div>
       ) : (
         // En la tienda pública (E-commerce) se muestra la barra de promociones en el tope superior, cabecera original y pie de Aromaniak
-        <div className="flex flex-col min-h-screen relative">
+        <div className="flex flex-col min-h-screen w-full max-w-full overflow-x-clip relative">
           {/* Parche visual para el arrastre (rubber-banding) en iOS Safari para el TickerBar */}
           <div className="absolute top-0 left-0 w-full h-[50vh] bg-[#4338ca] -translate-y-full z-0"></div>
           <PromoTickerBar />
           <EcommerceHeader />
-          <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 lg:p-8">
+          <main className="flex-1 max-w-7xl w-full min-w-0 mx-auto p-3 sm:p-6 lg:p-8">
             {children}
           </main>
           <EcommerceFooter />

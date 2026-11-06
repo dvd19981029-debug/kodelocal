@@ -112,7 +112,7 @@ export default function ReactiveSearchBar({
       >
         <div className="w-full px-1 sm:px-2">
           {/* Fila: Cápsula de Búsqueda (animada hacia arriba) + Botón del Carrito (permanece visible) */}
-          <div className="flex items-center w-full gap-2">
+          <div className="flex items-center w-full">
             
             {/* Cápsula de Búsqueda: Se desliza hacia arriba y se desvanece al arrastrar hacia arriba */}
             <div
@@ -172,8 +172,8 @@ export default function ReactiveSearchBar({
             <div
               className={`transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] shrink-0 flex items-center ${
                 isScrolled || !isSearchBarVisible
-                  ? 'w-auto opacity-100 scale-100 translate-x-0 pointer-events-auto overflow-visible'
-                  : 'w-0 opacity-0 scale-75 translate-x-4 pointer-events-none overflow-hidden'
+                  ? 'ml-2 w-auto opacity-100 scale-100 translate-x-0 pointer-events-auto overflow-visible'
+                  : 'ml-0 w-0 max-w-0 opacity-0 scale-75 translate-x-0 pointer-events-none overflow-hidden'
               }`}
             >
               <button
