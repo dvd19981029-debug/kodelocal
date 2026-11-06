@@ -443,7 +443,23 @@ export async function POST(request: Request) {
                 }, { maxWait: 15000, timeout: 30000 });
               }
 
-            if (!existingSale.payments || existingSale.payments.length === 0) {
+            if (Array.isArray(body.payments) && body.payments.length > 0) {
+              await prisma.salePayment.deleteMany({ where: { saleId: existingSale.id } });
+              await prisma.salePayment.createMany({
+                data: body.payments.map((p: any) => ({
+                  saleId: existingSale.id,
+                  amount: Number(p.amount || 0),
+                  paymentMethod: p.paymentMethod || 'CASH',
+                  reference: p.reference || paymentReference || null,
+                  notes:
+                    p.paymentMethod === 'CASH' && cashReceived
+                      ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}`
+                      : null,
+                  cashierName: cashierName || existingSale.cashierName || 'Caja 1',
+                  shiftId: existingSale.shiftId || null,
+                })),
+              });
+            } else if (!existingSale.payments || existingSale.payments.length === 0) {
               await prisma.salePayment.create({
                 data: {
                   saleId: existingSale.id,
@@ -479,7 +495,23 @@ export async function POST(request: Request) {
               ...(cashierName ? { cashierName } : {}),
             },
           });
-          if (!existingSale.payments || existingSale.payments.length === 0) {
+          if (Array.isArray(body.payments) && body.payments.length > 0) {
+            await prisma.salePayment.deleteMany({ where: { saleId: existingSale.id } });
+            await prisma.salePayment.createMany({
+              data: body.payments.map((p: any) => ({
+                saleId: existingSale.id,
+                amount: Number(p.amount || 0),
+                paymentMethod: p.paymentMethod || 'CASH',
+                reference: p.reference || paymentReference || null,
+                notes:
+                  p.paymentMethod === 'CASH' && cashReceived
+                    ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}`
+                    : null,
+                cashierName: cashierName || existingSale.cashierName || 'Caja 1',
+                shiftId: existingSale.shiftId || null,
+              })),
+            });
+          } else if (!existingSale.payments || existingSale.payments.length === 0) {
             await prisma.salePayment.create({
               data: {
                 saleId: existingSale.id,
@@ -790,17 +822,34 @@ export async function POST(request: Request) {
       // 2. Registrar el PAGO RECIBIDO en la tabla SalePayment SOLO si la venta ya está pagada/completada
       let paymentRecord = null;
       if (isIncomingCompleted) {
-        paymentRecord = await tx.salePayment.create({
-          data: {
-            saleId: createdSale.id,
-            amount: Number(total || 0),
-            paymentMethod: paymentMethod || 'CASH',
-            reference: paymentReference || null,
-            notes: cashReceived ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}` : null,
-            cashierName: cashierName || 'Caja 1',
-            shiftId: actualShiftId || null,
-          },
-        });
+        if (Array.isArray(body.payments) && body.payments.length > 0) {
+          await tx.salePayment.createMany({
+            data: body.payments.map((p: any) => ({
+              saleId: createdSale.id,
+              amount: Number(p.amount || 0),
+              paymentMethod: p.paymentMethod || 'CASH',
+              reference: p.reference || paymentReference || null,
+              notes:
+                p.paymentMethod === 'CASH' && cashReceived
+                  ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}`
+                  : null,
+              cashierName: cashierName || 'Caja 1',
+              shiftId: actualShiftId || null,
+            })),
+          });
+        } else {
+          paymentRecord = await tx.salePayment.create({
+            data: {
+              saleId: createdSale.id,
+              amount: Number(total || 0),
+              paymentMethod: paymentMethod || 'CASH',
+              reference: paymentReference || null,
+              notes: cashReceived ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}` : null,
+              cashierName: cashierName || 'Caja 1',
+              shiftId: actualShiftId || null,
+            },
+          });
+        }
       }
 
       // 3. Descontar existencias y asentar Kardex en lote (OUT_SALE) SOLO SI:
@@ -1600,7 +1649,23 @@ export async function PATCH(request: Request) {
     });
 
     if ((paymentStatus === 'COMPLETED' || orderStatus === 'COMPLETED') && paymentMethod) {
-      if (!updated.payments || updated.payments.length === 0) {
+      if (Array.isArray(body.payments) && body.payments.length > 0) {
+        await prisma.salePayment.deleteMany({ where: { saleId: updated.id } });
+        await prisma.salePayment.createMany({
+          data: body.payments.map((p: any) => ({
+            saleId: updated.id,
+            amount: Number(p.amount || 0),
+            paymentMethod: p.paymentMethod || 'CASH',
+            reference: p.reference || null,
+            notes:
+              p.paymentMethod === 'CASH' && cashReceived
+                ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}`
+                : null,
+            cashierName: cashierName || updated.cashierName || 'Caja 1',
+            shiftId: updated.shiftId || null,
+          })),
+        });
+      } else if (!updated.payments || updated.payments.length === 0) {
         await prisma.salePayment.create({
           data: {
             saleId: updated.id,

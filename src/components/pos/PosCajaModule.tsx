@@ -498,7 +498,18 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
   }, [completedDteSales, todaySvKey]);
 
   const todayCashSales = useMemo(() => {
-    return todayInvoicedSales.filter((s) => (s.paymentMethod || 'CASH') === 'CASH');
+    const result: SaleRecord[] = [];
+    for (const s of todayInvoicedSales) {
+      if (Array.isArray(s.payments) && s.payments.length > 1) {
+        const cashPart = s.payments.find((p) => String(p.paymentMethod || '').toUpperCase() === 'CASH');
+        if (cashPart && Number(cashPart.amount || 0) > 0) {
+          result.push({ ...s, total: Number(cashPart.amount), paymentMethod: 'CASH' });
+        }
+      } else if ((s.paymentMethod || 'CASH') === 'CASH') {
+        result.push(s);
+      }
+    }
+    return result;
   }, [todayInvoicedSales]);
 
   // Saldo en Caja dinámico: parte del último Conteo Efectivo guardado y suma/resta
@@ -536,15 +547,27 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
   };
 
   const todayCardSales = useMemo(() => {
-    return todayInvoicedSales
-      .filter((s) => s.paymentMethod === 'CARD' && !isEcommerceWompiSale(s))
-      .map((s) => ({
-        ...s,
-        cliente: {
-          ...s.cliente,
-          nombre: resolveCustomerName(s),
-        },
-      }));
+    const result: SaleRecord[] = [];
+    for (const s of todayInvoicedSales) {
+      if (isEcommerceWompiSale(s)) continue;
+      if (Array.isArray(s.payments) && s.payments.length > 1) {
+        const cardPart = s.payments.find((p) => String(p.paymentMethod || '').toUpperCase() === 'CARD');
+        if (cardPart && Number(cardPart.amount || 0) > 0) {
+          result.push({
+            ...s,
+            total: Number(cardPart.amount),
+            paymentMethod: 'CARD',
+            cliente: { ...s.cliente, nombre: resolveCustomerName(s) },
+          });
+        }
+      } else if (s.paymentMethod === 'CARD') {
+        result.push({
+          ...s,
+          cliente: { ...s.cliente, nombre: resolveCustomerName(s) },
+        });
+      }
+    }
+    return result;
   }, [todayInvoicedSales, customers]);
 
   const todayMetrics = useMemo(() => {
@@ -565,6 +588,32 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
     for (const s of todayInvoicedSales) {
       const amt = Number(s.total || 0);
       total += amt;
+
+      if (Array.isArray(s.payments) && s.payments.length > 1) {
+        for (const p of s.payments) {
+          const pAmt = Number(p.amount || 0);
+          if (pAmt <= 0) continue;
+          const pm = String(p.paymentMethod || 'CASH').toUpperCase();
+          if (pm === 'CASH') {
+            cashTotal += pAmt;
+            cashCount += 1;
+          } else if (pm === 'CARD') {
+            cardTotal += pAmt;
+            cardCount += 1;
+          } else if (pm === 'TRANSFER') {
+            transferTotal += pAmt;
+            transferCount += 1;
+          } else if (pm === 'WOMPI') {
+            wompiTotal += pAmt;
+            wompiCount += 1;
+          } else if (pm === 'CONTRA_ENTREGA') {
+            contraEntregaTotal += pAmt;
+            contraEntregaCount += 1;
+          }
+        }
+        continue;
+      }
+
       const pm = s.paymentMethod || 'CASH';
       if (pm === 'CASH') {
         cashTotal += amt;
@@ -613,12 +662,31 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
     return 'CONTRA_ENTREGA';
   };
 
+  const saleMatchesPaymentFilter = (
+    s: SaleRecord,
+    filter: 'ALL' | 'CASH' | 'CARD_POS' | 'TRANSFER' | 'WOMPI' | 'CONTRA_ENTREGA'
+  ): boolean => {
+    if (filter === 'ALL') return true;
+    if (Array.isArray(s.payments) && s.payments.length > 1) {
+      return s.payments.some((p) => {
+        const pm = String(p.paymentMethod || '').toUpperCase();
+        if (filter === 'CASH') return pm === 'CASH';
+        if (filter === 'CARD_POS') return pm === 'CARD';
+        if (filter === 'TRANSFER') return pm === 'TRANSFER';
+        if (filter === 'WOMPI') return pm === 'WOMPI';
+        if (filter === 'CONTRA_ENTREGA') return pm === 'CONTRA_ENTREGA';
+        return false;
+      });
+    }
+    return resolvePaymentCategory(s) === filter;
+  };
+
   const displayedTodaySales = useMemo(() => {
     const activePaymentFilter = onlyCashToday ? 'CASH' : todayPaymentFilter;
     const q = todaySearch.trim().toLowerCase();
 
     const filtered = todayInvoicedSales.filter((s) => {
-      if (activePaymentFilter !== 'ALL' && resolvePaymentCategory(s) !== activePaymentFilter) {
+      if (!saleMatchesPaymentFilter(s, activePaymentFilter)) {
         return false;
       }
       if (todayDocFilter !== 'ALL') {
@@ -1703,33 +1771,56 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                             </span>
                           </td>
                           <td className="py-2.5 px-3 whitespace-nowrap">
-                            <span
-                              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-black border ${
-                                isCash
-                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            {Array.isArray(sale.payments) && sale.payments.length > 1 ? (
+                              <div className="flex flex-wrap items-center gap-1">
+                                {sale.payments.map((p, pIdx) => {
+                                  const pm = String(p.paymentMethod || 'CASH').toUpperCase();
+                                  const isPcash = pm === 'CASH';
+                                  return (
+                                    <span
+                                      key={pIdx}
+                                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black border ${
+                                        isPcash
+                                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                          : pm === 'CARD'
+                                          ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                          : 'bg-purple-50 text-purple-700 border-purple-200'
+                                      }`}
+                                    >
+                                      {isPcash ? 'Efectivo' : pm === 'CARD' ? 'Tarjeta' : 'Transf.'} ${Number(p.amount || 0).toFixed(2)}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <span
+                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-black border ${
+                                  isCash
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                    : isEcommerceWompiSale(sale)
+                                    ? 'bg-violet-50 text-violet-700 border-violet-200'
+                                    : sale.paymentMethod === 'CARD'
+                                    ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                    : sale.paymentMethod === 'TRANSFER'
+                                    ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                    : sale.paymentMethod === 'CONTRA_ENTREGA'
+                                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                    : 'bg-amber-50 text-amber-700 border-amber-200'
+                                }`}
+                              >
+                                {isCash
+                                  ? 'Efectivo'
                                   : isEcommerceWompiSale(sale)
-                                  ? 'bg-violet-50 text-violet-700 border-violet-200'
+                                  ? 'Wompi / Ecommerce'
                                   : sale.paymentMethod === 'CARD'
-                                  ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                  ? 'Tarjeta POS'
                                   : sale.paymentMethod === 'TRANSFER'
-                                  ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                  ? 'Transferencia'
                                   : sale.paymentMethod === 'CONTRA_ENTREGA'
-                                  ? 'bg-blue-50 text-blue-700 border-blue-200'
-                                  : 'bg-amber-50 text-amber-700 border-amber-200'
-                              }`}
-                            >
-                              {isCash
-                                ? 'Efectivo'
-                                : isEcommerceWompiSale(sale)
-                                ? 'Wompi / Ecommerce'
-                                : sale.paymentMethod === 'CARD'
-                                ? 'Tarjeta POS'
-                                : sale.paymentMethod === 'TRANSFER'
-                                ? 'Transferencia'
-                                : sale.paymentMethod === 'CONTRA_ENTREGA'
-                                ? 'Contra Entrega'
-                                : 'Bitcoin'}
-                            </span>
+                                  ? 'Contra Entrega'
+                                  : 'Bitcoin'}
+                              </span>
+                            )}
                           </td>
                           <td className="py-2.5 px-3 text-right font-mono font-black text-xs text-slate-900 whitespace-nowrap">
                             ${Number(sale.total || 0).toFixed(2)}

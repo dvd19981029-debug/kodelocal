@@ -182,6 +182,9 @@ export default function PosPage() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH');
   const [cashAmount, setCashAmount] = useState<string>('');
+  const [isMixedPayment, setIsMixedPayment] = useState(false);
+  const [mixedCashAmount, setMixedCashAmount] = useState<string>('');
+  const [mixedSecondMethod, setMixedSecondMethod] = useState<'CARD' | 'TRANSFER'>('CARD');
   const [tipoComprobante, setTipoComprobante] = useState<TipoComprobante>('01');
   
   // Datos de cliente en venta activa
@@ -691,6 +694,13 @@ export default function PosPage() {
                 ivaTotal: Number(s.ivaTotal || 0),
                 shippingCost: Number(s.shippingCost || 0),
                 paymentMethod: s.paymentMethod || 'CASH',
+                payments: Array.isArray(s.payments)
+                  ? s.payments.map((p: any) => ({
+                      paymentMethod: p.paymentMethod || 'CASH',
+                      amount: Number(p.amount || 0),
+                      reference: p.reference || undefined,
+                    }))
+                  : undefined,
                 paymentStatus: hasProcessedDte
                   ? 'COMPLETED'
                   : (s.paymentStatus || (s.orderStatus === 'PENDING_PREPARATION' || s.orderStatus === 'READY_AT_WINDOW' ? 'PENDING' : 'COMPLETED')),
@@ -2745,6 +2755,9 @@ export default function PosPage() {
     } else {
       setCashAmount('');
     }
+    setIsMixedPayment(false);
+    setMixedCashAmount('');
+    setMixedSecondMethod('CARD');
     setIsCheckoutOpen(true);
   };
 
@@ -2796,7 +2809,13 @@ export default function PosPage() {
 
     if (itemsToBill.length === 0) return;
 
-    if (paymentMethod === 'CASH' && !isOrderAlreadyPaid) {
+    const mixedCashNum = parseFloat(mixedCashAmount);
+    if (isMixedPayment && !isOrderAlreadyPaid) {
+      if (isNaN(mixedCashNum) || mixedCashNum <= 0 || mixedCashNum >= totalToBill) {
+        alert('En Pago Mixto, ingresa un monto en efectivo mayor a $0.00 y menor al total a pagar.');
+        return;
+      }
+    } else if (paymentMethod === 'CASH' && !isOrderAlreadyPaid) {
       const parsed = parseFloat(cashAmount);
       if (isNaN(parsed) || parsed < totalToBill) {
         alert('El monto en efectivo ingresado es insuficiente para cubrir el total.');
@@ -2804,12 +2823,24 @@ export default function PosPage() {
       }
     }
 
+    const resolvedPayments =
+      isMixedPayment && !isOrderAlreadyPaid
+        ? [
+            { paymentMethod: 'CASH', amount: Number(mixedCashNum.toFixed(2)) },
+            { paymentMethod: mixedSecondMethod, amount: Number((totalToBill - mixedCashNum).toFixed(2)) },
+          ]
+        : undefined;
+
     invoicingLockRef.current = true;
     setIsProcessing(true);
     try {
 
-    const parsedCash = paymentMethod === 'CASH' ? parseFloat(cashAmount) : undefined;
-    const changeAmount = parsedCash ? parsedCash - totalToBill : undefined;
+    const parsedCash = isMixedPayment
+      ? Number(mixedCashNum.toFixed(2))
+      : paymentMethod === 'CASH'
+      ? parseFloat(cashAmount)
+      : undefined;
+    const changeAmount = !isMixedPayment && parsedCash ? parsedCash - totalToBill : undefined;
     const staffToken = await getStaffToken().catch(() => null);
 
     let resolvedCheckoutCustomerId = selectedCustomerId || (isOrderFromWindow ? (orderToInvoice.cliente as any)?.id : undefined) || undefined;
@@ -2967,7 +2998,8 @@ export default function PosPage() {
             status: 'COMPLETED',
             invoicedAt: new Date().toISOString(),
             cajero: getActiveSessionUI().name,
-            paymentMethod,
+            paymentMethod: isMixedPayment ? mixedSecondMethod : paymentMethod,
+            payments: resolvedPayments,
             cashReceived: parsedCash,
             cashChange: changeAmount,
             tipoComprobante,
@@ -3007,7 +3039,8 @@ export default function PosPage() {
           status: 'COMPLETED',
           invoicedAt: new Date().toISOString(),
           cajero: getActiveSessionUI().name,
-          paymentMethod,
+          paymentMethod: isMixedPayment ? mixedSecondMethod : paymentMethod,
+          payments: resolvedPayments,
           cashReceived: parsedCash,
           cashChange: changeAmount,
           tipoComprobante,
@@ -3072,7 +3105,8 @@ export default function PosPage() {
               saleNumber: orderToInvoice.saleNumber,
               orderStatus: 'COMPLETED',
               paymentStatus: 'COMPLETED',
-              paymentMethod,
+              paymentMethod: isMixedPayment ? mixedSecondMethod : paymentMethod,
+              payments: resolvedPayments,
               cashReceived: parsedCash,
               cashChange: changeAmount,
               cashierName: getActiveSessionUI().name,
@@ -3129,7 +3163,8 @@ export default function PosPage() {
         total: cartSubtotal,
         subtotal: subtotalNeto,
         ivaTotal: ivaCalculado,
-        paymentMethod,
+        paymentMethod: isMixedPayment ? mixedSecondMethod : paymentMethod,
+        payments: resolvedPayments,
         cashReceived: parsedCash,
         cashChange: changeAmount,
         tipoComprobante,
@@ -3196,6 +3231,7 @@ export default function PosPage() {
         ivaTotal: completedRecord.ivaTotal,
         total: completedRecord.total,
         paymentMethod: completedRecord.paymentMethod || 'CASH',
+        payments: completedRecord.payments,
         cashReceived: completedRecord.cashReceived,
         cashChange: completedRecord.cashChange,
         notes: syncNotes,
@@ -3945,6 +3981,12 @@ export default function PosPage() {
         setPaymentMethod={setPaymentMethod}
         cashAmount={cashAmount}
         setCashAmount={setCashAmount}
+        isMixedPayment={isMixedPayment}
+        setIsMixedPayment={setIsMixedPayment}
+        mixedCashAmount={mixedCashAmount}
+        setMixedCashAmount={setMixedCashAmount}
+        mixedSecondMethod={mixedSecondMethod}
+        setMixedSecondMethod={setMixedSecondMethod}
         currentBillingTotal={currentBillingTotal}
         isProcessing={isProcessing}
         handleCompleteSale={handleCompleteSale}

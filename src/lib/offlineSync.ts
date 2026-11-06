@@ -16,6 +16,7 @@ export interface OfflineSalePayload {
   ivaTotal: number;
   total: number;
   paymentMethod: string;
+  payments?: Array<{ paymentMethod: string; amount: number; reference?: string }>;
   paymentStatus?: string;
   orderStatus?: string;
   cashReceived?: number;

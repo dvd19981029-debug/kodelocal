@@ -54,6 +54,12 @@ export interface PosCheckoutModalProps {
   setPaymentMethod: (method: PaymentMethod) => void;
   cashAmount: string;
   setCashAmount: (val: string) => void;
+  isMixedPayment?: boolean;
+  setIsMixedPayment?: (val: boolean) => void;
+  mixedCashAmount?: string;
+  setMixedCashAmount?: (val: string) => void;
+  mixedSecondMethod?: 'CARD' | 'TRANSFER';
+  setMixedSecondMethod?: (val: 'CARD' | 'TRANSFER') => void;
   currentBillingTotal: number;
   isProcessing: boolean;
   handleCompleteSale: () => void;
@@ -89,6 +95,12 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
   setPaymentMethod,
   cashAmount,
   setCashAmount,
+  isMixedPayment = false,
+  setIsMixedPayment,
+  mixedCashAmount = '',
+  setMixedCashAmount,
+  mixedSecondMethod = 'CARD',
+  setMixedSecondMethod,
   currentBillingTotal,
   isProcessing,
   handleCompleteSale,
@@ -553,73 +565,154 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
         ) : (
           <>
             <div className="mb-4">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block mb-1.5">
-                Método de Pago
-              </label>
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                {[
-                  { id: 'CASH', label: 'Efectivo', icon: Banknote },
-                  { id: 'CARD', label: 'Tarjeta', icon: CreditCard },
-                  { id: 'TRANSFER', label: 'Transf.', icon: Building },
-                  { id: 'WOMPI', label: 'Wompi', icon: Link2 },
-                  { id: 'CONTRA_ENTREGA', label: 'Contra Entrega', icon: Truck },
-                ].map((method) => {
-                  const Icon = method.icon;
-                  return (
-                    <button
-                      key={method.id}
-                      type="button"
-                      onClick={() => setPaymentMethod(method.id as any)}
-                      className={`p-2 rounded-xl text-xs font-bold flex flex-col items-center gap-1 transition-all ${
-                        paymentMethod === method.id ? 'clay-btn-primary' : 'clay-btn-light'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                      <span>{method.label}</span>
-                    </button>
-                  );
-                })}
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block">
+                  Método de Pago
+                </label>
+                {setIsMixedPayment && (
+                  <button
+                    type="button"
+                    onClick={() => setIsMixedPayment(!isMixedPayment)}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-black border transition-all cursor-pointer ${
+                      isMixedPayment
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
+                    }`}
+                  >
+                    {isMixedPayment ? '✓ Pago Mixto Activo' : '+ Pago Mixto (Efectivo + Otro)'}
+                  </button>
+                )}
               </div>
+
+              {!isMixedPayment && (
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                  {[
+                    { id: 'CASH', label: 'Efectivo', icon: Banknote },
+                    { id: 'CARD', label: 'Tarjeta', icon: CreditCard },
+                    { id: 'TRANSFER', label: 'Transf.', icon: Building },
+                    { id: 'WOMPI', label: 'Wompi', icon: Link2 },
+                    { id: 'CONTRA_ENTREGA', label: 'Contra Entrega', icon: Truck },
+                  ].map((method) => {
+                    const Icon = method.icon;
+                    return (
+                      <button
+                        key={method.id}
+                        type="button"
+                        onClick={() => setPaymentMethod(method.id as any)}
+                        className={`p-2 rounded-xl text-xs font-bold flex flex-col items-center gap-1 transition-all ${
+                          paymentMethod === method.id ? 'clay-btn-primary' : 'clay-btn-light'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" />
+                        <span>{method.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
-            {/* Efectivo recibido */}
-            {paymentMethod === 'CASH' && (
-              <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200 mb-4 space-y-2 shadow-sm">
-                <label className="text-xs font-bold text-amber-950 block">
-                  Efectivo Recibido
-                </label>
-                <div className="flex gap-2">
-                  <div className="flex-1 flex items-center rounded-xl bg-white border border-amber-300 shadow-inner overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition-all">
-                    <span className="px-3.5 py-2.5 bg-amber-100/90 border-r border-amber-200 text-amber-950 font-black text-sm select-none">
+            {/* Desglose de Pago Mixto */}
+            {isMixedPayment ? (
+              <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 mb-4 space-y-3 shadow-xs">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    1. Monto pagado en Efectivo ($)
+                  </label>
+                  <div className="flex items-center rounded-xl bg-white border border-indigo-300 overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500">
+                    <span className="px-3 py-2 bg-emerald-100 border-r border-emerald-200 text-emerald-900 font-black text-sm select-none">
                       $
                     </span>
                     <input
                       type="number"
                       step="0.01"
-                      min="0"
+                      min="0.01"
+                      max={Math.max(0.01, currentBillingTotal - 0.01)}
                       placeholder="0.00"
-                      value={cashAmount}
-                      onChange={(e) => setCashAmount(e.target.value)}
-                      className="w-full px-3 py-2 text-base font-mono font-bold text-slate-900 bg-transparent outline-none placeholder:text-slate-400"
+                      value={mixedCashAmount}
+                      onChange={(e) => setMixedCashAmount?.(e.target.value)}
+                      className="w-full px-3 py-1.5 text-sm font-mono font-bold text-slate-900 bg-transparent outline-none"
                     />
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setCashAmount(currentBillingTotal.toFixed(2))}
-                    className="clay-btn clay-btn-light px-3.5 text-xs font-bold whitespace-nowrap text-amber-950 bg-amber-100/70 border border-amber-200 hover:bg-amber-100"
-                  >
-                    Exacto (${currentBillingTotal.toFixed(2)})
-                  </button>
                 </div>
-                {parseFloat(cashAmount) >= currentBillingTotal && (
-                  <div className="flex justify-between items-center text-xs font-bold text-emerald-800 pt-1">
-                    <span>Cambio a devolver:</span>
-                    <span className="font-mono text-base font-black">
-                      ${(parseFloat(cashAmount) - currentBillingTotal).toFixed(2)}
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-slate-700">
+                      2. Resto a cobrar con:
+                    </label>
+                    <span className="font-mono text-sm font-black text-indigo-700">
+                      ${Math.max(0, currentBillingTotal - (parseFloat(mixedCashAmount) || 0)).toFixed(2)}
                     </span>
                   </div>
-                )}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setMixedSecondMethod?.('CARD')}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                        mixedSecondMethod === 'CARD'
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      <CreditCard className="w-4 h-4" />
+                      <span>Tarjeta POS</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMixedSecondMethod?.('TRANSFER')}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                        mixedSecondMethod === 'TRANSFER'
+                          ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      <Building className="w-4 h-4" />
+                      <span>Transferencia</span>
+                    </button>
+                  </div>
+                </div>
               </div>
+            ) : (
+              /* Efectivo recibido */
+              paymentMethod === 'CASH' && (
+                <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200 mb-4 space-y-2 shadow-sm">
+                  <label className="text-xs font-bold text-amber-950 block">
+                    Efectivo Recibido
+                  </label>
+                  <div className="flex gap-2">
+                    <div className="flex-1 flex items-center rounded-xl bg-white border border-amber-300 shadow-inner overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition-all">
+                      <span className="px-3.5 py-2.5 bg-amber-100/90 border-r border-amber-200 text-amber-950 font-black text-sm select-none">
+                        $
+                      </span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        value={cashAmount}
+                        onChange={(e) => setCashAmount(e.target.value)}
+                        className="w-full px-3 py-2 text-base font-mono font-bold text-slate-900 bg-transparent outline-none placeholder:text-slate-400"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCashAmount(currentBillingTotal.toFixed(2))}
+                      className="clay-btn clay-btn-light px-3.5 text-xs font-bold whitespace-nowrap text-amber-950 bg-amber-100/70 border border-amber-200 hover:bg-amber-100"
+                    >
+                      Exacto (${currentBillingTotal.toFixed(2)})
+                    </button>
+                  </div>
+                  {parseFloat(cashAmount) >= currentBillingTotal && (
+                    <div className="flex justify-between items-center text-xs font-bold text-emerald-800 pt-1">
+                      <span>Cambio a devolver:</span>
+                      <span className="font-mono text-base font-black">
+                        ${(parseFloat(cashAmount) - currentBillingTotal).toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )
             )}
           </>
         )}
