@@ -207,6 +207,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
   const [movementPerformedBy, setMovementPerformedBy] = useState(() => getActiveSessionUI().name || '');
   const [movementAuthorizedBy, setMovementAuthorizedBy] = useState('');
   const [movementAmount, setMovementAmount] = useState('');
+  const [movementObservation, setMovementObservation] = useState('');
   const [isSavingMovement, setIsSavingMovement] = useState(false);
   const [todayMovements, setTodayMovements] = useState<any[]>([]);
 
@@ -274,6 +275,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
           amount: amt,
           performedBy: movementPerformedBy.trim(),
           authorizedBy: movementAuthorizedBy.trim(),
+          reason: movementObservation.trim(),
         }),
       });
       const data = await res.json();
@@ -281,6 +283,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
         setIsCashMovementModalOpen(false);
         setMovementAmount('');
         setMovementAuthorizedBy('');
+        setMovementObservation('');
         fetchTodayMovements();
       } else {
         alert(data.error || 'No se pudo registrar el movimiento');
@@ -1157,6 +1160,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                       <th className="py-2 px-3">Tipo</th>
                       <th className="py-2 px-3">Quién lo hace</th>
                       <th className="py-2 px-3">Quién autoriza</th>
+                      <th className="py-2 px-3">Observación</th>
                       <th className="py-2 px-3 text-right">Monto</th>
                     </tr>
                   </thead>
@@ -1171,6 +1175,13 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                             minute: '2-digit',
                           })
                         : '-';
+                      const rawReason = String(m.reason || '');
+                      const authMatch = rawReason.match(/\(Autoriza:\s*([^)]+)\)$/i) || rawReason.match(/^Autoriza:\s*(.+)$/i);
+                      const authorizedByText = authMatch ? authMatch[1].trim() : '-';
+                      const observationText = rawReason
+                        .replace(/\s*\(Autoriza:\s*[^)]+\)$/i, '')
+                        .replace(/^Autoriza:\s*.+$/i, '')
+                        .trim();
                       return (
                         <tr key={m.id} className="hover:bg-slate-50/80">
                           <td className="py-2 px-3 font-mono text-slate-500">{horaStr}</td>
@@ -1187,7 +1198,10 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                           </td>
                           <td className="py-2 px-3 font-bold text-slate-800">{m.performedBy || '-'}</td>
                           <td className="py-2 px-3 font-semibold text-slate-600">
-                            {String(m.reason || '').replace(/^Autoriza:\s*/i, '') || '-'}
+                            {authorizedByText}
+                          </td>
+                          <td className="py-2 px-3 text-slate-600">
+                            {observationText || '-'}
                           </td>
                           <td
                             className={`py-2 px-3 text-right font-mono font-black ${
@@ -1931,6 +1945,18 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                     className="bg-transparent border-none outline-none w-full text-sm font-black text-slate-800 p-0"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Observación detallada</label>
+                <textarea
+                  rows={2}
+                  required
+                  value={movementObservation}
+                  onChange={(e) => setMovementObservation(e.target.value)}
+                  placeholder="Describe el motivo detallado del retiro o abono..."
+                  className="clay-input w-full text-xs resize-none"
+                />
               </div>
 
               <div className="flex gap-2.5 pt-2">
