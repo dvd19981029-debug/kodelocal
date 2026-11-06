@@ -112,14 +112,25 @@ export function buildMetaCatalogRows(
   const kitPlusPrice = Number(options?.kitPlusPrice || 14.0);
   const rows: MetaCatalogRow[] = [];
 
-  // Filtrar ítems internos de sistema ($1 Alcohol y Envío a Domicilio)
-  const catalogProducts = products.filter(
-    (p) =>
-      p.id !== 'ENVIO-DOM' &&
-      p.id !== 'cmvfrqz7v0003jp08y8bmrnpz' &&
-      String(p.name || '').trim().toLowerCase() !== '$1 alcohol' &&
-      p.category !== 'Logística'
-  );
+  // Filtrar estrictamente: solo Esencias para Perfume y Botes (excluir stickers, alcohol, empaques e insumos)
+  const catalogProducts = products.filter((p) => {
+    const idStr = String(p.id || '').toLowerCase();
+    if (
+      idStr.startsWith('sticker-') ||
+      idStr.includes('alcohol') ||
+      p.id === 'ENVIO-DOM' ||
+      p.id === 'cmvfrqz7v0003jp08y8bmrnpz'
+    ) {
+      return false;
+    }
+    const isEssence =
+      p.category === 'Esencias para Perfume' || idStr.startsWith('esencia-');
+    const isBottle =
+      p.category === 'Botes' ||
+      p.category === 'Botes & Envases' ||
+      idStr.startsWith('bote-');
+    return isEssence || isBottle;
+  });
 
   // Ordenar: Esencias primero (por SKU numérico), luego Botes, luego Insumos
   catalogProducts.sort((a, b) => {
@@ -140,34 +151,14 @@ export function buildMetaCatalogRows(
     return (b.stock || 0) - (a.stock || 0);
   });
 
-  // 1. Producto Estrella Hero: Arma tu Perfume de 100ml Listo para Usar
-  rows.push({
-    id: 'arma-tu-perfume-100ml',
-    title: 'Arma tu Perfume de 100ml Listo para Usar (Alta Fijación) | Aromaniak',
-    description: `Personaliza tu propio perfume de 100ml en Aromaniak SV. Elige tu aroma favorito entre más de 80 fragancias de alta gama y selecciona tu frasco de cristal de 100ml con atomizador spray. Preparado con Esencia 100% Pura AAA+ y Alcohol Perfumero con Fijador para una duración superior en el clima de El Salvador. Fórmula Estándar $${kitStandardPrice.toFixed(2)} USD | Fórmula Plus $${kitPlusPrice.toFixed(2)} USD. Tienda física en C.C. El Rosal, San Salvador y envíos a todo El Salvador por $2.90.`,
-    availability: 'in stock',
-    quantity_to_sell_on_facebook: 100,
-    condition: 'new',
-    price: `${kitStandardPrice.toFixed(2)} USD`,
-    sale_price: '',
-    sale_price_effective_date: '',
-    link: `${SITE_URL}/?categoria=Arma+tu+perfume#seccion-arma-tu-perfume`,
-    image_link: `${SITE_URL}/images/meta/arma-tu-perfume-100ml.jpg?v=6`,
-    brand: 'Aromaniak',
-    google_product_category: 'Health & Beauty > Personal Care > Cosmetics > Perfume & Cologne',
-    fb_product_category: 'health & beauty > beauty > fragrance',
-    gender: 'unisex',
-    age_group: 'adult',
-    custom_label_0: 'Perfume Preparado 100ml',
-    custom_label_1: 'Unisex',
-    custom_label_2: 'Disponible en Tienda',
-    custom_label_3: 'Extracto de Perfume 100ml',
-    custom_label_4: 'Best Seller',
-  });
-
   for (const p of catalogProducts) {
-    const isEssence = p.category === 'Esencias para Perfume';
-    const isBottle = p.category === 'Botes' || p.category === 'Botes & Envases';
+    const idStr = String(p.id || '').toLowerCase();
+    const isEssence =
+      p.category === 'Esencias para Perfume' || idStr.startsWith('esencia-');
+    const isBottle =
+      p.category === 'Botes' ||
+      p.category === 'Botes & Envases' ||
+      idStr.startsWith('bote-');
     const isDiscontinued = p.isActive === false || p.isAvailableOnline === false;
 
     const fullOzStock = Math.max(0, Math.floor(Number(p.stock || 0)));
