@@ -2901,7 +2901,8 @@ export default function PosPage() {
 
     const effectiveMainPaymentMethod: PaymentMethod =
       isMixedPayment && resolvedPayments && resolvedPayments.length > 0
-        ? ((resolvedPayments.find((p) => p.paymentMethod !== 'CASH')?.paymentMethod ||
+        ? ((resolvedPayments.find((p) => p.paymentMethod === 'CONTRA_ENTREGA')?.paymentMethod ||
+            resolvedPayments.find((p) => p.paymentMethod !== 'CASH')?.paymentMethod ||
             resolvedPayments[0].paymentMethod) as PaymentMethod)
         : paymentMethod;
 

@@ -1302,17 +1302,31 @@ export async function PATCH(request: Request) {
       } catch (_) {}
     }
 
-    if (parsedNotesObj?.domicilio && paymentMethod && !body.domicilio?.c807PaymentMode) {
-      const pmUpper = String(paymentMethod).toUpperCase().trim();
-      if (pmUpper === 'CARD' || pmUpper === 'WOMPI') {
-        parsedNotesObj.domicilio.c807PaymentMode = 'TARJETA';
-        parsedNotesObj.domicilio.c807ServiceType = 'SER';
-      } else if (pmUpper === 'TRANSFER') {
-        parsedNotesObj.domicilio.c807PaymentMode = 'TRANSFERENCIA';
-        parsedNotesObj.domicilio.c807ServiceType = 'SER';
-      } else if (pmUpper === 'CONTRA_ENTREGA' || pmUpper === 'CONTRAENTREGA') {
+    const incomingOrSavedPayments = Array.isArray(body.payments)
+      ? body.payments
+      : Array.isArray((sale as any).payments)
+      ? (sale as any).payments
+      : [];
+    const hasContraEntregaPaymentLine = incomingOrSavedPayments.some(
+      (p: any) => String(p.paymentMethod || '').toUpperCase() === 'CONTRA_ENTREGA' && Number(p.amount || 0) > 0
+    );
+
+    if (parsedNotesObj?.domicilio && !body.domicilio?.c807PaymentMode) {
+      if (hasContraEntregaPaymentLine) {
         parsedNotesObj.domicilio.c807PaymentMode = 'CONTRA_ENTREGA';
         parsedNotesObj.domicilio.c807ServiceType = 'CCE';
+      } else if (paymentMethod) {
+        const pmUpper = String(paymentMethod).toUpperCase().trim();
+        if (pmUpper === 'CARD' || pmUpper === 'WOMPI') {
+          parsedNotesObj.domicilio.c807PaymentMode = 'TARJETA';
+          parsedNotesObj.domicilio.c807ServiceType = 'SER';
+        } else if (pmUpper === 'TRANSFER') {
+          parsedNotesObj.domicilio.c807PaymentMode = 'TRANSFERENCIA';
+          parsedNotesObj.domicilio.c807ServiceType = 'SER';
+        } else if (pmUpper === 'CONTRA_ENTREGA' || pmUpper === 'CONTRAENTREGA') {
+          parsedNotesObj.domicilio.c807PaymentMode = 'CONTRA_ENTREGA';
+          parsedNotesObj.domicilio.c807ServiceType = 'CCE';
+        }
       }
     }
 
@@ -1504,13 +1518,18 @@ export async function PATCH(request: Request) {
         resolvedServiceType = 'CCE';
       }
 
-      const contraEntregaLinesTotal = Array.isArray((sale as any).payments)
-        ? (sale as any).payments
-            .filter((p: any) => String(p.paymentMethod || '').toUpperCase() === 'CONTRA_ENTREGA')
-            .reduce((acc: number, p: any) => acc + Number(p.amount || 0), 0)
-        : 0;
+      const contraEntregaLinesTotal = incomingOrSavedPayments
+        .filter((p: any) => String(p.paymentMethod || '').toUpperCase() === 'CONTRA_ENTREGA')
+        .reduce((acc: number, p: any) => acc + Number(p.amount || 0), 0);
 
-      if (contraEntregaLinesTotal > 0 && !rawPaymentMode) {
+      const explicitBodyMode = String(body.domicilio?.c807PaymentMode || '').toUpperCase().trim();
+      if (
+        contraEntregaLinesTotal > 0 &&
+        explicitBodyMode !== 'TARJETA' &&
+        explicitBodyMode !== 'YA_PAGADO_TARJETA' &&
+        explicitBodyMode !== 'TRANSFERENCIA' &&
+        explicitBodyMode !== 'YA_PAGADO_TRANSFERENCIA'
+      ) {
         resolvedTipoPagoC807 = 'CONTRAENTREGA';
         resolvedPaymentMode = 'CONTRA_ENTREGA';
         resolvedServiceType = 'CCE';
