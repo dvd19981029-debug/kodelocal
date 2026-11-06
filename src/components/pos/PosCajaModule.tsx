@@ -210,6 +210,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
   const [movementObservation, setMovementObservation] = useState('');
   const [isSavingMovement, setIsSavingMovement] = useState(false);
   const [todayMovements, setTodayMovements] = useState<any[]>([]);
+  const [adminStaffList, setAdminStaffList] = useState<Array<{ id: string; name: string }>>([]);
 
   const todayMovementTotals = useMemo(() => {
     let ingresos = 0;
@@ -245,6 +246,25 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
   useEffect(() => {
     if (cajaSubTab === 'ventas_dia') {
       fetchTodayMovements();
+      getStaffToken().then((staffToken) => {
+        fetch('/api/staff', {
+          headers: {
+            ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+          },
+        })
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.success && Array.isArray(data.staff)) {
+              const admins = data.staff.filter(
+                (s: any) =>
+                  s.isActive !== false &&
+                  String(s.role || '').toUpperCase().includes('ADMIN')
+              );
+              setAdminStaffList(admins);
+            }
+          })
+          .catch((e) => console.error('Error cargando colaboradores admin:', e));
+      });
     }
   }, [cajaSubTab]);
 
@@ -1920,14 +1940,19 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
 
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">Quién autoriza</label>
-                <input
-                  type="text"
+                <select
                   required
                   value={movementAuthorizedBy}
                   onChange={(e) => setMovementAuthorizedBy(e.target.value)}
-                  placeholder="Nombre de quien autoriza"
-                  className="clay-input w-full text-xs"
-                />
+                  className="clay-input w-full text-xs cursor-pointer"
+                >
+                  <option value="">Seleccionar administrador que autoriza...</option>
+                  {adminStaffList.map((adm) => (
+                    <option key={adm.id} value={adm.name}>
+                      {adm.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
