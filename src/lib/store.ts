@@ -2557,7 +2557,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "imageUrl": "/images/esencias/esencia_77.webp?v=aroma_official_v4",
     "description": "Inspirado en OUD FOR GLORY BADE'E AL OUD LATTAFA",
     "isAvailableOnline": true,
-    "puesto": "A1",
+    "puesto": "B6",
     "stockHalf": 0
   },
   {
