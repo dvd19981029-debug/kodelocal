@@ -220,6 +220,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
   const [cashCounts, setCashCounts] = useState<Record<string, string>>({});
   const [isSavingCashCount, setIsSavingCashCount] = useState(false);
   const [initialCashFondo, setInitialCashFondo] = useState(0);
+  const [lastCountUpdatedAt, setLastCountUpdatedAt] = useState<number>(0);
   const [isRemesaWithdrawal, setIsRemesaWithdrawal] = useState(false);
 
   const CASH_DENOMINATIONS = [
@@ -297,8 +298,12 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
         setInitialCashFondo(Number(data.previousCashCount?.total || 0));
         if (data.todayCashCount?.counts) {
           setCashCounts(data.todayCashCount.counts);
+          const ts = data.todayCashCount.updatedAt ? new Date(data.todayCashCount.updatedAt).getTime() : 0;
+          setLastCountUpdatedAt(!isNaN(ts) ? ts : 0);
         } else if (data.previousCashCount?.counts) {
           setCashCounts(data.previousCashCount.counts);
+          const ts = data.previousCashCount.updatedAt ? new Date(data.previousCashCount.updatedAt).getTime() : 0;
+          setLastCountUpdatedAt(!isNaN(ts) ? ts : 0);
         }
       }
     } catch (e) {
@@ -327,6 +332,12 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
       if (data.success) {
         if (data.todayCashCount?.counts) {
           setCashCounts(data.todayCashCount.counts);
+        }
+        if (data.todayCashCount?.updatedAt) {
+          const ts = new Date(data.todayCashCount.updatedAt).getTime();
+          if (!isNaN(ts)) setLastCountUpdatedAt(ts);
+        } else {
+          setLastCountUpdatedAt(Date.now());
         }
         setIsCashCountModalOpen(false);
       } else {
@@ -409,7 +420,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
             return sum + (isNaN(qty) || qty < 0 ? 0 : qty * d.value);
           }, 0);
           setCashCounts(remainingCounts);
-          await fetch('/api/shifts', {
+          const countRes = await fetch('/api/shifts', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -422,6 +433,13 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
               performedBy: movementPerformedBy.trim(),
             }),
           });
+          const countData = await countRes.json().catch(() => null);
+          if (countData?.todayCashCount?.updatedAt) {
+            const ts = new Date(countData.todayCashCount.updatedAt).getTime();
+            if (!isNaN(ts)) setLastCountUpdatedAt(ts);
+          } else {
+            setLastCountUpdatedAt(Date.now());
+          }
         }
         setIsCashMovementModalOpen(false);
         setIsRemesaWithdrawal(false);
@@ -482,6 +500,33 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
   const todayCashSales = useMemo(() => {
     return todayInvoicedSales.filter((s) => (s.paymentMethod || 'CASH') === 'CASH');
   }, [todayInvoicedSales]);
+
+  // Saldo en Caja dinámico: parte del último Conteo Efectivo guardado y suma/resta
+  // las ventas en efectivo y movimientos ocurridos después de ese conteo.
+  const saldoEnCaja = useMemo(() => {
+    let cashSalesSinceCount = 0;
+    for (const s of todayCashSales) {
+      const saleTs = parseSaleDateObj(s).getTime();
+      if (lastCountUpdatedAt === 0 || saleTs > lastCountUpdatedAt) {
+        cashSalesSinceCount += Number(s.total || 0);
+      }
+    }
+
+    let movementsSinceCount = 0;
+    for (const m of todayMovements) {
+      const movTs = new Date(m.createdAt).getTime();
+      if (lastCountUpdatedAt === 0 || (!isNaN(movTs) && movTs > lastCountUpdatedAt)) {
+        const amt = Number(m.amount || 0);
+        if (String(m.type || '').toUpperCase() === 'INGRESO') {
+          movementsSinceCount += amt;
+        } else {
+          movementsSinceCount -= amt;
+        }
+      }
+    }
+
+    return cashCountTotal + cashSalesSinceCount + movementsSinceCount;
+  }, [cashCountTotal, todayCashSales, todayMovements, lastCountUpdatedAt]);
 
   const isEcommerceWompiSale = (s: SaleRecord) => {
     if (s.paymentMethod === 'WOMPI') return true;
@@ -1096,7 +1141,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                 <Calculator className="w-4 h-4 shrink-0" />
                 <span>Conteo Efectivo</span>
                 <span className="px-2 py-0.5 rounded-md bg-white/90 text-sky-800 font-mono text-[11px] font-black">
-                  ${cashCountTotal.toFixed(2)}
+                  ${saldoEnCaja.toFixed(2)}
                 </span>
               </button>
             </div>
@@ -1170,7 +1215,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                 +${todayMetrics.cashTotal.toFixed(2)}
               </div>
               <span className="text-[10.5px] text-emerald-800 font-bold block mt-0.5">
-                {todayMetrics.cashCount} {todayMetrics.cashCount === 1 ? 'venta' : 'ventas'} | Saldo en Caja: ${cashCountTotal.toFixed(2)}
+                {todayMetrics.cashCount} {todayMetrics.cashCount === 1 ? 'venta' : 'ventas'} | Saldo en Caja: ${saldoEnCaja.toFixed(2)}
               </span>
             </div>
 
@@ -1306,7 +1351,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                   <span>Retiros y Abonos de Caja Hoy ({todayMovements.length})</span>
                 </h3>
                 <span className="text-xs font-mono font-black text-slate-700">
-                  Saldo en Caja: ${cashCountTotal.toFixed(2)}
+                  Saldo en Caja: ${saldoEnCaja.toFixed(2)}
                 </span>
               </div>
               <div className="overflow-x-auto rounded-xl border border-slate-200/80">
