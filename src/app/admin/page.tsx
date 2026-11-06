@@ -2156,6 +2156,7 @@ export default function AdminPage() {
                       <th className="py-3 px-4">Fragancia</th>
                       <th className="py-3 px-4 text-right">Unidades Restantes (1 Oz)</th>
                       <th className="py-3 px-4 text-right">Medias Onzas Restantes (½ Oz)</th>
+                      <th className="py-3 px-4 text-center">Inventario en Kg (Garrafa)</th>
                       <th className="py-3 px-4 text-right">Ventas Promedio / Mes (Oz)</th>
                       <th className="py-3 px-4 text-right">Ventas Promedio / Mes (Kg)</th>
                     </tr>
@@ -2163,13 +2164,14 @@ export default function AdminPage() {
                   <tbody className="divide-y divide-slate-100">
                     {lowStockEssences.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="py-8 text-center text-xs text-slate-400">
+                        <td colSpan={6} className="py-8 text-center text-xs text-slate-400">
                           No hay esencias por debajo de 15 onzas.
                         </td>
                       </tr>
                     ) : (
                       lowStockEssences.map((item) => {
                         const stats = monthlySalesByProduct.get(item.id) || { ozPerMonth: 0, kgPerMonth: 0 };
+                        const kgAvailable = Number(item.stockKg || 0);
                         return (
                           <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
                             <td className="py-3 px-4 font-bold text-slate-800">
@@ -2184,6 +2186,30 @@ export default function AdminPage() {
                               <span className="font-mono font-black text-purple-700 bg-purple-50 px-2.5 py-1 rounded-md border border-purple-200/80">
                                 {Number(item.stockHalf || 0)} ½ Oz
                               </span>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              {kgAvailable > 0 ? (
+                                <div className="inline-flex items-center gap-1.5">
+                                  <span className="font-mono font-black text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200/80">
+                                    🛢️ Sí ({kgAvailable} Kg)
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEnvasarProduct(item);
+                                      setIsEnvasarModalOpen(true);
+                                    }}
+                                    className="px-2 py-1 rounded-md bg-amber-100 hover:bg-amber-600 text-amber-900 hover:text-white font-black text-[10.5px] transition-colors"
+                                    title="Envasar estos Kg ahora"
+                                  >
+                                    🧪 Envasar
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="font-mono font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200/80">
+                                  No (0 Kg)
+                                </span>
+                              )}
                             </td>
                             <td className="py-3 px-4 text-right font-mono font-bold text-slate-700">
                               {stats.ozPerMonth.toFixed(1)} Oz
