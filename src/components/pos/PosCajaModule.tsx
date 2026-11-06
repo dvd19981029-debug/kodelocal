@@ -220,6 +220,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
   const [cashCounts, setCashCounts] = useState<Record<string, string>>({});
 
   const CASH_DENOMINATIONS = [
+    { key: 'b100', label: 'Billetes de 100', value: 100 },
     { key: 'b50', label: 'Billetes de 50', value: 50 },
     { key: 'b20', label: 'Billetes de 20', value: 20 },
     { key: 'b10', label: 'Billetes de 10', value: 10 },
