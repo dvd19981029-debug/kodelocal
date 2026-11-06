@@ -4130,21 +4130,21 @@
     "estado": "Activa"
   },
   {
-    "kodigo": "1",
+    "kodigo": "685",
     "contratipo": "Very Pink",
     "marca": "Perry Ellis",
     "genero": "Dama",
     "estado": "Activa"
   },
   {
-    "kodigo": "2",
+    "kodigo": "686",
     "contratipo": "Born in Roma Intense",
     "marca": "Valentino",
     "genero": "Caballero",
-    "estado": ""
+    "estado": "Activa"
   },
   {
-    "kodigo": "4",
+    "kodigo": "687",
     "contratipo": "Azzaro Most Wanted",
     "marca": "Azzaro",
     "genero": "Caballero",
@@ -4158,10 +4158,10 @@
     "estado": "Activa"
   },
   {
-    "kodigo": "10001",
+    "kodigo": "1001",
     "contratipo": "Invictus Victory Elixir",
     "marca": "Paco Rabanne",
-    "genero": "Masculino",
+    "genero": "Caballero",
     "estado": "Activa"
   },
   {
@@ -4193,7 +4193,7 @@
     "estado": "Activa"
   },
   {
-    "kodigo": "6",
+    "kodigo": "688",
     "contratipo": "Club de Nuit Intense Woman Extrait de Parfum",
     "marca": "Armaf",
     "genero": "Dama",
@@ -4484,6 +4484,209 @@
     "contratipo": "Hawas Ice",
     "marca": "Rasasi",
     "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "724",
+    "contratipo": "Pacific Chill",
+    "marca": "Louis Vuitton",
+    "genero": "Unisex",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "725",
+    "contratipo": "CH Eau de Toilette",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "726",
+    "contratipo": "Eros Eau de Parfum",
+    "marca": "Versace",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "727",
+    "contratipo": "Eros Energy Eau de Parfum",
+    "marca": "Versace",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "730",
+    "contratipo": "Armani Code Elixir",
+    "marca": "Armani",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "731",
+    "contratipo": "Oriana",
+    "marca": "Parfums de Marly",
+    "genero": "Dama",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "732",
+    "contratipo": "MYSLF EDP",
+    "marca": "YSL Yves Saint Laurent",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "733",
+    "contratipo": "L'homme",
+    "marca": "Prada",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "734",
+    "contratipo": "Allure Homme Sport superleggera",
+    "marca": "Chanel",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "735",
+    "contratipo": "Divine Elixir",
+    "marca": "Jean Paul Gaultier",
+    "genero": "Dama",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "736",
+    "contratipo": "Bvlgari Le Gemme Tygar Extrait",
+    "marca": "Bulgari",
+    "genero": "Unisex",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "737",
+    "contratipo": "Le Male",
+    "marca": "Jean Paul Gaultier",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "738",
+    "contratipo": "Le Male Elixir Absolu",
+    "marca": "Jean Paul Gaultier",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "739",
+    "contratipo": "Boss Bottled Absolu",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "740",
+    "contratipo": "La Nuit Tresor",
+    "marca": "Lancome",
+    "genero": "Dama",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "741",
+    "contratipo": "Hawas Fire",
+    "marca": "Rasasi",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "742",
+    "contratipo": "Gentleman",
+    "marca": "Givenchy",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "745",
+    "contratipo": "Hugo Man",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "748",
+    "contratipo": "Born in Roma Purple melancholia",
+    "marca": "Valentino",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "749",
+    "contratipo": "Born in Roma Purple Melancholia Donna",
+    "marca": "Valentino",
+    "genero": "Dama",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "750",
+    "contratipo": "Born In Roma Green Stravaganza",
+    "marca": "Valentino",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "751",
+    "contratipo": "Born in Roma Green Stravaganza Donna",
+    "marca": "Valentino",
+    "genero": "Dama",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "754",
+    "contratipo": "Ch Hot Hot",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "769",
+    "contratipo": "Very Good Girl",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "794",
+    "contratipo": "Arabians Tonka",
+    "marca": "Montale París",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "829",
+    "contratipo": "Mod vanilla",
+    "marca": "Ariana Grande",
+    "genero": "Dama",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "844",
+    "contratipo": "Scandal pour homme",
+    "marca": "Jean Paul Gaultier",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "880",
+    "contratipo": "Animale For Men",
+    "marca": "Animale parfums",
+    "genero": "Caballero",
+    "estado": "Activa"
+  },
+  {
+    "kodigo": "890",
+    "contratipo": "Princess Vera Wang",
+    "marca": "Vera Wang",
+    "genero": "Dama",
     "estado": "Activa"
   }
 ]
