@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Calculator,
   ReceiptText,
@@ -30,10 +30,12 @@ import {
   ArrowUp,
   ArrowDown,
   Filter,
+  PlusCircle,
+  X,
 } from 'lucide-react';
 import { CustomerRecord } from '@/lib/customers';
 import { SaleRecord, getOrderPaymentDisplayInfo } from '@/lib/store';
-import { getActiveSessionUI } from '@/lib/auth';
+import { getActiveSessionUI, getStaffToken } from '@/lib/auth';
 import {
   printDailyCashSalesTicketPdf,
   printDailyCardSalesTicketPdf,
@@ -198,6 +200,83 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
   const [todaySortDir, setTodaySortDir] = useState<'asc' | 'desc'>('desc');
   const [todayPaymentFilter, setTodayPaymentFilter] = useState<'ALL' | 'CASH' | 'CARD_POS' | 'TRANSFER' | 'WOMPI' | 'CONTRA_ENTREGA'>('ALL');
   const [todayDocFilter, setTodayDocFilter] = useState<'ALL' | '01' | '03' | 'TICKET'>('ALL');
+
+  // Estado para Modal de Retiro o Abono de Caja
+  const [isCashMovementModalOpen, setIsCashMovementModalOpen] = useState(false);
+  const [movementType, setMovementType] = useState<'INGRESO' | 'RETIRO'>('RETIRO');
+  const [movementPerformedBy, setMovementPerformedBy] = useState(() => getActiveSessionUI().name || '');
+  const [movementAuthorizedBy, setMovementAuthorizedBy] = useState('');
+  const [movementAmount, setMovementAmount] = useState('');
+  const [isSavingMovement, setIsSavingMovement] = useState(false);
+  const [todayMovements, setTodayMovements] = useState<any[]>([]);
+
+  const fetchTodayMovements = async () => {
+    try {
+      const staffToken = await getStaffToken();
+      const res = await fetch('/api/shifts', {
+        headers: {
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.todayMovements)) {
+        setTodayMovements(data.todayMovements);
+      }
+    } catch (e) {
+      console.error('Error cargando movimientos de caja:', e);
+    }
+  };
+
+  useEffect(() => {
+    if (cajaSubTab === 'ventas_dia') {
+      fetchTodayMovements();
+    }
+  }, [cajaSubTab]);
+
+  const handleSaveCashMovement = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const amt = parseFloat(movementAmount);
+    if (isNaN(amt) || amt <= 0) {
+      alert('Ingresa un monto válido mayor a $0.00');
+      return;
+    }
+    if (!movementPerformedBy.trim() || !movementAuthorizedBy.trim()) {
+      alert('Completa quién realiza y quién autoriza el movimiento.');
+      return;
+    }
+
+    setIsSavingMovement(true);
+    try {
+      const staffToken = await getStaffToken();
+      const res = await fetch('/api/shifts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({
+          action: 'movement',
+          type: movementType,
+          amount: amt,
+          performedBy: movementPerformedBy.trim(),
+          authorizedBy: movementAuthorizedBy.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsCashMovementModalOpen(false);
+        setMovementAmount('');
+        setMovementAuthorizedBy('');
+        fetchTodayMovements();
+      } else {
+        alert(data.error || 'No se pudo registrar el movimiento');
+      }
+    } catch (err) {
+      alert('Error de conexión al guardar el movimiento');
+    } finally {
+      setIsSavingMovement(false);
+    }
+  };
 
   const toggleTodaySort = (field: 'HORA' | 'CLIENTE' | 'ORDEN' | 'ITEMS' | 'FORMA_PAGO' | 'MONTO') => {
     if (todaySortField === field) {
@@ -834,6 +913,15 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                 <span className="px-2 py-0.5 rounded-md bg-white/90 text-emerald-800 font-mono text-[11px] font-black">
                   +${todayMetrics.cashTotal.toFixed(2)}
                 </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsCashMovementModalOpen(true)}
+                className="px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer border bg-amber-500 hover:bg-amber-600 text-white border-amber-600 shadow-sm"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Registrar Retiro / Abono</span>
               </button>
             </div>
 
@@ -1672,6 +1760,114 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
       {/* SUBPESTAÑA 5: DOMICILIO POS */}
       {cajaSubTab === 'domicilio' && (
         <PosDomicilioPanel onOrderChanged={onOrderChanged} />
+      )}
+
+      {/* MODAL: REGISTRAR RETIRO O ABONO DE CAJA */}
+      {isCashMovementModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+          <div className="clay-card w-full max-w-md p-6 relative bg-white animate-in fade-in zoom-in-95">
+            <button
+              type="button"
+              onClick={() => setIsCashMovementModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-lg font-black text-slate-800 mb-1">Registrar Retiro o Abono</h3>
+            <p className="text-xs text-slate-500 mb-4">
+              Movimiento de efectivo en caja del día
+            </p>
+
+            <form onSubmit={handleSaveCashMovement} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1.5">Tipo de Movimiento</label>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setMovementType('INGRESO')}
+                    className={`py-2.5 px-3 rounded-xl text-xs font-black border transition-all cursor-pointer ${
+                      movementType === 'INGRESO'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    Ingreso (Abono)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMovementType('RETIRO')}
+                    className={`py-2.5 px-3 rounded-xl text-xs font-black border transition-all cursor-pointer ${
+                      movementType === 'RETIRO'
+                        ? 'bg-rose-600 text-white border-rose-600 shadow-sm'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    Retiro
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Quién lo hace</label>
+                <input
+                  type="text"
+                  required
+                  value={movementPerformedBy}
+                  onChange={(e) => setMovementPerformedBy(e.target.value)}
+                  placeholder="Nombre de quien realiza el movimiento"
+                  className="clay-input w-full text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Quién autoriza</label>
+                <input
+                  type="text"
+                  required
+                  value={movementAuthorizedBy}
+                  onChange={(e) => setMovementAuthorizedBy(e.target.value)}
+                  placeholder="Nombre de quien autoriza"
+                  className="clay-input w-full text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Monto ($)</label>
+                <div className="clay-input flex items-center gap-1.5 px-3 py-2">
+                  <span className="font-black text-slate-400 text-sm">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    required
+                    value={movementAmount}
+                    onChange={(e) => setMovementAmount(e.target.value)}
+                    placeholder="0.00"
+                    className="bg-transparent border-none outline-none w-full text-sm font-black text-slate-800 p-0"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsCashMovementModalOpen(false)}
+                  className="clay-btn clay-btn-light flex-1 py-2.5 text-xs font-bold cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingMovement}
+                  className="clay-btn clay-btn-primary flex-1 py-2.5 text-xs font-black cursor-pointer"
+                >
+                  {isSavingMovement ? 'Guardando...' : 'Guardar Movimiento'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

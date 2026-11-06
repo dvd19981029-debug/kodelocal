@@ -50,7 +50,18 @@ export async function GET(request: Request) {
       orderBy: { openedAt: 'desc' },
     });
 
-    return NextResponse.json({ success: true, shift: activeShift });
+    // Obtener todos los movimientos de caja registrados hoy en horario de El Salvador (UTC-6)
+    const nowSv = new Date(Date.now() - 6 * 60 * 60 * 1000);
+    const svDateStr = nowSv.toISOString().split('T')[0];
+    const startOfTodaySv = new Date(`${svDateStr}T00:00:00-06:00`);
+    const todayMovements = await prisma.cashMovement.findMany({
+      where: {
+        createdAt: { gte: startOfTodaySv },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return NextResponse.json({ success: true, shift: activeShift, todayMovements });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
@@ -195,18 +206,46 @@ export async function POST(request: Request) {
 
     // ================= 3. REGISTRO DE MOVIMIENTO DE CAJA CHICA =================
     if (action === 'movement') {
-      const { shiftId, type, amount, reason, performedBy } = body;
+      const { shiftId, type, amount, reason, performedBy, authorizedBy } = body;
 
-      if (!shiftId || !amount || !reason) {
-        return NextResponse.json({ success: false, error: 'Datos incompletos para movimiento de caja' }, { status: 400 });
+      if (!amount || Number(amount) <= 0) {
+        return NextResponse.json({ success: false, error: 'Ingresa un monto válido mayor a 0' }, { status: 400 });
       }
+
+      let resolvedShiftId = shiftId;
+      if (!resolvedShiftId) {
+        let activeShift = await prisma.cashShift.findFirst({
+          where: { status: 'OPEN' },
+          orderBy: { openedAt: 'desc' },
+        });
+        if (!activeShift) {
+          activeShift = await prisma.cashShift.create({
+            data: {
+              cashierName: performedBy || 'Caja Principal',
+              initialAmount: 0,
+              status: 'OPEN',
+            },
+          });
+        }
+        resolvedShiftId = activeShift.id;
+      }
+
+      const finalReason = reason
+        ? authorizedBy
+          ? `${reason} (Autoriza: ${authorizedBy})`
+          : reason
+        : authorizedBy
+        ? `Autoriza: ${authorizedBy}`
+        : type === 'INGRESO'
+        ? 'Abono a caja'
+        : 'Retiro de caja';
 
       const movement = await prisma.cashMovement.create({
         data: {
-          shiftId,
-          type: type || 'EGRESO',
+          shiftId: resolvedShiftId,
+          type: type || 'RETIRO',
           amount: Number(amount),
-          reason,
+          reason: finalReason,
           performedBy: performedBy || 'Cajero',
         },
       });
