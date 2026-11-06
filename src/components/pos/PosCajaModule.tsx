@@ -210,6 +210,20 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
   const [isSavingMovement, setIsSavingMovement] = useState(false);
   const [todayMovements, setTodayMovements] = useState<any[]>([]);
 
+  const todayMovementTotals = useMemo(() => {
+    let ingresos = 0;
+    let retiros = 0;
+    for (const m of todayMovements) {
+      const amt = Number(m.amount || 0);
+      if (String(m.type || '').toUpperCase() === 'INGRESO') {
+        ingresos += amt;
+      } else {
+        retiros += amt;
+      }
+    }
+    return { ingresos, retiros, netAdjustment: ingresos - retiros };
+  }, [todayMovements]);
+
   const fetchTodayMovements = async () => {
     try {
       const staffToken = await getStaffToken();
@@ -991,10 +1005,12 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                 <Banknote className="w-4 h-4 text-emerald-600" />
               </div>
               <div className="text-xl font-black text-emerald-700 font-mono mt-1">
-                +${todayMetrics.cashTotal.toFixed(2)}
+                ${(todayMetrics.cashTotal + todayMovementTotals.netAdjustment).toFixed(2)}
               </div>
               <span className="text-[10.5px] text-emerald-800 font-bold block mt-0.5">
-                {todayMetrics.cashCount} {todayMetrics.cashCount === 1 ? 'venta' : 'ventas'} en efectivo
+                {todayMetrics.cashCount} {todayMetrics.cashCount === 1 ? 'venta' : 'ventas'} (+${todayMetrics.cashTotal.toFixed(2)})
+                {todayMovementTotals.ingresos > 0 && ` | Abonos: +$${todayMovementTotals.ingresos.toFixed(2)}`}
+                {todayMovementTotals.retiros > 0 && ` | Retiros: -$${todayMovementTotals.retiros.toFixed(2)}`}
               </span>
             </div>
 
@@ -1120,6 +1136,74 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
               </span>
             </div>
           </div>
+
+          {/* Tabla de Movimientos de Caja de Hoy (Retiros y Abonos) */}
+          {todayMovements.length > 0 && (
+            <div className="clay-card p-4 bg-white space-y-2.5 border-l-4 border-amber-500">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                  <PlusCircle className="w-4 h-4 text-amber-600" />
+                  <span>Retiros y Abonos de Caja Hoy ({todayMovements.length})</span>
+                </h3>
+                <span className="text-xs font-mono font-black text-slate-700">
+                  Neto en Caja: ${(todayMetrics.cashTotal + todayMovementTotals.netAdjustment).toFixed(2)}
+                </span>
+              </div>
+              <div className="overflow-x-auto rounded-xl border border-slate-200/80">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50/80 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      <th className="py-2 px-3">Hora</th>
+                      <th className="py-2 px-3">Tipo</th>
+                      <th className="py-2 px-3">Quién lo hace</th>
+                      <th className="py-2 px-3">Quién autoriza</th>
+                      <th className="py-2 px-3 text-right">Monto</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {todayMovements.map((m) => {
+                      const isIngreso = String(m.type || '').toUpperCase() === 'INGRESO';
+                      const d = new Date(m.createdAt);
+                      const horaStr = !isNaN(d.getTime())
+                        ? d.toLocaleTimeString('es-SV', {
+                            timeZone: 'America/El_Salvador',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })
+                        : '-';
+                      return (
+                        <tr key={m.id} className="hover:bg-slate-50/80">
+                          <td className="py-2 px-3 font-mono text-slate-500">{horaStr}</td>
+                          <td className="py-2 px-3">
+                            <span
+                              className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase border ${
+                                isIngreso
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  : 'bg-rose-50 text-rose-700 border-rose-200'
+                              }`}
+                            >
+                              {isIngreso ? 'Ingreso (Abono)' : 'Retiro'}
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 font-bold text-slate-800">{m.performedBy || '-'}</td>
+                          <td className="py-2 px-3 font-semibold text-slate-600">
+                            {String(m.reason || '').replace(/^Autoriza:\s*/i, '') || '-'}
+                          </td>
+                          <td
+                            className={`py-2 px-3 text-right font-mono font-black ${
+                              isIngreso ? 'text-emerald-700' : 'text-rose-700'
+                            }`}
+                          >
+                            {isIngreso ? '+' : '-'}${Number(m.amount || 0).toFixed(2)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {/* Tabla de Facturaciones de Hoy */}
           <div className="clay-card p-4 sm:p-5 bg-white space-y-3">
