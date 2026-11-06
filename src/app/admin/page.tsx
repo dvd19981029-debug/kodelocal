@@ -134,6 +134,7 @@ export default function AdminPage() {
   // Modales
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isBulkPriceModalOpen, setIsBulkPriceModalOpen] = useState(false);
+  const [isInventoryAlertOpen, setIsInventoryAlertOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isMobileAdminMenuOpen, setIsMobileAdminMenuOpen] = useState(false);
@@ -390,6 +391,19 @@ export default function AdminPage() {
   const totalEsencias = useMemo(
     () => inventoriedProducts.filter((p) => p.category === 'Esencias para Perfume').length,
     [inventoriedProducts]
+  );
+  const lowStockEssences = useMemo(
+    () =>
+      products
+        .filter(
+          (p) =>
+            (p.category === 'Esencias para Perfume' || !p.category) &&
+            p.id !== 'ENVIO-DOM' &&
+            (p.unit || '').toLowerCase() !== 'servicio' &&
+            Number(p.stock || 0) < 15
+        )
+        .sort((a, b) => Number(a.stock || 0) - Number(b.stock || 0)),
+    [products]
   );
   const totalStockOnzas = useMemo(
     () =>
@@ -1430,6 +1444,13 @@ export default function AdminPage() {
                 <p className="text-xs text-slate-500 font-medium">Control de precios de venta, costos de compra y existencias</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setIsInventoryAlertOpen(true)}
+                  className="clay-btn clay-btn-light px-3.5 py-2.5 text-xs flex items-center gap-1.5 font-bold text-amber-700"
+                >
+                  <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Alerta Inventario</span>
+                </button>
                 <button
                   onClick={handleDownloadProductsExcel}
                   className="clay-btn clay-btn-light px-3.5 py-2.5 text-xs flex items-center gap-1.5 font-bold text-emerald-700"
@@ -2477,6 +2498,49 @@ export default function AdminPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: ALERTA INVENTARIO ================= */}
+      {isInventoryAlertOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="clay-card w-full max-w-md p-6 relative animate-in fade-in zoom-in-95 flex flex-col max-h-[80vh]">
+            <button
+              onClick={() => setIsInventoryAlertOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-xl font-black text-slate-800 mb-1">Alerta Inventario</h3>
+            <p className="text-xs text-slate-500 mb-4">
+              Esencias por debajo del mínimo de 15 onzas ({lowStockEssences.length})
+            </p>
+
+            <div className="overflow-y-auto flex-1 rounded-xl border border-slate-200/80 divide-y divide-slate-100 bg-white">
+              <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 text-[11px] font-black text-slate-500 uppercase tracking-wider sticky top-0">
+                <span>Fragancia</span>
+                <span>Unidades Restantes</span>
+              </div>
+              {lowStockEssences.length === 0 ? (
+                <div className="p-6 text-center text-xs text-slate-400">
+                  No hay esencias por debajo de 15 onzas.
+                </div>
+              ) : (
+                lowStockEssences.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between px-4 py-2.5 text-xs hover:bg-slate-50/80"
+                  >
+                    <span className="font-bold text-slate-800 pr-3">{item.name}</span>
+                    <span className="font-mono font-black text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-md border border-rose-200/80 shrink-0">
+                      {Number(item.stock || 0)} Oz
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}
