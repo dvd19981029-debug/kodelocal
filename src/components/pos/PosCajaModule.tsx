@@ -2245,30 +2245,30 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
 
       {/* Modal para Conteo Efectivo */}
       {isCashCountModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-          <div className="clay-card bg-white w-full max-w-md p-6 space-y-4 shadow-2xl border border-slate-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-3">
+          <div className="clay-card bg-white w-full max-w-md p-4 space-y-2.5 shadow-2xl border border-slate-200">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-black text-slate-900">Conteo Efectivo</h3>
-                <p className="text-xs text-slate-500">Cantidad por denominación en caja</p>
+                <h3 className="text-sm font-black text-slate-900 leading-tight">Conteo Efectivo</h3>
+                <p className="text-[11px] text-slate-500 leading-tight">Cantidad por denominación en caja</p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsCashCountModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="divide-y divide-slate-100 border border-slate-200/80 rounded-2xl px-3 py-1 bg-slate-50/40 max-h-[60vh] overflow-y-auto">
+            <div className="divide-y divide-slate-100 border border-slate-200/80 rounded-xl px-3 py-0.5 bg-slate-50/40">
               {CASH_DENOMINATIONS.map((denom) => {
                 const rawVal = cashCounts[denom.key] ?? '';
                 const qty = parseInt(rawVal || '0', 10);
                 const subtotal = isNaN(qty) || qty < 0 ? 0 : qty * denom.value;
                 return (
-                  <div key={denom.key} className="py-2 flex items-center justify-between gap-3">
-                    <span className="text-xs font-bold text-slate-700 flex-1">{denom.label}</span>
+                  <div key={denom.key} className="py-1 flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold text-slate-700 flex-1 leading-tight">{denom.label}</span>
                     <input
                       type="number"
                       min="0"
@@ -2281,9 +2281,9 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                         }))
                       }
                       placeholder="0"
-                      className="clay-input w-24 text-xs font-black text-center py-1.5 px-2"
+                      className="w-20 h-7 rounded-lg border border-slate-200 bg-white text-xs font-black text-slate-800 text-center px-2 py-0.5 shadow-2xs focus:outline-none focus:ring-2 focus:ring-indigo-400"
                     />
-                    <span className="w-20 text-right font-mono text-xs font-black text-slate-700">
+                    <span className="w-20 text-right font-mono text-xs font-black text-slate-700 leading-tight">
                       ${subtotal.toFixed(2)}
                     </span>
                   </div>
@@ -2291,36 +2291,36 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
               })}
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-emerald-50 border border-emerald-200">
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200">
                 <div>
-                  <span className="text-xs font-black uppercase tracking-wider text-emerald-800 block">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-emerald-800 block leading-tight">
                     Total Conteo
                   </span>
-                  <span className="text-[10.5px] font-bold text-emerald-700">
+                  <span className="text-[10px] font-bold text-emerald-700 leading-tight">
                     Esperado en caja: ${(initialCashFondo + todayMetrics.cashTotal + todayMovementTotals.netAdjustment).toFixed(2)}
                   </span>
                 </div>
-                <span className="text-xl font-black font-mono text-emerald-700">
+                <span className="text-lg font-black font-mono text-emerald-700 leading-tight">
                   ${cashCountTotal.toFixed(2)}
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div className="px-3 py-2.5 rounded-xl bg-amber-50 border border-amber-200">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 block">
-                    Monto a Remesar (&ge; $10)
+              <div className="grid grid-cols-2 gap-1.5">
+                <div className="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-800">
+                    Remesar (&ge;$10)
                   </span>
-                  <span className="text-sm font-black font-mono text-amber-700 mt-0.5 block">
+                  <span className="text-xs font-black font-mono text-amber-700">
                     ${cashCountBreakdown.remesaTotal.toFixed(2)}
                   </span>
                 </div>
 
-                <div className="px-3 py-2.5 rounded-xl bg-sky-50 border border-sky-200">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-sky-800 block">
-                    Queda en Caja (&le; $5)
+                <div className="px-3 py-1.5 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-sky-800">
+                    En Caja (&le;$5)
                   </span>
-                  <span className="text-sm font-black font-mono text-sky-700 mt-0.5 block">
+                  <span className="text-xs font-black font-mono text-sky-700">
                     ${cashCountBreakdown.fondoCajaTotal.toFixed(2)}
                   </span>
                 </div>
@@ -2339,19 +2339,19 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                     setIsRemesaWithdrawal(true);
                     setIsCashMovementModalOpen(true);
                   }}
-                  className="w-full py-2.5 px-3 rounded-xl text-xs font-black bg-amber-500 hover:bg-amber-600 text-white border border-amber-600 shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  className="w-full py-2 px-3 rounded-xl text-xs font-black bg-amber-500 hover:bg-amber-600 text-white border border-amber-600 shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  <Banknote className="w-4 h-4 shrink-0" />
+                  <Banknote className="w-3.5 h-3.5 shrink-0" />
                   <span>Generar Retiro de Remesa (${cashCountBreakdown.remesaTotal.toFixed(2)})</span>
                 </button>
               )}
             </div>
 
-            <div className="flex gap-2.5 pt-1">
+            <div className="flex gap-2 pt-0.5">
               <button
                 type="button"
                 onClick={() => setCashCounts({})}
-                className="clay-btn clay-btn-light flex-1 py-2.5 text-xs font-bold cursor-pointer"
+                className="clay-btn clay-btn-light flex-1 py-2 text-xs font-bold cursor-pointer"
               >
                 Limpiar
               </button>
@@ -2359,7 +2359,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                 type="button"
                 disabled={isSavingCashCount}
                 onClick={handleSaveCashCount}
-                className="clay-btn clay-btn-primary flex-1 py-2.5 text-xs font-black cursor-pointer"
+                className="clay-btn clay-btn-primary flex-1 py-2 text-xs font-black cursor-pointer"
               >
                 {isSavingCashCount ? 'Guardando...' : 'Guardar'}
               </button>
