@@ -36,6 +36,7 @@ export default function EnvasarKgModal({
 }: EnvasarKgModalProps) {
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(initialProduct);
   const [searchQuery, setSearchQuery] = useState('');
+  const [bottlingMode, setBottlingMode] = useState<'BY_KG' | 'PARTIAL_OZ'>('BY_KG');
 
   const [kgProcessed, setKgProcessed] = useState<number>(1);
   const [ozProduced, setOzProduced] = useState<number>(32);
@@ -52,6 +53,7 @@ export default function EnvasarKgModal({
   useEffect(() => {
     if (isOpen) {
       setSelectedProduct(initialProduct);
+      setBottlingMode('BY_KG');
       setErrorMsg(null);
       setNotes('');
       setSaveYieldAsDefault(false);
@@ -76,14 +78,38 @@ export default function EnvasarKgModal({
 
   const baseYieldOzPerKg = Number(selectedProduct?.yieldOzPerKg ?? 32);
   const baseYieldHalfPerKg = Number(selectedProduct?.yieldHalfPerKg ?? 8);
+  const baseTotalEquivOzPerKg = Math.max(1, baseYieldOzPerKg + baseYieldHalfPerKg * 0.5);
 
   // Recalcular estimación sugerida cuando el usuario cambia los Kg a procesar
   const handleKgChange = (newKg: number) => {
     const validKg = Math.max(0, newKg);
     setKgProcessed(validKg);
-    if (validKg > 0) {
+    if (bottlingMode === 'BY_KG' && validKg > 0) {
       setOzProduced(Math.round(validKg * baseYieldOzPerKg));
       setHalfOzProduced(Math.round(validKg * baseYieldHalfPerKg));
+    }
+  };
+
+  // En modo parcial por onzas, calcular automáticamente los Kg proporcionales a descontar
+  const updateProportionalKgFromOunces = (nextOz: number, nextHalf: number) => {
+    const equiv = Math.max(0, nextOz + nextHalf * 0.5);
+    const propKg = Number((equiv / baseTotalEquivOzPerKg).toFixed(3));
+    setKgProcessed(propKg);
+  };
+
+  const handleOzChange = (nextOz: number) => {
+    const valid = Math.max(0, nextOz);
+    setOzProduced(valid);
+    if (bottlingMode === 'PARTIAL_OZ') {
+      updateProportionalKgFromOunces(valid, halfOzProduced);
+    }
+  };
+
+  const handleHalfOzChange = (nextHalf: number) => {
+    const valid = Math.max(0, nextHalf);
+    setHalfOzProduced(valid);
+    if (bottlingMode === 'PARTIAL_OZ') {
+      updateProportionalKgFromOunces(ozProduced, valid);
     }
   };
 
@@ -306,6 +332,48 @@ export default function EnvasarKgModal({
               </div>
             )}
 
+            {/* SELECTOR DE MODO: ENVASAR POR KG vs ENVASADO PARCIAL POR ONZAS */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200">
+              <button
+                type="button"
+                onClick={() => {
+                  setBottlingMode('BY_KG');
+                  const availKg = Number(selectedProduct.stockKg || 0);
+                  const defKg = availKg > 0 ? (availKg >= 1 ? 1 : availKg) : 1;
+                  setKgProcessed(defKg);
+                  setOzProduced(Math.round(defKg * baseYieldOzPerKg));
+                  setHalfOzProduced(Math.round(defKg * baseYieldHalfPerKg));
+                }}
+                className={`py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                  bottlingMode === 'BY_KG'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Scale className="w-3.5 h-3.5" />
+                <span>🛢️ Envasar por Kg (Ej. 1 Kg completo)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setBottlingMode('PARTIAL_OZ');
+                  const defOz = 10;
+                  const defHalf = 0;
+                  setOzProduced(defOz);
+                  setHalfOzProduced(defHalf);
+                  updateProportionalKgFromOunces(defOz, defHalf);
+                }}
+                className={`py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                  bottlingMode === 'PARTIAL_OZ'
+                    ? 'bg-amber-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Droplets className="w-3.5 h-3.5" />
+                <span>💧 Parcial por Onzas (Ej. sacar 10 Oz)</span>
+              </button>
+            </div>
+
             {/* PASO 1: KG A PROCESAR Y ESTANTE */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-amber-50/40 border border-amber-200/70">
               <div>
@@ -428,7 +496,7 @@ export default function EnvasarKgModal({
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => setOzProduced((prev) => Math.max(0, prev - 1))}
+                      onClick={() => handleOzChange(ozProduced - 1)}
                       className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 font-black text-slate-700 text-base flex items-center justify-center shrink-0"
                     >
                       -
@@ -437,12 +505,12 @@ export default function EnvasarKgModal({
                       type="number"
                       min="0"
                       value={ozProduced}
-                      onChange={(e) => setOzProduced(Math.max(0, parseInt(e.target.value) || 0))}
+                      onChange={(e) => handleOzChange(parseInt(e.target.value) || 0)}
                       className="clay-input w-full text-center font-mono font-black text-lg text-amber-950 py-1.5 border-amber-300"
                     />
                     <button
                       type="button"
-                      onClick={() => setOzProduced((prev) => prev + 1)}
+                      onClick={() => handleOzChange(ozProduced + 1)}
                       className="w-9 h-9 rounded-xl bg-amber-100 hover:bg-amber-200 font-black text-amber-900 text-base flex items-center justify-center shrink-0"
                     >
                       +
@@ -469,7 +537,7 @@ export default function EnvasarKgModal({
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => setHalfOzProduced((prev) => Math.max(0, prev - 1))}
+                      onClick={() => handleHalfOzChange(halfOzProduced - 1)}
                       className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 font-black text-slate-700 text-base flex items-center justify-center shrink-0"
                     >
                       -
@@ -478,12 +546,12 @@ export default function EnvasarKgModal({
                       type="number"
                       min="0"
                       value={halfOzProduced}
-                      onChange={(e) => setHalfOzProduced(Math.max(0, parseInt(e.target.value) || 0))}
+                      onChange={(e) => handleHalfOzChange(parseInt(e.target.value) || 0)}
                       className="clay-input w-full text-center font-mono font-black text-lg text-indigo-950 py-1.5 border-indigo-300"
                     />
                     <button
                       type="button"
-                      onClick={() => setHalfOzProduced((prev) => prev + 1)}
+                      onClick={() => handleHalfOzChange(halfOzProduced + 1)}
                       className="w-9 h-9 rounded-xl bg-indigo-100 hover:bg-indigo-200 font-black text-indigo-900 text-base flex items-center justify-center shrink-0"
                     >
                       +
