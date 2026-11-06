@@ -32,6 +32,7 @@ import {
   Filter,
   PlusCircle,
   X,
+  ChevronDown,
 } from 'lucide-react';
 import { CustomerRecord } from '@/lib/customers';
 import { SaleRecord, getOrderPaymentDisplayInfo } from '@/lib/store';
@@ -211,6 +212,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
   const [isSavingMovement, setIsSavingMovement] = useState(false);
   const [todayMovements, setTodayMovements] = useState<any[]>([]);
   const [adminStaffList, setAdminStaffList] = useState<Array<{ id: string; name: string }>>([]);
+  const [isAuthDropdownOpen, setIsAuthDropdownOpen] = useState(false);
 
   const todayMovementTotals = useMemo(() => {
     let ingresos = 0;
@@ -1938,21 +1940,66 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                 />
               </div>
 
-              <div>
+              <div className="relative">
                 <label className="text-xs font-bold text-slate-700 block mb-1">Quién autoriza</label>
-                <select
-                  required
-                  value={movementAuthorizedBy}
-                  onChange={(e) => setMovementAuthorizedBy(e.target.value)}
-                  className="clay-input w-full text-xs cursor-pointer"
+                <button
+                  type="button"
+                  onClick={() => setIsAuthDropdownOpen((prev) => !prev)}
+                  className="clay-input w-full text-xs flex items-center justify-between px-3 py-2.5 text-left cursor-pointer"
                 >
-                  <option value="">Seleccionar administrador que autoriza...</option>
-                  {adminStaffList.map((adm) => (
-                    <option key={adm.id} value={adm.name}>
-                      {adm.name}
-                    </option>
-                  ))}
-                </select>
+                  {movementAuthorizedBy ? (
+                    <span className="flex items-center gap-2 font-bold text-slate-800">
+                      <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px] font-black shrink-0">
+                        {movementAuthorizedBy.charAt(0).toUpperCase()}
+                      </span>
+                      <span>{movementAuthorizedBy}</span>
+                    </span>
+                  ) : (
+                    <span className="text-slate-400">Seleccionar administrador que autoriza...</span>
+                  )}
+                  <ChevronDown
+                    className={`w-4 h-4 text-slate-400 transition-transform duration-150 ${
+                      isAuthDropdownOpen ? 'rotate-180 text-indigo-600' : ''
+                    }`}
+                  />
+                </button>
+
+                {isAuthDropdownOpen && (
+                  <div className="absolute left-0 right-0 mt-1.5 z-50 rounded-2xl bg-white border border-slate-200/90 shadow-xl p-1.5 space-y-1 animate-in fade-in zoom-in-95 duration-100">
+                    {adminStaffList.map((adm) => {
+                      const isSelected = movementAuthorizedBy === adm.name;
+                      return (
+                        <button
+                          key={adm.id}
+                          type="button"
+                          onClick={() => {
+                            setMovementAuthorizedBy(adm.name);
+                            setIsAuthDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-indigo-600 text-white shadow-xs'
+                              : 'text-slate-700 hover:bg-indigo-50 hover:text-indigo-700'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2.5">
+                            <span
+                              className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${
+                                isSelected
+                                  ? 'bg-white/20 text-white'
+                                  : 'bg-indigo-100 text-indigo-700'
+                              }`}
+                            >
+                              {adm.name.charAt(0).toUpperCase()}
+                            </span>
+                            <span>{adm.name}</span>
+                          </span>
+                          {isSelected && <CheckCircle2 className="w-4 h-4 text-white shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <div>
