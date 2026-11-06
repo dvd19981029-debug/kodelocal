@@ -503,14 +503,26 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
       if (Array.isArray(s.payments) && s.payments.length > 1) {
         const cashPart = s.payments.find((p) => String(p.paymentMethod || '').toUpperCase() === 'CASH');
         if (cashPart && Number(cashPart.amount || 0) > 0) {
-          result.push({ ...s, total: Number(cashPart.amount), paymentMethod: 'CASH' });
+          const cashAmt = Number(cashPart.amount);
+          const cashSub = Number((cashAmt / 1.13).toFixed(2));
+          result.push({
+            ...s,
+            total: cashAmt,
+            subtotal: cashSub,
+            ivaTotal: Number((cashAmt - cashSub).toFixed(2)),
+            paymentMethod: 'CASH',
+            cliente: { ...s.cliente, nombre: resolveCustomerName(s) },
+          });
         }
       } else if ((s.paymentMethod || 'CASH') === 'CASH') {
-        result.push(s);
+        result.push({
+          ...s,
+          cliente: { ...s.cliente, nombre: resolveCustomerName(s) },
+        });
       }
     }
     return result;
-  }, [todayInvoicedSales]);
+  }, [todayInvoicedSales, customers]);
 
   // Saldo en Caja dinámico: parte del último Conteo Efectivo guardado y suma/resta
   // las ventas en efectivo y movimientos ocurridos después de ese conteo.

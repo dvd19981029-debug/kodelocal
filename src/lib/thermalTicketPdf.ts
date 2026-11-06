@@ -1229,13 +1229,28 @@ function renderDailySummaryByPaymentToDoc(
     grandSubtotal += sub;
     grandIva += iva;
 
-    const mKey = (isWompiOrEcomCard(s) ? 'WOMPI' : s.paymentMethod || 'CASH') as keyof typeof byMethod;
-    if (byMethod[mKey]) {
-      byMethod[mKey].count += 1;
-      byMethod[mKey].total += amt;
+    if (Array.isArray(s.payments) && s.payments.length > 1) {
+      for (const p of s.payments) {
+        const pAmt = Number(p.amount || 0);
+        if (pAmt <= 0) continue;
+        const pKey = String(p.paymentMethod || 'CASH').toUpperCase() as keyof typeof byMethod;
+        if (byMethod[pKey]) {
+          byMethod[pKey].count += 1;
+          byMethod[pKey].total += pAmt;
+        } else {
+          byMethod.CASH.count += 1;
+          byMethod.CASH.total += pAmt;
+        }
+      }
     } else {
-      byMethod.CASH.count += 1;
-      byMethod.CASH.total += amt;
+      const mKey = (isWompiOrEcomCard(s) ? 'WOMPI' : s.paymentMethod || 'CASH') as keyof typeof byMethod;
+      if (byMethod[mKey]) {
+        byMethod[mKey].count += 1;
+        byMethod[mKey].total += amt;
+      } else {
+        byMethod.CASH.count += 1;
+        byMethod.CASH.total += amt;
+      }
     }
 
     const dKey = (s.tipoComprobante || '01') as keyof typeof byDoc;
@@ -1321,7 +1336,9 @@ function renderDailySummaryByPaymentToDoc(
       .toUpperCase()
       .slice(0, 17);
     const mShort =
-      s.paymentMethod === 'CASH'
+      Array.isArray(s.payments) && s.payments.length > 1
+        ? 'MIXT'
+        : s.paymentMethod === 'CASH'
         ? 'EFEC'
         : isWompiOrEcomCard(s)
         ? 'WOMP'
