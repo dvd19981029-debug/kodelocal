@@ -405,6 +405,46 @@ export default function AdminPage() {
         .sort((a, b) => Number(a.stock || 0) - Number(b.stock || 0)),
     [products]
   );
+  const monthlySalesByProduct = useMemo(() => {
+    const map = new Map<string, { ozPerMonth: number; kgPerMonth: number }>();
+    if (!sales.length) return map;
+
+    let minDateMs = Date.now();
+    for (const s of sales) {
+      const t = new Date(s.createdAt).getTime();
+      if (!isNaN(t) && t < minDateMs) minDateMs = t;
+    }
+    const monthsSpan = Math.max(1, (Date.now() - minDateMs) / (30 * 24 * 60 * 60 * 1000));
+    const totalsOz = new Map<string, number>();
+
+    for (const s of sales) {
+      for (const it of s.items || []) {
+        const pid = it.productId;
+        if (!pid) continue;
+        const qty = Math.max(0, Number(it.quantity || 0));
+        const combined = `${it.unit || ''} ${it.name || ''}`.toLowerCase();
+        let oz = qty;
+        if (combined.includes('½') || combined.includes('media') || combined.includes('0.5') || combined.includes('1/2')) {
+          oz = qty * 0.5;
+        } else if (combined.includes('30ml') || combined.includes('30 ml')) {
+          oz = qty * 0.34;
+        } else if (combined.includes('50ml') || combined.includes('50 ml')) {
+          oz = qty * 0.56;
+        } else if (combined.includes('100ml') || combined.includes('100 ml')) {
+          oz = qty * 1.12;
+        }
+        totalsOz.set(pid, (totalsOz.get(pid) || 0) + oz);
+      }
+    }
+
+    totalsOz.forEach((totalOz, pid) => {
+      const ozPerMonth = totalOz / monthsSpan;
+      const kgPerMonth = ozPerMonth / 35.274;
+      map.set(pid, { ozPerMonth, kgPerMonth });
+    });
+
+    return map;
+  }, [sales]);
   const totalStockOnzas = useMemo(
     () =>
       inventoriedProducts
@@ -1776,28 +1816,35 @@ export default function AdminPage() {
                     <tr className="border-b border-slate-200/80 text-slate-400 font-bold text-[10px] uppercase tracking-wider">
                       <th className="py-3 px-4">Fragancia</th>
                       <th className="py-3 px-4 text-right">Unidades Restantes</th>
+                      <th className="py-3 px-4 text-right">Ventas Promedio / Mes</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {lowStockEssences.length === 0 ? (
                       <tr>
-                        <td colSpan={2} className="py-8 text-center text-xs text-slate-400">
+                        <td colSpan={3} className="py-8 text-center text-xs text-slate-400">
                           No hay esencias por debajo de 15 onzas.
                         </td>
                       </tr>
                     ) : (
-                      lowStockEssences.map((item) => (
-                        <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                          <td className="py-3 px-4 font-bold text-slate-800">
-                            {item.name}
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            <span className="font-mono font-black text-rose-700 bg-rose-50 px-2.5 py-1 rounded-md border border-rose-200/80">
-                              {Number(item.stock || 0)} Oz
-                            </span>
-                          </td>
-                        </tr>
-                      ))
+                      lowStockEssences.map((item) => {
+                        const stats = monthlySalesByProduct.get(item.id) || { ozPerMonth: 0, kgPerMonth: 0 };
+                        return (
+                          <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="py-3 px-4 font-bold text-slate-800">
+                              {item.name}
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <span className="font-mono font-black text-rose-700 bg-rose-50 px-2.5 py-1 rounded-md border border-rose-200/80">
+                                {Number(item.stock || 0)} Oz
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right font-mono font-bold text-slate-700">
+                              {stats.ozPerMonth.toFixed(1)} Oz <span className="text-indigo-600">({stats.kgPerMonth.toFixed(2)} Kg)</span>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
