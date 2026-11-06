@@ -1826,14 +1826,15 @@ export default function AdminPage() {
                   <thead>
                     <tr className="border-b border-slate-200/80 text-slate-400 font-bold text-[10px] uppercase tracking-wider">
                       <th className="py-3 px-4">Fragancia</th>
-                      <th className="py-3 px-4 text-right">Unidades Restantes</th>
+                      <th className="py-3 px-4 text-right">Unidades Restantes (1 Oz)</th>
+                      <th className="py-3 px-4 text-right">Medias Onzas Restantes (½ Oz)</th>
                       <th className="py-3 px-4 text-right">Ventas Promedio / Mes</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {lowStockEssences.length === 0 ? (
                       <tr>
-                        <td colSpan={3} className="py-8 text-center text-xs text-slate-400">
+                        <td colSpan={4} className="py-8 text-center text-xs text-slate-400">
                           No hay esencias por debajo de 15 onzas.
                         </td>
                       </tr>
@@ -1848,6 +1849,11 @@ export default function AdminPage() {
                             <td className="py-3 px-4 text-right">
                               <span className="font-mono font-black text-rose-700 bg-rose-50 px-2.5 py-1 rounded-md border border-rose-200/80">
                                 {Number(item.stock || 0)} Oz
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <span className="font-mono font-black text-purple-700 bg-purple-50 px-2.5 py-1 rounded-md border border-purple-200/80">
+                                {Number(item.stockHalf || 0)} ½ Oz
                               </span>
                             </td>
                             <td className="py-3 px-4 text-right font-mono font-bold text-slate-700">
