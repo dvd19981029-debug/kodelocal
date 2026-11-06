@@ -247,6 +247,30 @@ Control de gastos e insumos de laboratorio.
 | `pdfUrl` | `String` | SÍ | - | Enlace al PDF generado |
 | `jsonUrl` | `String` | SÍ | - | Enlace al JSON firmado |
 
+### 13. Tabla `CashShift`
+| Columna SQL / Prisma | Tipo | Nulo | FK / Relación | Descripción |
+| :--- | :--- | :---: | :--- | :--- |
+| `id` | `String` | NO | **PK** (`cuid`) | ID del turno de caja |
+| `cashierName` | `String` | NO | - | Nombre del cajero responsable |
+| `openedAt` | `DateTime` | NO | Default `now()` | Fecha/hora de apertura |
+| `closedAt` | `DateTime` | SÍ | - | Fecha/hora de cierre |
+| `initialAmount` | `Decimal(10,2)`| NO | Default `0.00` | Fondo inicial de caja |
+| `finalAmount` | `Decimal(10,2)`| SÍ | - | Efectivo físico contado al cierre |
+| `expectedAmount` | `Decimal(10,2)`| SÍ | - | Efectivo esperado al cierre |
+| `difference` | `Decimal(10,2)`| SÍ | - | Diferencia (sobrante/faltante) |
+| `status` | `String` | NO | Default `'OPEN'` | `'OPEN'` o `'CLOSED'` |
+
+### 14. Tabla `CashMovement`
+| Columna SQL / Prisma | Tipo | Nulo | FK / Relación | Descripción |
+| :--- | :--- | :---: | :--- | :--- |
+| `id` | `String` | NO | **PK** (`cuid`) | ID del movimiento o conteo |
+| `shiftId` | `String` | NO | `CashShift.id` | Turno de caja asociado |
+| `type` | `String` | NO | - | `'INGRESO'`, `'RETIRO'` o `'CONTEO'` (arqueo de denominaciones) |
+| `amount` | `Decimal(10,2)`| NO | - | Monto del movimiento o total del conteo |
+| `reason` | `String` | SÍ | - | Observación y quién autoriza (o JSON de denominaciones cuando `type = 'CONTEO'`) |
+| `performedBy` | `String` | NO | - | Colaborador que registra el movimiento o conteo |
+| `createdAt` | `DateTime` | NO | Default `now()` | Fecha y hora del registro |
+
 ---
 
 ## 🏛️ MÓDULO 3: PRODUCTOS & INVENTARIO

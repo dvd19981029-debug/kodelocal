@@ -54,14 +54,31 @@ export async function GET(request: Request) {
     const nowSv = new Date(Date.now() - 6 * 60 * 60 * 1000);
     const svDateStr = nowSv.toISOString().split('T')[0];
     const startOfTodaySv = new Date(`${svDateStr}T00:00:00-06:00`);
-    const todayMovements = await prisma.cashMovement.findMany({
+    const allTodayRecords = await prisma.cashMovement.findMany({
       where: {
         createdAt: { gte: startOfTodaySv },
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json({ success: true, shift: activeShift, todayMovements });
+    const todayMovements = allTodayRecords.filter((m) => m.type !== 'CONTEO');
+    const todayCashCountRecord = allTodayRecords.find((m) => m.type === 'CONTEO') || null;
+    let todayCashCount = null;
+    if (todayCashCountRecord) {
+      let counts: Record<string, string> = {};
+      try {
+        counts = JSON.parse(todayCashCountRecord.reason || '{}');
+      } catch {}
+      todayCashCount = {
+        id: todayCashCountRecord.id,
+        total: Number(todayCashCountRecord.amount || 0),
+        counts,
+        performedBy: todayCashCountRecord.performedBy,
+        updatedAt: todayCashCountRecord.createdAt,
+      };
+    }
+
+    return NextResponse.json({ success: true, shift: activeShift, todayMovements, todayCashCount });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
@@ -251,6 +268,71 @@ export async function POST(request: Request) {
       });
 
       return NextResponse.json({ success: true, movement });
+    }
+
+    // ================= 4. GUARDAR CONTEO DE EFECTIVO EN CAJA =================
+    if (action === 'cash_count') {
+      const { counts, total, performedBy } = body;
+
+      let activeShift = await prisma.cashShift.findFirst({
+        where: { status: 'OPEN' },
+        orderBy: { openedAt: 'desc' },
+      });
+      if (!activeShift) {
+        activeShift = await prisma.cashShift.create({
+          data: {
+            cashierName: performedBy || 'Caja Principal',
+            initialAmount: 0,
+            status: 'OPEN',
+          },
+        });
+      }
+
+      const nowSv = new Date(Date.now() - 6 * 60 * 60 * 1000);
+      const svDateStr = nowSv.toISOString().split('T')[0];
+      const startOfTodaySv = new Date(`${svDateStr}T00:00:00-06:00`);
+
+      const existingCount = await prisma.cashMovement.findFirst({
+        where: {
+          type: 'CONTEO',
+          createdAt: { gte: startOfTodaySv },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      const serializedCounts = JSON.stringify(counts || {});
+      const numericTotal = Number(total || 0);
+
+      const savedRecord = existingCount
+        ? await prisma.cashMovement.update({
+            where: { id: existingCount.id },
+            data: {
+              amount: numericTotal,
+              reason: serializedCounts,
+              performedBy: performedBy || 'Caja Principal',
+              createdAt: new Date(),
+            },
+          })
+        : await prisma.cashMovement.create({
+            data: {
+              shiftId: activeShift.id,
+              type: 'CONTEO',
+              amount: numericTotal,
+              reason: serializedCounts,
+              performedBy: performedBy || 'Caja Principal',
+            },
+          });
+
+      return NextResponse.json({
+        success: true,
+        todayCashCount: {
+          id: savedRecord.id,
+          total: Number(savedRecord.amount || 0),
+          counts: counts || {},
+          performedBy: savedRecord.performedBy,
+          updatedAt: savedRecord.createdAt,
+        },
+      });
     }
 
     return NextResponse.json({ success: false, error: 'Acción inválida' }, { status: 400 });

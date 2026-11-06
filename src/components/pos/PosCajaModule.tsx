@@ -218,6 +218,7 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
   // Estado para Modal de Conteo Efectivo
   const [isCashCountModalOpen, setIsCashCountModalOpen] = useState(false);
   const [cashCounts, setCashCounts] = useState<Record<string, string>>({});
+  const [isSavingCashCount, setIsSavingCashCount] = useState(false);
 
   const CASH_DENOMINATIONS = [
     { key: 'b100', label: 'Billetes de 100', value: 100 },
@@ -266,8 +267,44 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
       if (data.success && Array.isArray(data.todayMovements)) {
         setTodayMovements(data.todayMovements);
       }
+      if (data.success && data.todayCashCount?.counts) {
+        setCashCounts(data.todayCashCount.counts);
+      }
     } catch (e) {
       console.error('Error cargando movimientos de caja:', e);
+    }
+  };
+
+  const handleSaveCashCount = async () => {
+    setIsSavingCashCount(true);
+    try {
+      const staffToken = await getStaffToken();
+      const res = await fetch('/api/shifts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { 'x-staff-token': staffToken } : {}),
+        },
+        body: JSON.stringify({
+          action: 'cash_count',
+          counts: cashCounts,
+          total: cashCountTotal,
+          performedBy: getActiveSessionUI().name || 'Caja Principal',
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (data.todayCashCount?.counts) {
+          setCashCounts(data.todayCashCount.counts);
+        }
+        setIsCashCountModalOpen(false);
+      } else {
+        alert(data.error || 'No se pudo guardar el conteo de efectivo');
+      }
+    } catch (err) {
+      alert('Error de conexión al guardar el conteo de efectivo');
+    } finally {
+      setIsSavingCashCount(false);
     }
   };
 
@@ -2213,10 +2250,11 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
               </button>
               <button
                 type="button"
-                onClick={() => setIsCashCountModalOpen(false)}
+                disabled={isSavingCashCount}
+                onClick={handleSaveCashCount}
                 className="clay-btn clay-btn-primary flex-1 py-2.5 text-xs font-black cursor-pointer"
               >
-                Cerrar
+                {isSavingCashCount ? 'Guardando...' : 'Guardar'}
               </button>
             </div>
           </div>
