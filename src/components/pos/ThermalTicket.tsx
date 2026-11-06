@@ -193,20 +193,44 @@ export default function ThermalTicket({ ticket }: ThermalTicketProps) {
               </div>
 
               {/* FORMA DE PAGO */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3px' }}>
-                <span>
-                  {currentTicket.paymentMethod === 'CARD'
-                    ? 'TARJETA'
-                    : currentTicket.paymentMethod === 'TRANSFER'
-                    ? 'TRANSFERENCIA'
-                    : currentTicket.paymentMethod === 'WOMPI'
-                    ? 'WOMPI'
-                    : currentTicket.paymentMethod === 'CONTRA_ENTREGA'
-                    ? 'CONTRA ENTREGA'
-                    : 'EFECTIVO'}:
-                </span>
-                <span style={{ fontFamily: 'monospace' }}>{total}</span>
-              </div>
+              {Array.isArray(currentTicket.payments) && currentTicket.payments.length > 1 ? (
+                <div style={{ marginTop: '3px' }}>
+                  {currentTicket.payments.map((p, pIdx) => {
+                    const pm = String(p.paymentMethod || 'CASH').toUpperCase();
+                    const lbl =
+                      pm === 'CARD'
+                        ? 'TARJETA'
+                        : pm === 'TRANSFER'
+                        ? 'TRANSFERENCIA'
+                        : pm === 'WOMPI'
+                        ? 'WOMPI'
+                        : pm === 'CONTRA_ENTREGA'
+                        ? 'CONTRA ENTREGA'
+                        : 'EFECTIVO';
+                    return (
+                      <div key={pIdx} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>PAGO {lbl}:</span>
+                        <span style={{ fontFamily: 'monospace' }}>{Number(p.amount || 0).toFixed(2)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3px' }}>
+                  <span>
+                    {currentTicket.paymentMethod === 'CARD'
+                      ? 'TARJETA'
+                      : currentTicket.paymentMethod === 'TRANSFER'
+                      ? 'TRANSFERENCIA'
+                      : currentTicket.paymentMethod === 'WOMPI'
+                      ? 'WOMPI'
+                      : currentTicket.paymentMethod === 'CONTRA_ENTREGA'
+                      ? 'CONTRA ENTREGA'
+                      : 'EFECTIVO'}:
+                  </span>
+                  <span style={{ fontFamily: 'monospace' }}>{total}</span>
+                </div>
+              )}
 
               {currentTicket.paymentMethod === 'CASH' && cashRec && (
                 <>

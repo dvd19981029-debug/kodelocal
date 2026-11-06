@@ -264,21 +264,41 @@ function renderTicketToDoc(doc: any, ticket: SaleRecord): number {
   y += 3.8;
 
   // Forma de pago
-  const payLabel = ticket.paymentMethod === 'CARD'
-    ? 'TARJETA'
-    : ticket.paymentMethod === 'TRANSFER'
-    ? 'TRANSFERENCIA'
-    : ticket.paymentMethod === 'WOMPI'
-    ? 'WOMPI'
-    : ticket.paymentMethod === 'CONTRA_ENTREGA'
-    ? 'CONTRA ENTREGA'
-    : 'EFECTIVO';
-
   doc.setFont('courier', 'normal');
   doc.setFontSize(7.2);
-  doc.text(`PAGO: ${payLabel}:`, leftM, y);
-  doc.text(`$${total}`, rightM, y, { align: 'right' });
-  y += 3.1;
+  if (Array.isArray(ticket.payments) && ticket.payments.length > 1) {
+    for (const p of ticket.payments) {
+      const pm = String(p.paymentMethod || 'CASH').toUpperCase();
+      const lbl =
+        pm === 'CARD'
+          ? 'TARJETA'
+          : pm === 'TRANSFER'
+          ? 'TRANSFERENCIA'
+          : pm === 'WOMPI'
+          ? 'WOMPI'
+          : pm === 'CONTRA_ENTREGA'
+          ? 'CONTRA ENTREGA'
+          : 'EFECTIVO';
+      doc.text(`PAGO ${lbl}:`, leftM, y);
+      doc.text(`$${Number(p.amount || 0).toFixed(2)}`, rightM, y, { align: 'right' });
+      y += 3.1;
+    }
+  } else {
+    const payLabel =
+      ticket.paymentMethod === 'CARD'
+        ? 'TARJETA'
+        : ticket.paymentMethod === 'TRANSFER'
+        ? 'TRANSFERENCIA'
+        : ticket.paymentMethod === 'WOMPI'
+        ? 'WOMPI'
+        : ticket.paymentMethod === 'CONTRA_ENTREGA'
+        ? 'CONTRA ENTREGA'
+        : 'EFECTIVO';
+
+    doc.text(`PAGO: ${payLabel}:`, leftM, y);
+    doc.text(`$${total}`, rightM, y, { align: 'right' });
+    y += 3.1;
+  }
 
   if (ticket.cashReceived != null) {
     doc.text('EFECTIVO RECIBIDO:', leftM, y);
@@ -1036,7 +1056,8 @@ function renderDailyCashSalesToDoc(
     doc.setFont('courier', 'bold');
     doc.setFontSize(6.8);
     doc.text(hr, leftM, y);
-    doc.text(`${tipoStr} ${cleanPdfText(refNum)}`, leftM + 12, y);
+    const isMixedSale = Array.isArray(s.payments) && s.payments.length > 1;
+    doc.text(`${tipoStr} ${cleanPdfText(refNum)}${isMixedSale ? ' (MIXTO)' : ''}`, leftM + 12, y);
     doc.text(`$${amount.toFixed(2)}`, rightM, y, { align: 'right' });
     y += 2.9;
 
@@ -1358,6 +1379,28 @@ function renderDailySummaryByPaymentToDoc(
     doc.text(mShort, rightM - 15, y, { align: 'right' });
     doc.text(`$${amt.toFixed(2)}`, rightM, y, { align: 'right' });
     y += 2.9;
+
+    if (Array.isArray(s.payments) && s.payments.length > 1) {
+      const splitBreakdown = s.payments
+        .map((p) => {
+          const pm = String(p.paymentMethod || 'CASH').toUpperCase();
+          const code =
+            pm === 'CASH'
+              ? 'EFEC'
+              : pm === 'CARD'
+              ? 'TPOS'
+              : pm === 'TRANSFER'
+              ? 'TRAN'
+              : pm === 'WOMPI'
+              ? 'WOMP'
+              : 'C.EN';
+          return `${code}:$${Number(p.amount || 0).toFixed(2)}`;
+        })
+        .join(' + ');
+      doc.setFontSize(5.9);
+      doc.text(`-> ${splitBreakdown}`.slice(0, 42), leftM + 10, y);
+      y += 2.6;
+    }
   }
 
   y += 0.8;
@@ -1577,7 +1620,9 @@ function renderDailyCardSalesToDoc(
 
       doc.setFont('courier', 'normal');
       doc.setFontSize(6.8);
-      const splitClient = doc.splitTextToSize(clientName, 40);
+      const isMixedCard = Array.isArray(s.payments) && s.payments.length > 1;
+      const clientWithTag = isMixedCard ? `${clientName} (MIXTO)` : clientName;
+      const splitClient = doc.splitTextToSize(clientWithTag, 40);
       doc.text(splitClient[0] || 'CONSUMIDOR FINAL', leftM + 12, y);
       y += 3.2;
       if (splitClient.length > 1) {

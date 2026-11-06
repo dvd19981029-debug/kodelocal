@@ -56,10 +56,20 @@ export interface PosCheckoutModalProps {
   setCashAmount: (val: string) => void;
   isMixedPayment?: boolean;
   setIsMixedPayment?: (val: boolean) => void;
-  mixedCashAmount?: string;
-  setMixedCashAmount?: (val: string) => void;
-  mixedSecondMethod?: 'CARD' | 'TRANSFER';
-  setMixedSecondMethod?: (val: 'CARD' | 'TRANSFER') => void;
+  mixedPaymentLines?: Array<{
+    id: string;
+    paymentMethod: 'CASH' | 'CARD' | 'TRANSFER' | 'WOMPI' | 'CONTRA_ENTREGA';
+    amount: string;
+  }>;
+  setMixedPaymentLines?: React.Dispatch<
+    React.SetStateAction<
+      Array<{
+        id: string;
+        paymentMethod: 'CASH' | 'CARD' | 'TRANSFER' | 'WOMPI' | 'CONTRA_ENTREGA';
+        amount: string;
+      }>
+    >
+  >;
   currentBillingTotal: number;
   isProcessing: boolean;
   handleCompleteSale: () => void;
@@ -97,10 +107,8 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
   setCashAmount,
   isMixedPayment = false,
   setIsMixedPayment,
-  mixedCashAmount = '',
-  setMixedCashAmount,
-  mixedSecondMethod = 'CARD',
-  setMixedSecondMethod,
+  mixedPaymentLines = [],
+  setMixedPaymentLines,
   currentBillingTotal,
   isProcessing,
   handleCompleteSale,
@@ -572,14 +580,23 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
                 {setIsMixedPayment && (
                   <button
                     type="button"
-                    onClick={() => setIsMixedPayment(!isMixedPayment)}
+                    onClick={() => {
+                      const next = !isMixedPayment;
+                      setIsMixedPayment(next);
+                      if (next && setMixedPaymentLines && mixedPaymentLines.length < 2) {
+                        setMixedPaymentLines([
+                          { id: 'line-1', paymentMethod: 'CASH', amount: '' },
+                          { id: 'line-2', paymentMethod: 'CARD', amount: currentBillingTotal.toFixed(2) },
+                        ]);
+                      }
+                    }}
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-black border transition-all cursor-pointer ${
                       isMixedPayment
                         ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
                         : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
                     }`}
                   >
-                    {isMixedPayment ? '✓ Pago Mixto Activo' : '+ Pago Mixto (Efectivo + Otro)'}
+                    {isMixedPayment ? '✓ Pago en Varias Líneas' : '+ Dividir Pago (Varias Líneas)'}
                   </button>
                 )}
               </div>
@@ -612,66 +629,182 @@ export const PosCheckoutModal: React.FC<PosCheckoutModalProps> = ({
               )}
             </div>
 
-            {/* Desglose de Pago Mixto */}
+            {/* Desglose de Pago en Líneas Dinámicas */}
             {isMixedPayment ? (
-              <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 mb-4 space-y-3 shadow-xs">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    1. Monto pagado en Efectivo ($)
-                  </label>
-                  <div className="flex items-center rounded-xl bg-white border border-indigo-300 overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500">
-                    <span className="px-3 py-2 bg-emerald-100 border-r border-emerald-200 text-emerald-900 font-black text-sm select-none">
-                      $
-                    </span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      max={Math.max(0.01, currentBillingTotal - 0.01)}
-                      placeholder="0.00"
-                      value={mixedCashAmount}
-                      onChange={(e) => setMixedCashAmount?.(e.target.value)}
-                      className="w-full px-3 py-1.5 text-sm font-mono font-bold text-slate-900 bg-transparent outline-none"
-                    />
-                  </div>
-                </div>
+              <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 mb-4 space-y-2.5 shadow-xs">
+                {(() => {
+                  const lines =
+                    mixedPaymentLines.length >= 2
+                      ? mixedPaymentLines
+                      : [
+                          { id: 'line-1', paymentMethod: 'CASH' as const, amount: '' },
+                          { id: 'line-2', paymentMethod: 'CARD' as const, amount: currentBillingTotal.toFixed(2) },
+                        ];
+                  const assignedSum = lines.reduce((acc, l) => acc + (parseFloat(l.amount) || 0), 0);
+                  const diff = Number((currentBillingTotal - assignedSum).toFixed(2));
+                  const hasCashLine = lines.some((l) => l.paymentMethod === 'CASH' && (parseFloat(l.amount) || 0) > 0);
+                  const nonCashSum = lines
+                    .filter((l) => l.paymentMethod !== 'CASH')
+                    .reduce((acc, l) => acc + (parseFloat(l.amount) || 0), 0);
 
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-bold text-slate-700">
-                      2. Resto a cobrar con:
-                    </label>
-                    <span className="font-mono text-sm font-black text-indigo-700">
-                      ${Math.max(0, currentBillingTotal - (parseFloat(mixedCashAmount) || 0)).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setMixedSecondMethod?.('CARD')}
-                      className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
-                        mixedSecondMethod === 'CARD'
-                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-                      }`}
-                    >
-                      <CreditCard className="w-4 h-4" />
-                      <span>Tarjeta POS</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setMixedSecondMethod?.('TRANSFER')}
-                      className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
-                        mixedSecondMethod === 'TRANSFER'
-                          ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
-                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-                      }`}
-                    >
-                      <Building className="w-4 h-4" />
-                      <span>Transferencia</span>
-                    </button>
-                  </div>
-                </div>
+                  return (
+                    <>
+                      <div className="space-y-2">
+                        {lines.map((line, idx) => {
+                          const otherLinesSum = lines.reduce(
+                            (acc, l, i) => (i === idx ? acc : acc + (parseFloat(l.amount) || 0)),
+                            0
+                          );
+                          const remainingForThisLine = Math.max(0, Number((currentBillingTotal - otherLinesSum).toFixed(2)));
+
+                          return (
+                            <div
+                              key={line.id}
+                              className="p-2.5 rounded-xl bg-white border border-indigo-200/90 space-y-2 shadow-2xs"
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-[11px] font-black text-slate-700">
+                                  Pago #{idx + 1}
+                                </span>
+                                <div className="flex items-center gap-1.5">
+                                  {remainingForThisLine > 0 &&
+                                    Math.abs((parseFloat(line.amount) || 0) - remainingForThisLine) >= 0.01 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setMixedPaymentLines?.((prev) =>
+                                            prev.map((item, i) =>
+                                              i === idx ? { ...item, amount: remainingForThisLine.toFixed(2) } : item
+                                            )
+                                          );
+                                        }}
+                                        className="px-2 py-0.5 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-[10px] font-bold cursor-pointer"
+                                      >
+                                        Restante (${remainingForThisLine.toFixed(2)})
+                                      </button>
+                                    )}
+                                  {lines.length > 2 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setMixedPaymentLines?.((prev) => prev.filter((_, i) => i !== idx));
+                                      }}
+                                      className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
+                                      title="Quitar línea de pago"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-5 gap-1">
+                                {[
+                                  { id: 'CASH', label: 'Efectivo', activeCls: 'bg-emerald-600 text-white border-emerald-600' },
+                                  { id: 'CARD', label: 'Tarjeta', activeCls: 'bg-indigo-600 text-white border-indigo-600' },
+                                  { id: 'TRANSFER', label: 'Transf.', activeCls: 'bg-purple-600 text-white border-purple-600' },
+                                  { id: 'WOMPI', label: 'Wompi', activeCls: 'bg-violet-600 text-white border-violet-600' },
+                                  { id: 'CONTRA_ENTREGA', label: 'C. Entr.', activeCls: 'bg-blue-600 text-white border-blue-600' },
+                                ].map((m) => {
+                                  const isSel = line.paymentMethod === m.id;
+                                  return (
+                                    <button
+                                      key={m.id}
+                                      type="button"
+                                      onClick={() => {
+                                        setMixedPaymentLines?.((prev) =>
+                                          prev.map((item, i) =>
+                                            i === idx ? { ...item, paymentMethod: m.id as any } : item
+                                          )
+                                        );
+                                      }}
+                                      className={`py-1.5 px-1 rounded-lg text-[10.5px] font-bold border transition-all cursor-pointer truncate ${
+                                        isSel
+                                          ? `${m.activeCls} shadow-2xs`
+                                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                                      }`}
+                                    >
+                                      {m.label}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+
+                              <div className="flex items-center rounded-xl bg-slate-50 border border-slate-300 overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 focus-within:bg-white">
+                                <span className="px-3 py-1.5 bg-slate-200/70 border-r border-slate-300 text-slate-800 font-black text-xs select-none">
+                                  $
+                                </span>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  placeholder="0.00"
+                                  value={line.amount}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setMixedPaymentLines?.((prev) => {
+                                      const next = prev.map((item, i) =>
+                                        i === idx ? { ...item, amount: val } : item
+                                      );
+                                      if (next.length === 2 && idx === 0) {
+                                        const firstNum = parseFloat(val) || 0;
+                                        const rem = Math.max(0, Number((currentBillingTotal - firstNum).toFixed(2)));
+                                        next[1] = { ...next[1], amount: rem > 0 ? rem.toFixed(2) : '' };
+                                      }
+                                      return next;
+                                    });
+                                  }}
+                                  className="w-full px-3 py-1.5 text-sm font-mono font-bold text-slate-900 bg-transparent outline-none"
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="flex items-center justify-between pt-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const currentAssigned = lines.reduce((acc, l) => acc + (parseFloat(l.amount) || 0), 0);
+                            const rem = Math.max(0, Number((currentBillingTotal - currentAssigned).toFixed(2)));
+                            setMixedPaymentLines?.((prev) => [
+                              ...prev,
+                              {
+                                id: `line-${Date.now()}-${prev.length + 1}`,
+                                paymentMethod: 'TRANSFER',
+                                amount: rem > 0 ? rem.toFixed(2) : '',
+                              },
+                            ]);
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-300 text-xs font-black transition-colors cursor-pointer"
+                        >
+                          + Agregar línea de pago
+                        </button>
+
+                        <div className="text-right">
+                          {Math.abs(diff) < 0.01 ? (
+                            <span className="text-xs font-black text-emerald-700 font-mono">
+                              ✓ Cuadrado: ${assignedSum.toFixed(2)}
+                            </span>
+                          ) : diff > 0 ? (
+                            <span className="text-xs font-black text-amber-700 font-mono">
+                              Falta asignar: ${diff.toFixed(2)}
+                            </span>
+                          ) : hasCashLine && nonCashSum <= currentBillingTotal + 0.009 ? (
+                            <span className="text-xs font-black text-emerald-800 font-mono">
+                              Cambio (Efectivo): ${Math.abs(diff).toFixed(2)}
+                            </span>
+                          ) : (
+                            <span className="text-xs font-black text-rose-600 font-mono">
+                              Excede por: ${Math.abs(diff).toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             ) : (
               /* Efectivo recibido */

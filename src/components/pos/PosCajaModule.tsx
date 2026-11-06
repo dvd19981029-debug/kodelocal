@@ -501,8 +501,10 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
     const result: SaleRecord[] = [];
     for (const s of todayInvoicedSales) {
       if (Array.isArray(s.payments) && s.payments.length > 1) {
-        const cashPart = s.payments.find((p) => String(p.paymentMethod || '').toUpperCase() === 'CASH');
-        if (cashPart && Number(cashPart.amount || 0) > 0) {
+        const cashParts = s.payments.filter(
+          (p) => String(p.paymentMethod || '').toUpperCase() === 'CASH' && Number(p.amount || 0) > 0
+        );
+        for (const cashPart of cashParts) {
           const cashAmt = Number(cashPart.amount);
           const cashSub = Number((cashAmt / 1.13).toFixed(2));
           result.push({
@@ -563,8 +565,10 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
     for (const s of todayInvoicedSales) {
       if (isEcommerceWompiSale(s)) continue;
       if (Array.isArray(s.payments) && s.payments.length > 1) {
-        const cardPart = s.payments.find((p) => String(p.paymentMethod || '').toUpperCase() === 'CARD');
-        if (cardPart && Number(cardPart.amount || 0) > 0) {
+        const cardParts = s.payments.filter(
+          (p) => String(p.paymentMethod || '').toUpperCase() === 'CARD' && Number(p.amount || 0) > 0
+        );
+        for (const cardPart of cardParts) {
           result.push({
             ...s,
             total: Number(cardPart.amount),
@@ -1259,9 +1263,15 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
               <button
                 type="button"
                 onClick={() =>
-                  printDailySummaryByPaymentTicketPdf(todayInvoicedSales, {
-                    cashier: getActiveSessionUI().name || 'Caja Principal',
-                  })
+                  printDailySummaryByPaymentTicketPdf(
+                    todayInvoicedSales.map((s) => ({
+                      ...s,
+                      cliente: { ...s.cliente, nombre: resolveCustomerName(s) },
+                    })),
+                    {
+                      cashier: getActiveSessionUI().name || 'Caja Principal',
+                    }
+                  )
                 }
                 className="clay-btn clay-btn-primary px-3.5 py-2 text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer shadow-sm whitespace-nowrap"
                 title="Imprimir ticket de 80mm con la Venta del Día Resumida y el monto por Forma de Pago"
@@ -1796,10 +1806,23 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                                           ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                           : pm === 'CARD'
                                           ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                          : pm === 'WOMPI'
+                                          ? 'bg-violet-50 text-violet-700 border-violet-200'
+                                          : pm === 'CONTRA_ENTREGA'
+                                          ? 'bg-blue-50 text-blue-700 border-blue-200'
                                           : 'bg-purple-50 text-purple-700 border-purple-200'
                                       }`}
                                     >
-                                      {isPcash ? 'Efectivo' : pm === 'CARD' ? 'Tarjeta' : 'Transf.'} ${Number(p.amount || 0).toFixed(2)}
+                                      {isPcash
+                                        ? 'Efectivo'
+                                        : pm === 'CARD'
+                                        ? 'Tarjeta'
+                                        : pm === 'WOMPI'
+                                        ? 'Wompi'
+                                        : pm === 'CONTRA_ENTREGA'
+                                        ? 'Contra Ent.'
+                                        : 'Transf.'}{' '}
+                                      ${Number(p.amount || 0).toFixed(2)}
                                     </span>
                                   );
                                 })}
@@ -1835,7 +1858,33 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                             )}
                           </td>
                           <td className="py-2.5 px-3 text-right font-mono font-black text-xs text-slate-900 whitespace-nowrap">
-                            ${Number(sale.total || 0).toFixed(2)}
+                            {(() => {
+                              const activeFilter = onlyCashToday ? 'CASH' : todayPaymentFilter;
+                              if (activeFilter !== 'ALL' && Array.isArray(sale.payments) && sale.payments.length > 1) {
+                                const matchingSum = sale.payments
+                                  .filter((p) => {
+                                    const pm = String(p.paymentMethod || '').toUpperCase();
+                                    if (activeFilter === 'CASH') return pm === 'CASH';
+                                    if (activeFilter === 'CARD_POS') return pm === 'CARD';
+                                    if (activeFilter === 'TRANSFER') return pm === 'TRANSFER';
+                                    if (activeFilter === 'WOMPI') return pm === 'WOMPI';
+                                    if (activeFilter === 'CONTRA_ENTREGA') return pm === 'CONTRA_ENTREGA';
+                                    return false;
+                                  })
+                                  .reduce((acc, p) => acc + Number(p.amount || 0), 0);
+                                if (matchingSum > 0) {
+                                  return (
+                                    <div>
+                                      <span className="block">${matchingSum.toFixed(2)}</span>
+                                      <span className="text-[9.5px] font-semibold text-slate-400 block">
+                                        de ${Number(sale.total || 0).toFixed(2)}
+                                      </span>
+                                    </div>
+                                  );
+                                }
+                              }
+                              return `$${Number(sale.total || 0).toFixed(2)}`;
+                            })()}
                           </td>
                           <td className="py-2.5 px-3 text-center whitespace-nowrap">
                             <div className="flex items-center justify-center gap-1.5">
@@ -2055,7 +2104,24 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                           )}
                         </td>
                         <td className="py-2.5 px-3 text-slate-600 font-bold text-[11px]">
-                          {sale.paymentMethod === 'CASH'
+                          {Array.isArray(sale.payments) && sale.payments.length > 1
+                            ? sale.payments
+                                .map((p) => {
+                                  const pm = String(p.paymentMethod || 'CASH').toUpperCase();
+                                  const lbl =
+                                    pm === 'CASH'
+                                      ? 'Efectivo'
+                                      : pm === 'CARD'
+                                      ? 'Tarjeta'
+                                      : pm === 'WOMPI'
+                                      ? 'Wompi'
+                                      : pm === 'CONTRA_ENTREGA'
+                                      ? 'Contra Ent.'
+                                      : 'Transf.';
+                                  return `${lbl} $${Number(p.amount || 0).toFixed(2)}`;
+                                })
+                                .join(' + ')
+                            : sale.paymentMethod === 'CASH'
                             ? 'Efectivo'
                             : isEcommerceWompiSale(sale)
                             ? 'Wompi / Ecommerce'

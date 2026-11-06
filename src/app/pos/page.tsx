@@ -183,8 +183,16 @@ export default function PosPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH');
   const [cashAmount, setCashAmount] = useState<string>('');
   const [isMixedPayment, setIsMixedPayment] = useState(false);
-  const [mixedCashAmount, setMixedCashAmount] = useState<string>('');
-  const [mixedSecondMethod, setMixedSecondMethod] = useState<'CARD' | 'TRANSFER'>('CARD');
+  const [mixedPaymentLines, setMixedPaymentLines] = useState<
+    Array<{
+      id: string;
+      paymentMethod: 'CASH' | 'CARD' | 'TRANSFER' | 'WOMPI' | 'CONTRA_ENTREGA';
+      amount: string;
+    }>
+  >([
+    { id: 'line-1', paymentMethod: 'CASH', amount: '' },
+    { id: 'line-2', paymentMethod: 'CARD', amount: '' },
+  ]);
   const [tipoComprobante, setTipoComprobante] = useState<TipoComprobante>('01');
   
   // Datos de cliente en venta activa
@@ -2756,8 +2764,10 @@ export default function PosPage() {
       setCashAmount('');
     }
     setIsMixedPayment(false);
-    setMixedCashAmount('');
-    setMixedSecondMethod('CARD');
+    setMixedPaymentLines([
+      { id: 'line-1', paymentMethod: 'CASH', amount: '' },
+      { id: 'line-2', paymentMethod: 'CARD', amount: order.total.toFixed(2) },
+    ]);
     setIsCheckoutOpen(true);
   };
 
@@ -2809,12 +2819,78 @@ export default function PosPage() {
 
     if (itemsToBill.length === 0) return;
 
-    const mixedCashNum = parseFloat(mixedCashAmount);
+    let resolvedPayments: Array<{ paymentMethod: string; amount: number }> | undefined = undefined;
+    let mixedCashReceived: number | undefined = undefined;
+    let mixedChangeAmount: number | undefined = undefined;
+
     if (isMixedPayment && !isOrderAlreadyPaid) {
-      if (isNaN(mixedCashNum) || mixedCashNum <= 0 || mixedCashNum >= totalToBill) {
-        alert('En Pago Mixto, ingresa un monto en efectivo mayor a $0.00 y menor al total a pagar.');
+      const validLines = mixedPaymentLines
+        .map((l) => ({
+          paymentMethod: l.paymentMethod,
+          amount: Number((parseFloat(l.amount) || 0).toFixed(2)),
+        }))
+        .filter((l) => l.amount > 0);
+
+      if (validLines.length === 0) {
+        alert('Ingresa al menos un monto válido en las líneas de pago.');
         return;
       }
+
+      const totalAssigned = Number(validLines.reduce((acc, l) => acc + l.amount, 0).toFixed(2));
+      const nonCashAssigned = Number(
+        validLines
+          .filter((l) => l.paymentMethod !== 'CASH')
+          .reduce((acc, l) => acc + l.amount, 0)
+          .toFixed(2)
+      );
+      const cashAssigned = Number(
+        validLines
+          .filter((l) => l.paymentMethod === 'CASH')
+          .reduce((acc, l) => acc + l.amount, 0)
+          .toFixed(2)
+      );
+
+      if (totalAssigned + 0.009 < totalToBill) {
+        alert(
+          `La suma de las líneas de pago ($${totalAssigned.toFixed(2)}) es menor al total a pagar ($${totalToBill.toFixed(2)}).`
+        );
+        return;
+      }
+
+      if (nonCashAssigned > totalToBill + 0.009) {
+        alert(
+          `Los pagos que no son en efectivo ($${nonCashAssigned.toFixed(2)}) no pueden exceder el total de la venta ($${totalToBill.toFixed(2)}).`
+        );
+        return;
+      }
+
+      if (totalAssigned > totalToBill + 0.009 && cashAssigned <= 0) {
+        alert(
+          `La suma de las líneas de pago ($${totalAssigned.toFixed(2)}) excede el total ($${totalToBill.toFixed(2)}).`
+        );
+        return;
+      }
+
+      const overage = Math.max(0, Number((totalAssigned - totalToBill).toFixed(2)));
+      if (cashAssigned > 0) {
+        mixedCashReceived = cashAssigned;
+        mixedChangeAmount = overage > 0 ? overage : 0;
+      }
+
+      let remainingOverageToDeduct = overage;
+      resolvedPayments = validLines
+        .map((l) => {
+          if (l.paymentMethod === 'CASH' && remainingOverageToDeduct > 0) {
+            const deduct = Math.min(l.amount, remainingOverageToDeduct);
+            remainingOverageToDeduct = Number((remainingOverageToDeduct - deduct).toFixed(2));
+            return {
+              paymentMethod: l.paymentMethod,
+              amount: Number((l.amount - deduct).toFixed(2)),
+            };
+          }
+          return l;
+        })
+        .filter((l) => l.amount > 0);
     } else if (paymentMethod === 'CASH' && !isOrderAlreadyPaid) {
       const parsed = parseFloat(cashAmount);
       if (isNaN(parsed) || parsed < totalToBill) {
@@ -2823,24 +2899,26 @@ export default function PosPage() {
       }
     }
 
-    const resolvedPayments =
-      isMixedPayment && !isOrderAlreadyPaid
-        ? [
-            { paymentMethod: 'CASH', amount: Number(mixedCashNum.toFixed(2)) },
-            { paymentMethod: mixedSecondMethod, amount: Number((totalToBill - mixedCashNum).toFixed(2)) },
-          ]
-        : undefined;
+    const effectiveMainPaymentMethod: PaymentMethod =
+      isMixedPayment && resolvedPayments && resolvedPayments.length > 0
+        ? ((resolvedPayments.find((p) => p.paymentMethod !== 'CASH')?.paymentMethod ||
+            resolvedPayments[0].paymentMethod) as PaymentMethod)
+        : paymentMethod;
 
     invoicingLockRef.current = true;
     setIsProcessing(true);
     try {
 
     const parsedCash = isMixedPayment
-      ? Number(mixedCashNum.toFixed(2))
+      ? mixedCashReceived
       : paymentMethod === 'CASH'
       ? parseFloat(cashAmount)
       : undefined;
-    const changeAmount = !isMixedPayment && parsedCash ? parsedCash - totalToBill : undefined;
+    const changeAmount = isMixedPayment
+      ? mixedChangeAmount
+      : parsedCash
+      ? parsedCash - totalToBill
+      : undefined;
     const staffToken = await getStaffToken().catch(() => null);
 
     let resolvedCheckoutCustomerId = selectedCustomerId || (isOrderFromWindow ? (orderToInvoice.cliente as any)?.id : undefined) || undefined;
@@ -2998,7 +3076,7 @@ export default function PosPage() {
             status: 'COMPLETED',
             invoicedAt: new Date().toISOString(),
             cajero: getActiveSessionUI().name,
-            paymentMethod: isMixedPayment ? mixedSecondMethod : paymentMethod,
+            paymentMethod: effectiveMainPaymentMethod,
             payments: resolvedPayments,
             cashReceived: parsedCash,
             cashChange: changeAmount,
@@ -3105,7 +3183,7 @@ export default function PosPage() {
               saleNumber: orderToInvoice.saleNumber,
               orderStatus: 'COMPLETED',
               paymentStatus: 'COMPLETED',
-              paymentMethod: isMixedPayment ? mixedSecondMethod : paymentMethod,
+              paymentMethod: effectiveMainPaymentMethod,
               payments: resolvedPayments,
               cashReceived: parsedCash,
               cashChange: changeAmount,
@@ -3163,7 +3241,7 @@ export default function PosPage() {
         total: cartSubtotal,
         subtotal: subtotalNeto,
         ivaTotal: ivaCalculado,
-        paymentMethod: isMixedPayment ? mixedSecondMethod : paymentMethod,
+        paymentMethod: effectiveMainPaymentMethod,
         payments: resolvedPayments,
         cashReceived: parsedCash,
         cashChange: changeAmount,
@@ -3561,6 +3639,11 @@ export default function PosPage() {
                   onOpenQuoteHistory={() => setPosTab('prefacturas')}
                   onOpenCheckout={() => {
                     setOrderToInvoice(null);
+                    setIsMixedPayment(false);
+                    setMixedPaymentLines([
+                      { id: 'line-1', paymentMethod: 'CASH', amount: '' },
+                      { id: 'line-2', paymentMethod: 'CARD', amount: cartSubtotal.toFixed(2) },
+                    ]);
                     if (isOrderDomicilio) {
                       setPaymentMethod(
                         domicilioPaymentMode === 'TARJETA'
@@ -3621,6 +3704,11 @@ export default function PosPage() {
                       type="button"
                       onClick={() => {
                         setOrderToInvoice(null);
+                        setIsMixedPayment(false);
+                        setMixedPaymentLines([
+                          { id: 'line-1', paymentMethod: 'CASH', amount: '' },
+                          { id: 'line-2', paymentMethod: 'CARD', amount: cartSubtotal.toFixed(2) },
+                        ]);
                         setIsCheckoutOpen(true);
                       }}
                       className="clay-btn clay-btn-success py-1.5 px-2.5 text-xs font-bold rounded-xl shadow-xs"
@@ -3711,6 +3799,11 @@ export default function PosPage() {
                       onOpenCheckout={() => {
                         setIsMobileCartOpen(false);
                         setOrderToInvoice(null);
+                        setIsMixedPayment(false);
+                        setMixedPaymentLines([
+                          { id: 'line-1', paymentMethod: 'CASH', amount: '' },
+                          { id: 'line-2', paymentMethod: 'CARD', amount: cartSubtotal.toFixed(2) },
+                        ]);
                         if (isOrderDomicilio) {
                           setPaymentMethod(
                             domicilioPaymentMode === 'TARJETA'
@@ -3983,10 +4076,8 @@ export default function PosPage() {
         setCashAmount={setCashAmount}
         isMixedPayment={isMixedPayment}
         setIsMixedPayment={setIsMixedPayment}
-        mixedCashAmount={mixedCashAmount}
-        setMixedCashAmount={setMixedCashAmount}
-        mixedSecondMethod={mixedSecondMethod}
-        setMixedSecondMethod={setMixedSecondMethod}
+        mixedPaymentLines={mixedPaymentLines}
+        setMixedPaymentLines={setMixedPaymentLines}
         currentBillingTotal={currentBillingTotal}
         isProcessing={isProcessing}
         handleCompleteSale={handleCompleteSale}

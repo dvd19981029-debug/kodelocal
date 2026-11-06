@@ -122,6 +122,30 @@ export const PosSaleDetailModal: React.FC<PosSaleDetailModalProps> = ({
               <span>Total:</span>
               <span className="font-mono text-indigo-600">${sale.total.toFixed(2)}</span>
             </div>
+            {Array.isArray(sale.payments) && sale.payments.length > 1 && (
+              <div className="pt-1.5 border-t border-indigo-100 space-y-0.5 text-[11px]">
+                <span className="font-bold text-slate-600 block">Desglose de Pagos:</span>
+                {sale.payments.map((p, idx) => {
+                  const pm = String(p.paymentMethod || 'CASH').toUpperCase();
+                  const lbl =
+                    pm === 'CASH'
+                      ? 'Efectivo'
+                      : pm === 'CARD'
+                      ? 'Tarjeta POS'
+                      : pm === 'WOMPI'
+                      ? 'Wompi / Ecommerce'
+                      : pm === 'CONTRA_ENTREGA'
+                      ? 'Contra Entrega'
+                      : 'Transferencia';
+                  return (
+                    <div key={idx} className="flex justify-between text-slate-700">
+                      <span>• {lbl}:</span>
+                      <span className="font-mono font-bold">${Number(p.amount || 0).toFixed(2)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {sale.dteInfo && (
