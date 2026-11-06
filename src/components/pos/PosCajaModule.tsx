@@ -215,6 +215,30 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
   const [isPerformedByDropdownOpen, setIsPerformedByDropdownOpen] = useState(false);
   const [isAuthDropdownOpen, setIsAuthDropdownOpen] = useState(false);
 
+  // Estado para Modal de Conteo Efectivo
+  const [isCashCountModalOpen, setIsCashCountModalOpen] = useState(false);
+  const [cashCounts, setCashCounts] = useState<Record<string, string>>({});
+
+  const CASH_DENOMINATIONS = [
+    { key: 'b50', label: 'Billetes de 50', value: 50 },
+    { key: 'b20', label: 'Billetes de 20', value: 20 },
+    { key: 'b10', label: 'Billetes de 10', value: 10 },
+    { key: 'b5', label: 'Billetes de 5', value: 5 },
+    { key: 'b1', label: 'Billetes de 1', value: 1 },
+    { key: 'm1', label: 'Monedas de 1', value: 1 },
+    { key: 'm025', label: 'Moneda de 0.25', value: 0.25 },
+    { key: 'm010', label: 'Moneda de 0.10', value: 0.1 },
+    { key: 'm005', label: 'Moneda de 0.05', value: 0.05 },
+    { key: 'm001', label: 'Moneda de 0.01', value: 0.01 },
+  ] as const;
+
+  const cashCountTotal = useMemo(() => {
+    return CASH_DENOMINATIONS.reduce((sum, d) => {
+      const qty = parseInt(cashCounts[d.key] || '0', 10);
+      return sum + (isNaN(qty) || qty < 0 ? 0 : qty * d.value);
+    }, 0);
+  }, [cashCounts]);
+
   const todayMovementTotals = useMemo(() => {
     let ingresos = 0;
     let retiros = 0;
@@ -965,6 +989,15 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
               >
                 <PlusCircle className="w-4 h-4 shrink-0" />
                 <span>Retiro / Abono</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsCashCountModalOpen(true)}
+                className="px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer border bg-sky-600 hover:bg-sky-700 text-white border-sky-600 shadow-sm whitespace-nowrap"
+              >
+                <Calculator className="w-4 h-4 shrink-0" />
+                <span>Conteo Efectivo</span>
               </button>
             </div>
 
@@ -2108,6 +2141,83 @@ export const PosCajaModule: React.FC<PosCajaModuleProps> = React.memo(({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para Conteo Efectivo */}
+      {isCashCountModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+          <div className="clay-card bg-white w-full max-w-md p-6 space-y-4 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-black text-slate-900">Conteo Efectivo</h3>
+                <p className="text-xs text-slate-500">Cantidad por denominación en caja</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCashCountModalOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="divide-y divide-slate-100 border border-slate-200/80 rounded-2xl px-3 py-1 bg-slate-50/40 max-h-[60vh] overflow-y-auto">
+              {CASH_DENOMINATIONS.map((denom) => {
+                const rawVal = cashCounts[denom.key] ?? '';
+                const qty = parseInt(rawVal || '0', 10);
+                const subtotal = isNaN(qty) || qty < 0 ? 0 : qty * denom.value;
+                return (
+                  <div key={denom.key} className="py-2 flex items-center justify-between gap-3">
+                    <span className="text-xs font-bold text-slate-700 flex-1">{denom.label}</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={rawVal}
+                      onChange={(e) =>
+                        setCashCounts((prev) => ({
+                          ...prev,
+                          [denom.key]: e.target.value,
+                        }))
+                      }
+                      placeholder="0"
+                      className="clay-input w-24 text-xs font-black text-center py-1.5 px-2"
+                    />
+                    <span className="w-20 text-right font-mono text-xs font-black text-slate-700">
+                      ${subtotal.toFixed(2)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-emerald-50 border border-emerald-200">
+              <span className="text-xs font-black uppercase tracking-wider text-emerald-800">
+                Total Conteo
+              </span>
+              <span className="text-xl font-black font-mono text-emerald-700">
+                ${cashCountTotal.toFixed(2)}
+              </span>
+            </div>
+
+            <div className="flex gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => setCashCounts({})}
+                className="clay-btn clay-btn-light flex-1 py-2.5 text-xs font-bold cursor-pointer"
+              >
+                Limpiar
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsCashCountModalOpen(false)}
+                className="clay-btn clay-btn-primary flex-1 py-2.5 text-xs font-black cursor-pointer"
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
         </div>
       )}
