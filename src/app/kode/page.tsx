@@ -1158,6 +1158,7 @@ export default function KodeSystemPage() {
                   onVolver={() => setVentasView('hub')}
                   onRefresh={() => {
                     fetchPedidos();
+                    fetchInsumos();
                     showToast('Actualizando pedidos...', 'info');
                   }}
                   onGenerarGuia={handleGenerarGuiaDirecta}
@@ -1253,6 +1254,8 @@ export default function KodeSystemPage() {
                   onSelectView={(view) => {
                     setSelectedPedidoIdFab(null);
                     setFabView(view);
+                    fetchPedidos();
+                    fetchInsumos();
                   }}
                 />
               )}
