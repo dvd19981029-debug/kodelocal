@@ -2997,7 +2997,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "imageUrl": "/images/esencias/esencia_95.webp?v=aroma_official_v4",
     "description": "Inspirado en LIGHT BLUE DOLCE & GABBANA",
     "isAvailableOnline": true,
-    "puesto": "A1",
+    "puesto": "B7",
     "stockHalf": 11
   },
   {
@@ -3019,7 +3019,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "imageUrl": "/images/esencias/esencia_96.webp?v=aroma_official_v4",
     "description": "Inspirado en MISS DIOR",
     "isAvailableOnline": true,
-    "puesto": "A1",
+    "puesto": "B7",
     "stockHalf": 7
   },
   {
@@ -3151,7 +3151,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "imageUrl": "/images/esencias/esencia_102.webp?v=aroma_official_v4",
     "description": "Inspirado en VALENTINO UOMO",
     "isAvailableOnline": true,
-    "puesto": "A1",
+    "puesto": "B9",
     "stockHalf": 9
   },
   {
