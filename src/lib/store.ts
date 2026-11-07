@@ -2886,13 +2886,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.93,
-    "stock": 0,
+    "stock": 32,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_92.webp?v=aroma_official_v4",
     "description": "Inspirado en ALLURE HOMME SPORT CHANEL",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 10
   },
   {
     "id": "esencia-apae-093",
