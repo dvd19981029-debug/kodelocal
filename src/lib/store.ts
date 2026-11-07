@@ -3146,13 +3146,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 2.03,
-    "stock": 0,
+    "stock": 32,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_102.webp?v=aroma_official_v4",
     "description": "Inspirado en VALENTINO UOMO",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 9
   },
   {
     "id": "esencia-apae-103",
