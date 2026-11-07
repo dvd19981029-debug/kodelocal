@@ -2909,7 +2909,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "imageUrl": "/images/esencias/esencia_91.webp?v=aroma_official_v4",
     "description": "Inspirado en EROS FLAME VERSACE",
     "isAvailableOnline": true,
-    "puesto": "A1",
+    "puesto": "B9",
     "stockHalf": 3
   },
   {
@@ -2931,7 +2931,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "imageUrl": "/images/esencias/esencia_92.webp?v=aroma_official_v4",
     "description": "Inspirado en ALLURE HOMME SPORT CHANEL",
     "isAvailableOnline": true,
-    "puesto": "A1",
+    "puesto": "B8",
     "stockHalf": 10
   },
   {
@@ -2953,7 +2953,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "imageUrl": "/images/esencias/esencia_93.webp?v=aroma_official_v4",
     "description": "Inspirado en BHARARA KING",
     "isAvailableOnline": true,
-    "puesto": "A1",
+    "puesto": "B8",
     "stockHalf": 0
   },
   {
@@ -2975,7 +2975,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "imageUrl": "/images/esencias/esencia_94.webp?v=aroma_official_v4",
     "description": "Inspirado en INVICTUS VICTORY PACO RABANNE",
     "isAvailableOnline": true,
-    "puesto": "A1",
+    "puesto": "B8",
     "stockHalf": 3
   },
   {
@@ -3107,7 +3107,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "imageUrl": "/images/esencias/esencia_100.webp?v=aroma_official_v4",
     "description": "Inspirado en DYLAN BLUE VERSACE",
     "isAvailableOnline": true,
-    "puesto": "A1",
+    "puesto": "B8",
     "stockHalf": 9
   },
   {
@@ -3195,7 +3195,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "imageUrl": "/images/esencias/esencia_104.webp?v=aroma_official_v4",
     "description": "Inspirado en 212 VIP BLACK CAROLINA HERRERA",
     "isAvailableOnline": true,
-    "puesto": "A1",
+    "puesto": "B9",
     "stockHalf": 8
   },
   {
