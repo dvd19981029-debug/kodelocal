@@ -56,7 +56,7 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
   const baseSlides: PromoSlide[] = [
     {
       id: 'promo-nuevos-insumos',
-      imageUrl: '/images/promo/banner_nuevos_insumos.webp?v=1',
+      imageUrl: '/images/promo/banner_nuevos_insumos.webp?v=3',
       imageAlt: 'Conoce los nuevos insumos: Piseta dosificadora, mini embudos, cajas y alcohol perfumero - Aromaniak',
       action: 'insumos',
     },
@@ -341,9 +341,9 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
                     src={slide.imageUrl}
                     alt={slide.imageAlt}
                     className="w-full h-full object-fill transform group-hover:scale-[1.01] transition-transform duration-700"
-                    loading={isInitialVisible ? 'eager' : 'lazy'}
-                    fetchPriority={isInitialVisible ? 'high' : 'low'}
-                    decoding={isInitialVisible ? 'sync' : 'async'}
+                    loading="eager"
+                    fetchPriority={isInitialVisible ? 'high' : 'auto'}
+                    decoding="async"
                   />
                 )}
               </div>
