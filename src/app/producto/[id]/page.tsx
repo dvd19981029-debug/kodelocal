@@ -27,7 +27,7 @@ import { getProductImage } from '@/lib/perfumeImages';
 import { getFragranceProfile, getFragranceAccordBars } from '@/lib/fragranceProfiles';
 import ProductCard from '@/components/ecommerce/ProductCard';
 import FragranceNotesVisual from '@/components/ecommerce/FragranceNotesVisual';
-import { getInspiracionPerfumeName, formatPerfumeDisplayName, getBottleLabelConfig, isIncomingEssence } from '@/lib/perfumeNames';
+import { getInspiracionPerfumeName, formatPerfumeDisplayName, getBottleLabelConfig, isIncomingEssence, isNewEssence } from '@/lib/perfumeNames';
 import {
   getCricutStickerEntryForProduct,
   getStickerFooterClassification,
@@ -497,7 +497,17 @@ export default function ProductDetailPage() {
               </div>
 
               {/* Badge Disponibilidad */}
-              <div className="absolute top-3 right-3 z-10">
+              <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1.5">
+                {isEssence && isNewEssence(product) && (
+                  <span className="gold-ticket-wrap">
+                    <span className="gold-ticket-badge text-[10px] sm:text-[11px] font-black tracking-wider uppercase !py-1 !px-2.5">
+                      <span className="relative z-10 flex items-center pr-1.5 border-r border-dashed border-amber-900/35">
+                        <Sparkles className="w-3 h-3 text-amber-950 fill-amber-700/30 shrink-0" />
+                      </span>
+                      <span className="gold-ticket-text pl-0.5">Nuevo</span>
+                    </span>
+                  </span>
+                )}
                 {isOutOfStock ? (
                   <span className="bg-slate-900 text-white text-xs font-black py-1 px-3 rounded-lg shadow-md uppercase tracking-wider">
                     {isIncoming ? 'En camino' : 'Agotado'}

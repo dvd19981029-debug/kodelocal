@@ -7,7 +7,7 @@ import { ProductItem, INITIAL_PRODUCTS } from '@/lib/store';
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation, getEssenceDiscreteStock, getBottleAvailableStock } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { getProductImage } from '@/lib/perfumeImages';
-import { getInspiracionPerfumeName, formatPerfumeDisplayName, getBottleLabelConfig, isIncomingEssence } from '@/lib/perfumeNames';
+import { getInspiracionPerfumeName, formatPerfumeDisplayName, getBottleLabelConfig, isIncomingEssence, isNewEssence } from '@/lib/perfumeNames';
 import { getProductUrl } from '@/lib/productUrl';
 import {
   isHalloweenPromoProduct,
@@ -140,6 +140,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
   const isBottle = product.category === 'Botes' || product.category === 'Botes & Envases';
   const isSticker = product.category === 'Stickers' || String(product.id || '').startsWith('sticker-');
   const isIncoming = isBottle || (isEssence && isIncomingEssence(product));
+  const isNewEssenceItem = isEssence && isNewEssence(product);
   const [stickerBottleIdx, setStickerBottleIdx] = useState<number | null>(null);
   const activeStickerBottle =
     isSticker && stickerBottleIdx !== null
@@ -326,12 +327,24 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
               </div>
             )}
 
-            {/* Badge Agotado / En camino en esquina superior derecha */}
-            {isOutOfStock && (
-              <div className="absolute top-2 right-2 z-10">
-                <span className="bg-slate-900 text-white text-[8px] sm:text-[9px] font-black py-0.5 px-2 rounded-md shadow-md tracking-wider uppercase">
-                  {isIncoming ? 'En camino' : 'Agotado'}
-                </span>
+            {/* Badge Nuevo / Agotado / En camino en esquina superior derecha */}
+            {(isNewEssenceItem || isOutOfStock) && (
+              <div className="absolute top-2 right-2 z-10 flex flex-col items-end gap-1 pointer-events-none">
+                {isNewEssenceItem && (
+                  <span className="gold-ticket-wrap">
+                    <span className="gold-ticket-badge text-[8px] sm:text-[9px] font-black tracking-wider uppercase">
+                      <span className="relative z-10 flex items-center pr-1 border-r border-dashed border-amber-900/35">
+                        <Sparkles className="w-2.5 h-2.5 text-amber-950 fill-amber-700/30 shrink-0" />
+                      </span>
+                      <span className="gold-ticket-text pl-0.5">Nuevo</span>
+                    </span>
+                  </span>
+                )}
+                {isOutOfStock && (
+                  <span className="bg-slate-900 text-white text-[8px] sm:text-[9px] font-black py-0.5 px-2 rounded-md shadow-md tracking-wider uppercase">
+                    {isIncoming ? 'En camino' : 'Agotado'}
+                  </span>
+                )}
               </div>
             )}
 

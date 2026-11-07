@@ -17,7 +17,7 @@ import {
 import { ProductItem } from '@/lib/store';
 import { MOCK_100ML_BOTTLES } from '@/lib/bottles';
 import { useEcommerceCart, getEssenceDiscreteStock, getBottleAvailableStock } from '@/context/EcommerceCartContext';
-import { getInspiracionPerfumeName, formatPerfumeDisplayName } from '@/lib/perfumeNames';
+import { getInspiracionPerfumeName, formatPerfumeDisplayName, isNewEssence } from '@/lib/perfumeNames';
 import { getProductImage } from '@/lib/perfumeImages';
 
 interface PerfumeKitBuilderModalProps {
@@ -441,10 +441,17 @@ export default function PerfumeKitBuilderModal({
                                 />
                               </div>
                               <div className="min-w-0 flex-1">
-                                <div className="flex items-center justify-between text-[8.5px] text-slate-400 font-bold mb-0.5">
+                                <div className="flex items-center justify-between gap-1 text-[8.5px] text-slate-400 font-bold mb-0.5">
                                   {essence.gender && (
                                     <span className="uppercase text-purple-700 bg-purple-100/70 px-1 py-0.2 rounded font-black text-[8px]">
                                       {essence.gender === 'Caballero' ? 'Hombre' : essence.gender}
+                                    </span>
+                                  )}
+                                  {isNewEssence(essence) && (
+                                    <span className="gold-ticket-wrap">
+                                      <span className="gold-ticket-badge text-[7.5px] font-black tracking-wider uppercase !py-0.5 !px-1.5">
+                                        <span className="gold-ticket-text">Nuevo</span>
+                                      </span>
                                     </span>
                                   )}
                                 </div>

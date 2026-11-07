@@ -238,6 +238,13 @@ export function isIncomingEssence(product: { id?: string | null; sku?: string | 
   return false;
 }
 
+export function isNewEssence(product: { id?: string | null; sku?: string | null; category?: string | null } | null | undefined): boolean {
+  if (!product) return false;
+  const id = String(product.id || '').trim().toLowerCase();
+  if (product.category === 'Stickers' || id.startsWith('sticker-')) return false;
+  return isIncomingEssence(product);
+}
+
 // Alias de retrocompatibilidad
 export const ORIGINAL_PERFUME_MAP = INSPIRACION_PERFUME_MAP;
 
