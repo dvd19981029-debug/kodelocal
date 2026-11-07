@@ -2908,7 +2908,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 2.03,
-    "stock": 0,
+    "stock": 33,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_93.webp?v=aroma_official_v4",
     "description": "Inspirado en BHARARA KING",
