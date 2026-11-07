@@ -1952,7 +1952,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "id": "piseta-dosificadora-250ml",
     "sku": "INS-PIS-250",
     "barcode": "741999000INS-PIS-250",
-    "name": "Piseta Dosificadora con Pico Curvo (Frasco Lavador 250ml)",
+    "name": "Piseta Dosificadora 250ml (Perfecta para alcohol perfumero)",
     "officialName": "Piseta Dosificadora 250ml",
     "brand": "",
     "gender": "Unisex",
@@ -1963,7 +1963,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "stock": 72,
     "minStock": 10,
     "imageUrl": "/images/insumos/piseta_dosificadora_250ml.jpg",
-    "description": "Piseta dosificadora flexible con pico curvo para verter alcohol perfumero y formular perfumes con precisión sin derrames.",
+    "description": "Perfecta para alcohol perfumero • Con pico curvo para verter sin derrames",
     "isAvailableOnline": true,
     "puesto": "C2",
     "stockHalf": 0
