@@ -3190,13 +3190,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.98,
-    "stock": 0,
+    "stock": 30,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_104.webp?v=aroma_official_v4",
     "description": "Inspirado en 212 VIP BLACK CAROLINA HERRERA",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 8
   },
   {
     "id": "esencia-apae-105",
