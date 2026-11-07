@@ -2952,13 +2952,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.88,
-    "stock": 0,
+    "stock": 32,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_95.webp?v=aroma_official_v4",
     "description": "Inspirado en LIGHT BLUE DOLCE & GABBANA",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 11
   },
   {
     "id": "esencia-apae-096",
@@ -2974,13 +2974,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 1.98,
-    "stock": 0,
+    "stock": 33,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_96.webp?v=aroma_official_v4",
     "description": "Inspirado en MISS DIOR",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 7
   },
   {
     "id": "esencia-apae-097",
