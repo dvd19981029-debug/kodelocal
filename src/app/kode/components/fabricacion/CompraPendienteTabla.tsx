@@ -46,10 +46,37 @@ export function CompraPendienteTabla({
 
   const insumosSplitPane = useMemo(() => {
     const activeInsumos = insumos.filter((item) => pedidosRojosIds.has(item.pedido_id));
+    const existingItemIds = new Set(activeInsumos.map((item) => item.item_id));
+
+    // Respaldo inmediato desde pedidosRojos.items por si la lista de insumos aún no se ha sincronizado
+    const fallbackInsumos: InsumoItem[] = [];
+    pedidosRojos.forEach((p) => {
+      (p.items || []).forEach((it) => {
+        if (!it.insumo_comprado && it.id && !existingItemIds.has(it.id)) {
+          fallbackInsumos.push({
+            item_id: it.id,
+            pedido_id: p.id,
+            numero_pedido: p.numero_pedido,
+            pedido_estado: p.estado,
+            cliente_nombre: p.cliente_nombre,
+            fecha_registro: p.created_at,
+            catalogo_id: it.catalogo_id,
+            codigo: it.codigo,
+            contratipo: it.contratipo,
+            marca_inspirada: it.marca,
+            genero: it.genero,
+            version: it.version,
+            cantidad: it.cantidad,
+          });
+        }
+      });
+    });
+
+    const combinedInsumos = [...activeInsumos, ...fallbackInsumos];
 
     const list = selectedPedidoId
-      ? activeInsumos.filter((item) => item.pedido_id === selectedPedidoId)
-      : [...activeInsumos];
+      ? combinedInsumos.filter((item) => item.pedido_id === selectedPedidoId)
+      : combinedInsumos;
 
     return [...list].sort((a, b) => {
       if (sortInsumos.column === 'kodigo') {

@@ -383,6 +383,7 @@ export default function KodeSystemPage() {
       if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
         lastKodeFetch = Date.now();
         fetchPedidos();
+        fetchInsumos();
       }
     }, 120000);
 
@@ -390,6 +391,7 @@ export default function KodeSystemPage() {
       if (document.visibilityState === 'visible' && Date.now() - lastKodeFetch > 60000) {
         lastKodeFetch = Date.now();
         fetchPedidos();
+        fetchInsumos();
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);
