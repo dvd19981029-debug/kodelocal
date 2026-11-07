@@ -14,6 +14,7 @@ interface PromoSlide {
     | 'bruja-halloween'
     | 'blog-como-hacer-perfume'
     | 'blog-importancia-macerar'
+    | 'insumos'
     | 'emprendedor'
     | 'aromas'
     | 'arma-tu-perfume'
@@ -53,6 +54,12 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
   ];
 
   const baseSlides: PromoSlide[] = [
+    {
+      id: 'promo-nuevos-insumos',
+      imageUrl: '/images/promo/banner_nuevos_insumos.webp?v=1',
+      imageAlt: 'Conoce los nuevos insumos: Piseta dosificadora, mini embudos, cajas y alcohol perfumero - Aromaniak',
+      action: 'insumos',
+    },
     {
       id: 'promo-emprendedor',
       imageUrl: '/images/promo/banner_emprendedor.webp',
@@ -179,6 +186,10 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
     } else if (action === 'arma-tu-perfume') {
       if (onFilterCategory) {
         onFilterCategory('Arma tu perfume');
+      }
+    } else if (action === 'insumos') {
+      if (onFilterCategory) {
+        onFilterCategory('Insumos');
       }
     } else if (action === 'botes') {
       if (onFilterCategory) {
