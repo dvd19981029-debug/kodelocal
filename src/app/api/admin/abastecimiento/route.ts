@@ -107,6 +107,21 @@ const DEFAULT_APAESA_CATALOG: SupplierCatalogEntry[] = [
   { sku: '88', id_proveedor: 'APAE-8801', name: 'AZZARO THE MOST WANTED H', contratipo: 'PLAYBOY', price_per_kg: 77.88 },
   { sku: '89', id_proveedor: 'APAE-8901', name: 'PARIS HILTON FOR MEN H', contratipo: 'BEVERLY BOY', price_per_kg: 75.22 },
   { sku: '90', id_proveedor: 'APAE-9001', name: 'BLACK XS PACO RABANNE H', contratipo: 'ROCKSTAR', price_per_kg: 77.88 },
+  { sku: '91', id_proveedor: 'EFH1kg', name: 'EROS FLAME H', contratipo: 'ATREVIDO FLAME', price_per_kg: 70.80 },
+  { sku: '92', id_proveedor: 'ASC1kg', name: 'ALLURE SPORT CHANEL H', contratipo: 'GRAND SPORT', price_per_kg: 68.14 },
+  { sku: '93', id_proveedor: 'BK1kg', name: 'BHARARA KING', contratipo: 'KING ROYALTY', price_per_kg: 71.68 },
+  { sku: '94', id_proveedor: 'IV1kg', name: 'INVICTUS VICTORY', contratipo: 'KICKBOX VICTORY', price_per_kg: 71.68 },
+  { sku: '95', id_proveedor: 'LBF1kg', name: 'LIGHT BLUE F', contratipo: 'OCEAN LADY', price_per_kg: 66.37 },
+  { sku: '96', id_proveedor: 'MDF1kg', name: 'MISS DIOR F', contratipo: 'MADEMOISELLE BLOOM', price_per_kg: 69.91 },
+  { sku: '97', id_proveedor: 'TOH1kg', name: 'THE ONE H', contratipo: 'GOLDEN ONE', price_per_kg: 66.37 },
+  { sku: '98', id_proveedor: 'LAY1kg', name: 'LAYTON', contratipo: 'ROYAL STALLION', price_per_kg: 73.45 },
+  { sku: '99', id_proveedor: 'IVE1kg', name: 'INVICTUS VICTORY ELIXIR', contratipo: 'KICKBOX ELIXIR', price_per_kg: 68.14 },
+  { sku: '100', id_proveedor: 'DBH1kg', name: 'DYLAN BLUE H', contratipo: 'MEDUSA BLUE', price_per_kg: 68.14 },
+  { sku: '101', id_proveedor: 'HBH1kg', name: 'HUGO BOSS H', contratipo: 'GREEN WOLF', price_per_kg: 66.37 },
+  { sku: '102', id_proveedor: 'UH1kg', name: 'UOMO H', contratipo: 'ROMA UOMO', price_per_kg: 71.68 },
+  { sku: '103', id_proveedor: 'SCF1kg', name: 'SCANDAL F', contratipo: 'PARTYGIRL', price_per_kg: 69.91 },
+  { sku: '104', id_proveedor: '212VB1kg', name: '212 VIP BLACK H', contratipo: 'MANHATTAN VIP', price_per_kg: 69.91 },
+  { sku: '105', id_proveedor: 'GGB1kg', name: 'GOOD GIRL BLUSH', contratipo: 'FEMME BLUSH', price_per_kg: 66.37 },
 ];
 
 function checkStaffAuth(request: Request): boolean {

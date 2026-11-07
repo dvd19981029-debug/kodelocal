@@ -378,5 +378,80 @@
     "id_proveedor": "APAE-9001",
     "name": "BLACK XS PACO RABANNE H",
     "price_per_kg": 77.88
+  },
+  {
+    "id_proveedor": "EFH1kg",
+    "name": "EROS FLAME H",
+    "price_per_kg": 70.80
+  },
+  {
+    "id_proveedor": "ASC1kg",
+    "name": "ALLURE SPORT CHANEL H",
+    "price_per_kg": 68.14
+  },
+  {
+    "id_proveedor": "BK1kg",
+    "name": "BHARARA KING",
+    "price_per_kg": 71.68
+  },
+  {
+    "id_proveedor": "IV1kg",
+    "name": "INVICTUS VICTORY",
+    "price_per_kg": 71.68
+  },
+  {
+    "id_proveedor": "LBF1kg",
+    "name": "LIGHT BLUE F",
+    "price_per_kg": 66.37
+  },
+  {
+    "id_proveedor": "MDF1kg",
+    "name": "MISS DIOR F",
+    "price_per_kg": 69.91
+  },
+  {
+    "id_proveedor": "TOH1kg",
+    "name": "THE ONE H",
+    "price_per_kg": 66.37
+  },
+  {
+    "id_proveedor": "LAY1kg",
+    "name": "LAYTON",
+    "price_per_kg": 73.45
+  },
+  {
+    "id_proveedor": "IVE1kg",
+    "name": "INVICTUS VICTORY ELIXIR",
+    "price_per_kg": 68.14
+  },
+  {
+    "id_proveedor": "DBH1kg",
+    "name": "DYLAN BLUE H",
+    "price_per_kg": 68.14
+  },
+  {
+    "id_proveedor": "HBH1kg",
+    "name": "HUGO BOSS H",
+    "price_per_kg": 66.37
+  },
+  {
+    "id_proveedor": "UH1kg",
+    "name": "UOMO H",
+    "price_per_kg": 71.68
+  },
+  {
+    "id_proveedor": "SCF1kg",
+    "name": "SCANDAL F",
+    "price_per_kg": 69.91
+  },
+  {
+    "id_proveedor": "212VB1kg",
+    "name": "212 VIP BLACK H",
+    "price_per_kg": 69.91
+  },
+  {
+    "id_proveedor": "GGB1kg",
+    "name": "GOOD GIRL BLUSH",
+    "price_per_kg": 66.37
   }
 ]

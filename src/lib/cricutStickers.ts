@@ -2414,6 +2414,383 @@ export const CRICUT_STICKERS_CATALOG: CricutStickerCatalogEntry[] = [
       "Palo de rosa",
       "Ébano"
     ]
+  },
+  {
+    "sku": "91",
+    "contratipo": "ATREVIDO FLAME",
+    "nombre": "Eros Flame",
+    "genero": "H",
+    "marca": "Versace",
+    "anio": "2018",
+    "familia": "Amaderada Especiada",
+    "fraseOlfativa": "Mandarina ardiente, pimienta negra y vainilla sensual sobre maderas.",
+    "topNotes": [
+      "Mandarina",
+      "Pimienta negra",
+      "Limón",
+      "Romero"
+    ],
+    "heartNotes": [
+      "Pimienta",
+      "Geranio",
+      "Rosa"
+    ],
+    "baseNotes": [
+      "Vainilla",
+      "Haba tonka",
+      "Sándalo",
+      "Cedro"
+    ]
+  },
+  {
+    "sku": "92",
+    "contratipo": "GRAND SPORT",
+    "nombre": "Allure Homme Sport",
+    "genero": "H",
+    "marca": "Chanel",
+    "anio": "2004",
+    "familia": "Amaderada Especiada",
+    "fraseOlfativa": "Naranja vibrante, brisa marina y aldehídos sobre haba tonka cremosa.",
+    "topNotes": [
+      "Naranja",
+      "Notas marinas",
+      "Aldehídos",
+      "Mandarina"
+    ],
+    "heartNotes": [
+      "Pimienta",
+      "Neroli",
+      "Cedro"
+    ],
+    "baseNotes": [
+      "Haba tonka",
+      "Vainilla",
+      "Almizcle blanco",
+      "Ámbar"
+    ]
+  },
+  {
+    "sku": "93",
+    "contratipo": "KING ROYALTY",
+    "nombre": "Bharara King",
+    "genero": "H",
+    "marca": "Bharara",
+    "anio": "2021",
+    "familia": "Aromática Frutal",
+    "fraseOlfativa": "Cítricos reales, frutas exóticas jugosas y fondo opulento de vainilla.",
+    "topNotes": [
+      "Naranja",
+      "Bergamota",
+      "Limón"
+    ],
+    "heartNotes": [
+      "Notas frutales",
+      "Melón",
+      "Piña"
+    ],
+    "baseNotes": [
+      "Vainilla",
+      "Almizcle blanco",
+      "Ámbar"
+    ]
+  },
+  {
+    "sku": "94",
+    "contratipo": "KICKBOX VICTORY",
+    "nombre": "Invictus Victory",
+    "genero": "H",
+    "marca": "Paco Rabanne",
+    "anio": "2021",
+    "familia": "Ámbar",
+    "fraseOlfativa": "Pimienta rosa y limón chispeante sobre incienso ahumado y vainilla.",
+    "topNotes": [
+      "Pimienta rosa",
+      "Limón"
+    ],
+    "heartNotes": [
+      "Incienso",
+      "Lavanda"
+    ],
+    "baseNotes": [
+      "Vainilla",
+      "Haba tonka",
+      "Ámbar"
+    ]
+  },
+  {
+    "sku": "95",
+    "contratipo": "OCEAN LADY",
+    "nombre": "Light Blue",
+    "genero": "F",
+    "marca": "Dolce & Gabbana",
+    "anio": "2001",
+    "familia": "Floral Frutal",
+    "fraseOlfativa": "Limón de Sicilia, manzana verde crujiente y bambú sobre cedro.",
+    "topNotes": [
+      "Limón siciliano",
+      "Manzana verde",
+      "Cedro",
+      "Campanilla"
+    ],
+    "heartNotes": [
+      "Bambú",
+      "Jazmín",
+      "Rosa blanca"
+    ],
+    "baseNotes": [
+      "Cedro",
+      "Almizcle",
+      "Ámbar"
+    ]
+  },
+  {
+    "sku": "96",
+    "contratipo": "MADEMOISELLE BLOOM",
+    "nombre": "Miss Dior",
+    "genero": "F",
+    "marca": "Dior",
+    "anio": "2021",
+    "familia": "Ámbar Floral",
+    "fraseOlfativa": "Rosa centifolia aterciopelada, peonía e iris sobre vainilla y sándalo.",
+    "topNotes": [
+      "Iris",
+      "Peonía",
+      "Lirio de los valles"
+    ],
+    "heartNotes": [
+      "Rosa",
+      "Durazno",
+      "Albaricoque"
+    ],
+    "baseNotes": [
+      "Vainilla",
+      "Almizcle",
+      "Haba tonka",
+      "Sándalo"
+    ]
+  },
+  {
+    "sku": "97",
+    "contratipo": "GOLDEN ONE",
+    "nombre": "The One",
+    "genero": "H",
+    "marca": "Dolce & Gabbana",
+    "anio": "2008",
+    "familia": "Amaderada Especiada",
+    "fraseOlfativa": "Pomelo, cardamomo y jengibre cálido sobre tabaco noble y ámbar.",
+    "topNotes": [
+      "Pomelo",
+      "Cilantro",
+      "Albahaca"
+    ],
+    "heartNotes": [
+      "Cardamomo",
+      "Jengibre",
+      "Flor de azahar"
+    ],
+    "baseNotes": [
+      "Ámbar",
+      "Tabaco",
+      "Cedro"
+    ]
+  },
+  {
+    "sku": "98",
+    "contratipo": "ROYAL STALLION",
+    "nombre": "Layton",
+    "genero": "U",
+    "marca": "Parfums de Marly",
+    "anio": "2016",
+    "familia": "Ámbar Floral",
+    "fraseOlfativa": "Manzana crujiente, lavanda real y cardamomo especiado sobre vainilla.",
+    "topNotes": [
+      "Manzana",
+      "Lavanda",
+      "Bergamota",
+      "Mandarina"
+    ],
+    "heartNotes": [
+      "Geranio",
+      "Violeta",
+      "Jazmín"
+    ],
+    "baseNotes": [
+      "Vainilla",
+      "Cardamomo",
+      "Sándalo",
+      "Madera de gaiac"
+    ]
+  },
+  {
+    "sku": "99",
+    "contratipo": "KICKBOX ELIXIR",
+    "nombre": "Invictus Victory Elixir",
+    "genero": "H",
+    "marca": "Paco Rabanne",
+    "anio": "2023",
+    "familia": "Ámbar Amaderada",
+    "fraseOlfativa": "Cardamomo verde, incienso misterioso y néctar rico de vainilla.",
+    "topNotes": [
+      "Lavanda",
+      "Cardamomo",
+      "Pimienta negra"
+    ],
+    "heartNotes": [
+      "Incienso",
+      "Pachulí"
+    ],
+    "baseNotes": [
+      "Vainilla",
+      "Haba tonka"
+    ]
+  },
+  {
+    "sku": "100",
+    "contratipo": "MEDUSA BLUE",
+    "nombre": "Dylan Blue",
+    "genero": "H",
+    "marca": "Versace",
+    "anio": "2016",
+    "familia": "Aromática Fougère",
+    "fraseOlfativa": "Bergamota calabresa, notas marinas y ambroxan sobre incienso.",
+    "topNotes": [
+      "Bergamota de Calabria",
+      "Notas acuáticas",
+      "Pomelo",
+      "Hojas de higuera"
+    ],
+    "heartNotes": [
+      "Ambroxan",
+      "Pimienta negra",
+      "Pachulí",
+      "Hojas de violeta"
+    ],
+    "baseNotes": [
+      "Incienso",
+      "Almizcle",
+      "Haba tonka",
+      "Azafrán"
+    ]
+  },
+  {
+    "sku": "101",
+    "contratipo": "GREEN WOLF",
+    "nombre": "Hugo Man",
+    "genero": "H",
+    "marca": "Hugo Boss",
+    "anio": "1995",
+    "familia": "Aromática Verde",
+    "fraseOlfativa": "Manzana verde crujiente, menta fresca y lavanda sobre pino abeto.",
+    "topNotes": [
+      "Manzana verde",
+      "Menta",
+      "Lavanda",
+      "Pomelo"
+    ],
+    "heartNotes": [
+      "Salvia",
+      "Geranio",
+      "Clavel",
+      "Jazmín"
+    ],
+    "baseNotes": [
+      "Abeto",
+      "Cedro",
+      "Pachulí"
+    ]
+  },
+  {
+    "sku": "102",
+    "contratipo": "ROMA UOMO",
+    "nombre": "Valentino Uomo",
+    "genero": "H",
+    "marca": "Valentino",
+    "anio": "2014",
+    "familia": "Cuero",
+    "fraseOlfativa": "Bergamota italiana, crema de avellana, chocolate y café sobre cuero.",
+    "topNotes": [
+      "Bergamota",
+      "Mirto"
+    ],
+    "heartNotes": [
+      "Avellana",
+      "Chocolate",
+      "Café tostado"
+    ],
+    "baseNotes": [
+      "Cuero",
+      "Cedro"
+    ]
+  },
+  {
+    "sku": "103",
+    "contratipo": "PARTYGIRL",
+    "nombre": "Scandal",
+    "genero": "F",
+    "marca": "Jean Paul Gaultier",
+    "anio": "2017",
+    "familia": "Chipre Floral",
+    "fraseOlfativa": "Miel dorada adictiva, gardenia radiante y naranja sanguina sobre pachulí.",
+    "topNotes": [
+      "Naranja sanguina",
+      "Mandarina"
+    ],
+    "heartNotes": [
+      "Miel",
+      "Gardenia",
+      "Flor de azahar",
+      "Durazno"
+    ],
+    "baseNotes": [
+      "Cera de abeja",
+      "Caramelo",
+      "Pachulí",
+      "Regaliz"
+    ]
+  },
+  {
+    "sku": "104",
+    "contratipo": "MANHATTAN VIP",
+    "nombre": "212 VIP Black",
+    "genero": "H",
+    "marca": "Carolina Herrera",
+    "anio": "2017",
+    "familia": "Aromática Fougère",
+    "fraseOlfativa": "Absenta electrizante, anís e hinojo con corazón de lavanda y vainilla.",
+    "topNotes": [
+      "Absenta",
+      "Anís",
+      "Hinojo"
+    ],
+    "heartNotes": [
+      "Lavanda"
+    ],
+    "baseNotes": [
+      "Vainilla negra",
+      "Almizcle"
+    ]
+  },
+  {
+    "sku": "105",
+    "contratipo": "FEMME BLUSH",
+    "nombre": "Good Girl Blush",
+    "genero": "F",
+    "marca": "Carolina Herrera",
+    "anio": "2023",
+    "familia": "Chipre Floral",
+    "fraseOlfativa": "Peonía romántica, bergamota radiante e ylang-ylang sobre vainilla.",
+    "topNotes": [
+      "Bergamota",
+      "Almendra amarga"
+    ],
+    "heartNotes": [
+      "Peonía",
+      "Ylang-ylang"
+    ],
+    "baseNotes": [
+      "Vainilla",
+      "Cumarina"
+    ]
   }
 ];
 

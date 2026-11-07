@@ -96,7 +96,22 @@ export const CATALOG_DESCRIPTIONS_48: Record<string, string> = {
   '87': 'Sofisticación parisina, moderna y arrolladora. Manzana verde ácida, jengibre picante y bergamota iluminan un corazón aromático de salvia y bayas de enebro, reposando sobre amberwood, haba tonka, cedro y olíbano.',
   '88': 'El arma definitiva de seducción nocturna. Un disparo vibrante de cardamomo picante se funde con el calor irresistible del caramelo toffee derretido, cerrando sobre una base intensa y magnética de amberwood y vainilla Bourbon.',
   '89': 'Frescura californiana magnética, frutal y juvenil. Una apertura jugosa de mango tropical, hojas de higuera y aire puro de montaña que se une a salvia blanca, enebro y albahaca sobre un fondo limpio de pepino, cedro, almizcle y ámbar.',
-  '90': 'Rebeldía magnética y sensualidad rockstar. Limón vibrante, salvia y caléndula abren paso a un corazón adictivo de praliné dulce, canela, cardamomo negro y bálsamo de Tolú sobre una base profunda de ámbar negro, pachulí, palo de rosa y ébano.'
+  '90': 'Rebeldía magnética y sensualidad rockstar. Limón vibrante, salvia y caléndula abren paso a un corazón adictivo de praliné dulce, canela, cardamomo negro y bálsamo de Tolú sobre una base profunda de ámbar negro, pachulí, palo de rosa y ébano.',
+  '91': 'Pasión ardiente y contraste magnético. Mandarina italiana, pimienta negra de Madagascar y romero silvestre encienden un corazón de geranio y rosa sobre una base envolvente de vainilla, haba tonka, sándalo y cedro.',
+  '92': 'La sinergia perfecta entre elegancia deportiva y sensualidad fresca. Naranja sanguina, acordes marinos y aldehídos cristalinos dan paso a pimienta y cedro del Atlas sobre un fondo cremoso de haba tonka, vainilla, almizcle blanco y ámbar.',
+  '93': 'Opulencia frutal y proyección majestuosa. Una explosión radiante de naranja dulce, bergamota siciliana y limón que abre paso a una cesta jugosa de frutas tropicales sobre un fondo regio y duradero de vainilla blanca, ámbar y almizcle.',
+  '94': 'El choque electrizante entre frescura punzante e intensidad magnética. Limón ácido y pimienta rosa abren paso a un corazón místico de incienso ahumado y lavanda, reposando sobre un fondo goloso de vainilla, haba tonka y ámbar.',
+  '95': 'Un tributo luminoso al sol y la brisa del Mediterráneo. Manzana Granny Smith crujiente, limón de Sicilia y campanilla se funden con bambú fresco, jazmín y rosa blanca sobre madera de cedro, ámbar y almizcle.',
+  '96': 'Un bouquet millefiori aterciopelado y profundamente romántico. Rosa centifolia luminosa se entrelaza con iris noble, peonía fresca y notas de durazno sobre una caricia cremosa de vainilla de Papúa, haba tonka, benjuí y sándalo.',
+  '97': 'Carisma clásico, masculino y seductor. Pomelo vibrante, cilantro y albahaca abren paso a un corazón cálido y especiado de cardamomo y jengibre, sellado con una estela inconfundible de tabaco rico, ámbar dorado y cedro.',
+  '98': 'Distinción aristocrática de la alta perfumería nicho. Manzana jugosa, lavanda y bergamota iluminan un corazón floral de violeta, jazmín y geranio sobre una base opulenta de vainilla, cardamomo, pimienta, madera de gaiac y sándalo.',
+  '99': 'La expresión máxima de la victoria nocturna. Lavanda aromática, cardamomo verde y pimienta negra abren paso a un corazón misterioso de incienso y pachulí de Indonesia sobre un elixir adictivo de vainilla y haba tonka.',
+  '100': 'Fuerza mediterránea moderna y seducción profunda. Bergamota de Calabria, pomelo, hojas de higuera y notas acuáticas colisionan con ambroxan, pimienta negra y hojas de violeta sobre incienso, azafrán y haba tonka.',
+  '101': 'Frescura verde icónica y espíritu libre. Manzana verde crujiente, menta helada, lavanda y pomelo despiertan un corazón botánico de salvia y geranio sobre un bosque limpio de agujas de abeto, cedro y pachulí.',
+  '102': 'Elegancia italiana clásica con un giro gourmand irresistible. Bergamota luminosa y mirto dan paso a un corazón envolvente de crema de avellana, chocolate y café tostado sobre cuero suave y madera de cedro.',
+  '103': 'Una sobredosis de placer gourmand y feminidad audaz. Naranja sanguina y mandarina iluminan un corazón opulento de miel dorada, gardenia, flor de azahar y durazno sobre cera de abeja, caramelo, pachulí y regaliz.',
+  '104': 'Energía nocturna, magnética e irreverente. Un disparo ardiente de absenta, anís estrellado e hinojo envuelve una lavanda aromática y cuero suave sobre una estela adictiva de vainilla negra y almizcle.',
+  '105': 'Delicadeza floral pastel con carácter seductor. Bergamota italiana y almendra amarga abren paso a un corazón radiante de peonía y ylang-ylang exótico sobre una base envolvente de vainilla absoluta y cumarina.'
 };
 
 /**

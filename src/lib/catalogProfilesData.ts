@@ -910,6 +910,156 @@ export const CATALOG_PROFILES_48: Record<string, StaticProfile> = {
     occasion: 'Fiestas nocturnas, conciertos, citas magnéticas y estilo rebelde',
     intensity: 'Intensa'
   },
+  '91': {
+    family: 'Amaderada Especiada',
+    accords: ['cítrico', 'cálido especiado', 'amaderado', 'avainillado', 'aromático', 'fresco especiado', 'rosas'],
+    topNotes: ['Mandarina', 'Pimienta negra', 'Limón', 'Romero'],
+    heartNotes: ['Pimienta', 'Geranio', 'Rosa'],
+    baseNotes: ['Vainilla', 'Haba tonka', 'Sándalo', 'Cedro', 'Pachulí', 'Musgo de roble'],
+    season: 'Otoño / Invierno / Noche',
+    occasion: 'Citas apasionadas, salidas nocturnas, fiestas y seducción intensa',
+    intensity: 'Intensa'
+  },
+  '92': {
+    family: 'Amaderada Especiada',
+    accords: ['cítrico', 'aldehídico', 'marino', 'aromático', 'avainillado', 'dulce', 'ámbar'],
+    topNotes: ['Naranja', 'Notas marinas', 'Aldehídos', 'Mandarina'],
+    heartNotes: ['Pimienta', 'Neroli', 'Cedro'],
+    baseNotes: ['Haba tonka', 'Vainilla', 'Almizcle blanco', 'Ámbar', 'Vetiver'],
+    season: 'Todo el año / Primavera y Verano',
+    occasion: 'Oficina, deporte de lujo, uso diario versátil y salidas elegantes',
+    intensity: 'Intensa'
+  },
+  '93': {
+    family: 'Aromática Frutal',
+    accords: ['afrutado', 'cítrico', 'dulce', 'avainillado', 'ámbar', 'almizclado', 'fresco'],
+    topNotes: ['Naranja', 'Bergamota', 'Limón'],
+    heartNotes: ['Notas frutales', 'Melón', 'Piña'],
+    baseNotes: ['Vainilla', 'Almizcle blanco', 'Ámbar'],
+    season: 'Todo el año / Día y Noche',
+    occasion: 'Eventos sociales, fiestas, uso firma de alta proyección y cumplidos',
+    intensity: 'Intensa'
+  },
+  '94': {
+    family: 'Ámbar',
+    accords: ['avainillado', 'ámbar', 'cálido especiado', 'dulce', 'ahumado', 'lavanda', 'balsámico'],
+    topNotes: ['Pimienta rosa', 'Limón'],
+    heartNotes: ['Incienso', 'Lavanda'],
+    baseNotes: ['Vainilla', 'Haba tonka', 'Ámbar'],
+    season: 'Otoño / Invierno / Noche',
+    occasion: 'Salidas nocturnas, citas magnéticas, triunfos y clima fresco',
+    intensity: 'Intensa'
+  },
+  '95': {
+    family: 'Floral Frutal',
+    accords: ['cítrico', 'amaderado', 'afrutado', 'fresco', 'verde', 'aromático', 'almizclado'],
+    topNotes: ['Limón siciliano', 'Manzana verde', 'Cedro', 'Campanilla'],
+    heartNotes: ['Bambú', 'Jazmín', 'Rosa blanca'],
+    baseNotes: ['Cedro', 'Almizcle', 'Ámbar'],
+    season: 'Primavera / Verano / Días soleados',
+    occasion: 'Uso diario fresco, playa, oficina y paseos al aire libre',
+    intensity: 'Moderada'
+  },
+  '96': {
+    family: 'Ámbar Floral',
+    accords: ['rosas', 'floral', 'atalcado', 'avainillado', 'dulce', 'iris', 'amaderado'],
+    topNotes: ['Iris', 'Peonía', 'Lirio de los valles'],
+    heartNotes: ['Rosa', 'Durazno', 'Albaricoque'],
+    baseNotes: ['Vainilla', 'Almizcle', 'Haba tonka', 'Sándalo', 'Benjuí'],
+    season: 'Primavera / Todo el año',
+    occasion: 'Citas románticas, bodas, eventos elegantes y uso diario sofisticado',
+    intensity: 'Intensa'
+  },
+  '97': {
+    family: 'Amaderada Especiada',
+    accords: ['ámbar', 'cálido especiado', 'tabaco', 'aromático', 'cítrico', 'amaderado', 'dulce'],
+    topNotes: ['Pomelo', 'Cilantro', 'Albahaca'],
+    heartNotes: ['Cardamomo', 'Jengibre', 'Flor de azahar'],
+    baseNotes: ['Ámbar', 'Tabaco', 'Cedro'],
+    season: 'Otoño / Invierno / Noche',
+    occasion: 'Cenas románticas, traje formal, citas íntimas y eventos nocturnos',
+    intensity: 'Intensa'
+  },
+  '98': {
+    family: 'Ámbar Floral',
+    accords: ['cálido especiado', 'avainillado', 'fresco especiado', 'amaderado', 'aromático', 'afrutado', 'lavanda'],
+    topNotes: ['Manzana', 'Lavanda', 'Bergamota', 'Mandarina'],
+    heartNotes: ['Geranio', 'Violeta', 'Jazmín'],
+    baseNotes: ['Vainilla', 'Cardamomo', 'Sándalo', 'Pimienta', 'Madera de gaiac', 'Pachulí'],
+    season: 'Otoño / Invierno / Noche',
+    occasion: 'Gala, reuniones de alto nivel, citas exclusivas y alta perfumería nicho',
+    intensity: 'Intensa'
+  },
+  '99': {
+    family: 'Ámbar Amaderada',
+    accords: ['ámbar', 'avainillado', 'cálido especiado', 'ahumado', 'balsámico', 'dulce', 'aromático'],
+    topNotes: ['Lavanda', 'Cardamomo', 'Pimienta negra'],
+    heartNotes: ['Incienso', 'Pachulí'],
+    baseNotes: ['Vainilla', 'Haba tonka'],
+    season: 'Otoño / Invierno / Noche',
+    occasion: 'Noches intensas, fiestas exclusivas y máxima fijación nocturna',
+    intensity: 'Intensa'
+  },
+  '100': {
+    family: 'Aromática Fougère',
+    accords: ['ámbar', 'cítrico', 'fresco especiado', 'aromático', 'acuático', 'almizclado', 'ahumado'],
+    topNotes: ['Bergamota de Calabria', 'Notas acuáticas', 'Pomelo', 'Hojas de higuera'],
+    heartNotes: ['Ambroxan', 'Pimienta negra', 'Pachulí', 'Hojas de violeta', 'Papiro'],
+    baseNotes: ['Incienso', 'Almizcle', 'Haba tonka', 'Azafrán'],
+    season: 'Todo el año / Versátil',
+    occasion: 'Oficina, uso diario elegante, salidas nocturnas y fragancia firma',
+    intensity: 'Intensa'
+  },
+  '101': {
+    family: 'Aromática Verde',
+    accords: ['aromático', 'verde', 'fresco especiado', 'amaderado', 'afrutado', 'fresco', 'lavanda'],
+    topNotes: ['Manzana verde', 'Menta', 'Lavanda', 'Pomelo', 'Albahaca'],
+    heartNotes: ['Salvia', 'Geranio', 'Clavel', 'Jazmín'],
+    baseNotes: ['Abeto', 'Cedro', 'Pachulí'],
+    season: 'Primavera / Verano / Todo el año',
+    occasion: 'Uso diario limpio, oficina, universidad y actividades al aire libre',
+    intensity: 'Moderada'
+  },
+  '102': {
+    family: 'Cuero',
+    accords: ['dulce', 'cacao', 'café', 'cálido especiado', 'cuero', 'amaderado', 'cítrico'],
+    topNotes: ['Bergamota', 'Mirto'],
+    heartNotes: ['Avellana', 'Chocolate', 'Café tostado'],
+    baseNotes: ['Cuero', 'Cedro'],
+    season: 'Otoño / Invierno / Noche',
+    occasion: 'Cenas elegantes, citas románticas, eventos formales y estilo italiano',
+    intensity: 'Intensa'
+  },
+  '103': {
+    family: 'Chipre Floral',
+    accords: ['miel', 'dulce', 'floral blanco', 'cítrico', 'pachulí', 'caramelo', 'balsámico'],
+    topNotes: ['Naranja sanguina', 'Mandarina'],
+    heartNotes: ['Miel', 'Gardenia', 'Flor de azahar', 'Jazmín', 'Durazno'],
+    baseNotes: ['Cera de abeja', 'Caramelo', 'Pachulí', 'Regaliz'],
+    season: 'Otoño / Invierno / Noche',
+    occasion: 'Fiestas nocturnas, citas seductoras y eventos donde destacar',
+    intensity: 'Intensa'
+  },
+  '104': {
+    family: 'Aromática Fougère',
+    accords: ['avainillado', 'aromático', 'lavanda', 'anisado', 'dulce', 'almizclado', 'fresco especiado'],
+    topNotes: ['Absenta', 'Anís', 'Hinojo'],
+    heartNotes: ['Lavanda'],
+    baseNotes: ['Vainilla negra', 'Almizcle'],
+    season: 'Otoño / Invierno / Noche',
+    occasion: 'Fiestas VIP, discoteca, citas nocturnas y salidas con amigos',
+    intensity: 'Intensa'
+  },
+  '105': {
+    family: 'Chipre Floral',
+    accords: ['floral', 'avainillado', 'cítrico', 'rosas', 'fresco', 'dulce', 'atalcado'],
+    topNotes: ['Bergamota', 'Almendra amarga'],
+    heartNotes: ['Peonía', 'Ylang-ylang'],
+    baseNotes: ['Vainilla', 'Cumarina'],
+    season: 'Primavera / Verano / Todo el año',
+    occasion: 'Citas románticas, uso diario femenino, brunch y ocasiones especiales',
+    intensity: 'Intensa'
+  },
   'APAE-2154': {
     family: 'Floral Frutal',
     accords: ['floral', 'afrutado', 'fresco', 'dulce', 'acuático'],

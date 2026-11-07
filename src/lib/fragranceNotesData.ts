@@ -147,7 +147,7 @@ const NOTE_RULES: Array<{ pattern: RegExp; file: string }> = [
   { pattern: /verbena|artemisia|ajenjo|g[áa]lbano|manzanilla/i, file: 'verbena' },
   { pattern: /hinojo|alcaravea|apio/i, file: 'anis' },
   { pattern: /absenta/i, file: 'menta' },
-  { pattern: /cannabis|lentisco|cactus|laurel/i, file: 'notas-verdes' },
+  { pattern: /cannabis|lentisco|cactus|laurel|mirto/i, file: 'notas-verdes' },
   { pattern: /davana/i, file: 'melocoton' },
 
   // Especias

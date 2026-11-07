@@ -1764,28 +1764,29 @@
     "contratipo": "212 Vip Black H",
     "marca": "Carolina Herrera",
     "genero": "Caballero",
-    "officialName": "212 VIP",
+    "officialName": "212 VIP Black",
     "brand": "Carolina Herrera",
-    "family": "DULCE avainillado",
+    "family": "Aromática Fougère",
     "accords": [
-      "dulce",
       "avainillado",
-      "rum",
-      "afrutado",
-      "afrutado",
-      "floral blanco"
+      "aromático",
+      "lavanda",
+      "anisado",
+      "dulce",
+      "almizclado",
+      "fresco especiado"
     ],
     "topNotes": [
-      "Maracuyá",
-      "Ron"
+      "Absenta",
+      "Anís",
+      "Hinojo"
     ],
     "heartNotes": [
-      "Almizcle",
-      "Gardenia"
+      "Lavanda"
     ],
     "baseNotes": [
-      "Haba tonka",
-      "Vanille"
+      "Vainilla negra",
+      "Almizcle"
     ],
     "source": "fragrantica"
   },
@@ -2461,39 +2462,35 @@
     "contratipo": "Allure Sport H",
     "marca": "Chanel",
     "genero": "Caballero",
-    "officialName": "Allure",
+    "officialName": "Allure Homme Sport",
     "brand": "Chanel",
-    "family": "FLORAL BLANCO cítrico",
+    "family": "Amaderada Especiada",
     "accords": [
-      "floral blanco",
       "cítrico",
-      "floral",
-      "afrutado",
-      "avainillado"
+      "aldehídico",
+      "marino",
+      "aromático",
+      "avainillado",
+      "dulce",
+      "ámbar"
     ],
     "topNotes": [
-      "Limón",
-      "Bergamota",
-      "Mandarina",
-      "Melocotón",
-      "Maracuyá"
+      "Naranja",
+      "Notas marinas",
+      "Aldehídos",
+      "Mandarina"
     ],
     "heartNotes": [
-      "Jazmín",
-      "Lirio",
-      "Miel",
-      "Fresia",
-      "Magnolia",
-      "Rosa",
-      "Peonía",
-      "Flor de azahar"
+      "Pimienta",
+      "Neroli",
+      "Cedro"
     ],
     "baseNotes": [
-      "Sándalo",
-      "Vetiver",
+      "Haba tonka",
       "Vainilla",
-      "Pachulí",
-      "Ámbar"
+      "Almizcle blanco",
+      "Ámbar",
+      "Vetiver"
     ],
     "source": "fragrantica"
   },
@@ -3074,30 +3071,34 @@
     "contratipo": "Bharara King",
     "marca": "Bharara",
     "genero": "Caballero",
-    "officialName": "King",
+    "officialName": "Bharara King",
     "brand": "Bharara",
-    "family": "Cítrica Amaderada",
+    "family": "Aromática Frutal",
     "accords": [
-      "cítrico",
       "afrutado",
+      "cítrico",
       "dulce",
       "avainillado",
-      "ámbar"
+      "ámbar",
+      "almizclado",
+      "fresco"
     ],
     "topNotes": [
       "Naranja",
-      "Limón",
-      "Bergamota"
+      "Bergamota",
+      "Limón"
     ],
     "heartNotes": [
-      "Tutti Frutti"
+      "Notas frutales",
+      "Melón",
+      "Piña"
     ],
     "baseNotes": [
-      "Vainilla blanca",
-      "Ámbar",
-      "Almizcle"
+      "Vainilla",
+      "Almizcle blanco",
+      "Ámbar"
     ],
-    "source": "canonical_fragrantica"
+    "source": "fragrantica"
   },
   "155": {
     "kodigo": "155",
@@ -4887,33 +4888,34 @@
     "contratipo": "Dylan Blue H",
     "marca": "Versace",
     "genero": "Caballero",
-    "officialName": "Versace Pour Homme Dylan Blue",
+    "officialName": "Dylan Blue",
     "brand": "Versace",
-    "family": "CÍTRICO fresco especiado",
+    "family": "Aromática Fougère",
     "accords": [
+      "ámbar",
       "cítrico",
       "fresco especiado",
+      "aromático",
+      "acuático",
       "almizclado",
-      "balsámico",
-      "ámbar",
-      "acuático"
+      "ahumado"
     ],
     "topNotes": [
-      "Notas acuáticas",
       "Bergamota de Calabria",
+      "Notas acuáticas",
       "Pomelo",
       "Hojas de higuera"
     ],
     "heartNotes": [
-      "Hojas de violeta",
-      "Papyrus",
-      "Pachulí",
+      "Ambroxan",
       "Pimienta negra",
-      "Ambroxan"
+      "Pachulí",
+      "Hojas de violeta",
+      "Papiro"
     ],
     "baseNotes": [
-      "Almizcle",
       "Incienso",
+      "Almizcle",
       "Haba tonka",
       "Azafrán"
     ],
@@ -4980,20 +4982,36 @@
     "genero": "Caballero",
     "officialName": "Eros Flame",
     "brand": "Versace",
-    "family": "DULCE",
+    "family": "Amaderada Especiada",
     "accords": [
-      "dulce"
+      "cítrico",
+      "cálido especiado",
+      "amaderado",
+      "avainillado",
+      "aromático",
+      "fresco especiado",
+      "rosas"
     ],
     "topNotes": [
-      "Spicy"
+      "Mandarina",
+      "Pimienta negra",
+      "Limón",
+      "Romero"
     ],
     "heartNotes": [
-      "Citrus"
+      "Pimienta",
+      "Geranio",
+      "Rosa"
     ],
     "baseNotes": [
-      "Fruity"
+      "Vainilla",
+      "Haba tonka",
+      "Sándalo",
+      "Cedro",
+      "Pachulí",
+      "Musgo de roble"
     ],
-    "source": "parfumo"
+    "source": "fragrantica"
   },
   "217": {
     "kodigo": "217",
@@ -5667,34 +5685,35 @@
     "contratipo": "Hugo Boss H",
     "marca": "Hugo Boss",
     "genero": "Caballero",
-    "officialName": "Hugo",
+    "officialName": "Hugo Man",
     "brand": "Hugo Boss",
-    "family": "AROMÁTICO fresco especiado",
+    "family": "Aromática Verde",
     "accords": [
       "aromático",
-      "fresco especiado",
       "verde",
-      "fresco",
+      "fresco especiado",
+      "amaderado",
       "afrutado",
-      "amaderado"
+      "fresco",
+      "lavanda"
     ],
     "topNotes": [
-      "Lavanda",
       "Manzana verde",
       "Menta",
+      "Lavanda",
       "Pomelo",
       "Albahaca"
     ],
     "heartNotes": [
-      "Clavel",
       "Salvia",
       "Geranio",
+      "Clavel",
       "Jazmín"
     ],
     "baseNotes": [
-      "Pachulí",
-      "Fir",
-      "Cedro"
+      "Abeto",
+      "Cedro",
+      "Pachulí"
     ],
     "source": "fragrantica"
   },
@@ -6203,20 +6222,30 @@
     "genero": "Caballero",
     "officialName": "Invictus Victory",
     "brand": "Paco Rabanne",
-    "family": "DULCE",
+    "family": "Ámbar",
     "accords": [
-      "dulce"
+      "avainillado",
+      "ámbar",
+      "cálido especiado",
+      "dulce",
+      "ahumado",
+      "lavanda",
+      "balsámico"
     ],
     "topNotes": [
-      "Spicy"
+      "Pimienta rosa",
+      "Limón"
     ],
     "heartNotes": [
-      "Synthetic"
+      "Incienso",
+      "Lavanda"
     ],
     "baseNotes": [
-      "Fresh"
+      "Vainilla",
+      "Haba tonka",
+      "Ámbar"
     ],
-    "source": "parfumo"
+    "source": "fragrantica"
   },
   "256": {
     "kodigo": "256",
@@ -9348,32 +9377,31 @@
     "marca": "Dolce & Gabbana",
     "genero": "Caballero",
     "officialName": "The One",
-    "brand": "Dolce Gabbana",
-    "family": "AFRUTADO avainillado",
+    "brand": "Dolce & Gabbana",
+    "family": "Amaderada Especiada",
     "accords": [
-      "afrutado",
-      "avainillado",
-      "floral blanco",
-      "dulce",
-      "atalcado"
+      "ámbar",
+      "cálido especiado",
+      "tabaco",
+      "aromático",
+      "cítrico",
+      "amaderado",
+      "dulce"
     ],
     "topNotes": [
-      "Litchi",
-      "Mandarina",
-      "Melocotón",
-      "Bergamota"
+      "Pomelo",
+      "Cilantro",
+      "Albahaca"
     ],
     "heartNotes": [
-      "Lirio",
-      "Ciruela",
-      "Jazmín",
-      "Lirio de los valles"
+      "Cardamomo",
+      "Jengibre",
+      "Flor de azahar"
     ],
     "baseNotes": [
       "Ámbar",
-      "Almizcle",
-      "Vainilla",
-      "Vetiver"
+      "Tabaco",
+      "Cedro"
     ],
     "source": "fragrantica"
   },
@@ -9702,23 +9730,24 @@
     "genero": "Caballero",
     "officialName": "Valentino Uomo",
     "brand": "Valentino",
-    "family": "AMADERADO nutty",
+    "family": "Cuero",
     "accords": [
-      "amaderado",
-      "nutty",
       "dulce",
       "cacao",
+      "café",
       "cálido especiado",
-      "café"
+      "cuero",
+      "amaderado",
+      "cítrico"
     ],
     "topNotes": [
       "Bergamota",
-      "Myrtle"
+      "Mirto"
     ],
     "heartNotes": [
-      "Café",
+      "Avellana",
       "Chocolate",
-      "Avellana"
+      "Café tostado"
     ],
     "baseNotes": [
       "Cuero",
@@ -13745,27 +13774,29 @@
     "contratipo": "Good Girl Blush F",
     "marca": "Carolina Herrera",
     "genero": "Dama",
-    "officialName": "Good Girl",
+    "officialName": "Good Girl Blush",
     "brand": "Carolina Herrera",
-    "family": "FLORAL BLANCO cálido especiado",
+    "family": "Chipre Floral",
     "accords": [
-      "floral blanco",
-      "cálido especiado",
+      "floral",
+      "avainillado",
+      "cítrico",
       "rosas",
+      "fresco",
       "dulce",
-      "cacao"
+      "atalcado"
     ],
     "topNotes": [
-      "Almendra",
-      "Café"
+      "Bergamota",
+      "Almendra amarga"
     ],
     "heartNotes": [
-      "Jazmín Sambac",
-      "Tuberosa"
+      "Peonía",
+      "Ylang-ylang"
     ],
     "baseNotes": [
-      "Haba tonka",
-      "Cacao"
+      "Vainilla",
+      "Cumarina"
     ],
     "source": "fragrantica"
   },
@@ -15391,26 +15422,33 @@
     "contratipo": "Light Blue F",
     "marca": "Dolce & Gabbana",
     "genero": "Dama",
-    "officialName": "Light Blue Pour Homme Beauty of Capri",
-    "brand": "Dolce Gabbana",
-    "family": "CÍTRICO amaderado",
+    "officialName": "Light Blue",
+    "brand": "Dolce & Gabbana",
+    "family": "Floral Frutal",
     "accords": [
       "cítrico",
       "amaderado",
-      "aromático",
+      "afrutado",
+      "fresco",
       "verde",
-      "fresco especiado"
+      "aromático",
+      "almizclado"
     ],
     "topNotes": [
-      "Bergamota",
-      "Citron"
+      "Limón siciliano",
+      "Manzana verde",
+      "Cedro",
+      "Campanilla"
     ],
     "heartNotes": [
-      "Petitgrain"
+      "Bambú",
+      "Jazmín",
+      "Rosa blanca"
     ],
     "baseNotes": [
       "Cedro",
-      "Vetiver"
+      "Almizcle",
+      "Ámbar"
     ],
     "source": "fragrantica"
   },
@@ -15832,40 +15870,33 @@
     "marca": "Dior",
     "genero": "Dama",
     "officialName": "Miss Dior",
-    "brand": "Christian Dior",
-    "family": "AMADERADO verde",
+    "brand": "Dior",
+    "family": "Ámbar Floral",
     "accords": [
-      "amaderado",
-      "verde",
-      "aromático",
+      "rosas",
       "floral",
-      "terroso"
+      "atalcado",
+      "avainillado",
+      "dulce",
+      "iris",
+      "amaderado"
     ],
     "topNotes": [
-      "Aldehídos",
-      "Gardenia",
-      "Galbanum",
-      "Salvia",
-      "Bergamota"
+      "Iris",
+      "Peonía",
+      "Lirio de los valles"
     ],
     "heartNotes": [
-      "Clavel",
-      "Iris",
-      "Lirio",
-      "Jazmín",
-      "Neroli",
-      "Lirio de los valles",
       "Rosa",
-      "Narcissus"
+      "Durazno",
+      "Albaricoque"
     ],
     "baseNotes": [
-      "Ládano",
-      "Cuero",
+      "Vainilla",
+      "Almizcle",
+      "Haba tonka",
       "Sándalo",
-      "Ámbar",
-      "Pachulí",
-      "Musgo de roble",
-      "Vetiver"
+      "Benjuí"
     ],
     "source": "fragrantica"
   },
@@ -17627,22 +17658,36 @@
     "contratipo": "Scandal F",
     "marca": "Jean Paul Gaultier",
     "genero": "Dama",
-    "officialName": "Scandal à Paris",
+    "officialName": "Scandal",
     "brand": "Jean Paul Gaultier",
-    "family": "DULCE",
+    "family": "Chipre Floral",
     "accords": [
-      "dulce"
+      "miel",
+      "dulce",
+      "floral blanco",
+      "cítrico",
+      "pachulí",
+      "caramelo",
+      "balsámico"
     ],
     "topNotes": [
-      "Fruity"
+      "Naranja sanguina",
+      "Mandarina"
     ],
     "heartNotes": [
-      "Floral"
+      "Miel",
+      "Gardenia",
+      "Flor de azahar",
+      "Jazmín",
+      "Durazno"
     ],
     "baseNotes": [
-      "Gourmand"
+      "Cera de abeja",
+      "Caramelo",
+      "Pachulí",
+      "Regaliz"
     ],
-    "source": "parfumo"
+    "source": "fragrantica"
   },
   "618": {
     "kodigo": "618",
@@ -19195,32 +19240,34 @@
     "genero": "Unisex",
     "officialName": "Layton",
     "brand": "Parfums de Marly",
-    "family": "FRESCO ESPECIADO aromático",
+    "family": "Ámbar Floral",
     "accords": [
-      "fresco especiado",
-      "aromático",
       "cálido especiado",
+      "avainillado",
+      "fresco especiado",
       "amaderado",
-      "atalcado"
+      "aromático",
+      "afrutado",
+      "lavanda"
     ],
     "topNotes": [
-      "Bergamota",
-      "Lavanda",
       "Manzana",
+      "Lavanda",
+      "Bergamota",
       "Mandarina"
     ],
     "heartNotes": [
+      "Geranio",
       "Violeta",
-      "Jazmín",
-      "Geranio"
+      "Jazmín"
     ],
     "baseNotes": [
-      "Madera de gaiac",
-      "Pachulí",
-      "Sándalo",
-      "Cardamomo",
       "Vainilla",
-      "Pimienta"
+      "Cardamomo",
+      "Sándalo",
+      "Pimienta",
+      "Madera de gaiac",
+      "Pachulí"
     ],
     "source": "fragrantica"
   },
@@ -21372,5 +21419,558 @@
       "Floral"
     ],
     "source": "Fragrantica / Parfumo"
+  },
+  "91": {
+    "kodigo": "91",
+    "contratipo": "Atrevido Flame H",
+    "marca": "Versace",
+    "genero": "Caballero",
+    "officialName": "Eros Flame",
+    "brand": "Versace",
+    "family": "Amaderada Especiada",
+    "accords": [
+      "cítrico",
+      "cálido especiado",
+      "amaderado",
+      "avainillado",
+      "aromático",
+      "fresco especiado",
+      "rosas"
+    ],
+    "topNotes": [
+      "Mandarina",
+      "Pimienta negra",
+      "Limón",
+      "Romero"
+    ],
+    "heartNotes": [
+      "Pimienta",
+      "Geranio",
+      "Rosa"
+    ],
+    "baseNotes": [
+      "Vainilla",
+      "Haba tonka",
+      "Sándalo",
+      "Cedro",
+      "Pachulí",
+      "Musgo de roble"
+    ],
+    "source": "fragrantica"
+  },
+  "92": {
+    "kodigo": "92",
+    "contratipo": "Grand Sport H",
+    "marca": "Chanel",
+    "genero": "Caballero",
+    "officialName": "Allure Homme Sport",
+    "brand": "Chanel",
+    "family": "Amaderada Especiada",
+    "accords": [
+      "cítrico",
+      "aldehídico",
+      "marino",
+      "aromático",
+      "avainillado",
+      "dulce",
+      "ámbar"
+    ],
+    "topNotes": [
+      "Naranja",
+      "Notas marinas",
+      "Aldehídos",
+      "Mandarina"
+    ],
+    "heartNotes": [
+      "Pimienta",
+      "Neroli",
+      "Cedro"
+    ],
+    "baseNotes": [
+      "Haba tonka",
+      "Vainilla",
+      "Almizcle blanco",
+      "Ámbar",
+      "Vetiver"
+    ],
+    "source": "fragrantica"
+  },
+  "93": {
+    "kodigo": "93",
+    "contratipo": "King Royalty H",
+    "marca": "Bharara",
+    "genero": "Caballero",
+    "officialName": "Bharara King",
+    "brand": "Bharara",
+    "family": "Aromática Frutal",
+    "accords": [
+      "afrutado",
+      "cítrico",
+      "dulce",
+      "avainillado",
+      "ámbar",
+      "almizclado",
+      "fresco"
+    ],
+    "topNotes": [
+      "Naranja",
+      "Bergamota",
+      "Limón"
+    ],
+    "heartNotes": [
+      "Notas frutales",
+      "Melón",
+      "Piña"
+    ],
+    "baseNotes": [
+      "Vainilla",
+      "Almizcle blanco",
+      "Ámbar"
+    ],
+    "source": "fragrantica"
+  },
+  "94": {
+    "kodigo": "94",
+    "contratipo": "Kickbox Victory H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "officialName": "Invictus Victory",
+    "brand": "Paco Rabanne",
+    "family": "Ámbar",
+    "accords": [
+      "avainillado",
+      "ámbar",
+      "cálido especiado",
+      "dulce",
+      "ahumado",
+      "lavanda",
+      "balsámico"
+    ],
+    "topNotes": [
+      "Pimienta rosa",
+      "Limón"
+    ],
+    "heartNotes": [
+      "Incienso",
+      "Lavanda"
+    ],
+    "baseNotes": [
+      "Vainilla",
+      "Haba tonka",
+      "Ámbar"
+    ],
+    "source": "fragrantica"
+  },
+  "95": {
+    "kodigo": "95",
+    "contratipo": "Ocean Lady F",
+    "marca": "Dolce & Gabbana",
+    "genero": "Dama",
+    "officialName": "Light Blue",
+    "brand": "Dolce & Gabbana",
+    "family": "Floral Frutal",
+    "accords": [
+      "cítrico",
+      "amaderado",
+      "afrutado",
+      "fresco",
+      "verde",
+      "aromático",
+      "almizclado"
+    ],
+    "topNotes": [
+      "Limón siciliano",
+      "Manzana verde",
+      "Cedro",
+      "Campanilla"
+    ],
+    "heartNotes": [
+      "Bambú",
+      "Jazmín",
+      "Rosa blanca"
+    ],
+    "baseNotes": [
+      "Cedro",
+      "Almizcle",
+      "Ámbar"
+    ],
+    "source": "fragrantica"
+  },
+  "96": {
+    "kodigo": "96",
+    "contratipo": "Mademoiselle Bloom F",
+    "marca": "Dior",
+    "genero": "Dama",
+    "officialName": "Miss Dior",
+    "brand": "Dior",
+    "family": "Ámbar Floral",
+    "accords": [
+      "rosas",
+      "floral",
+      "atalcado",
+      "avainillado",
+      "dulce",
+      "iris",
+      "amaderado"
+    ],
+    "topNotes": [
+      "Iris",
+      "Peonía",
+      "Lirio de los valles"
+    ],
+    "heartNotes": [
+      "Rosa",
+      "Durazno",
+      "Albaricoque"
+    ],
+    "baseNotes": [
+      "Vainilla",
+      "Almizcle",
+      "Haba tonka",
+      "Sándalo",
+      "Benjuí"
+    ],
+    "source": "fragrantica"
+  },
+  "97": {
+    "kodigo": "97",
+    "contratipo": "Golden One H",
+    "marca": "Dolce & Gabbana",
+    "genero": "Caballero",
+    "officialName": "The One",
+    "brand": "Dolce & Gabbana",
+    "family": "Amaderada Especiada",
+    "accords": [
+      "ámbar",
+      "cálido especiado",
+      "tabaco",
+      "aromático",
+      "cítrico",
+      "amaderado",
+      "dulce"
+    ],
+    "topNotes": [
+      "Pomelo",
+      "Cilantro",
+      "Albahaca"
+    ],
+    "heartNotes": [
+      "Cardamomo",
+      "Jengibre",
+      "Flor de azahar"
+    ],
+    "baseNotes": [
+      "Ámbar",
+      "Tabaco",
+      "Cedro"
+    ],
+    "source": "fragrantica"
+  },
+  "98": {
+    "kodigo": "98",
+    "contratipo": "Royal Stallion",
+    "marca": "Parfums de Marly",
+    "genero": "Unisex",
+    "officialName": "Layton",
+    "brand": "Parfums de Marly",
+    "family": "Ámbar Floral",
+    "accords": [
+      "cálido especiado",
+      "avainillado",
+      "fresco especiado",
+      "amaderado",
+      "aromático",
+      "afrutado",
+      "lavanda"
+    ],
+    "topNotes": [
+      "Manzana",
+      "Lavanda",
+      "Bergamota",
+      "Mandarina"
+    ],
+    "heartNotes": [
+      "Geranio",
+      "Violeta",
+      "Jazmín"
+    ],
+    "baseNotes": [
+      "Vainilla",
+      "Cardamomo",
+      "Sándalo",
+      "Pimienta",
+      "Madera de gaiac",
+      "Pachulí"
+    ],
+    "source": "fragrantica"
+  },
+  "99": {
+    "kodigo": "99",
+    "contratipo": "Kickbox Elixir H",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "officialName": "Invictus Victory Elixir",
+    "brand": "Paco Rabanne",
+    "family": "Ámbar Amaderada",
+    "accords": [
+      "ámbar",
+      "avainillado",
+      "cálido especiado",
+      "ahumado",
+      "balsámico",
+      "dulce",
+      "aromático"
+    ],
+    "topNotes": [
+      "Lavanda",
+      "Cardamomo",
+      "Pimienta negra"
+    ],
+    "heartNotes": [
+      "Incienso",
+      "Pachulí"
+    ],
+    "baseNotes": [
+      "Vainilla",
+      "Haba tonka"
+    ],
+    "source": "fragrantica"
+  },
+  "1001": {
+    "kodigo": "1001",
+    "contratipo": "Invictus Victory Elixir",
+    "marca": "Paco Rabanne",
+    "genero": "Caballero",
+    "officialName": "Invictus Victory Elixir",
+    "brand": "Paco Rabanne",
+    "family": "Ámbar Amaderada",
+    "accords": [
+      "ámbar",
+      "avainillado",
+      "cálido especiado",
+      "ahumado",
+      "balsámico",
+      "dulce",
+      "aromático"
+    ],
+    "topNotes": [
+      "Lavanda",
+      "Cardamomo",
+      "Pimienta negra"
+    ],
+    "heartNotes": [
+      "Incienso",
+      "Pachulí"
+    ],
+    "baseNotes": [
+      "Vainilla",
+      "Haba tonka"
+    ],
+    "source": "fragrantica"
+  },
+  "AR-100": {
+    "kodigo": "100",
+    "contratipo": "Medusa Blue H",
+    "marca": "Versace",
+    "genero": "Caballero",
+    "officialName": "Dylan Blue",
+    "brand": "Versace",
+    "family": "Aromática Fougère",
+    "accords": [
+      "ámbar",
+      "cítrico",
+      "fresco especiado",
+      "aromático",
+      "acuático",
+      "almizclado",
+      "ahumado"
+    ],
+    "topNotes": [
+      "Bergamota de Calabria",
+      "Notas acuáticas",
+      "Pomelo",
+      "Hojas de higuera"
+    ],
+    "heartNotes": [
+      "Ambroxan",
+      "Pimienta negra",
+      "Pachulí",
+      "Hojas de violeta",
+      "Papiro"
+    ],
+    "baseNotes": [
+      "Incienso",
+      "Almizcle",
+      "Haba tonka",
+      "Azafrán"
+    ],
+    "source": "fragrantica"
+  },
+  "AR-101": {
+    "kodigo": "101",
+    "contratipo": "Green Wolf H",
+    "marca": "Hugo Boss",
+    "genero": "Caballero",
+    "officialName": "Hugo Man",
+    "brand": "Hugo Boss",
+    "family": "Aromática Verde",
+    "accords": [
+      "aromático",
+      "verde",
+      "fresco especiado",
+      "amaderado",
+      "afrutado",
+      "fresco",
+      "lavanda"
+    ],
+    "topNotes": [
+      "Manzana verde",
+      "Menta",
+      "Lavanda",
+      "Pomelo",
+      "Albahaca"
+    ],
+    "heartNotes": [
+      "Salvia",
+      "Geranio",
+      "Clavel",
+      "Jazmín"
+    ],
+    "baseNotes": [
+      "Abeto",
+      "Cedro",
+      "Pachulí"
+    ],
+    "source": "fragrantica"
+  },
+  "AR-102": {
+    "kodigo": "102",
+    "contratipo": "Roma Uomo H",
+    "marca": "Valentino",
+    "genero": "Caballero",
+    "officialName": "Valentino Uomo",
+    "brand": "Valentino",
+    "family": "Cuero",
+    "accords": [
+      "dulce",
+      "cacao",
+      "café",
+      "cálido especiado",
+      "cuero",
+      "amaderado",
+      "cítrico"
+    ],
+    "topNotes": [
+      "Bergamota",
+      "Mirto"
+    ],
+    "heartNotes": [
+      "Avellana",
+      "Chocolate",
+      "Café tostado"
+    ],
+    "baseNotes": [
+      "Cuero",
+      "Cedro"
+    ],
+    "source": "fragrantica"
+  },
+  "AR-103": {
+    "kodigo": "103",
+    "contratipo": "PartyGirl F",
+    "marca": "Jean Paul Gaultier",
+    "genero": "Dama",
+    "officialName": "Scandal",
+    "brand": "Jean Paul Gaultier",
+    "family": "Chipre Floral",
+    "accords": [
+      "miel",
+      "dulce",
+      "floral blanco",
+      "cítrico",
+      "pachulí",
+      "caramelo",
+      "balsámico"
+    ],
+    "topNotes": [
+      "Naranja sanguina",
+      "Mandarina"
+    ],
+    "heartNotes": [
+      "Miel",
+      "Gardenia",
+      "Flor de azahar",
+      "Jazmín",
+      "Durazno"
+    ],
+    "baseNotes": [
+      "Cera de abeja",
+      "Caramelo",
+      "Pachulí",
+      "Regaliz"
+    ],
+    "source": "fragrantica"
+  },
+  "AR-104": {
+    "kodigo": "104",
+    "contratipo": "Manhattan VIP H",
+    "marca": "Carolina Herrera",
+    "genero": "Caballero",
+    "officialName": "212 VIP Black",
+    "brand": "Carolina Herrera",
+    "family": "Aromática Fougère",
+    "accords": [
+      "avainillado",
+      "aromático",
+      "lavanda",
+      "anisado",
+      "dulce",
+      "almizclado",
+      "fresco especiado"
+    ],
+    "topNotes": [
+      "Absenta",
+      "Anís",
+      "Hinojo"
+    ],
+    "heartNotes": [
+      "Lavanda"
+    ],
+    "baseNotes": [
+      "Vainilla negra",
+      "Almizcle"
+    ],
+    "source": "fragrantica"
+  },
+  "AR-105": {
+    "kodigo": "105",
+    "contratipo": "Femme Blush F",
+    "marca": "Carolina Herrera",
+    "genero": "Dama",
+    "officialName": "Good Girl Blush",
+    "brand": "Carolina Herrera",
+    "family": "Chipre Floral",
+    "accords": [
+      "floral",
+      "avainillado",
+      "cítrico",
+      "rosas",
+      "fresco",
+      "dulce",
+      "atalcado"
+    ],
+    "topNotes": [
+      "Bergamota",
+      "Almendra amarga"
+    ],
+    "heartNotes": [
+      "Peonía",
+      "Ylang-ylang"
+    ],
+    "baseNotes": [
+      "Vainilla",
+      "Cumarina"
+    ],
+    "source": "fragrantica"
   }
 }

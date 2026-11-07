@@ -95,7 +95,22 @@ export const INSPIRACION_PERFUME_MAP: Record<string, string> = {
   '87': 'Y Eau de Parfum H',
   '88': 'The Most Wanted H',
   '89': 'Paris Hilton H',
-  '90': 'Black XS H'
+  '90': 'Black XS H',
+  '91': 'Eros Flame H',
+  '92': 'Allure Homme Sport H',
+  '93': 'Bharara King H',
+  '94': 'Invictus Victory H',
+  '95': 'Light Blue F',
+  '96': 'Miss Dior F',
+  '97': 'The One H',
+  '98': 'Layton',
+  '99': 'Invictus Victory Elixir H',
+  '100': 'Dylan Blue H',
+  '101': 'Hugo Man H',
+  '102': 'Valentino Uomo H',
+  '103': 'Scandal F',
+  '104': '212 VIP Black H',
+  '105': 'Good Girl Blush F'
 };
 
 export const INSPIRACION_BRAND_MAP: Record<string, string> = {
@@ -188,13 +203,29 @@ export const INSPIRACION_BRAND_MAP: Record<string, string> = {
   '87': 'Yves Saint Laurent',
   '88': 'Azzaro',
   '89': 'Paris Hilton',
-  '90': 'Paco Rabanne'
+  '90': 'Paco Rabanne',
+  '91': 'Versace',
+  '92': 'Chanel',
+  '93': 'Bharara',
+  '94': 'Paco Rabanne',
+  '95': 'Dolce & Gabbana',
+  '96': 'Dior',
+  '97': 'Dolce & Gabbana',
+  '98': 'Parfums de Marly',
+  '99': 'Paco Rabanne',
+  '100': 'Versace',
+  '101': 'Hugo Boss',
+  '102': 'Valentino',
+  '103': 'Jean Paul Gaultier',
+  '104': 'Carolina Herrera',
+  '105': 'Carolina Herrera'
 };
 
 export const INCOMING_ESSENCE_SKUS = new Set([
   '62', '63', '64', '65', '66', '67', '68', '69', '70', '71',
   '72', '73', '74', '75', '76', '77', '78', '79', '80', '81', '82',
-  '83', '84', '85', '86', '87', '88', '89', '90'
+  '83', '84', '85', '86', '87', '88', '89', '90',
+  '91', '92', '93', '94', '95', '96', '97', '98', '99', '100', '101', '102', '103', '104', '105'
 ]);
 
 export function isIncomingEssence(product: { id?: string | null; sku?: string | null; category?: string | null } | null | undefined): boolean {
@@ -222,7 +253,7 @@ const FAMOUS_BRANDS = [
   'LACOSTE', 'LATTAFA', 'BHARARA', 'BVLGARI', 'MOSCHINO', 'CHANEL',
   'XERJOFF', 'LE LABO', 'HERMÈS', 'HERMES', 'MUGLER', 'CREED', 'VERSACE',
   'ARMAF', 'AFNAN', 'PRADA', 'DKNY', 'DIOR', 'HUGO BOSS', 'BOSS',
-  'ARIANA GRANDE', 'NAUTICA', 'AZZARO', 'YSL', 'PARIS HILTON'
+  'ARIANA GRANDE', 'NAUTICA', 'AZZARO', 'YSL', 'PARIS HILTON', 'PARFUMS DE MARLY'
 ];
 
 /**
@@ -571,6 +602,21 @@ export const OFFICIAL_TO_ORIGINAL_MAP: Record<string, { originalName: string; br
   'PLAYBOY': { originalName: 'The Most Wanted H', brand: 'Azzaro', sku: '88' },
   'BEVERLY BOY': { originalName: 'Paris Hilton H', brand: 'Paris Hilton', sku: '89' },
   'ROCKSTAR': { originalName: 'Black XS H', brand: 'Paco Rabanne', sku: '90' },
+  'ATREVIDO FLAME': { originalName: 'Eros Flame H', brand: 'Versace', sku: '91' },
+  'GRAND SPORT': { originalName: 'Allure Homme Sport H', brand: 'Chanel', sku: '92' },
+  'KING ROYALTY': { originalName: 'Bharara King H', brand: 'Bharara', sku: '93' },
+  'KICKBOX VICTORY': { originalName: 'Invictus Victory H', brand: 'Paco Rabanne', sku: '94' },
+  'OCEAN LADY': { originalName: 'Light Blue F', brand: 'Dolce & Gabbana', sku: '95' },
+  'MADEMOISELLE BLOOM': { originalName: 'Miss Dior F', brand: 'Dior', sku: '96' },
+  'GOLDEN ONE': { originalName: 'The One H', brand: 'Dolce & Gabbana', sku: '97' },
+  'ROYAL STALLION': { originalName: 'Layton', brand: 'Parfums de Marly', sku: '98' },
+  'KICKBOX ELIXIR': { originalName: 'Invictus Victory Elixir H', brand: 'Paco Rabanne', sku: '99' },
+  'MEDUSA BLUE': { originalName: 'Dylan Blue H', brand: 'Versace', sku: '100' },
+  'GREEN WOLF': { originalName: 'Hugo Man H', brand: 'Hugo Boss', sku: '101' },
+  'ROMA UOMO': { originalName: 'Valentino Uomo H', brand: 'Valentino', sku: '102' },
+  'PARTYGIRL': { originalName: 'Scandal F', brand: 'Jean Paul Gaultier', sku: '103' },
+  'MANHATTAN VIP': { originalName: '212 VIP Black H', brand: 'Carolina Herrera', sku: '104' },
+  'FEMME BLUSH': { originalName: 'Good Girl Blush F', brand: 'Carolina Herrera', sku: '105' },
 };
 
 // Generar variaciones con sufijos H / F / M / U para match instantáneo
