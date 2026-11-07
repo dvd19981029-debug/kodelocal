@@ -1969,6 +1969,26 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "stockHalf": 0
   },
   {
+    "id": "mini-embudo-perfumeria",
+    "sku": "INS-EMB-MINI",
+    "barcode": "741999000INS-EMB-MINI",
+    "name": "Mini Embudo para llenar botes con esencias u otros usos",
+    "officialName": "Mini Embudo",
+    "brand": "",
+    "gender": "Unisex",
+    "category": "Insumos y Materia Prima",
+    "unit": "Unidad",
+    "price": 0.35,
+    "cost": 0.1,
+    "stock": 240,
+    "minStock": 20,
+    "imageUrl": "/images/insumos/mini_embudo_perfumeria.jpg",
+    "description": "Mini embudo para llenar botes con esencias u otros usos.",
+    "isAvailableOnline": true,
+    "puesto": "C2",
+    "stockHalf": 0
+  },
+  {
     "id": "esencia-apae-050",
     "sku": "50",
     "barcode": "741001000050",
