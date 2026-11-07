@@ -377,7 +377,7 @@ export default function KodeSystemPage() {
     fetchClientes();
     cargarComprasLocal();
 
-    // Refrescar solo cuando la pestaña está activa (cada 2 minutos o al volver a la pestaña tras >60s)
+    // Refrescar solo cuando la pestaña está activa (cada 30 segundos o al volver a la pestaña tras >15s)
     let lastKodeFetch = Date.now();
     const interval = setInterval(() => {
       if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
@@ -385,10 +385,10 @@ export default function KodeSystemPage() {
         fetchPedidos();
         fetchInsumos();
       }
-    }, 120000);
+    }, 30000);
 
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible' && Date.now() - lastKodeFetch > 60000) {
+      if (document.visibilityState === 'visible' && Date.now() - lastKodeFetch > 15000) {
         lastKodeFetch = Date.now();
         fetchPedidos();
         fetchInsumos();
