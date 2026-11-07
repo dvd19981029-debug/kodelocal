@@ -2904,13 +2904,13 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "priceHalfOunce": 1.9,
     "finishedPerfumePrice": 15,
     "cost": 2.01,
-    "stock": 0,
+    "stock": 31,
     "minStock": 15,
     "imageUrl": "/images/esencias/esencia_91.webp?v=aroma_official_v4",
     "description": "Inspirado en EROS FLAME VERSACE",
     "isAvailableOnline": true,
     "puesto": "A1",
-    "stockHalf": 0
+    "stockHalf": 3
   },
   {
     "id": "esencia-apae-092",
