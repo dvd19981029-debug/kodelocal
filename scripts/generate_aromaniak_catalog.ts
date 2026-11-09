@@ -2,9 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 import { PrismaClient } from '@prisma/client';
-import { getInspiracionPerfumeName } from '../src/lib/perfumeNames';
+import { getInspiracionPerfumeName, isNewEssence } from '../src/lib/perfumeNames';
 import { getFragranceProfile } from '../src/lib/fragranceProfiles';
 import { getFragranceDescription } from '../src/lib/fragranceDescriptions';
+import { getCurrentCatalogMonthYear, getEssenceGenderOrderRank, getEssenceGenderDisplayLabel } from '../src/lib/aromaniakCatalogPdf';
 
 const prisma = new PrismaClient();
 
@@ -30,7 +31,19 @@ async function generateAromaniakCatalog() {
     }
   });
 
-  allFragrances.sort((a, b) => Number(a.sku) - Number(b.sku));
+  allFragrances.sort((a, b) => {
+    const rankA = getEssenceGenderOrderRank(a.gender);
+    const rankB = getEssenceGenderOrderRank(b.gender);
+    if (rankA !== rankB) return rankA - rankB;
+
+    const availA = (Number(a.stock || 0) > 0 || Number((a as any).stockHalf || 0) > 0) ? 0 : 1;
+    const availB = (Number(b.stock || 0) > 0 || Number((b as any).stockHalf || 0) > 0) ? 0 : 1;
+    if (availA !== availB) return availA - availB;
+
+    return Number(a.sku || 0) - Number(b.sku || 0);
+  });
+
+  const { upperLabel } = getCurrentCatalogMonthYear(new Date());
 
   // Base64 del logo de Aromaniak
   const logoPath = path.join(__dirname, '../public/images/aromaniak_black_logo.png');
@@ -45,7 +58,7 @@ async function generateAromaniakCatalog() {
   }
 
   const items = allFragrances.map(p => {
-    const ap = apaesaMap[p.sku] || {} as any;
+    const ap = apaesaMap[p.sku || ''] || {} as any;
     const prof = getFragranceProfile(p as any);
     const desc = getFragranceDescription(p as any, prof);
     let cleanOriginal = (p.name || '').replace(/(?:\s+[HFMUD])+$/i, '').trim();
@@ -107,14 +120,15 @@ async function generateAromaniakCatalog() {
       contratipo: contratipoName,
       originalName: cleanOriginal,
       brand: brandName,
-      gender: p.gender || 'Unisex',
+      gender: getEssenceGenderDisplayLabel(p.gender),
       family: family,
       topNotes: prof?.topNotes || [],
       heartNotes: prof?.heartNotes || [],
       baseNotes: prof?.baseNotes || [],
       description: cleanDesc,
       bottleUri,
-      isIncoming: Number(p.stock || 0) <= 0 && Number(p.stockHalf || 0) <= 0
+      isIncoming: Number(p.stock || 0) <= 0 && Number((p as any).stockHalf || 0) <= 0,
+      isNew: isNewEssence(p as any)
     };
   });
 
@@ -468,6 +482,10 @@ async function generateAromaniakCatalog() {
               <span class="brand-sub">Esencias Calidad AAA+ • Perfumería Fina</span>
             </div>
           </div>
+          <div class="header-status-badge">
+            <div class="header-status-title">CATÁLOGO • ${upperLabel}</div>
+            <div class="header-status-sub">ORDEN: HOMBRE • MUJER • UNISEX</div>
+          </div>
         </div>
 
         <div class="grid">
@@ -489,7 +507,8 @@ async function generateAromaniakCatalog() {
                   <div class="card-top">
                     <span class="code-badge">${item.skuCode}</span>
                     <div style="display:flex;gap:4px;align-items:center;">
-                      ${item.isIncoming ? `<span style="background:#f59e0b;color:#fff;font-size:7px;font-weight:900;padding:1px 5px;border-radius:2px;letter-spacing:0.6px;text-transform:uppercase;">EN CAMINO</span>` : ''}
+                      ${item.isNew ? `<span style="background:linear-gradient(135deg,#fef08a,#fbbf24);color:#451a03;border:1px solid #d97706;font-size:6.8px;font-weight:900;padding:1px 5px;border-radius:2px;letter-spacing:0.6px;text-transform:uppercase;">NUEVO</span>` : ''}
+                      ${item.isIncoming ? `<span style="background:#f59e0b;color:#fff;font-size:7px;font-weight:900;padding:1px 5px;border-radius:2px;letter-spacing:0.6px;text-transform:uppercase;">EN CAMINO</span>` : `<span style="background:#ecfdf5;color:#047857;border:1px solid #059669;font-size:6.8px;font-weight:900;padding:1px 5px;border-radius:2px;letter-spacing:0.5px;text-transform:uppercase;">DISPONIBLE</span>`}
                       <span class="gender-tag ${genderClass}">${item.gender}</span>
                     </div>
                   </div>
@@ -531,7 +550,7 @@ async function generateAromaniakCatalog() {
       </div>
 
       <div class="page-footer">
-        <div><strong>AROMANIAK SV</strong> • Perfumería Fina & Esencias de Alta Gama • www.aromaniaksv.com</div>
+        <div><strong>AROMANIAK SV</strong> • Catálogo Actualizado: ${upperLabel} • www.aromaniaksv.com</div>
         <div>Página ${pageNum} de ${pages.length}</div>
       </div>
     </div>
