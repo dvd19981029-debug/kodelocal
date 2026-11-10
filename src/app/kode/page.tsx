@@ -1186,6 +1186,7 @@ export default function KodeSystemPage() {
               {ventasView === 'catalogo' && (
                 <CatalogoGrid
                   catalogo={catalogo}
+                  pedidos={pedidos}
                   onAbrirEdicion={(p) => setPerfumeEditando(p)}
                   onAbrirNuevaFragancia={() => setModalNuevaFragancia(true)}
                   onSeleccionarPerfume={handleSeleccionarPerfume}
@@ -1232,6 +1233,7 @@ export default function KodeSystemPage() {
           {activeNav === 'INVENTARIO' && (
             <CatalogoGrid
               catalogo={catalogo}
+              pedidos={pedidos}
               onAbrirEdicion={(p) => setPerfumeEditando(p)}
               onAbrirNuevaFragancia={() => setModalNuevaFragancia(true)}
               onSeleccionarPerfume={handleSeleccionarPerfume}

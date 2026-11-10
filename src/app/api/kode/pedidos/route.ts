@@ -10,6 +10,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const estado = searchParams.get('estado')?.trim() || '';
     const q = searchParams.get('q')?.trim() || '';
+    const catalogoId = searchParams.get('catalogo_id')?.trim() || '';
+    const codigoPerfume = searchParams.get('codigo')?.trim() || '';
 
     let sql = `
       SELECT 
@@ -119,6 +121,20 @@ export async function GET(request: Request) {
         OR c.nombre_completo ILIKE $${params.length} 
         OR c.telefono_whatsapp ILIKE $${params.length}
         OR p.c807_guia_numero ILIKE $${params.length}
+      )`;
+    }
+
+    if (catalogoId || codigoPerfume) {
+      params.push(catalogoId);
+      params.push(codigoPerfume);
+      sql += ` AND EXISTS (
+        SELECT 1 FROM public.pedido_items pi_f
+        LEFT JOIN public.catalogo cat_f ON pi_f.catalogo_id = cat_f.id
+        WHERE pi_f.pedido_id = p.id
+          AND (
+            ($${params.length - 1} <> '' AND pi_f.catalogo_id::text = $${params.length - 1})
+            OR ($${params.length} <> '' AND cat_f.codigo = $${params.length})
+          )
       )`;
     }
 
