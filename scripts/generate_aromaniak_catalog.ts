@@ -61,18 +61,16 @@ crop.save("${croppedLogoPath}", "PNG")
     height: 176,
   };
 
-  // 2. Generar recorte exacto de la botella base (360x756 JPEG con fondo #faf5ff)
+  // 2. Generar recorte limpio de la botella en su proporción real 1:1 (1024x1024) sobre fondo blanco puro (#ffffff)
   const bottleWebpPath = path.join(__dirname, '../public/images/essence_bottle_blank.webp');
   const croppedBottlePath = '/tmp/aromaniak_bottle_cropped.jpg';
   execSync(
     `python3 -c '
 from PIL import Image
-im = Image.open("${bottleWebpPath}").convert("RGBA")
-w, h = im.size
-sx, sy, sw, sh = round(w * 0.2656), round(h * 0.1504), round(w * 0.4688), round(h * 0.7383)
-bg = Image.new("RGBA", (w, h), (250, 245, 255, 255))
+im = Image.open("${bottleWebpPath}").convert("RGBA").resize((1024, 1024), Image.Resampling.LANCZOS)
+bg = Image.new("RGBA", (1024, 1024), (255, 255, 255, 255))
 comp = Image.alpha_composite(bg, im).convert("RGB")
-crop = comp.crop((sx, sy, sx + sw, sy + sh))
+crop = comp.crop((240, 150, 784, 910))
 crop.save("${croppedBottlePath}", "JPEG", quality=92)
 '`
   );
@@ -80,8 +78,8 @@ crop.save("${croppedBottlePath}", "JPEG", quality=92)
   const bottleB64 = fs.readFileSync(croppedBottlePath).toString('base64');
   const bottleImg: CatalogImageAsset = {
     dataUrl: `data:image/jpeg;base64,${bottleB64}`,
-    width: 360,
-    height: 756,
+    width: 544,
+    height: 760,
   };
 
   const doc = new jsPDF({

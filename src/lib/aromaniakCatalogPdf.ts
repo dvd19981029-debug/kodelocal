@@ -48,11 +48,11 @@ export function getEssenceGenderOrderRank(gender?: string | null): number {
   return 2; // 3. Unisex
 }
 
-export function getEssenceGenderDisplayLabel(gender?: string | null): 'HOMBRE' | 'MUJER' | 'UNISEX' {
+export function getEssenceGenderDisplayLabel(gender?: string | null): 'Hombre' | 'Mujer' | 'Unisex' {
   const rank = getEssenceGenderOrderRank(gender);
-  if (rank === 0) return 'HOMBRE';
-  if (rank === 1) return 'MUJER';
-  return 'UNISEX';
+  if (rank === 0) return 'Hombre';
+  if (rank === 1) return 'Mujer';
+  return 'Unisex';
 }
 
 // Lookup inverso por SKU para encontrar el nombre contratipo oficial limpio
@@ -72,18 +72,28 @@ export interface CatalogImageAsset {
 export interface CatalogEssenceItem {
   rawSku: string;
   skuNum: number;
-  skuCode: string;
   contratipo: string;
   originalName: string;
   brand: string;
   genderRank: number;
-  genderLabel: 'HOMBRE' | 'MUJER' | 'UNISEX';
+  genderLabel: 'Hombre' | 'Mujer' | 'Unisex';
   family: string;
-  topNotes: string[];
-  heartNotes: string[];
-  baseNotes: string[];
+  notesList: string[];
   hasStock: boolean;
   isNew: boolean;
+}
+
+function toTitleCaseEs(str: string): string {
+  const minorWords = new Set(['de', 'del', 'la', 'las', 'el', 'los', 'y', 'en', 'con', 'a']);
+  return str
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word, idx) => {
+      if (!word) return '';
+      if (idx > 0 && minorWords.has(word)) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
 }
 
 async function loadLogoAsDataUrl(src: string): Promise<CatalogImageAsset | null> {
@@ -95,7 +105,6 @@ async function loadLogoAsDataUrl(src: string): Promise<CatalogImageAsset | null>
       try {
         const natW = img.naturalWidth || 1024;
         const natH = img.naturalHeight || 409;
-        // Recorte exacto a los píxeles visibles del logo (/logo.png 1024x409 -> x:12..1006, y:108..284)
         const isHighResMainLogo = natW >= 800 && natH >= 300;
         const sx = isHighResMainLogo ? Math.round(natW * 0.0117) : 0;
         const sy = isHighResMainLogo ? Math.round(natH * 0.264) : 0;
@@ -126,24 +135,35 @@ async function loadLogoAsDataUrl(src: string): Promise<CatalogImageAsset | null>
 }
 
 /**
- * Carga la imagen de la botella de esencia recortando los márgenes blancos excesivos
- * (de 768x1024 al encuadre real del frasco ~360x756, proporción 1:2.1) para que luzca
- * grande, nítida y con proporciones reales dentro de cada tarjeta del catálogo.
+ * Carga la imagen del frasco restaurando primero su proporción cuadrada original (1024x1024,
+ * igual que el contenedor aspect-square de la web) para eliminar el estiramiento vertical
+ * de 768x1024, y recortando sobre fondo blanco puro (#ffffff).
  */
-async function loadCroppedBottleAsDataUrl(src: string): Promise<CatalogImageAsset | null> {
+async function loadBottleAsDataUrl(src: string): Promise<CatalogImageAsset | null> {
   if (typeof window === 'undefined') return null;
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
       try {
-        const natW = img.naturalWidth || 768;
-        const natH = img.naturalHeight || 1024;
-        // Encuadre exacto del frasco (centrado horizontalmente en 50%)
-        const sx = Math.round(natW * 0.2656);
-        const sy = Math.round(natH * 0.1504);
-        const sw = Math.round(natW * 0.4688);
-        const sh = Math.round(natH * 0.7383);
+        // Normalizar a lienzo cuadrado 1024x1024 para que el frasco recupere su proporción real sin estirarse
+        const baseSize = 1024;
+        const sx = 240;
+        const sy = 150;
+        const sw = 544;
+        const sh = 760;
+
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = baseSize;
+        tempCanvas.height = baseSize;
+        const tempCtx = tempCanvas.getContext('2d');
+        if (!tempCtx) {
+          resolve(null);
+          return;
+        }
+        tempCtx.fillStyle = '#ffffff';
+        tempCtx.fillRect(0, 0, baseSize, baseSize);
+        tempCtx.drawImage(img, 0, 0, baseSize, baseSize);
 
         const canvas = document.createElement('canvas');
         canvas.width = sw;
@@ -153,11 +173,11 @@ async function loadCroppedBottleAsDataUrl(src: string): Promise<CatalogImageAsse
           resolve(null);
           return;
         }
-        ctx.fillStyle = '#faf5ff';
+        ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, sw, sh);
-        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+        ctx.drawImage(tempCanvas, sx, sy, sw, sh, 0, 0, sw, sh);
         resolve({
-          dataUrl: canvas.toDataURL('image/jpeg', 0.9),
+          dataUrl: canvas.toDataURL('image/jpeg', 0.92),
           width: sw,
           height: sh,
         });
@@ -183,7 +203,6 @@ export function prepareCatalogEssenceItems(products: ProductItem[]): {
     const skuNum = Number(rawSku || 0);
     const prof = getFragranceProfile(p);
 
-    // Limpiar nombre de inspiración sin letra de género ni marca pegada
     const rawInsp = INSPIRACION_PERFUME_MAP[rawSku] || p.name || '';
     let cleanOriginal = rawInsp
       .replace(/(?:\s+[HFMUD])+$/i, '')
@@ -197,15 +216,24 @@ export function prepareCatalogEssenceItems(products: ProductItem[]): {
     if (cleanOriginal === 'Princess') cleanOriginal = 'Vera Wang Princess';
     if (cleanOriginal === 'Good Girl M' || cleanOriginal === 'Good Girl') cleanOriginal = 'Good Girl';
 
-    const cleanContratipo = (
+    const rawContratipo =
       SKU_TO_CONTRATIPO_MAP[rawSku] ||
       (p.officialName || '').replace(/(?:\s+[HFMUD])+$/i, '').trim() ||
-      cleanOriginal
-    ).toUpperCase();
+      cleanOriginal;
 
+    const cleanContratipo = toTitleCaseEs(rawContratipo);
     const brandName = (INSPIRACION_BRAND_MAP[rawSku] || p.brand || '').trim();
+    const family = toTitleCaseEs(prof?.family || 'Fragancia Fina');
 
-    const family = (prof?.family || 'Fragancia Fina').toUpperCase();
+    // Combinar las notas principales sin sobrecargar (máximo 5 notas clave)
+    const combinedNotes = Array.from(
+      new Set([
+        ...(prof?.topNotes || []).slice(0, 2),
+        ...(prof?.heartNotes || []).slice(0, 2),
+        ...(prof?.baseNotes || []).slice(0, 2),
+      ])
+    ).slice(0, 5);
+
     const hasStock = Number(p.stock || 0) > 0 || Number(p.stockHalf || 0) > 0;
     const genderRank = getEssenceGenderOrderRank(p.gender);
     const genderLabel = getEssenceGenderDisplayLabel(p.gender);
@@ -213,16 +241,13 @@ export function prepareCatalogEssenceItems(products: ProductItem[]): {
     return {
       rawSku,
       skuNum,
-      skuCode: `AR-${rawSku.padStart(3, '0')}`,
       contratipo: cleanContratipo,
       originalName: cleanOriginal,
       brand: brandName,
       genderRank,
       genderLabel,
       family,
-      topNotes: prof?.topNotes || [],
-      heartNotes: prof?.heartNotes || [],
-      baseNotes: prof?.baseNotes || [],
+      notesList: combinedNotes,
       hasStock,
       isNew: isNewEssence(p),
     };
@@ -249,16 +274,10 @@ function fitTextSingleLine(doc: any, text: string, maxWidth: number): string {
   return trimmed + '...';
 }
 
-function drawCoverPage(
-  doc: any,
-  logoImg: CatalogImageAsset | null,
-  upperLabel: string
-) {
-  // Fondo blanco puro minimalista
+function drawCoverPage(doc: any, logoImg: CatalogImageAsset | null, upperLabel: string) {
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, 210, 297, 'F');
 
-  // Logo central de Aromaniak en alta resolución
   if (logoImg) {
     const logoW = 104;
     const logoH = (logoImg.height / logoImg.width) * logoW;
@@ -275,28 +294,21 @@ function drawCoverPage(
   } else {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(34);
-    doc.setTextColor(30, 27, 75);
+    doc.setTextColor(30, 41, 59);
     doc.text('Aromaniak', 105, 130, { align: 'center' });
   }
 
-  // Línea minimalista sutil
-  doc.setDrawColor(203, 213, 225); // #cbd5e1
+  doc.setDrawColor(203, 213, 225);
   doc.setLineWidth(0.35);
   doc.line(91, 146, 119, 146);
 
-  // Catálogo del Mes y Año (limpio y directo)
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(15);
-  doc.setTextColor(30, 27, 75); // #1e1b4b
+  doc.setTextColor(30, 41, 59);
   doc.text(`CATÁLOGO ${upperLabel}`, 105, 156.5, { align: 'center' });
 }
 
-function drawIncomingDividerPage(
-  doc: any,
-  logoImg: CatalogImageAsset | null,
-  upperLabel: string
-) {
-  // Fondo blanco puro minimalista
+function drawIncomingDividerPage(doc: any, logoImg: CatalogImageAsset | null, upperLabel: string) {
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, 210, 297, 'F');
 
@@ -315,20 +327,18 @@ function drawIncomingDividerPage(
     );
   }
 
-  // Línea minimalista sutil
-  doc.setDrawColor(203, 213, 225); // #cbd5e1
+  doc.setDrawColor(203, 213, 225);
   doc.setLineWidth(0.35);
   doc.line(91, 144, 119, 144);
 
-  // Título limpio de la sección divisoria
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
-  doc.setTextColor(30, 27, 75); // #1e1b4b
+  doc.setTextColor(30, 41, 59);
   doc.text('PRÓXIMOS INGRESOS', 105, 154.5, { align: 'center' });
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10.5);
-  doc.setTextColor(100, 116, 139); // #64748b
+  doc.setTextColor(100, 116, 139);
   doc.text(upperLabel, 105, 162.5, { align: 'center' });
 }
 
@@ -337,76 +347,55 @@ function drawCatalogGridPage(
   pageItems: CatalogEssenceItem[],
   logoImg: CatalogImageAsset | null,
   bottleImg: CatalogImageAsset | null,
-  upperLabel: string,
+  label: string,
   sectionMode: 'AVAILABLE' | 'INCOMING',
   pageNum: number,
   totalPages: number
 ) {
-  const marginX = 13.5;
-  const usableW = 210 - marginX * 2; // 183mm
-  const colGap = 5.0;
-  const rowGap = 4.2;
-  const cardW = (usableW - colGap) / 2; // 89.0mm
-  const gridTop = 25.0;
-  const gridBottom = 279.8;
-  const cardH = (gridBottom - gridTop - rowGap * 3) / 4; // 60.55mm
+  // Fondo suave estilo Aromaniak web (#f4f6fb) para que las tarjetas blancas destaquen limpiamente
+  doc.setFillColor(244, 246, 251);
+  doc.rect(0, 0, 210, 297, 'F');
 
-  // ================= HEADER =================
-  let brandTextX = marginX;
+  const marginX = 14.0;
+  const usableW = 210 - marginX * 2; // 182mm
+  const colGap = 5.5;
+  const rowGap = 4.8;
+  const cardW = (usableW - colGap) / 2; // 88.25mm
+  const gridTop = 26.5;
+  const gridBottom = 278.5;
+  const cardH = (gridBottom - gridTop - rowGap * 3) / 4; // 59.4mm
+
+  // ================= HEADER MINIMALISTA AROMANIAK =================
   if (logoImg) {
-    const logoH = 7.0;
+    const logoH = 7.8;
     const logoW = (logoImg.width / logoImg.height) * logoH;
-    doc.addImage(logoImg.dataUrl, 'PNG', marginX, 10.8, logoW, logoH, 'aromaniak_logo', 'FAST');
-    brandTextX = marginX + logoW + 3.0;
-  }
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10.5);
-  doc.setTextColor(59, 7, 100); // #3b0764
-  doc.text('AROMANIAK SV', brandTextX, 14.8);
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(6.2);
-  doc.setTextColor(126, 34, 206); // #7e22ce
-  doc.text('CATÁLOGO DE ESENCIAS GRADO AAA+', brandTextX, 18.2);
-
-  // Géneros presentes en esta página
-  const uniqueGenders = Array.from(new Set(pageItems.map((i) => i.genderLabel)));
-  const genderSummary = uniqueGenders.join(' / ');
-
-  // Badge derecho con Fecha y Sección
-  const badgeW = 68;
-  const badgeH = 9.2;
-  const badgeX = 210 - marginX - badgeW;
-  const badgeY = 10.2;
-  if (sectionMode === 'INCOMING') {
-    doc.setFillColor(180, 83, 9); // #b45309
-    doc.setDrawColor(146, 64, 14);
+    doc.addImage(logoImg.dataUrl, 'PNG', marginX, 11.2, logoW, logoH, 'aromaniak_logo', 'FAST');
   } else {
-    doc.setFillColor(88, 28, 135); // #581c87
-    doc.setDrawColor(59, 7, 100);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(30, 41, 59);
+    doc.text('Aromaniak', marginX, 16.5);
   }
-  doc.setLineWidth(0.25);
-  doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 1.5, 1.5, 'FD');
+
+  const uniqueGenders = Array.from(new Set(pageItems.map((i) => i.genderLabel)));
+  const genderSummary = uniqueGenders.join(' • ');
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(6.6);
-  doc.setTextColor(255, 255, 255);
-  const badgeTitle =
-    sectionMode === 'INCOMING'
-      ? `PRÓXIMOS INGRESOS • ${upperLabel}`
-      : `DISPONIBLES • ${upperLabel}`;
-  doc.text(badgeTitle, badgeX + badgeW - 2.8, badgeY + 4.1, { align: 'right' });
+  doc.setFontSize(8.5);
+  doc.setTextColor(30, 41, 59); // #1e293b
+  const headerRightTitle =
+    sectionMode === 'INCOMING' ? `Próximos Ingresos • ${label}` : `Catálogo • ${label}`;
+  doc.text(headerRightTitle, 210 - marginX, 14.8, { align: 'right' });
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(5.5);
-  doc.setTextColor(243, 232, 255);
-  doc.text(`SECCIÓN: ${genderSummary}`, badgeX + badgeW - 2.8, badgeY + 7.5, { align: 'right' });
+  doc.setFontSize(7.2);
+  doc.setTextColor(124, 58, 237); // #7c3aed (Violeta Aromaniak)
+  doc.text(genderSummary, 210 - marginX, 18.8, { align: 'right' });
 
-  // Línea divisoria del header
-  doc.setDrawColor(88, 28, 135);
-  doc.setLineWidth(0.55);
-  doc.line(marginX, 21.5, 210 - marginX, 21.5);
+  // Línea divisoria sutil
+  doc.setDrawColor(226, 232, 240); // #e2e8f0
+  doc.setLineWidth(0.35);
+  doc.line(marginX, 22.2, 210 - marginX, 22.2);
 
   // ================= 8 TARJETAS DE PERFUME (2x4) =================
   pageItems.forEach((item, idx) => {
@@ -415,32 +404,24 @@ function drawCatalogGridPage(
     const x = marginX + col * (cardW + colGap);
     const y = gridTop + row * (cardH + rowGap);
 
-    // Marco exterior limpio con esquinas redondeadas
+    // Sombra suave inferior derecha estilo clay-card
+    doc.setFillColor(226, 232, 240);
+    doc.roundedRect(x + 0.4, y + 0.5, cardW, cardH, 3.8, 3.8, 'F');
+
+    // Tarjeta blanca limpia con bordes redondeados suaves (sin borde morado chillón)
     doc.setFillColor(255, 255, 255);
-    doc.setDrawColor(192, 132, 252); // #c084fc
-    doc.setLineWidth(0.35);
-    doc.roundedRect(x, y, cardW, cardH, 2.0, 2.0, 'FD');
+    doc.setDrawColor(226, 232, 240); // #e2e8f0
+    doc.setLineWidth(0.3);
+    doc.roundedRect(x, y, cardW, cardH, 3.8, 3.8, 'FD');
 
-    // Pedestal izquierdo para la botella (proporciones reales y amplias)
-    const bottleBoxX = x + 2.8;
-    const bottleBoxY = y + 2.8;
-    const bottleBoxW = 24.0;
-    const bottleBoxH = cardH - 5.6; // 54.95mm
-    doc.setFillColor(250, 245, 255); // #faf5ff
-    doc.setDrawColor(233, 213, 255); // #e9d5ff
-    doc.setLineWidth(0.25);
-    doc.roundedRect(bottleBoxX, bottleBoxY, bottleBoxW, bottleBoxH, 1.5, 1.5, 'FD');
-
+    // Área izquierda del frasco: directo sobre el fondo blanco de la tarjeta (SIN pastilla morada)
+    const bottleAreaW = 30.5;
     if (bottleImg) {
-      // Con el recorte exacto (proporción ~1:2.1), bW=20.2mm da bH=~42.4mm
-      let bW = 20.2;
-      let bH = (bottleImg.height / bottleImg.width) * bW;
-      if (bH > bottleBoxH - 3.0) {
-        bH = bottleBoxH - 3.0;
-        bW = (bottleImg.width / bottleImg.height) * bH;
-      }
-      const bX = bottleBoxX + (bottleBoxW - bW) / 2;
-      const bY = bottleBoxY + (bottleBoxH - bH) / 2;
+      // Proporción real des-estirada (544:760 -> bW=27.2mm, bH=38.0mm)
+      const bH = 38.0;
+      const bW = (bottleImg.width / bottleImg.height) * bH;
+      const bX = x + 2.2 + (bottleAreaW - bW) / 2;
+      const bY = y + (cardH - bH) / 2;
       doc.addImage(
         bottleImg.dataUrl,
         'JPEG',
@@ -448,199 +429,139 @@ function drawCatalogGridPage(
         bY,
         bW,
         bH,
-        'aromaniak_bottle_crop',
+        'aromaniak_bottle_clean',
         'FAST'
       );
 
-      // Nombre contratipo impreso con precisión en la etiqueta blanca del frasco
+      // Nombre contratipo en la etiqueta del frasco
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(3.1);
       doc.setTextColor(24, 24, 27);
       const labelCenterX = bX + bW * 0.5;
-      const labelCenterY = bY + bH * 0.604;
+      const labelCenterY = bY + bH * 0.605;
+      const upperContratipo = item.contratipo.toUpperCase();
       const shortLabel =
-        item.contratipo.length > 13 ? item.contratipo.slice(0, 12) : item.contratipo;
+        upperContratipo.length > 13 ? upperContratipo.slice(0, 12) : upperContratipo;
       doc.text(shortLabel, labelCenterX, labelCenterY, { align: 'center' });
     }
 
-    // Columna derecha de información (ordenada, aireada y sin texto recargado)
-    const infoX = bottleBoxX + bottleBoxW + 3.2; // x + 30.0mm
-    const infoRightX = x + cardW - 3.0;
-    const infoW = infoRightX - infoX; // ~56.0mm
+    // Separador vertical ultra sutil entre frasco y texto
+    const sepX = x + bottleAreaW + 2.2;
+    doc.setDrawColor(241, 245, 249); // #f1f5f9
+    doc.setLineWidth(0.3);
+    doc.line(sepX, y + 6.0, sepX, y + cardH - 6.0);
 
-    // 1. Fila Superior: Código AR-XXX (+ NUEVO / EN CAMINO) a la izquierda, Género a la derecha
-    const topRowY = y + 3.4;
-    const badgeHSmall = 4.5;
-    const skuBadgeW = 13.0;
+    // Columna derecha de texto (limpia, aireada y sin saturación)
+    const infoX = sepX + 3.5;
+    const infoRightX = x + cardW - 4.0;
+    const infoW = infoRightX - infoX;
 
-    doc.setFillColor(76, 29, 149); // #4c1d95
-    doc.roundedRect(infoX, topRowY, skuBadgeW, badgeHSmall, 0.9, 0.9, 'F');
+    // 1. Fila superior de etiquetas: Género a la izquierda + Nuevo / En camino a la derecha (SIN AR-XXX)
+    const topY = y + 6.2;
+    const pillH = 4.6;
+
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(6.3);
-    doc.setTextColor(255, 255, 255);
-    doc.text(item.skuCode, infoX + skuBadgeW / 2, topRowY + 3.1, { align: 'center' });
-
-    let leftCursorX = infoX + skuBadgeW + 1.5;
-
-    // Si es esencia nueva, badge dorado limpio
-    if (item.isNew) {
-      const newText = 'NUEVO';
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(5.4);
-      const nW = doc.getTextWidth(newText) + 3.0;
-      doc.setFillColor(254, 240, 138); // #fef08a
-      doc.setDrawColor(217, 119, 6); // #d97706
-      doc.setLineWidth(0.22);
-      doc.roundedRect(leftCursorX, topRowY, nW, badgeHSmall, 0.9, 0.9, 'FD');
-      doc.setTextColor(113, 63, 18); // #713f12
-      doc.text(newText, leftCursorX + nW / 2, topRowY + 3.1, { align: 'center' });
-      leftCursorX += nW + 1.4;
-    }
-
-    // Si es próximo ingreso, badge ámbar limpio
-    if (!item.hasStock) {
-      const incText = 'EN CAMINO';
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(5.2);
-      const sW = doc.getTextWidth(incText) + 2.8;
-      doc.setFillColor(255, 251, 235); // #fffbeb
-      doc.setDrawColor(217, 119, 6); // #d97706
-      doc.setLineWidth(0.22);
-      doc.roundedRect(leftCursorX, topRowY, sW, badgeHSmall, 0.9, 0.9, 'FD');
-      doc.setTextColor(180, 83, 9); // #b45309
-      doc.text(incText, leftCursorX + sW / 2, topRowY + 3.1, { align: 'center' });
-    }
-
-    // Pill de Género a la derecha
+    doc.setFontSize(6.2);
     const genderText = item.genderLabel;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(5.7);
-    const gW = doc.getTextWidth(genderText) + 3.6;
-    const gX = infoRightX - gW;
-    if (genderText === 'HOMBRE') {
+    const gW = doc.getTextWidth(genderText) + 4.4;
+
+    if (genderText === 'Hombre') {
       doc.setFillColor(239, 246, 255); // #eff6ff
-      doc.setDrawColor(59, 130, 246); // #3b82f6
-      doc.setTextColor(29, 78, 216); // #1d4ed8
-    } else if (genderText === 'MUJER') {
+      doc.setTextColor(30, 58, 138); // #1e3a8a
+    } else if (genderText === 'Mujer') {
       doc.setFillColor(253, 242, 248); // #fdf2f8
-      doc.setDrawColor(236, 72, 153); // #ec4899
-      doc.setTextColor(190, 24, 93); // #be185d
+      doc.setTextColor(131, 24, 67); // #831843
     } else {
       doc.setFillColor(243, 232, 255); // #f3e8ff
-      doc.setDrawColor(168, 85, 247); // #a855f7
-      doc.setTextColor(109, 40, 217); // #6d28d9
+      doc.setTextColor(88, 28, 135); // #581c87
     }
-    doc.setLineWidth(0.22);
-    doc.roundedRect(gX, topRowY, gW, badgeHSmall, 0.9, 0.9, 'FD');
-    doc.text(genderText, gX + gW / 2, topRowY + 3.1, { align: 'center' });
+    doc.roundedRect(infoX, topY, gW, pillH, 1.4, 1.4, 'F');
+    doc.text(genderText, infoX + gW / 2, topY + 3.15, { align: 'center' });
 
-    // 2. Nombre Contratipo Oficial (grande y protagonista)
+    let badgeCursorX = infoX + gW + 1.8;
+
+    if (item.isNew) {
+      const newText = 'Nuevo';
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(6.0);
+      const nW = doc.getTextWidth(newText) + 4.0;
+      doc.setFillColor(254, 243, 199); // #fef3c7
+      doc.setTextColor(146, 64, 14); // #92400e
+      doc.roundedRect(badgeCursorX, topY, nW, pillH, 1.4, 1.4, 'F');
+      doc.text(newText, badgeCursorX + nW / 2, topY + 3.15, { align: 'center' });
+      badgeCursorX += nW + 1.8;
+    }
+
+    if (!item.hasStock) {
+      const incText = 'En camino';
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(5.8);
+      const sW = doc.getTextWidth(incText) + 4.0;
+      doc.setFillColor(241, 245, 249); // #f1f5f9
+      doc.setTextColor(71, 85, 105); // #475569
+      doc.roundedRect(badgeCursorX, topY, sW, pillH, 1.4, 1.4, 'F');
+      doc.text(incText, badgeCursorX + sW / 2, topY + 3.15, { align: 'center' });
+    }
+
+    // 2. Nombre del perfume (Contratipo) en slate-900 como en la web de Aromaniak
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10.6);
-    doc.setTextColor(46, 16, 101); // #2e1065
-    const contratipoLine = fitTextSingleLine(doc, item.contratipo, infoW);
-    doc.text(contratipoLine, infoX, y + 13.0);
-
-    // 3. Recuadro destacado de Inspiración y Casa Perfumera
-    const inspBoxY = y + 15.2;
-    const inspBoxH = 11.4;
-    doc.setFillColor(250, 245, 255); // #faf5ff
-    doc.setDrawColor(233, 213, 255); // #e9d5ff
-    doc.setLineWidth(0.25);
-    doc.roundedRect(infoX, inspBoxY, infoW, inspBoxH, 1.2, 1.2, 'FD');
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(5.3);
-    doc.setTextColor(126, 34, 206); // #7e22ce
-    doc.text('INSPIRADO EN:', infoX + 2.2, inspBoxY + 3.8);
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.6);
+    doc.setFontSize(12.2);
     doc.setTextColor(15, 23, 42); // #0f172a
-    const fullInspStr = item.brand
-      ? `${item.originalName}  •  ${item.brand}`
-      : item.originalName;
-    const fittedInsp = fitTextSingleLine(doc, fullInspStr, infoW - 4.4);
-    doc.text(fittedInsp, infoX + 2.2, inspBoxY + 8.8);
+    const titleStr = fitTextSingleLine(doc, item.contratipo, infoW);
+    doc.text(titleStr, infoX, y + 17.8);
+
+    // 3. Inspirado en (limpio, sin cajas artificiales)
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.2);
+    doc.setTextColor(100, 116, 139); // #64748b
+    doc.text('Inspirado en', infoX, y + 23.6);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.8);
+    doc.setTextColor(124, 58, 237); // #7c3aed (Violeta Aromaniak)
+    const inspNameStr = fitTextSingleLine(doc, item.originalName, infoW);
+    doc.text(inspNameStr, infoX, y + 28.4);
+
+    if (item.brand) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(71, 85, 105); // #475569
+      const brandStr = fitTextSingleLine(doc, item.brand, infoW);
+      doc.text(brandStr, infoX, y + 32.8);
+    }
 
     // 4. Familia Olfativa
-    const famY = y + 31.4;
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(5.6);
-    doc.setTextColor(100, 116, 139); // #64748b
-    const famLabel = 'FAMILIA: ';
-    doc.text(famLabel, infoX, famY);
-    const famLabelW = doc.getTextWidth(famLabel);
+    doc.setFontSize(7.0);
+    doc.setTextColor(30, 41, 59); // #1e293b
+    const famStr = fitTextSingleLine(doc, item.family, infoW);
+    doc.text(famStr, infoX, y + 40.2);
 
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(6.1);
-    doc.setTextColor(88, 28, 135); // #581c87
-    const fittedFam = fitTextSingleLine(doc, item.family, infoW - famLabelW);
-    doc.text(fittedFam, infoX + famLabelW, famY);
-
-    // 5. Línea divisoria sutil + Pirámide Olfativa estructurada en 3 niveles limpios
-    doc.setDrawColor(226, 232, 240); // #e2e8f0
-    doc.setLineWidth(0.25);
-    doc.line(infoX, y + 34.0, infoRightX, y + 34.0);
-
-    const pyramidRows = [
-      {
-        label: 'Salida:',
-        notes: item.topNotes.length > 0 ? item.topNotes.slice(0, 3).join(', ') : 'Acordes frescos',
-        rowY: y + 39.2,
-      },
-      {
-        label: 'Corazón:',
-        notes:
-          item.heartNotes.length > 0 ? item.heartNotes.slice(0, 3).join(', ') : 'Notas aromáticas',
-        rowY: y + 46.2,
-      },
-      {
-        label: 'Fondo:',
-        notes:
-          item.baseNotes.length > 0 ? item.baseNotes.slice(0, 3).join(', ') : 'Maderas y almizcle',
-        rowY: y + 53.2,
-      },
-    ];
-
-    pyramidRows.forEach((pRow) => {
-      // Viñeta circular morada
-      doc.setFillColor(126, 34, 206);
-      doc.circle(infoX + 1.0, pRow.rowY - 0.9, 0.65, 'F');
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(6.2);
-      doc.setTextColor(59, 7, 100);
-      doc.text(pRow.label, infoX + 2.8, pRow.rowY);
-      const lblW = doc.getTextWidth(pRow.label);
-
+    // 5. Notas principales (bloque limpio de 2 líneas sin viñetas saturadas)
+    if (item.notesList.length > 0) {
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(6.2);
-      doc.setTextColor(51, 65, 85); // #334155
-      const noteTextX = infoX + 2.8 + lblW + 1.2;
-      const maxNoteW = infoRightX - noteTextX;
-      const fittedNotes = fitTextSingleLine(doc, pRow.notes, maxNoteW);
-      doc.text(fittedNotes, noteTextX, pRow.rowY);
-    });
+      doc.setFontSize(6.8);
+      doc.setTextColor(100, 116, 139); // #64748b
+      const notesSummary = `Notas: ${item.notesList.join(', ')}`;
+      const noteLines: string[] = doc.splitTextToSize(notesSummary, infoW).slice(0, 2);
+      noteLines.forEach((line, lIdx) => {
+        doc.text(line, infoX, y + 45.4 + lIdx * 3.6);
+      });
+    }
   });
 
-  // ================= FOOTER =================
+  // ================= FOOTER MINIMALISTA =================
   const footerLineY = 283.5;
-  doc.setDrawColor(88, 28, 135);
-  doc.setLineWidth(0.4);
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.35);
   doc.line(marginX, footerLineY, 210 - marginX, footerLineY);
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(6.2);
-  doc.setTextColor(88, 28, 135);
-  doc.text(
-    `AROMANIAK SV • CATÁLOGO ACTUALIZADO: ${upperLabel} • WWW.AROMANIAKSV.COM`,
-    marginX,
-    footerLineY + 4.0
-  );
-
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6.8);
   doc.setTextColor(100, 116, 139);
-  doc.text(`PÁGINA ${pageNum} DE ${totalPages}`, 210 - marginX, footerLineY + 4.0, {
+  doc.text(`www.aromaniaksv.com`, marginX, footerLineY + 4.2);
+
+  doc.text(`Página ${pageNum} de ${totalPages}`, 210 - marginX, footerLineY + 4.2, {
     align: 'right',
   });
 }
@@ -652,7 +573,7 @@ export function buildAromaniakCatalogJsPdfDocument(
   bottleImg: CatalogImageAsset | null,
   date: Date = new Date()
 ): { fileSlug: string; totalPages: number } {
-  const { upperLabel, fileSlug } = getCurrentCatalogMonthYear(date);
+  const { label, upperLabel, fileSlug } = getCurrentCatalogMonthYear(date);
   const { availableItems, incomingItems } = prepareCatalogEssenceItems(products);
 
   const ITEMS_PER_PAGE = 8;
@@ -660,8 +581,6 @@ export function buildAromaniakCatalogJsPdfDocument(
   const hasIncoming = incomingItems.length > 0;
   const incomingPagesCount = hasIncoming ? Math.ceil(incomingItems.length / ITEMS_PER_PAGE) : 0;
 
-  // Total de páginas:
-  // 1 (Portada) + availPagesCount + (hasIncoming ? 1 (Portada Próximos Ingresos) + incomingPagesCount : 0)
   const totalPages = 1 + availPagesCount + (hasIncoming ? 1 + incomingPagesCount : 0);
 
   // 1. PÁGINA 1: PORTADA OFICIAL
@@ -679,7 +598,7 @@ export function buildAromaniakCatalogJsPdfDocument(
       pageItems,
       logoImg,
       bottleImg,
-      upperLabel,
+      label,
       'AVAILABLE',
       currentPageNum,
       totalPages
@@ -688,12 +607,10 @@ export function buildAromaniakCatalogJsPdfDocument(
 
   // 3. SECCIÓN PRÓXIMOS INGRESOS (SOLO SI HAY FRAGANCIAS EN CAMINO EN TIEMPO REAL)
   if (hasIncoming) {
-    // Página divisoria antes de los próximos ingresos
     doc.addPage('a4', 'portrait');
     currentPageNum++;
     drawIncomingDividerPage(doc, logoImg, upperLabel);
 
-    // Páginas de perfumes en camino (Hombre -> Mujer -> Unisex, 8 por página)
     for (let i = 0; i < incomingPagesCount; i++) {
       doc.addPage('a4', 'portrait');
       currentPageNum++;
@@ -703,7 +620,7 @@ export function buildAromaniakCatalogJsPdfDocument(
         pageItems,
         logoImg,
         bottleImg,
-        upperLabel,
+        label,
         'INCOMING',
         currentPageNum,
         totalPages
@@ -715,7 +632,6 @@ export function buildAromaniakCatalogJsPdfDocument(
 }
 
 export async function downloadLiveAromaniakCatalogPdf(): Promise<void> {
-  // 1. Obtener siempre el catálogo más actualizado en tiempo real desde la API
   let products: ProductItem[] = [];
   try {
     const res = await fetch(`/api/products?fresh=true&_t=${Date.now()}`, { cache: 'no-store' });
@@ -724,7 +640,7 @@ export async function downloadLiveAromaniakCatalogPdf(): Promise<void> {
       products = data.products;
     }
   } catch {
-    // Fallback local si no hay red momentáneamente
+    // Fallback local
   }
 
   if (products.length === 0) {
@@ -742,7 +658,7 @@ export async function downloadLiveAromaniakCatalogPdf(): Promise<void> {
 
   const [logoImg, bottleImg] = await Promise.all([
     loadLogoAsDataUrl('/logo.png'),
-    loadCroppedBottleAsDataUrl('/images/essence_bottle_blank.webp'),
+    loadBottleAsDataUrl('/images/essence_bottle_blank.webp'),
   ]);
 
   const { fileSlug } = buildAromaniakCatalogJsPdfDocument(
