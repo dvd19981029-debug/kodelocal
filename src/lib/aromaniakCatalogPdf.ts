@@ -498,24 +498,30 @@ function drawCatalogGridPage(
     const titleStr = fitTextSingleLine(doc, item.contratipo, infoW);
     doc.text(titleStr, infoX, y + 17.8);
 
-    // 3. Inspirado en (limpio, sin cajas artificiales)
+    // 3. Inspirado en (nombre del perfume más grande y en negrita destacada)
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.2);
     doc.setTextColor(100, 116, 139); // #64748b
-    doc.text('Inspirado en', infoX, y + 23.6);
+    doc.text('Inspirado en', infoX, y + 23.2);
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.8);
-    doc.setTextColor(124, 58, 237); // #7c3aed (Violeta Aromaniak)
+    let inspFontSize = 10.4;
+    doc.setFontSize(inspFontSize);
+    while (inspFontSize > 8.6 && doc.getTextWidth(item.originalName) > infoW) {
+      inspFontSize -= 0.4;
+      doc.setFontSize(inspFontSize);
+    }
+    doc.setTextColor(109, 40, 217); // #6d28d9 (Violeta intenso Aromaniak)
     const inspNameStr = fitTextSingleLine(doc, item.originalName, infoW);
-    doc.text(inspNameStr, infoX, y + 28.4);
+    doc.text(inspNameStr, infoX, y + 28.5);
+    doc.text(inspNameStr, infoX + 0.08, y + 28.5);
 
     if (item.brand) {
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.6);
       doc.setTextColor(71, 85, 105); // #475569
       const brandStr = fitTextSingleLine(doc, item.brand, infoW);
-      doc.text(brandStr, infoX, y + 32.8);
+      doc.text(brandStr, infoX, y + 33.2);
     }
 
     // 4. Familia Olfativa
