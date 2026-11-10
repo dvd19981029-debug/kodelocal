@@ -78,6 +78,7 @@ export async function GET(request: Request) {
               'codigo', cat.codigo,
               'contratipo', cat.contratipo,
               'marca', cat.marca_inspirada,
+              'genero', cat.genero,
               'version', pi.version,
               'cantidad', pi.cantidad,
               'precio_unitario', pi.precio_unitario,
