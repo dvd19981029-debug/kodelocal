@@ -1320,6 +1320,7 @@ export default function KodeSystemPage() {
               {biView === 'dashboard' && (
                 <DashboardMetricas
                   metricas={metricas}
+                  pedidos={pedidos}
                   onBack={() => setBiView('hub')}
                 />
               )}

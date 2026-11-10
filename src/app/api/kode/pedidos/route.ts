@@ -141,7 +141,7 @@ export async function GET(request: Request) {
     sql += `
       GROUP BY p.id, c.id, u.id
       ORDER BY p.created_at DESC
-      LIMIT 100;
+      LIMIT 1000;
     `;
 
     const result = await queryKode(sql, params);
