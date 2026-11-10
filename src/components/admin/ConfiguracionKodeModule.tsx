@@ -1983,7 +1983,34 @@ export default function ConfiguracionKodeModule() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => showNotification(`Liquidación de $${Number(emp.total_comisiones || 0).toFixed(2)} registrada para ${emp.nombre}`, 'success')}
+                            onClick={async () => {
+                              const monto = Number(emp.total_comisiones || 0);
+                              if (monto <= 0) {
+                                showNotification(`${emp.nombre} no tiene saldo pendiente por liquidar`, 'error');
+                                return;
+                              }
+                              try {
+                                const res = await kodeFetch('/api/kode/empleados', {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    id: emp.id,
+                                    liquidar_comision: true,
+                                    monto_liquidar: monto,
+                                  }),
+                                });
+                                const data = await res.json();
+                                if (data.success) {
+                                  showNotification(`Liquidación de $${monto.toFixed(2)} registrada para ${emp.nombre}`, 'success');
+                                  fetchEmpleados();
+                                  fetchReportes();
+                                } else {
+                                  showNotification(data.error || 'Error al liquidar comisión', 'error');
+                                }
+                              } catch (err: any) {
+                                showNotification(err.message, 'error');
+                              }
+                            }}
                             className="clay-btn bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 text-[10px] font-bold"
                           >
                             Liquidar

@@ -3,9 +3,20 @@ import { queryKode } from '@/lib/kodeDb';
 
 export const dynamic = 'force-dynamic';
 
+let columnsEnsured = false;
+
 // Asegura que las columnas de empleados, credenciales y Sujeto Excluido existan en public.usuarios
 async function ensureUsuariosColumns() {
-  return;
+  if (columnsEnsured) return;
+  try {
+    await queryKode(`
+      ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS comision_pagada NUMERIC(10,2) DEFAULT 0.00;
+      ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS fecha_ultima_liquidacion TIMESTAMPTZ DEFAULT NULL;
+    `);
+    columnsEnsured = true;
+  } catch (e) {
+    console.error('Error ensuring usuarios columns:', e);
+  }
 }
 
 export async function GET() {
@@ -29,6 +40,8 @@ export async function GET() {
         COALESCE(u.comision_normal, 1.00) AS comision_normal,
         COALESCE(u.comision_plus, 1.50) AS comision_plus,
         COALESCE(u.comision_porcentaje, 5.00)::float AS comision_porcentaje,
+        COALESCE(u.comision_pagada, 0.00)::float AS comision_pagada,
+        u.fecha_ultima_liquidacion,
         COALESCE(u.activo, TRUE) AS activo,
         u.created_at,
         COUNT(DISTINCT p.id) FILTER (WHERE p.id IS NOT NULL) AS total_pedidos,
@@ -42,16 +55,19 @@ export async function GET() {
           ), 0
         )::float AS total_ventas,
         -- REGLA DE NEGOCIO: La comisión se calcula sobre el monto neto entregado con descuento aplicado (ej. 3 Plus = $65)
-        -- SOLO se liquida y acumula cuando el pedido está ENTREGADO
-        COALESCE(
-          (
-            SELECT SUM(
-              GREATEST(0, COALESCE(ped.total, 0) - COALESCE(ped.costo_envio, 0)) * (COALESCE(u.comision_porcentaje, 5.00) / 100.0)
-            )
-            FROM public.pedidos ped
-            WHERE ped.vendedora_id = u.id
-              AND ped.estado IN ('Entregado', 'ENTREGADO')
-          ), 0
+        -- SOLO se liquida y acumula cuando el pedido está ENTREGADO, descontando lo ya liquidado (comision_pagada)
+        GREATEST(
+          0,
+          COALESCE(
+            (
+              SELECT SUM(
+                GREATEST(0, COALESCE(ped.total, 0) - COALESCE(ped.costo_envio, 0)) * (COALESCE(u.comision_porcentaje, 5.00) / 100.0)
+              )
+              FROM public.pedidos ped
+              WHERE ped.vendedora_id = u.id
+                AND ped.estado IN ('Entregado', 'ENTREGADO')
+            ), 0
+          ) - COALESCE(u.comision_pagada, 0)
         )::float AS total_comisiones,
         -- Comisiones de pedidos en curso pendientes de ser entregados (con descuento ya aplicado)
         COALESCE(
@@ -69,7 +85,7 @@ export async function GET() {
       GROUP BY 
         u.id, u.nombre, u.email, u.username, u.password, u.telefono, u.rol,
         u.doc_tipo, u.doc_numero, u.departamento_mh, u.municipio_mh, u.direccion_complemento,
-        u.comision_normal, u.comision_plus, u.comision_porcentaje, u.activo, u.created_at
+        u.comision_normal, u.comision_plus, u.comision_porcentaje, u.comision_pagada, u.fecha_ultima_liquidacion, u.activo, u.created_at
       ORDER BY u.activo DESC, u.nombre ASC;
     `;
 
@@ -158,7 +174,27 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    await ensureUsuariosColumns();
     const body = await request.json();
+
+    // Liquidación de saldo de comisiones de una asesora
+    if (body.liquidar_comision && body.id) {
+      const montoLiquidar = parseFloat(body.monto_liquidar) || 0;
+      const resLiq = await queryKode(
+        `UPDATE public.usuarios
+         SET comision_pagada = COALESCE(comision_pagada, 0) + $1,
+             fecha_ultima_liquidacion = NOW(),
+             updated_at = NOW()
+         WHERE id = $2
+         RETURNING *`,
+        [montoLiquidar, body.id]
+      );
+      return NextResponse.json({
+        success: true,
+        empleado: resLiq.rows[0],
+        message: `Liquidación de $${montoLiquidar.toFixed(2)} registrada exitosamente`,
+      });
+    }
 
     // Actualización masiva de comisión global a todos los empleados
     if (body.aplicar_global) {

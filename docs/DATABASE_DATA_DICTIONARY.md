@@ -196,6 +196,34 @@ Control de gastos e insumos de laboratorio.
 
 ---
 
+### 8. Tabla `public.usuarios`
+Usuarios del taller, administradores y asesoras de ventas KÖDE.
+
+| Columna SQL | Tipo de Dato | Nulo | Default | FK / Relación | Descripción y Uso en Frontend |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id` | `UUID` | NO | `gen_random_uuid()` | **PK** | Identificador único del usuario/asesora |
+| `nombre` | `VARCHAR(150)` | NO | - | - | Nombre completo de la asesora o colaborador |
+| `email` | `VARCHAR(150)` | NO | - | Unique | Correo electrónico |
+| `username` | `VARCHAR(100)` | SÍ | `NULL` | - | Usuario de inicio de sesión |
+| `password` | `VARCHAR(150)` | SÍ | `NULL` | - | Credencial de acceso |
+| `telefono` | `VARCHAR(50)` | SÍ | `''` | - | WhatsApp / teléfono |
+| `rol` | `VARCHAR(50)` | SÍ | `'VENDEDORA'` | - | Rol (`ADMIN`, `VENDEDORA`, `BODEGA`) |
+| `activo` | `BOOLEAN` | SÍ | `TRUE` | - | Si el colaborador está activo |
+| `doc_tipo` | `VARCHAR(20)` | SÍ | `'DUI'` | - | Tipo de documento fiscal (`DUI`, `NIT`) |
+| `doc_numero` | `VARCHAR(50)` | SÍ | `''` | - | Número de documento para Sujeto Excluido (DTE-14) |
+| `departamento_mh` | `VARCHAR(10)` | SÍ | `'06'` | - | Código MH de departamento |
+| `municipio_mh` | `VARCHAR(10)` | SÍ | `'14'` | - | Código MH de municipio |
+| `direccion_complemento` | `TEXT` | SÍ | `''` | - | Dirección fiscal para DTE-14 |
+| `comision_normal` | `NUMERIC(10,2)` | SÍ | `1.00` | - | Tarifa base por perfume normal |
+| `comision_plus` | `NUMERIC(10,2)` | SÍ | `1.50` | - | Tarifa base por perfume Extra Shot |
+| `comision_porcentaje` | `NUMERIC(5,2)` | SÍ | `5.00` | - | Porcentaje de comisión sobre pedidos entregados |
+| `comision_pagada` | `NUMERIC(10,2)` | SÍ | `0.00` | - | Monto acumulado de comisiones ya liquidadas/pagadas |
+| `fecha_ultima_liquidacion` | `TIMESTAMPTZ` | SÍ | `NULL` | - | Fecha y hora del último corte/liquidación de comisiones |
+| `created_at` | `TIMESTAMPTZ` | NO | `NOW()` | - | Fecha de registro |
+| `updated_at` | `TIMESTAMPTZ` | SÍ | `NOW()` | - | Última actualización |
+
+---
+
 ## 🏛️ MÓDULO 2: POS, VENTAS MOSTRADOR & DTE (PRISMA)
 
 ### 9. Tabla `Sale` (Ventas POS)

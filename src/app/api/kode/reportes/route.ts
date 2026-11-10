@@ -53,20 +53,23 @@ export async function GET() {
           SUM(GREATEST(0, COALESCE(p.total, 0) - COALESCE(p.costo_envio, 0))) FILTER (WHERE p.estado IN ('Entregado', 'ENTREGADO')),
           0
         )::float AS ventas_totales,
-        -- REGLA DE NEGOCIO: La comisión de venta se calcula sobre el precio real entregado con descuento aplicado
-        COALESCE(
-          (
-            SELECT SUM(
-              GREATEST(0, COALESCE(ped.total, 0) - COALESCE(ped.costo_envio, 0)) * (COALESCE(u.comision_porcentaje, 5.00) / 100.0)
-            )
-            FROM public.pedidos ped
-            WHERE ped.vendedora_id = u.id
-              AND ped.estado IN ('Entregado', 'ENTREGADO')
-          ), 0
+        -- REGLA DE NEGOCIO: La comisión de venta se calcula sobre el precio real entregado con descuento aplicado, menos lo ya liquidado
+        GREATEST(
+          0,
+          COALESCE(
+            (
+              SELECT SUM(
+                GREATEST(0, COALESCE(ped.total, 0) - COALESCE(ped.costo_envio, 0)) * (COALESCE(u.comision_porcentaje, 5.00) / 100.0)
+              )
+              FROM public.pedidos ped
+              WHERE ped.vendedora_id = u.id
+                AND ped.estado IN ('Entregado', 'ENTREGADO')
+            ), 0
+          ) - COALESCE(u.comision_pagada, 0)
         )::float AS comisiones_acumuladas
       FROM public.pedidos p
       LEFT JOIN public.usuarios u ON p.vendedora_id = u.id
-      GROUP BY u.id, u.nombre, u.email, u.comision_porcentaje
+      GROUP BY u.id, u.nombre, u.email, u.comision_porcentaje, u.comision_pagada
       ORDER BY ventas_totales DESC;
     `);
 
