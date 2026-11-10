@@ -93,21 +93,28 @@ async function loadLogoAsDataUrl(src: string): Promise<CatalogImageAsset | null>
     img.crossOrigin = 'anonymous';
     img.onload = () => {
       try {
+        const natW = img.naturalWidth || 1024;
+        const natH = img.naturalHeight || 409;
+        // Recorte exacto a los píxeles visibles del logo (/logo.png 1024x409 -> x:12..1006, y:108..284)
+        const isHighResMainLogo = natW >= 800 && natH >= 300;
+        const sx = isHighResMainLogo ? Math.round(natW * 0.0117) : 0;
+        const sy = isHighResMainLogo ? Math.round(natH * 0.264) : 0;
+        const sw = isHighResMainLogo ? Math.round(natW * 0.9707) : natW;
+        const sh = isHighResMainLogo ? Math.round(natH * 0.4303) : natH;
+
         const canvas = document.createElement('canvas');
-        const targetW = img.naturalWidth || 340;
-        const targetH = img.naturalHeight || 90;
-        canvas.width = targetW;
-        canvas.height = targetH;
+        canvas.width = sw;
+        canvas.height = sh;
         const ctx = canvas.getContext('2d');
         if (!ctx) {
           resolve(null);
           return;
         }
-        ctx.drawImage(img, 0, 0, targetW, targetH);
+        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
         resolve({
           dataUrl: canvas.toDataURL('image/png'),
-          width: targetW,
-          height: targetH,
+          width: sw,
+          height: sh,
         });
       } catch {
         resolve(null);
@@ -245,325 +252,84 @@ function fitTextSingleLine(doc: any, text: string, maxWidth: number): string {
 function drawCoverPage(
   doc: any,
   logoImg: CatalogImageAsset | null,
-  bottleImg: CatalogImageAsset | null,
-  upperLabel: string,
-  availableItems: CatalogEssenceItem[],
-  incomingItems: CatalogEssenceItem[]
+  upperLabel: string
 ) {
-  // Fondo crema/lavanda ultra sutil en toda la portada
-  doc.setFillColor(253, 251, 255);
+  // Fondo blanco puro minimalista
+  doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, 210, 297, 'F');
 
-  // Marco exterior e interior de lujo
-  doc.setDrawColor(88, 28, 135); // #581c87
-  doc.setLineWidth(0.9);
-  doc.roundedRect(12, 12, 186, 273, 3, 3, 'D');
-
-  doc.setDrawColor(216, 180, 254); // #d8b4fe
-  doc.setLineWidth(0.35);
-  doc.roundedRect(15, 15, 180, 267, 2, 2, 'D');
-
-  // Franja decorativa superior morada real
-  doc.setFillColor(59, 7, 100); // #3b0764
-  doc.roundedRect(22, 22, 166, 8, 1.5, 1.5, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.2);
-  doc.setTextColor(243, 232, 255);
-  doc.text('ALTA PERFUMERÍA FINA • ESENCIAS PURAS GRADO AAA+', 105, 27.2, { align: 'center' });
-
-  // Logo central grande de Aromaniak
+  // Logo central de Aromaniak en alta resolución
   if (logoImg) {
-    const logoW = 92;
+    const logoW = 104;
     const logoH = (logoImg.height / logoImg.width) * logoW;
-    doc.addImage(logoImg.dataUrl, 'PNG', 105 - logoW / 2, 44, logoW, logoH, 'aromaniak_logo', 'FAST');
+    doc.addImage(
+      logoImg.dataUrl,
+      'PNG',
+      105 - logoW / 2,
+      128 - logoH / 2,
+      logoW,
+      logoH,
+      'aromaniak_logo',
+      'FAST'
+    );
   } else {
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(32);
-    doc.setTextColor(59, 7, 100);
-    doc.text('AROMANIAK', 105, 62, { align: 'center' });
+    doc.setFontSize(34);
+    doc.setTextColor(30, 27, 75);
+    doc.text('Aromaniak', 105, 130, { align: 'center' });
   }
 
+  // Línea minimalista sutil
+  doc.setDrawColor(203, 213, 225); // #cbd5e1
+  doc.setLineWidth(0.35);
+  doc.line(91, 146, 119, 146);
+
+  // Catálogo del Mes y Año (limpio y directo)
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.setTextColor(126, 34, 206); // #7e22ce
-  doc.text('EL SALVADOR • PERFUMERÍA & INSUMOS', 105, 76, { align: 'center' });
-
-  // Línea ornamental con rombo dorado central
-  doc.setDrawColor(192, 132, 252);
-  doc.setLineWidth(0.4);
-  doc.line(42, 85, 98, 85);
-  doc.line(112, 85, 168, 85);
-  doc.setFillColor(217, 119, 6); // Dorado
-  doc.circle(105, 85, 1.6, 'F');
-
-  // Título Principal de Portada
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(26);
-  doc.setTextColor(59, 7, 100); // #3b0764
-  doc.text('CATÁLOGO OFICIAL', 105, 104, { align: 'center' });
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
-  doc.setTextColor(107, 33, 168); // #6b21a8
-  doc.text('COLECCIÓN DE ESENCIAS Y CONTRATIPOS', 105, 113, { align: 'center' });
-
-  // Badge Principal de Mes y Año (Portada)
-  const dateBoxW = 114;
-  const dateBoxH = 19;
-  const dateBoxX = 105 - dateBoxW / 2;
-  const dateBoxY = 123;
-  doc.setFillColor(59, 7, 100); // #3b0764
-  doc.setDrawColor(217, 119, 6); // Borde dorado #d97706
-  doc.setLineWidth(0.6);
-  doc.roundedRect(dateBoxX, dateBoxY, dateBoxW, dateBoxH, 2.5, 2.5, 'FD');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.2);
-  doc.setTextColor(253, 224, 71); // #fde047
-  doc.text('EDICIÓN ACTUALIZADA EN TIEMPO REAL', 105, dateBoxY + 6.5, { align: 'center' });
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14.5);
-  doc.setTextColor(255, 255, 255);
-  doc.text(upperLabel, 105, dateBoxY + 14.8, { align: 'center' });
-
-  // Ilustración central del frasco insignia (si está disponible)
-  if (bottleImg) {
-    const pedW = 36;
-    const pedH = 54;
-    const pedX = 105 - pedW / 2;
-    const pedY = 150;
-    doc.setFillColor(250, 245, 255);
-    doc.setDrawColor(233, 213, 255);
-    doc.setLineWidth(0.4);
-    doc.roundedRect(pedX, pedY, pedW, pedH, 2.5, 2.5, 'FD');
-
-    const bW = 23;
-    const bH = (bottleImg.height / bottleImg.width) * bW;
-    const bX = 105 - bW / 2;
-    const bY = pedY + (pedH - bH) / 2;
-    doc.addImage(bottleImg.dataUrl, 'JPEG', bX, bY, bW, bH, 'aromaniak_bottle_crop', 'FAST');
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(3.6);
-    doc.setTextColor(24, 24, 27);
-    doc.text('AROMANIAK', 105, bY + bH * 0.604, { align: 'center' });
-  }
-
-  // Tarjetas de resumen de secciones (Orden del Catálogo)
-  const countHombre = availableItems.filter((i) => i.genderLabel === 'HOMBRE').length;
-  const countMujer = availableItems.filter((i) => i.genderLabel === 'MUJER').length;
-  const countUnisex = availableItems.filter((i) => i.genderLabel === 'UNISEX').length;
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.2);
-  doc.setTextColor(88, 28, 135);
-  doc.text('ORDEN DE SECCIONES DEL CATÁLOGO', 105, 215, { align: 'center' });
-
-  const secY = 220;
-  const secW = 48;
-  const secH = 22;
-  const secGap = 6;
-  const startSecX = 105 - (secW * 3 + secGap * 2) / 2;
-
-  const sections = [
-    {
-      step: '01',
-      title: 'HOMBRE',
-      sub: `${countHombre} Fragancias Disponibles`,
-      bg: [239, 246, 255] as [number, number, number],
-      border: [147, 197, 253] as [number, number, number],
-      color: [30, 64, 175] as [number, number, number],
-    },
-    {
-      step: '02',
-      title: 'MUJER',
-      sub: `${countMujer} Fragancias Disponibles`,
-      bg: [253, 242, 248] as [number, number, number],
-      border: [249, 168, 212] as [number, number, number],
-      color: [157, 23, 77] as [number, number, number],
-    },
-    {
-      step: '03',
-      title: 'UNISEX',
-      sub: `${countUnisex} Fragancias Disponibles`,
-      bg: [243, 232, 255] as [number, number, number],
-      border: [216, 180, 254] as [number, number, number],
-      color: [107, 33, 168] as [number, number, number],
-    },
-  ];
-
-  sections.forEach((sec, idx) => {
-    const sx = startSecX + idx * (secW + secGap);
-    doc.setFillColor(...sec.bg);
-    doc.setDrawColor(...sec.border);
-    doc.setLineWidth(0.35);
-    doc.roundedRect(sx, secY, secW, secH, 1.8, 1.8, 'FD');
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(6.5);
-    doc.setTextColor(...sec.color);
-    doc.text(`SECCIÓN ${sec.step}`, sx + secW / 2, secY + 6.5, { align: 'center' });
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10.5);
-    doc.text(sec.title, sx + secW / 2, secY + 13, { align: 'center' });
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.2);
-    doc.setTextColor(71, 85, 105);
-    doc.text(sec.sub, sx + secW / 2, secY + 18.2, { align: 'center' });
-  });
-
-  // Si hay próximos ingresos en camino, mostrar aviso de la sección final
-  if (incomingItems.length > 0) {
-    const incBoxW = 156;
-    const incBoxH = 12;
-    const incBoxX = 105 - incBoxW / 2;
-    const incBoxY = 247;
-    doc.setFillColor(255, 251, 235); // #fffbeb
-    doc.setDrawColor(245, 158, 11); // #f59e0b
-    doc.setLineWidth(0.35);
-    doc.roundedRect(incBoxX, incBoxY, incBoxW, incBoxH, 1.8, 1.8, 'FD');
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.2);
-    doc.setTextColor(180, 83, 9);
-    doc.text(
-      `INCLUYE SECCIÓN FINAL DE PRÓXIMOS INGRESOS (${incomingItems.length} FRAGANCIAS EN CAMINO)`,
-      105,
-      incBoxY + 7.4,
-      { align: 'center' }
-    );
-  }
-
-  // Pie de portada
-  doc.setDrawColor(216, 180, 254);
-  doc.setLineWidth(0.3);
-  doc.line(30, 266, 180, 266);
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.8);
-  doc.setTextColor(59, 7, 100);
-  doc.text('WWW.AROMANIAKSV.COM', 105, 272.5, { align: 'center' });
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(6.5);
-  doc.setTextColor(100, 116, 139);
-  doc.text(
-    `Disponibilidad sincronizada en tiempo real • Presentaciones de 1 Onza y Media Onza`,
-    105,
-    277.5,
-    { align: 'center' }
-  );
+  doc.setFontSize(15);
+  doc.setTextColor(30, 27, 75); // #1e1b4b
+  doc.text(`CATÁLOGO ${upperLabel}`, 105, 156.5, { align: 'center' });
 }
 
 function drawIncomingDividerPage(
   doc: any,
   logoImg: CatalogImageAsset | null,
-  upperLabel: string,
-  incomingItems: CatalogEssenceItem[],
-  pageNum: number,
-  totalPages: number
+  upperLabel: string
 ) {
-  doc.setFillColor(255, 253, 248);
+  // Fondo blanco puro minimalista
+  doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, 210, 297, 'F');
 
-  // Marco doble elegante
-  doc.setDrawColor(88, 28, 135);
-  doc.setLineWidth(0.8);
-  doc.roundedRect(12, 12, 186, 273, 3, 3, 'D');
-
-  doc.setDrawColor(245, 158, 11);
-  doc.setLineWidth(0.35);
-  doc.roundedRect(15, 15, 180, 267, 2, 2, 'D');
-
   if (logoImg) {
-    const logoW = 68;
+    const logoW = 74;
     const logoH = (logoImg.height / logoImg.width) * logoW;
-    doc.addImage(logoImg.dataUrl, 'PNG', 105 - logoW / 2, 52, logoW, logoH, 'aromaniak_logo', 'FAST');
+    doc.addImage(
+      logoImg.dataUrl,
+      'PNG',
+      105 - logoW / 2,
+      128 - logoH / 2,
+      logoW,
+      logoH,
+      'aromaniak_logo',
+      'FAST'
+    );
   }
 
-  // Badge superior
-  const pillW = 86;
-  const pillH = 9;
-  doc.setFillColor(254, 243, 199); // #fef3c7
-  doc.setDrawColor(217, 119, 6); // #d97706
+  // Línea minimalista sutil
+  doc.setDrawColor(203, 213, 225); // #cbd5e1
   doc.setLineWidth(0.35);
-  doc.roundedRect(105 - pillW / 2, 88, pillW, pillH, 2, 2, 'FD');
+  doc.line(91, 144, 119, 144);
 
+  // Título limpio de la sección divisoria
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
-  doc.setTextColor(180, 83, 9);
-  doc.text(`SECCIÓN ESPECIAL • ${upperLabel}`, 105, 93.8, { align: 'center' });
+  doc.setFontSize(16);
+  doc.setTextColor(30, 27, 75); // #1e1b4b
+  doc.text('PRÓXIMOS INGRESOS', 105, 154.5, { align: 'center' });
 
-  // Título Principal de la Sección Divisoria
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(28);
-  doc.setTextColor(59, 7, 100); // #3b0764
-  doc.text('PRÓXIMOS INGRESOS', 105, 118, { align: 'center' });
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11.5);
-  doc.setTextColor(180, 83, 9); // #b45309
-  doc.text('FRAGANCIAS EN CAMINO A NUESTRAS BODEGAS', 105, 128, { align: 'center' });
-
-  // Línea decorativa
-  doc.setDrawColor(217, 119, 6);
-  doc.setLineWidth(0.45);
-  doc.line(55, 137, 155, 137);
-
-  // Descripción explicativa limpia
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9.2);
-  doc.setTextColor(71, 85, 105);
-  const descLines = doc.splitTextToSize(
-    'Las esencias presentadas a continuación se encuentran actualmente en tránsito internacional hacia nuestras bodegas y estarán disponibles muy pronto. Esta sección se actualiza automáticamente en tiempo real.',
-    136
-  );
-  descLines.forEach((line: string, i: number) => {
-    doc.text(line, 105, 150 + i * 5.2, { align: 'center' });
-  });
-
-  // Resumen por género en camino
-  const incHombre = incomingItems.filter((i) => i.genderLabel === 'HOMBRE').length;
-  const incMujer = incomingItems.filter((i) => i.genderLabel === 'MUJER').length;
-  const incUnisex = incomingItems.filter((i) => i.genderLabel === 'UNISEX').length;
-
-  const boxW = 126;
-  const boxH = 34;
-  const boxX = 105 - boxW / 2;
-  const boxY = 176;
-  doc.setFillColor(250, 245, 255);
-  doc.setDrawColor(216, 180, 254);
-  doc.setLineWidth(0.4);
-  doc.roundedRect(boxX, boxY, boxW, boxH, 2.2, 2.2, 'FD');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.setTextColor(59, 7, 100);
-  doc.text(
-    `${incomingItems.length} FRAGANCIAS EN CAMINO`,
-    105,
-    boxY + 12.5,
-    { align: 'center' }
-  );
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.2);
-  doc.setTextColor(107, 33, 168);
-  doc.text(
-    `Hombre: ${incHombre}   •   Mujer: ${incMujer}   •   Unisex: ${incUnisex}`,
-    105,
-    boxY + 23.5,
-    { align: 'center' }
-  );
-
-  // Pie de página de la portada divisoria
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7);
-  doc.setTextColor(100, 116, 139);
-  doc.text(`PÁGINA ${pageNum} DE ${totalPages}`, 105, 274, { align: 'center' });
+  doc.setFontSize(10.5);
+  doc.setTextColor(100, 116, 139); // #64748b
+  doc.text(upperLabel, 105, 162.5, { align: 'center' });
 }
 
 function drawCatalogGridPage(
@@ -899,7 +665,7 @@ export function buildAromaniakCatalogJsPdfDocument(
   const totalPages = 1 + availPagesCount + (hasIncoming ? 1 + incomingPagesCount : 0);
 
   // 1. PÁGINA 1: PORTADA OFICIAL
-  drawCoverPage(doc, logoImg, bottleImg, upperLabel, availableItems, incomingItems);
+  drawCoverPage(doc, logoImg, upperLabel);
 
   let currentPageNum = 1;
 
@@ -925,14 +691,7 @@ export function buildAromaniakCatalogJsPdfDocument(
     // Página divisoria antes de los próximos ingresos
     doc.addPage('a4', 'portrait');
     currentPageNum++;
-    drawIncomingDividerPage(
-      doc,
-      logoImg,
-      upperLabel,
-      incomingItems,
-      currentPageNum,
-      totalPages
-    );
+    drawIncomingDividerPage(doc, logoImg, upperLabel);
 
     // Páginas de perfumes en camino (Hombre -> Mujer -> Unisex, 8 por página)
     for (let i = 0; i < incomingPagesCount; i++) {
@@ -982,7 +741,7 @@ export async function downloadLiveAromaniakCatalogPdf(): Promise<void> {
   });
 
   const [logoImg, bottleImg] = await Promise.all([
-    loadLogoAsDataUrl('/images/aromaniak_black_logo.png'),
+    loadLogoAsDataUrl('/logo.png'),
     loadCroppedBottleAsDataUrl('/images/essence_bottle_blank.webp'),
   ]);
 

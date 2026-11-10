@@ -41,13 +41,24 @@ async function generateAromaniakCatalog() {
     isAvailableOnline: p.isAvailableOnline !== false,
   }));
 
-  // 1. Cargar logo de Aromaniak (340x90 PNG)
-  const logoPath = path.join(__dirname, '../public/images/aromaniak_black_logo.png');
-  const logoB64 = fs.readFileSync(logoPath).toString('base64');
+  // 1. Cargar y recortar logo oficial de Aromaniak en alta resolución (/logo.png 1024x409 -> 994x176)
+  const rawLogoPath = path.join(__dirname, '../public/logo.png');
+  const croppedLogoPath = '/tmp/aromaniak_logo_cropped.png';
+  execSync(
+    `python3 -c '
+from PIL import Image
+im = Image.open("${rawLogoPath}").convert("RGBA")
+w, h = im.size
+sx, sy, sw, sh = round(w * 0.0117), round(h * 0.264), round(w * 0.9707), round(h * 0.4303)
+crop = im.crop((sx, sy, sx + sw, sy + sh))
+crop.save("${croppedLogoPath}", "PNG")
+'`
+  );
+  const logoB64 = fs.readFileSync(croppedLogoPath).toString('base64');
   const logoImg: CatalogImageAsset = {
     dataUrl: `data:image/png;base64,${logoB64}`,
-    width: 340,
-    height: 90,
+    width: 994,
+    height: 176,
   };
 
   // 2. Generar recorte exacto de la botella base (360x756 JPEG con fondo #faf5ff)
