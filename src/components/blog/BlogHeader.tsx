@@ -51,7 +51,7 @@ export default function BlogHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-[#f1f4f9]/95 border-b border-white/80 px-3 sm:px-6 py-2 sm:py-2.5 shadow-2xs transition-all">
+    <header className="sticky top-0 z-[45] w-full backdrop-blur-md bg-[#f1f4f9]/95 border-b border-white/80 px-3 sm:px-6 py-2 sm:py-2.5 shadow-2xs transition-all">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
         
         {/* ================= LADO IZQUIERDO: Logo Oficial Aromaniak ================= */}

@@ -102,7 +102,7 @@ export default function EcommerceHeader() {
   };
 
   return (
-    <header className={`sticky top-0 z-40 w-full bg-[#f1f4f9]/90 backdrop-blur-md border-b border-white/80 shadow-2xs transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+    <header className={`sticky top-0 z-[45] w-full bg-[#f1f4f9]/90 backdrop-blur-md border-b border-white/80 shadow-2xs transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${
       isScrolled ? '-translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100 pointer-events-auto'
     }`}>
       <div className="max-w-7xl mx-auto grid grid-cols-3 items-center relative px-3 sm:px-6 py-2 sm:py-2.5">
