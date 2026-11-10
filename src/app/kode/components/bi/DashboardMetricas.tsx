@@ -540,6 +540,199 @@ export function DashboardMetricas({ metricas, pedidos = [], onBack }: DashboardM
     };
   }, [validPedidos]);
 
+  // ============================================================================
+  // 5. VENTAS ACUMULADAS DEL MES Y PROYECCIÓN A FIN DE MES (INDIVIDUAL Y KÖDE)
+  // ============================================================================
+  const proyeccionMensual = useMemo(() => {
+    // Determinar fecha actual o más reciente en horario de El Salvador
+    let anchorMs = Date.now();
+    for (const p of validPedidos) {
+      const ms = new Date(p.created_at!).getTime();
+      if (!isNaN(ms) && ms > anchorMs) anchorMs = ms;
+    }
+
+    const anchorKey = toSvDateKey(new Date(anchorMs)); // YYYY-MM-DD
+    const [yearStr, monthStr, dayStr] = anchorKey.split('-');
+    const yearNum = parseInt(yearStr || '2026', 10);
+    const monthNum = parseInt(monthStr || '11', 10); // 1..12
+    const currentDay = Math.max(1, parseInt(dayStr || '1', 10));
+    const monthPrefix = `${yearStr}-${monthStr}`; // YYYY-MM
+
+    // Total de días calendario del mes actual (ej. Noviembre = 30)
+    const daysInMonth = new Date(yearNum, monthNum, 0).getDate();
+
+    const monthNames = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+    ];
+    const monthLabel = `${monthNames[(monthNum - 1) % 12]} ${yearNum}`;
+
+    // Filtrar pedidos del mes en curso
+    const pedidosMes = validPedidos.filter((p) =>
+      toSvDateKey(p.created_at!).startsWith(monthPrefix)
+    );
+
+    // Determinar desde qué día del mes hay actividad o usar los días transcurridos del mes
+    let maxDayWithSale = currentDay;
+    for (const p of pedidosMes) {
+      const dKey = toSvDateKey(p.created_at!);
+      const dNum = parseInt(dKey.split('-')[2] || '1', 10);
+      if (dNum > maxDayWithSale) maxDayWithSale = dNum;
+    }
+
+    const daysElapsed = Math.max(1, Math.min(daysInMonth, maxDayWithSale));
+    const daysRemaining = Math.max(0, daysInMonth - daysElapsed);
+    const factorProyeccion = daysInMonth / daysElapsed;
+
+    const colabMap = new Map<
+      string,
+      {
+        nombre: string;
+        shortName: string;
+        colorKey: 'sky' | 'pink' | 'indigo';
+        pedidosAcumulados: number;
+        ventasAcumuladas: number;
+        promedioDiario: number;
+        proyeccionFinMes: number;
+        pedidosProyectados: number;
+      }
+    >();
+
+    // Inicializar las dos asesoras principales para garantizar que siempre aparezcan
+    colabMap.set('Patricia Elizabeth Mejía Ramírez', {
+      nombre: 'Patricia Elizabeth Mejía Ramírez',
+      shortName: 'Patricia',
+      colorKey: 'sky',
+      pedidosAcumulados: 0,
+      ventasAcumuladas: 0,
+      promedioDiario: 0,
+      proyeccionFinMes: 0,
+      pedidosProyectados: 0,
+    });
+    colabMap.set('Isis Dayana', {
+      nombre: 'Isis Dayana',
+      shortName: 'Dayana',
+      colorKey: 'pink',
+      pedidosAcumulados: 0,
+      ventasAcumuladas: 0,
+      promedioDiario: 0,
+      proyeccionFinMes: 0,
+      pedidosProyectados: 0,
+    });
+
+    // Serie diaria del mes (1..daysInMonth) para curva acumulada
+    const dailyPatricia = new Array(daysInMonth + 1).fill(0);
+    const dailyDayana = new Array(daysInMonth + 1).fill(0);
+    const dailyTotal = new Array(daysInMonth + 1).fill(0);
+
+    for (const p of pedidosMes) {
+      const monto = parseFloat(p.total?.toString() || '0') || 0;
+      const vendRaw = (p.vendedora_nombre || 'Sin Asesor').trim();
+      const vendLower = vendRaw.toLowerCase();
+
+      const dKey = toSvDateKey(p.created_at!);
+      const dNum = Math.max(1, Math.min(daysInMonth, parseInt(dKey.split('-')[2] || '1', 10)));
+      dailyTotal[dNum] += monto;
+
+      let key = vendRaw;
+      if (vendLower.includes('patricia')) {
+        key = 'Patricia Elizabeth Mejía Ramírez';
+        dailyPatricia[dNum] += monto;
+      } else if (vendLower.includes('isis') || vendLower.includes('dayana')) {
+        key = 'Isis Dayana';
+        dailyDayana[dNum] += monto;
+      }
+
+      const prev = colabMap.get(key) || {
+        nombre: vendRaw,
+        shortName: vendRaw.split(' ')[0] || vendRaw,
+        colorKey: 'indigo' as const,
+        pedidosAcumulados: 0,
+        ventasAcumuladas: 0,
+        promedioDiario: 0,
+        proyeccionFinMes: 0,
+        pedidosProyectados: 0,
+      };
+      prev.pedidosAcumulados += 1;
+      prev.ventasAcumuladas += monto;
+      colabMap.set(key, prev);
+    }
+
+    let totalAcumuladoMes = 0;
+    let totalPedidosMes = 0;
+
+    const colaboradores = Array.from(colabMap.values()).map((c) => {
+      const prom = c.ventasAcumuladas / daysElapsed;
+      const proy = c.ventasAcumuladas * factorProyeccion;
+      const pedProy = Math.round(c.pedidosAcumulados * factorProyeccion);
+      totalAcumuladoMes += c.ventasAcumuladas;
+      totalPedidosMes += c.pedidosAcumulados;
+      return {
+        ...c,
+        promedioDiario: prom,
+        proyeccionFinMes: proy,
+        pedidosProyectados: pedProy,
+      };
+    });
+
+    const totalPromedioDiario = totalAcumuladoMes / daysElapsed;
+    const totalProyeccionMes = totalAcumuladoMes * factorProyeccion;
+    const totalPedidosProyectados = Math.round(totalPedidosMes * factorProyeccion);
+
+    // Construir puntos de curva acumulada (días 1..daysElapsed reales + proyección hasta daysInMonth)
+    let accPat = 0;
+    let accDay = 0;
+    let accTot = 0;
+    const patEntry = colaboradores.find((c) => c.colorKey === 'sky');
+    const dayEntry = colaboradores.find((c) => c.colorKey === 'pink');
+
+    const curvePoints: {
+      day: number;
+      isProjected: boolean;
+      cumPat: number;
+      cumDay: number;
+      cumTot: number;
+    }[] = [];
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      if (d <= daysElapsed) {
+        accPat += dailyPatricia[d];
+        accDay += dailyDayana[d];
+        accTot += dailyTotal[d];
+        curvePoints.push({
+          day: d,
+          isProjected: false,
+          cumPat: accPat,
+          cumDay: accDay,
+          cumTot: accTot,
+        });
+      } else {
+        const extraDays = d - daysElapsed;
+        curvePoints.push({
+          day: d,
+          isProjected: true,
+          cumPat: accPat + (patEntry?.promedioDiario || 0) * extraDays,
+          cumDay: accDay + (dayEntry?.promedioDiario || 0) * extraDays,
+          cumTot: accTot + totalPromedioDiario * extraDays,
+        });
+      }
+    }
+
+    return {
+      monthLabel,
+      daysInMonth,
+      daysElapsed,
+      daysRemaining,
+      colaboradores,
+      totalAcumuladoMes,
+      totalPedidosMes,
+      totalPromedioDiario,
+      totalProyeccionMes,
+      totalPedidosProyectados,
+      curvePoints,
+    };
+  }, [validPedidos]);
+
   const maxPedidosDia = useMemo(
     () => Math.max(...dailyData.map((d) => d.pedidosCount), 1),
     [dailyData]
@@ -875,6 +1068,398 @@ export function DashboardMetricas({ metricas, pedidos = [], onBack }: DashboardM
               </span>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* ==================================================================== */}
+      {/* FILA 4: VENTAS ACUMULADAS DEL MES Y PROYECCIÓN A FIN DE MES (KÖDE)   */}
+      {/* ==================================================================== */}
+      <div className="clay-card p-5 space-y-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <h3 className="text-xs font-black uppercase tracking-wider text-slate-800">
+              Ventas Acumuladas del Mes ({proyeccionMensual.monthLabel}) y Proyección a Fin de Mes
+            </h3>
+            <p className="text-[11px] text-slate-500">
+              Corte al día {proyeccionMensual.daysElapsed} de {proyeccionMensual.daysInMonth} ({proyeccionMensual.daysRemaining} días restantes) · Ritmo promedio diario proyectado al cierre del mes
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 text-xs font-bold">
+            <span className="flex items-center gap-1.5 text-slate-700">
+              <span className="w-3 h-3 rounded-sm bg-indigo-600 inline-block" />
+              Acumulado Real Hoy
+            </span>
+            <span className="flex items-center gap-1.5 text-emerald-700">
+              <span className="w-3 h-3 rounded-sm bg-emerald-100 border-2 border-dashed border-emerald-600 inline-block" />
+              Proyección Cierre de Mes
+            </span>
+          </div>
+        </div>
+
+        {/* Tarjetas de Resumen y Proyección Conjunta KÖDE */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-black uppercase text-slate-500 block">
+                Acumulado Conjunto Mes (Hoy)
+              </span>
+              <span className="text-xl font-mono font-black text-slate-900">
+                ${proyeccionMensual.totalAcumuladoMes.toFixed(2)}
+              </span>
+              <span className="text-[11px] text-slate-500 block">
+                {proyeccionMensual.totalPedidosMes} pedidos en {proyeccionMensual.daysElapsed} días
+              </span>
+            </div>
+            <div className="text-right font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1.5 rounded-xl border border-indigo-200">
+              ${proyeccionMensual.totalPromedioDiario.toFixed(2)}
+              <span className="block text-[9px] text-indigo-500 font-sans">prom. / día</span>
+            </div>
+          </div>
+
+          {proyeccionMensual.colaboradores.map((c) => (
+            <div
+              key={c.nombre}
+              className={`p-4 rounded-2xl border flex items-center justify-between ${
+                c.colorKey === 'sky'
+                  ? 'bg-sky-50/60 border-sky-200'
+                  : 'bg-pink-50/60 border-pink-200'
+              }`}
+            >
+              <div>
+                <span
+                  className={`text-[10px] font-black uppercase block ${
+                    c.colorKey === 'sky' ? 'text-sky-800' : 'text-pink-800'
+                  }`}
+                >
+                  {c.shortName} · Acumulado Mes
+                </span>
+                <span
+                  className={`text-xl font-mono font-black ${
+                    c.colorKey === 'sky' ? 'text-sky-900' : 'text-pink-900'
+                  }`}
+                >
+                  ${c.ventasAcumuladas.toFixed(2)}
+                </span>
+                <span className="text-[11px] text-slate-500 block">
+                  {c.pedidosAcumulados} ped. (${c.promedioDiario.toFixed(2)}/día)
+                </span>
+              </div>
+
+              <div className="text-right">
+                <span className="text-[10px] font-black uppercase text-slate-400 block">
+                  Proyección Fin de Mes
+                </span>
+                <span
+                  className={`text-lg font-mono font-black ${
+                    c.colorKey === 'sky' ? 'text-sky-700' : 'text-pink-700'
+                  }`}
+                >
+                  ${c.proyeccionFinMes.toFixed(2)}
+                </span>
+                <span className="text-[10px] font-mono text-slate-500 block">
+                  ~{c.pedidosProyectados} pedidos est.
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Gráfico Comparativo de Barras (Acumulado vs Proyección Individual y Conjunta KÖDE) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 pt-2">
+          {/* Sub-gráfico Izquierdo: Barras Acumulado Hoy vs Proyección Fin de Mes */}
+          <div className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 flex flex-col justify-between">
+            <div className="mb-3">
+              <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-700">
+                Comparativa: Acumulado Hoy vs. Proyección Cierre de Mes
+              </h4>
+              <p className="text-[10px] text-slate-500">
+                Barra sólida = vendido hasta hoy · Barra punteada = estimado al día {proyeccionMensual.daysInMonth}
+              </p>
+            </div>
+
+            {(() => {
+              const maxScale = Math.max(proyeccionMensual.totalProyeccionMes, 1);
+              const groups = [
+                ...proyeccionMensual.colaboradores.map((c) => ({
+                  label: c.shortName,
+                  acumulado: c.ventasAcumuladas,
+                  proyeccion: c.proyeccionFinMes,
+                  pedidosAcum: c.pedidosAcumulados,
+                  pedidosProy: c.pedidosProyectados,
+                  barSolid:
+                    c.colorKey === 'sky'
+                      ? 'bg-sky-500 border-sky-600'
+                      : 'bg-pink-500 border-pink-600',
+                  barProj:
+                    c.colorKey === 'sky'
+                      ? 'bg-sky-100/90 border-2 border-dashed border-sky-500'
+                      : 'bg-pink-100/90 border-2 border-dashed border-pink-500',
+                  textSolid: c.colorKey === 'sky' ? 'text-sky-800' : 'text-pink-800',
+                  textProj: c.colorKey === 'sky' ? 'text-sky-600' : 'text-pink-600',
+                })),
+                {
+                  label: 'Total KÖDE (Conjunto)',
+                  acumulado: proyeccionMensual.totalAcumuladoMes,
+                  proyeccion: proyeccionMensual.totalProyeccionMes,
+                  pedidosAcum: proyeccionMensual.totalPedidosMes,
+                  pedidosProy: proyeccionMensual.totalPedidosProyectados,
+                  barSolid: 'bg-emerald-600 border-emerald-700',
+                  barProj: 'bg-emerald-100/90 border-2 border-dashed border-emerald-600',
+                  textSolid: 'text-emerald-900',
+                  textProj: 'text-emerald-700',
+                },
+              ];
+
+              return (
+                <div>
+                  <div className="h-56 flex items-end justify-around gap-4 pt-8 pb-1 px-2 border-b border-slate-200">
+                    {groups.map((g) => {
+                      const hAcum =
+                        g.acumulado > 0 ? Math.max((g.acumulado / maxScale) * 100, 8) : 2;
+                      const hProy =
+                        g.proyeccion > 0 ? Math.max((g.proyeccion / maxScale) * 100, 8) : 2;
+
+                      return (
+                        <div
+                          key={g.label}
+                          className="flex-1 h-full flex flex-col items-center justify-end"
+                        >
+                          <div className="w-full h-full flex items-end justify-center gap-1.5">
+                            {/* Barra Acumulado Real */}
+                            <div className="w-12 h-full flex flex-col items-center justify-end">
+                              <span
+                                className={`text-[10px] font-mono font-black mb-1 whitespace-nowrap ${g.textSolid}`}
+                              >
+                                ${g.acumulado.toFixed(0)}
+                              </span>
+                              <div
+                                style={{ height: `${hAcum}%` }}
+                                className={`w-full rounded-t-lg border shadow-sm transition-all ${g.barSolid}`}
+                                title={`${g.label} Acumulado Hoy: $${g.acumulado.toFixed(2)} (${g.pedidosAcum} pedidos)`}
+                              />
+                            </div>
+
+                            {/* Barra Proyección Fin de Mes */}
+                            <div className="w-12 h-full flex flex-col items-center justify-end">
+                              <span
+                                className={`text-[10px] font-mono font-black mb-1 whitespace-nowrap ${g.textProj}`}
+                              >
+                                ${g.proyeccion.toFixed(0)}
+                              </span>
+                              <div
+                                style={{ height: `${hProy}%` }}
+                                className={`w-full rounded-t-lg transition-all ${g.barProj}`}
+                                title={`${g.label} Proyección Fin de Mes: $${g.proyeccion.toFixed(2)} (~${g.pedidosProy} pedidos)`}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex items-center justify-around gap-4 pt-2.5 px-2">
+                    {groups.map((g) => (
+                      <div key={g.label} className="flex-1 text-center">
+                        <span className="text-xs font-black text-slate-800 block">
+                          {g.label}
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-500">
+                          +${Math.max(0, g.proyeccion - g.acumulado).toFixed(0)} est. restante
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Sub-gráfico Derecho: Curva de Evolución Acumulada del Mes (Día 1 al 30) */}
+          <div className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 flex flex-col justify-between">
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <div>
+                <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-700">
+                  Curva de Crecimiento Acumulado (Día 1 al {proyeccionMensual.daysInMonth})
+                </h4>
+                <p className="text-[10px] text-slate-500">
+                  Línea continua = ventas reales hasta día {proyeccionMensual.daysElapsed} · Línea punteada = proyección al día {proyeccionMensual.daysInMonth}
+                </p>
+              </div>
+              <div className="text-right shrink-0 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-xl">
+                <span className="text-[9px] font-black uppercase text-emerald-700 block">
+                  Proyección Conjunta KÖDE
+                </span>
+                <span className="text-base font-mono font-black text-emerald-800">
+                  ${proyeccionMensual.totalProyeccionMes.toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            {(() => {
+              const pts = proyeccionMensual.curvePoints;
+              const maxY = Math.max(proyeccionMensual.totalProyeccionMes, 1);
+              const n = pts.length;
+
+              const toCoord = (dayIdx: number, val: number) => {
+                const x = n > 1 ? (dayIdx / (n - 1)) * 100 : 50;
+                const y = 94 - (val / maxY) * 84;
+                return { x, y };
+              };
+
+              const realPts = pts.filter((p) => !p.isProjected);
+              const projPts = pts.filter(
+                (p, i) => p.isProjected || i === realPts.length - 1
+              );
+
+              const polyRealTot = realPts
+                .map((p) => {
+                  const c = toCoord(p.day - 1, p.cumTot);
+                  return `${c.x},${c.y}`;
+                })
+                .join(' ');
+              const polyProjTot = projPts
+                .map((p) => {
+                  const c = toCoord(p.day - 1, p.cumTot);
+                  return `${c.x},${c.y}`;
+                })
+                .join(' ');
+
+              const polyRealPat = realPts
+                .map((p) => {
+                  const c = toCoord(p.day - 1, p.cumPat);
+                  return `${c.x},${c.y}`;
+                })
+                .join(' ');
+              const polyProjPat = projPts
+                .map((p) => {
+                  const c = toCoord(p.day - 1, p.cumPat);
+                  return `${c.x},${c.y}`;
+                })
+                .join(' ');
+
+              const polyRealDay = realPts
+                .map((p) => {
+                  const c = toCoord(p.day - 1, p.cumDay);
+                  return `${c.x},${c.y}`;
+                })
+                .join(' ');
+              const polyProjDay = projPts
+                .map((p) => {
+                  const c = toCoord(p.day - 1, p.cumDay);
+                  return `${c.x},${c.y}`;
+                })
+                .join(' ');
+
+              const todayX =
+                n > 1 ? ((proyeccionMensual.daysElapsed - 1) / (n - 1)) * 100 : 50;
+
+              return (
+                <div>
+                  <div className="h-48 w-full bg-white rounded-xl border border-slate-200/70 p-3 relative">
+                    <svg
+                      viewBox="0 0 100 100"
+                      preserveAspectRatio="none"
+                      className="w-full h-full overflow-visible"
+                    >
+                      {/* Línea vertical del día actual */}
+                      <line
+                        x1={todayX}
+                        y1="5"
+                        x2={todayX}
+                        y2="95"
+                        stroke="#cbd5e1"
+                        strokeWidth="0.8"
+                        strokeDasharray="2,2"
+                      />
+
+                      {/* Total KÖDE: Real + Proyección */}
+                      <polyline
+                        fill="none"
+                        stroke="#059669"
+                        strokeWidth="2.4"
+                        points={polyRealTot}
+                      />
+                      <polyline
+                        fill="none"
+                        stroke="#059669"
+                        strokeWidth="2"
+                        strokeDasharray="3,2"
+                        points={polyProjTot}
+                      />
+
+                      {/* Patricia (Celeste): Real + Proyección */}
+                      <polyline
+                        fill="none"
+                        stroke="#0ea5e9"
+                        strokeWidth="2"
+                        points={polyRealPat}
+                      />
+                      <polyline
+                        fill="none"
+                        stroke="#0ea5e9"
+                        strokeWidth="1.6"
+                        strokeDasharray="2.5,2"
+                        points={polyProjPat}
+                      />
+
+                      {/* Dayana (Rosa): Real + Proyección */}
+                      <polyline
+                        fill="none"
+                        stroke="#ec4899"
+                        strokeWidth="2"
+                        points={polyRealDay}
+                      />
+                      <polyline
+                        fill="none"
+                        stroke="#ec4899"
+                        strokeWidth="1.6"
+                        strokeDasharray="2.5,2"
+                        points={polyProjDay}
+                      />
+                    </svg>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 text-[10px] font-bold">
+                    <span className="flex items-center gap-1.5 text-emerald-700">
+                      <span className="w-3 h-0.5 bg-emerald-600 inline-block" />
+                      Conjunto KÖDE (${proyeccionMensual.totalAcumuladoMes.toFixed(0)} → $
+                      {proyeccionMensual.totalProyeccionMes.toFixed(0)})
+                    </span>
+                    <span className="flex items-center gap-1.5 text-sky-700">
+                      <span className="w-3 h-0.5 bg-sky-500 inline-block" />
+                      Patricia ($
+                      {(
+                        proyeccionMensual.colaboradores.find((c) => c.colorKey === 'sky')
+                          ?.ventasAcumuladas || 0
+                      ).toFixed(0)}{' '}
+                      → $
+                      {(
+                        proyeccionMensual.colaboradores.find((c) => c.colorKey === 'sky')
+                          ?.proyeccionFinMes || 0
+                      ).toFixed(0)}
+                      )
+                    </span>
+                    <span className="flex items-center gap-1.5 text-pink-700">
+                      <span className="w-3 h-0.5 bg-pink-500 inline-block" />
+                      Dayana ($
+                      {(
+                        proyeccionMensual.colaboradores.find((c) => c.colorKey === 'pink')
+                          ?.ventasAcumuladas || 0
+                      ).toFixed(0)}{' '}
+                      → $
+                      {(
+                        proyeccionMensual.colaboradores.find((c) => c.colorKey === 'pink')
+                          ?.proyeccionFinMes || 0
+                      ).toFixed(0)}
+                      )
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
         </div>
       </div>
 
