@@ -135,9 +135,8 @@ async function loadLogoAsDataUrl(src: string): Promise<CatalogImageAsset | null>
 }
 
 /**
- * Carga la imagen del frasco restaurando primero su proporción cuadrada original (1024x1024,
- * igual que el contenedor aspect-square de la web) para eliminar el estiramiento vertical
- * de 768x1024, y recortando sobre fondo blanco puro (#ffffff).
+ * Carga la imagen del frasco manteniendo su proporción nativa exacta 1:1 de píxeles
+ * (768x1024 sin deformar ni estirar en ningún eje) sobre fondo blanco puro (#ffffff).
  */
 async function loadBottleAsDataUrl(src: string): Promise<CatalogImageAsset | null> {
   if (typeof window === 'undefined') return null;
@@ -146,24 +145,13 @@ async function loadBottleAsDataUrl(src: string): Promise<CatalogImageAsset | nul
     img.crossOrigin = 'anonymous';
     img.onload = () => {
       try {
-        // Normalizar a lienzo cuadrado 1024x1024 para que el frasco recupere su proporción real sin estirarse
-        const baseSize = 1024;
-        const sx = 240;
-        const sy = 150;
-        const sw = 544;
-        const sh = 760;
-
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = baseSize;
-        tempCanvas.height = baseSize;
-        const tempCtx = tempCanvas.getContext('2d');
-        if (!tempCtx) {
-          resolve(null);
-          return;
-        }
-        tempCtx.fillStyle = '#ffffff';
-        tempCtx.fillRect(0, 0, baseSize, baseSize);
-        tempCtx.drawImage(img, 0, 0, baseSize, baseSize);
+        const natW = img.naturalWidth || 768;
+        const natH = img.naturalHeight || 1024;
+        // Recorte limpio manteniendo píxeles 1:1 exactos sin deformar (408x760 en 768x1024)
+        const sx = Math.round(natW * (180 / 768));
+        const sy = Math.round(natH * (148 / 1024));
+        const sw = Math.round(natW * (408 / 768));
+        const sh = Math.round(natH * (760 / 1024));
 
         const canvas = document.createElement('canvas');
         canvas.width = sw;
@@ -175,7 +163,7 @@ async function loadBottleAsDataUrl(src: string): Promise<CatalogImageAsset | nul
         }
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, sw, sh);
-        ctx.drawImage(tempCanvas, sx, sy, sw, sh, 0, 0, sw, sh);
+        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
         resolve({
           dataUrl: canvas.toDataURL('image/jpeg', 0.92),
           width: sw,
@@ -415,10 +403,10 @@ function drawCatalogGridPage(
     doc.roundedRect(x, y, cardW, cardH, 3.8, 3.8, 'FD');
 
     // Área izquierda del frasco: directo sobre el fondo blanco de la tarjeta (SIN pastilla morada)
-    const bottleAreaW = 30.5;
+    const bottleAreaW = 28.0;
     if (bottleImg) {
-      // Proporción real des-estirada (544:760 -> bW=27.2mm, bH=38.0mm)
-      const bH = 38.0;
+      // Proporción nativa 1:1 de píxeles sin deformar (408:760 -> bW=22.55mm, bH=42.0mm)
+      const bH = 42.0;
       const bW = (bottleImg.width / bottleImg.height) * bH;
       const bX = x + 2.2 + (bottleAreaW - bW) / 2;
       const bY = y + (cardH - bH) / 2;
