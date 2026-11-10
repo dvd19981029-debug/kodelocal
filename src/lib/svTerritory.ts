@@ -540,7 +540,11 @@ export function resolveC807MunicipioId(muniName: string, idDepto?: number, direc
  * Resuelve el código de 2 dígitos del municipio para Factura Llama / MH (ej. "23")
  */
 export function resolveMhMunicipioCodeFromKode(muniName: string, idDepto?: number): string {
-  const clean = normalizeMuniStr(muniName);
+  const raw = (muniName || '').trim();
+  if (/^\d{1,2}$/.test(raw)) {
+    return raw.padStart(2, '0');
+  }
+  const clean = normalizeMuniStr(raw);
   if (!clean) return '23';
   const exact = MUNICIPIOS_KODE.find(
     m => (!idDepto || m.id_depto === idDepto) && normalizeMuniStr(m.nombre_municipio) === clean
