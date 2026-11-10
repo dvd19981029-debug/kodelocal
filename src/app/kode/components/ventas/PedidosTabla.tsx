@@ -167,7 +167,10 @@ export const PedidosTabla: React.FC<PedidosTablaProps> = ({
 
                         {/* 2. Cliente */}
                         <td className={`py-2.5 px-3 whitespace-nowrap ${getClienteColorPorEstado(p.estado)}`}>
-                          {p.cliente_nombre}
+                          {p.cliente_nombre}{' '}
+                          <span className="font-mono font-bold opacity-80">
+                            ({(p.items || []).reduce((acc, it) => acc + Math.max(1, Number(it.cantidad || 1)), 0)})
+                          </span>
                         </td>
 
                         {/* 3. Teléfono */}
