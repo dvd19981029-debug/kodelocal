@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getWompiTransaction } from '@/lib/wompi';
 import { verifyCustomerToken, verifyStaffInternalToken, verifyStaffRequest } from '@/lib/customerAuthToken';
@@ -13,6 +13,7 @@ import { buildCustomerLookupOrConditions, consolidateCustomerDiscounts } from '@
 import { extractTransferReceiptUrl, stripTransferReceiptTag, upsertTransferReceiptInNotes } from '@/lib/bankAccounts';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 export async function GET(request: Request) {
   try {
@@ -1359,50 +1360,60 @@ export async function POST(request: Request) {
       timeout: 20000, // Tiempo máximo de ejecución para carritos con múltiples productos (20s)
     });
 
-    // Enviar confirmación por correo (Google Apps Script)
+    // Enviar confirmación por correo en segundo plano (after) sin bloquear ni demorar la respuesta al cliente
     if (newOrder.customerEmail && (newOrder.paymentMethod === 'CASH' || newOrder.paymentMethod === 'TRANSFER')) {
+      const emailPayload = {
+        orderNumber: newOrder.orderNumber,
+        customerName: newOrder.customerName,
+        customerEmail: newOrder.customerEmail,
+        customerPhone: newOrder.customerPhone,
+        department: newOrder.department,
+        municipality: newOrder.municipality,
+        shippingAddress: newOrder.shippingAddress,
+        deliveryReference: newOrder.deliveryReference,
+        subtotal: Number(newOrder.subtotal || 0),
+        shippingCost: Number(newOrder.shippingCost || 0),
+        total: Number(newOrder.total || 0),
+        paymentMethod: newOrder.paymentMethod,
+        paymentStatus: newOrder.paymentStatus,
+        items: (newOrder.items || []).map((it) => {
+          const prod = (it as any).product;
+          const officialName = prod?.officialName?.trim();
+          const isKitItem =
+            String(it.productName || '').toLowerCase().includes('arma tu propio perfume') ||
+            String(it.presentation || '').toLowerCase().includes('arma tu propio perfume');
+          const displayName = isKitItem
+            ? (String(it.productName || '').toLowerCase().includes('arma tu propio perfume')
+                ? it.productName
+                : `Arma tu propio perfume: ${officialName || prod?.name || it.productName}`)
+            : (officialName || it.productName);
+          const isEssence = isKitItem ||
+                            String(it.presentation || '').toLowerCase().includes('onza') ||
+                            Boolean(prod?.name && prod?.name !== officialName);
+          const inspired = isEssence && prod ? getInspiracionPerfumeName(prod) : null;
+          return {
+            productName: displayName,
+            inspiredBy: inspired,
+            presentation: it.presentation,
+            quantity: it.quantity,
+            unitPrice: Number(it.unitPrice || 0),
+            total: Number(it.total || 0),
+          };
+        }),
+      };
+
       try {
-        await sendOrderConfirmationEmail({
-          orderNumber: newOrder.orderNumber,
-          customerName: newOrder.customerName,
-          customerEmail: newOrder.customerEmail,
-          customerPhone: newOrder.customerPhone,
-          department: newOrder.department,
-          municipality: newOrder.municipality,
-          shippingAddress: newOrder.shippingAddress,
-          deliveryReference: newOrder.deliveryReference,
-          subtotal: Number(newOrder.subtotal || 0),
-          shippingCost: Number(newOrder.shippingCost || 0),
-          total: Number(newOrder.total || 0),
-          paymentMethod: newOrder.paymentMethod,
-          paymentStatus: newOrder.paymentStatus,
-          items: (newOrder.items || []).map((it) => {
-            const prod = (it as any).product;
-            const officialName = prod?.officialName?.trim();
-            const isKitItem =
-              String(it.productName || '').toLowerCase().includes('arma tu propio perfume') ||
-              String(it.presentation || '').toLowerCase().includes('arma tu propio perfume');
-            const displayName = isKitItem
-              ? (String(it.productName || '').toLowerCase().includes('arma tu propio perfume')
-                  ? it.productName
-                  : `Arma tu propio perfume: ${officialName || prod?.name || it.productName}`)
-              : (officialName || it.productName);
-            const isEssence = isKitItem ||
-                              String(it.presentation || '').toLowerCase().includes('onza') ||
-                              Boolean(prod?.name && prod?.name !== officialName);
-            const inspired = isEssence && prod ? getInspiracionPerfumeName(prod) : null;
-            return {
-              productName: displayName,
-              inspiredBy: inspired,
-              presentation: it.presentation,
-              quantity: it.quantity,
-              unitPrice: Number(it.unitPrice || 0),
-              total: Number(it.total || 0),
-            };
-          }),
+        after(async () => {
+          try {
+            await sendOrderConfirmationEmail(emailPayload);
+          } catch (err) {
+            console.error('Error enviando correo de confirmación de pedido (POST after):', err);
+          }
         });
-      } catch (err) {
-        console.error('Error enviando correo de confirmación de pedido (POST):', err);
+      } catch {
+        sendOrderConfirmationEmail(emailPayload).catch((err) =>
+          console.error('Error enviando correo de confirmación de pedido (POST fallback):', err)
+        );
       }
     }
 

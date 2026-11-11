@@ -131,11 +131,13 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
 
   const saveCustomerSession = (user: CustomerUser | null) => {
     setCustomer(user);
-    if (user) {
-      localStorage.setItem('aromaniak_customer_session', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('aromaniak_customer_session');
-    }
+    try {
+      if (user) {
+        localStorage.setItem('aromaniak_customer_session', JSON.stringify(user));
+      } else {
+        localStorage.removeItem('aromaniak_customer_session');
+      }
+    } catch (_) {}
   };
 
   useEffect(() => {

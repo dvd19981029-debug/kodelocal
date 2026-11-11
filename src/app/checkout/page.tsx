@@ -442,9 +442,24 @@ export default function CheckoutPage() {
         })
       });
 
-      const orderData = await orderRes.json();
-      if (!orderRes.ok || !orderData.success) {
-        throw new Error(orderData.error || 'No fue posible confirmar el pedido');
+      let orderData: any = null;
+      try {
+        orderData = await orderRes.json();
+      } catch {
+        // Si la respuesta se cortó por timeout pero el pedido ya se guardó en BD, verificarlo por número de orden
+        try {
+          const verifyRes = await fetch(`/api/ecommerce/orders?orderNumber=${encodeURIComponent(orderNumber)}`);
+          const verifyData = await verifyRes.json();
+          const savedMatch = Array.isArray(verifyData?.orders)
+            ? verifyData.orders.find((o: any) => o.orderNumber === orderNumber)
+            : null;
+          if (savedMatch) {
+            orderData = { success: true, order: savedMatch };
+          }
+        } catch (_) {}
+      }
+      if (!orderData || !orderData.success) {
+        throw new Error(orderData?.error || 'No fue posible confirmar el pedido');
       }
 
       const finalOrderTotal = Number(orderData.order?.total ?? totalConEnvio);

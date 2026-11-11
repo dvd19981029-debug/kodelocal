@@ -606,7 +606,9 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
 
   useEffect(() => {
     if (isMounted) {
-      localStorage.setItem('aromaniak_online_cart', JSON.stringify(cart));
+      try {
+        localStorage.setItem('aromaniak_online_cart', JSON.stringify(cart));
+      } catch (_) {}
     }
   }, [cart, isMounted]);
 

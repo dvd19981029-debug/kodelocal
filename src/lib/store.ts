@@ -3437,6 +3437,8 @@ export function checkAndMigrateToZeroStock(): boolean {
 
 export function saveStoredProducts(products: ProductItem[]): void {
   if (typeof window === 'undefined') return;
-  localStorage.setItem('kodelocal_products', JSON.stringify(products));
+  try {
+    localStorage.setItem('kodelocal_products', JSON.stringify(products));
+  } catch (_) {}
   window.dispatchEvent(new Event('kodelocal_products_updated'));
 }
