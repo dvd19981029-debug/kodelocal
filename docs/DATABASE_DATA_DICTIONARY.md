@@ -126,6 +126,9 @@ Directorio central de clientes para pedidos KÖDE.
 | `municipio` | `VARCHAR(100)` | NO | - | - | Municipio oficial de SV perteneciente al departamento |
 | `direccion` | `TEXT` | NO | - | - | Dirección exacta de entrega para C807 |
 | `punto_referencia`| `TEXT` | SÍ | `NULL` | - | Punto de referencia (ej. casa blanca portón negro) |
+| `origen` | `VARCHAR(100)` | SÍ | `'Directo'` | - | Canal de origen del cliente (`Directo`, `WhatsApp`, `Instagram`, `Facebook`, `Chatwoot`) |
+| `chatwoot_contact_id` | `VARCHAR(100)` | SÍ | `NULL` | - | ID único del contacto en Chatwoot |
+| `instagram_username` | `VARCHAR(150)` | SÍ | `NULL` | - | Usuario de Instagram / red social del cliente |
 | `created_at` | `TIMESTAMPTZ` | NO | `NOW()` | - | Fecha de alta |
 | `updated_at` | `TIMESTAMPTZ` | NO | `NOW()` | - | Última actualización |
 

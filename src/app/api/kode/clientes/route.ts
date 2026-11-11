@@ -23,6 +23,9 @@ async function ensureClientesTable() {
       ALTER TABLE public.clientes ADD COLUMN IF NOT EXISTS tipo_documento VARCHAR(50) DEFAULT 'DUI';
       ALTER TABLE public.clientes ADD COLUMN IF NOT EXISTS numero_documento VARCHAR(50);
       ALTER TABLE public.clientes ADD COLUMN IF NOT EXISTS email VARCHAR(150);
+      ALTER TABLE public.clientes ADD COLUMN IF NOT EXISTS origen VARCHAR(100) DEFAULT 'Directo';
+      ALTER TABLE public.clientes ADD COLUMN IF NOT EXISTS chatwoot_contact_id VARCHAR(100);
+      ALTER TABLE public.clientes ADD COLUMN IF NOT EXISTS instagram_username VARCHAR(150);
     `);
   } catch (err) {
     console.error('Error ensuring clientes table:', err);
@@ -31,6 +34,7 @@ async function ensureClientesTable() {
 
 export async function GET(request: Request) {
   try {
+    await ensureClientesTable();
     const { searchParams } = new URL(request.url);
     const q = searchParams.get('q');
 
@@ -46,6 +50,9 @@ export async function GET(request: Request) {
         c.tipo_documento,
         c.numero_documento,
         c.email,
+        c.origen,
+        c.chatwoot_contact_id,
+        c.instagram_username,
         c.created_at,
         c.updated_at,
         COUNT(DISTINCT p.id) AS pedidos_count,
@@ -79,11 +86,13 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    await ensureClientesTable();
     const body = await request.json();
 
     // Soporte nativo tanto para payload directo de KÖDE como para Webhooks/integraciones de Chatwoot & Meta
     const cwContact = body?.contact || body?.meta?.sender || body?.sender || {};
     const cwAttrs = body?.custom_attributes || cwContact?.custom_attributes || {};
+    const cwAddAttrs = body?.additional_attributes || cwContact?.additional_attributes || {};
 
     const rawNombre =
       body.nombre_completo ||
@@ -139,6 +148,26 @@ export async function POST(request: Request) {
       cwContact.email ||
       null;
 
+    const rawChatwootId =
+      body.chatwoot_contact_id ||
+      cwContact.id ||
+      (body.event?.startsWith('contact_') ? body.id : null) ||
+      null;
+
+    const rawInstagram =
+      body.instagram_username ||
+      cwAttrs.instagram_username ||
+      cwAddAttrs?.social_profiles?.instagram ||
+      cwAddAttrs?.username ||
+      null;
+
+    const rawOrigen =
+      body.origen ||
+      body.source ||
+      cwAttrs.origen ||
+      body?.inbox?.channel_type ||
+      (rawChatwootId ? 'Chatwoot / Meta' : 'Directo');
+
     const isChatwootOrExternal = Boolean(
       body.name ||
       body.phone_number ||
@@ -183,6 +212,9 @@ export async function POST(request: Request) {
     const cleanNumDoc = rawNumDoc ? String(rawNumDoc).trim() : null;
     const cleanEmail = rawEmail ? String(rawEmail).trim() : null;
     const cleanRef = rawRef ? String(rawRef).trim() : null;
+    const cleanOrigen = String(rawOrigen || 'Directo').trim() || 'Directo';
+    const cleanCwId = rawChatwootId ? String(rawChatwootId).trim() : null;
+    const cleanIg = rawInstagram ? String(rawInstagram).trim() : null;
 
     // Verificar si ya existe cliente con este teléfono
     const existing = await queryKode(
@@ -203,8 +235,11 @@ export async function POST(request: Request) {
              tipo_documento = $6,
              numero_documento = $7,
              email = $8,
+             origen = $9,
+             chatwoot_contact_id = $10,
+             instagram_username = $11,
              updated_at = NOW()
-         WHERE id = $9
+         WHERE id = $12
          RETURNING *`,
         [
           cleanNombre || prev.nombre_completo,
@@ -215,6 +250,9 @@ export async function POST(request: Request) {
           cleanTipoDoc || prev.tipo_documento,
           cleanNumDoc ?? prev.numero_documento,
           cleanEmail ?? prev.email,
+          cleanOrigen !== 'Directo' ? cleanOrigen : (prev.origen || 'Directo'),
+          cleanCwId ?? prev.chatwoot_contact_id,
+          cleanIg ?? prev.instagram_username,
           prev.id,
         ]
       );
@@ -231,9 +269,12 @@ export async function POST(request: Request) {
           tipo_documento,
           numero_documento,
           email,
+          origen,
+          chatwoot_contact_id,
+          instagram_username,
           created_at,
           updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
         RETURNING *`,
         [
           cleanNombre,
@@ -245,6 +286,9 @@ export async function POST(request: Request) {
           cleanTipoDoc,
           cleanNumDoc,
           cleanEmail,
+          cleanOrigen,
+          cleanCwId,
+          cleanIg,
         ]
       );
       cliente = insertRes.rows[0];
