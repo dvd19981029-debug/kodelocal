@@ -21972,5 +21972,180 @@
       "Cumarina"
     ],
     "source": "fragrantica"
+  },
+  "AR-106": {
+    "kodigo": "106",
+    "contratipo": "Arabian Fire H",
+    "marca": "Rasasi",
+    "genero": "Caballero",
+    "officialName": "Hawas Fire",
+    "brand": "Rasasi",
+    "family": "Ámbar Aromática",
+    "accords": [
+      "ámbar",
+      "aromático",
+      "floral blanco",
+      "marino",
+      "mineral",
+      "fresco especiado",
+      "afrutado"
+    ],
+    "topNotes": [
+      "Salvia esclarea",
+      "Frutos rojos",
+      "Bergamota"
+    ],
+    "heartNotes": [
+      "Jazmín egipcio",
+      "Notas marinas",
+      "Canela"
+    ],
+    "baseNotes": [
+      "Ámbar",
+      "Notas minerales",
+      "Ámbar gris"
+    ],
+    "source": "fragrantica"
+  },
+  "AR-107": {
+    "kodigo": "107",
+    "contratipo": "Arabian Aqua H",
+    "marca": "Rasasi",
+    "genero": "Caballero",
+    "officialName": "Hawas for Him",
+    "brand": "Rasasi",
+    "family": "Aromática Acuática",
+    "accords": [
+      "afrutado",
+      "cítrico",
+      "acuático",
+      "aromático",
+      "fresco especiado",
+      "dulce",
+      "ámbar"
+    ],
+    "topNotes": [
+      "Manzana",
+      "Bergamota",
+      "Limón",
+      "Canela"
+    ],
+    "heartNotes": [
+      "Notas marinas",
+      "Ciruela",
+      "Flor de azahar",
+      "Cardamomo"
+    ],
+    "baseNotes": [
+      "Ámbar gris",
+      "Almizcle",
+      "Madera flotante",
+      "Pachulí"
+    ],
+    "source": "fragrantica"
+  },
+  "AR-108": {
+    "kodigo": "108",
+    "contratipo": "Starboy Intense H",
+    "marca": "Yves Saint Laurent",
+    "genero": "Caballero",
+    "officialName": "MYSLF Intense",
+    "brand": "Yves Saint Laurent",
+    "family": "Amaderada Floral",
+    "accords": [
+      "floral blanco",
+      "avainillado",
+      "cálido especiado",
+      "amaderado",
+      "cítrico",
+      "ámbar",
+      "atalcado"
+    ],
+    "topNotes": [
+      "Pimienta negra",
+      "Bergamota de Calabria"
+    ],
+    "heartNotes": [
+      "Flor de azahar de Túnez"
+    ],
+    "baseNotes": [
+      "Vainilla Bourbon",
+      "Ámbar",
+      "Pachulí",
+      "Notas amaderadas"
+    ],
+    "source": "fragrantica"
+  },
+  "AR-109": {
+    "kodigo": "109",
+    "contratipo": "Sultán Elixir",
+    "marca": "Lattafa",
+    "genero": "Unisex",
+    "officialName": "Khamrah",
+    "brand": "Lattafa",
+    "family": "Aromática Especiada",
+    "accords": [
+      "cálido especiado",
+      "dulce",
+      "avainillado",
+      "ámbar",
+      "canela",
+      "amaderado",
+      "afrutado"
+    ],
+    "topNotes": [
+      "Canela",
+      "Nuez moscada",
+      "Bergamota"
+    ],
+    "heartNotes": [
+      "Dátiles",
+      "Praliné",
+      "Nardos",
+      "Mahonia"
+    ],
+    "baseNotes": [
+      "Vainilla",
+      "Haba tonka",
+      "Amberwood",
+      "Mirra",
+      "Benjuí",
+      "Akigalawood"
+    ],
+    "source": "fragrantica"
+  },
+  "AR-110": {
+    "kodigo": "110",
+    "contratipo": "Golden Oud",
+    "marca": "Al Haramain",
+    "genero": "Unisex",
+    "officialName": "Amber Oud",
+    "brand": "Al Haramain",
+    "family": "Ámbar Vainilla",
+    "accords": [
+      "dulce",
+      "afrutado",
+      "ozónico",
+      "avainillado",
+      "ámbar",
+      "almizclado",
+      "fresco"
+    ],
+    "topNotes": [
+      "Bergamota",
+      "Notas verdes"
+    ],
+    "heartNotes": [
+      "Melón",
+      "Piña",
+      "Notas dulces",
+      "Ámbar"
+    ],
+    "baseNotes": [
+      "Almizcle",
+      "Vainilla",
+      "Notas amaderadas"
+    ],
+    "source": "fragrantica"
   }
 }

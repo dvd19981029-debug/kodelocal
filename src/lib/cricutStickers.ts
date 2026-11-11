@@ -2791,6 +2791,135 @@ export const CRICUT_STICKERS_CATALOG: CricutStickerCatalogEntry[] = [
       "Vainilla",
       "Cumarina"
     ]
+  },
+  {
+    "sku": "106",
+    "contratipo": "ARABIAN FIRE",
+    "nombre": "Hawas Fire",
+    "genero": "H",
+    "marca": "Rasasi",
+    "anio": "2025",
+    "familia": "Ámbar Aromática",
+    "fraseOlfativa": "Salvia esclarea y frutos rojos con jazmín egipcio sobre ámbar mineral.",
+    "topNotes": [
+      "Salvia esclarea",
+      "Frutos rojos",
+      "Bergamota"
+    ],
+    "heartNotes": [
+      "Jazmín egipcio",
+      "Notas marinas",
+      "Canela"
+    ],
+    "baseNotes": [
+      "Ámbar",
+      "Notas minerales",
+      "Ámbar gris"
+    ]
+  },
+  {
+    "sku": "107",
+    "contratipo": "ARABIAN AQUA",
+    "nombre": "Hawas for Him",
+    "genero": "H",
+    "marca": "Rasasi",
+    "anio": "2015",
+    "familia": "Aromática Acuática",
+    "fraseOlfativa": "Frescura marina explosiva con manzana, ciruela, canela y ámbar gris.",
+    "topNotes": [
+      "Manzana",
+      "Bergamota",
+      "Limón",
+      "Canela"
+    ],
+    "heartNotes": [
+      "Notas marinas",
+      "Ciruela",
+      "Flor de azahar",
+      "Cardamomo"
+    ],
+    "baseNotes": [
+      "Ámbar gris",
+      "Almizcle",
+      "Madera flotante",
+      "Pachulí"
+    ]
+  },
+  {
+    "sku": "108",
+    "contratipo": "STARBOY INTENSE",
+    "nombre": "MYSLF Intense",
+    "genero": "H",
+    "marca": "Yves Saint Laurent",
+    "anio": "2024",
+    "familia": "Amaderada Floral",
+    "fraseOlfativa": "Pimienta negra vibrante y flor de azahar sobre vainilla Bourbon.",
+    "topNotes": [
+      "Pimienta negra",
+      "Bergamota de Calabria"
+    ],
+    "heartNotes": [
+      "Flor de azahar de Túnez"
+    ],
+    "baseNotes": [
+      "Vainilla Bourbon",
+      "Ámbar",
+      "Pachulí",
+      "Notas amaderadas"
+    ]
+  },
+  {
+    "sku": "109",
+    "contratipo": "SULTÁN ELIXIR",
+    "nombre": "Khamrah",
+    "genero": "U",
+    "marca": "Lattafa",
+    "anio": "2022",
+    "familia": "Aromática Especiada",
+    "fraseOlfativa": "Elixir árabe de canela, dátiles dulces, praliné y vainilla con mirra.",
+    "topNotes": [
+      "Canela",
+      "Nuez moscada",
+      "Bergamota"
+    ],
+    "heartNotes": [
+      "Dátiles",
+      "Praliné",
+      "Nardos",
+      "Mahonia"
+    ],
+    "baseNotes": [
+      "Vainilla",
+      "Haba tonka",
+      "Amberwood",
+      "Mirra",
+      "Benjuí"
+    ]
+  },
+  {
+    "sku": "110",
+    "contratipo": "GOLDEN OUD",
+    "nombre": "Amber Oud",
+    "genero": "U",
+    "marca": "Al Haramain",
+    "anio": "2018",
+    "familia": "Ámbar Vainilla",
+    "fraseOlfativa": "Melón jugoso y piña tropical envueltos en ámbar dorado y vainilla.",
+    "topNotes": [
+      "Bergamota",
+      "Notas verdes"
+    ],
+    "heartNotes": [
+      "Melón",
+      "Piña",
+      "Notas dulces",
+      "Ámbar"
+    ],
+    "baseNotes": [
+      "Almizcle",
+      "Vainilla",
+      "Notas amaderadas"
+    ]
   }
 ];
 

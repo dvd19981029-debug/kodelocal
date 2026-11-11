@@ -110,7 +110,12 @@ export const INSPIRACION_PERFUME_MAP: Record<string, string> = {
   '102': 'Valentino Uomo H',
   '103': 'Scandal F',
   '104': '212 VIP Black H',
-  '105': 'Good Girl Blush F'
+  '105': 'Good Girl Blush F',
+  '106': 'Hawas Fire H',
+  '107': 'Hawas H',
+  '108': 'MYSLF Intense H',
+  '109': 'Khamrah',
+  '110': 'Amber Oud'
 };
 
 export const INSPIRACION_BRAND_MAP: Record<string, string> = {
@@ -218,14 +223,20 @@ export const INSPIRACION_BRAND_MAP: Record<string, string> = {
   '102': 'Valentino',
   '103': 'Jean Paul Gaultier',
   '104': 'Carolina Herrera',
-  '105': 'Carolina Herrera'
+  '105': 'Carolina Herrera',
+  '106': 'Rasasi',
+  '107': 'Rasasi',
+  '108': 'Yves Saint Laurent',
+  '109': 'Lattafa',
+  '110': 'Al Haramain'
 };
 
 export const INCOMING_ESSENCE_SKUS = new Set([
   '62', '63', '64', '65', '66', '67', '68', '69', '70', '71',
   '72', '73', '74', '75', '76', '77', '78', '79', '80', '81', '82',
   '83', '84', '85', '86', '87', '88', '89', '90',
-  '91', '92', '93', '94', '95', '96', '97', '98', '99', '100', '101', '102', '103', '104', '105'
+  '91', '92', '93', '94', '95', '96', '97', '98', '99', '100', '101', '102', '103', '104', '105',
+  '106', '107', '108', '109', '110'
 ]);
 
 export function isIncomingEssence(product: { id?: string | null; sku?: string | null; category?: string | null } | null | undefined): boolean {
@@ -260,7 +271,8 @@ const FAMOUS_BRANDS = [
   'LACOSTE', 'LATTAFA', 'BHARARA', 'BVLGARI', 'MOSCHINO', 'CHANEL',
   'XERJOFF', 'LE LABO', 'HERMÈS', 'HERMES', 'MUGLER', 'CREED', 'VERSACE',
   'ARMAF', 'AFNAN', 'PRADA', 'DKNY', 'DIOR', 'HUGO BOSS', 'BOSS',
-  'ARIANA GRANDE', 'NAUTICA', 'AZZARO', 'YSL', 'PARIS HILTON', 'PARFUMS DE MARLY'
+  'ARIANA GRANDE', 'NAUTICA', 'AZZARO', 'YSL', 'PARIS HILTON', 'PARFUMS DE MARLY',
+  'RASASI', 'AL HARAMAIN'
 ];
 
 /**
@@ -624,6 +636,12 @@ export const OFFICIAL_TO_ORIGINAL_MAP: Record<string, { originalName: string; br
   'PARTYGIRL': { originalName: 'Scandal F', brand: 'Jean Paul Gaultier', sku: '103' },
   'MANHATTAN VIP': { originalName: '212 VIP Black H', brand: 'Carolina Herrera', sku: '104' },
   'FEMME BLUSH': { originalName: 'Good Girl Blush F', brand: 'Carolina Herrera', sku: '105' },
+  'ARABIAN FIRE': { originalName: 'Hawas Fire H', brand: 'Rasasi', sku: '106' },
+  'ARABIAN AQUA': { originalName: 'Hawas H', brand: 'Rasasi', sku: '107' },
+  'STARBOY INTENSE': { originalName: 'MYSLF Intense H', brand: 'Yves Saint Laurent', sku: '108' },
+  'SULTÁN ELIXIR': { originalName: 'Khamrah', brand: 'Lattafa', sku: '109' },
+  'SULTAN ELIXIR': { originalName: 'Khamrah', brand: 'Lattafa', sku: '109' },
+  'GOLDEN OUD': { originalName: 'Amber Oud', brand: 'Al Haramain', sku: '110' },
 };
 
 // Generar variaciones con sufijos H / F / M / U para match instantáneo

@@ -111,7 +111,12 @@ export const CATALOG_DESCRIPTIONS_48: Record<string, string> = {
   '102': 'Elegancia italiana clásica con un giro gourmand irresistible. Bergamota luminosa y mirto dan paso a un corazón envolvente de crema de avellana, chocolate y café tostado sobre cuero suave y madera de cedro.',
   '103': 'Una sobredosis de placer gourmand y feminidad audaz. Naranja sanguina y mandarina iluminan un corazón opulento de miel dorada, gardenia, flor de azahar y durazno sobre cera de abeja, caramelo, pachulí y regaliz.',
   '104': 'Energía nocturna, magnética e irreverente. Un disparo ardiente de absenta, anís estrellado e hinojo envuelve una lavanda aromática y cuero suave sobre una estela adictiva de vainilla negra y almizcle.',
-  '105': 'Delicadeza floral pastel con carácter seductor. Bergamota italiana y almendra amarga abren paso a un corazón radiante de peonía y ylang-ylang exótico sobre una base envolvente de vainilla absoluta y cumarina.'
+  '105': 'Delicadeza floral pastel con carácter seductor. Bergamota italiana y almendra amarga abren paso a un corazón radiante de peonía y ylang-ylang exótico sobre una base envolvente de vainilla absoluta y cumarina.',
+  '106': 'Intensidad ardiente y magnetismo oriental contemporáneo. Salvia esclarea aromática, frutos rojos vibrantes y bergamota iluminan un corazón de jazmín egipcio y acordes marinos sobre una base poderosa de ámbar cálido, notas minerales y ámbar gris.',
+  '107': 'Frescura acuática explosiva con sello árabe de alta proyección. Manzana crujiente, bergamota, limón siciliano y un toque de canela abren paso a notas marinas, ciruela jugosa, flor de azahar y cardamomo sobre ámbar gris, madera flotante, almizcle y pachulí.',
+  '108': 'Sofisticación parisina en su faceta más profunda, nocturna y sensual. Una apertura vibrante de pimienta negra especiada y bergamota da paso a un corazón absoluto de flor de azahar de Túnez, fundiéndose en una estela opulenta de vainilla Bourbon, ámbar, pachulí y maderas.',
+  '109': 'Un elixir gourmand especiado de lujo árabe inconfundible. Canela cálida, nuez moscada y bergamota envuelven un corazón opulento de dátiles dulces, praliné cremoso y nardos sobre una base majestuosa de vainilla tostada, haba tonka, mirra, benjuí y amberwood.',
+  '110': 'Opulencia frutal dorada y fijación extraordinaria. Bergamota luminosa y notas verdes frescas abren paso a un corazón jugoso e irresistible de melón dulce, piña tropical y ámbar cálido, reposando sobre una estela envolvente de vainilla, almizcle blanco y maderas preciosas.'
 };
 
 /**

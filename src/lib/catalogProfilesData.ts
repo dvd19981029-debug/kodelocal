@@ -1060,6 +1060,56 @@ export const CATALOG_PROFILES_48: Record<string, StaticProfile> = {
     occasion: 'Citas románticas, uso diario femenino, brunch y ocasiones especiales',
     intensity: 'Intensa'
   },
+  '106': {
+    family: 'Ámbar Aromática',
+    accords: ['ámbar', 'aromático', 'floral blanco', 'marino', 'mineral', 'fresco especiado', 'afrutado'],
+    topNotes: ['Salvia esclarea', 'Frutos rojos', 'Bergamota'],
+    heartNotes: ['Jazmín egipcio', 'Notas marinas', 'Canela'],
+    baseNotes: ['Ámbar', 'Notas minerales', 'Ámbar gris'],
+    season: 'Todo el año / Noche',
+    occasion: 'Salidas nocturnas, eventos sociales, citas magnéticas y alta proyección',
+    intensity: 'Intensa'
+  },
+  '107': {
+    family: 'Aromática Acuática',
+    accords: ['afrutado', 'cítrico', 'acuático', 'aromático', 'fresco especiado', 'dulce', 'ámbar'],
+    topNotes: ['Manzana', 'Bergamota', 'Limón', 'Canela'],
+    heartNotes: ['Notas marinas', 'Ciruela', 'Flor de azahar', 'Cardamomo'],
+    baseNotes: ['Ámbar gris', 'Almizcle', 'Madera flotante', 'Pachulí'],
+    season: 'Primavera / Verano / Todo el año',
+    occasion: 'Uso diario versátil, días soleados, fiestas, oficina y cumplidos garantizados',
+    intensity: 'Intensa'
+  },
+  '108': {
+    family: 'Amaderada Floral',
+    accords: ['floral blanco', 'avainillado', 'cálido especiado', 'amaderado', 'cítrico', 'ámbar', 'atalcado'],
+    topNotes: ['Pimienta negra', 'Bergamota de Calabria'],
+    heartNotes: ['Flor de azahar de Túnez'],
+    baseNotes: ['Vainilla Bourbon', 'Ámbar', 'Pachulí', 'Notas amaderadas'],
+    season: 'Otoño / Invierno / Noche',
+    occasion: 'Citas elegantes, salidas nocturnas, eventos formales y fragancia firma intensa',
+    intensity: 'Intensa'
+  },
+  '109': {
+    family: 'Aromática Especiada',
+    accords: ['cálido especiado', 'dulce', 'avainillado', 'ámbar', 'canela', 'amaderado', 'afrutado'],
+    topNotes: ['Canela', 'Nuez moscada', 'Bergamota'],
+    heartNotes: ['Dátiles', 'Praliné', 'Nardos', 'Mahonia'],
+    baseNotes: ['Vainilla', 'Haba tonka', 'Amberwood', 'Mirra', 'Benjuí', 'Akigalawood'],
+    season: 'Otoño / Invierno / Noche',
+    occasion: 'Noches frías, fiestas de gala, citas seductoras y perfumería árabe de impacto',
+    intensity: 'Intensa'
+  },
+  '110': {
+    family: 'Ámbar Vainilla',
+    accords: ['dulce', 'afrutado', 'ozónico', 'avainillado', 'ámbar', 'almizclado', 'fresco'],
+    topNotes: ['Bergamota', 'Notas verdes'],
+    heartNotes: ['Melón', 'Piña', 'Notas dulces', 'Ámbar'],
+    baseNotes: ['Almizcle', 'Vainilla', 'Notas amaderadas'],
+    season: 'Todo el año / Día y Noche',
+    occasion: 'Eventos especiales, fiestas, uso firma de lujo y máxima estela',
+    intensity: 'Intensa'
+  },
   'APAE-2154': {
     family: 'Floral Frutal',
     accords: ['floral', 'afrutado', 'fresco', 'dulce', 'acuático'],

@@ -122,6 +122,11 @@ const DEFAULT_APAESA_CATALOG: SupplierCatalogEntry[] = [
   { sku: '103', id_proveedor: 'SCF1kg', name: 'SCANDAL F', contratipo: 'PARTYGIRL', price_per_kg: 69.91 },
   { sku: '104', id_proveedor: '212VB1kg', name: '212 VIP BLACK H', contratipo: 'MANHATTAN VIP', price_per_kg: 69.91 },
   { sku: '105', id_proveedor: 'GGB1kg', name: 'GOOD GIRL BLUSH', contratipo: 'FEMME BLUSH', price_per_kg: 66.37 },
+  { sku: '106', id_proveedor: 'HF1kg', name: 'HAWAS FIRE', contratipo: 'ARABIAN FIRE', price_per_kg: 73.45 },
+  { sku: '107', id_proveedor: 'HAH1kg', name: 'HAWAS H', contratipo: 'ARABIAN AQUA', price_per_kg: 71.68 },
+  { sku: '108', id_proveedor: 'MYLI1kg', name: 'MYSLF INTENSE H', contratipo: 'STARBOY INTENSE', price_per_kg: 71.68 },
+  { sku: '109', id_proveedor: 'KHA1kg', name: 'KHAMRAH', contratipo: 'SULTÁN ELIXIR', price_per_kg: 71.68 },
+  { sku: '110', id_proveedor: 'AO1kg', name: 'AMBER OUD', contratipo: 'GOLDEN OUD', price_per_kg: 69.91 },
 ];
 
 function checkStaffAuth(request: Request): boolean {

@@ -129,7 +129,7 @@ const NOTE_RULES: Array<{ pattern: RegExp; file: string }> = [
   { pattern: /granada/i, file: 'granada' },
   { pattern: /maracuy[áa]|pitahaya/i, file: 'maracuya' },
   { pattern: /lichi/i, file: 'lichi' },
-  { pattern: /higo/i, file: 'higo' },
+  { pattern: /higo|d[áa]til/i, file: 'higo' },
   { pattern: /frut/i, file: 'frutos-rojos' },
 
   // Aromáticas y Hierbas
@@ -221,7 +221,7 @@ const NOTE_RULES: Array<{ pattern: RegExp; file: string }> = [
   { pattern: /chocolate/i, file: 'chocolate' },
   { pattern: /leche|lact[óo]nic/i, file: 'leche' },
   { pattern: /miel|cera\s*de\s*abeja/i, file: 'miel' },
-  { pattern: /caramelo|acorde\s*goloso/i, file: 'caramelo' },
+  { pattern: /caramelo|acorde\s*goloso|notas\s*dulces/i, file: 'caramelo' },
   { pattern: /almendra/i, file: 'almendra' },
   { pattern: /avellana|pralin[ée]|casta[ñn]a/i, file: 'avellana' },
   { pattern: /crema\s*batida/i, file: 'crema-batida' },

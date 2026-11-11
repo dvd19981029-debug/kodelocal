@@ -453,5 +453,30 @@
     "id_proveedor": "GGB1kg",
     "name": "GOOD GIRL BLUSH",
     "price_per_kg": 66.37
+  },
+  {
+    "id_proveedor": "HF1kg",
+    "name": "HAWAS FIRE",
+    "price_per_kg": 73.45
+  },
+  {
+    "id_proveedor": "HAH1kg",
+    "name": "HAWAS H",
+    "price_per_kg": 71.68
+  },
+  {
+    "id_proveedor": "MYLI1kg",
+    "name": "MYSLF INTENSE H",
+    "price_per_kg": 71.68
+  },
+  {
+    "id_proveedor": "KHA1kg",
+    "name": "KHAMRAH",
+    "price_per_kg": 71.68
+  },
+  {
+    "id_proveedor": "AO1kg",
+    "name": "AMBER OUD",
+    "price_per_kg": 69.91
   }
 ]
