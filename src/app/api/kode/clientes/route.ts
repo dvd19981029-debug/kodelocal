@@ -80,49 +80,119 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const {
-      nombre_completo,
-      telefono_whatsapp,
-      direccion_entrega,
-      departamento,
-      municipio,
-      punto_referencia,
-      tipo_documento,
-      numero_documento,
-      email,
-    } = body;
 
-    if (!nombre_completo?.trim()) {
+    // Soporte nativo tanto para payload directo de KÖDE como para Webhooks/integraciones de Chatwoot & Meta
+    const cwContact = body?.contact || body?.meta?.sender || body?.sender || {};
+    const cwAttrs = body?.custom_attributes || cwContact?.custom_attributes || {};
+
+    const rawNombre =
+      body.nombre_completo ||
+      body.nombre ||
+      body.name ||
+      cwContact.name ||
+      '';
+
+    const rawTelefono =
+      body.telefono_whatsapp ||
+      body.telefono ||
+      body.phone_number ||
+      body.phone ||
+      cwContact.phone_number ||
+      '';
+
+    const rawDireccion =
+      body.direccion_entrega ||
+      body.direccion ||
+      cwAttrs.direccion_entrega ||
+      cwAttrs.direccion ||
+      '';
+
+    const rawDepto =
+      body.departamento ||
+      cwAttrs.departamento ||
+      '';
+
+    const rawMuni =
+      body.municipio ||
+      cwAttrs.municipio ||
+      '';
+
+    const rawRef =
+      body.punto_referencia ||
+      cwAttrs.punto_referencia ||
+      null;
+
+    const rawTipoDoc =
+      body.tipo_documento ||
+      cwAttrs.tipo_documento ||
+      'DUI';
+
+    const rawNumDoc =
+      body.numero_documento ||
+      body.documento ||
+      cwAttrs.numero_documento ||
+      null;
+
+    const rawEmail =
+      body.email ||
+      body.correo ||
+      cwContact.email ||
+      null;
+
+    const isChatwootOrExternal = Boolean(
+      body.name ||
+      body.phone_number ||
+      body.contact ||
+      body.meta?.sender ||
+      body.origen === 'chatwoot' ||
+      body.source === 'chatwoot' ||
+      request.headers.get('x-api-key') ||
+      new URL(request.url).searchParams.get('api_key')
+    );
+
+    if (!rawNombre?.trim()) {
       return NextResponse.json({ success: false, error: 'El nombre completo es requerido' }, { status: 400 });
     }
-    if (!telefono_whatsapp?.trim()) {
+    if (!rawTelefono?.trim()) {
       return NextResponse.json({ success: false, error: 'El teléfono WhatsApp es requerido' }, { status: 400 });
     }
-    if (!departamento?.trim()) {
-      return NextResponse.json({ success: false, error: 'El departamento es requerido y no puede estar vacío' }, { status: 400 });
-    }
-    if (!municipio?.trim()) {
-      return NextResponse.json({ success: false, error: 'El municipio es requerido y no puede estar vacío' }, { status: 400 });
-    }
-    if (!direccion_entrega?.trim()) {
-      return NextResponse.json({ success: false, error: 'La dirección de entrega es requerida y no puede estar vacía' }, { status: 400 });
+
+    if (!isChatwootOrExternal) {
+      if (!rawDepto?.trim()) {
+        return NextResponse.json({ success: false, error: 'El departamento es requerido y no puede estar vacío' }, { status: 400 });
+      }
+      if (!rawMuni?.trim()) {
+        return NextResponse.json({ success: false, error: 'El municipio es requerido y no puede estar vacío' }, { status: 400 });
+      }
+      if (!rawDireccion?.trim()) {
+        return NextResponse.json({ success: false, error: 'La dirección de entrega es requerida y no puede estar vacía' }, { status: 400 });
+      }
     }
 
-    const cleanTel = telefono_whatsapp.trim().replace(/\D/g, '');
-    const cleanDepto = departamento.trim();
-    const cleanMuni = municipio.trim();
-    const cleanTipoDoc = tipo_documento?.trim() || 'DUI';
-    const cleanNumDoc = numero_documento?.trim() || null;
-    const cleanEmail = email?.trim() || null;
+    // Normalizar teléfono salvadoreño (si viene con +50371234567 de Meta/Chatwoot, dejar los 8 dígitos locales)
+    let cleanTel = String(rawTelefono).trim().replace(/\D/g, '');
+    if (cleanTel.length === 11 && cleanTel.startsWith('503')) {
+      cleanTel = cleanTel.slice(3);
+    }
+
+    const cleanNombre = String(rawNombre).trim();
+    const cleanDepto = String(rawDepto || '').trim() || 'San Salvador';
+    const cleanMuni = String(rawMuni || '').trim() || 'San Salvador';
+    const cleanDireccion = String(rawDireccion || '').trim() || 'Pendiente confirmar dirección (Meta / Chatwoot)';
+    const cleanTipoDoc = String(rawTipoDoc || 'DUI').trim() || 'DUI';
+    const cleanNumDoc = rawNumDoc ? String(rawNumDoc).trim() : null;
+    const cleanEmail = rawEmail ? String(rawEmail).trim() : null;
+    const cleanRef = rawRef ? String(rawRef).trim() : null;
 
     // Verificar si ya existe cliente con este teléfono
     const existing = await queryKode(
-      `SELECT id FROM public.clientes WHERE telefono_whatsapp = $1 LIMIT 1`,
+      `SELECT * FROM public.clientes WHERE telefono_whatsapp = $1 LIMIT 1`,
       [cleanTel]
     );
 
     let cliente;
     if (existing.rowCount && existing.rowCount > 0) {
+      const prev = existing.rows[0];
       const updateRes = await queryKode(
         `UPDATE public.clientes 
          SET nombre_completo = $1,
@@ -137,15 +207,15 @@ export async function POST(request: Request) {
          WHERE id = $9
          RETURNING *`,
         [
-          nombre_completo.trim(),
-          direccion_entrega.trim(),
-          cleanDepto,
-          cleanMuni,
-          punto_referencia?.trim() || null,
-          cleanTipoDoc,
-          cleanNumDoc,
-          cleanEmail,
-          existing.rows[0].id,
+          cleanNombre || prev.nombre_completo,
+          rawDireccion?.trim() ? cleanDireccion : prev.direccion_entrega,
+          rawDepto?.trim() ? cleanDepto : prev.departamento,
+          rawMuni?.trim() ? cleanMuni : prev.municipio,
+          cleanRef ?? prev.punto_referencia,
+          cleanTipoDoc || prev.tipo_documento,
+          cleanNumDoc ?? prev.numero_documento,
+          cleanEmail ?? prev.email,
+          prev.id,
         ]
       );
       cliente = updateRes.rows[0];
@@ -166,12 +236,12 @@ export async function POST(request: Request) {
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
         RETURNING *`,
         [
-          nombre_completo.trim(),
+          cleanNombre,
           cleanTel,
-          direccion_entrega.trim(),
+          cleanDireccion,
           cleanDepto,
           cleanMuni,
-          punto_referencia?.trim() || null,
+          cleanRef,
           cleanTipoDoc,
           cleanNumDoc,
           cleanEmail,

@@ -63,6 +63,24 @@ async function getEdgeAuthSecret(): Promise<string> {
   return 'aromaniak_auth_token_secret_prod_fallback_2026';
 }
 
+const KODE_CHATWOOT_API_KEY =
+  process.env.KODE_API_KEY || 'kode_cw_live_9f8e4a2b7c1d6e5f3a0b8c9d2e4f6a1b';
+
+function hasValidKodeApiKey(request: NextRequest): boolean {
+  const apiKeyHeader = request.headers.get('x-api-key')?.trim();
+  const staffHeader = request.headers.get('x-staff-token')?.trim();
+  const authHeader = request.headers.get('authorization') || '';
+  const bearer = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : null;
+  const queryKey = request.nextUrl.searchParams.get('api_key')?.trim();
+
+  return (
+    apiKeyHeader === KODE_CHATWOOT_API_KEY ||
+    staffHeader === KODE_CHATWOOT_API_KEY ||
+    bearer === KODE_CHATWOOT_API_KEY ||
+    queryKey === KODE_CHATWOOT_API_KEY
+  );
+}
+
 const KODE_ONLY_EMAILS = new Set([
   'pm3923193@gmail.com',
   'm3923193@gmail.com',
@@ -189,8 +207,10 @@ export async function middleware(request: NextRequest) {
     return redirectRes;
   }
 
-  // 3. En el dominio de clientes (aromaniaksv.com), bloquear APIs operacionales/administrativas
-  if (isCustomerDomain && isOperationalApi) {
+  const isKodeApiWithValidKey = pathname.startsWith('/api/kode') && hasValidKodeApiKey(request);
+
+  // 3. En el dominio de clientes (aromaniaksv.com), bloquear APIs operacionales/administrativas (excepto integraciones KÖDE con API Key válida)
+  if (isCustomerDomain && isOperationalApi && !isKodeApiWithValidKey) {
     return NextResponse.json(
       {
         success: false,
@@ -244,7 +264,7 @@ export async function middleware(request: NextRequest) {
     (pathname.startsWith('/api/kode/dte/') && (request.method === 'GET' || request.method === 'HEAD')) ||
     (pathname === '/api/kode/guia/pdf' && (request.method === 'GET' || request.method === 'HEAD'));
 
-  if (isOperationalApi && !isPublicApiException) {
+  if (isOperationalApi && !isPublicApiException && !isKodeApiWithValidKey) {
     const authHeader = request.headers.get('authorization') || '';
     const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : null;
     const staffHeaderToken = request.headers.get('x-staff-token');
