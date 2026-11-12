@@ -1190,10 +1190,14 @@ export default function CheckoutPage() {
                 {metodoEntrega === 'ENVIO' ? (
                   <>
                     <div>
-                      <label className="font-bold text-slate-700 block mb-1">
+                      <label htmlFor="checkout-departamento" className="font-bold text-slate-700 block mb-1">
                         Departamento <span className="text-rose-500">*</span>
                       </label>
                       <select
+                        id="checkout-departamento"
+                        name="department"
+                        required
+                        aria-describedby="checkout-location-warning"
                         value={departamento}
                         onChange={(e) => {
                           const newDept = e.target.value;
@@ -1212,11 +1216,14 @@ export default function CheckoutPage() {
                     </div>
 
                     <div>
-                      <label className="font-bold text-slate-700 block mb-1">
+                      <label htmlFor="checkout-municipio" className="font-bold text-slate-700 block mb-1">
                         Municipio / Distrito <span className="text-rose-500">*</span>
                       </label>
                       <select
+                        id="checkout-municipio"
+                        name="municipality"
                         required
+                        aria-describedby="checkout-location-warning"
                         value={municipio}
                         onChange={(e) => setMunicipio(e.target.value)}
                         className="clay-input w-full font-bold"
@@ -1225,6 +1232,17 @@ export default function CheckoutPage() {
                           <option key={m.id} value={m.nombre}>{m.nombre}</option>
                         ))}
                       </select>
+                    </div>
+
+                    <div
+                      id="checkout-location-warning"
+                      role="note"
+                      className="sm:col-span-2 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/90 px-3.5 py-2.5 text-xs text-amber-900"
+                    >
+                      <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" aria-hidden="true" />
+                      <p className="font-semibold leading-relaxed">
+                        Importante: Verifica que tu departamento y municipio sean correctos. Los paquetes podrían no llegar o retrasarse de ingresarse departamentos o municipios incorrectos en la dirección.
+                      </p>
                     </div>
 
                     {(() => {
