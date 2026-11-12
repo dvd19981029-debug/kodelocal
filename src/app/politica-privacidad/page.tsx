@@ -4,7 +4,7 @@ import { ShieldCheck, ArrowLeft, Lock, UserCheck, Eye, FileText } from 'lucide-r
 
 export const metadata = {
   title: 'Política de Privacidad',
-  description: 'Política de Privacidad y Tratamiento de Datos de Aromaniak SV. Información sobre el uso de datos en el inicio de sesión con Google.',
+  description: 'Política de Privacidad y Tratamiento de Datos de GRUPO KODE, S.A.S. DE C.V. (Aromaniak SV, KÖDE y Chatwoot CRM).',
 };
 
 export default function PoliticaPrivacidadPage() {
@@ -18,7 +18,7 @@ export default function PoliticaPrivacidadPage() {
           <ArrowLeft className="w-4 h-4" />
           <span>Volver a la tienda</span>
         </Link>
-        <span className="text-xs text-slate-400 font-medium">Última actualización: Septiembre 2026</span>
+        <span className="text-xs text-slate-400 font-medium">Última actualización: Noviembre 2026</span>
       </div>
 
       <div className="clay-card p-6 sm:p-10 bg-white space-y-8 rounded-3xl border border-white/90 shadow-xl">
@@ -30,7 +30,7 @@ export default function PoliticaPrivacidadPage() {
             Política de Privacidad
           </h1>
           <p className="text-sm text-slate-600 font-medium">
-            En <strong>Aromaniak SV</strong> (sitio web oficial: <a href="https://aromaniaksv.com" className="text-purple-700 underline font-bold">https://aromaniaksv.com</a>), la privacidad de nuestros clientes es una prioridad fundamental.
+            La presente Política de Privacidad regula el tratamiento de datos personales realizado por <strong>GRUPO KODE, SOCIEDAD POR ACCIONES SIMPLIFICADA DE CAPITAL VARIABLE</strong> (abreviadamente <strong>GRUPO KODE, S.A.S. DE C.V.</strong>, El Salvador), titular y operadora de las marcas y plataformas oficiales <strong>Aromaniak SV</strong> (<a href="https://aromaniaksv.com" className="text-purple-700 underline font-bold">https://aromaniaksv.com</a> y <a href="https://pos.aromaniaksv.com" className="text-purple-700 underline font-bold">https://pos.aromaniaksv.com</a>), <strong>KÖDE</strong> (<a href="https://kodesv.com" className="text-purple-700 underline font-bold">https://kodesv.com</a>) y nuestra plataforma interna de atención al cliente <strong>Chatwoot CRM</strong> (<a href="https://chat.kodesv.com" className="text-purple-700 underline font-bold">https://chat.kodesv.com</a>).
           </p>
         </div>
 
@@ -41,15 +41,23 @@ export default function PoliticaPrivacidadPage() {
             <span>1. Información que Recopilamos</span>
           </h2>
           <p className="text-sm text-slate-600 leading-relaxed font-medium">
-            Cuando utilizas nuestra plataforma de comercio electrónico y decides autenticarte utilizando <strong>Iniciar Sesión con Google (Google Sign-In)</strong>, únicamente solicitamos acceso a la información básica de tu perfil público:
+            <strong>a) Tienda en línea e Inicio de Sesión con Google (Google Sign-In):</strong> Cuando utilizas nuestra plataforma de comercio electrónico y decides autenticarte con Google, únicamente solicitamos acceso a la información básica de tu perfil público:
           </p>
           <ul className="list-disc list-inside text-sm text-slate-600 space-y-1 pl-2 font-medium">
             <li><strong>Nombre y apellidos:</strong> Para personalizar tu experiencia de compra y dirigirnos a ti en tus órdenes.</li>
             <li><strong>Dirección de correo electrónico:</strong> Para asociar tu cuenta de cliente, enviarte comprobantes de tus pedidos, confirmaciones de entrega y notificaciones de estado.</li>
             <li><strong>Foto de perfil (avatar público):</strong> Exclusivamente para mostrar tu avatar en la barra de navegación de tu cuenta dentro de la tienda.</li>
           </ul>
+          <p className="text-sm text-slate-600 leading-relaxed font-medium pt-2">
+            <strong>b) Canales de Mensajería e Integración con Meta Platforms (Facebook Login y Facebook Messenger):</strong> Cuando un cliente nos escribe a nuestras páginas oficiales de Facebook/Messenger o cuando nuestros administradores autorizados conectan páginas comerciales en <strong>Chatwoot CRM</strong> (<a href="https://chat.kodesv.com" className="text-purple-700 underline font-bold">https://chat.kodesv.com</a>) mediante la API de Meta, recopilamos únicamente:
+          </p>
+          <ul className="list-disc list-inside text-sm text-slate-600 space-y-1 pl-2 font-medium">
+            <li><strong>Datos de perfil en Messenger (<code>pages_read_engagement</code>):</strong> Nombre público, foto de perfil e identificador de página (PSID) del remitente para identificar la conversación de soporte.</li>
+            <li><strong>Mensajes y archivos enviados (<code>pages_messaging</code>):</strong> El contenido de las consultas, pedidos y comprobantes que el usuario envía voluntariamente para recibir atención humana en tiempo real.</li>
+            <li><strong>Metadatos de páginas administradas (<code>pages_show_list</code>, <code>pages_manage_metadata</code>, <code>business_management</code>):</strong> Listado de páginas comerciales de nuestro portafolio empresarial y suscripción de webhooks durante la autenticación con Facebook Login realizada por nuestros propios administradores.</li>
+          </ul>
           <p className="text-xs text-purple-900 bg-purple-50 p-3 rounded-xl border border-purple-200 font-semibold">
-            No solicitamos ni tenemos acceso a contraseñas, contactos, correos personales, archivos de Google Drive ni ninguna otra información privada de tu cuenta de Google.
+            No solicitamos ni tenemos acceso a contraseñas personales, listas de amigos ni mensajes privados ajenos a las conversaciones iniciadas directamente con nuestras páginas oficiales.
           </p>
         </section>
 
@@ -60,13 +68,12 @@ export default function PoliticaPrivacidadPage() {
             <span>2. Uso y Finalidad de los Datos</span>
           </h2>
           <p className="text-sm text-slate-600 leading-relaxed font-medium">
-            Los datos obtenidos a través de la autenticación con Google y durante el proceso de compra se utilizan exclusivamente para:
+            Los datos obtenidos a través de Google Sign-In, las APIs de Meta (Facebook Messenger / Facebook Login) y durante el proceso de compra se utilizan exclusivamente para:
           </p>
           <ul className="list-disc list-inside text-sm text-slate-600 space-y-1 pl-2 font-medium">
-            <li>Autenticar tu identidad de forma segura sin que tengas que recordar una contraseña adicional.</li>
-            <li>Registrar y procesar tus pedidos de esencias, botes de vidrio y materias primas de perfumería fina.</li>
-            <li>Generar tus comprobantes electrónicos y coordinar la entrega a domicilio a todo El Salvador o retiro en local.</li>
-            <li>Brindarte soporte y atención al cliente sobre tus compras.</li>
+            <li>Autenticar tu identidad de forma segura y conectar nuestras bandejas oficiales de atención al cliente.</li>
+            <li>Recibir y responder en tiempo real tus consultas, cotizaciones y soporte postventa a través de Facebook Messenger y nuestra web.</li>
+            <li>Registrar y procesar tus pedidos, generar comprobantes electrónicos y coordinar entregas a domicilio en todo El Salvador o retiro en sucursal.</li>
           </ul>
         </section>
 
@@ -74,13 +81,13 @@ export default function PoliticaPrivacidadPage() {
         <section className="space-y-3">
           <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
             <Lock className="w-5 h-5 text-purple-600" />
-            <span>3. Protección y Confidencialidad (No Venta de Datos)</span>
+            <span>3. Protección, Encargados de Infraestructura y Retención (No Venta de Datos)</span>
           </h2>
           <p className="text-sm text-slate-600 leading-relaxed font-medium">
-            <strong>Aromaniak SV no vende, no alquila ni comercializa datos personales de sus usuarios a terceros, agencias de publicidad o intermediarios de datos.</strong>
+            <strong>GRUPO KODE, S.A.S. DE C.V. (Aromaniak SV / KÖDE) no vende, no alquila ni comercializa datos personales ni Datos de la Plataforma de Meta a terceros, agencias de publicidad o intermediarios de datos.</strong>
           </p>
           <p className="text-sm text-slate-600 leading-relaxed font-medium">
-            El intercambio de datos con terceros se limita estrictamente a los proveedores tecnológicos indispensables para el funcionamiento del servicio (nuestra base de datos segura en Supabase protegida con cifrado SSL/TLS y pasarelas de pago autorizadas para el cobro).
+            El tratamiento técnico se apoya estrictamente en proveedores de infraestructura en la nube de primer nivel bajo cifrado SSL/TLS: <strong>Google Cloud Platform (Google LLC, EE. UU.)</strong> para el alojamiento privado de nuestro servidor Chatwoot CRM, <strong>Supabase</strong> para nuestra base de datos segura de pedidos y pasarelas bancarias autorizadas para el cobro. El historial de conversaciones y archivos multimedia de atención al cliente se depura automáticamente tras 90 días de inactividad.
           </p>
         </section>
 
@@ -88,13 +95,13 @@ export default function PoliticaPrivacidadPage() {
         <section className="space-y-3">
           <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
             <FileText className="w-5 h-5 text-purple-600" />
-            <span>4. Derechos del Usuario y Eliminación de Datos</span>
+            <span>4. Derechos del Usuario e Instrucciones para la Eliminación de Datos</span>
           </h2>
           <p className="text-sm text-slate-600 leading-relaxed font-medium">
-            Tienes derecho en cualquier momento a solicitar el acceso, rectificación o eliminación total de tu cuenta y de tus datos personales registrados en nuestra base de datos.
+            Tienes derecho en cualquier momento a solicitar el acceso, rectificación o <strong>eliminación total de tu cuenta, historial de mensajes de Facebook Messenger y datos personales</strong> registrados en Chatwoot CRM y nuestras bases de datos.
           </p>
           <p className="text-sm text-slate-600 leading-relaxed font-medium">
-            Para solicitar la eliminación de tu cuenta o realizar consultas sobre esta política de privacidad, puedes contactarnos directamente al correo electrónico de soporte:
+            <strong>¿Cómo solicitar la eliminación de tus datos (incluidos datos recibidos de Meta / Facebook)?</strong> Envía un correo electrónico a nuestro contacto oficial de privacidad indicando tu nombre, número telefónico o perfil de Facebook/correo asociado con el asunto <em>&quot;Eliminación de Datos&quot;</em>. Procesaremos la eliminación definitiva en un plazo máximo de 5 días hábiles y te enviaremos confirmación por escrito:
           </p>
           <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs font-bold text-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
