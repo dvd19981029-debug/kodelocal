@@ -12,6 +12,7 @@ import {
   HALLOWEEN_PROMO_PRICE_HALF_OZ,
   HALLOWEEN_ORIGINAL_PRICE_HALF_OZ,
 } from '@/lib/halloweenPromo';
+import { isFixedPriceEssence } from '@/lib/customerDiscounts';
 
 export type ProductPresentation = 
   | 'ONZA_COMPLETA'      // 1 Onza Completa (Precio por onza del sistema)
@@ -50,6 +51,11 @@ export function applyCustomerProductPricing(
       return { price: HALLOWEEN_PROMO_PRICE_HALF_OZ, originalPrice: HALLOWEEN_ORIGINAL_PRICE_HALF_OZ };
     }
     return { price: HALLOWEEN_PROMO_PRICE_1OZ, originalPrice: HALLOWEEN_ORIGINAL_PRICE_1OZ };
+  }
+
+  // Esencias de alto costo con precio fijo protegido (sin descuento de cliente)
+  if (isFixedPriceEssence(product) && presentation !== 'KIT_PREPARADO' && presentation !== 'KIT_PREPARADO_PLUS') {
+    return { price: originalPrice, originalPrice };
   }
 
   if (!customer) {

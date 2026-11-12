@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyStaffInternalToken } from '@/lib/customerAuthToken';
 import { prisma } from '@/lib/prisma';
 import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ, HALLOWEEN_PROMO_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
-import { buildCustomerLookupOrConditions, consolidateCustomerDiscounts } from '@/lib/customerDiscounts';
+import { buildCustomerLookupOrConditions, consolidateCustomerDiscounts, isFixedPriceEssence } from '@/lib/customerDiscounts';
 
 export const dynamic = 'force-dynamic';
 
@@ -292,11 +292,16 @@ export async function POST(request: Request) {
           prod.unit === 'Servicio';
 
         const isHalloweenPromo = isEssence && isHalloweenPromoProduct(prod);
+        const isFixedEssence = isEssence && isFixedPriceEssence(prod);
         if (isHalloweenPromo) {
           const promoPrice =
             it.presentation === 'MEDIA_ONZA' ? HALLOWEEN_PROMO_PRICE_HALF_OZ : HALLOWEEN_PROMO_PRICE_1OZ;
           if (promoPrice < unitPrice) {
             unitPrice = promoPrice;
+          }
+        } else if (isFixedEssence) {
+          if (catalogListPrice != null && catalogListPrice > 0) {
+            unitPrice = catalogListPrice;
           }
         } else {
           let basePrice = catalogListPrice != null ? catalogListPrice : unitPrice;

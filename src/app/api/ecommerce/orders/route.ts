@@ -9,8 +9,9 @@ import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { resolveGiroMH, formatGiroOption } from '@/lib/svGirosCat019';
 import { c807Client } from '@/lib/c807';
 import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ, HALLOWEEN_PROMO_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
-import { buildCustomerLookupOrConditions, consolidateCustomerDiscounts } from '@/lib/customerDiscounts';
+import { buildCustomerLookupOrConditions, consolidateCustomerDiscounts, isFixedPriceEssence } from '@/lib/customerDiscounts';
 import { extractTransferReceiptUrl, stripTransferReceiptTag, upsertTransferReceiptInNotes } from '@/lib/bankAccounts';
+import { restoreArmedPerfumeStickersOnCancel } from '@/lib/armedPerfumeStickerInventory';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -580,6 +581,11 @@ export async function PATCH(request: Request) {
           }
         }
       }
+
+      await restoreArmedPerfumeStickersOnCancel(prisma, {
+        saleNumber: order.orderNumber,
+        userName: 'Sistema',
+      });
     }
 
     let resolvedTracking = trackingNumber;
@@ -1177,9 +1183,14 @@ export async function POST(request: Request) {
 
         const isHalfOunce = isEssence && (presLower.includes('media') || presLower.includes('½') || presLower.includes('half'));
         const isHalloweenPromo = isEssence && isHalloweenPromoProduct(prod);
+        const isFixedEssence = isEssence && isFixedPriceEssence(prod);
 
         if (isHalloweenPromo) {
           legitimateUnitPrice = isHalfOunce ? HALLOWEEN_PROMO_PRICE_HALF_OZ : HALLOWEEN_PROMO_PRICE_1OZ;
+        } else if (isFixedEssence) {
+          legitimateUnitPrice = isHalfOunce
+            ? (prod.priceHalfOunce != null ? Number(prod.priceHalfOunce) : Number((Number(prod.price) / 2).toFixed(2)))
+            : Number(prod.price);
         } else {
           if (isEssence) {
             if (isHalfOunce) {

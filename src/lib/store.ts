@@ -2350,8 +2350,8 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Unisex",
     "category": "Esencias para Perfume",
     "unit": "Onza",
-    "price": 3.75,
-    "priceHalfOunce": 1.9,
+    "price": 4,
+    "priceHalfOunce": 2,
     "finishedPerfumePrice": 15,
     "cost": 5.56,
     "stock": 0,
@@ -2614,8 +2614,8 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Caballero",
     "category": "Esencias para Perfume",
     "unit": "Onza",
-    "price": 3.75,
-    "priceHalfOunce": 1.9,
+    "price": 4,
+    "priceHalfOunce": 2,
     "finishedPerfumePrice": 15,
     "cost": 4.24,
     "stock": 0,
@@ -2658,8 +2658,8 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Caballero",
     "category": "Esencias para Perfume",
     "unit": "Onza",
-    "price": 3.75,
-    "priceHalfOunce": 1.9,
+    "price": 4,
+    "priceHalfOunce": 2,
     "finishedPerfumePrice": 15,
     "cost": 3.57,
     "stock": 0,
@@ -2680,8 +2680,8 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Unisex",
     "category": "Esencias para Perfume",
     "unit": "Onza",
-    "price": 3.75,
-    "priceHalfOunce": 1.9,
+    "price": 4,
+    "priceHalfOunce": 2,
     "finishedPerfumePrice": 15,
     "cost": 3.61,
     "stock": 0,
@@ -2746,8 +2746,8 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Unisex",
     "category": "Esencias para Perfume",
     "unit": "Onza",
-    "price": 3.75,
-    "priceHalfOunce": 1.9,
+    "price": 4,
+    "priceHalfOunce": 2,
     "finishedPerfumePrice": 15,
     "cost": 2.98,
     "stock": 0,
@@ -3354,7 +3354,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   ...INITIAL_STICKER_PRODUCTS
 ];
 
-export const DATA_VERSION = "2026_oficial_real_v47_esencias_106_110";
+export const DATA_VERSION = '2026_oficial_real_v48_fixed_margin_essences';
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;

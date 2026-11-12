@@ -146,3 +146,50 @@ export function consolidateCustomerDiscounts<T extends Record<string, any>>(
       null,
   };
 }
+
+/**
+ * Esencias de alto costo (>= $88/Kg o >= $2.50/oz) que tienen precio protegido fijo ($3.75 o $4.00)
+ * y NO aceptan descuentos de cliente ($3.50 / $3.25 / niveles VIP) para evitar pérdidas o márgenes nulos:
+ * - Fijas en $3.75/oz (½ oz: $1.90): #63 Celeste Star (Angel), #69 Scarlet Luxe (Eau de Rhubarbe Hermès)
+ * - Fijas en $4.00/oz (½ oz: $2.00): #66 Nicho Lavanda (Lavande 31), #78 Cyberbot (Phantom Parfum),
+ *   #80 Cumbre de Plata (Silver Mountain Water), #81 Cuero Toscano (Tuscan Leather), #84 Nicho Oud (Oud Wood)
+ */
+export const FIXED_PRICE_ESSENCE_SKUS = new Set<string>(['63', '66', '69', '78', '80', '81', '84']);
+
+export const FIXED_PRICE_ESSENCE_IDS = new Set<string>([
+  'esencia-apae-063',
+  'esencia-apae-066',
+  'esencia-apae-069',
+  'esencia-apae-078',
+  'esencia-apae-080',
+  'esencia-apae-081',
+  'esencia-apae-084',
+]);
+
+export function isFixedPriceEssence(productOrId?: any): boolean {
+  if (!productOrId) return false;
+  if (typeof productOrId === 'string') {
+    const clean = productOrId.trim().toLowerCase();
+    if (FIXED_PRICE_ESSENCE_IDS.has(clean)) return true;
+    const skuMatch = clean.match(/^esencia-(?:apae-)?0*(\d+)$/);
+    if (skuMatch && FIXED_PRICE_ESSENCE_SKUS.has(skuMatch[1])) return true;
+    return FIXED_PRICE_ESSENCE_SKUS.has(clean.replace(/^0+/, ''));
+  }
+
+  const rawId = String(productOrId.id || '').trim().toLowerCase();
+  if (rawId && FIXED_PRICE_ESSENCE_IDS.has(rawId)) return true;
+
+  const rawSku = String(productOrId.sku || '').trim().replace(/^0+/, '');
+  if (rawSku && FIXED_PRICE_ESSENCE_SKUS.has(rawSku)) return true;
+
+  if (rawId) {
+    const idSkuMatch = rawId.match(/^esencia-(?:apae-)?0*(\d+)$/);
+    if (idSkuMatch && FIXED_PRICE_ESSENCE_SKUS.has(idSkuMatch[1])) return true;
+  }
+
+  const cost = Number(productOrId.cost || 0);
+  const price = Number(productOrId.price || 0);
+  if (cost >= 2.5 || (price >= 4.0 && price < 10)) return true;
+
+  return false;
+}

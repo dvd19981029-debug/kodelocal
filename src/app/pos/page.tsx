@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { INITIAL_PRODUCTS, ProductItem, CartItem, SaleRecord, PERFUME_CATEGORIES, getStoredProducts } from '@/lib/store';
 import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ, HALLOWEEN_PROMO_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
-import { consolidateCustomerDiscounts, hasCustomerDiscountFields } from '@/lib/customerDiscounts';
+import { consolidateCustomerDiscounts, hasCustomerDiscountFields, isFixedPriceEssence } from '@/lib/customerDiscounts';
 import CotizacionModal, { type CotizacionNotices } from '@/components/pos/CotizacionModal';
 import CotizacionesHistoryModal from '@/components/pos/CotizacionesHistoryModal';
 import ThermalTicket from '@/components/pos/ThermalTicket';
@@ -1014,6 +1014,17 @@ export default function PosPage() {
         const discountAmt = Number(Math.max(0, regularFull - finalPrice).toFixed(4));
         return { listPrice: regularFull, finalPrice, discountAmt };
       }
+    }
+
+    // Esencias de alto costo con precio fijo protegido (no aplican descuentos de cliente)
+    if (isEssence && isFixedPriceEssence(item.product)) {
+      if (item.presentation === "MEDIA_ONZA") {
+        const fixedHalf = item.product.priceHalfOunce != null
+          ? Number(item.product.priceHalfOunce)
+          : Number((listPrice / 2).toFixed(2));
+        return { listPrice: fixedHalf, finalPrice: fixedHalf, discountAmt: 0 };
+      }
+      return { listPrice, finalPrice: listPrice, discountAmt: 0 };
     }
 
     if (isEssence && item.presentation === "MEDIA_ONZA") {
