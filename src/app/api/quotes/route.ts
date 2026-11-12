@@ -305,28 +305,32 @@ export async function POST(request: Request) {
           }
         } else {
           let basePrice = catalogListPrice != null ? catalogListPrice : unitPrice;
+          let hasSpecialFixedPrice = false;
           if (isEssence && it.presentation === 'MEDIA_ONZA') {
             if (dbCustomer.specialHalfEssencePrice != null && Number(dbCustomer.specialHalfEssencePrice) > 0) {
               basePrice = Number(dbCustomer.specialHalfEssencePrice);
+              hasSpecialFixedPrice = true;
             }
           } else if (isEssence) {
             if (dbCustomer.specialEssencePrice != null && Number(dbCustomer.specialEssencePrice) > 0) {
               basePrice = Number(dbCustomer.specialEssencePrice);
+              hasSpecialFixedPrice = true;
             }
           } else if (isBottle) {
             if (dbCustomer.specialBottlePrice != null && Number(dbCustomer.specialBottlePrice) > 0) {
               basePrice = Number(dbCustomer.specialBottlePrice);
+              hasSpecialFixedPrice = true;
             }
           }
 
-          const activeCategoryTier = isLogistics
+          const activeCategoryTier = (isLogistics || hasSpecialFixedPrice)
             ? null
             : isEssence
             ? dbCustomer.tier
             : isBottle
             ? dbCustomer.bottleTier
             : dbCustomer.suppliesTier;
-          const activeCategoryCustomPct = isLogistics
+          const activeCategoryCustomPct = (isLogistics || hasSpecialFixedPrice)
             ? null
             : isEssence
             ? dbCustomer.customDiscountPct

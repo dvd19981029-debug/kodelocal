@@ -514,16 +514,28 @@ export async function PATCH(request: Request) {
     }
 
     // Si se cancela o rechaza el pedido y no estaba cancelado previamente (o se fuerza restock), restaurar existencias una única vez
+    // IMPORTANTE: Solo devolver inventario si el pedido realmente llegó a descontar existencias en StockMovement (OUT_SALE).
     const isAlreadyCancelled = order.orderStatus === 'CANCELADO' || order.paymentStatus === 'CANCELLED';
     const isCancelling = (orderStatus === 'CANCELADO' || paymentStatus === 'CANCELLED' || paymentStatus === 'REJECTED' || restock === true) && !isAlreadyCancelled;
     if (isCancelling && order.items && order.items.length > 0 && restock !== false) {
-      const existingReturn = await prisma.stockMovement.findFirst({
-        where: {
-          reference: `Devolución Web #${order.orderNumber}`,
-          type: 'RETURN',
-        },
-      });
-      if (!existingReturn) {
+      const [existingReturn, existingOutSaleCount] = await Promise.all([
+        prisma.stockMovement.findFirst({
+          where: {
+            reference: `Devolución Web #${order.orderNumber}`,
+            type: 'RETURN',
+          },
+        }),
+        prisma.stockMovement.count({
+          where: {
+            type: 'OUT_SALE',
+            OR: [
+              { reference: { contains: order.orderNumber } },
+              { notes: { contains: order.orderNumber } },
+            ],
+          },
+        }),
+      ]);
+      if (!existingReturn && existingOutSaleCount > 0) {
         for (const it of order.items) {
           if (it.productId) {
             const qty = Math.max(1, it.quantity || 1);
@@ -691,6 +703,97 @@ export async function PATCH(request: Request) {
         customer: true,
       },
     });
+
+    // Si el pedido con tarjeta (CARD) pasa a COMPLETED en PATCH y aún no se había descontado su inventario, descontarlo ahora de forma idempotente
+    if (
+      safePaymentStatus === 'COMPLETED' &&
+      order.paymentStatus !== 'COMPLETED' &&
+      updated.items &&
+      updated.items.length > 0
+    ) {
+      try {
+        const existingDeductions = await prisma.stockMovement.count({
+          where: {
+            type: 'OUT_SALE',
+            OR: [
+              { reference: { contains: updated.orderNumber } },
+              { notes: { contains: updated.orderNumber } },
+            ],
+          },
+        });
+        if (existingDeductions === 0) {
+          for (const it of updated.items) {
+            if (!it.productId) continue;
+            const qty = Math.max(1, Number(it.quantity || 1));
+            const presLower = String(it.presentation || '').toLowerCase();
+            const prodNameLower = String(it.productName || '').toLowerCase();
+            const isNonEssenceOrLitro =
+              prodNameLower.includes('litro') ||
+              presLower.includes('litro') ||
+              prodNameLower.includes('alcohol');
+            const isKit =
+              presLower.includes('arma tu propio perfume') ||
+              prodNameLower.includes('arma tu propio perfume');
+            const isKitPlus = isKit && (presLower.includes('plus') || presLower.includes('1.5'));
+            const isHalfOz = !isKit && !isNonEssenceOrLitro && (presLower.includes('media') || presLower.includes('½') || presLower.includes('half'));
+
+            if (isHalfOz) {
+              const p = await prisma.product.update({
+                where: { id: it.productId },
+                data: { stockHalf: { decrement: qty } },
+              });
+              await prisma.stockMovement.create({
+                data: {
+                  productId: it.productId,
+                  type: 'OUT_SALE',
+                  quantity: qty,
+                  previousStock: ((p as any).stockHalf || 0) + qty,
+                  newStock: (p as any).stockHalf || 0,
+                  reference: `Pedido Web #${updated.orderNumber}`,
+                  notes: `½ Onza • Venta Ecommerce (${updated.paymentMethod})`,
+                  userName: updated.customerName,
+                },
+              });
+            } else {
+              const p = await prisma.product.update({
+                where: { id: it.productId },
+                data: isKitPlus
+                  ? { stock: { decrement: qty }, stockHalf: { decrement: qty } }
+                  : { stock: { decrement: qty } },
+              });
+              await prisma.stockMovement.create({
+                data: {
+                  productId: it.productId,
+                  type: 'OUT_SALE',
+                  quantity: qty,
+                  previousStock: p.stock + qty,
+                  newStock: p.stock,
+                  reference: `Pedido Web #${updated.orderNumber}`,
+                  notes: `Venta Ecommerce (${updated.paymentMethod})`,
+                  userName: updated.customerName,
+                },
+              });
+              if (isKitPlus) {
+                await prisma.stockMovement.create({
+                  data: {
+                    productId: it.productId,
+                    type: 'OUT_SALE',
+                    quantity: qty,
+                    previousStock: ((p as any).stockHalf || 0) + qty,
+                    newStock: (p as any).stockHalf || 0,
+                    reference: `Pedido Web #${updated.orderNumber}`,
+                    notes: `½ Onza PLUS • Venta Ecommerce (${updated.paymentMethod})`,
+                    userName: updated.customerName,
+                  },
+                });
+              }
+            }
+          }
+        }
+      } catch (deductErr) {
+        console.error('Error descontando inventario al confirmar pago tarjeta en PATCH:', deductErr);
+      }
+    }
 
     // Enviar confirmación por correo solo si es un pago con tarjeta (Wompi) que acaba de completarse
     // (los pedidos por transferencia o contra entrega ya envían su correo al crearse en POST; validar transferencia solo marca que ya transfirió)
@@ -1192,27 +1295,35 @@ export async function POST(request: Request) {
             ? (prod.priceHalfOunce != null ? Number(prod.priceHalfOunce) : Number((Number(prod.price) / 2).toFixed(2)))
             : Number(prod.price);
         } else {
+          let hasSpecialFixedPrice = false;
           if (isEssence) {
             if (isHalfOunce) {
               if ((dbCustomer as any)?.specialHalfEssencePrice) {
                 legitimateUnitPrice = Number((dbCustomer as any).specialHalfEssencePrice);
+                hasSpecialFixedPrice = true;
               } else {
                 legitimateUnitPrice = prod.priceHalfOunce != null ? Number(prod.priceHalfOunce) : 1.90;
               }
             } else if (dbCustomer?.specialEssencePrice) {
               legitimateUnitPrice = Number(dbCustomer.specialEssencePrice);
+              hasSpecialFixedPrice = true;
             }
           } else if (isBottle && dbCustomer?.specialBottlePrice) {
             legitimateUnitPrice = Number(dbCustomer.specialBottlePrice);
+            hasSpecialFixedPrice = true;
           }
 
-          // Aplicar descuento por nivel VIP según la categoría específica del producto (Esencias, Botes o Insumos)
-          const activeCategoryTier = isEssence
+          // Aplicar descuento por nivel VIP solo si el cliente NO tiene ya un precio fijo especial ($3.50 / $3.25)
+          const activeCategoryTier = hasSpecialFixedPrice
+            ? null
+            : isEssence
             ? dbCustomer?.tier
             : isBottle
             ? dbCustomer?.bottleTier
             : dbCustomer?.suppliesTier;
-          const activeCategoryCustomPct = isEssence
+          const activeCategoryCustomPct = hasSpecialFixedPrice
+            ? null
+            : isEssence
             ? dbCustomer?.customDiscountPct
             : isBottle
             ? dbCustomer?.bottleCustomDiscountPct
@@ -1257,10 +1368,20 @@ export async function POST(request: Request) {
         });
       }
 
-      // 2. Descuento atómico de existencias en PostgreSQL con control estricto anti-overselling (REQ-DB-02)
+      // 2. Control estricto anti-overselling y descuento atómico de existencias en PostgreSQL (REQ-DB-02)
+      // IMPORTANTE: Para pagos con TARJETA (CARD), solo se valida la existencia aquí; el descuento real de stock ocurre únicamente cuando Wompi confirma el pago (COMPLETED).
+      const isCardCheckoutAttempt = String(paymentMethod || '').toUpperCase() === 'CARD';
+
       for (const [prodId, deductQty] of stockDeltas.entries()) {
         const prod = productMap.get(prodId);
         const prodName = prod?.officialName?.trim() || prod?.name || 'Producto';
+
+        if (isCardCheckoutAttempt) {
+          if (!prod || prod.stock < deductQty) {
+            throw new Error(`INSUFFICIENT_STOCK: Inventario insuficiente para "${prodName}".`);
+          }
+          continue;
+        }
 
         const updatedRows: Array<{ stock: number }> = await tx.$queryRaw`
           UPDATE "Product"
@@ -1292,6 +1413,14 @@ export async function POST(request: Request) {
       for (const [prodId, deductHalf] of halfDeltas.entries()) {
         const prod = productMap.get(prodId);
         const prodName = prod?.officialName?.trim() || prod?.name || 'Producto';
+
+        if (isCardCheckoutAttempt) {
+          if (!prod || ((prod as any).stockHalf ?? 0) < deductHalf) {
+            throw new Error(`INSUFFICIENT_STOCK: Inventario de ½ onza insuficiente para "${prodName}".`);
+          }
+          continue;
+        }
+
         const rows: Array<{ stockHalf: number }> = await tx.$queryRaw`
           UPDATE "Product"
           SET "stockHalf" = "stockHalf" - ${deductHalf},

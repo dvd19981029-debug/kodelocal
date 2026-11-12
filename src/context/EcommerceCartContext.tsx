@@ -78,17 +78,26 @@ export function applyCustomerProductPricing(
       prodNameLower.includes('frasco'));
 
   let effectivePrice = originalPrice;
+  let hasSpecialFixedPrice = false;
 
   if (isEssence && presentation !== 'KIT_PREPARADO' && presentation !== 'KIT_PREPARADO_PLUS') {
     if (presentation === 'MEDIA_ONZA') {
       if (customer.specialHalfEssencePrice != null && Number(customer.specialHalfEssencePrice) > 0) {
         effectivePrice = Number(Number(customer.specialHalfEssencePrice).toFixed(2));
+        hasSpecialFixedPrice = true;
       }
     } else if (customer.specialEssencePrice != null && Number(customer.specialEssencePrice) > 0) {
       effectivePrice = Number(Number(customer.specialEssencePrice).toFixed(2));
+      hasSpecialFixedPrice = true;
     }
   } else if (isBottle && customer.specialBottlePrice != null && Number(customer.specialBottlePrice) > 0) {
     effectivePrice = Number(Number(customer.specialBottlePrice).toFixed(2));
+    hasSpecialFixedPrice = true;
+  }
+
+  // Si el cliente ya tiene un precio fijo especial ($3.50 / $3.25), NO acumular porcentaje VIP encima
+  if (hasSpecialFixedPrice) {
+    return { price: effectivePrice, originalPrice };
   }
 
   const activeCategoryTier = isEssence

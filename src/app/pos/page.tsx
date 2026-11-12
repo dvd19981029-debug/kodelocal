@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { INITIAL_PRODUCTS, ProductItem, CartItem, SaleRecord, PERFUME_CATEGORIES, getStoredProducts } from '@/lib/store';
+import { extractNumericSkuFromEssenceRef, isArmedPerfumeWithSticker } from '@/lib/armedPerfumeStickerInventory';
 import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ, HALLOWEEN_PROMO_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
 import { consolidateCustomerDiscounts, hasCustomerDiscountFields, isFixedPriceEssence } from '@/lib/customerDiscounts';
 import CotizacionModal, { type CotizacionNotices } from '@/components/pos/CotizacionModal';
@@ -1027,9 +1028,11 @@ export default function PosPage() {
       return { listPrice, finalPrice: listPrice, discountAmt: 0 };
     }
 
+    let hasSpecialFixedPrice = false;
     if (isEssence && item.presentation === "MEDIA_ONZA") {
       if (activeCustomer?.specialHalfEssencePrice != null && Number(activeCustomer.specialHalfEssencePrice) > 0) {
         listPrice = Number(activeCustomer.specialHalfEssencePrice);
+        hasSpecialFixedPrice = true;
       } else if (item.product.priceHalfOunce != null) {
         listPrice = Number(item.product.priceHalfOunce);
       } else {
@@ -1038,13 +1041,19 @@ export default function PosPage() {
     } else {
       if (isEssence && activeCustomer?.specialEssencePrice != null && Number(activeCustomer.specialEssencePrice) > 0) {
         listPrice = Number(activeCustomer.specialEssencePrice);
+        hasSpecialFixedPrice = true;
       } else if (isBottle && activeCustomer?.specialBottlePrice != null && Number(activeCustomer.specialBottlePrice) > 0) {
         listPrice = Number(activeCustomer.specialBottlePrice);
+        hasSpecialFixedPrice = true;
       }
     }
 
     let finalPrice = listPrice;
     let discountAmt = 0;
+
+    if (hasSpecialFixedPrice) {
+      return { listPrice, finalPrice, discountAmt: 0 };
+    }
 
     const activeCategoryTier = isLogistics
       ? null
@@ -3026,53 +3035,86 @@ export default function PosPage() {
       }
     }
 
-    // Descontar inventario oficial localmente solo si NO es un pedido web (los pedidos web ya descuentan stock al crearse en el checkout)
+    // Descontar inventario oficial localmente (para pedidos web solo se descuenta el sticker de perfumes armados si estaba en inventario, pues esencia y envase ya se descontaron en el checkout)
     const isWebOrderBeingInvoiced = isOrderFromWindow && orderToInvoice.channel === 'ONLINE';
-    if (!isWebOrderBeingInvoiced) {
-      setProducts(prev => {
-        const updated = prev.map(prod => {
-          const matchingItems = itemsToBill.filter(
-            ci => ci.productId && ci.productId !== 'ENVIO-DOM' && (ci.productId === prod.id || ci.productId === prod.sku)
-          );
-          if (matchingItems.length > 0) {
-            let fullDeduct = 0;
-            let halfDeduct = 0;
-            const prodCat = prod.category || '';
-            const isEssenceProd =
-              prodCat === 'Esencias para Perfume' ||
-              prodCat === 'Esencias & Fragancias' ||
-              (!prodCat && prod.unit === 'Onza');
-            matchingItems.forEach(ci => {
-              const unitLower = String(ci.unit || '').toLowerCase();
-              const nameLower = String(ci.name || '').toLowerCase();
-              const isHalf =
-                isEssenceProd &&
-                !nameLower.includes('litro') &&
-                !unitLower.includes('litro') &&
-                ((ci as any).presentation === 'MEDIA_ONZA' ||
-                  unitLower.includes('media onza') ||
-                  unitLower.includes('½ onza') ||
-                  unitLower.includes('½ oz') ||
-                  unitLower === 'media' ||
-                  unitLower === '½' ||
-                  nameLower.includes('media onza') ||
-                  nameLower.includes('½ onza') ||
-                  nameLower.includes('½ oz'));
-              if (isHalf) halfDeduct += ci.quantity; else fullDeduct += ci.quantity;
-            });
+    setProducts(prev => {
+      const armedStickerQtyByNumSku = new Map<string, number>();
+      itemsToBill.forEach(ci => {
+        if (!isArmedPerfumeWithSticker(ci)) return;
+        const rawRef = String(ci.productId || '').trim();
+        let numSku = extractNumericSkuFromEssenceRef(rawRef);
+        if (!numSku && rawRef) {
+          const essenceProd = prev.find(p => p.id === rawRef || p.sku === rawRef);
+          if (essenceProd) {
+            numSku = extractNumericSkuFromEssenceRef(essenceProd.sku) || extractNumericSkuFromEssenceRef(essenceProd.id);
+          }
+        }
+        if (numSku) {
+          armedStickerQtyByNumSku.set(numSku, (armedStickerQtyByNumSku.get(numSku) || 0) + Math.max(1, ci.quantity || 1));
+        }
+      });
+
+      if (isWebOrderBeingInvoiced && armedStickerQtyByNumSku.size === 0) {
+        return prev;
+      }
+
+      const updated = prev.map(prod => {
+        if (armedStickerQtyByNumSku.size > 0 && (prod.category === 'Stickers' || String(prod.id).startsWith('sticker-'))) {
+          const prodNumSku = extractNumericSkuFromEssenceRef(prod.id) || extractNumericSkuFromEssenceRef(prod.sku);
+          const stickerDeduct = prodNumSku ? (armedStickerQtyByNumSku.get(prodNumSku) || 0) : 0;
+          if (stickerDeduct > 0 && prod.stock > 0) {
             return {
               ...prod,
-              stock: Math.max(0, prod.stock - fullDeduct),
-              stockHalf: Math.max(0, (prod.stockHalf || 0) - halfDeduct),
+              stock: Math.max(0, prod.stock - stickerDeduct),
             };
           }
+        }
+
+        if (isWebOrderBeingInvoiced) {
           return prod;
-        });
-        localStorage.setItem('kodelocal_products', JSON.stringify(updated));
-        window.dispatchEvent(new Event('kodelocal_products_updated'));
-        return updated;
+        }
+
+        const matchingItems = itemsToBill.filter(
+          ci => ci.productId && ci.productId !== 'ENVIO-DOM' && (ci.productId === prod.id || ci.productId === prod.sku)
+        );
+        if (matchingItems.length > 0) {
+          let fullDeduct = 0;
+          let halfDeduct = 0;
+          const prodCat = prod.category || '';
+          const isEssenceProd =
+            prodCat === 'Esencias para Perfume' ||
+            prodCat === 'Esencias & Fragancias' ||
+            (!prodCat && prod.unit === 'Onza');
+          matchingItems.forEach(ci => {
+            const unitLower = String(ci.unit || '').toLowerCase();
+            const nameLower = String(ci.name || '').toLowerCase();
+            const isHalf =
+              isEssenceProd &&
+              !nameLower.includes('litro') &&
+              !unitLower.includes('litro') &&
+              ((ci as any).presentation === 'MEDIA_ONZA' ||
+                unitLower.includes('media onza') ||
+                unitLower.includes('½ onza') ||
+                unitLower.includes('½ oz') ||
+                unitLower === 'media' ||
+                unitLower === '½' ||
+                nameLower.includes('media onza') ||
+                nameLower.includes('½ onza') ||
+                nameLower.includes('½ oz'));
+            if (isHalf) halfDeduct += ci.quantity; else fullDeduct += ci.quantity;
+          });
+          return {
+            ...prod,
+            stock: Math.max(0, prod.stock - fullDeduct),
+            stockHalf: Math.max(0, (prod.stockHalf || 0) - halfDeduct),
+          };
+        }
+        return prod;
       });
-    }
+      localStorage.setItem('kodelocal_products', JSON.stringify(updated));
+      window.dispatchEvent(new Event('kodelocal_products_updated'));
+      return updated;
+    });
 
     let completedRecord: SaleRecord;
 
