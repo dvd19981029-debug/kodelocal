@@ -41,7 +41,25 @@ export function applyCustomerProductPricing(
   customer?: any
 ): { price: number; originalPrice: number } {
   const originalPrice = Number(Number(baseListPrice || 0).toFixed(2));
-  const isHalloweenPromo = isHalloweenPromoProduct(product);
+  const catStr = String(product.category || '');
+  const prodNameLower = (product.name || '').toLowerCase();
+  const isNonEssenceOrLitro =
+    prodNameLower.includes('litro') ||
+    prodNameLower.includes('alcohol');
+  const isEssence =
+    !isNonEssenceOrLitro &&
+    (catStr === 'Esencias para Perfume' ||
+      catStr === 'Esencias & Fragancias' ||
+      catStr === 'Arma tu propio perfume' ||
+      product.unit === 'Onza');
+  const isBottle =
+    !isEssence &&
+    (catStr === 'Botes' ||
+      catStr === 'Botes & Envases' ||
+      catStr === 'Envases & Botes' ||
+      prodNameLower.includes('bote') ||
+      prodNameLower.includes('frasco'));
+  const isHalloweenPromo = isEssence && isHalloweenPromoProduct(product);
 
   // Para los 10 perfumes de la promoción de Halloween (vigente hasta el 31 de oct 11:59 PM):
   // 1 Onza fija en $3.30 (Antes $3.75) y ½ Onza fija en $1.85 (Antes $1.90).
@@ -54,28 +72,13 @@ export function applyCustomerProductPricing(
   }
 
   // Esencias de alto costo con precio fijo protegido (sin descuento de cliente)
-  if (isFixedPriceEssence(product) && presentation !== 'KIT_PREPARADO' && presentation !== 'KIT_PREPARADO_PLUS') {
+  if (isEssence && isFixedPriceEssence(product) && presentation !== 'KIT_PREPARADO' && presentation !== 'KIT_PREPARADO_PLUS') {
     return { price: originalPrice, originalPrice };
   }
 
   if (!customer) {
     return { price: originalPrice, originalPrice };
   }
-
-  const catStr = String(product.category || '');
-  const prodNameLower = (product.name || '').toLowerCase();
-  const isEssence =
-    catStr === 'Esencias para Perfume' ||
-    catStr === 'Esencias & Fragancias' ||
-    catStr === 'Arma tu propio perfume' ||
-    product.unit === 'Onza';
-  const isBottle =
-    !isEssence &&
-    (catStr === 'Botes' ||
-      catStr === 'Botes & Envases' ||
-      catStr === 'Envases & Botes' ||
-      prodNameLower.includes('bote') ||
-      prodNameLower.includes('frasco'));
 
   let effectivePrice = originalPrice;
   let hasSpecialFixedPrice = false;
@@ -427,6 +430,7 @@ function reconcileCartWithCatalog(
         stockHalf: nextStockHalf,
         minStock: liveProd.minStock,
       };
+      const isFixedEssence = isEssence && isFixedPriceEssence(updatedProd);
       const nextUnitPrice =
         item.presentation === 'MEDIA_ONZA'
           ? (nextPriceHalf != null ? Number(nextPriceHalf) : Number((nextPrice / 2).toFixed(2)))
@@ -434,8 +438,8 @@ function reconcileCartWithCatalog(
       nextCart.push({
         ...item,
         quantity: allowedQty,
-        unitPrice: isFixedPriceEssence(updatedProd) ? nextUnitPrice : item.unitPrice,
-        totalPrice: Number(((isFixedPriceEssence(updatedProd) ? nextUnitPrice : item.unitPrice) * allowedQty).toFixed(2)),
+        unitPrice: isFixedEssence ? nextUnitPrice : item.unitPrice,
+        totalPrice: Number(((isFixedEssence ? nextUnitPrice : item.unitPrice) * allowedQty).toFixed(2)),
         product: updatedProd,
       });
     } else {

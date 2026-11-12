@@ -178,6 +178,22 @@ export function isFixedPriceEssence(productOrId?: any): boolean {
     return FIXED_PRICE_ESSENCE_SKUS.has(clean.replace(/^0+/, ''));
   }
 
+  // Solo aplica a esencias; evita falsos positivos en insumos o envases de >= $4.00 / >= $2.50 costo
+  const rawCat = typeof productOrId.category === 'string'
+    ? productOrId.category
+    : (productOrId.category?.name || '');
+  const catLower = String(rawCat || '').trim().toLowerCase();
+  const unitLower = String(productOrId.unit || '').trim().toLowerCase();
+  const nameLower = String(productOrId.name || '').trim().toLowerCase();
+  const isExplicitNonEssence =
+    nameLower.includes('litro') ||
+    nameLower.includes('alcohol') ||
+    (catLower !== '' &&
+      catLower !== 'esencias para perfume' &&
+      catLower !== 'esencias & fragancias') ||
+    (catLower === '' && unitLower !== '' && unitLower !== 'onza' && unitLower !== 'oz');
+  if (isExplicitNonEssence) return false;
+
   const rawId = String(productOrId.id || '').trim().toLowerCase();
   if (rawId && FIXED_PRICE_ESSENCE_IDS.has(rawId)) return true;
 
