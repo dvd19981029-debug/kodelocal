@@ -330,6 +330,24 @@ function drawIncomingDividerPage(doc: any, logoImg: CatalogImageAsset | null, up
   doc.text(upperLabel, 105, 162.5, { align: 'center' });
 }
 
+function drawGenderDividerPage(doc: any, genderLabel: string) {
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, 0, 210, 297, 'F');
+
+  doc.setDrawColor(203, 213, 225);
+  doc.setLineWidth(0.35);
+  doc.line(93, 136, 117, 136);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(26);
+  doc.setTextColor(30, 41, 59);
+  doc.text(genderLabel.toUpperCase(), 105, 149.5, { align: 'center' });
+
+  doc.setDrawColor(203, 213, 225);
+  doc.setLineWidth(0.35);
+  doc.line(93, 157, 117, 157);
+}
+
 function drawCatalogGridPage(
   doc: any,
   pageItems: CatalogEssenceItem[],
@@ -560,6 +578,43 @@ function drawCatalogGridPage(
   });
 }
 
+type CatalogPagePlanItem<T> =
+  | { type: 'INCOMING_DIVIDER' }
+  | { type: 'GENDER_DIVIDER'; genderLabel: string }
+  | { type: 'GRID'; sectionMode: 'AVAILABLE' | 'INCOMING'; items: T[] };
+
+function buildSectionPagePlan<T extends { genderLabel: string }>(
+  items: T[],
+  sectionMode: 'AVAILABLE' | 'INCOMING',
+  itemsPerPage: number
+): Array<CatalogPagePlanItem<T>> {
+  if (items.length === 0) return [];
+
+  const groupedByGender = new Map<string, T[]>();
+  for (const item of items) {
+    const existing = groupedByGender.get(item.genderLabel);
+    if (existing) {
+      existing.push(item);
+    } else {
+      groupedByGender.set(item.genderLabel, [item]);
+    }
+  }
+
+  const pages: Array<CatalogPagePlanItem<T>> = [];
+  for (const [genderLabel, genderItems] of groupedByGender.entries()) {
+    pages.push({ type: 'GENDER_DIVIDER', genderLabel });
+    for (let i = 0; i < genderItems.length; i += itemsPerPage) {
+      pages.push({
+        type: 'GRID',
+        sectionMode,
+        items: genderItems.slice(i, i + itemsPerPage),
+      });
+    }
+  }
+
+  return pages;
+}
+
 export function buildAromaniakCatalogJsPdfDocument(
   doc: any,
   products: ProductItem[],
@@ -571,51 +626,40 @@ export function buildAromaniakCatalogJsPdfDocument(
   const { availableItems, incomingItems } = prepareCatalogEssenceItems(products);
 
   const ITEMS_PER_PAGE = 8;
-  const availPagesCount = Math.ceil(availableItems.length / ITEMS_PER_PAGE);
-  const hasIncoming = incomingItems.length > 0;
-  const incomingPagesCount = hasIncoming ? Math.ceil(incomingItems.length / ITEMS_PER_PAGE) : 0;
+  const pagePlan = [
+    ...buildSectionPagePlan(availableItems, 'AVAILABLE', ITEMS_PER_PAGE),
+    ...(incomingItems.length > 0
+      ? [
+          { type: 'INCOMING_DIVIDER' as const },
+          ...buildSectionPagePlan(incomingItems, 'INCOMING', ITEMS_PER_PAGE),
+        ]
+      : []),
+  ];
 
-  const totalPages = 1 + availPagesCount + (hasIncoming ? 1 + incomingPagesCount : 0);
+  const totalPages = 1 + pagePlan.length;
 
   // 1. PÁGINA 1: PORTADA OFICIAL
   drawCoverPage(doc, logoImg, upperLabel);
 
   let currentPageNum = 1;
 
-  // 2. SECCIÓN DISPONIBLES (Hombre -> Mujer -> Unisex, 8 por página)
-  for (let i = 0; i < availPagesCount; i++) {
+  // 2. SECCIONES POR GÉNERO (Hombre -> Mujer -> Unisex, con separador blanco entre cada género)
+  for (const page of pagePlan) {
     doc.addPage('a4', 'portrait');
     currentPageNum++;
-    const pageItems = availableItems.slice(i * ITEMS_PER_PAGE, (i + 1) * ITEMS_PER_PAGE);
-    drawCatalogGridPage(
-      doc,
-      pageItems,
-      logoImg,
-      bottleImg,
-      label,
-      'AVAILABLE',
-      currentPageNum,
-      totalPages
-    );
-  }
 
-  // 3. SECCIÓN PRÓXIMOS INGRESOS (SOLO SI HAY FRAGANCIAS EN CAMINO EN TIEMPO REAL)
-  if (hasIncoming) {
-    doc.addPage('a4', 'portrait');
-    currentPageNum++;
-    drawIncomingDividerPage(doc, logoImg, upperLabel);
-
-    for (let i = 0; i < incomingPagesCount; i++) {
-      doc.addPage('a4', 'portrait');
-      currentPageNum++;
-      const pageItems = incomingItems.slice(i * ITEMS_PER_PAGE, (i + 1) * ITEMS_PER_PAGE);
+    if (page.type === 'GENDER_DIVIDER') {
+      drawGenderDividerPage(doc, page.genderLabel);
+    } else if (page.type === 'INCOMING_DIVIDER') {
+      drawIncomingDividerPage(doc, logoImg, upperLabel);
+    } else {
       drawCatalogGridPage(
         doc,
-        pageItems,
+        page.items,
         logoImg,
         bottleImg,
         label,
-        'INCOMING',
+        page.sectionMode,
         currentPageNum,
         totalPages
       );
