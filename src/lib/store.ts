@@ -2658,8 +2658,8 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Caballero",
     "category": "Esencias para Perfume",
     "unit": "Onza",
-    "price": 4,
-    "priceHalfOunce": 2,
+    "price": 4.25,
+    "priceHalfOunce": 2.15,
     "finishedPerfumePrice": 15,
     "cost": 3.57,
     "stock": 0,
@@ -2680,8 +2680,8 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "gender": "Unisex",
     "category": "Esencias para Perfume",
     "unit": "Onza",
-    "price": 4,
-    "priceHalfOunce": 2,
+    "price": 4.25,
+    "priceHalfOunce": 2.15,
     "finishedPerfumePrice": 15,
     "cost": 3.61,
     "stock": 0,
@@ -3354,7 +3354,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   ...INITIAL_STICKER_PRODUCTS
 ];
 
-export const DATA_VERSION = '2026_oficial_real_v49_phantom_lavande_prices';
+export const DATA_VERSION = '2026_oficial_real_v50_cuero_cumbre_425';
 
 export function resetDatabaseToInitialStock(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;

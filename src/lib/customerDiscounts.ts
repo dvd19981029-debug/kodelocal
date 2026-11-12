@@ -151,7 +151,8 @@ export function consolidateCustomerDiscounts<T extends Record<string, any>>(
  * Esencias de alto costo (>= $88/Kg o >= $2.50/oz) que tienen precio protegido fijo
  * y NO aceptan descuentos de cliente ($3.50 / $3.25 / niveles VIP) para evitar pérdidas o márgenes nulos:
  * - Fijas en $3.75/oz (½ oz: $1.90): #63 Celeste Star (Angel), #69 Scarlet Luxe (Eau de Rhubarbe Hermès)
- * - Fijas en $4.00/oz (½ oz: $2.00): #80 Cumbre de Plata (Silver Mountain Water), #81 Cuero Toscano (Tuscan Leather), #84 Nicho Oud (Oud Wood)
+ * - Fija en $4.00/oz (½ oz: $2.00): #84 Nicho Oud (Oud Wood)
+ * - Fijas en $4.25/oz (½ oz: $2.15): #80 Cumbre de Plata (Silver Mountain Water), #81 Cuero Toscano (Tuscan Leather)
  * - Fija en $4.50/oz (½ oz: $2.25): #78 Cyberbot (Phantom Parfum)
  * - Fija en $6.00/oz (½ oz: $3.00): #66 Nicho Lavanda (Lavande 31)
  */
