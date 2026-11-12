@@ -1980,7 +1980,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 0.35,
     "cost": 0.06,
-    "stock": 240,
+    "stock": 360,
     "minStock": 20,
     "imageUrl": "/images/insumos/mini_embudo_perfumeria.jpg",
     "description": "Mini embudo para llenar botes con esencias u otros usos.",
