@@ -578,6 +578,7 @@ const ProductCard = React.memo(ProductCardComponent, (prev, next) => {
     prev.product.stock === next.product.stock &&
     prev.product.stockHalf === next.product.stockHalf &&
     prev.product.price === next.product.price &&
+    prev.product.priceHalfOunce === next.product.priceHalfOunce &&
     prev.priority === next.priority
   );
 });

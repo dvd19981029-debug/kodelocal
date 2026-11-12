@@ -399,23 +399,35 @@ function reconcileCartWithCatalog(
 
     const nextStock = liveProd.stock;
     const nextStockHalf = liveProd.stockHalf ?? 0;
+    const nextPrice = liveProd.price;
+    const nextPriceHalf = liveProd.priceHalfOunce;
 
     if (
       allowedQty !== item.quantity ||
       nextStock !== item.product.stock ||
-      nextStockHalf !== item.product.stockHalf
+      nextStockHalf !== item.product.stockHalf ||
+      nextPrice !== item.product.price ||
+      nextPriceHalf !== item.product.priceHalfOunce
     ) {
       changed = true;
+      const updatedProd: ProductItem = {
+        ...item.product,
+        price: nextPrice,
+        priceHalfOunce: nextPriceHalf,
+        stock: nextStock,
+        stockHalf: nextStockHalf,
+        minStock: liveProd.minStock,
+      };
+      const nextUnitPrice =
+        item.presentation === 'MEDIA_ONZA'
+          ? (nextPriceHalf != null ? Number(nextPriceHalf) : Number((nextPrice / 2).toFixed(2)))
+          : nextPrice;
       nextCart.push({
         ...item,
         quantity: allowedQty,
-        totalPrice: Number((item.unitPrice * allowedQty).toFixed(2)),
-        product: {
-          ...item.product,
-          stock: nextStock,
-          stockHalf: nextStockHalf,
-          minStock: liveProd.minStock,
-        },
+        unitPrice: isFixedPriceEssence(updatedProd) ? nextUnitPrice : item.unitPrice,
+        totalPrice: Number(((isFixedPriceEssence(updatedProd) ? nextUnitPrice : item.unitPrice) * allowedQty).toFixed(2)),
+        product: updatedProd,
       });
     } else {
       nextCart.push(item);
