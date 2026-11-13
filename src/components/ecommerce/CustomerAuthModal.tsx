@@ -146,10 +146,10 @@ export default function CustomerAuthModal() {
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-1">
             {authModalTab === 'login' ? '¡Hola de nuevo!' : '¡Crea tu cuenta!'}
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 font-medium">
+          <p className="text-xs sm:text-sm text-slate-700 font-medium">
             {authModalTab === 'login' 
-              ? 'Entra para acceder a tus cupones' 
-              : 'Regístrate para acceder a tus cupones y facturación rápida'}
+              ? 'Inicia sesión para agilizar tus compras y ver tus pedidos' 
+              : 'Regístrate para guardar tus datos y comprar más rápido'}
           </p>
         </div>
 
@@ -223,7 +223,7 @@ export default function CustomerAuthModal() {
                 placeholder="Tu nombre completo"
                 value={name}
                 onChange={(e) => setName(e.target.value.slice(0, 75))}
-                className="w-full px-4 py-3 text-sm rounded-2xl bg-white border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#52b747] focus:ring-2 focus:ring-[#52b747]/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] font-medium transition-all"
+                className="w-full px-4 py-3 text-sm rounded-2xl bg-white border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] font-medium transition-all"
               />
             </div>
           )}
@@ -239,7 +239,7 @@ export default function CustomerAuthModal() {
               placeholder="tu@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value.slice(0, 75))}
-              className="w-full px-4 py-3 text-sm rounded-2xl bg-white border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#52b747] focus:ring-2 focus:ring-[#52b747]/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] font-medium transition-all"
+              className="w-full px-4 py-3 text-sm rounded-2xl bg-white border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] font-medium transition-all"
             />
           </div>
 
@@ -254,7 +254,7 @@ export default function CustomerAuthModal() {
                 placeholder="7000-0000"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.slice(0, 25))}
-                className="w-full px-4 py-3 text-sm rounded-2xl bg-white border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#52b747] focus:ring-2 focus:ring-[#52b747]/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] font-medium transition-all"
+                className="w-full px-4 py-3 text-sm rounded-2xl bg-white border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] font-medium transition-all"
               />
             </div>
           )}
@@ -263,14 +263,14 @@ export default function CustomerAuthModal() {
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-3">
               <label className="flex items-center justify-between gap-2 cursor-pointer select-none">
                 <span className="flex items-center gap-2 text-xs font-extrabold text-slate-800">
-                  <Building2 className="w-4 h-4 text-[#52b747]" />
+                  <Building2 className="w-4 h-4 text-[#7c3aed]" />
                   <span>Requiero Crédito Fiscal (CCF) en mis compras</span>
                 </span>
                 <input
                   type="checkbox"
                   checked={isCreditFiscal}
                   onChange={(e) => setIsCreditFiscal(e.target.checked)}
-                  className="rounded border-slate-300 text-[#52b747] focus:ring-[#52b747] w-4 h-4 cursor-pointer"
+                  className="rounded border-slate-300 text-[#7c3aed] focus:ring-[#7c3aed] w-4 h-4 cursor-pointer"
                 />
               </label>
 
@@ -287,7 +287,7 @@ export default function CustomerAuthModal() {
                       placeholder="Nombre en tarjeta de IVA o Razón Social"
                       value={businessName}
                       onChange={(e) => setBusinessName(e.target.value.slice(0, 75))}
-                      className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#52b747] font-medium"
+                      className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#7c3aed] font-medium"
                     />
                   </div>
 
@@ -303,7 +303,7 @@ export default function CustomerAuthModal() {
                         placeholder="0614-000000-000-0"
                         value={documentNum}
                         onChange={(e) => setDocumentNum(e.target.value.slice(0, 75))}
-                        className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#52b747] font-mono"
+                        className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#7c3aed] font-mono"
                       />
                     </div>
                     <div>
@@ -317,7 +317,7 @@ export default function CustomerAuthModal() {
                         placeholder="123456-7"
                         value={nrc}
                         onChange={(e) => setNrc(e.target.value.slice(0, 25))}
-                        className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#52b747] font-mono"
+                        className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#7c3aed] font-mono"
                       />
                     </div>
                   </div>
@@ -351,7 +351,7 @@ export default function CustomerAuthModal() {
                           const munis = getMunicipiosByDepartamento(newDept);
                           if (munis.length > 0) setMunicipality(munis[0].nombre);
                         }}
-                        className="w-full px-2.5 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#52b747] font-medium"
+                        className="w-full px-2.5 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#7c3aed] font-medium"
                       >
                         {DEPARTAMENTOS_CATALOG.map((dep) => (
                           <option key={dep.id} value={dep.nombre}>{dep.nombre}</option>
@@ -365,7 +365,7 @@ export default function CustomerAuthModal() {
                       <select
                         value={municipality}
                         onChange={(e) => setMunicipality(e.target.value)}
-                        className="w-full px-2.5 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#52b747] font-medium"
+                        className="w-full px-2.5 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#7c3aed] font-medium"
                       >
                         {getMunicipiosByDepartamento(department).map((m) => (
                           <option key={m.id} value={m.nombre}>{m.nombre}</option>
@@ -388,7 +388,7 @@ export default function CustomerAuthModal() {
                       placeholder="Colonia, calle, número de local o casa"
                       value={address}
                       onChange={(e) => setAddress(e.target.value.slice(0, 250))}
-                      className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#52b747] font-medium"
+                      className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#7c3aed] font-medium"
                     />
                   </div>
                 </div>
@@ -406,7 +406,7 @@ export default function CustomerAuthModal() {
                   href="https://wa.me/50360437496?text=Hola%2C%20olvid%C3%A9%20la%20contrase%C3%B1a%20de%20mi%20cuenta%20de%20Aromaniak%20y%20necesito%20recuperarla"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs font-bold text-[#52b747] hover:text-[#439c39] transition-colors"
+                  className="text-xs font-bold text-[#7c3aed] hover:text-[#6d28d9] transition-colors"
                 >
                   ¿Olvidaste tu contraseña?
                 </a>
@@ -419,7 +419,7 @@ export default function CustomerAuthModal() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 pr-11 text-sm rounded-2xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#52b747] focus:ring-2 focus:ring-[#52b747]/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] font-medium transition-all"
+                className="w-full px-4 py-3 pr-11 text-sm rounded-2xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] font-medium transition-all"
               />
               <button
                 type="button"
@@ -432,11 +432,11 @@ export default function CustomerAuthModal() {
             </div>
           </div>
 
-          {/* Botón Verde de Acción */}
+          {/* Botón Morado Aromaniak */}
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3.5 px-4 rounded-2xl bg-[#52b747] hover:bg-[#47a63c] text-white font-black text-sm sm:text-base shadow-[0_4px_14px_rgba(82,183,71,0.35)] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer mt-5 disabled:opacity-50"
+            className="w-full py-3.5 px-4 rounded-2xl bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-black text-sm sm:text-base shadow-[0_4px_14px_rgba(124,58,237,0.35)] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer mt-5 disabled:opacity-50"
           >
             {isLoading ? (
               <>
@@ -457,7 +457,7 @@ export default function CustomerAuthModal() {
               <button
                 type="button"
                 onClick={() => { setErrorMessage(''); openAuthModal('register'); }}
-                className="text-[#52b747] font-bold hover:underline cursor-pointer"
+                className="text-[#7c3aed] font-bold hover:underline cursor-pointer"
               >
                 Regístrate gratis
               </button>
@@ -468,7 +468,7 @@ export default function CustomerAuthModal() {
               <button
                 type="button"
                 onClick={() => { setErrorMessage(''); openAuthModal('login'); }}
-                className="text-[#52b747] font-bold hover:underline cursor-pointer"
+                className="text-[#7c3aed] font-bold hover:underline cursor-pointer"
               >
                 Inicia sesión
               </button>
