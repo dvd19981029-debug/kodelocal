@@ -1679,20 +1679,28 @@ export default function BodegaPage() {
                       order.domicilio?.customerPhone ||
                       '';
                     const isExpanded = !!expandedOrderIds[order.id];
+                    const createdAtMs = new Date(order.createdAt).getTime() || nowMs;
                     const printedTs =
                       ticketPrintedAt[order.id] ||
                       (order.saleNumber ? ticketPrintedAt[order.saleNumber] : 0) ||
                       0;
-                    const shouldBlinkRedAura = !printedTs || nowMs - printedTs >= 90000;
+                    const isUnprintedAlert = !printedTs && nowMs - createdAtMs >= 30000;
+                    const isPreparingAfterPrint = printedTs > 0 && nowMs - printedTs < 90000;
+                    const isDelayedAfterPrint = printedTs > 0 && nowMs - printedTs >= 90000;
+                    const cardAuraClass = isDelayedAfterPrint
+                      ? 'border-rose-500 bodega-red-aura-blink'
+                      : isPreparingAfterPrint
+                      ? 'border-sky-500 bodega-blue-aura-steady'
+                      : isUnprintedAlert
+                      ? 'border-amber-500 bodega-amber-aura-blink'
+                      : 'border-amber-400';
 
                     if (!isExpanded) {
                       return (
                         <div
                           key={order.id}
                           onClick={() => toggleOrderExpanded(order.id)}
-                          className={`clay-card px-3.5 py-2.5 border-l-4 border-rose-500 hover:shadow-md transition-all cursor-pointer space-y-1.5 ${
-                            shouldBlinkRedAura ? 'bodega-red-aura-blink' : ''
-                          }`}
+                          className={`clay-card px-3.5 py-2.5 border-l-4 hover:shadow-md transition-all cursor-pointer space-y-1.5 ${cardAuraClass}`}
                         >
                           <div className="flex items-center justify-between gap-2 flex-wrap">
                             <div className="flex items-center gap-1.5 flex-wrap min-w-0">
@@ -1796,9 +1804,7 @@ export default function BodegaPage() {
                     return (
                       <div 
                         key={order.id} 
-                        className={`clay-card p-4 flex flex-col justify-between border-l-4 border-rose-500 hover:shadow-md transition-all ${
-                          shouldBlinkRedAura ? 'bodega-red-aura-blink' : ''
-                        }`}
+                        className={`clay-card p-4 flex flex-col justify-between border-l-4 hover:shadow-md transition-all ${cardAuraClass}`}
                       >
                         <div>
                           {/* Encabezado del Pedido */}
