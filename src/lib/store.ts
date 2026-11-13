@@ -40,6 +40,7 @@ export interface SaleRecord {
   saleNumber: string;
   orderNumber?: string;
   createdAt: string;
+  readyAt?: string;
   cotizacionDate?: string;
   invoicedAt?: string;
   total: number;

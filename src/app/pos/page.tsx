@@ -564,6 +564,7 @@ export default function PosPage() {
               saleNumber: o.orderNumber,
               orderNumber: o.orderNumber,
               createdAt: o.createdAt,
+              readyAt: o.readyAt || (o.orderStatus === 'EN_RUTA' ? o.updatedAt : undefined),
               invoicedAt: dteDoc?.fhProcesamiento || dteDoc?.createdAt || o.sale?.createdAt || undefined,
               channel: 'ONLINE',
               total: Number(o.total || 0),
@@ -625,6 +626,7 @@ export default function PosPage() {
               if (prevMatch) {
                 return {
                   ...ws,
+                  readyAt: ws.readyAt || prevMatch.readyAt,
                   dteInfo: ws.dteInfo || prevMatch.dteInfo,
                   invoicedAt: ws.invoicedAt || prevMatch.invoicedAt || prevMatch.dteInfo?.fhProcesamiento,
                   status: prevMatch.status || ws.status,
@@ -696,6 +698,7 @@ export default function PosPage() {
                 saleNumber: s.saleNumber,
                 orderNumber: s.saleNumber,
                 createdAt: s.createdAt,
+                readyAt: s.readyAt || (s.orderStatus === 'READY_AT_WINDOW' ? s.updatedAt : undefined),
                 invoicedAt: s.dteDocument?.fhProcesamiento || s.dteDocument?.createdAt || (s.orderStatus === 'COMPLETED' && !isCancelledSale ? (s.updatedAt || s.createdAt) : undefined),
                 channel: s.channel || 'POS',
                 total: Number(s.total || 0),
@@ -787,6 +790,9 @@ export default function PosPage() {
                   }
                 } else {
                   const existing = mergedMap.get(p.saleNumber)!;
+                  if (!existing.readyAt && p.readyAt) {
+                    existing.readyAt = p.readyAt;
+                  }
                   if (!existing.dteInfo && p.dteInfo) {
                     existing.dteInfo = p.dteInfo;
                   }
@@ -1194,29 +1200,39 @@ export default function PosPage() {
 
   // Filtrado de órdenes en bodega para la vista de POS
   const filteredBodegaOrders = useMemo(() => {
-    return sales.filter(s => {
-      const isPending = s.status === 'PENDING_PREPARATION' || !s.status;
-      const isReady = s.status === 'READY_AT_WINDOW';
-      const isCompleted = s.status === 'COMPLETED';
+    return sales
+      .filter(s => {
+        const isPending = s.status === 'PENDING_PREPARATION' || !s.status;
+        const isReady = s.status === 'READY_AT_WINDOW';
+        const isCompleted = s.status === 'COMPLETED';
 
-      // "Todos" muestra solo pedidos activos; los entregados se ven en la pestaña "Entregados"
-      if (bodegaOrdenesFilter === 'ALL' && isCompleted) return false;
-      if (bodegaOrdenesFilter === 'PENDING' && !isPending) return false;
-      if (bodegaOrdenesFilter === 'READY' && !isReady) return false;
-      if (bodegaOrdenesFilter === 'COMPLETED' && !isCompleted) return false;
+        // "Todos" muestra solo pedidos activos; los entregados se ven en la pestaña "Entregados"
+        if (bodegaOrdenesFilter === 'ALL' && isCompleted) return false;
+        if (bodegaOrdenesFilter === 'PENDING' && !isPending) return false;
+        if (bodegaOrdenesFilter === 'READY' && !isReady) return false;
+        if (bodegaOrdenesFilter === 'COMPLETED' && !isCompleted) return false;
 
-      if (!bodegaOrdenesSearch.trim()) return true;
-      const q = bodegaOrdenesSearch.toLowerCase().trim();
-      return (
-        s.saleNumber.toLowerCase().includes(q) ||
-        (s.cliente?.nombre && s.cliente.nombre.toLowerCase().includes(q)) ||
-        (s.vendedor && s.vendedor.toLowerCase().includes(q)) ||
-        s.items.some(it => it.name.toLowerCase().includes(q))
-      );
-    });
+        if (!bodegaOrdenesSearch.trim()) return true;
+        const q = bodegaOrdenesSearch.toLowerCase().trim();
+        return (
+          s.saleNumber.toLowerCase().includes(q) ||
+          (s.cliente?.nombre && s.cliente.nombre.toLowerCase().includes(q)) ||
+          (s.vendedor && s.vendedor.toLowerCase().includes(q)) ||
+          s.items.some(it => it.name.toLowerCase().includes(q))
+        );
+      })
+      .sort((a, b) => {
+        const refA = a.status === 'READY_AT_WINDOW' ? (a.readyAt || a.createdAt || 0) : (a.createdAt || 0);
+        const refB = b.status === 'READY_AT_WINDOW' ? (b.readyAt || b.createdAt || 0) : (b.createdAt || 0);
+        const timeA = new Date(refA).getTime() || 0;
+        const timeB = new Date(refB).getTime() || 0;
+        if (timeA !== timeB) return timeA - timeB;
+        return String(a.saleNumber || a.id || '').localeCompare(String(b.saleNumber || b.id || ''));
+      });
   }, [sales, bodegaOrdenesFilter, bodegaOrdenesSearch]);
 
   const handleMarkOrderReadyFromPos = async (orderId: string) => {
+    const readyAtIso = new Date().toISOString();
     const targetSale = sales.find(s => s.id === orderId || s.saleNumber === orderId);
     try {
       const staffToken = await getStaffToken();
@@ -1227,7 +1243,7 @@ export default function PosPage() {
             "Content-Type": "application/json",
             ...(staffToken ? { "x-staff-token": staffToken } : {}),
           },
-          body: JSON.stringify({ orderId, orderNumber: targetSale?.orderNumber || targetSale?.saleNumber, orderStatus: "EN_RUTA" }),
+          body: JSON.stringify({ orderId, orderNumber: targetSale?.orderNumber || targetSale?.saleNumber, orderStatus: "EN_RUTA", readyAt: readyAtIso }),
         }).catch(err => console.error(err));
       }
       if (!targetSale || targetSale.channel !== "ONLINE") {
@@ -1237,12 +1253,12 @@ export default function PosPage() {
             "Content-Type": "application/json",
             ...(staffToken ? { "x-staff-token": staffToken } : {}),
           },
-          body: JSON.stringify({ id: orderId, saleNumber: targetSale?.saleNumber, orderStatus: "READY_AT_WINDOW" }),
+          body: JSON.stringify({ id: orderId, saleNumber: targetSale?.saleNumber, orderStatus: "READY_AT_WINDOW", readyAt: readyAtIso }),
         }).catch(() => {});
       }
     } catch (e) {}
     setSales(prev => {
-      const updated = prev.map(s => (s.id === orderId || s.saleNumber === orderId) ? { ...s, status: "READY_AT_WINDOW" as const } : s);
+      const updated = prev.map(s => (s.id === orderId || s.saleNumber === orderId) ? { ...s, status: "READY_AT_WINDOW" as const, readyAt: readyAtIso } : s);
       if (typeof window !== 'undefined') {
         localStorage.setItem('kodelocal_sales', JSON.stringify(updated));
       }
@@ -3533,9 +3549,16 @@ export default function PosPage() {
     });
   }, [customers, customerSearch, customerFilterType]);
 
-  // Órdenes listas en ventanilla preparadas por Bodega
+  // Órdenes listas en ventanilla preparadas por Bodega (ordenadas según la hora en que se marcaron como listas)
   const readyInWindowOrders = useMemo(() => {
-    return sales.filter(s => s.status === 'READY_AT_WINDOW');
+    return sales
+      .filter(s => s.status === 'READY_AT_WINDOW')
+      .sort((a, b) => {
+        const timeA = new Date(a.readyAt || a.createdAt || 0).getTime() || 0;
+        const timeB = new Date(b.readyAt || b.createdAt || 0).getTime() || 0;
+        if (timeA !== timeB) return timeA - timeB;
+        return String(a.saleNumber || a.id || '').localeCompare(String(b.saleNumber || b.id || ''));
+      });
   }, [sales]);
 
   // Listado de DTEs y comprobantes emitidos en Caja (solo órdenes ya facturadas/completadas)

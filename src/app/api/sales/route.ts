@@ -5,6 +5,15 @@ import { c807Client } from '@/lib/c807';
 
 export const dynamic = 'force-dynamic';
 
+let readyAtColEnsured = false;
+async function ensureSaleReadyAtColumn() {
+  if (readyAtColEnsured) return;
+  try {
+    await prisma.$executeRawUnsafe(`ALTER TABLE public."Sale" ADD COLUMN IF NOT EXISTS "readyAt" TIMESTAMP(3);`);
+    readyAtColEnsured = true;
+  } catch (_) {}
+}
+
 function parseMhDateSafe(rawDate?: string | Date | null): Date {
   if (!rawDate) return new Date();
   if (rawDate instanceof Date) {
@@ -77,6 +86,7 @@ async function linkOrUpsertDteForSale(
 
 export async function GET(request: Request) {
   try {
+    await ensureSaleReadyAtColumn();
     const authHeader = request.headers.get('authorization') || '';
     const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : null;
     const staffHeaderToken = request.headers.get('x-staff-token');
@@ -976,6 +986,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
+    await ensureSaleReadyAtColumn();
     const body = await request.json();
     const {
       id,
@@ -1662,10 +1673,16 @@ export async function PATCH(request: Request) {
       }
     }
 
+    const resolvedReadyAt =
+      orderStatus === 'READY_AT_WINDOW'
+        ? (body.readyAt ? parseMhDateSafe(body.readyAt) : ((sale as any).readyAt || new Date()))
+        : undefined;
+
     const updated = await prisma.sale.update({
       where: { id: sale.id },
       data: {
         ...(orderStatus ? { orderStatus } : {}),
+        ...(resolvedReadyAt ? { readyAt: resolvedReadyAt } : {}),
         ...(paymentStatus ? { paymentStatus } : {}),
         ...(paymentMethod ? { paymentMethod } : {}),
         ...(cashReceived !== undefined ? { cashReceived: cashReceived ? Number(cashReceived) : null } : {}),

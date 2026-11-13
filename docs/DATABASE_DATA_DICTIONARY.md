@@ -245,6 +245,7 @@ Usuarios del taller, administradores y asesoras de ventas KÖDE.
 | `status` | `String` | NO | Default `'COMPLETED'`| `COMPLETED`, `CANCELLED`, `DRAFT` |
 | `origin` | `String` | NO | Default `'POS'` | `POS`, `ECOMMERCE`, `WHATSAPP` |
 | `createdAt` | `DateTime` | NO | Default `now()` | Fecha y hora de venta |
+| `readyAt` | `DateTime` | SÍ | - | Fecha y hora exacta en que Bodega marca la comanda como lista en ventanilla (`READY_AT_WINDOW`) |
 
 ### 10. Tabla `SaleItem`
 | Columna SQL / Prisma | Tipo | Nulo | FK / Relación | Descripción |

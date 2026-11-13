@@ -375,6 +375,7 @@ export default function BodegaPage() {
           saleNumber: o.orderNumber,
           orderNumber: o.orderNumber,
           createdAt: o.createdAt,
+          readyAt: o.readyAt || (o.orderStatus === 'EN_RUTA' ? o.updatedAt : undefined),
           channel: 'ONLINE',
           total: Number(o.total || 0),
           subtotal: Number(o.subtotal || 0),
@@ -489,6 +490,7 @@ export default function BodegaPage() {
                   saleNumber: s.saleNumber,
                   orderNumber: s.saleNumber,
                   createdAt: s.createdAt,
+                  readyAt: s.readyAt || (s.orderStatus === 'READY_AT_WINDOW' ? s.updatedAt : undefined),
                   channel: 'POS',
                   total: Number(s.total || 0),
                   subtotal: Number(s.subtotal || 0),
@@ -626,18 +628,29 @@ export default function BodegaPage() {
           posSales.forEach(s => {
             const key = s.saleNumber || s.id;
             const prevLocal = mergedMap.get(key);
+            const mergedSale: SaleRecord = {
+              ...s,
+              readyAt: s.readyAt || prevLocal?.readyAt,
+            };
             if (prevLocal?.cliente?.nombre && prevLocal.cliente.nombre !== 'Consumidor Final' && (!s.cliente?.nombre || s.cliente.nombre === 'Consumidor Final')) {
-              mergedMap.set(key, { ...s, cliente: prevLocal.cliente });
+              mergedMap.set(key, { ...mergedSale, cliente: prevLocal.cliente });
             } else if (prevLocal?.cliente?.telefono && !s.cliente?.telefono) {
               mergedMap.set(key, {
-                ...s,
+                ...mergedSale,
                 cliente: { ...(s.cliente || { nombre: 'Consumidor Final' }), telefono: prevLocal.cliente.telefono },
               });
             } else {
-              mergedMap.set(key, s);
+              mergedMap.set(key, mergedSale);
             }
           });
-          webSales.forEach(s => mergedMap.set(s.saleNumber || s.id, s));
+          webSales.forEach(s => {
+            const key = s.saleNumber || s.id;
+            const prevLocal = prev.find(p => (p.saleNumber || p.id) === key);
+            mergedMap.set(key, {
+              ...s,
+              readyAt: s.readyAt || prevLocal?.readyAt,
+            });
+          });
           const merged = Array.from(mergedMap.values());
           if (typeof window !== 'undefined') {
             localStorage.setItem('kodelocal_sales', JSON.stringify(merged));
@@ -820,6 +833,7 @@ export default function BodegaPage() {
 
   // Marcar pedido como listo para ventanilla
   const handleMarkAsReady = async (orderId: string) => {
+    const readyAtIso = new Date().toISOString();
     // Si es pedido web, actualizar en Supabase
     const staffToken = await getStaffToken();
     fetch('/api/ecommerce/orders', {
@@ -828,7 +842,7 @@ export default function BodegaPage() {
         'Content-Type': 'application/json',
         ...(staffToken ? { 'x-staff-token': staffToken } : {}),
       },
-      body: JSON.stringify({ orderId, orderStatus: 'EN_RUTA' })
+      body: JSON.stringify({ orderId, orderStatus: 'EN_RUTA', readyAt: readyAtIso })
     }).catch(() => {});
 
     const targetSale = sales.find(s => s.id === orderId);
@@ -844,6 +858,7 @@ export default function BodegaPage() {
             id: orderId,
             saleNumber: targetSale?.saleNumber,
             orderStatus: 'READY_AT_WINDOW',
+            readyAt: readyAtIso,
             expectedStatus: ['PENDING_PREPARATION'],
           })
         });
@@ -858,7 +873,7 @@ export default function BodegaPage() {
     setSales(prev => {
       const updated = prev.map(s => {
         if (s.id === orderId) {
-          return { ...s, status: 'READY_AT_WINDOW' as const };
+          return { ...s, status: 'READY_AT_WINDOW' as const, readyAt: readyAtIso };
         }
         return s;
       });
@@ -996,8 +1011,10 @@ export default function BodegaPage() {
         );
       })
       .sort((a, b) => {
-        const timeA = new Date(a.createdAt || 0).getTime() || 0;
-        const timeB = new Date(b.createdAt || 0).getTime() || 0;
+        const refA = bodegaTab === 'listos' ? (a.readyAt || a.createdAt || 0) : (a.createdAt || 0);
+        const refB = bodegaTab === 'listos' ? (b.readyAt || b.createdAt || 0) : (b.createdAt || 0);
+        const timeA = new Date(refA).getTime() || 0;
+        const timeB = new Date(refB).getTime() || 0;
         if (timeA !== timeB) return timeA - timeB;
         return String(a.saleNumber || a.id || '').localeCompare(String(b.saleNumber || b.id || ''));
       });

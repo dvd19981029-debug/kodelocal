@@ -16,8 +16,18 @@ import { restoreArmedPerfumeStickersOnCancel } from '@/lib/armedPerfumeStickerIn
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
+let ecomReadyAtColEnsured = false;
+async function ensureEcommerceReadyAtColumn() {
+  if (ecomReadyAtColEnsured) return;
+  try {
+    await prisma.$executeRawUnsafe(`ALTER TABLE public."EcommerceOrder" ADD COLUMN IF NOT EXISTS "readyAt" TIMESTAMP(3);`);
+    ecomReadyAtColEnsured = true;
+  } catch (_) {}
+}
+
 export async function GET(request: Request) {
   try {
+    await ensureEcommerceReadyAtColumn();
     const { searchParams } = new URL(request.url);
     const queryCustomerId = searchParams.get('customerId');
     const queryOrderNumbers = searchParams.get('orderNumbers');
@@ -364,6 +374,7 @@ export async function GET(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
+    await ensureEcommerceReadyAtColumn();
     const body = await request.json();
     const {
       orderId,
@@ -681,10 +692,16 @@ export async function PATCH(request: Request) {
       mergedNotes = upsertTransferReceiptInNotes(mergedNotes, transferReceiptUrl);
     }
 
+    const resolvedReadyAt =
+      safeOrderStatus === 'EN_RUTA'
+        ? (body.readyAt && !isNaN(new Date(body.readyAt).getTime()) ? new Date(body.readyAt) : ((order as any).readyAt || new Date()))
+        : undefined;
+
     const updated = await prisma.ecommerceOrder.update({
       where: { id: order.id },
       data: {
         ...(safeOrderStatus ? { orderStatus: safeOrderStatus } : {}),
+        ...(resolvedReadyAt ? { readyAt: resolvedReadyAt } : {}),
         ...(safePaymentStatus ? { paymentStatus: safePaymentStatus } : {}),
         ...(resolvedCourier ? { courierName: resolvedCourier } : {}),
         ...(resolvedTracking ? { trackingNumber: resolvedTracking } : {}),
