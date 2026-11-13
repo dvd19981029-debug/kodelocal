@@ -52,8 +52,13 @@ export default function ProductDetailPage() {
   const [justAdded, setJustAdded] = useState(false);
   const [selectedStickerBottleId, setSelectedStickerBottleId] = useState<string | null>(null);
 
-  const { cart, addToCart, updateQuantity } = useEcommerceCart();
+  const { cart, addToCart, updateQuantity, setIsCartOpen } = useEcommerceCart();
   const { customer } = useCustomerAuth();
+  const [hasHydrated, setHasHydrated] = useState(false);
+
+  useEffect(() => {
+    setHasHydrated(true);
+  }, []);
 
   // 1. Sincronización con catálogo local o API
   useEffect(() => {
@@ -407,6 +412,370 @@ export default function ProductDetailPage() {
       }
     }
   };
+
+  if (isBottle) {
+    const quickBottlePacks = [1, 3, 6, 12];
+    const unitPrice = activeOption?.price ?? product.price;
+    const lineTotal = unitPrice * quantity;
+    const showStockBadge = hasHydrated || !isLoading;
+
+    return (
+      <div className="space-y-6 sm:space-y-8 pb-20 pt-1">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+        />
+
+        {/* Navegación superior discreta */}
+        <div className="flex items-center justify-between gap-2 px-1">
+          <Link
+            href="/?categoria=Botes"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-800 hover:text-indigo-700 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Volver a Botes de Vidrio</span>
+          </Link>
+          {product.sku && (
+            <span className="text-[11px] font-mono font-bold text-slate-600">
+              SKU: {product.sku}
+            </span>
+          )}
+        </div>
+
+        {/* ================= HERO PRINCIPAL DE 2 COLUMNAS (IMAGEN + BUY BOX ARRIBA DEL PLIEGUE) ================= */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+          {/* COLUMNA IZQUIERDA: VITRINA LIMPIA DEL FRASCO */}
+          <div className="lg:col-span-6 lg:sticky lg:top-24">
+            <div className="clay-card p-3 sm:p-5 bg-white rounded-3xl border border-white/90 relative overflow-hidden shadow-lg group">
+              <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center">
+                <img
+                  src={productImage}
+                  alt={displayName}
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
+                  onError={(e) => {
+                    e.currentTarget.src = '/images/botes/bote_100ml_degrade_azul_noche.jpg';
+                  }}
+                  className={`w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105 ${
+                    showStockBadge && isOutOfStock ? 'grayscale-[35%]' : ''
+                  }`}
+                />
+
+                {showStockBadge && (
+                  <div className="absolute top-3 right-3 z-10">
+                    {isOutOfStock ? (
+                      <span className="bg-slate-900 text-white text-xs font-black py-1 px-3 rounded-lg shadow-md uppercase tracking-wider">
+                        En camino
+                      </span>
+                    ) : (
+                      <span className="bg-emerald-600 text-white text-xs font-black py-1 px-3 rounded-lg shadow-md inline-flex items-center gap-1">
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Disponible</span>
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* COLUMNA DERECHA: BUY BOX DE ALTA CONVERSIÓN */}
+          <div className="lg:col-span-6 space-y-4">
+            <div className="clay-card p-5 sm:p-6 bg-white rounded-3xl border border-slate-100 shadow-md space-y-5">
+              {/* Título y subtítulo claro */}
+              <div className="space-y-2">
+                <span className="inline-block text-[11px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-lg">
+                  Envase de Vidrio • 100 ml (3.4 fl oz)
+                </span>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#7c3aed] tracking-tight leading-tight">
+                  {displayName}
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-800 font-medium leading-relaxed">
+                  Frasco de vidrio grueso con atomizador spray de lujo y tapa de rosca hermética.
+                </p>
+              </div>
+
+              {/* Precio y disponibilidad */}
+              <div className="pt-3 border-t border-slate-100 flex flex-wrap items-baseline justify-between gap-2">
+                <div className="flex items-baseline gap-2.5">
+                  <span className="text-3xl sm:text-4xl font-black text-slate-950 tracking-tight tabular-nums">
+                    ${lineTotal.toFixed(2)}
+                  </span>
+                  <span className="text-xs sm:text-sm font-bold text-slate-700 tabular-nums">
+                    {quantity > 1 ? `($${unitPrice.toFixed(2)} c/u • ${quantity} uds.)` : 'por unidad'}
+                  </span>
+                </div>
+
+                {showStockBadge && (
+                  <span className="text-xs font-bold text-slate-800">
+                    {availableRemaining === 0 ? (
+                      cartQuantity > 0 ? (
+                        <span className="text-indigo-700">Todo el stock reservado en tu carrito</span>
+                      ) : (
+                        <span className="text-slate-600">Próximo ingreso a bodega</span>
+                      )
+                    ) : isBelowMinAlert ? (
+                      <strong className="text-amber-800 font-black">
+                        {availableRemaining === 1
+                          ? '¡Solo queda 1 unidad!'
+                          : `¡Solo quedan ${availableRemaining} unidades!`}
+                      </strong>
+                    ) : (
+                      <span className="text-emerald-700 font-extrabold">Entrega inmediata</span>
+                    )}
+                  </span>
+                )}
+              </div>
+
+              {/* Selección rápida de cantidad + stepper */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                    Cantidad
+                  </span>
+                  <span className="text-[11px] font-bold text-slate-700">
+                    Incluye atomizador + tapa
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {quickBottlePacks.map((pack) => {
+                    const disabled = pack > maxSelectable || isOutOfStock;
+                    const isSelected = quantity === pack;
+                    return (
+                      <button
+                        key={pack}
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => setQuantity(pack)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-extrabold border transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                          isSelected
+                            ? 'border-2 border-indigo-600 bg-indigo-50 text-indigo-800'
+                            : 'border-slate-300 bg-white text-slate-900 hover:border-slate-400'
+                        }`}
+                      >
+                        {pack} {pack === 1 ? 'ud.' : 'uds.'}
+                      </button>
+                    );
+                  })}
+
+                  <div className="flex items-center rounded-xl border border-slate-300 bg-white p-0.5 ml-auto">
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      disabled={quantity <= 1}
+                      aria-label="Disminuir cantidad"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-800 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="w-9 text-center text-xs font-black text-slate-950 tabular-nums">
+                      {quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(quantity + 1)}
+                      disabled={quantity >= maxSelectable}
+                      aria-label="Aumentar cantidad"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-800 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botón CTA Principal */}
+              <div className="space-y-2.5">
+                <div className="flex flex-col sm:flex-row gap-2.5">
+                  <button
+                    type="button"
+                    onClick={handleAddToCart}
+                    disabled={isOutOfStock || maxSelectable <= 0 || isQuantityBlocked}
+                    className={`flex-1 py-3.5 px-6 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all shadow-md ${
+                      isOutOfStock || maxSelectable <= 0
+                        ? 'bg-slate-200 text-slate-600 cursor-not-allowed border border-slate-300'
+                        : justAdded
+                        ? 'bg-emerald-600 text-white shadow-emerald-500/30'
+                        : isQuantityBlocked
+                        ? 'bg-emerald-50 text-emerald-900 border border-emerald-300 cursor-default'
+                        : isAlreadyInCart
+                        ? 'clay-btn bg-gradient-to-r from-amber-600 to-amber-700 !text-white active:scale-98 cursor-pointer'
+                        : 'clay-btn clay-btn-primary !text-white active:scale-98 cursor-pointer'
+                    }`}
+                  >
+                    {justAdded ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>{isAlreadyInCart ? '¡Carrito Actualizado!' : '¡Agregado al Carrito!'}</span>
+                      </>
+                    ) : isQuantityBlocked ? (
+                      <>
+                        <Check className="w-4 h-4 text-emerald-700" />
+                        <span>En tu carrito ({cartQuantity}) • ${(unitPrice * cartQuantity).toFixed(2)}</span>
+                      </>
+                    ) : isAlreadyInCart ? (
+                      <>
+                        <ShoppingBag className="w-4 h-4" />
+                        <span>Actualizar Carrito • ${lineTotal.toFixed(2)}</span>
+                      </>
+                    ) : isOutOfStock || maxSelectable <= 0 ? (
+                      <span>En camino</span>
+                    ) : (
+                      <>
+                        <ShoppingBag className="w-4 h-4" />
+                        <span>Agregar al Carrito • ${lineTotal.toFixed(2)}</span>
+                      </>
+                    )}
+                  </button>
+
+                  {(isAlreadyInCart || justAdded) && (
+                    <button
+                      type="button"
+                      onClick={() => setIsCartOpen(true)}
+                      className="px-5 py-3.5 rounded-2xl bg-slate-950 hover:bg-slate-800 text-white font-black text-xs sm:text-sm transition-colors cursor-pointer shrink-0"
+                    >
+                      Ir al carrito
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* 3 beneficios clave sin repetición */}
+              <ul className="pt-3 border-t border-slate-100 space-y-2 text-xs font-semibold text-slate-900">
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-700 shrink-0" />
+                  <span>Cierre de rosca fácil a mano — no requiere máquina selladora ni genera fugas.</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-700 shrink-0" />
+                  <span>Vidrio grueso de 100 ml grado cosmético compatible con perfumería fina.</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-700 shrink-0" />
+                  <span>Envío a domicilio a todo El Salvador (24–48h) o retiro gratis en local.</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Acceso directo a Arma tu propio perfume */}
+            <Link
+              href="/?categoria=Arma+tu+perfume#seccion-arma-tu-perfume"
+              className="w-full clay-card clay-card-interactive group flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-white border border-purple-200/80 hover:border-purple-300 transition-all"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-700 border border-purple-200 flex items-center justify-center shrink-0">
+                  <Wand2 className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm font-black text-slate-950 leading-tight">
+                    ¿Prefieres tu perfume ya armado?
+                  </p>
+                  <p className="text-xs text-slate-700 font-medium truncate">
+                    Elige tu esencia favorita + frasco 100 ml + alcohol perfumero
+                  </p>
+                </div>
+              </div>
+              <span className="clay-btn clay-btn-primary !text-white px-3.5 py-2 rounded-xl text-xs font-black shrink-0 inline-flex items-center gap-1">
+                <span>Armar</span>
+                <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+              </span>
+            </Link>
+          </div>
+        </section>
+
+        {/* ================= DETALLES Y ENTREGA (COMPACTO Y LEGIBLE) ================= */}
+        <section className="grid grid-cols-1 md:grid-cols-12 gap-4">
+          <div className="md:col-span-6 clay-card p-5 rounded-3xl bg-white border border-slate-100 space-y-3 shadow-xs">
+            <h2 className="text-xs sm:text-sm font-black text-slate-950 uppercase tracking-wider">
+              Especificaciones del envase
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-800 leading-relaxed font-medium">
+              {product.description || 'Frasco de vidrio grueso de 100 ml con atomizador spray y cierre de rosca hermético. Ideal para envasar perfumes de forma rápida sin necesidad de selladora.'}
+            </p>
+            <div className="grid grid-cols-2 gap-2.5 pt-1">
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                <span className="text-[11px] font-bold uppercase text-slate-600 block">Capacidad</span>
+                <strong className="text-xs sm:text-sm font-black text-slate-950">100 ml (3.4 fl oz)</strong>
+              </div>
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                <span className="text-[11px] font-bold uppercase text-slate-600 block">Cierre</span>
+                <strong className="text-xs sm:text-sm font-black text-slate-950">Rosca manual hermética</strong>
+              </div>
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                <span className="text-[11px] font-bold uppercase text-slate-600 block">Material</span>
+                <strong className="text-xs sm:text-sm font-black text-slate-950">Vidrio grueso premium</strong>
+              </div>
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                <span className="text-[11px] font-bold uppercase text-slate-600 block">Incluye</span>
+                <strong className="text-xs sm:text-sm font-black text-indigo-700">Atomizador + Tapa</strong>
+              </div>
+            </div>
+          </div>
+
+          <div className="md:col-span-6 clay-card p-5 rounded-3xl bg-white border border-slate-100 space-y-3 shadow-xs flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center justify-center shrink-0">
+                  <Truck className="w-4 h-4" />
+                </div>
+                <div>
+                  <h2 className="text-xs sm:text-sm font-black text-slate-950">
+                    Envíos en El Salvador y Retiro en Local
+                  </h2>
+                  <p className="text-xs text-slate-700 font-medium">
+                    Entregas de 24 a 48 horas hábiles en los 14 departamentos
+                  </p>
+                </div>
+              </div>
+
+              <ul className="space-y-2 text-xs text-slate-800 font-medium leading-relaxed">
+                <li>
+                  <strong className="font-bold text-slate-950">Retiro gratis en tienda:</strong> Centro Comercial El Rosal, Calle El Progreso, San Salvador.
+                </li>
+                <li>
+                  <strong className="font-bold text-slate-950">Despachos:</strong> Pedidos en horario laboral se despachan el mismo día (pedidos de fin de semana salen el lunes).
+                </li>
+                <li>
+                  <strong className="font-bold text-slate-950">Formas de pago:</strong> Tarjeta de crédito/débito vía Wompi o transferencia a Bancoagrícola y BAC Credomatic.
+                </li>
+              </ul>
+            </div>
+
+            <div className="pt-2.5 border-t border-slate-200 flex items-center justify-between text-xs font-bold text-slate-800">
+              <span>✓ Stock verificado</span>
+              <span>✓ Pago 100% seguro</span>
+            </div>
+          </div>
+        </section>
+
+        {/* ================= OTROS MODELOS DE FRASCOS ================= */}
+        {relatedProducts.length > 0 && (
+          <section className="space-y-3.5 pt-2">
+            <div className="flex items-center justify-between px-1">
+              <h2 className="text-base sm:text-lg font-black text-slate-950">
+                Otros modelos de frascos disponibles
+              </h2>
+              <Link
+                href="/?categoria=Botes"
+                className="text-xs font-bold text-indigo-700 hover:text-indigo-900 flex items-center gap-1"
+              >
+                <span>Ver todos los botes</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-3 sm:gap-x-4 gap-y-10 sm:gap-y-12">
+              {relatedProducts.map(rel => (
+                <ProductCard key={rel.id} product={rel} />
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 sm:space-y-8 pb-20 pt-1">
