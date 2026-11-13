@@ -188,6 +188,37 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
       }
     };
 
+    // 1b. Completar inicio de sesión con Google directo (sin depender de Supabase)
+    if (typeof window !== 'undefined') {
+      const currentUrl = new URL(window.location.href);
+      const directGoogleToken = currentUrl.searchParams.get('google_customer_token');
+      const googleAuthError = currentUrl.searchParams.get('google_auth_error');
+
+      if (directGoogleToken || googleAuthError) {
+        currentUrl.searchParams.delete('google_customer_token');
+        currentUrl.searchParams.delete('google_auth_error');
+        window.history.replaceState({}, '', `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`);
+      }
+
+      if (directGoogleToken) {
+        fetch('/api/customer/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'google', directGoogleToken }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success && data.customer) {
+              saveCustomerSession(data.customer);
+              closeAuthModal();
+            }
+          })
+          .catch((err) => {
+            console.error('Error completando login con Google:', err);
+          });
+      }
+    }
+
     // 2. Escuchar cambios de autenticación de Supabase (OAuth con Google)
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
@@ -217,13 +248,12 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     setIsAuthModalOpen(false);
   };
 
-  // 1. Iniciar Sesión / Registro con Google (Direct Authorize URL)
+  // 1. Iniciar Sesión / Registro con Google (OAuth directo)
   const loginWithGoogle = async () => {
     try {
-      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://aromaniaksv.com';
-      const authUrl = `https://dogavyiyrqktygdgikqi.supabase.co/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(origin)}`;
       if (typeof window !== 'undefined') {
-        window.location.href = authUrl;
+        const returnTo = `${window.location.pathname}${window.location.search}`;
+        window.location.href = `/api/auth/google?mode=customer&returnTo=${encodeURIComponent(returnTo)}`;
       }
       return { success: true };
     } catch (err: any) {

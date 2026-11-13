@@ -61,9 +61,11 @@ export default function CustomerAuthModal() {
   const handleGoogleAuth = () => {
     setIsLoading(true);
     setErrorMessage('');
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://aromaniaksv.com';
-    const authUrl = `https://dogavyiyrqktygdgikqi.supabase.co/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(origin)}`;
-    window.location.href = authUrl;
+    const returnTo =
+      typeof window !== 'undefined'
+        ? `${window.location.pathname}${window.location.search}`
+        : '/';
+    window.location.href = `/api/auth/google?mode=customer&returnTo=${encodeURIComponent(returnTo)}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

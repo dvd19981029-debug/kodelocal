@@ -76,6 +76,80 @@ export function verifyCustomerToken(token?: string | null): CustomerTokenPayload
   }
 }
 
+export interface GoogleHandoffPayload {
+  email: string;
+  name: string;
+  avatarUrl: string;
+  googleId: string;
+  scope: 'google_customer_handoff';
+  exp: number;
+}
+
+/**
+ * Crea un token temporal firmado (5 min) tras verificar Google OAuth directo en el servidor.
+ */
+export function createGoogleHandoffToken(data: {
+  email: string;
+  name?: string;
+  avatarUrl?: string;
+  googleId?: string;
+}): string {
+  const secret = ensureAuthSecret();
+  const payload: GoogleHandoffPayload = {
+    email: data.email.toLowerCase().trim(),
+    name: data.name || 'Cliente Aromaniak',
+    avatarUrl: data.avatarUrl || '',
+    googleId: data.googleId || '',
+    scope: 'google_customer_handoff',
+    exp: Date.now() + 5 * 60 * 1000,
+  };
+
+  const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const signature = crypto
+    .createHmac('sha256', secret)
+    .update(payloadB64)
+    .digest('base64url');
+
+  return `${payloadB64}.${signature}`;
+}
+
+/**
+ * Verifica un token temporal de handoff de Google OAuth para clientes.
+ */
+export function verifyGoogleHandoffToken(token?: string | null): GoogleHandoffPayload | null {
+  if (!token || typeof token !== 'string') return null;
+
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+
+  const [payloadB64, receivedSig] = parts;
+
+  try {
+    const secret = ensureAuthSecret();
+    const expectedSig = crypto
+      .createHmac('sha256', secret)
+      .update(payloadB64)
+      .digest('base64url');
+
+    const expectedBuf = Buffer.from(expectedSig);
+    const receivedBuf = Buffer.from(receivedSig);
+
+    if (expectedBuf.length !== receivedBuf.length) return null;
+    if (!crypto.timingSafeEqual(expectedBuf, receivedBuf)) return null;
+
+    const payload: GoogleHandoffPayload = JSON.parse(
+      Buffer.from(payloadB64, 'base64url').toString('utf8')
+    );
+
+    if (payload.scope !== 'google_customer_handoff' || !payload.email) return null;
+    if (Date.now() > payload.exp) return null;
+
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Firma interna para peticiones de Bodega y POS desde el servidor u operaciones internas.
  * Vigencia: 30 días (con renovación automática).

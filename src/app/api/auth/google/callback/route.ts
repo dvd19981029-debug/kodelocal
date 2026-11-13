@@ -1,21 +1,48 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { createStaffInternalToken } from '@/lib/customerAuthToken';
+import { createStaffInternalToken, createGoogleHandoffToken } from '@/lib/customerAuthToken';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: Request) {
+function parseCustomerState(rawState: string | null): { mode: 'customer'; returnTo: string } | null {
+  if (!rawState) return null;
   try {
-    const url = new URL(request.url);
+    const decoded = JSON.parse(Buffer.from(rawState, 'base64url').toString('utf8'));
+    if (decoded?.mode === 'customer') {
+      const rt = typeof decoded.returnTo === 'string' && decoded.returnTo.startsWith('/') && !decoded.returnTo.startsWith('//')
+        ? decoded.returnTo
+        : '/';
+      return { mode: 'customer', returnTo: rt };
+    }
+  } catch {
+    // Ignore non-customer or malformed state
+  }
+  return null;
+}
+
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const customerState = parseCustomerState(url.searchParams.get('state'));
+
+  const buildErrorRedirect = (message: string) => {
+    if (customerState) {
+      const dest = new URL(`${url.origin}${customerState.returnTo}`);
+      dest.searchParams.set('google_auth_error', message);
+      return NextResponse.redirect(dest.toString());
+    }
+    return NextResponse.redirect(`${url.origin}/login?error=${encodeURIComponent(message)}`);
+  };
+
+  try {
     const code = url.searchParams.get('code');
     const error = url.searchParams.get('error');
 
     if (error) {
-      return NextResponse.redirect(`${url.origin}/login?error=${encodeURIComponent('Google login cancelado')}`);
+      return buildErrorRedirect('Google login cancelado');
     }
 
     if (!code) {
-      return NextResponse.redirect(`${url.origin}/login?error=${encodeURIComponent('Código de autorización faltante')}`);
+      return buildErrorRedirect('Código de autorización faltante');
     }
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -23,7 +50,7 @@ export async function GET(request: Request) {
     const redirectUri = `${url.origin}/api/auth/google/callback`;
 
     if (!clientId || !clientSecret) {
-      return NextResponse.redirect(`${url.origin}/login?error=${encodeURIComponent('Google Auth no configurado en el servidor')}`);
+      return buildErrorRedirect('Google Auth no configurado en el servidor');
     }
 
     // Intercambiar el código por tokens
@@ -41,20 +68,31 @@ export async function GET(request: Request) {
 
     const tokenData = await tokenRes.json();
     if (!tokenRes.ok || !tokenData.id_token) {
-      return NextResponse.redirect(`${url.origin}/login?error=${encodeURIComponent('Fallo al verificar con Google')}`);
+      return buildErrorRedirect('Fallo al verificar con Google');
     }
 
     // Decodificar el id_token (JWT de Google)
-    // El id_token tiene 3 partes base64, la segunda es el payload.
     const payloadB64 = tokenData.id_token.split('.')[1];
     const payloadStr = Buffer.from(payloadB64, 'base64').toString('utf-8');
     const googleProfile = JSON.parse(payloadStr);
 
     if (googleProfile.aud !== clientId || googleProfile.email_verified === false || !googleProfile.email) {
-      return NextResponse.redirect(`${url.origin}/login?error=${encodeURIComponent('Token de Google no válido o correo no verificado')}`);
+      return buildErrorRedirect('Token de Google no válido o correo no verificado');
     }
 
     const email = googleProfile.email.toLowerCase().trim();
+
+    if (customerState) {
+      const handoffToken = createGoogleHandoffToken({
+        email,
+        name: googleProfile.name || googleProfile.given_name || email.split('@')[0],
+        avatarUrl: googleProfile.picture || '',
+        googleId: googleProfile.sub || '',
+      });
+      const dest = new URL(`${url.origin}${customerState.returnTo}`);
+      dest.searchParams.set('google_customer_token', handoffToken);
+      return NextResponse.redirect(dest.toString());
+    }
 
     // Buscar si el empleado existe
     const staffUser = await prisma.staffUser.findUnique({

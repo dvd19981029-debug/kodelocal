@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { createCustomerToken, verifyCustomerToken, hashPasswordSecure, verifyPasswordSecure } from '@/lib/customerAuthToken';
+import { createCustomerToken, verifyCustomerToken, verifyGoogleHandoffToken, hashPasswordSecure, verifyPasswordSecure } from '@/lib/customerAuthToken';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { sanitizeText, sanitizeEmail, sanitizePhone, sanitizeDocument } from '@/lib/sanitize';
 import { supabase } from '@/lib/supabaseClient';
@@ -188,38 +188,57 @@ export async function POST(request: Request) {
 
     // ================= 1. REGISTRO / LOGIN CON GOOGLE =================
     if (action === 'google') {
-      const { name, avatarUrl, accessToken } = body;
+      const { name, avatarUrl, accessToken, directGoogleToken } = body;
       const authHeader = request.headers.get('authorization');
       const tokenToVerify = accessToken || (authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : null);
 
-      if (!tokenToVerify) {
-        return NextResponse.json(
-          { success: false, error: 'Token de autenticación de Google requerido' },
-          { status: 401 }
-        );
-      }
+      let normalizedEmail = '';
+      let verifiedGoogleId = '';
+      let verifiedName = name || 'Cliente Aromaniak';
+      let verifiedAvatar = avatarUrl || '';
 
-      // Verificar criptográficamente el access_token contra Supabase Auth
-      const { data: userData, error: authErr } = await supabase.auth.getUser(tokenToVerify);
-      if (authErr || !userData?.user?.email) {
-        return NextResponse.json(
-          { success: false, error: 'Sesión de Google inválida o expirada' },
-          { status: 401 }
-        );
-      }
+      if (directGoogleToken) {
+        const directPayload = verifyGoogleHandoffToken(directGoogleToken);
+        if (!directPayload) {
+          return NextResponse.json(
+            { success: false, error: 'Sesión de Google inválida o expirada' },
+            { status: 401 }
+          );
+        }
+        normalizedEmail = directPayload.email;
+        verifiedGoogleId = directPayload.googleId;
+        verifiedName = directPayload.name || verifiedName;
+        verifiedAvatar = directPayload.avatarUrl || verifiedAvatar;
+      } else {
+        if (!tokenToVerify) {
+          return NextResponse.json(
+            { success: false, error: 'Token de autenticación de Google requerido' },
+            { status: 401 }
+          );
+        }
 
-      const normalizedEmail = userData.user.email.toLowerCase().trim();
-      const verifiedGoogleId = userData.user.id;
-      const verifiedName =
-        userData.user.user_metadata?.full_name ||
-        userData.user.user_metadata?.name ||
-        name ||
-        'Cliente Aromaniak';
-      const verifiedAvatar =
-        userData.user.user_metadata?.avatar_url ||
-        userData.user.user_metadata?.picture ||
-        avatarUrl ||
-        '';
+        // Verificar criptográficamente el access_token contra Supabase Auth
+        const { data: userData, error: authErr } = await supabase.auth.getUser(tokenToVerify);
+        if (authErr || !userData?.user?.email) {
+          return NextResponse.json(
+            { success: false, error: 'Sesión de Google inválida o expirada' },
+            { status: 401 }
+          );
+        }
+
+        normalizedEmail = userData.user.email.toLowerCase().trim();
+        verifiedGoogleId = userData.user.id;
+        verifiedName =
+          userData.user.user_metadata?.full_name ||
+          userData.user.user_metadata?.name ||
+          name ||
+          'Cliente Aromaniak';
+        verifiedAvatar =
+          userData.user.user_metadata?.avatar_url ||
+          userData.user.user_metadata?.picture ||
+          avatarUrl ||
+          '';
+      }
 
       // Buscar si el cliente ya existe por email (case-insensitive) o googleId
       let customer = await prisma.customer.findFirst({
