@@ -196,6 +196,15 @@ export default function BodegaPage() {
     }
     return {};
   });
+  const [orderFirstSeenAt, setOrderFirstSeenAt] = useState<Record<string, number>>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('kodelocal_bodega_first_seen_at');
+        if (raw) return JSON.parse(raw);
+      } catch (_) {}
+    }
+    return {};
+  });
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
   const [zoomedBottle, setZoomedBottle] = useState<{ imageUrl: string; name: string; puesto?: string } | null>(null);
   const [envasarProduct, setEnvasarProduct] = useState<ProductItem | null>(null);
@@ -207,6 +216,32 @@ export default function BodegaPage() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const pendingOrders = sales.filter(s => s.status === 'PENDING_PREPARATION' || !s.status);
+    if (pendingOrders.length === 0) return;
+    setOrderFirstSeenAt(prev => {
+      let changed = false;
+      const next = { ...prev };
+      const now = Date.now();
+      for (const ord of pendingOrders) {
+        if (ord.id && !next[ord.id]) {
+          next[ord.id] = now;
+          changed = true;
+        }
+        if (ord.saleNumber && !next[ord.saleNumber]) {
+          next[ord.saleNumber] = now;
+          changed = true;
+        }
+      }
+      if (changed && typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('kodelocal_bodega_first_seen_at', JSON.stringify(next));
+        } catch (_) {}
+      }
+      return changed ? next : prev;
+    });
+  }, [sales]);
 
   const handlePrintOrderTicket = useCallback((order: SaleRecord) => {
     const ts = Date.now();
@@ -1679,12 +1714,15 @@ export default function BodegaPage() {
                       order.domicilio?.customerPhone ||
                       '';
                     const isExpanded = !!expandedOrderIds[order.id];
-                    const createdAtMs = new Date(order.createdAt).getTime() || nowMs;
+                    const arrivalTs =
+                      orderFirstSeenAt[order.id] ||
+                      (order.saleNumber ? orderFirstSeenAt[order.saleNumber] : 0) ||
+                      nowMs;
                     const printedTs =
                       ticketPrintedAt[order.id] ||
                       (order.saleNumber ? ticketPrintedAt[order.saleNumber] : 0) ||
                       0;
-                    const isUnprintedAlert = !printedTs && nowMs - createdAtMs >= 30000;
+                    const isUnprintedAlert = !printedTs && nowMs - arrivalTs >= 30000;
                     const isPreparingAfterPrint = printedTs > 0 && nowMs - printedTs < 90000;
                     const isDelayedAfterPrint = printedTs > 0 && nowMs - printedTs >= 90000;
                     const cardAuraClass = isDelayedAfterPrint
@@ -1692,8 +1730,8 @@ export default function BodegaPage() {
                       : isPreparingAfterPrint
                       ? 'border-sky-500 bodega-blue-aura-steady'
                       : isUnprintedAlert
-                      ? 'border-amber-500 bodega-amber-aura-blink'
-                      : 'border-amber-400';
+                      ? 'border-orange-500 bodega-orange-aura-blink'
+                      : 'border-yellow-400 bodega-yellow-aura-steady';
 
                     if (!isExpanded) {
                       return (
