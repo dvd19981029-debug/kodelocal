@@ -1,10 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
+const ALLOWED_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'image/heic',
+  'image/heif',
+  'application/pdf',
+]);
+
 export async function POST(req: NextRequest) {
   try {
+    const rl = await checkRateLimit(req, {
+      keyPrefix: 'upload_comprobante',
+      maxRequests: 20,
+      windowMs: 60 * 1000,
+    });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { success: false, error: `Demasiados intentos de subida. Espera ${rl.resetSeconds} segundos.` },
+        { status: 429 }
+      );
+    }
+
     let buffer: Buffer;
     let contentType = 'image/jpeg';
     let ext = 'jpg';
@@ -54,6 +77,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const normalizedMime = String(contentType || '').toLowerCase().trim();
+    if (!ALLOWED_MIME_TYPES.has(normalizedMime)) {
+      return NextResponse.json(
+        { success: false, error: 'Formato de comprobante no permitido. Usa JPG, PNG, WEBP o PDF.' },
+        { status: 400 }
+      );
+    }
+
     // Límite razonable: 8MB
     if (buffer.length > 8 * 1024 * 1024) {
       return NextResponse.json(
@@ -81,8 +112,8 @@ export async function POST(req: NextRequest) {
           const { error } = await supabase.storage
             .from(bucketName)
             .upload(fileName, buffer, {
-              contentType,
-              upsert: true,
+              contentType: normalizedMime,
+              upsert: false,
             });
           if (!error) {
             const { data } = supabase.storage.from(bucketName).getPublicUrl(fileName);

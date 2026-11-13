@@ -128,11 +128,16 @@ export async function POST(request: Request) {
             );
           }
 
-          const pwdMatch =
-            kUser.password === cleanPwd ||
-            cleanPwd === '123' ||
-            (isPin && kUser.password === cleanPwd);
+          const storedKodePwd = String(kUser.password || '');
+          const pwdCheck = verifyPasswordSecure(cleanPwd, storedKodePwd);
+          const pwdMatch = pwdCheck.valid || (storedKodePwd !== '' && storedKodePwd === cleanPwd);
           if (pwdMatch) {
+            if (pwdCheck.needsRehash) {
+              await queryKode(
+                `UPDATE public.usuarios SET password = $1 WHERE id = $2`,
+                [hashPasswordSecure(cleanPwd), kUser.id]
+              ).catch(() => {});
+            }
             const isAdminRole = String(kUser.rol || '').toUpperCase() === 'ADMIN';
             isKodeOnlyUser = KODE_ONLY_EMAILS.has(kEmailLower) || !isAdminRole;
             if (!isKodeContext && isKodeOnlyUser) {

@@ -1266,9 +1266,6 @@ export default function BodegaPage() {
                 Módulo Operativo
               </span>
             </div>
-            <p className="text-xs text-slate-500 font-medium">
-              Gestión física de pedidos, puestos en estantería (📍 A1) y recepción confrontada de compras • <strong className="text-amber-800 font-bold">Sin precios ni dinero</strong>
-            </p>
           </div>
         </div>
 

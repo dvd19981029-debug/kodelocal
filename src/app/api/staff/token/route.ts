@@ -26,41 +26,14 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. Verificar por token firmado (header o cookie HttpOnly kodelocal_staff_token)
+    // 1. Verificar únicamente por token firmado criptográficamente (header o cookie HttpOnly kodelocal_staff_token)
     const { authorized, payload } = verifyStaffRequest(request);
 
     let matchedRole = payload?.role || '';
     let matchedEmail = payload?.email || '';
     let matchedName = payload?.name || '';
     let matchedId = payload?.id || '';
-    let isVerified = authorized && !!payload;
-
-    // 2. Respaldo de recuperación de sesión: si la cookie kode_session_ui sigue activa en el navegador,
-    // verificar contra la base de datos que el usuario exista y esté activo para restaurar su token sin sacarlo.
-    if (!isVerified) {
-      const cookieHeader = request.headers.get('cookie') || '';
-      const uiMatch = cookieHeader.match(/(?:^|;\s*)kode_session_ui=([^;]+)/);
-      if (uiMatch) {
-        try {
-          const uiSession = JSON.parse(decodeURIComponent(uiMatch[1].trim()));
-          if (uiSession?.email) {
-            const dbStaff = await prisma.staffUser.findFirst({
-              where: {
-                email: String(uiSession.email).toLowerCase().trim(),
-                isActive: true,
-              },
-            });
-            if (dbStaff) {
-              matchedRole = dbStaff.role;
-              matchedEmail = dbStaff.email;
-              matchedName = dbStaff.name;
-              matchedId = dbStaff.id;
-              isVerified = true;
-            }
-          }
-        } catch (_) {}
-      }
-    }
+    const isVerified = authorized && !!payload;
 
     if (!isVerified) {
       return NextResponse.json(

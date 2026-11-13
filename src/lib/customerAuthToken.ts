@@ -6,7 +6,7 @@ function ensureAuthSecret(): string {
     if (process.env.DATABASE_URL) {
       return crypto.createHash('sha256').update(`aromaniak_auth_${process.env.DATABASE_URL}`).digest('hex');
     }
-    return 'aromaniak_auth_token_secret_prod_fallback_2026';
+    throw new Error('AUTH_SECRET o DATABASE_URL es requerido para firmar sesiones.');
   }
   return secret;
 }

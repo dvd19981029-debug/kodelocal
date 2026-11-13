@@ -60,7 +60,7 @@ async function getEdgeAuthSecret(): Promise<string> {
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('');
   }
-  return 'aromaniak_auth_token_secret_prod_fallback_2026';
+  throw new Error('AUTH_SECRET o DATABASE_URL es requerido para verificar sesiones.');
 }
 
 const KODE_CHATWOOT_API_KEY =

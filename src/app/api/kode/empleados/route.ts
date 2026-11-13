@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { queryKode } from '@/lib/kodeDb';
+import { hashPasswordSecure } from '@/lib/customerAuthToken';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +30,7 @@ export async function GET() {
         u.nombre,
         u.email,
         COALESCE(u.username, '') AS username,
-        COALESCE(u.password, '') AS password,
+        CASE WHEN u.password IS NOT NULL AND u.password != '' THEN '••••••••' ELSE '' END AS password,
         COALESCE(u.telefono, '') AS telefono,
         COALESCE(u.rol, 'VENDEDORA') AS rol,
         COALESCE(u.doc_tipo, 'DUI') AS doc_tipo,
@@ -151,7 +152,7 @@ export async function POST(request: Request) {
         nombre.trim(),
         email.trim().toLowerCase(),
         cleanUsername,
-        password?.trim() || null,
+        password?.trim() && password.trim() !== '••••••••' ? hashPasswordSecure(password.trim()) : null,
         telefono?.trim() || '',
         rol,
         doc_tipo,
@@ -165,7 +166,11 @@ export async function POST(request: Request) {
       ]
     );
 
-    return NextResponse.json({ success: true, empleado: res.rows[0], message: 'Empleado guardado con éxito' });
+    const createdEmp = res.rows[0]
+      ? { ...res.rows[0], password: res.rows[0].password ? '••••••••' : '' }
+      : null;
+
+    return NextResponse.json({ success: true, empleado: createdEmp, message: 'Empleado guardado con éxito' });
   } catch (error: any) {
     console.error('Error creating empleado:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -189,9 +194,12 @@ export async function PUT(request: Request) {
          RETURNING *`,
         [montoLiquidar, body.id]
       );
+      const liqEmp = resLiq.rows[0]
+        ? { ...resLiq.rows[0], password: resLiq.rows[0].password ? '••••••••' : '' }
+        : null;
       return NextResponse.json({
         success: true,
-        empleado: resLiq.rows[0],
+        empleado: liqEmp,
         message: `Liquidación de $${montoLiquidar.toFixed(2)} registrada exitosamente`,
       });
     }
@@ -232,6 +240,11 @@ export async function PUT(request: Request) {
       return NextResponse.json({ success: false, error: 'ID de empleado es requerido' }, { status: 400 });
     }
 
+    const cleanNewPassword =
+      typeof password === 'string' && password.trim() !== '' && password.trim() !== '••••••••'
+        ? hashPasswordSecure(password.trim())
+        : null;
+
     const res = await queryKode(
       `UPDATE public.usuarios 
        SET nombre = COALESCE($1, nombre),
@@ -256,7 +269,7 @@ export async function PUT(request: Request) {
         nombre,
         email?.toLowerCase(),
         username,
-        password !== undefined ? password : null,
+        cleanNewPassword,
         telefono,
         rol,
         doc_tipo,
@@ -276,7 +289,11 @@ export async function PUT(request: Request) {
       return NextResponse.json({ success: false, error: 'Empleado no encontrado' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, empleado: res.rows[0], message: 'Empleado actualizado con éxito' });
+    const updatedEmp = res.rows[0]
+      ? { ...res.rows[0], password: res.rows[0].password ? '••••••••' : '' }
+      : null;
+
+    return NextResponse.json({ success: true, empleado: updatedEmp, message: 'Empleado actualizado con éxito' });
   } catch (error: any) {
     console.error('Error updating empleado:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
