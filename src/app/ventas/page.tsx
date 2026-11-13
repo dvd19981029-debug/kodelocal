@@ -177,6 +177,9 @@ export default function VentasPage() {
       return (
         s.saleNumber.toLowerCase().includes(q) ||
         s.cliente.nombre.toLowerCase().includes(q) ||
+        (s.cliente.correo && s.cliente.correo.toLowerCase().includes(q)) ||
+        (s.cliente.numDocumento && s.cliente.numDocumento.toLowerCase().includes(q)) ||
+        (s.cliente.telefono && s.cliente.telefono.toLowerCase().includes(q)) ||
         (s.dteInfo?.codigoGeneracion && s.dteInfo.codigoGeneracion.toLowerCase().includes(q)) ||
         (s.dteInfo?.numeroControl && s.dteInfo.numeroControl.toLowerCase().includes(q))
       );
@@ -489,7 +492,7 @@ export default function VentasPage() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none z-10" />
             <input
               type="text"
-              placeholder="Buscar por N° Venta, Cliente, Código de Generación o N° Control..."
+              placeholder="Buscar por N° Venta, Cliente, Correo, Código de Generación o N° Control..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="clay-input has-icon w-full pr-4 py-2 text-xs sm:text-sm font-mono"

@@ -3667,6 +3667,9 @@ export default function PosPage() {
           sale.saleNumber.toLowerCase().includes(q) ||
           (sale.orderNumber && sale.orderNumber.toLowerCase().includes(q)) ||
           (sale.cliente?.nombre && sale.cliente.nombre.toLowerCase().includes(q)) ||
+          (sale.cliente?.correo && sale.cliente.correo.toLowerCase().includes(q)) ||
+          (sale.cliente?.numDocumento && sale.cliente.numDocumento.toLowerCase().includes(q)) ||
+          (sale.cliente?.telefono && sale.cliente.telefono.toLowerCase().includes(q)) ||
           (sale.dteInfo?.numeroControl && sale.dteInfo.numeroControl.toLowerCase().includes(q)) ||
           (sale.dteInfo?.codigoGeneracion && sale.dteInfo.codigoGeneracion.toLowerCase().includes(q))
         );
