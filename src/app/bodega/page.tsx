@@ -187,9 +187,45 @@ export default function BodegaPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [expandedOrderIds, setExpandedOrderIds] = useState<Record<string, boolean>>({});
+  const [ticketPrintedAt, setTicketPrintedAt] = useState<Record<string, number>>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('kodelocal_bodega_ticket_printed_at');
+        if (raw) return JSON.parse(raw);
+      } catch (_) {}
+    }
+    return {};
+  });
+  const [nowMs, setNowMs] = useState<number>(() => Date.now());
   const [zoomedBottle, setZoomedBottle] = useState<{ imageUrl: string; name: string; puesto?: string } | null>(null);
   const [envasarProduct, setEnvasarProduct] = useState<ProductItem | null>(null);
   const [isEnvasarModalOpen, setIsEnvasarModalOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNowMs(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const handlePrintOrderTicket = useCallback((order: SaleRecord) => {
+    const ts = Date.now();
+    setTicketPrintedAt(prev => {
+      const next = {
+        ...prev,
+        ...(order.id ? { [order.id]: ts } : {}),
+        ...(order.saleNumber ? { [order.saleNumber]: ts } : {}),
+      };
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('kodelocal_bodega_ticket_printed_at', JSON.stringify(next));
+        } catch (_) {}
+      }
+      return next;
+    });
+    setNowMs(ts);
+    printDispatchTicketPdf(order, products);
+  }, [products]);
 
   const toggleOrderExpanded = useCallback((orderId: string) => {
     setExpandedOrderIds(prev => ({ ...prev, [orderId]: !prev[orderId] }));
@@ -938,26 +974,33 @@ export default function BodegaPage() {
 
   const pendingPurchasesCount = pendingPurchases.length;
 
-  // Filtrado de comandas por tab
+  // Filtrado de comandas por tab (ordenados por orden de llegada)
   const filteredOrders = useMemo(() => {
-    return sales.filter(s => {
-      const isPending = s.status === 'PENDING_PREPARATION' || !s.status;
-      const isReady = s.status === 'READY_AT_WINDOW';
-      const isCompleted = s.status === 'COMPLETED';
+    return sales
+      .filter(s => {
+        const isPending = s.status === 'PENDING_PREPARATION' || !s.status;
+        const isReady = s.status === 'READY_AT_WINDOW';
+        const isCompleted = s.status === 'COMPLETED';
 
-      if (bodegaTab === 'por_preparar' && !isPending) return false;
-      if (bodegaTab === 'listos' && !isReady) return false;
-      if (bodegaTab === 'entregados' && !isCompleted) return false;
+        if (bodegaTab === 'por_preparar' && !isPending) return false;
+        if (bodegaTab === 'listos' && !isReady) return false;
+        if (bodegaTab === 'entregados' && !isCompleted) return false;
 
-      if (!searchQuery.trim()) return true;
-      const q = searchQuery.toLowerCase().trim();
-      return (
-        s.saleNumber.toLowerCase().includes(q) ||
-        (s.vendedor && s.vendedor.toLowerCase().includes(q)) ||
-        (s.cliente?.nombre && s.cliente.nombre.toLowerCase().includes(q)) ||
-        s.items.some(it => it.name.toLowerCase().includes(q) || (it.puesto && it.puesto.toLowerCase().includes(q)))
-      );
-    });
+        if (!searchQuery.trim()) return true;
+        const q = searchQuery.toLowerCase().trim();
+        return (
+          s.saleNumber.toLowerCase().includes(q) ||
+          (s.vendedor && s.vendedor.toLowerCase().includes(q)) ||
+          (s.cliente?.nombre && s.cliente.nombre.toLowerCase().includes(q)) ||
+          s.items.some(it => it.name.toLowerCase().includes(q) || (it.puesto && it.puesto.toLowerCase().includes(q)))
+        );
+      })
+      .sort((a, b) => {
+        const timeA = new Date(a.createdAt || 0).getTime() || 0;
+        const timeB = new Date(b.createdAt || 0).getTime() || 0;
+        if (timeA !== timeB) return timeA - timeB;
+        return String(a.saleNumber || a.id || '').localeCompare(String(b.saleNumber || b.id || ''));
+      });
   }, [sales, bodegaTab, searchQuery]);
 
   // Filtrado de inventario físico para bodega (sin precios)
@@ -1619,13 +1662,20 @@ export default function BodegaPage() {
                       order.domicilio?.customerPhone ||
                       '';
                     const isExpanded = !!expandedOrderIds[order.id];
+                    const printedTs =
+                      ticketPrintedAt[order.id] ||
+                      (order.saleNumber ? ticketPrintedAt[order.saleNumber] : 0) ||
+                      0;
+                    const shouldBlinkRedAura = !printedTs || nowMs - printedTs >= 90000;
 
                     if (!isExpanded) {
                       return (
                         <div
                           key={order.id}
                           onClick={() => toggleOrderExpanded(order.id)}
-                          className="clay-card px-3.5 py-2.5 border-l-4 border-rose-500 hover:shadow-md transition-all cursor-pointer space-y-1.5"
+                          className={`clay-card px-3.5 py-2.5 border-l-4 border-rose-500 hover:shadow-md transition-all cursor-pointer space-y-1.5 ${
+                            shouldBlinkRedAura ? 'bodega-red-aura-blink' : ''
+                          }`}
                         >
                           <div className="flex items-center justify-between gap-2 flex-wrap">
                             <div className="flex items-center gap-1.5 flex-wrap min-w-0">
@@ -1673,7 +1723,7 @@ export default function BodegaPage() {
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  printDispatchTicketPdf(order, products);
+                                  handlePrintOrderTicket(order);
                                 }}
                                 title="Imprimir Orden de Despacho en ticketera térmica 80mm"
                                 className="clay-btn clay-btn-light px-2.5 py-1 text-[11px] font-bold flex items-center gap-1 text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50 border border-indigo-200 cursor-pointer"
@@ -1729,7 +1779,9 @@ export default function BodegaPage() {
                     return (
                       <div 
                         key={order.id} 
-                        className="clay-card p-4 flex flex-col justify-between border-l-4 border-rose-500 hover:shadow-md transition-all"
+                        className={`clay-card p-4 flex flex-col justify-between border-l-4 border-rose-500 hover:shadow-md transition-all ${
+                          shouldBlinkRedAura ? 'bodega-red-aura-blink' : ''
+                        }`}
                       >
                         <div>
                           {/* Encabezado del Pedido */}
@@ -2109,7 +2161,7 @@ export default function BodegaPage() {
                           <div className="flex flex-wrap items-center gap-1.5">
                             <button
                               type="button"
-                              onClick={() => printDispatchTicketPdf(order, products)}
+                              onClick={() => handlePrintOrderTicket(order)}
                               title="Imprimir Orden de Despacho en ticketera térmica 80mm"
                               className="clay-btn clay-btn-light px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50 border border-indigo-200"
                             >
@@ -2210,13 +2262,20 @@ export default function BodegaPage() {
                       order.domicilio?.customerPhone ||
                       '';
                     const isExpanded = !!expandedOrderIds[order.id];
+                    const printedTs =
+                      ticketPrintedAt[order.id] ||
+                      (order.saleNumber ? ticketPrintedAt[order.saleNumber] : 0) ||
+                      0;
+                    const shouldBlinkRedAura = !printedTs;
 
                     if (!isExpanded) {
                       return (
                         <div
                           key={order.id}
                           onClick={() => toggleOrderExpanded(order.id)}
-                          className="clay-card px-3.5 py-2.5 border-l-4 border-emerald-500 hover:shadow-md transition-all cursor-pointer space-y-1.5"
+                          className={`clay-card px-3.5 py-2.5 border-l-4 border-emerald-500 hover:shadow-md transition-all cursor-pointer space-y-1.5 ${
+                            shouldBlinkRedAura ? 'bodega-red-aura-blink' : ''
+                          }`}
                         >
                           <div className="flex items-center justify-between gap-2 flex-wrap">
                             <div className="flex items-center gap-1.5 flex-wrap min-w-0">
@@ -2264,7 +2323,7 @@ export default function BodegaPage() {
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  printDispatchTicketPdf(order, products);
+                                  handlePrintOrderTicket(order);
                                 }}
                                 title="Imprimir Orden de Despacho en ticketera térmica 80mm"
                                 className="clay-btn clay-btn-light px-2.5 py-1 text-[11px] font-bold flex items-center gap-1 text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50 border border-indigo-200 cursor-pointer"
@@ -2320,7 +2379,9 @@ export default function BodegaPage() {
                     return (
                     <div 
                       key={order.id} 
-                      className="clay-card p-4 flex flex-col justify-between border-l-4 border-emerald-500 hover:shadow-md transition-all"
+                      className={`clay-card p-4 flex flex-col justify-between border-l-4 border-emerald-500 hover:shadow-md transition-all ${
+                        shouldBlinkRedAura ? 'bodega-red-aura-blink' : ''
+                      }`}
                     >
                       <div>
                         <div className="pb-3 border-b border-slate-100 mb-3 space-y-2.5">
@@ -2586,7 +2647,7 @@ export default function BodegaPage() {
                       <div className="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-end gap-1.5">
                         <button
                           type="button"
-                          onClick={() => printDispatchTicketPdf(order, products)}
+                          onClick={() => handlePrintOrderTicket(order)}
                           title="Imprimir Orden de Despacho en ticketera térmica 80mm"
                           className="clay-btn clay-btn-light px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50 border border-indigo-200"
                         >
