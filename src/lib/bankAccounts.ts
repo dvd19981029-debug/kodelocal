@@ -27,10 +27,10 @@ export const OFFICIAL_BANK_ACCOUNTS: BankAccountInfo[] = [
     holderName: 'Grupo Kode SaS De Cv',
     personType: 'Persona jurídica',
     email: 'ventas@forbiddensoluciones.com',
-    badgeBg: 'bg-slate-100 border-slate-200 text-slate-900',
-    badgeText: 'text-slate-800',
-    borderColor: 'border-slate-200',
-    accentColor: 'text-slate-900',
+    badgeBg: 'bg-slate-100 border-slate-300 text-slate-900',
+    badgeText: 'text-slate-900',
+    borderColor: 'border-slate-300',
+    accentColor: 'text-slate-950',
   },
   {
     id: 'bac',
@@ -44,8 +44,8 @@ export const OFFICIAL_BANK_ACCOUNTS: BankAccountInfo[] = [
     email: 'ventas@forbiddensoluciones.com',
     badgeBg: 'bg-rose-50 border-rose-200 text-rose-900',
     badgeText: 'text-rose-800',
-    borderColor: 'border-slate-200',
-    accentColor: 'text-slate-900',
+    borderColor: 'border-slate-300',
+    accentColor: 'text-slate-950',
   },
 ];
 

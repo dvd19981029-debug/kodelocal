@@ -776,66 +776,66 @@ export default function CheckoutPage() {
         <div className="flex items-center justify-between">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-800 hover:text-indigo-700 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Volver a la tienda</span>
           </Link>
-          <span className="text-xs font-mono font-bold text-slate-700 bg-white border border-slate-200 px-3 py-1 rounded-lg">
+          <span className="text-xs font-mono font-extrabold text-slate-900 bg-white border border-slate-300 px-3 py-1 rounded-lg">
             Orden #{completedOrder.orderNumber}
           </span>
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 sm:p-8 space-y-6">
+        <div className="bg-white rounded-2xl border border-slate-300 shadow-xs p-6 sm:p-8 space-y-6">
           <div className="text-center space-y-2">
             <div className="flex justify-center">
               <span
-                className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border ${
+                className={`inline-flex items-center gap-1.5 text-xs font-extrabold px-3 py-1 rounded-full border ${
                   isTransfer
-                    ? 'text-amber-800 bg-amber-50 border-amber-200'
-                    : 'text-emerald-800 bg-emerald-50 border-emerald-200'
+                    ? 'text-amber-900 bg-amber-50 border-amber-300'
+                    : 'text-emerald-900 bg-emerald-50 border-emerald-300'
                 }`}
               >
                 {isTransfer ? (
                   <>
-                    <Clock className="w-3.5 h-3.5 text-amber-600" />
+                    <Clock className="w-3.5 h-3.5 text-amber-700" />
                     <span>Pendiente de verificación de transferencia</span>
                   </>
                 ) : (
                   <>
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
                     <span>Pedido confirmado</span>
                   </>
                 )}
               </span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight">
               {isTransfer ? '¡Pedido registrado!' : '¡Pedido recibido con éxito!'}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-800 max-w-lg mx-auto leading-relaxed">
               {isTransfer ? (
                 <>
                   Transfiere{' '}
-                  <strong className="text-slate-900 font-extrabold">
+                  <strong className="text-indigo-700 font-extrabold">
                     ${completedOrder.total.toFixed(2)}
                   </strong>{' '}
                   a cualquiera de nuestras cuentas corrientes y envía tu comprobante por{' '}
-                  <strong>WhatsApp (6043-7496)</strong> o súbelo directamente aquí.
+                  <strong className="text-slate-950">WhatsApp (6043-7496)</strong> o súbelo directamente aquí.
                 </>
               ) : (
                 <>
-                  Gracias por tu compra, <strong>{completedOrder.cliente.nombre}</strong>. Tu comanda ya está en preparación.
+                  Gracias por tu compra, <strong className="text-slate-950">{completedOrder.cliente.nombre}</strong>. Tu comanda ya está en preparación.
                 </>
               )}
             </p>
           </div>
 
           {isTransfer ? (
-            <div className="space-y-4 pt-2 border-t border-slate-200/80">
+            <div className="space-y-4 pt-2 border-t border-slate-200">
               <div className="space-y-2.5">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                  <Building className="w-3.5 h-3.5 text-slate-700" />
+                <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
+                  <Building className="w-4 h-4 text-indigo-700" />
                   <span>Cuentas empresariales autorizadas</span>
                 </h2>
                 <BankAccountsCardsList />
@@ -861,26 +861,26 @@ export default function CheckoutPage() {
                 <Send className="w-4 h-4" />
                 <span>Notificar por WhatsApp (6043-7496)</span>
               </a>
-              <p className="text-[11px] text-slate-500">
-                WhatsApp oficial de atención: <strong className="text-slate-700">6043-7496</strong>
+              <p className="text-xs text-slate-700">
+                WhatsApp oficial de atención: <strong className="text-slate-950">6043-7496</strong>
               </p>
             </div>
           )}
 
-          <div className="pt-4 border-t border-slate-200/80 text-xs space-y-2">
-            <div className="flex justify-between gap-4 text-slate-600">
-              <span className="shrink-0">Destino:</span>
-              <span className="font-semibold text-slate-900 text-right">{completedOrder.cliente.direccion}</span>
+          <div className="pt-4 border-t border-slate-200 text-xs space-y-2">
+            <div className="flex justify-between gap-4 text-slate-800">
+              <span className="shrink-0 font-semibold">Destino:</span>
+              <span className="font-bold text-slate-950 text-right">{completedOrder.cliente.direccion}</span>
             </div>
-            <div className="flex justify-between gap-4 text-slate-600">
-              <span>Forma de pago:</span>
-              <span className="font-semibold text-slate-900">
+            <div className="flex justify-between gap-4 text-slate-800">
+              <span className="font-semibold">Forma de pago:</span>
+              <span className="font-bold text-slate-950">
                 {isTransfer ? 'Transferencia bancaria' : 'Tarjeta de crédito / débito'}
               </span>
             </div>
-            <div className="flex justify-between text-slate-900 font-bold pt-2 border-t border-slate-100 text-sm">
+            <div className="flex justify-between text-slate-950 font-extrabold pt-2 border-t border-slate-200 text-sm">
               <span>Total:</span>
-              <span className="font-mono font-extrabold tabular-nums">
+              <span className="font-mono font-black text-indigo-700 tabular-nums">
                 ${completedOrder.total.toFixed(2)}
               </span>
             </div>
@@ -897,7 +897,7 @@ export default function CheckoutPage() {
             </button>
             <Link
               href="/"
-              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-semibold transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-900 border border-slate-300 text-xs font-bold transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Seguir comprando</span>
@@ -912,11 +912,11 @@ export default function CheckoutPage() {
   if (cart.length === 0 && !isSubmitting) {
     return (
       <div className="max-w-md mx-auto py-16 px-4 text-center space-y-4">
-        <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 text-slate-400 flex items-center justify-center mx-auto shadow-2xs">
+        <div className="w-14 h-14 rounded-2xl bg-white border border-slate-300 text-indigo-600 flex items-center justify-center mx-auto shadow-2xs">
           <ShoppingBag className="w-7 h-7" />
         </div>
-        <h1 className="text-xl font-extrabold text-slate-900">Tu carrito está vacío</h1>
-        <p className="text-xs sm:text-sm text-slate-500">
+        <h1 className="text-xl font-extrabold text-slate-950">Tu carrito está vacío</h1>
+        <p className="text-xs sm:text-sm text-slate-700 font-medium">
           Agrega tus esencias, frascos o insumos antes de continuar al pago.
         </p>
         <Link
@@ -941,29 +941,29 @@ export default function CheckoutPage() {
       </div>
 
       {/* ================= CABECERA INTEGRADA EN LA PÁGINA (SIN BURBUJAS PASTILLA) ================= */}
-      <header className="space-y-3 pb-4 border-b border-slate-200/90">
-        {/* Fila superior: navegación de retorno + sesión de cuenta discreta */}
+      <header className="space-y-3 pb-4 border-b border-slate-300">
+        {/* Fila superior: navegación de retorno + sesión de cuenta */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-800 hover:text-indigo-700 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Seguir comprando</span>
           </Link>
 
           {isLoggedIn && customer ? (
-            <div className="inline-flex items-center gap-2 text-xs text-slate-600">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" aria-hidden="true" />
+            <div className="inline-flex items-center gap-2 text-xs text-slate-800 font-medium">
+              <span className="w-2 h-2 rounded-full bg-emerald-600 shrink-0" aria-hidden="true" />
               <span className="truncate max-w-[220px] sm:max-w-xs">
-                Sesión activa: <strong className="font-bold text-slate-900">{customer.name}</strong>
+                Sesión activa: <strong className="font-extrabold text-slate-950">{customer.name}</strong>
               </span>
             </div>
           ) : (
             <button
               type="button"
               onClick={() => openAuthModal('login')}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200/90 text-xs font-semibold text-slate-700 hover:text-slate-900 shadow-2xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-300 text-xs font-bold text-slate-900 shadow-2xs transition-colors cursor-pointer"
             >
               <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -979,11 +979,11 @@ export default function CheckoutPage() {
         {/* Título de Checkout + Respaldo Bancario Integrado Directamente en el Lienzo */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 pt-1">
           <div className="space-y-1">
-            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-950 tracking-tight">
               Finalizar compra
             </h1>
-            <p className="text-xs text-slate-600 flex items-center gap-1.5">
-              <Lock className="w-3.5 h-3.5 text-emerald-600 shrink-0" aria-hidden="true" />
+            <p className="text-xs sm:text-[13px] font-semibold text-slate-800 flex items-center gap-1.5">
+              <Lock className="w-3.5 h-3.5 text-emerald-700 shrink-0" aria-hidden="true" />
               <span>
                 Pago seguro protegido con 3D Secure y cuentas empresariales verificadas
               </span>
@@ -1027,7 +1027,7 @@ export default function CheckoutPage() {
               />
             </svg>
 
-            <span className="h-3.5 w-px bg-slate-300/80 shrink-0" aria-hidden="true" />
+            <span className="h-3.5 w-px bg-slate-400 shrink-0" aria-hidden="true" />
 
             {/* Wompi */}
             <img
@@ -1036,7 +1036,7 @@ export default function CheckoutPage() {
               className="h-4 sm:h-[17px] w-auto object-contain shrink-0"
             />
 
-            <span className="h-3.5 w-px bg-slate-300/80 shrink-0" aria-hidden="true" />
+            <span className="h-3.5 w-px bg-slate-400 shrink-0" aria-hidden="true" />
 
             {/* Bancoagrícola (Identidad oficial moderna monocromática) */}
             <img
@@ -1045,7 +1045,7 @@ export default function CheckoutPage() {
               className="h-3.5 sm:h-4 w-auto object-contain shrink-0"
             />
 
-            <span className="h-3.5 w-px bg-slate-300/80 shrink-0" aria-hidden="true" />
+            <span className="h-3.5 w-px bg-slate-400 shrink-0" aria-hidden="true" />
 
             {/* BAC Credomatic */}
             <img
@@ -1059,12 +1059,12 @@ export default function CheckoutPage() {
 
       {/* Aviso si el usuario regresó de Wompi sin completar pago */}
       {wompiCancelledNotice && (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start justify-between gap-3">
+        <div className="p-4 bg-amber-50 border border-amber-300 rounded-xl flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
             <div className="space-y-0.5 text-xs">
               <p className="font-bold text-amber-950">Pago no completado en Wompi</p>
-              <p className="text-amber-900 leading-relaxed">
+              <p className="text-amber-950 leading-relaxed">
                 No se realizó ningún cargo a tu tarjeta y la orden anterior ({wompiCancelledNotice}) fue anulada. Tus productos siguen intactos en el carrito.
               </p>
             </div>
@@ -1072,7 +1072,7 @@ export default function CheckoutPage() {
           <button
             type="button"
             onClick={() => setWompiCancelledNotice(null)}
-            className="text-amber-600 hover:text-amber-900 p-1 rounded text-xs font-bold cursor-pointer shrink-0"
+            className="text-amber-800 hover:text-amber-950 p-1 rounded text-xs font-bold cursor-pointer shrink-0"
             aria-label="Cerrar aviso"
           >
             ✕
@@ -1084,16 +1084,16 @@ export default function CheckoutPage() {
       {submitErrorBanner && (
         <div
           role="alert"
-          className="p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-start justify-between gap-3"
+          className="p-4 bg-rose-50 border border-rose-300 rounded-xl flex items-start justify-between gap-3"
         >
-          <div className="flex items-start gap-2.5 text-xs text-rose-900">
-            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-            <p className="font-medium leading-relaxed">{submitErrorBanner}</p>
+          <div className="flex items-start gap-2.5 text-xs text-rose-950">
+            <AlertCircle className="w-4 h-4 text-rose-700 shrink-0 mt-0.5" />
+            <p className="font-semibold leading-relaxed">{submitErrorBanner}</p>
           </div>
           <button
             type="button"
             onClick={() => setSubmitErrorBanner(null)}
-            className="text-rose-500 hover:text-rose-800 p-1 rounded text-xs font-bold cursor-pointer shrink-0"
+            className="text-rose-700 hover:text-rose-950 p-1 rounded text-xs font-bold cursor-pointer shrink-0"
             aria-label="Cerrar error"
           >
             ✕
@@ -1106,25 +1106,25 @@ export default function CheckoutPage() {
           {/* ================= COLUMNA IZQUIERDA: SECCIONES DEL CHECKOUT ================= */}
           <div className="lg:col-span-7 space-y-6">
             {/* SECCIÓN 1: ENTREGA, CONTACTO Y DIRECCIÓN */}
-            <section className="bg-white rounded-2xl border border-slate-200/95 shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden">
-              <div className="px-5 sm:px-6 py-4 bg-slate-50/70 border-b border-slate-200/80 flex items-center justify-between gap-2">
+            <section className="bg-white rounded-2xl border border-slate-300 shadow-xs overflow-hidden">
+              <div className="px-5 sm:px-6 py-4 bg-slate-100/80 border-b border-slate-300/80 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
-                  <span className="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                  <span className="w-6 h-6 rounded-full bg-slate-950 text-white flex items-center justify-center font-extrabold text-xs shrink-0">
                     1
                   </span>
-                  <h2 className="font-bold text-sm sm:text-base text-slate-900">
+                  <h2 className="font-extrabold text-sm sm:text-base text-slate-950">
                     Entrega y datos de contacto
                   </h2>
                 </div>
-                <span className="text-[11px] font-semibold text-slate-500 hidden sm:inline">
+                <span className="text-xs font-bold text-indigo-800 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-md hidden sm:inline">
                   Cobertura en los 14 departamentos
                 </span>
               </div>
 
-              <div className="divide-y divide-slate-200/80">
+              <div className="divide-y divide-slate-200">
                 {/* Bloque 1A: Modalidad de Entrega */}
                 <div className="p-5 sm:p-6 space-y-3.5">
-                  <span className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                  <span className="block text-xs font-extrabold uppercase tracking-wide text-slate-900">
                     Modalidad de entrega
                   </span>
 
@@ -1135,24 +1135,24 @@ export default function CheckoutPage() {
                       role="radio"
                       aria-checked={metodoEntrega === 'ENVIO'}
                       onClick={() => setMetodoEntrega('ENVIO')}
-                      className={`p-4 rounded-xl border text-left flex flex-col justify-between gap-2 transition-colors cursor-pointer ${
+                      className={`p-4 rounded-xl text-left flex flex-col justify-between gap-2 transition-colors cursor-pointer ${
                         metodoEntrega === 'ENVIO'
-                          ? 'border-indigo-600 bg-indigo-50/25 ring-1 ring-indigo-600'
-                          : 'border-slate-200 bg-white hover:border-slate-300'
+                          ? 'border-2 border-indigo-600 bg-indigo-50/45'
+                          : 'border border-slate-300 bg-white hover:border-slate-400'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2 w-full">
                         <div className="flex items-center gap-2.5">
                           <Truck
                             className={`w-4 h-4 shrink-0 ${
-                              metodoEntrega === 'ENVIO' ? 'text-indigo-600' : 'text-slate-500'
+                              metodoEntrega === 'ENVIO' ? 'text-indigo-700' : 'text-slate-800'
                             }`}
                           />
                           <div>
-                            <span className="font-bold text-slate-900 text-sm block leading-tight">
+                            <span className="font-extrabold text-slate-950 text-sm block leading-tight">
                               Envío a domicilio
                             </span>
-                            <span className="text-xs font-semibold text-slate-500">
+                            <span className="text-xs font-bold text-indigo-700">
                               Tarifa estándar $2.90
                             </span>
                           </div>
@@ -1161,7 +1161,7 @@ export default function CheckoutPage() {
                           className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${
                             metodoEntrega === 'ENVIO'
                               ? 'border-indigo-600 bg-indigo-600'
-                              : 'border-slate-300 bg-white'
+                              : 'border-slate-400 bg-white'
                           }`}
                         >
                           {metodoEntrega === 'ENVIO' && (
@@ -1169,8 +1169,8 @@ export default function CheckoutPage() {
                           )}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-600 leading-relaxed">
-                        Entrega de 24 a 48 horas hábiles en todo El Salvador (lunes a sábado).
+                      <p className="text-xs font-medium text-slate-800 leading-relaxed">
+                        Entrega de <strong className="font-bold text-slate-950">24 a 48 horas hábiles</strong> en todo El Salvador (lunes a sábado).
                       </p>
                     </button>
 
@@ -1180,24 +1180,24 @@ export default function CheckoutPage() {
                       role="radio"
                       aria-checked={metodoEntrega === 'RETIRO'}
                       onClick={() => setMetodoEntrega('RETIRO')}
-                      className={`p-4 rounded-xl border text-left flex flex-col justify-between gap-2 transition-colors cursor-pointer ${
+                      className={`p-4 rounded-xl text-left flex flex-col justify-between gap-2 transition-colors cursor-pointer ${
                         metodoEntrega === 'RETIRO'
-                          ? 'border-indigo-600 bg-indigo-50/25 ring-1 ring-indigo-600'
-                          : 'border-slate-200 bg-white hover:border-slate-300'
+                          ? 'border-2 border-indigo-600 bg-indigo-50/45'
+                          : 'border border-slate-300 bg-white hover:border-slate-400'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2 w-full">
                         <div className="flex items-center gap-2.5">
                           <Store
                             className={`w-4 h-4 shrink-0 ${
-                              metodoEntrega === 'RETIRO' ? 'text-indigo-600' : 'text-slate-500'
+                              metodoEntrega === 'RETIRO' ? 'text-indigo-700' : 'text-slate-800'
                             }`}
                           />
                           <div>
-                            <span className="font-bold text-slate-900 text-sm block leading-tight">
+                            <span className="font-extrabold text-slate-950 text-sm block leading-tight">
                               Retiro en sucursal
                             </span>
-                            <span className="text-xs font-semibold text-emerald-700">
+                            <span className="text-xs font-bold text-emerald-700">
                               Sin costo de envío (Gratis)
                             </span>
                           </div>
@@ -1206,7 +1206,7 @@ export default function CheckoutPage() {
                           className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${
                             metodoEntrega === 'RETIRO'
                               ? 'border-indigo-600 bg-indigo-600'
-                              : 'border-slate-300 bg-white'
+                              : 'border-slate-400 bg-white'
                           }`}
                         >
                           {metodoEntrega === 'RETIRO' && (
@@ -1214,34 +1214,30 @@ export default function CheckoutPage() {
                           )}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-600 leading-relaxed">
-                        Retira personalmente o envía PedidosYa / Uber a C.C. El Rosal, San Salvador.
+                      <p className="text-xs font-medium text-slate-800 leading-relaxed">
+                        Retira personalmente o envía <strong className="font-bold text-slate-950">PedidosYa / Uber</strong> a C.C. El Rosal, San Salvador.
                       </p>
                     </button>
                   </div>
 
                   {metodoEntrega === 'RETIRO' && (
-                    <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/90 text-xs text-slate-700 space-y-1.5">
+                    <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-300 text-xs text-slate-900 space-y-1.5">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                        <p className="font-bold text-slate-900">
+                        <p className="font-extrabold text-slate-950">
                           Punto de retiro: Centro Comercial El Rosal, Calle El Progreso, San Salvador
                         </p>
                         <a
                           href="https://maps.app.goo.gl/shtetXTGcPZQpBwY6"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 underline shrink-0"
+                          className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 hover:text-indigo-900 underline shrink-0"
                         >
                           <span>Ver en Google Maps</span>
                           <ExternalLink className="w-3 h-3" />
                         </a>
                       </div>
-                      <p className="text-slate-600 leading-relaxed">
-                        Te notificaremos por WhatsApp al{' '}
-                        <strong className="font-semibold text-slate-800">
-                          {telefono || 'número registrado'}
-                        </strong>{' '}
-                        en cuanto tu orden esté lista. Si envías un repartidor de PedidosYa o Uber, solo indícale el nombre del titular del pedido.
+                      <p className="text-slate-800 font-medium leading-relaxed">
+                        Te avisaremos desde nuestro WhatsApp oficial (<strong className="font-extrabold text-slate-950">6043-7496</strong>) al teléfono de contacto que ingreses abajo en cuanto tu orden esté lista para retirar. Si envías un repartidor de PedidosYa o Uber, solo indícale el nombre del titular del pedido.
                       </p>
                     </div>
                   )}
@@ -1249,7 +1245,7 @@ export default function CheckoutPage() {
 
                 {/* Bloque 1B: Datos de Contacto */}
                 <div className="p-5 sm:p-6 space-y-4">
-                  <span className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                  <span className="block text-xs font-extrabold uppercase tracking-wide text-slate-900">
                     Datos de quien recibe
                   </span>
 
@@ -1257,7 +1253,7 @@ export default function CheckoutPage() {
                     <div className="sm:col-span-2">
                       <label
                         htmlFor="checkout-nombre"
-                        className="block text-xs font-semibold text-slate-700 mb-1.5"
+                        className="block text-xs font-bold text-slate-900 mb-1.5"
                       >
                         Nombre completo <span className="text-rose-600">*</span>
                       </label>
@@ -1276,10 +1272,10 @@ export default function CheckoutPage() {
                           setNombre(e.target.value.slice(0, 75));
                           clearFieldError('nombre');
                         }}
-                        className="checkout-field font-medium"
+                        className="checkout-field font-semibold"
                       />
                       {fieldErrors.nombre && (
-                        <p id="error-nombre" className="mt-1 text-xs font-medium text-rose-600">
+                        <p id="error-nombre" className="mt-1 text-xs font-bold text-rose-700">
                           {fieldErrors.nombre}
                         </p>
                       )}
@@ -1288,7 +1284,7 @@ export default function CheckoutPage() {
                     <div>
                       <label
                         htmlFor="checkout-telefono"
-                        className="block text-xs font-semibold text-slate-700 mb-1.5"
+                        className="block text-xs font-bold text-slate-900 mb-1.5"
                       >
                         Teléfono / WhatsApp <span className="text-rose-600">*</span>
                       </label>
@@ -1308,10 +1304,10 @@ export default function CheckoutPage() {
                           setTelefono(e.target.value.slice(0, 25));
                           clearFieldError('telefono');
                         }}
-                        className="checkout-field font-medium"
+                        className="checkout-field font-semibold"
                       />
                       {fieldErrors.telefono && (
-                        <p id="error-telefono" className="mt-1 text-xs font-medium text-rose-600">
+                        <p id="error-telefono" className="mt-1 text-xs font-bold text-rose-700">
                           {fieldErrors.telefono}
                         </p>
                       )}
@@ -1320,13 +1316,13 @@ export default function CheckoutPage() {
                     <div>
                       <label
                         htmlFor="checkout-email"
-                        className="block text-xs font-semibold text-slate-700 mb-1.5"
+                        className="block text-xs font-bold text-slate-900 mb-1.5"
                       >
                         Correo electrónico{' '}
                         {tipoComprobante === '03' ? (
                           <span className="text-rose-600">*</span>
                         ) : (
-                          <span className="font-normal text-slate-400">(recomendado)</span>
+                          <span className="font-semibold text-slate-600">(recomendado)</span>
                         )}
                       </label>
                       <input
@@ -1348,10 +1344,10 @@ export default function CheckoutPage() {
                           setEmail(e.target.value.slice(0, 75));
                           clearFieldError('email');
                         }}
-                        className="checkout-field font-medium"
+                        className="checkout-field font-semibold"
                       />
                       {fieldErrors.email && (
-                        <p id="error-email" className="mt-1 text-xs font-medium text-rose-600">
+                        <p id="error-email" className="mt-1 text-xs font-bold text-rose-700">
                           {fieldErrors.email}
                         </p>
                       )}
@@ -1362,7 +1358,7 @@ export default function CheckoutPage() {
                 {/* Bloque 1C: Dirección de Envío (Solo cuando es Envío a Domicilio) */}
                 {metodoEntrega === 'ENVIO' && (
                   <div className="p-5 sm:p-6 space-y-4">
-                    <span className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                    <span className="block text-xs font-extrabold uppercase tracking-wide text-slate-900">
                       Dirección de entrega
                     </span>
 
@@ -1370,7 +1366,7 @@ export default function CheckoutPage() {
                       <div>
                         <label
                           htmlFor="checkout-departamento"
-                          className="block text-xs font-semibold text-slate-700 mb-1.5"
+                          className="block text-xs font-bold text-slate-900 mb-1.5"
                         >
                           Departamento <span className="text-rose-600">*</span>
                         </label>
@@ -1392,21 +1388,21 @@ export default function CheckoutPage() {
                             clearFieldError('departamento');
                             clearFieldError('municipio');
                           }}
-                          className={`checkout-field font-semibold ${
-                            !departamento ? 'text-slate-400 font-normal' : 'text-slate-900'
+                          className={`checkout-field ${
+                            !departamento ? 'text-slate-800 font-semibold' : 'text-slate-950 font-bold'
                           }`}
                         >
                           <option value="" disabled>
                             Selecciona tu departamento
                           </option>
                           {DEPARTAMENTOS_CATALOG.map((dep) => (
-                            <option key={dep.id} value={dep.nombre} className="text-slate-900">
+                            <option key={dep.id} value={dep.nombre} className="text-slate-950 font-semibold">
                               {dep.nombre}
                             </option>
                           ))}
                         </select>
                         {fieldErrors.departamento && (
-                          <p id="error-departamento" className="mt-1 text-xs font-medium text-rose-600">
+                          <p id="error-departamento" className="mt-1 text-xs font-bold text-rose-700">
                             {fieldErrors.departamento}
                           </p>
                         )}
@@ -1415,7 +1411,7 @@ export default function CheckoutPage() {
                       <div>
                         <label
                           htmlFor="checkout-municipio"
-                          className="block text-xs font-semibold text-slate-700 mb-1.5"
+                          className="block text-xs font-bold text-slate-900 mb-1.5"
                         >
                           Municipio / Distrito <span className="text-rose-600">*</span>
                         </label>
@@ -1435,8 +1431,8 @@ export default function CheckoutPage() {
                             setMunicipio(e.target.value);
                             clearFieldError('municipio');
                           }}
-                          className={`checkout-field font-semibold ${
-                            !municipio ? 'text-slate-400 font-normal' : 'text-slate-900'
+                          className={`checkout-field ${
+                            !municipio ? 'text-slate-800 font-semibold' : 'text-slate-950 font-bold'
                           }`}
                         >
                           <option value="" disabled>
@@ -1445,13 +1441,13 @@ export default function CheckoutPage() {
                               : 'Elige primero tu departamento'}
                           </option>
                           {availableMunicipios.map((m) => (
-                            <option key={m.id} value={m.nombre} className="text-slate-900">
+                            <option key={m.id} value={m.nombre} className="text-slate-950 font-semibold">
                               {m.nombre}
                             </option>
                           ))}
                         </select>
                         {fieldErrors.municipio && (
-                          <p id="error-municipio" className="mt-1 text-xs font-medium text-rose-600">
+                          <p id="error-municipio" className="mt-1 text-xs font-bold text-rose-700">
                             {fieldErrors.municipio}
                           </p>
                         )}
@@ -1460,14 +1456,14 @@ export default function CheckoutPage() {
                       <div
                         id="checkout-location-warning"
                         role="note"
-                        className="sm:col-span-2 flex items-start gap-2.5 rounded-xl border border-amber-200/90 bg-amber-50/70 px-3.5 py-2.5 text-xs text-amber-950"
+                        className="sm:col-span-2 flex items-start gap-2.5 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-2.5 text-xs text-amber-950"
                       >
                         <AlertTriangle
-                          className="w-4 h-4 text-amber-600 shrink-0 mt-0.5"
+                          className="w-4 h-4 text-amber-700 shrink-0 mt-0.5"
                           aria-hidden="true"
                         />
-                        <p className="leading-relaxed">
-                          <strong className="font-bold">Importante:</strong> Verifica que tu departamento y municipio sean correctos. Los paquetes podrían no llegar o retrasarse de ingresarse departamentos o municipios incorrectos en la dirección.
+                        <p className="font-medium leading-relaxed">
+                          <strong className="font-extrabold">Importante:</strong> Verifica que tu departamento y municipio sean correctos. Los paquetes podrían no llegar o retrasarse de ingresarse departamentos o municipios incorrectos en la dirección.
                         </p>
                       </div>
 
@@ -1475,12 +1471,12 @@ export default function CheckoutPage() {
                         <div className="flex items-center justify-between mb-1.5">
                           <label
                             htmlFor="checkout-direccion"
-                            className="text-xs font-semibold text-slate-700"
+                            className="text-xs font-bold text-slate-900"
                           >
                             Dirección exacta de entrega <span className="text-rose-600">*</span>
                           </label>
                           {direccion.length > maxDir - 40 && (
-                            <span className="text-[11px] font-medium text-slate-400 tabular-nums">
+                            <span className="text-[11px] font-semibold text-slate-700 tabular-nums">
                               {direccion.length}/{maxDir}
                             </span>
                           )}
@@ -1500,10 +1496,10 @@ export default function CheckoutPage() {
                             setDireccion(e.target.value.slice(0, maxDir));
                             clearFieldError('direccion');
                           }}
-                          className="checkout-field font-medium"
+                          className="checkout-field font-semibold"
                         />
                         {fieldErrors.direccion && (
-                          <p id="error-direccion" className="mt-1 text-xs font-medium text-rose-600">
+                          <p id="error-direccion" className="mt-1 text-xs font-bold text-rose-700">
                             {fieldErrors.direccion}
                           </p>
                         )}
@@ -1513,13 +1509,13 @@ export default function CheckoutPage() {
                         <div className="flex items-center justify-between mb-1.5">
                           <label
                             htmlFor="checkout-referencia"
-                            className="text-xs font-semibold text-slate-700"
+                            className="text-xs font-bold text-slate-900"
                           >
                             Puntos de referencia para el repartidor{' '}
-                            <span className="font-normal text-slate-400">(opcional)</span>
+                            <span className="font-semibold text-slate-600">(opcional)</span>
                           </label>
                           {referencia.length > maxRef - 30 && (
-                            <span className="text-[11px] font-medium text-slate-400 tabular-nums">
+                            <span className="text-[11px] font-semibold text-slate-700 tabular-nums">
                               {referencia.length}/{maxRef}
                             </span>
                           )}
@@ -1533,7 +1529,7 @@ export default function CheckoutPage() {
                           placeholder="Ej. Frente a parque infantil, portón negro..."
                           value={referencia}
                           onChange={(e) => setReferencia(e.target.value.slice(0, maxRef))}
-                          className="checkout-field font-medium"
+                          className="checkout-field font-semibold"
                         />
                       </div>
                     </div>
@@ -1543,15 +1539,15 @@ export default function CheckoutPage() {
             </section>
 
             {/* SECCIÓN 2: FORMA DE PAGO */}
-            <section className="bg-white rounded-2xl border border-slate-200/95 shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden">
-              <div className="px-5 sm:px-6 py-4 bg-slate-50/70 border-b border-slate-200/80 flex items-center justify-between gap-2">
+            <section className="bg-white rounded-2xl border border-slate-300 shadow-xs overflow-hidden">
+              <div className="px-5 sm:px-6 py-4 bg-slate-100/80 border-b border-slate-300/80 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
-                  <span className="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                  <span className="w-6 h-6 rounded-full bg-slate-950 text-white flex items-center justify-center font-extrabold text-xs shrink-0">
                     2
                   </span>
-                  <h2 className="font-bold text-sm sm:text-base text-slate-900">Forma de pago</h2>
+                  <h2 className="font-extrabold text-sm sm:text-base text-slate-950">Forma de pago</h2>
                 </div>
-                <span className="text-[11px] font-semibold text-slate-500 hidden sm:inline">
+                <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-md hidden sm:inline">
                   Transacción protegida
                 </span>
               </div>
@@ -1567,24 +1563,24 @@ export default function CheckoutPage() {
                       setMetodoPago('CARD');
                       trackMetaAddPaymentInfo(cart, totalConEnvio, 'CARD');
                     }}
-                    className={`p-4 rounded-xl border text-left flex flex-col justify-between gap-2.5 transition-colors cursor-pointer ${
+                    className={`p-4 rounded-xl text-left flex flex-col justify-between gap-2.5 transition-colors cursor-pointer ${
                       metodoPago === 'CARD'
-                        ? 'border-indigo-600 bg-indigo-50/25 ring-1 ring-indigo-600'
-                        : 'border-slate-200 bg-white hover:border-slate-300'
+                        ? 'border-2 border-indigo-600 bg-indigo-50/45'
+                        : 'border border-slate-300 bg-white hover:border-slate-400'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2 w-full">
                       <div className="flex items-center gap-2.5">
                         <CreditCard
                           className={`w-4 h-4 shrink-0 ${
-                            metodoPago === 'CARD' ? 'text-indigo-600' : 'text-slate-500'
+                            metodoPago === 'CARD' ? 'text-indigo-700' : 'text-slate-800'
                           }`}
                         />
                         <div>
-                          <span className="font-bold text-slate-900 text-sm block leading-tight">
+                          <span className="font-extrabold text-slate-950 text-sm block leading-tight">
                             Tarjeta crédito o débito
                           </span>
-                          <span className="text-xs font-medium text-slate-500">
+                          <span className="text-xs font-bold text-indigo-700">
                             Visa, Mastercard, puntos y cuotas
                           </span>
                         </div>
@@ -1593,7 +1589,7 @@ export default function CheckoutPage() {
                         className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${
                           metodoPago === 'CARD'
                             ? 'border-indigo-600 bg-indigo-600'
-                            : 'border-slate-300 bg-white'
+                            : 'border-slate-400 bg-white'
                         }`}
                       >
                         {metodoPago === 'CARD' && (
@@ -1601,8 +1597,8 @@ export default function CheckoutPage() {
                         )}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-600 leading-relaxed">
-                      Pago inmediato en línea mediante <strong className="font-semibold text-slate-800">Wompi (Bancoagrícola)</strong>.
+                    <p className="text-xs font-medium text-slate-800 leading-relaxed">
+                      Pago inmediato en línea mediante <strong className="font-bold text-slate-950">Wompi (Bancoagrícola)</strong>.
                     </p>
                   </button>
 
@@ -1615,24 +1611,24 @@ export default function CheckoutPage() {
                       setMetodoPago('TRANSFER');
                       trackMetaAddPaymentInfo(cart, totalConEnvio, 'TRANSFER');
                     }}
-                    className={`p-4 rounded-xl border text-left flex flex-col justify-between gap-2.5 transition-colors cursor-pointer ${
+                    className={`p-4 rounded-xl text-left flex flex-col justify-between gap-2.5 transition-colors cursor-pointer ${
                       metodoPago === 'TRANSFER'
-                        ? 'border-indigo-600 bg-indigo-50/25 ring-1 ring-indigo-600'
-                        : 'border-slate-200 bg-white hover:border-slate-300'
+                        ? 'border-2 border-indigo-600 bg-indigo-50/45'
+                        : 'border border-slate-300 bg-white hover:border-slate-400'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2 w-full">
                       <div className="flex items-center gap-2.5">
                         <Building
                           className={`w-4 h-4 shrink-0 ${
-                            metodoPago === 'TRANSFER' ? 'text-indigo-600' : 'text-slate-500'
+                            metodoPago === 'TRANSFER' ? 'text-indigo-700' : 'text-slate-800'
                           }`}
                         />
                         <div>
-                          <span className="font-bold text-slate-900 text-sm block leading-tight">
+                          <span className="font-extrabold text-slate-950 text-sm block leading-tight">
                             Transferencia bancaria
                           </span>
-                          <span className="text-xs font-medium text-slate-500">
+                          <span className="text-xs font-bold text-indigo-700">
                             Bancoagrícola o BAC Credomatic
                           </span>
                         </div>
@@ -1641,7 +1637,7 @@ export default function CheckoutPage() {
                         className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${
                           metodoPago === 'TRANSFER'
                             ? 'border-indigo-600 bg-indigo-600'
-                            : 'border-slate-300 bg-white'
+                            : 'border-slate-400 bg-white'
                         }`}
                       >
                         {metodoPago === 'TRANSFER' && (
@@ -1649,22 +1645,22 @@ export default function CheckoutPage() {
                         )}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-600 leading-relaxed">
-                      Envía tu comprobante al <strong className="font-semibold text-slate-800">6043-7496</strong> o súbelo al confirmar tu orden.
+                    <p className="text-xs font-medium text-slate-800 leading-relaxed">
+                      Envía tu comprobante al <strong className="font-bold text-slate-950">6043-7496</strong> o súbelo al confirmar tu orden.
                     </p>
                   </button>
                 </div>
 
                 {metodoPago === 'CARD' ? (
-                  <div className="flex items-start gap-2.5 pt-3 border-t border-slate-100 text-xs text-slate-600 leading-relaxed">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-2.5 pt-3 border-t border-slate-200 text-xs text-slate-800 font-medium leading-relaxed">
+                    <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
                     <p>
-                      Serás redirigido a la pasarela oficial de <strong className="font-semibold text-slate-800">Wompi</strong> (propiedad de <strong className="font-semibold text-slate-800">Bancoagrícola</strong>). Aromaniak no almacena ni tiene acceso a los datos de tu tarjeta.
+                      Serás redirigido a la pasarela oficial de <strong className="font-bold text-slate-950">Wompi</strong> (propiedad de <strong className="font-bold text-slate-950">Bancoagrícola</strong>). Aromaniak no almacena ni tiene acceso a los datos de tu tarjeta.
                     </p>
                   </div>
                 ) : (
-                  <div className="pt-3 border-t border-slate-200/80 space-y-3">
-                    <p className="text-xs text-slate-600 leading-relaxed">
+                  <div className="pt-3 border-t border-slate-200 space-y-3">
+                    <p className="text-xs text-slate-800 font-medium leading-relaxed">
                       Puedes transferir a cualquiera de nuestras cuentas corrientes oficiales. Al confirmar el pedido podrás adjuntar la captura o enviarla por WhatsApp.
                     </p>
                     <BankAccountsCardsList />
@@ -1674,17 +1670,17 @@ export default function CheckoutPage() {
             </section>
 
             {/* SECCIÓN 3: COMPROBANTE FISCAL */}
-            <section className="bg-white rounded-2xl border border-slate-200/95 shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden">
-              <div className="px-5 sm:px-6 py-4 bg-slate-50/70 border-b border-slate-200/80 flex items-center justify-between gap-2">
+            <section className="bg-white rounded-2xl border border-slate-300 shadow-xs overflow-hidden">
+              <div className="px-5 sm:px-6 py-4 bg-slate-100/80 border-b border-slate-300/80 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
-                  <span className="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                  <span className="w-6 h-6 rounded-full bg-slate-950 text-white flex items-center justify-center font-extrabold text-xs shrink-0">
                     3
                   </span>
-                  <h2 className="font-bold text-sm sm:text-base text-slate-900">
+                  <h2 className="font-extrabold text-sm sm:text-base text-slate-950">
                     Tipo de comprobante
                   </h2>
                 </div>
-                <span className="text-[11px] font-semibold text-slate-500">
+                <span className="text-xs font-bold text-slate-800">
                   Factura electrónica DTE
                 </span>
               </div>
@@ -1696,23 +1692,23 @@ export default function CheckoutPage() {
                     role="radio"
                     aria-checked={tipoComprobante === '01'}
                     onClick={() => setTipoComprobante('01')}
-                    className={`px-4 py-3 rounded-xl border text-left flex items-center justify-between gap-2 transition-colors cursor-pointer ${
+                    className={`px-4 py-3 rounded-xl text-left flex items-center justify-between gap-2 transition-colors cursor-pointer ${
                       tipoComprobante === '01'
-                        ? 'border-indigo-600 bg-indigo-50/25 ring-1 ring-indigo-600'
-                        : 'border-slate-200 bg-white hover:border-slate-300'
+                        ? 'border-2 border-indigo-600 bg-indigo-50/45'
+                        : 'border border-slate-300 bg-white hover:border-slate-400'
                     }`}
                   >
                     <div>
-                      <span className="font-bold text-slate-900 text-xs sm:text-sm block">
+                      <span className="font-extrabold text-slate-950 text-xs sm:text-sm block">
                         Factura Consumidor Final
                       </span>
-                      <span className="text-[11px] text-slate-500">Persona natural</span>
+                      <span className="text-xs font-medium text-slate-700">Persona natural</span>
                     </div>
                     <span
                       className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
                         tipoComprobante === '01'
                           ? 'border-indigo-600 bg-indigo-600'
-                          : 'border-slate-300 bg-white'
+                          : 'border-slate-400 bg-white'
                       }`}
                     >
                       {tipoComprobante === '01' && (
@@ -1726,23 +1722,23 @@ export default function CheckoutPage() {
                     role="radio"
                     aria-checked={tipoComprobante === '03'}
                     onClick={() => setTipoComprobante('03')}
-                    className={`px-4 py-3 rounded-xl border text-left flex items-center justify-between gap-2 transition-colors cursor-pointer ${
+                    className={`px-4 py-3 rounded-xl text-left flex items-center justify-between gap-2 transition-colors cursor-pointer ${
                       tipoComprobante === '03'
-                        ? 'border-indigo-600 bg-indigo-50/25 ring-1 ring-indigo-600'
-                        : 'border-slate-200 bg-white hover:border-slate-300'
+                        ? 'border-2 border-indigo-600 bg-indigo-50/45'
+                        : 'border border-slate-300 bg-white hover:border-slate-400'
                     }`}
                   >
                     <div>
-                      <span className="font-bold text-slate-900 text-xs sm:text-sm block">
+                      <span className="font-extrabold text-slate-950 text-xs sm:text-sm block">
                         Crédito Fiscal (CCF)
                       </span>
-                      <span className="text-[11px] text-slate-500">Contribuyente inscrito con NRC</span>
+                      <span className="text-xs font-medium text-slate-700">Contribuyente inscrito con NRC</span>
                     </div>
                     <span
                       className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
                         tipoComprobante === '03'
                           ? 'border-indigo-600 bg-indigo-600'
-                          : 'border-slate-300 bg-white'
+                          : 'border-slate-400 bg-white'
                       }`}
                     >
                       {tipoComprobante === '03' && (
@@ -1756,9 +1752,9 @@ export default function CheckoutPage() {
                   <div>
                     <label
                       htmlFor="checkout-dui-opcional"
-                      className="block text-xs font-semibold text-slate-700 mb-1.5"
+                      className="block text-xs font-bold text-slate-900 mb-1.5"
                     >
-                      Número de DUI <span className="font-normal text-slate-400">(opcional)</span>
+                      Número de DUI <span className="font-semibold text-slate-600">(opcional)</span>
                     </label>
                     <input
                       id="checkout-dui-opcional"
@@ -1771,7 +1767,7 @@ export default function CheckoutPage() {
                       placeholder="00000000-0"
                       value={numDoc}
                       onChange={(e) => setNumDoc(e.target.value.slice(0, 75))}
-                      className="checkout-field font-mono"
+                      className="checkout-field font-mono font-semibold"
                     />
                   </div>
                 ) : (
@@ -1779,7 +1775,7 @@ export default function CheckoutPage() {
                     <div className="sm:col-span-2">
                       <label
                         htmlFor="checkout-razon-social"
-                        className="block text-xs font-semibold text-slate-700 mb-1.5"
+                        className="block text-xs font-bold text-slate-900 mb-1.5"
                       >
                         Razón social o nombre según tarjeta de contribuyente{' '}
                         <span className="text-rose-600">*</span>
@@ -1799,10 +1795,10 @@ export default function CheckoutPage() {
                           setRazonSocial(e.target.value.slice(0, 75));
                           clearFieldError('razonSocial');
                         }}
-                        className="checkout-field font-semibold"
+                        className="checkout-field font-bold"
                       />
                       {fieldErrors.razonSocial && (
-                        <p id="error-razon-social" className="mt-1 text-xs font-medium text-rose-600">
+                        <p id="error-razon-social" className="mt-1 text-xs font-bold text-rose-700">
                           {fieldErrors.razonSocial}
                         </p>
                       )}
@@ -1811,7 +1807,7 @@ export default function CheckoutPage() {
                     <div>
                       <label
                         htmlFor="checkout-nrc"
-                        className="block text-xs font-semibold text-slate-700 mb-1.5"
+                        className="block text-xs font-bold text-slate-900 mb-1.5"
                       >
                         NRC <span className="text-rose-600">*</span>
                       </label>
@@ -1832,10 +1828,10 @@ export default function CheckoutPage() {
                           setNrc(e.target.value.slice(0, 25));
                           clearFieldError('nrc');
                         }}
-                        className="checkout-field font-mono"
+                        className="checkout-field font-mono font-semibold"
                       />
                       {fieldErrors.nrc && (
-                        <p id="error-nrc" className="mt-1 text-xs font-medium text-rose-600">
+                        <p id="error-nrc" className="mt-1 text-xs font-bold text-rose-700">
                           {fieldErrors.nrc}
                         </p>
                       )}
@@ -1844,7 +1840,7 @@ export default function CheckoutPage() {
                     <div>
                       <label
                         htmlFor="checkout-num-doc"
-                        className="block text-xs font-semibold text-slate-700 mb-1.5"
+                        className="block text-xs font-bold text-slate-900 mb-1.5"
                       >
                         NIT / DUI de contribuyente <span className="text-rose-600">*</span>
                       </label>
@@ -1865,17 +1861,17 @@ export default function CheckoutPage() {
                           setNumDoc(e.target.value.slice(0, 75));
                           clearFieldError('numDoc');
                         }}
-                        className="checkout-field font-mono"
+                        className="checkout-field font-mono font-semibold"
                       />
                       {fieldErrors.numDoc && (
-                        <p id="error-num-doc" className="mt-1 text-xs font-medium text-rose-600">
+                        <p id="error-num-doc" className="mt-1 text-xs font-bold text-rose-700">
                           {fieldErrors.numDoc}
                         </p>
                       )}
                     </div>
 
                     <div id="checkout-giro-wrapper" className="sm:col-span-2">
-                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      <label className="block text-xs font-bold text-slate-900 mb-1.5">
                         Giro o actividad económica (Catálogo MH CAT-019){' '}
                         <span className="text-rose-600">*</span>
                       </label>
@@ -1890,7 +1886,7 @@ export default function CheckoutPage() {
                         placeholder="Buscar giro por código o actividad (ej. 47722, cosméticos...)"
                       />
                       {fieldErrors.giro && (
-                        <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.giro}</p>
+                        <p className="mt-1 text-xs font-bold text-rose-700">{fieldErrors.giro}</p>
                       )}
                     </div>
 
@@ -1899,7 +1895,7 @@ export default function CheckoutPage() {
                         <div>
                           <label
                             htmlFor="checkout-departamento-fiscal"
-                            className="block text-xs font-semibold text-slate-700 mb-1.5"
+                            className="block text-xs font-bold text-slate-900 mb-1.5"
                           >
                             Departamento fiscal <span className="text-rose-600">*</span>
                           </label>
@@ -1919,21 +1915,21 @@ export default function CheckoutPage() {
                               clearFieldError('departamento');
                               clearFieldError('municipio');
                             }}
-                            className={`checkout-field font-semibold ${
-                              !departamento ? 'text-slate-400 font-normal' : 'text-slate-900'
+                            className={`checkout-field ${
+                              !departamento ? 'text-slate-800 font-semibold' : 'text-slate-950 font-bold'
                             }`}
                           >
                             <option value="" disabled>
                               Selecciona tu departamento
                             </option>
                             {DEPARTAMENTOS_CATALOG.map((dep) => (
-                              <option key={dep.id} value={dep.nombre} className="text-slate-900">
+                              <option key={dep.id} value={dep.nombre} className="text-slate-950 font-semibold">
                                 {dep.nombre}
                               </option>
                             ))}
                           </select>
                           {fieldErrors.departamento && (
-                            <p id="error-depto-fiscal" className="mt-1 text-xs font-medium text-rose-600">
+                            <p id="error-depto-fiscal" className="mt-1 text-xs font-bold text-rose-700">
                               {fieldErrors.departamento}
                             </p>
                           )}
@@ -1942,7 +1938,7 @@ export default function CheckoutPage() {
                         <div>
                           <label
                             htmlFor="checkout-municipio-fiscal"
-                            className="block text-xs font-semibold text-slate-700 mb-1.5"
+                            className="block text-xs font-bold text-slate-900 mb-1.5"
                           >
                             Municipio / Distrito fiscal <span className="text-rose-600">*</span>
                           </label>
@@ -1958,8 +1954,8 @@ export default function CheckoutPage() {
                               setMunicipio(e.target.value);
                               clearFieldError('municipio');
                             }}
-                            className={`checkout-field font-semibold ${
-                              !municipio ? 'text-slate-400 font-normal' : 'text-slate-900'
+                            className={`checkout-field ${
+                              !municipio ? 'text-slate-800 font-semibold' : 'text-slate-950 font-bold'
                             }`}
                           >
                             <option value="" disabled>
@@ -1968,13 +1964,13 @@ export default function CheckoutPage() {
                                 : 'Elige primero tu departamento'}
                             </option>
                             {availableMunicipios.map((m) => (
-                              <option key={m.id} value={m.nombre} className="text-slate-900">
+                              <option key={m.id} value={m.nombre} className="text-slate-950 font-semibold">
                                 {m.nombre}
                               </option>
                             ))}
                           </select>
                           {fieldErrors.municipio && (
-                            <p id="error-muni-fiscal" className="mt-1 text-xs font-medium text-rose-600">
+                            <p id="error-muni-fiscal" className="mt-1 text-xs font-bold text-rose-700">
                               {fieldErrors.municipio}
                             </p>
                           )}
@@ -1985,7 +1981,7 @@ export default function CheckoutPage() {
                     <div className="sm:col-span-2">
                       <label
                         htmlFor="checkout-direccion-fiscal"
-                        className="block text-xs font-semibold text-slate-700 mb-1.5"
+                        className="block text-xs font-bold text-slate-900 mb-1.5"
                       >
                         Dirección fiscal (según tarjeta NRC) <span className="text-rose-600">*</span>
                       </label>
@@ -2005,12 +2001,12 @@ export default function CheckoutPage() {
                           setDireccionFiscal(e.target.value.slice(0, 250));
                           clearFieldError('direccionFiscal');
                         }}
-                        className="checkout-field font-medium"
+                        className="checkout-field font-semibold"
                       />
                       {fieldErrors.direccionFiscal && (
                         <p
                           id="error-direccion-fiscal"
-                          className="mt-1 text-xs font-medium text-rose-600"
+                          className="mt-1 text-xs font-bold text-rose-700"
                         >
                           {fieldErrors.direccionFiscal}
                         </p>
@@ -2024,24 +2020,24 @@ export default function CheckoutPage() {
 
           {/* ================= COLUMNA DERECHA: RESUMEN DEL PEDIDO ================= */}
           <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-4">
-            <aside className="bg-white rounded-2xl border border-slate-200/95 shadow-[0_1px_3px_rgba(15,23,42,0.05)] overflow-hidden">
-              <div className="px-5 sm:px-6 py-4 bg-slate-50/70 border-b border-slate-200/80 flex items-center justify-between">
-                <h2 className="font-bold text-sm sm:text-base text-slate-900">
+            <aside className="bg-white rounded-2xl border border-slate-300 shadow-xs overflow-hidden">
+              <div className="px-5 sm:px-6 py-4 bg-slate-100/80 border-b border-slate-300/80 flex items-center justify-between">
+                <h2 className="font-extrabold text-sm sm:text-base text-slate-950">
                   Resumen del pedido
                 </h2>
-                <span className="text-xs font-semibold text-slate-600 tabular-nums">
+                <span className="text-xs font-extrabold text-indigo-800 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-md tabular-nums">
                   {totalItems} artículo{totalItems === 1 ? '' : 's'}
                 </span>
               </div>
 
               {/* Lista de productos */}
-              <div className="px-5 sm:px-6 py-4 max-h-72 overflow-y-auto divide-y divide-slate-100">
+              <div className="px-5 sm:px-6 py-4 max-h-72 overflow-y-auto divide-y divide-slate-200">
                 {cart.map((it) => (
                   <div
                     key={it.id}
                     className="py-3 first:pt-0 last:pb-0 flex items-start gap-3 text-xs"
                   >
-                    <div className="relative w-11 h-11 rounded-lg overflow-hidden bg-slate-50 border border-slate-200/80 shrink-0 flex items-center justify-center">
+                    <div className="relative w-11 h-11 rounded-lg overflow-hidden bg-slate-50 border border-slate-300 shrink-0 flex items-center justify-center">
                       {it.kitDetails ? (
                         <div className="relative w-full h-full p-0.5 bg-slate-50">
                           <img
@@ -2052,7 +2048,7 @@ export default function CheckoutPage() {
                             onError={(e) => {
                               e.currentTarget.src = '/images/essence_bottle_blank.webp';
                             }}
-                            className="absolute left-0.5 top-0.5 w-6 h-6 rounded object-cover border border-slate-200 z-10"
+                            className="absolute left-0.5 top-0.5 w-6 h-6 rounded object-cover border border-slate-300 z-10"
                           />
                           <img
                             src={
@@ -2083,25 +2079,25 @@ export default function CheckoutPage() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0 space-y-0.5">
-                      <p className="font-bold text-slate-900 truncate">
+                      <p className="font-extrabold text-slate-950 truncate">
                         {it.product.officialName || it.product.name}
                       </p>
                       {it.product.category === 'Esencias para Perfume' && (
                         <p
-                          className="text-[11px] text-slate-500 truncate"
+                          className="text-xs text-slate-700 font-medium truncate"
                           title={`Inspirado en ${getInspiracionPerfumeName(it.product)}`}
                         >
                           Inspirado en{' '}
-                          <strong className="font-semibold text-slate-700">
+                          <strong className="font-bold text-slate-950">
                             {getInspiracionPerfumeName(it.product)}
                           </strong>
                         </p>
                       )}
-                      <p className="text-[11px] text-slate-500 font-medium">
+                      <p className="text-xs text-indigo-700 font-bold">
                         {it.quantity} × {it.presentationName}
                       </p>
                     </div>
-                    <span className="font-bold text-slate-900 tabular-nums shrink-0">
+                    <span className="font-extrabold text-slate-950 tabular-nums shrink-0">
                       ${it.totalPrice.toFixed(2)}
                     </span>
                   </div>
@@ -2109,15 +2105,15 @@ export default function CheckoutPage() {
               </div>
 
               {/* Desglose y botón principal */}
-              <div className="px-5 sm:px-6 py-5 bg-slate-50/60 border-t border-slate-200/80 space-y-4">
+              <div className="px-5 sm:px-6 py-5 bg-slate-50 border-t border-slate-300/80 space-y-4">
                 <div className="space-y-2 text-xs">
-                  <div className="flex justify-between text-slate-600">
+                  <div className="flex justify-between text-slate-800 font-semibold">
                     <span>Subtotal productos</span>
                     <span
                       className={`tabular-nums ${
                         discountTotal > 0
-                          ? 'font-semibold text-slate-400 line-through'
-                          : 'font-semibold text-slate-800'
+                          ? 'font-semibold text-slate-500 line-through'
+                          : 'font-extrabold text-slate-950'
                       }`}
                     >
                       ${rawSubtotal.toFixed(2)}
@@ -2171,7 +2167,7 @@ export default function CheckoutPage() {
                       return (
                         <>
                           {halloweenPromoDiscount > 0 && (
-                            <div className="flex items-center justify-between text-[#ea580c] font-semibold">
+                            <div className="flex items-center justify-between text-[#c2410c] font-bold">
                               <span>Descuento Promo Halloween (Precio fijo)</span>
                               <span className="tabular-nums">
                                 -${halloweenPromoDiscount.toFixed(2)}
@@ -2179,7 +2175,7 @@ export default function CheckoutPage() {
                             </div>
                           )}
                           {vipDiscount > 0 && (
-                            <div className="flex items-center justify-between text-indigo-700 font-semibold">
+                            <div className="flex items-center justify-between text-indigo-700 font-bold">
                               <span>Descuento VIP ({discountLabel})</span>
                               <span className="tabular-nums">-${vipDiscount.toFixed(2)}</span>
                             </div>
@@ -2189,13 +2185,13 @@ export default function CheckoutPage() {
                     })()}
 
                   {discountTotal > 0 && (
-                    <div className="flex items-center justify-between text-slate-800 font-semibold">
+                    <div className="flex items-center justify-between text-slate-950 font-bold">
                       <span>Subtotal con descuento</span>
                       <span className="tabular-nums">${subtotal.toFixed(2)}</span>
                     </div>
                   )}
 
-                  <div className="flex justify-between text-slate-600">
+                  <div className="flex justify-between text-slate-800 font-semibold">
                     <span>
                       {metodoEntrega === 'RETIRO'
                         ? 'Retiro en sucursal (San Salvador)'
@@ -2204,17 +2200,17 @@ export default function CheckoutPage() {
                         : 'Envío a domicilio'}
                     </span>
                     <span
-                      className={`font-semibold tabular-nums ${
-                        metodoEntrega === 'RETIRO' ? 'text-emerald-700' : 'text-slate-800'
+                      className={`font-extrabold tabular-nums ${
+                        metodoEntrega === 'RETIRO' ? 'text-emerald-700' : 'text-slate-950'
                       }`}
                     >
                       {metodoEntrega === 'RETIRO' ? 'Gratis' : `$${shippingCost.toFixed(2)}`}
                     </span>
                   </div>
 
-                  <div className="flex items-baseline justify-between pt-3 border-t border-slate-200/90">
-                    <span className="text-sm font-bold text-slate-900">Total a pagar</span>
-                    <span className="text-xl font-extrabold text-slate-900 tabular-nums">
+                  <div className="flex items-baseline justify-between pt-3 border-t border-slate-300">
+                    <span className="text-sm font-extrabold text-slate-950">Total a pagar</span>
+                    <span className="text-xl font-black text-indigo-700 tabular-nums">
                       ${totalConEnvio.toFixed(2)}
                     </span>
                   </div>
@@ -2243,9 +2239,9 @@ export default function CheckoutPage() {
                               'Preferencial'
                             })`;
                       return (
-                        <div className="p-2.5 rounded-lg bg-emerald-50/80 border border-emerald-200/80 flex items-center justify-between text-xs text-emerald-900">
-                          <span className="font-semibold">{savingsLabel}</span>
-                          <span className="font-bold text-emerald-700 tabular-nums">
+                        <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-300 flex items-center justify-between text-xs text-emerald-950">
+                          <span className="font-bold">{savingsLabel}</span>
+                          <span className="font-extrabold text-emerald-800 tabular-nums">
                             ${discountTotal.toFixed(2)}
                           </span>
                         </div>
@@ -2256,7 +2252,7 @@ export default function CheckoutPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center justify-center gap-2">
@@ -2283,7 +2279,7 @@ export default function CheckoutPage() {
                   )}
                 </button>
 
-                <p className="text-[11px] text-slate-500 text-center leading-snug">
+                <p className="text-xs font-semibold text-slate-700 text-center leading-snug">
                   {metodoPago === 'CARD'
                     ? 'Conexión cifrada 3D Secure procesada por Wompi • Bancoagrícola'
                     : 'Tu pedido quedará reservado al confirmar para que envíes tu comprobante'}
@@ -2291,12 +2287,12 @@ export default function CheckoutPage() {
               </div>
             </aside>
 
-            {/* Notas informativas de producto y uso responsable en bloque editorial sobrio */}
-            <div className="bg-white/90 rounded-2xl border border-slate-200/85 p-4 sm:p-5 divide-y divide-slate-200/75 text-xs text-slate-600">
+            {/* Notas informativas de producto y uso responsable con tipografía nítida y alto contraste */}
+            <div className="bg-white rounded-2xl border border-slate-300 p-4 sm:p-5 divide-y divide-slate-200 text-xs text-slate-800">
               <div className="pb-3 flex items-start gap-2.5">
-                <Droplets className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" aria-hidden="true" />
-                <p className="leading-relaxed">
-                  <strong className="font-semibold text-slate-800">
+                <Droplets className="w-4 h-4 text-indigo-700 shrink-0 mt-0.5" aria-hidden="true" />
+                <p className="font-medium leading-relaxed">
+                  <strong className="font-extrabold text-slate-950">
                     Esencias 100% puras sin macerar:
                   </strong>{' '}
                   Nosotros no maceramos ningún perfume; nuestras esencias se entregan puras listas para combinarse con alcohol especial de perfumería.
@@ -2304,13 +2300,13 @@ export default function CheckoutPage() {
               </div>
 
               <div className="pt-3 space-y-1.5">
-                <p className="font-semibold text-slate-800 flex items-center gap-1.5">
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" aria-hidden="true" />
+                <p className="font-extrabold text-slate-950 flex items-center gap-1.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" aria-hidden="true" />
                   <span>Uso responsable de materias primas</span>
                 </p>
-                <ul className="space-y-1 pl-4 list-disc text-[11px] text-slate-500 leading-relaxed">
+                <ul className="space-y-1 pl-4 list-disc text-xs font-medium text-slate-800 leading-relaxed">
                   <li>
-                    <strong className="text-slate-700">No aplicar puras sobre la piel:</strong>{' '}
+                    <strong className="font-bold text-slate-950">No aplicar puras sobre la piel:</strong>{' '}
                     deben diluirse previamente en alcohol de perfumería (máximo recomendado para 100 ml: 1.5 oz de esencia).
                   </li>
                   <li>

@@ -47,7 +47,7 @@ export function BankAccountsCardsList({ compact = false }: BankAccountsCardsList
           } shadow-xs`}
         >
           {/* Encabezado del Banco con Logo Oficial sin duplicar texto */}
-          <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+          <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-200">
             <div className="flex items-center gap-2.5 min-w-0">
               <img
                 src={acc.logoUrl}
@@ -60,19 +60,19 @@ export function BankAccountsCardsList({ compact = false }: BankAccountsCardsList
               />
             </div>
             <div className="text-right shrink-0">
-              <span className="text-[10.5px] font-extrabold text-slate-800 block leading-tight">
+              <span className="text-[11px] font-extrabold text-slate-900 block leading-tight">
                 {acc.accountType}
               </span>
-              <span className="text-[9.5px] font-bold text-slate-500 block">
+              <span className="text-[10.5px] font-semibold text-slate-700 block">
                 {acc.personType}
               </span>
             </div>
           </div>
 
           {/* Número de Cuenta Destacado con Botón Copiar */}
-          <div className="bg-slate-50 rounded-xl px-3 py-2 border border-slate-200/80 flex items-center justify-between gap-2">
+          <div className="bg-slate-50 rounded-xl px-3 py-2 border border-slate-300 flex items-center justify-between gap-2">
             <div>
-              <span className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400 block">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700 block">
                 Número de cuenta
               </span>
               <span className={`font-mono font-black ${compact ? 'text-sm' : 'text-base'} ${acc.accentColor} tracking-wide`}>
@@ -82,7 +82,7 @@ export function BankAccountsCardsList({ compact = false }: BankAccountsCardsList
             <button
               type="button"
               onClick={() => handleCopy(acc.accountNumber, `${acc.id}-num`)}
-              className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 text-[10.5px] font-extrabold inline-flex items-center gap-1 transition-colors cursor-pointer shrink-0 shadow-2xs"
+              className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-indigo-50 text-slate-900 hover:text-indigo-700 border border-slate-300 text-[11px] font-extrabold inline-flex items-center gap-1 transition-colors cursor-pointer shrink-0 shadow-2xs"
             >
               {copiedKey === `${acc.id}-num` ? (
                 <>
@@ -99,13 +99,13 @@ export function BankAccountsCardsList({ compact = false }: BankAccountsCardsList
           </div>
 
           {/* Datos del Titular y Correo */}
-          <div className="space-y-1.5 text-[11px] pt-0.5">
+          <div className="space-y-1.5 text-xs pt-0.5">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-slate-500 font-medium shrink-0">Titular:</span>
+              <span className="text-slate-700 font-semibold shrink-0">Titular:</span>
               <button
                 type="button"
                 onClick={() => handleCopy(acc.holderName, `${acc.id}-holder`)}
-                className="font-extrabold text-slate-800 hover:text-indigo-700 text-right inline-flex items-center gap-1.5 px-2 py-0.5 -mr-1 rounded-md hover:bg-indigo-50/80 transition-colors cursor-pointer"
+                className="font-extrabold text-slate-900 hover:text-indigo-700 text-right inline-flex items-center gap-1.5 px-2 py-0.5 -mr-1 rounded-md hover:bg-indigo-50/80 transition-colors cursor-pointer"
                 title="Copiar nombre del titular"
               >
                 <span>{acc.holderName}</span>
@@ -115,23 +115,23 @@ export function BankAccountsCardsList({ compact = false }: BankAccountsCardsList
                     Copiado
                   </span>
                 ) : (
-                  <Copy className="w-3 h-3 text-slate-400 hover:text-indigo-600 shrink-0" />
+                  <Copy className="w-3 h-3 text-slate-600 hover:text-indigo-600 shrink-0" />
                 )}
               </button>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-slate-500 font-medium shrink-0">Correo:</span>
+              <span className="text-slate-700 font-semibold shrink-0">Correo:</span>
               <button
                 type="button"
                 onClick={() => handleCopy(acc.email, `${acc.id}-email`)}
-                className="font-mono font-bold text-indigo-600 hover:text-indigo-800 truncate inline-flex items-center gap-1 cursor-pointer"
+                className="font-mono font-bold text-indigo-700 hover:text-indigo-900 truncate inline-flex items-center gap-1 cursor-pointer"
                 title="Copiar correo"
               >
                 <span className="truncate">{acc.email}</span>
                 {copiedKey === `${acc.id}-email` ? (
                   <Check className="w-3 h-3 text-emerald-600 shrink-0" />
                 ) : (
-                  <Copy className="w-2.5 h-2.5 opacity-60 shrink-0" />
+                  <Copy className="w-3 h-3 text-indigo-600 shrink-0" />
                 )}
               </button>
             </div>
