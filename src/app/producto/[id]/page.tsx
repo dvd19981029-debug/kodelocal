@@ -797,19 +797,6 @@ export default function ProductDetailPage() {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
         />
 
-        {/* Breadcrumb sutil */}
-        <nav aria-label="Ruta de navegación" className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
-          <Link href="/" className="hover:text-slate-950 transition-colors">
-            Inicio
-          </Link>
-          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-          <Link href="/?categoria=Esencias" className="hover:text-slate-950 transition-colors">
-            Esencias
-          </Link>
-          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-          <span className="text-slate-950 font-bold truncate">{displayName}</span>
-        </nav>
-
         {/* ================= HERO PRODUCTO: FOTO + BUY BOX ABOVE THE FOLD ================= */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
           {/* Izquierda: Vitrina limpia y sticky */}
@@ -1149,83 +1136,78 @@ export default function ProductDetailPage() {
           </div>
         </section>
 
-        {/* ================= PERFIL OLFATIVO: ACORDES Y PIRÁMIDE DE NOTAS ================= */}
+        {/* ================= PERFIL OLFATIVO: PIRÁMIDE, ACORDES Y DESCRIPCIÓN ================= */}
         {profile && (
-          <section className="clay-card p-5 sm:p-7 rounded-3xl bg-white border border-slate-200/80 shadow-xs">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 lg:gap-10 items-start">
-              {/* Columna Izquierda: Descripción, ocasión y acordes principales */}
-              <div className="lg:col-span-5 space-y-5">
-                <div className="space-y-2">
-                  <h2 className="text-sm sm:text-base font-black text-slate-950">
-                    Perfil olfativo y acordes
-                  </h2>
-                  <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
-                    {getFragranceDescription(product, profile)}
-                  </p>
-                </div>
+          <section className="clay-card p-5 sm:p-7 rounded-3xl bg-white border border-slate-200/80 shadow-xs space-y-7">
+            {/* 1. Pirámide olfativa con fotos reales de notas */}
+            <FragranceNotesVisual profile={profile} showAccords={false} />
 
-                {(profile.season || profile.occasion) && (
-                  <dl className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100 text-xs">
-                    {profile.season && (
-                      <div>
-                        <dt className="text-[11px] font-bold text-slate-500">Estación ideal</dt>
-                        <dd className="font-extrabold text-slate-900 mt-0.5">{profile.season}</dd>
-                      </div>
-                    )}
-                    {profile.occasion && (
-                      <div>
-                        <dt className="text-[11px] font-bold text-slate-500">Ocasión</dt>
-                        <dd className="font-extrabold text-slate-900 mt-0.5">{profile.occasion}</dd>
-                      </div>
-                    )}
-                  </dl>
-                )}
+            {/* 2. Acordes principales abajo de la pirámide */}
+            {profile.accords && profile.accords.length > 0 && (
+              <div className="space-y-3 pt-6 border-t border-slate-100">
+                <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                  Acordes principales
+                </h3>
 
-                {profile.accords && profile.accords.length > 0 && (
-                  <div className="space-y-2.5 pt-2 border-t border-slate-100">
-                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                      Acordes principales
-                    </h3>
-
-                    {accordBars.length > 0 ? (
-                      <div className="flex flex-col gap-1.5 w-full">
-                        {accordBars.map((bar, idx) => (
-                          <div
-                            key={idx}
-                            style={{
-                              width: `${bar.percentage}%`,
-                              backgroundColor: bar.bg,
-                              color: bar.text,
-                              minWidth: '110px'
-                            }}
-                            className="min-h-[30px] py-1 px-3 rounded-r-xl rounded-l-md flex items-center justify-start transition-all duration-200 hover:brightness-105"
-                          >
-                            <span className="text-[11.5px] font-extrabold tracking-wide lowercase truncate">
-                              {bar.name}
-                            </span>
-                          </div>
-                        ))}
+                {accordBars.length > 0 ? (
+                  <div className="flex flex-col gap-1.5 w-full max-w-lg">
+                    {accordBars.map((bar, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          width: `${bar.percentage}%`,
+                          backgroundColor: bar.bg,
+                          color: bar.text,
+                          minWidth: '110px'
+                        }}
+                        className="min-h-[30px] py-1 px-3 rounded-r-xl rounded-l-md flex items-center justify-start transition-all duration-200 hover:brightness-105"
+                      >
+                        <span className="text-[11.5px] font-extrabold tracking-wide lowercase truncate">
+                          {bar.name}
+                        </span>
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {profile.accords.map((accord, idx) => (
-                          <span
-                            key={idx}
-                            className="bg-slate-100 text-slate-800 text-xs font-bold px-3 py-1.5 rounded-xl"
-                          >
-                            {accord}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {profile.accords.map((accord, idx) => (
+                      <span
+                        key={idx}
+                        className="bg-slate-100 text-slate-800 text-xs font-bold px-3 py-1.5 rounded-xl"
+                      >
+                        {accord}
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>
+            )}
 
-              {/* Columna Derecha: Pirámide olfativa con fotos reales de notas */}
-              <div className="lg:col-span-7 lg:pl-6 lg:border-l lg:border-slate-100">
-                <FragranceNotesVisual profile={profile} showAccords={false} />
-              </div>
+            {/* 3. Descripción hasta abajo después de las notas y acordes */}
+            <div className="space-y-3 pt-6 border-t border-slate-100">
+              <h2 className="text-sm sm:text-base font-black text-slate-950">
+                Detalles de la fragancia
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+                {getFragranceDescription(product, profile)}
+              </p>
+
+              {(profile.season || profile.occasion) && (
+                <dl className="grid grid-cols-2 sm:flex sm:flex-wrap gap-4 sm:gap-8 pt-2 text-xs">
+                  {profile.season && (
+                    <div>
+                      <dt className="text-[11px] font-bold text-slate-500">Estación ideal</dt>
+                      <dd className="font-extrabold text-slate-900 mt-0.5">{profile.season}</dd>
+                    </div>
+                  )}
+                  {profile.occasion && (
+                    <div>
+                      <dt className="text-[11px] font-bold text-slate-500">Ocasión</dt>
+                      <dd className="font-extrabold text-slate-900 mt-0.5">{profile.occasion}</dd>
+                    </div>
+                  )}
+                </dl>
+              )}
             </div>
           </section>
         )}
