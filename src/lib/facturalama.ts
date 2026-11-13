@@ -260,7 +260,7 @@ export class FacturaLlamaClient {
       };
 
       const rawDoc = (cliente?.numDocumento || '').replace(/\D/g, '');
-      if (rawDoc) {
+      if (rawDoc && !/^0+$/.test(rawDoc)) {
         if (rawDoc.length === 9) {
           recipient.identificationDocument = {
             type: 'DUI',
