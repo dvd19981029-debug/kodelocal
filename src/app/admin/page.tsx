@@ -689,7 +689,7 @@ export default function AdminPage() {
           price: np, 
           cost: nc,
           priceHalfOunce: !isNaN(npHalf) ? npHalf : Number((np / 2).toFixed(2)),
-          finishedPerfumePrice: !isNaN(npFinished) ? npFinished : 15.00,
+          finishedPerfumePrice: !isNaN(npFinished) ? npFinished : 10.00,
         };
       }
       return p;
@@ -712,7 +712,7 @@ export default function AdminPage() {
           price: np,
           cost: nc,
           priceHalfOunce: !isNaN(npHalf) ? npHalf : Number((np / 2).toFixed(2)),
-          finishedPerfumePrice: !isNaN(npFinished) ? npFinished : 15.00,
+          finishedPerfumePrice: !isNaN(npFinished) ? npFinished : 10.00,
         }),
       });
 
@@ -773,7 +773,7 @@ export default function AdminPage() {
       unit: 'Onza',
       price: 3.25,
       priceHalfOunce: 1.65,
-      finishedPerfumePrice: 15.00,
+      finishedPerfumePrice: 10.00,
       cost: 1.95,
       stock: 20,
       minStock: 5,

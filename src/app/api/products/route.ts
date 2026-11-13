@@ -236,6 +236,15 @@ export async function GET(request: Request) {
     const formatted = dbProducts.map((p) => {
       const catName = p.category?.name || 'Esencias para Perfume';
       const isEssence = catName === 'Esencias para Perfume';
+      let categoryBaseKitPrice = 10.00;
+      if (isEssence && p.category?.description) {
+        try {
+          const parsedKit = JSON.parse(p.category.description);
+          if (typeof parsedKit?.basePrice === 'number' && !isNaN(parsedKit.basePrice) && parsedKit.basePrice > 0) {
+            categoryBaseKitPrice = parsedKit.basePrice;
+          }
+        } catch {}
+      }
       const genderVal = p.gender || 'Unisex';
       const rawName = p.name || '';
       const rawOfficial = (p as any).officialName || '';
@@ -254,7 +263,7 @@ export async function GET(request: Request) {
           ? (p.priceHalfOunce != null ? Number(p.priceHalfOunce) : Number((Number(p.price) / 2).toFixed(2)))
           : (p.priceHalfOunce != null ? Number(p.priceHalfOunce) : undefined),
         finishedPerfumePrice: isEssence
-          ? (p.finishedPerfumePrice != null ? Number(p.finishedPerfumePrice) : 15.00)
+          ? (p.finishedPerfumePrice != null ? Number(p.finishedPerfumePrice) : categoryBaseKitPrice)
           : (p.finishedPerfumePrice != null ? Number(p.finishedPerfumePrice) : undefined),
         ...(isStaff ? { cost: Number(p.cost || 0), costPerKg: Number((p as any).costPerKg || 0) } : {}),
         stock: p.stock,
@@ -762,6 +771,15 @@ export async function POST(request: Request) {
     const categoryId = catRec ? catRec.id : null;
     const catName = catRec?.name || 'Esencias para Perfume';
     const isEssence = catName === 'Esencias para Perfume';
+    let categoryBaseKitPrice = 10.00;
+    if (isEssence && catRec?.description) {
+      try {
+        const parsedKit = JSON.parse(catRec.description);
+        if (typeof parsedKit?.basePrice === 'number' && !isNaN(parsedKit.basePrice) && parsedKit.basePrice > 0) {
+          categoryBaseKitPrice = parsedKit.basePrice;
+        }
+      } catch {}
+    }
     const resolvedUnit = typeof unit === 'string' && unit.trim()
       ? unit.trim()
       : (isEssence ? 'Onza' : 'Unidad');
@@ -787,7 +805,9 @@ export async function POST(request: Request) {
         price: typeof price === 'number' ? price : 0,
         cost: typeof cost === 'number' ? cost : 0,
         priceHalfOunce: isEssence && typeof priceHalfOunce === 'number' ? priceHalfOunce : null,
-        finishedPerfumePrice: isEssence && typeof finishedPerfumePrice === 'number' ? finishedPerfumePrice : null,
+        finishedPerfumePrice: isEssence
+          ? (typeof finishedPerfumePrice === 'number' ? finishedPerfumePrice : categoryBaseKitPrice)
+          : null,
         categoryId: categoryId,
         isAvailableOnline: typeof isAvailableOnline === 'boolean' ? isAvailableOnline : true,
         stock: typeof stock === 'number' ? Math.round(stock) : 0,

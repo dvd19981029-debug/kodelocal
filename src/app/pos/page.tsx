@@ -1766,7 +1766,7 @@ export default function PosPage() {
       unit: isEssenceDefault ? 'Onza' : 'Unidad',
       price: isEssenceDefault ? 3.75 : 1.00,
       priceHalfOunce: isEssenceDefault ? 1.90 : undefined,
-      finishedPerfumePrice: isEssenceDefault ? 15.00 : undefined,
+      finishedPerfumePrice: isEssenceDefault ? 10.00 : undefined,
       cost: 0,
       stock: 10,
       stockHalf: 0,
