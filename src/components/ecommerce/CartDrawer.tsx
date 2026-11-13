@@ -446,6 +446,9 @@ export default function CartDrawer() {
               <Link
                 href="/checkout"
                 onClick={() => {
+                  if (typeof document !== 'undefined') {
+                    document.body.style.overflow = '';
+                  }
                   setIsCartOpen(false);
                 }}
                 className="clay-btn clay-btn-primary w-full py-3 text-xs sm:text-sm font-black rounded-xl flex items-center justify-center gap-2 !shadow-[0_4px_16px_rgba(99,102,241,0.4)] tracking-wide cursor-pointer active:scale-95"

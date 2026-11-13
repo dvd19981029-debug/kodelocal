@@ -23,7 +23,7 @@ export default function EcommerceFooter() {
   };
 
   return (
-    <footer className="w-full bg-[#f1f4f9] border-t border-white/80 pt-12 pb-8 px-4 sm:px-8 mt-16 text-slate-600 text-xs">
+    <footer className="w-full bg-[#f1f4f9] border-t border-white/80 pt-12 pb-8 px-4 sm:px-8 mt-16 text-slate-600 text-xs [overflow-anchor:none]">
       <div className="max-w-7xl mx-auto space-y-10">
         
         {/* Grilla Principal */}

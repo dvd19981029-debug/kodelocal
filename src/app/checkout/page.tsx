@@ -66,11 +66,29 @@ const FIELD_DOM_IDS: Record<FieldKey, string> = {
   direccionFiscal: 'checkout-direccion-fiscal',
 };
 
+const useIsomorphicLayoutEffect =
+  typeof window !== 'undefined' ? React.useLayoutEffect : React.useEffect;
+
 export default function CheckoutPage() {
   const { cart, subtotal, rawSubtotal, discountTotal, totalItems, clearCart, syncCartWithLiveCatalog } = useEcommerceCart();
   const { customer, isLoggedIn, openAuthModal, openDrawer, updateCustomerProfile } = useCustomerAuth();
 
   const formRef = useRef<HTMLFormElement>(null);
+  const confirmationTopRef = useRef<HTMLDivElement>(null);
+  const confirmationHeadingRef = useRef<HTMLHeadingElement>(null);
+
+  const scrollCheckoutToTop = React.useCallback((anchorEl?: HTMLElement | null) => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+    if (anchorEl) {
+      anchorEl.scrollIntoView({ block: 'start', inline: 'nearest' });
+    }
+    window.scrollTo(0, 0);
+    if (document.scrollingElement) {
+      document.scrollingElement.scrollTop = 0;
+    }
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, []);
 
   // Sincronizar inventario en vivo al entrar al checkout para depurar cualquier producto agotado
   React.useEffect(() => {
@@ -247,12 +265,44 @@ export default function CheckoutPage() {
     };
   }, []);
 
-  // Desplazar al inicio cuando se complete el pedido
-  React.useEffect(() => {
-    if (completedOrder && typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    }
-  }, [completedOrder]);
+  // Asegurar que al entrar al checkout la vista inicie arriba
+  useIsomorphicLayoutEffect(() => {
+    scrollCheckoutToTop();
+  }, [scrollCheckoutToTop]);
+
+  // Desplazar arriba (donde están el encabezado de confirmación y las cuentas bancarias) al completar el pedido
+  useIsomorphicLayoutEffect(() => {
+    if (!completedOrder || typeof window === 'undefined' || typeof document === 'undefined') return;
+
+    document.documentElement.style.overflowAnchor = 'none';
+    document.body.style.overflowAnchor = 'none';
+
+    scrollCheckoutToTop(confirmationTopRef.current);
+    confirmationHeadingRef.current?.focus({ preventScroll: true });
+
+    const rafId = window.requestAnimationFrame(() => {
+      scrollCheckoutToTop(confirmationTopRef.current);
+      confirmationHeadingRef.current?.focus({ preventScroll: true });
+    });
+
+    const t1 = window.setTimeout(() => {
+      scrollCheckoutToTop(confirmationTopRef.current);
+    }, 80);
+
+    const t2 = window.setTimeout(() => {
+      scrollCheckoutToTop(confirmationTopRef.current);
+      document.documentElement.style.overflowAnchor = '';
+      document.body.style.overflowAnchor = '';
+    }, 240);
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      document.documentElement.style.overflowAnchor = '';
+      document.body.style.overflowAnchor = '';
+    };
+  }, [completedOrder, scrollCheckoutToTop]);
 
   // Municipios disponibles únicamente cuando el usuario ya eligió un departamento
   const availableMunicipios = React.useMemo(
@@ -726,10 +776,19 @@ export default function CheckoutPage() {
         items: metaItems,
       });
 
+      if (typeof document !== 'undefined') {
+        document.documentElement.style.overflowAnchor = 'none';
+        document.body.style.overflowAnchor = 'none';
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+      }
+
       clearCart();
       setCompletedOrder(newOrder);
       setIsSubmitting(false);
       setWompiStatusText(null);
+      scrollCheckoutToTop();
     } catch (error: any) {
       if (countdownTimer) clearInterval(countdownTimer);
       setWompiStatusText(null);
@@ -747,9 +806,7 @@ export default function CheckoutPage() {
           errMsg || 'Hubo un inconveniente al procesar tu pedido. Por favor verifica tus datos o escríbenos.'
         );
       }
-      if (typeof window !== 'undefined') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
+      scrollCheckoutToTop();
     }
   };
 
@@ -772,7 +829,10 @@ export default function CheckoutPage() {
     );
 
     return (
-      <div className="max-w-3xl mx-auto py-4 sm:py-6 space-y-5 animate-in fade-in duration-300">
+      <div
+        ref={confirmationTopRef}
+        className="max-w-3xl mx-auto py-4 sm:py-6 space-y-5 animate-in fade-in duration-300 [overflow-anchor:none]"
+      >
         <div className="flex items-center justify-between">
           <Link
             href="/"
@@ -810,7 +870,11 @@ export default function CheckoutPage() {
               </span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight">
+            <h1
+              ref={confirmationHeadingRef}
+              tabIndex={-1}
+              className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight outline-none"
+            >
               {isTransfer ? '¡Pedido registrado!' : '¡Pedido recibido con éxito!'}
             </h1>
             <p className="text-xs sm:text-sm text-slate-800 max-w-lg mx-auto leading-relaxed">
