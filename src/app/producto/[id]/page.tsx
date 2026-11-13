@@ -777,6 +777,519 @@ export default function ProductDetailPage() {
     );
   }
 
+  if (isEssence) {
+    const unitPrice = activeOption?.price ?? product.price;
+    const lineTotal = unitPrice * quantity;
+    const showStockBadge = hasHydrated || !isLoading;
+    const genderLabel = (() => {
+      const g = (product.gender || '').toLowerCase();
+      if (g.includes('caballero') || g.includes('hombre')) return 'Caballero';
+      if (g.includes('dama') || g.includes('mujer')) return 'Dama';
+      if (g) return 'Unisex';
+      return null;
+    })();
+    const canOrderReadyPerfume = Boolean(discreteStock && discreteStock.available1oz > 0);
+
+    return (
+      <div className="space-y-8 sm:space-y-10 pb-20 pt-1">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+        />
+
+        {/* Breadcrumb sutil */}
+        <nav aria-label="Ruta de navegación" className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
+          <Link href="/" className="hover:text-slate-950 transition-colors">
+            Inicio
+          </Link>
+          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+          <Link href="/?categoria=Esencias" className="hover:text-slate-950 transition-colors">
+            Esencias
+          </Link>
+          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+          <span className="text-slate-950 font-bold truncate">{displayName}</span>
+        </nav>
+
+        {/* ================= HERO PRODUCTO: FOTO + BUY BOX ABOVE THE FOLD ================= */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
+          {/* Izquierda: Vitrina limpia y sticky */}
+          <div className="lg:col-span-6 lg:sticky lg:top-24">
+            <div className="clay-card p-3 sm:p-5 bg-white rounded-3xl border border-slate-200/80 shadow-sm group">
+              <div className="relative aspect-square w-full @container rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center">
+                <img
+                  src={productImage}
+                  alt={displayName}
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
+                  onError={(e) => {
+                    e.currentTarget.src = '/images/essence_bottle_blank.webp';
+                  }}
+                  className={`w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.03] ${
+                    isOutOfStock ? 'grayscale-[35%]' : ''
+                  }`}
+                />
+
+                {/* Etiqueta dinámica del frasco de esencia */}
+                {productImage === '/images/essence_bottle_blank.webp' && (() => {
+                  const { lines, fontSize } = getBottleLabelConfig(displayName);
+                  return (
+                    <div className="absolute inset-0 pointer-events-none transition-transform duration-500 group-hover:scale-[1.03] origin-center">
+                      <div className="absolute flex flex-col items-center justify-center w-full -translate-y-1/2" style={{ top: '65%', left: '0%' }}>
+                        <div className="flex flex-col items-center justify-center w-[35%] max-w-[35%] text-center px-0.5">
+                          <div
+                            className="flex flex-col items-center justify-center text-[#111111] font-[800] tracking-wide leading-[1.12]"
+                            style={{ fontSize }}
+                          >
+                            {lines.map((line, idx) => (
+                              <span key={idx} className="block whitespace-nowrap">
+                                {line}
+                              </span>
+                            ))}
+                          </div>
+                          <div className="mt-[1.2cqw] w-[30%] h-[2px] bg-[#111111]/80"></div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Un único indicador discreto cuando aplica */}
+                {showStockBadge && (
+                  <div className="absolute top-3.5 right-3.5 z-10">
+                    {isOutOfStock ? (
+                      <span className="bg-slate-900 text-white text-xs font-extrabold px-3 py-1 rounded-full shadow-sm">
+                        {isIncoming ? 'En camino' : 'Agotado'}
+                      </span>
+                    ) : isNewEssence(product) ? (
+                      <span className="gold-ticket-wrap">
+                        <span className="gold-ticket-badge text-[10px] sm:text-[11px] font-black tracking-wider uppercase !py-1 !px-2.5">
+                          <span className="gold-ticket-text">Nuevo</span>
+                        </span>
+                      </span>
+                    ) : null}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Derecha: Buy Box clara, directa y sin ruido */}
+          <div className="lg:col-span-6">
+            <div className="clay-card p-5 sm:p-7 bg-white rounded-3xl border border-slate-200/80 shadow-sm space-y-5">
+              {/* Encabezado e inspiración */}
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-600">
+                  {genderLabel && (
+                    <span className="text-slate-800">{genderLabel}</span>
+                  )}
+                  {genderLabel && profile?.family && (
+                    <span className="text-slate-300">•</span>
+                  )}
+                  {profile?.family && (
+                    <span className="text-indigo-700">{profile.family}</span>
+                  )}
+                </div>
+
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-950 tracking-tight leading-tight">
+                  {displayName}
+                </h1>
+
+                <p className="text-sm text-slate-700 font-medium">
+                  Inspirado en{' '}
+                  <strong className="text-slate-950 font-black">
+                    {getInspiracionPerfumeName(product)}
+                  </strong>
+                </p>
+              </div>
+
+              {/* Precio y disponibilidad */}
+              <div className="pt-3.5 border-t border-slate-100 flex flex-wrap items-baseline justify-between gap-2">
+                {isHalloweenPromo ? (
+                  <div className="flex flex-wrap items-baseline gap-2.5">
+                    <span className="text-sm font-bold text-slate-500 line-through decoration-rose-500 decoration-2 tabular-nums">
+                      ${((activeOption.originalPrice || (selectedPresentation === 'MEDIA_ONZA' ? HALLOWEEN_ORIGINAL_PRICE_HALF_OZ : HALLOWEEN_ORIGINAL_PRICE_1OZ)) * quantity).toFixed(2)}
+                    </span>
+                    <span className="text-3xl sm:text-4xl font-black text-slate-950 tracking-tight tabular-nums">
+                      ${lineTotal.toFixed(2)}
+                    </span>
+                    <span className="text-xs font-extrabold text-purple-800 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-lg">
+                      Oferta especial
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-baseline gap-2.5">
+                    <span className="text-3xl sm:text-4xl font-black text-slate-950 tracking-tight tabular-nums">
+                      ${lineTotal.toFixed(2)}
+                    </span>
+                    <span className="text-xs sm:text-sm font-bold text-slate-700">
+                      {activeOption?.name}
+                      {quantity > 1 ? ` · ${quantity} uds.` : ''}
+                    </span>
+                  </div>
+                )}
+
+                {showStockBadge && (
+                  <span className="text-xs font-bold">
+                    {availableRemaining === 0 ? (
+                      cartQuantity > 0 ? (
+                        <span className="text-indigo-700">Todo el stock en tu carrito</span>
+                      ) : (
+                        <span className="text-slate-600">
+                          {isIncoming ? 'Próximo ingreso a bodega' : 'Temporalmente agotado'}
+                        </span>
+                      )
+                    ) : isBelowMinAlert ? (
+                      <strong className="text-amber-800 font-black">
+                        {selectedPresentation === 'MEDIA_ONZA'
+                          ? availableRemaining === 1
+                            ? '¡Última ½ onza disponible!'
+                            : `¡Solo quedan ${availableRemaining} medias onzas!`
+                          : availableRemaining === 1
+                          ? '¡Última onza disponible!'
+                          : `¡Solo quedan ${availableRemaining} onzas!`}
+                      </strong>
+                    ) : (
+                      <span className="text-emerald-700 font-extrabold">Disponible para envío</span>
+                    )}
+                  </span>
+                )}
+              </div>
+
+              {/* Selector de presentación */}
+              {presentations.length > 1 && (
+                <div className="space-y-2">
+                  <span className="text-xs font-black text-slate-900 uppercase tracking-wider block">
+                    Presentación
+                  </span>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {presentations.map((pres) => {
+                      const isSelected = selectedPresentation === pres.id;
+                      const isPresOutOfStock =
+                        pres.id === 'ONZA_COMPLETA'
+                          ? (discreteStock?.available1oz ?? 0) <= 0
+                          : (discreteStock?.availableHalfOz ?? 0) <= 0;
+
+                      return (
+                        <button
+                          key={pres.id}
+                          type="button"
+                          onClick={() => setSelectedPresentation(pres.id)}
+                          disabled={isPresOutOfStock}
+                          className={`px-3.5 py-2.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
+                            isSelected
+                              ? 'border-2 border-indigo-600 bg-indigo-50/70 text-slate-950'
+                              : isPresOutOfStock
+                              ? 'bg-slate-100 border-slate-200 text-slate-400 opacity-60 cursor-not-allowed'
+                              : 'bg-white border-slate-300 text-slate-900 hover:border-slate-400'
+                          }`}
+                        >
+                          <div>
+                            <div className="text-xs sm:text-sm font-black leading-tight">
+                              {pres.name}
+                            </div>
+                            <div className="text-xs font-bold text-indigo-700 tabular-nums mt-0.5">
+                              {pres.id === 'ONZA_COMPLETA' && isHalloweenPromo && pres.originalPrice && pres.originalPrice > pres.price && (
+                                <span className="text-slate-400 line-through mr-1.5 font-semibold">
+                                  ${pres.originalPrice.toFixed(2)}
+                                </span>
+                              )}
+                              ${pres.price.toFixed(2)}
+                            </div>
+                          </div>
+
+                          {isSelected ? (
+                            <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center shrink-0">
+                              <Check className="w-3 h-3" />
+                            </span>
+                          ) : isPresOutOfStock ? (
+                            <span className="text-[10px] font-bold text-slate-500 shrink-0">
+                              {isIncoming ? 'En camino' : 'Agotado'}
+                            </span>
+                          ) : null}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Stepper de cantidad + CTA Principal */}
+              <div className="space-y-2.5 pt-1">
+                <div className="flex items-stretch gap-2.5">
+                  <div className="flex items-center rounded-2xl border border-slate-300 bg-white px-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      disabled={quantity <= 1}
+                      aria-label="Disminuir cantidad"
+                      className="w-9 h-10 rounded-xl flex items-center justify-center text-slate-800 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="w-8 text-center text-sm font-black text-slate-950 tabular-nums">
+                      {quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(quantity + 1)}
+                      disabled={quantity >= maxSelectable}
+                      aria-label="Aumentar cantidad"
+                      className="w-9 h-10 rounded-xl flex items-center justify-center text-slate-800 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleAddToCart}
+                    disabled={isOutOfStock || maxSelectable <= 0 || isQuantityBlocked}
+                    className={`flex-1 py-3.5 px-5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all shadow-md ${
+                      isOutOfStock || maxSelectable <= 0
+                        ? 'bg-slate-200 text-slate-600 cursor-not-allowed border border-slate-300'
+                        : justAdded
+                        ? 'bg-emerald-600 text-white shadow-emerald-500/30'
+                        : isQuantityBlocked
+                        ? 'bg-emerald-50 text-emerald-900 border border-emerald-300 cursor-default'
+                        : isAlreadyInCart
+                        ? 'clay-btn bg-gradient-to-r from-amber-600 to-amber-700 !text-white active:scale-98 cursor-pointer'
+                        : 'clay-btn clay-btn-primary !text-white active:scale-98 cursor-pointer'
+                    }`}
+                  >
+                    {justAdded ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>{isAlreadyInCart ? '¡Carrito Actualizado!' : '¡Agregado al Carrito!'}</span>
+                      </>
+                    ) : isQuantityBlocked ? (
+                      <>
+                        <Check className="w-4 h-4 text-emerald-700" />
+                        <span>En el Carrito ({cartQuantity}) • ${(unitPrice * cartQuantity).toFixed(2)}</span>
+                      </>
+                    ) : isAlreadyInCart ? (
+                      <>
+                        <ShoppingBag className="w-4 h-4" />
+                        <span>Actualizar Carrito • ${lineTotal.toFixed(2)}</span>
+                      </>
+                    ) : isOutOfStock || maxSelectable <= 0 ? (
+                      <span>{isIncoming ? 'En camino' : 'Agotado'}</span>
+                    ) : (
+                      <>
+                        <ShoppingBag className="w-4 h-4" />
+                        <span>Agregar al Carrito • ${lineTotal.toFixed(2)}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {cartQuantity > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setIsCartOpen(true)}
+                    className="w-full py-2.5 px-4 rounded-xl border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100/70 text-indigo-800 text-xs font-black flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <span>Ir al carrito y finalizar pedido</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* 3 puntos concretos de valor */}
+              <ul className="pt-3 border-t border-slate-100 space-y-2 text-xs sm:text-[13px] font-semibold text-slate-800">
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>100% esencia pura sin diluir, lista para mezclar.</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>1 onza rinde para preparar un perfume completo de 100 ml.</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Envío nacional en 24–48 h o retiro gratis en San Salvador.</span>
+                </li>
+              </ul>
+
+              {/* Acceso directo a Pídela ya armada */}
+              <div className="pt-3 border-t border-slate-100">
+                <Link
+                  href={canOrderReadyPerfume ? `/?categoria=Arma+tu+perfume&essenceId=${product.id}#seccion-arma-tu-perfume` : '#'}
+                  onClick={(e) => {
+                    if (!canOrderReadyPerfume) e.preventDefault();
+                  }}
+                  className={`flex items-center justify-between gap-3 p-3 rounded-2xl border transition-colors ${
+                    canOrderReadyPerfume
+                      ? 'bg-slate-50 hover:bg-indigo-50/60 border-slate-200 hover:border-indigo-200'
+                      : 'bg-slate-100 border-slate-200 opacity-60 cursor-not-allowed'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                      <Wand2 className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-black text-slate-950">
+                        ¿La prefieres ya preparada?
+                      </div>
+                      <div className="text-[11px] font-medium text-slate-700 truncate">
+                        {canOrderReadyPerfume
+                          ? 'Ármala en frasco de 100 ml con bote y alcohol incluidos'
+                          : 'Sin stock de 1 oz para armar por ahora'}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-xs font-black text-indigo-700 shrink-0 flex items-center gap-0.5">
+                    <span>Armar</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ================= PERFIL OLFATIVO: ACORDES Y PIRÁMIDE DE NOTAS ================= */}
+        {profile && (
+          <section className="clay-card p-5 sm:p-7 rounded-3xl bg-white border border-slate-200/80 shadow-xs">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 lg:gap-10 items-start">
+              {/* Columna Izquierda: Descripción, ocasión y acordes principales */}
+              <div className="lg:col-span-5 space-y-5">
+                <div className="space-y-2">
+                  <h2 className="text-sm sm:text-base font-black text-slate-950">
+                    Perfil olfativo y acordes
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+                    {getFragranceDescription(product, profile)}
+                  </p>
+                </div>
+
+                {(profile.season || profile.occasion) && (
+                  <dl className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100 text-xs">
+                    {profile.season && (
+                      <div>
+                        <dt className="text-[11px] font-bold text-slate-500">Estación ideal</dt>
+                        <dd className="font-extrabold text-slate-900 mt-0.5">{profile.season}</dd>
+                      </div>
+                    )}
+                    {profile.occasion && (
+                      <div>
+                        <dt className="text-[11px] font-bold text-slate-500">Ocasión</dt>
+                        <dd className="font-extrabold text-slate-900 mt-0.5">{profile.occasion}</dd>
+                      </div>
+                    )}
+                  </dl>
+                )}
+
+                {profile.accords && profile.accords.length > 0 && (
+                  <div className="space-y-2.5 pt-2 border-t border-slate-100">
+                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                      Acordes principales
+                    </h3>
+
+                    {accordBars.length > 0 ? (
+                      <div className="flex flex-col gap-1.5 w-full">
+                        {accordBars.map((bar, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              width: `${bar.percentage}%`,
+                              backgroundColor: bar.bg,
+                              color: bar.text,
+                              minWidth: '110px'
+                            }}
+                            className="min-h-[30px] py-1 px-3 rounded-r-xl rounded-l-md flex items-center justify-start transition-all duration-200 hover:brightness-105"
+                          >
+                            <span className="text-[11.5px] font-extrabold tracking-wide lowercase truncate">
+                              {bar.name}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {profile.accords.map((accord, idx) => (
+                          <span
+                            key={idx}
+                            className="bg-slate-100 text-slate-800 text-xs font-bold px-3 py-1.5 rounded-xl"
+                          >
+                            {accord}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Columna Derecha: Pirámide olfativa con fotos reales de notas */}
+              <div className="lg:col-span-7 lg:pl-6 lg:border-l lg:border-slate-100">
+                <FragranceNotesVisual profile={profile} showAccords={false} />
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ================= PREPARACIÓN, USO Y ENVÍO ================= */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="clay-card p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs space-y-3">
+            <h3 className="text-sm font-black text-slate-950 flex items-center gap-2">
+              <Droplets className="w-4 h-4 text-indigo-700 shrink-0" />
+              <span>Preparación y uso responsable</span>
+            </h3>
+            <p className="text-xs sm:text-[13px] text-slate-800 leading-relaxed font-medium">
+              No maceramos perfumes: entregamos la esencia concentrada pura para que prepares tu fragancia al instante. Para un frasco de 100 ml mezcla <strong>1 onza (30 ml)</strong> —hasta un máximo de <strong>1.5 onzas</strong>— con alcohol especial de perfumería.
+            </p>
+            <ul className="space-y-1.5 text-xs text-slate-700 font-medium pt-1 border-t border-slate-100">
+              <li>• No aplicar sin diluir directamente sobre la piel.</li>
+              <li>• Evitar contacto con ojos, ingestión o inhalación directa.</li>
+              <li>• No usar en caso de alergia a fragancias o alcohol; mantener lejos de niños.</li>
+            </ul>
+          </div>
+
+          <div className="clay-card p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs space-y-3 flex flex-col justify-between">
+            <div className="space-y-2.5">
+              <h3 className="text-sm font-black text-slate-950 flex items-center gap-2">
+                <Truck className="w-4 h-4 text-indigo-700 shrink-0" />
+                <span>Envíos, retiro y formas de pago</span>
+              </h3>
+              <p className="text-xs sm:text-[13px] text-slate-800 leading-relaxed font-medium">
+                Entregas a domicilio en todo El Salvador (24 a 48 h hábiles) o retiro gratis en nuestro local en San Salvador. Pedidos de sábado llegan desde lunes; los de domingo se despachan el lunes.
+              </p>
+            </div>
+            <div className="pt-2.5 border-t border-slate-100 text-xs font-bold text-slate-800">
+              Pagos aceptados: Tarjeta de Crédito / Débito o Transferencia bancaria (Banco Agrícola y BAC Credomatic).
+            </div>
+          </div>
+        </section>
+
+        {/* ================= PRODUCTOS RELACIONADOS ================= */}
+        {relatedProducts.length > 0 && (
+          <section className="space-y-3.5 pt-2">
+            <div className="flex items-center justify-between px-1">
+              <h3 className="text-base sm:text-lg font-black text-slate-950">
+                También te podría interesar
+              </h3>
+              <Link
+                href="/"
+                className="text-xs font-bold text-indigo-700 hover:text-indigo-900 flex items-center gap-1"
+              >
+                <span>Ver catálogo completo</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-3 sm:gap-x-4 gap-y-10 sm:gap-y-12">
+              {relatedProducts.map(rel => (
+                <ProductCard key={rel.id} product={rel} />
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 sm:space-y-8 pb-20 pt-1">
       {/* SEO Schema Markup */}
