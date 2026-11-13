@@ -2262,20 +2262,13 @@ export default function BodegaPage() {
                       order.domicilio?.customerPhone ||
                       '';
                     const isExpanded = !!expandedOrderIds[order.id];
-                    const printedTs =
-                      ticketPrintedAt[order.id] ||
-                      (order.saleNumber ? ticketPrintedAt[order.saleNumber] : 0) ||
-                      0;
-                    const shouldBlinkRedAura = !printedTs;
 
                     if (!isExpanded) {
                       return (
                         <div
                           key={order.id}
                           onClick={() => toggleOrderExpanded(order.id)}
-                          className={`clay-card px-3.5 py-2.5 border-l-4 border-emerald-500 hover:shadow-md transition-all cursor-pointer space-y-1.5 ${
-                            shouldBlinkRedAura ? 'bodega-red-aura-blink' : ''
-                          }`}
+                          className="clay-card px-3.5 py-2.5 border-l-4 border-emerald-500 hover:shadow-md transition-all cursor-pointer space-y-1.5"
                         >
                           <div className="flex items-center justify-between gap-2 flex-wrap">
                             <div className="flex items-center gap-1.5 flex-wrap min-w-0">
@@ -2379,9 +2372,7 @@ export default function BodegaPage() {
                     return (
                     <div 
                       key={order.id} 
-                      className={`clay-card p-4 flex flex-col justify-between border-l-4 border-emerald-500 hover:shadow-md transition-all ${
-                        shouldBlinkRedAura ? 'bodega-red-aura-blink' : ''
-                      }`}
+                      className="clay-card p-4 flex flex-col justify-between border-l-4 border-emerald-500 hover:shadow-md transition-all"
                     >
                       <div>
                         <div className="pb-3 border-b border-slate-100 mb-3 space-y-2.5">
