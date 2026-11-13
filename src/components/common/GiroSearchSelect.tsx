@@ -15,7 +15,7 @@ interface GiroSearchSelectProps {
   onChange: (formattedValue: string, giro?: GiroMH) => void;
   placeholder?: string;
   required?: boolean;
-  variant?: 'pos' | 'ecommerce' | 'compact';
+  variant?: 'pos' | 'ecommerce' | 'compact' | 'checkout';
   className?: string;
 }
 
@@ -74,6 +74,8 @@ export const GiroSearchSelect: React.FC<GiroSearchSelectProps> = ({
   const inputBaseClass =
     variant === 'ecommerce'
       ? 'w-full pl-9 pr-8 py-2.5 text-xs sm:text-sm rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#52b747] focus:bg-white transition-all font-medium'
+      : variant === 'checkout'
+      ? 'checkout-field !pl-9 !pr-8 font-medium'
       : variant === 'compact'
       ? 'clay-input w-full pl-8 pr-7 py-1.5 text-xs'
       : 'clay-input w-full pl-9 pr-8 py-2 text-xs';
@@ -89,6 +91,8 @@ export const GiroSearchSelect: React.FC<GiroSearchSelectProps> = ({
           className={`cursor-pointer flex items-center justify-between gap-2 ${
             variant === 'ecommerce'
               ? 'px-3 py-2.5 rounded-xl bg-slate-50 hover:bg-white border border-slate-200 hover:border-[#52b747]/60 transition-all'
+              : variant === 'checkout'
+              ? 'checkout-field flex items-center justify-between hover:border-indigo-400'
               : variant === 'compact'
               ? 'clay-input px-2.5 py-1.5 bg-white hover:border-indigo-400 transition-all'
               : 'clay-input px-3 py-2 bg-white hover:border-indigo-400 transition-all'

@@ -120,10 +120,6 @@ export function BankAccountsCardsList({ compact = false }: BankAccountsCardsList
               </button>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-slate-500 font-medium">Tipo:</span>
-              <span className="font-bold text-slate-700 text-right">{acc.personType}</span>
-            </div>
-            <div className="flex items-center justify-between gap-2">
               <span className="text-slate-500 font-medium shrink-0">Correo:</span>
               <button
                 type="button"

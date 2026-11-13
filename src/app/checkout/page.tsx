@@ -1,18 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { 
-  ShoppingBag, 
-  Truck, 
-  CreditCard, 
-  CheckCircle2, 
-  ArrowLeft, 
-  Phone, 
-  MapPin, 
-  FileText,
-  Send,
+import {
+  ShoppingBag,
+  Truck,
+  CreditCard,
+  CheckCircle2,
+  ArrowLeft,
   Building,
   AlertCircle,
   Store,
@@ -20,12 +15,11 @@ import {
   Droplets,
   ShieldCheck,
   Lock,
-  Copy,
-  Check,
   Clock,
   Loader2,
   Package,
-  ExternalLink
+  ExternalLink,
+  Send,
 } from 'lucide-react';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
@@ -35,7 +29,7 @@ import {
   trackMetaPurchase,
   resolveMetaCatalogId,
 } from '@/components/analytics/MarketingScripts';
-import { DEPARTAMENTOS_SV, CustomerRecord, getStoredCustomers, saveStoredCustomers } from '@/lib/customers';
+import { CustomerRecord, getStoredCustomers, saveStoredCustomers } from '@/lib/customers';
 import { DEPARTAMENTOS_CATALOG, getMunicipiosByDepartamento } from '@/lib/svTerritory';
 import { SaleRecord } from '@/lib/store';
 import { getProductImage } from '@/lib/perfumeImages';
@@ -45,10 +39,38 @@ import { GiroSearchSelect } from '@/components/common/GiroSearchSelect';
 import { isHalloweenPromoProduct } from '@/lib/halloweenPromo';
 import { BankAccountsCardsList, OrderTransferReceiptSection } from '@/components/ecommerce/TransferBankAccountsWidget';
 
+type FieldKey =
+  | 'nombre'
+  | 'telefono'
+  | 'email'
+  | 'departamento'
+  | 'municipio'
+  | 'direccion'
+  | 'razonSocial'
+  | 'nrc'
+  | 'numDoc'
+  | 'giro'
+  | 'direccionFiscal';
+
+const FIELD_DOM_IDS: Record<FieldKey, string> = {
+  nombre: 'checkout-nombre',
+  telefono: 'checkout-telefono',
+  email: 'checkout-email',
+  departamento: 'checkout-departamento',
+  municipio: 'checkout-municipio',
+  direccion: 'checkout-direccion',
+  razonSocial: 'checkout-razon-social',
+  nrc: 'checkout-nrc',
+  numDoc: 'checkout-num-doc',
+  giro: 'checkout-giro-wrapper',
+  direccionFiscal: 'checkout-direccion-fiscal',
+};
+
 export default function CheckoutPage() {
-  const router = useRouter();
   const { cart, subtotal, rawSubtotal, discountTotal, totalItems, clearCart, syncCartWithLiveCatalog } = useEcommerceCart();
   const { customer, isLoggedIn, openAuthModal, openDrawer, updateCustomerProfile } = useCustomerAuth();
+
+  const formRef = useRef<HTMLFormElement>(null);
 
   // Sincronizar inventario en vivo al entrar al checkout para depurar cualquier producto agotado
   React.useEffect(() => {
@@ -58,22 +80,14 @@ export default function CheckoutPage() {
   // Método de entrega: Envío a domicilio o Retiro en sucursal
   const [metodoEntrega, setMetodoEntrega] = useState<'ENVIO' | 'RETIRO'>('ENVIO');
 
-  // Datos de Envío y Contacto
+  // Datos de Envío y Contacto (Departamento y Municipio inician sin preseleccionar para evitar envíos erróneos)
   const [nombre, setNombre] = useState(customer?.name || '');
   const [telefono, setTelefono] = useState(customer?.phone || '');
   const [email, setEmail] = useState(customer?.email || '');
-  const [departamento, setDepartamento] = useState(customer?.department || 'San Salvador');
-  const [municipio, setMunicipio] = useState(customer?.municipality || 'San Salvador');
+  const [departamento, setDepartamento] = useState('');
+  const [municipio, setMunicipio] = useState('');
   const [direccion, setDireccion] = useState(customer?.address || '');
   const [referencia, setReferencia] = useState('');
-
-  // Estado para copiar cuenta bancaria
-  const [copiedBank, setCopiedBank] = useState<string | null>(null);
-  const handleCopyAccount = (text: string, bankKey: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedBank(bankKey);
-    setTimeout(() => setCopiedBank(null), 2500);
-  };
 
   // Tipo de comprobante y datos de Crédito Fiscal (CCF)
   const [tipoComprobante, setTipoComprobante] = useState<'TICKET' | '01' | '03'>(
@@ -85,15 +99,27 @@ export default function CheckoutPage() {
   const [giro, setGiro] = useState(customer?.activityDesc || '');
   const [direccionFiscal, setDireccionFiscal] = useState(customer?.address || '');
 
-  // Actualizar si el cliente inicia sesión o tiene datos guardados en su perfil
+  // Errores de validación en línea y anuncio accesible
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<FieldKey, string>>>({});
+  const [submitErrorBanner, setSubmitErrorBanner] = useState<string | null>(null);
+  const [liveAnnouncement, setLiveAnnouncement] = useState('');
+
+  const clearFieldError = (key: FieldKey) => {
+    setFieldErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
+
+  // Actualizar si el cliente inicia sesión o tiene datos guardados en su perfil (sin preseleccionar departamento/municipio)
   React.useEffect(() => {
     if (customer) {
       if (customer.name) setNombre(customer.name);
       if (customer.businessName || customer.name) setRazonSocial(customer.businessName || customer.name);
       if (customer.email) setEmail(customer.email);
       if (customer.phone) setTelefono(customer.phone);
-      if (customer.department) setDepartamento(customer.department);
-      if (customer.municipality) setMunicipio(customer.municipality);
       if (customer.address) {
         setDireccion(customer.address);
         setDireccionFiscal((prev) => prev || customer.address || '');
@@ -101,32 +127,46 @@ export default function CheckoutPage() {
       if (customer.documentNum) setNumDoc(customer.documentNum);
       if (customer.nrc || customer.preferredDoc === '03') {
         if (customer.nrc) setNrc(customer.nrc);
-        setTipoComprobante('03'); // Si tiene NRC o preferencia 03, preseleccionar Crédito Fiscal
+        setTipoComprobante('03');
       }
       if (customer.activityDesc) setGiro(customer.activityDesc);
     }
-  }, [customer?.id, customer?.documentNum, customer?.nrc, customer?.activityDesc, customer?.businessName, customer?.address, customer?.phone, customer?.name, customer?.preferredDoc]);
+  }, [
+    customer?.id,
+    customer?.documentNum,
+    customer?.nrc,
+    customer?.activityDesc,
+    customer?.businessName,
+    customer?.address,
+    customer?.phone,
+    customer?.name,
+    customer?.preferredDoc,
+  ]);
 
-  // Cargar datos de envío guardados previamente si el usuario es invitado
+  // Cargar datos de contacto guardados previamente si el usuario es invitado (sin preseleccionar departamento/municipio)
   React.useEffect(() => {
     if (!customer) {
       const guestProfile = getGuestShippingProfile();
       if (guestProfile.name) setNombre((prev) => prev || guestProfile.name || '');
-      if (guestProfile.businessName || guestProfile.name) setRazonSocial((prev) => prev || guestProfile.businessName || guestProfile.name || '');
+      if (guestProfile.businessName || guestProfile.name) {
+        setRazonSocial((prev) => prev || guestProfile.businessName || guestProfile.name || '');
+      }
       if (guestProfile.phone) setTelefono((prev) => prev || guestProfile.phone || '');
       if (guestProfile.email) setEmail((prev) => prev || guestProfile.email || '');
-      if (guestProfile.department) setDepartamento((prev) => (prev === 'San Salvador' ? guestProfile.department || prev : prev));
-      if (guestProfile.municipality) setMunicipio((prev) => (prev === 'San Salvador Centro' || prev === 'San Salvador' ? guestProfile.municipality || prev : prev));
       if (guestProfile.address) {
         setDireccion((prev) => prev || guestProfile.address || '');
         setDireccionFiscal((prev) => prev || guestProfile.address || '');
       }
       if (guestProfile.reference) setReferencia((prev) => prev || guestProfile.reference || '');
       if (guestProfile.documentNum) setNumDoc((prev) => prev || guestProfile.documentNum || '');
-      if (guestProfile.tipoComprobante) setTipoComprobante((prev) => (prev === '01' ? guestProfile.tipoComprobante || prev : prev));
+      if (guestProfile.tipoComprobante) {
+        setTipoComprobante((prev) => (prev === '01' ? guestProfile.tipoComprobante || prev : prev));
+      }
       if (guestProfile.nrc) setNrc((prev) => prev || guestProfile.nrc || '');
       if (guestProfile.activityDesc) setGiro((prev) => prev || guestProfile.activityDesc || '');
-      if (guestProfile.metodoEntrega) setMetodoEntrega((prev) => prev || guestProfile.metodoEntrega || 'ENVIO');
+      if (guestProfile.metodoEntrega) {
+        setMetodoEntrega((prev) => prev || guestProfile.metodoEntrega || 'ENVIO');
+      }
     }
   }, [customer]);
 
@@ -171,7 +211,6 @@ export default function CheckoutPage() {
     const orderId = params.get('orderId');
 
     if (isCancelled && (orderId || num)) {
-      // Cancelar la orden en la base de datos y restaurar inventario
       fetch('/api/ecommerce/orders', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -186,8 +225,6 @@ export default function CheckoutPage() {
       }).catch((err) => console.error('Error cancelando orden abandonada:', err));
 
       setWompiCancelledNotice(num ? `Pedido #${num}` : 'Tu intento de pago');
-
-      // Limpiar los parámetros de la URL sin recargar
       window.history.replaceState({}, '', '/checkout');
     }
   }, []);
@@ -196,22 +233,17 @@ export default function CheckoutPage() {
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const handlePageShow = () => {
+    const handleReset = () => {
       setIsSubmitting(false);
       setWompiStatusText(null);
     };
 
-    const handleFocus = () => {
-      setIsSubmitting(false);
-      setWompiStatusText(null);
-    };
-
-    window.addEventListener('pageshow', handlePageShow);
-    window.addEventListener('focus', handleFocus);
+    window.addEventListener('pageshow', handleReset);
+    window.addEventListener('focus', handleReset);
 
     return () => {
-      window.removeEventListener('pageshow', handlePageShow);
-      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('pageshow', handleReset);
+      window.removeEventListener('focus', handleReset);
     };
   }, []);
 
@@ -222,44 +254,127 @@ export default function CheckoutPage() {
     }
   }, [completedOrder]);
 
+  // Municipios disponibles únicamente cuando el usuario ya eligió un departamento
+  const availableMunicipios = React.useMemo(
+    () => (departamento ? getMunicipiosByDepartamento(departamento) : []),
+    [departamento]
+  );
+
   // Cálculo del costo de envío: $0 si retira en local; $2.90 envío a domicilio
   const shippingCost = metodoEntrega === 'RETIRO' ? 0 : 2.90;
   const totalConEnvio = Number((subtotal + (cart.length > 0 ? shippingCost : 0)).toFixed(2));
 
-  const handleSubmitOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const validateCheckoutForm = (): boolean => {
+    const errors: Partial<Record<FieldKey, string>> = {};
+    const orderedKeys: FieldKey[] = [];
 
-    if (!nombre.trim() || !telefono.trim()) {
-      alert('Por favor completa tu Nombre y Teléfono.');
-      return;
+    const flag = (key: FieldKey, message: string) => {
+      if (!errors[key]) {
+        errors[key] = message;
+        orderedKeys.push(key);
+      }
+    };
+
+    if (!nombre.trim()) {
+      flag('nombre', 'Ingresa tu nombre completo.');
     }
 
-    // Validación de teléfono de El Salvador (8 dígitos)
     const rawPhoneDigits = telefono.replace(/\D/g, '');
-    const cleanPhoneDigits = rawPhoneDigits.startsWith('503') && rawPhoneDigits.length === 11 ? rawPhoneDigits.slice(3) : rawPhoneDigits;
-    if (cleanPhoneDigits.length !== 8) {
-      alert('Por favor ingresa un número de teléfono válido de El Salvador de 8 dígitos (ej. 7000-0000).');
-      return;
+    const cleanPhoneDigits =
+      rawPhoneDigits.startsWith('503') && rawPhoneDigits.length === 11
+        ? rawPhoneDigits.slice(3)
+        : rawPhoneDigits;
+    if (!telefono.trim()) {
+      flag('telefono', 'Ingresa tu número de teléfono o WhatsApp.');
+    } else if (cleanPhoneDigits.length !== 8) {
+      flag('telefono', 'Ingresa un número válido de El Salvador de 8 dígitos (ej. 7000-0000).');
     }
 
-    if (metodoEntrega === 'ENVIO' && !direccion.trim()) {
-      alert('Por favor completa tu Dirección exacta de entrega.');
-      return;
+    if (tipoComprobante === '03' && !email.trim()) {
+      flag('email', 'Ingresa tu correo electrónico para recibir tu Crédito Fiscal (CCF).');
+    } else if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      flag('email', 'Revisa el formato de tu correo electrónico.');
+    }
+
+    if (metodoEntrega === 'ENVIO') {
+      if (!departamento) {
+        flag('departamento', 'Selecciona tu departamento de entrega.');
+      }
+      if (!municipio || !availableMunicipios.some((m) => m.nombre === municipio)) {
+        flag('municipio', 'Selecciona tu municipio o distrito de entrega.');
+      }
+      if (!direccion.trim()) {
+        flag('direccion', 'Ingresa tu dirección exacta de entrega.');
+      }
     }
 
     if (tipoComprobante === '03') {
-      if (!email.trim()) {
-        alert('Por favor ingresa tu Correo Electrónico para asociar tus datos fiscales y enviarte tu Crédito Fiscal (CCF).');
-        return;
+      if (!razonSocial.trim()) {
+        flag('razonSocial', 'Ingresa la razón social o nombre del contribuyente.');
       }
-      if (!nrc.trim() || !numDoc.trim() || !giro.trim()) {
-        alert('Para emitir Crédito Fiscal (CCF) por favor completa tu NRC, NIT/DUI y Giro de Hacienda.');
-        return;
+      if (!nrc.trim()) {
+        flag('nrc', 'Ingresa tu número de NRC.');
+      }
+      if (!numDoc.trim()) {
+        flag('numDoc', 'Ingresa tu NIT o DUI de contribuyente.');
+      }
+      if (!giro.trim()) {
+        flag('giro', 'Selecciona tu giro o actividad económica de Hacienda.');
+      }
+      if (metodoEntrega === 'RETIRO') {
+        if (!departamento) {
+          flag('departamento', 'Selecciona tu departamento fiscal.');
+        }
+        if (!municipio || !availableMunicipios.some((m) => m.nombre === municipio)) {
+          flag('municipio', 'Selecciona tu municipio o distrito fiscal.');
+        }
+        if (!(direccionFiscal || direccion).trim()) {
+          flag('direccionFiscal', 'Ingresa tu dirección fiscal registrada en Hacienda.');
+        }
       }
     }
 
+    setFieldErrors(errors);
+
+    if (orderedKeys.length > 0) {
+      const firstKey = orderedKeys[0];
+      const firstMsg = errors[firstKey] || 'Por favor revisa los campos marcados.';
+      setLiveAnnouncement(firstMsg);
+
+      if (typeof document !== 'undefined') {
+        const targetId =
+          firstKey === 'departamento' && metodoEntrega === 'RETIRO'
+            ? 'checkout-departamento-fiscal'
+            : firstKey === 'municipio' && metodoEntrega === 'RETIRO'
+            ? 'checkout-municipio-fiscal'
+            : FIELD_DOM_IDS[firstKey];
+
+        const el = document.getElementById(targetId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const focusable =
+            el.matches('input, select, textarea, button')
+              ? (el as HTMLElement)
+              : (el.querySelector('input, select, textarea, button') as HTMLElement | null);
+          focusable?.focus({ preventScroll: true });
+        }
+      }
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmitOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitErrorBanner(null);
+
+    if (!validateCheckoutForm()) {
+      return;
+    }
+
     if (cart.length === 0) {
-      alert('Tu carrito está vacío.');
+      setSubmitErrorBanner('Tu carrito está vacío.');
       return;
     }
 
@@ -294,10 +409,16 @@ export default function CheckoutPage() {
       const orderNumber = `WEB-${Math.floor(100000 + Math.random() * 900000)}`;
       const saleId = `sale-${Date.now()}`;
       const now = new Date().toISOString();
-      const direccionFinal = metodoEntrega === 'RETIRO' 
-        ? 'Retiro en Local San Salvador (Centro Comercial El Rosal, Calle El Progreso) - Aromaniak' 
-        : `${direccion}, ${municipio}, ${departamento}`;
-      const effectiveClientName = tipoComprobante === '03' && razonSocial.trim() ? razonSocial.trim() : nombre.trim();
+      const resolvedDepto =
+        metodoEntrega === 'RETIRO' && tipoComprobante !== '03' ? 'San Salvador' : departamento;
+      const resolvedMuni =
+        metodoEntrega === 'RETIRO' && tipoComprobante !== '03' ? 'San Salvador Centro' : municipio;
+      const direccionFinal =
+        metodoEntrega === 'RETIRO'
+          ? 'Retiro en Local San Salvador (Centro Comercial El Rosal, Calle El Progreso) - Aromaniak'
+          : `${direccion}, ${municipio}, ${departamento}`;
+      const effectiveClientName =
+        tipoComprobante === '03' && razonSocial.trim() ? razonSocial.trim() : nombre.trim();
       const effectiveFiscalAddress = direccionFiscal.trim() || direccion.trim() || direccionFinal;
 
       const newOrder: SaleRecord = {
@@ -307,26 +428,27 @@ export default function CheckoutPage() {
         createdAt: now,
         total: totalConEnvio,
         subtotal: subtotal,
-        ivaTotal: Number((subtotal - (subtotal / 1.13)).toFixed(2)),
+        ivaTotal: Number((subtotal - subtotal / 1.13).toFixed(2)),
         paymentMethod: metodoPago,
         tipoComprobante,
         channel: 'ONLINE',
         shippingCost,
-        deliveryNotes: metodoEntrega === 'RETIRO'
-          ? 'Retiro en Sucursal / Centro Comercial El Rosal, Calle El Progreso, San Salvador'
-          : `Envío a domicilio - Departamento: ${departamento}, Municipio: ${municipio}. Ref: ${referencia || 'Sin referencias específicas'}`,
-        status: 'PENDING_PREPARATION', // Llega directo a Bodega para preparar
+        deliveryNotes:
+          metodoEntrega === 'RETIRO'
+            ? 'Retiro en Sucursal / Centro Comercial El Rosal, Calle El Progreso, San Salvador'
+            : `Envío a domicilio - Departamento: ${departamento}, Municipio: ${municipio}. Ref: ${referencia || 'Sin referencias específicas'}`,
+        status: 'PENDING_PREPARATION',
         vendedor: 'Tienda Online Aromaniak',
         cliente: {
           nombre: effectiveClientName,
           telefono,
           correo: email.trim().toLowerCase() || undefined,
           direccion: tipoComprobante === '03' ? effectiveFiscalAddress : direccionFinal,
-          departamento,
-          municipio,
+          departamento: resolvedDepto,
+          municipio: resolvedMuni,
           numDocumento: numDoc || undefined,
           nrc: nrc || undefined,
-          actividadEconomica: giro || undefined
+          actividadEconomica: giro || undefined,
         },
         items: cart.map((it) => ({
           productId: it.kitDetails?.essenceId || it.product.id,
@@ -338,34 +460,35 @@ export default function CheckoutPage() {
           puesto: it.kitDetails?.essencePuesto || it.product.puesto,
           kitDetails: it.kitDetails || undefined,
           selectedBottle: it.selectedBottle || undefined,
-        }))
+        })),
       };
 
-      // 2. Sincronizar cliente localmente en POS (asociado por correo electrónico primero)
+      // Sincronizar cliente localmente en POS
       try {
         const existingCustomers = getStoredCustomers();
         const normMail = email.trim().toLowerCase();
-        const matchIdx = existingCustomers.findIndex(c =>
-          (normMail && c.email && c.email.toLowerCase().trim() === normMail) ||
-          (telefono && c.phone === telefono) ||
-          (numDoc && c.numDocumento === numDoc)
+        const matchIdx = existingCustomers.findIndex(
+          (c) =>
+            (normMail && c.email && c.email.toLowerCase().trim() === normMail) ||
+            (telefono && c.phone === telefono) ||
+            (numDoc && c.numDocumento === numDoc)
         );
         const custRecordData: CustomerRecord = {
-          id: matchIdx >= 0 ? existingCustomers[matchIdx].id : (customer?.id || `cli-${Date.now()}`),
+          id: matchIdx >= 0 ? existingCustomers[matchIdx].id : customer?.id || `cli-${Date.now()}`,
           tipoPersona: tipoComprobante === '03' ? 'JURIDICA' : 'NATURAL',
           name: effectiveClientName,
-          nombreComercial: tipoComprobante === '03' ? (razonSocial.trim() || nombre.trim()) : undefined,
+          nombreComercial: tipoComprobante === '03' ? razonSocial.trim() || nombre.trim() : undefined,
           tipoDocumento: tipoComprobante === '03' ? 'NIT' : 'DUI',
           numDocumento: numDoc || '00000000-0',
           email: normMail || '',
           phone: telefono,
-          departamento,
-          municipio,
+          departamento: resolvedDepto,
+          municipio: resolvedMuni,
           direccion: effectiveFiscalAddress,
           documentoPreferido: tipoComprobante,
           nrc: nrc || undefined,
           actividadEconomica: giro || undefined,
-          createdAt: matchIdx >= 0 ? existingCustomers[matchIdx].createdAt : now
+          createdAt: matchIdx >= 0 ? existingCustomers[matchIdx].createdAt : now,
         };
         if (matchIdx >= 0) {
           const updatedList = [...existingCustomers];
@@ -374,21 +497,24 @@ export default function CheckoutPage() {
         } else {
           saveStoredCustomers([custRecordData, ...existingCustomers]);
         }
-      } catch (e) {}
+      } catch (_) {}
 
-      // Si el cliente tiene sesión iniciada, actualizar también su perfil de cuenta con los datos fiscales ingresados
+      // Si el cliente tiene sesión iniciada, actualizar su perfil de cuenta
       if (customer?.id) {
         updateCustomerProfile({
           name: nombre.trim(),
           phone: telefono.trim(),
           documentType: tipoComprobante === '03' ? 'NIT' : 'DUI',
           documentNum: numDoc.trim() || customer.documentNum,
-          department: departamento,
-          municipality: municipio,
+          department: departamento || customer.department,
+          municipality: municipio || customer.municipality,
           address: effectiveFiscalAddress,
-          businessName: tipoComprobante === '03' ? (razonSocial.trim() || nombre.trim()) : (customer.businessName || ''),
-          nrc: tipoComprobante === '03' ? nrc.trim() : (customer.nrc || ''),
-          activityDesc: tipoComprobante === '03' ? giro.trim() : (customer.activityDesc || ''),
+          businessName:
+            tipoComprobante === '03'
+              ? razonSocial.trim() || nombre.trim()
+              : customer.businessName || '',
+          nrc: tipoComprobante === '03' ? nrc.trim() : customer.nrc || '',
+          activityDesc: tipoComprobante === '03' ? giro.trim() : customer.activityDesc || '',
           preferredDoc: tipoComprobante,
         }).catch(() => {});
       }
@@ -398,26 +524,26 @@ export default function CheckoutPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(customer?.sessionToken ? { 'Authorization': `Bearer ${customer.sessionToken}` } : {}),
+          ...(customer?.sessionToken ? { Authorization: `Bearer ${customer.sessionToken}` } : {}),
         },
         body: JSON.stringify({
           orderNumber,
           sessionToken: customer?.sessionToken || undefined,
           customerId: customer?.id || null,
           customerName: effectiveClientName,
-          businessName: tipoComprobante === '03' ? (razonSocial.trim() || nombre.trim()) : null,
+          businessName: tipoComprobante === '03' ? razonSocial.trim() || nombre.trim() : null,
           customerEmail: email.trim().toLowerCase() || null,
           customerPhone: telefono,
-          department: metodoEntrega === 'RETIRO' && tipoComprobante !== '03' ? 'San Salvador' : departamento,
-          municipality: metodoEntrega === 'RETIRO' && tipoComprobante !== '03' ? 'San Salvador Centro' : municipio,
+          department: resolvedDepto,
+          municipality: resolvedMuni,
           shippingAddress: direccionFinal,
           fiscalAddress: effectiveFiscalAddress,
-          deliveryReference: metodoEntrega === 'RETIRO' ? 'Retiro en Sucursal' : (referencia || 'N/A'),
+          deliveryReference: metodoEntrega === 'RETIRO' ? 'Retiro en Sucursal' : referencia || 'N/A',
           subtotal,
           shippingCost,
           total: totalConEnvio,
           paymentMethod: metodoPago,
-          items: cart.map(it => {
+          items: cart.map((it) => {
             const origPrice = it.originalUnitPrice ?? it.unitPrice;
             const finalPrice = it.unitPrice;
             const discountAmt = Number(Math.max(0, origPrice - finalPrice).toFixed(4));
@@ -434,21 +560,24 @@ export default function CheckoutPage() {
               selectedBottle: it.selectedBottle || undefined,
             };
           }),
-          notes: `Entrega: ${metodoEntrega === 'RETIRO' ? 'Retiro en Local San Salvador' : 'Envío a Domicilio'} - Doc: ${tipoComprobante}`,
+          notes: `Entrega: ${
+            metodoEntrega === 'RETIRO' ? 'Retiro en Local San Salvador' : 'Envío a Domicilio'
+          } - Doc: ${tipoComprobante}`,
           numDoc: numDoc || null,
           nrc: nrc || null,
           giro: giro || null,
           tipoComprobante: tipoComprobante || '01',
-        })
+        }),
       });
 
       let orderData: any = null;
       try {
         orderData = await orderRes.json();
       } catch {
-        // Si la respuesta se cortó por timeout pero el pedido ya se guardó en BD, verificarlo por número de orden
         try {
-          const verifyRes = await fetch(`/api/ecommerce/orders?orderNumber=${encodeURIComponent(orderNumber)}`);
+          const verifyRes = await fetch(
+            `/api/ecommerce/orders?orderNumber=${encodeURIComponent(orderNumber)}`
+          );
           const verifyData = await verifyRes.json();
           const savedMatch = Array.isArray(verifyData?.orders)
             ? verifyData.orders.find((o: any) => o.orderNumber === orderNumber)
@@ -466,9 +595,9 @@ export default function CheckoutPage() {
       const finalOrderSubtotal = Number(orderData.order?.subtotal ?? subtotal);
       newOrder.total = finalOrderTotal;
       newOrder.subtotal = finalOrderSubtotal;
-      newOrder.ivaTotal = Number((finalOrderSubtotal - (finalOrderSubtotal / 1.13)).toFixed(2));
+      newOrder.ivaTotal = Number((finalOrderSubtotal - finalOrderSubtotal / 1.13).toFixed(2));
 
-      // Propagar inmediatamente el pedido a comanda local (0ms para Bodega abierta en el mismo navegador)
+      // Propagar inmediatamente el pedido a comanda local
       try {
         const currentSalesRaw = localStorage.getItem('kodelocal_sales');
         const currentSales = currentSalesRaw ? JSON.parse(currentSalesRaw) : [];
@@ -479,25 +608,25 @@ export default function CheckoutPage() {
         }
       } catch (_) {}
 
-      // Guardar perfil de envío del invitado para futuros pedidos y autocompletado
+      // Guardar perfil de envío del invitado
+      const prevGuest = getGuestShippingProfile();
       saveGuestShippingProfile({
         name: nombre,
         phone: telefono,
         email: email.trim().toLowerCase() || customer?.email,
-        department: departamento,
-        municipality: municipio,
+        department: departamento || prevGuest.department,
+        municipality: municipio || prevGuest.municipality,
         address: effectiveFiscalAddress,
         reference: referencia || undefined,
         metodoEntrega,
         documentType: tipoComprobante === '03' ? 'NIT' : 'DUI',
         documentNum: numDoc || undefined,
         tipoComprobante,
-        businessName: tipoComprobante === '03' ? (razonSocial.trim() || nombre.trim()) : undefined,
+        businessName: tipoComprobante === '03' ? razonSocial.trim() || nombre.trim() : undefined,
         nrc: nrc || undefined,
         activityDesc: giro || undefined,
       });
 
-      // Guardar pedido detallado en localStorage del dispositivo para modo invitado
       const finalOrderNumber = orderData.order?.orderNumber || orderNumber;
       const metaItems = cart.map((it) => ({
         productId: resolveMetaCatalogId(it),
@@ -505,10 +634,8 @@ export default function CheckoutPage() {
         price: it.unitPrice,
       }));
 
-      // Registrar evento estándar Meta Pixel AddPaymentInfo al confirmar el método de pago
       trackMetaAddPaymentInfo(cart, finalOrderTotal, metodoPago);
 
-      // Guardar temporalmente los ítems de Meta en sessionStorage para que /checkout/resultado registre Purchase al volver de Wompi
       try {
         sessionStorage.setItem(
           `aromaniak_pending_meta_order_${finalOrderNumber}`,
@@ -527,16 +654,16 @@ export default function CheckoutPage() {
         subtotal: finalOrderSubtotal,
         shippingCost: shippingCost,
         paymentMethod: metodoPago,
-        paymentStatus: metodoPago === 'CARD' ? 'PENDING' : 'PENDING',
+        paymentStatus: 'PENDING',
         orderStatus: 'NUEVO',
         customerName: nombre,
         customerEmail: email || customer?.email,
         customerPhone: telefono,
         shippingAddress: direccionFinal,
-        department: metodoEntrega === 'RETIRO' ? 'San Salvador' : departamento,
-        municipality: metodoEntrega === 'RETIRO' ? 'San Salvador Centro' : municipio,
+        department: resolvedDepto,
+        municipality: resolvedMuni,
         deliveryReference: referencia || undefined,
-        items: cart.map(it => ({
+        items: cart.map((it) => ({
           productName: it.product.name,
           inspiredBy: getInspiracionPerfumeName(it.product) || null,
           presentation: it.presentationName,
@@ -546,7 +673,6 @@ export default function CheckoutPage() {
         })),
       });
 
-      // Si el cliente paga con Tarjeta, generamos el enlace bancario de Wompi y lo redireccionamos
       if (metodoPago === 'CARD') {
         const wompiRes = await fetch('/api/wompi/create-checkout', {
           method: 'POST',
@@ -563,7 +689,6 @@ export default function CheckoutPage() {
 
         const wompiData = await wompiRes.json();
         if (!wompiRes.ok || !wompiData.success || !wompiData.urlEnlace) {
-          // Si falló la creación del enlace de Wompi, marcamos o cancelamos el pedido huérfano
           if (orderData.order?.id) {
             try {
               await fetch('/api/ecommerce/orders', {
@@ -583,16 +708,11 @@ export default function CheckoutPage() {
           throw new Error(wompiData.error || 'No se pudo generar la pasarela segura de Wompi');
         }
 
-
-
-        // Detener el contador visual y mostrar inmediatamente el estado de entrada a Wompi
         if (countdownTimer) clearInterval(countdownTimer);
         setWompiStatusText('Redirigiendo...');
 
-        // Redireccionar al usuario inmediatamente a la pasarela oficial de Wompi / Banco Agrícola sin esperas artificiales
         window.location.href = wompiData.urlEnlace;
 
-        // Fallback de seguridad: si el usuario regresa con el botón de atrás
         setTimeout(() => {
           setIsSubmitting(false);
           setWompiStatusText(null);
@@ -600,14 +720,12 @@ export default function CheckoutPage() {
         return;
       }
 
-      // Registrar evento estándar Meta Pixel Purchase para pedidos confirmados por Transferencia Bancaria
       trackMetaPurchase({
         orderNumber: finalOrderNumber,
         totalValue: totalConEnvio,
         items: metaItems,
       });
 
-      // Limpiar carrito del cliente para pedidos por transferencia
       clearCart();
       setCompletedOrder(newOrder);
       setIsSubmitting(false);
@@ -621,9 +739,16 @@ export default function CheckoutPage() {
       if (errMsg.includes('INSUFFICIENT_STOCK')) {
         await syncCartWithLiveCatalog();
         const cleanMsg = errMsg.replace(/^INSUFFICIENT_STOCK:\s*/i, '');
-        alert(`${cleanMsg}\n\nHemos actualizado tu carrito automáticamente con las existencias reales disponibles para que puedas continuar con tu compra.`);
+        setSubmitErrorBanner(
+          `${cleanMsg} Hemos actualizado tu carrito con las existencias reales disponibles para que puedas continuar.`
+        );
       } else {
-        alert(errMsg || 'Hubo un inconveniente al procesar tu pedido. Por favor verifica las existencias o escríbenos.');
+        setSubmitErrorBanner(
+          errMsg || 'Hubo un inconveniente al procesar tu pedido. Por favor verifica tus datos o escríbenos.'
+        );
+      }
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
   };
@@ -632,83 +757,71 @@ export default function CheckoutPage() {
   if (completedOrder) {
     const isTransfer = completedOrder.paymentMethod === 'TRANSFER';
 
-    const whatsappTransferMessage = encodeURIComponent(
-      `👋 ¡Hola Aromaniak!\n\n` +
-      `Acabo de realizar mi pedido en línea y pagaré por *Transferencia Bancaria*:\n\n` +
-      `📦 *Orden:* #${completedOrder.orderNumber}\n` +
-      `👤 *Cliente:* ${completedOrder.cliente.nombre}\n` +
-      `📱 *Teléfono:* ${completedOrder.cliente.telefono}\n` +
-      `📍 *Modalidad:* ${metodoEntrega === 'RETIRO' ? 'Retiro en Sucursal' : 'Envío a Domicilio'}\n` +
-      `🏠 *Destino:* ${completedOrder.cliente.direccion}\n\n` +
-      `🛍️ *Detalle del Pedido:*\n` +
-      completedOrder.items.map(it => `• ${it.quantity}x ${it.name} - $${it.total.toFixed(2)}`).join('\n') +
-      `\n\n` +
-      `*Total a Transferir:* $${completedOrder.total.toFixed(2)}\n\n` +
-      `📎 *Adjunto mi comprobante de transferencia bancaria para validación.* ¡Muchas gracias!`
-    );
-
     const whatsappCardMessage = encodeURIComponent(
       `👋 ¡Hola Aromaniak!\n\n` +
-      `Acabo de realizar mi pedido con *Tarjeta*:\n\n` +
-      `📦 *Orden:* #${completedOrder.orderNumber}\n` +
-      `👤 *Cliente:* ${completedOrder.cliente.nombre}\n` +
-      `📱 *Teléfono:* ${completedOrder.cliente.telefono}\n` +
-      `📍 *Modalidad:* ${metodoEntrega === 'RETIRO' ? 'Retiro en Sucursal' : 'Envío a Domicilio'}\n` +
-      `🏠 *Destino:* ${completedOrder.cliente.direccion}\n\n` +
-      `🛍️ *Productos:*\n` +
-      completedOrder.items.map(it => `• ${it.quantity}x ${it.name} - $${it.total.toFixed(2)}`).join('\n') +
-      `\n\n*Total:* $${completedOrder.total.toFixed(2)}\n\n` +
-      `¡Quedo atento a la entrega!`
+        `Acabo de realizar mi pedido con *Tarjeta*:\n\n` +
+        `📦 *Orden:* #${completedOrder.orderNumber}\n` +
+        `👤 *Cliente:* ${completedOrder.cliente.nombre}\n` +
+        `📱 *Teléfono:* ${completedOrder.cliente.telefono}\n` +
+        `📍 *Modalidad:* ${metodoEntrega === 'RETIRO' ? 'Retiro en Sucursal' : 'Envío a Domicilio'}\n` +
+        `🏠 *Destino:* ${completedOrder.cliente.direccion}\n\n` +
+        `🛍️ *Productos:*\n` +
+        completedOrder.items.map((it) => `• ${it.quantity}x ${it.name} - $${it.total.toFixed(2)}`).join('\n') +
+        `\n\n*Total:* $${completedOrder.total.toFixed(2)}\n\n` +
+        `¡Quedo atento a la entrega!`
     );
 
     return (
-      <div className="max-w-4xl mx-auto py-6 sm:py-8 px-4 space-y-5 animate-in fade-in duration-300">
-        
-        {/* Barra superior a la altura normal del inicio de página */}
+      <div className="max-w-3xl mx-auto py-4 sm:py-6 space-y-5 animate-in fade-in duration-300">
         <div className="flex items-center justify-between">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Volver a la tienda</span>
           </Link>
-          <span className="clay-badge text-xs font-mono font-black text-indigo-700 bg-white">
+          <span className="text-xs font-mono font-bold text-slate-700 bg-white border border-slate-200 px-3 py-1 rounded-lg">
             Orden #{completedOrder.orderNumber}
           </span>
         </div>
 
-        {/* Encabezado y Acción Principal */}
-        <div className="clay-card p-6 sm:p-8 text-center space-y-4 bg-white/95">
-          
-          <div className="flex justify-center">
-            <span className={`clay-badge text-xs font-extrabold px-3.5 py-1.5 rounded-full ${
-              isTransfer 
-                ? 'text-amber-800 bg-amber-100/90' 
-                : 'text-emerald-800 bg-emerald-100/90'
-            }`}>
-              {isTransfer ? (
-                <>
-                  <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
-                  <span>Pedido Pendiente de Verificación</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Pedido Confirmado</span>
-                </>
-              )}
-            </span>
-          </div>
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 sm:p-8 space-y-6">
+          <div className="text-center space-y-2">
+            <div className="flex justify-center">
+              <span
+                className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border ${
+                  isTransfer
+                    ? 'text-amber-800 bg-amber-50 border-amber-200'
+                    : 'text-emerald-800 bg-emerald-50 border-emerald-200'
+                }`}
+              >
+                {isTransfer ? (
+                  <>
+                    <Clock className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Pendiente de verificación de transferencia</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Pedido confirmado</span>
+                  </>
+                )}
+              </span>
+            </div>
 
-          <div className="space-y-1">
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              {isTransfer ? '¡Pedido Registrado!' : '¡Pedido Recibido con Éxito!'}
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto font-medium leading-relaxed">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              {isTransfer ? '¡Pedido registrado!' : '¡Pedido recibido con éxito!'}
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto leading-relaxed">
               {isTransfer ? (
                 <>
-                  Transfiere <strong className="text-indigo-700 font-black">${completedOrder.total.toFixed(2)}</strong> a cualquiera de nuestras cuentas autorizadas y envía tu comprobante por <strong>WhatsApp (6043-7496)</strong> o súbelo aquí mismo.
+                  Transfiere{' '}
+                  <strong className="text-slate-900 font-extrabold">
+                    ${completedOrder.total.toFixed(2)}
+                  </strong>{' '}
+                  a cualquiera de nuestras cuentas corrientes y envía tu comprobante por{' '}
+                  <strong>WhatsApp (6043-7496)</strong> o súbelo directamente aquí.
                 </>
               ) : (
                 <>
@@ -719,14 +832,12 @@ export default function CheckoutPage() {
           </div>
 
           {isTransfer ? (
-            <div className="pt-2 space-y-4 text-left">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between px-0.5">
-                  <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">
-                    <Building className="w-3.5 h-3.5 text-indigo-600" />
-                    <span>Cuentas Bancarias Autorizadas para Depósito / Transferencia</span>
-                  </span>
-                </div>
+            <div className="space-y-4 pt-2 border-t border-slate-200/80">
+              <div className="space-y-2.5">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <Building className="w-3.5 h-3.5 text-slate-700" />
+                  <span>Cuentas empresariales autorizadas</span>
+                </h2>
                 <BankAccountsCardsList />
               </div>
 
@@ -738,82 +849,61 @@ export default function CheckoutPage() {
                 initialReceiptUrl={completedOrder.transferReceiptUrl}
                 orderNotes={completedOrder.notes}
               />
-
-              <div className="pt-1 flex flex-col items-center justify-center">
-                <button
-                  type="button"
-                  onClick={() => openDrawer('orders')}
-                  className="clay-btn clay-btn-primary px-7 py-2.5 rounded-2xl font-black text-xs sm:text-sm active:scale-95 transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer w-full max-w-sm"
-                >
-                  <Package className="w-4 h-4" />
-                  <span>Ver Mi Pedido y Envío</span>
-                </button>
-              </div>
             </div>
           ) : (
-            <div className="pt-2 pb-1 flex flex-col items-center justify-center gap-2">
+            <div className="pt-2 flex flex-col items-center justify-center gap-2">
               <a
                 href={`https://wa.me/50360437496?text=${whatsappCardMessage}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="clay-btn clay-btn-success px-7 py-3 rounded-2xl font-black text-xs sm:text-sm active:scale-95 transition-all flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg cursor-pointer"
+                className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm transition-colors inline-flex items-center justify-center gap-2 shadow-xs cursor-pointer"
               >
                 <Send className="w-4 h-4" />
                 <span>Notificar por WhatsApp (6043-7496)</span>
               </a>
-              <button
-                type="button"
-                onClick={() => openDrawer('orders')}
-                className="clay-btn clay-btn-primary px-7 py-2.5 rounded-2xl font-black text-xs sm:text-sm active:scale-95 transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer w-full max-w-sm"
-              >
-                <Package className="w-4 h-4" />
-                <span>Ver Mi Pedido y Envío</span>
-              </button>
-              <p className="text-[11px] text-slate-500 font-medium">
-                WhatsApp oficial de validación: <strong className="text-slate-700 font-bold">6043-7496</strong>
+              <p className="text-[11px] text-slate-500">
+                WhatsApp oficial de atención: <strong className="text-slate-700">6043-7496</strong>
               </p>
             </div>
           )}
 
-          {/* Resumen Compacto */}
-          <div className="pt-3 border-t border-slate-100 text-xs space-y-1.5 text-left">
-            <div className="flex justify-between text-slate-600">
-              <span>Entrega:</span>
-              <span className="font-bold text-slate-900 truncate max-w-xs">{completedOrder.cliente.direccion}</span>
+          <div className="pt-4 border-t border-slate-200/80 text-xs space-y-2">
+            <div className="flex justify-between gap-4 text-slate-600">
+              <span className="shrink-0">Destino:</span>
+              <span className="font-semibold text-slate-900 text-right">{completedOrder.cliente.direccion}</span>
             </div>
-            <div className="flex justify-between text-slate-600">
+            <div className="flex justify-between gap-4 text-slate-600">
               <span>Forma de pago:</span>
-              <span className="font-bold text-slate-900">
-                {isTransfer ? 'Transferencia Bancaria' : 'Tarjeta de Crédito / Débito'}
+              <span className="font-semibold text-slate-900">
+                {isTransfer ? 'Transferencia bancaria' : 'Tarjeta de crédito / débito'}
               </span>
             </div>
-            <div className="flex justify-between text-slate-900 font-extrabold pt-1 border-t border-slate-100">
+            <div className="flex justify-between text-slate-900 font-bold pt-2 border-t border-slate-100 text-sm">
               <span>Total:</span>
-              <span className="text-indigo-700 font-mono font-black text-sm">${completedOrder.total.toFixed(2)}</span>
+              <span className="font-mono font-extrabold tabular-nums">
+                ${completedOrder.total.toFixed(2)}
+              </span>
             </div>
           </div>
 
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => openDrawer('orders')}
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Package className="w-4 h-4" />
+              <span>Ver mi pedido y envío</span>
+            </button>
+            <Link
+              href="/"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-semibold transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Seguir comprando</span>
+            </Link>
+          </div>
         </div>
-
-        {/* Botones inferiores */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
-          <button
-            type="button"
-            onClick={() => openDrawer('orders')}
-            className="clay-btn clay-btn-primary px-5 py-2.5 text-xs font-black rounded-xl active:scale-95 transition-all inline-flex items-center gap-2 cursor-pointer shadow-md"
-          >
-            <Package className="w-4 h-4" />
-            <span>Ver Mi Pedido y Envío</span>
-          </button>
-          <Link
-            href="/"
-            className="clay-btn clay-btn-light px-5 py-2.5 text-xs font-bold rounded-xl active:scale-95 transition-all inline-flex items-center gap-2 cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Volver a la Tienda</span>
-          </Link>
-        </div>
-
       </div>
     );
   }
@@ -822,144 +912,113 @@ export default function CheckoutPage() {
   if (cart.length === 0 && !isSubmitting) {
     return (
       <div className="max-w-md mx-auto py-16 px-4 text-center space-y-4">
-        <div className="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-400 flex items-center justify-center mx-auto shadow-inner">
-          <ShoppingBag className="w-8 h-8" />
+        <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 text-slate-400 flex items-center justify-center mx-auto shadow-2xs">
+          <ShoppingBag className="w-7 h-7" />
         </div>
-        <h2 className="text-xl font-black text-slate-900">Tu carrito está vacío</h2>
-        <p className="text-xs text-slate-500">
-          Agrega tus fragancias favoritas antes de proceder al pago seguro.
+        <h1 className="text-xl font-extrabold text-slate-900">Tu carrito está vacío</h1>
+        <p className="text-xs sm:text-sm text-slate-500">
+          Agrega tus esencias, frascos o insumos antes de continuar al pago.
         </p>
         <Link
           href="/"
-          className="clay-btn clay-btn-primary px-6 py-2.5 text-xs font-black rounded-xl inline-flex items-center gap-2 mt-2"
+          className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold inline-flex items-center gap-2 mt-1 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Explorar Catálogo</span>
+          <span>Explorar catálogo</span>
         </Link>
       </div>
     );
   }
 
+  const maxDir = referencia.trim() ? Math.max(120, 242 - referencia.trim().length) : 250;
+  const maxRef = Math.max(40, Math.min(120, 242 - direccion.trim().length));
+
   return (
-    <div className="max-w-6xl mx-auto py-6 sm:py-8 space-y-6">
-      
-      {/* Botón de volver */}
-      <div className="flex items-center justify-between">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Seguir comprando</span>
-        </Link>
-        <span className="text-xs font-bold text-slate-400">
-          Paso 2 de 2 • Pago Seguro
-        </span>
+    <div className="max-w-6xl mx-auto py-2 sm:py-4 space-y-6">
+      {/* Región accesible para anunciar validaciones sin intrusión visual */}
+      <div aria-live="polite" className="sr-only">
+        {liveAnnouncement}
       </div>
 
-      {/* Banner informativo si el usuario regresó de Wompi sin pagar */}
-      {wompiCancelledNotice && (
-        <div className="clay-card p-3.5 sm:p-4 bg-amber-50/95 border border-amber-200 shadow-xs rounded-2xl flex items-start justify-between gap-3 animate-in fade-in">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
-              <AlertCircle className="w-4 h-4 text-amber-600" />
-            </div>
-            <div className="space-y-1 text-xs">
-              <h4 className="font-black text-amber-900">
-                Pago no completado en Wompi
-              </h4>
-              <p className="text-amber-800 leading-relaxed text-[11px]">
-                Has regresado de la pasarela bancaria. No se realizó ningún cargo a tu tarjeta y la orden tentativa anterior ({wompiCancelledNotice}) no fue procesada. Tus productos siguen intactos en tu carrito para que puedas completar tu compra cuando gustes.
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setWompiCancelledNotice(null)}
-            className="text-amber-500 hover:text-amber-800 p-1 rounded-lg text-xs font-bold cursor-pointer transition-colors shrink-0"
-            title="Cerrar aviso"
+      {/* ================= CABECERA INTEGRADA EN LA PÁGINA (SIN BURBUJAS PASTILLA) ================= */}
+      <header className="space-y-3 pb-4 border-b border-slate-200/90">
+        {/* Fila superior: navegación de retorno + sesión de cuenta discreta */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 transition-colors"
           >
-            ✕
-          </button>
-        </div>
-      )}
+            <ArrowLeft className="w-4 h-4" />
+            <span>Seguir comprando</span>
+          </Link>
 
-      {/* Banner de Estado de Autenticación / Google Login (delgado y compacto) */}
-      {isLoggedIn && customer ? (
-        <div className="clay-card py-2 px-3.5 sm:px-4 bg-emerald-50/80 border border-emerald-200/80 shadow-2xs flex items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
-              ✓
+          {isLoggedIn && customer ? (
+            <div className="inline-flex items-center gap-2 text-xs text-slate-600">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" aria-hidden="true" />
+              <span className="truncate max-w-[220px] sm:max-w-xs">
+                Sesión activa: <strong className="font-bold text-slate-900">{customer.name}</strong>
+              </span>
             </div>
-            <p className="text-xs font-bold text-slate-800 truncate">
-              Sesión iniciada como <span className="text-emerald-700 font-extrabold">{customer.name}</span>
-            </p>
-          </div>
-          <span className="clay-badge bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0">
-            {customer.authProvider === 'google' ? 'Google' : 'Registrado'}
-          </span>
-        </div>
-      ) : (
-        <div className="clay-card py-2 px-3.5 sm:px-4 bg-gradient-to-r from-indigo-50/80 via-purple-50/80 to-pink-50/60 border border-indigo-100/70 shadow-2xs flex items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-7 h-7 rounded-lg bg-white text-slate-700 flex items-center justify-center shadow-xs border border-slate-100 shrink-0">
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          ) : (
+            <button
+              type="button"
+              onClick={() => openAuthModal('login')}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200/90 text-xs font-semibold text-slate-700 hover:text-slate-900 shadow-2xs transition-colors cursor-pointer"
+            >
+              <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
               </svg>
-            </div>
-            <p className="text-xs font-bold text-slate-800 truncate">
-              ¿Tienes cuenta? <span className="font-medium text-slate-500 hidden sm:inline">Inicia sesión para autocompletar tus datos</span>
+              <span>Autocompletar con Google</span>
+            </button>
+          )}
+        </div>
+
+        {/* Título de Checkout + Respaldo Bancario Integrado Directamente en el Lienzo */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 pt-1">
+          <div className="space-y-1">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+              Finalizar compra
+            </h1>
+            <p className="text-xs text-slate-600 flex items-center gap-1.5">
+              <Lock className="w-3.5 h-3.5 text-emerald-600 shrink-0" aria-hidden="true" />
+              <span>
+                Pago seguro protegido con 3D Secure y cuentas empresariales verificadas
+              </span>
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => openAuthModal('login')}
-            className="clay-btn clay-btn-primary px-3 py-1.5 text-xs font-bold rounded-lg whitespace-nowrap active:scale-95 transition-transform cursor-pointer shrink-0"
-          >
-            Continuar con Google
-          </button>
-        </div>
-      )}
 
-      {/* Barra Unificada de Respaldo Bancario y Pago Seguro */}
-      <div className="clay-card px-4 py-3 sm:px-5 sm:py-3.5 bg-white/95 border border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center shrink-0">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-          </div>
-          <div className="text-left">
-            <span className="text-xs font-black text-slate-900 block leading-tight">
-              Pago 100% Seguro y Protegido
-            </span>
-            <span className="text-[10.5px] font-semibold text-slate-500 block">
-              Pasarela oficial 3D Secure y cuentas empresariales verificadas
-            </span>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5">
-          {/* Visa */}
+          {/* Logotipos oficiales directos sobre la página (sin pastillas ni contenedores flotantes) */}
           <div
-            className="h-8 px-3 rounded-xl bg-slate-50 border border-slate-200/80 inline-flex items-center justify-center"
-            title="Visa"
+            className="flex flex-wrap items-center gap-x-3.5 sm:gap-x-4 gap-y-2 pt-0.5"
+            aria-label="Medios de pago y bancos respaldados"
           >
-            <svg className="h-3.5 w-auto" viewBox="0 0 66 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Visa */}
+            <svg
+              className="h-3.5 sm:h-4 w-auto shrink-0"
+              viewBox="0 0 66 22"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              role="img"
+              aria-label="Visa"
+            >
               <path
                 d="M24.5 1.5L16.2 18.5H10.8L6.6 4.8C6.3 3.8 6.1 3.4 5.3 3C4.1 2.3 2.1 1.7 0.5 1.4L0.6 0.8H9.2C10.3 0.8 11.3 1.5 11.5 2.8L13.6 13.7L18.8 0.8H24.5V1.5ZM45.8 12.8C45.8 8 39 7.7 39 5.5C39 4.8 39.7 4.1 41.1 3.9C41.8 3.8 43.8 3.7 45.8 4.7L46.6 0.9C45.5 0.5 44 0 42.2 0C37.1 0 33.5 2.7 33.5 6.6C33.5 9.5 36.1 11.1 38 12.1C40 13.1 40.7 13.7 40.7 14.6C40.7 15.9 39.1 16.5 37.7 16.5C35.1 16.5 33.5 15.8 32.3 15.2L31.4 19.3C32.7 19.9 35 20.4 37.3 20.4C42.8 20.4 45.8 17.7 45.8 12.8ZM59.5 18.5H64.3L60.1 0.8H55.9C54.9 0.8 54.1 1.4 53.8 2.2L46 18.5H51.2L52.2 15.7H58.6L59.5 18.5ZM53.6 11.8L56.3 4.5L57.8 11.8H53.6ZM32.4 0.8L28.2 18.5H23.3L27.5 0.8H32.4Z"
                 fill="#1434CB"
               />
             </svg>
-          </div>
 
-          {/* Mastercard */}
-          <div
-            className="h-8 px-3 rounded-xl bg-slate-50 border border-slate-200/80 inline-flex items-center justify-center"
-            title="Mastercard"
-          >
-            <svg className="h-[18px] w-auto" viewBox="0 0 36 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Mastercard */}
+            <svg
+              className="h-4 sm:h-[18px] w-auto shrink-0"
+              viewBox="0 0 36 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              role="img"
+              aria-label="Mastercard"
+            >
               <circle cx="12" cy="12" r="10" fill="#EB001B" />
               <circle cx="24" cy="12" r="10" fill="#F79E1B" />
               <path
@@ -967,719 +1026,1045 @@ export default function CheckoutPage() {
                 fill="#FF5F00"
               />
             </svg>
-          </div>
 
-          {/* Wompi */}
-          <div
-            className="h-8 px-3 rounded-xl bg-slate-50 border border-slate-200/80 inline-flex items-center justify-center"
-            title="Wompi El Salvador"
-          >
+            <span className="h-3.5 w-px bg-slate-300/80 shrink-0" aria-hidden="true" />
+
+            {/* Wompi */}
             <img
               src="/images/banks/wompi.svg"
               alt="Wompi El Salvador"
-              className="h-4 sm:h-[18px] w-auto object-contain"
+              className="h-4 sm:h-[17px] w-auto object-contain shrink-0"
             />
-          </div>
 
-          {/* Bancoagrícola */}
-          <div
-            className="h-8 px-3.5 rounded-xl bg-slate-50 border border-slate-200/80 inline-flex items-center justify-center"
-            title="Bancoagrícola"
-          >
+            <span className="h-3.5 w-px bg-slate-300/80 shrink-0" aria-hidden="true" />
+
+            {/* Bancoagrícola (Identidad oficial moderna monocromática) */}
             <img
-              src="/images/banks/bancoagricola.svg"
+              src="/images/banks/bancoagricola.svg?v=2026"
               alt="Bancoagrícola"
-              className="h-4 sm:h-[18px] w-auto object-contain"
+              className="h-3.5 sm:h-4 w-auto object-contain shrink-0"
             />
-          </div>
 
-          {/* BAC Credomatic */}
-          <div
-            className="h-8 px-3 rounded-xl bg-slate-50 border border-slate-200/80 inline-flex items-center justify-center"
-            title="BAC Credomatic"
-          >
+            <span className="h-3.5 w-px bg-slate-300/80 shrink-0" aria-hidden="true" />
+
+            {/* BAC Credomatic */}
             <img
               src="/images/banks/bac.svg"
               alt="BAC Credomatic"
-              className="h-3.5 sm:h-4 w-auto object-contain"
+              className="h-3.5 sm:h-4 w-auto object-contain shrink-0"
             />
           </div>
         </div>
-      </div>
+      </header>
 
-      <form onSubmit={handleSubmitOrder}>
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
-          {/* ================= COLUMNA IZQUIERDA: FORMULARIOS ================= */}
-          <div className="lg:col-span-7 space-y-5">
-            
-            {/* 1. Modalidad de Entrega, Datos de Contacto y Dirección */}
-            <div className="clay-card p-5 sm:p-6 space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
+      {/* Aviso si el usuario regresó de Wompi sin completar pago */}
+      {wompiCancelledNotice && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div className="space-y-0.5 text-xs">
+              <p className="font-bold text-amber-950">Pago no completado en Wompi</p>
+              <p className="text-amber-900 leading-relaxed">
+                No se realizó ningún cargo a tu tarjeta y la orden anterior ({wompiCancelledNotice}) fue anulada. Tus productos siguen intactos en el carrito.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setWompiCancelledNotice(null)}
+            className="text-amber-600 hover:text-amber-900 p-1 rounded text-xs font-bold cursor-pointer shrink-0"
+            aria-label="Cerrar aviso"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Aviso de error de servidor o inventario */}
+      {submitErrorBanner && (
+        <div
+          role="alert"
+          className="p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-start justify-between gap-3"
+        >
+          <div className="flex items-start gap-2.5 text-xs text-rose-900">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+            <p className="font-medium leading-relaxed">{submitErrorBanner}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSubmitErrorBanner(null)}
+            className="text-rose-500 hover:text-rose-800 p-1 rounded text-xs font-bold cursor-pointer shrink-0"
+            aria-label="Cerrar error"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      <form ref={formRef} onSubmit={handleSubmitOrder} noValidate>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+          {/* ================= COLUMNA IZQUIERDA: SECCIONES DEL CHECKOUT ================= */}
+          <div className="lg:col-span-7 space-y-6">
+            {/* SECCIÓN 1: ENTREGA, CONTACTO Y DIRECCIÓN */}
+            <section className="bg-white rounded-2xl border border-slate-200/95 shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden">
+              <div className="px-5 sm:px-6 py-4 bg-slate-50/70 border-b border-slate-200/80 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <span className="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
                     1
-                  </div>
-                  <h3 className="font-extrabold text-sm text-slate-900">
-                    Modalidad de Entrega y Contacto
-                  </h3>
+                  </span>
+                  <h2 className="font-bold text-sm sm:text-base text-slate-900">
+                    Entrega y datos de contacto
+                  </h2>
                 </div>
-                <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">
-                  Cobertura 100% El Salvador
+                <span className="text-[11px] font-semibold text-slate-500 hidden sm:inline">
+                  Cobertura en los 14 departamentos
                 </span>
               </div>
 
-              {/* Selector de Método de Entrega Claymórfico */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                {/* Botón Envío a Domicilio */}
-                <button
-                  type="button"
-                  onClick={() => setMetodoEntrega('ENVIO')}
-                  className={`relative p-3.5 sm:p-4 rounded-2xl text-left flex flex-col justify-between gap-2.5 cursor-pointer select-none transition-all duration-300 ease-out active:scale-[0.97] ${
-                    metodoEntrega === 'ENVIO'
-                      ? 'bg-gradient-to-br from-indigo-50/90 via-white to-purple-50/70 border-2 border-indigo-500 shadow-[5px_7px_18px_rgba(99,102,241,0.25),-4px_-4px_12px_rgba(255,255,255,0.95),inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),inset_-2px_-2px_5px_rgba(99,102,241,0.15)] scale-[1.01]'
-                      : 'bg-slate-50/90 border border-white/80 shadow-[4px_6px_14px_rgba(164,177,198,0.25),-4px_-4px_10px_rgba(255,255,255,0.95),inset_1px_1px_2px_rgba(255,255,255,0.9)] hover:bg-white hover:border-slate-200/80 hover:shadow-[6px_8px_18px_rgba(164,177,198,0.32),-5px_-5px_12px_rgba(255,255,255,1)] hover:-translate-y-0.5'
-                  }`}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-2.5">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
+              <div className="divide-y divide-slate-200/80">
+                {/* Bloque 1A: Modalidad de Entrega */}
+                <div className="p-5 sm:p-6 space-y-3.5">
+                  <span className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Modalidad de entrega
+                  </span>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Modalidad de entrega">
+                    {/* Opción: Envío a Domicilio */}
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={metodoEntrega === 'ENVIO'}
+                      onClick={() => setMetodoEntrega('ENVIO')}
+                      className={`p-4 rounded-xl border text-left flex flex-col justify-between gap-2 transition-colors cursor-pointer ${
                         metodoEntrega === 'ENVIO'
-                          ? 'bg-indigo-600 text-white shadow-[2px_3px_8px_rgba(99,102,241,0.45),inset_1px_1px_2px_rgba(255,255,255,0.4)] scale-110'
-                          : 'bg-white text-indigo-600 shadow-[2px_3px_6px_rgba(164,177,198,0.3),inset_1px_1px_2px_rgba(255,255,255,0.9)]'
-                      }`}>
-                        <Truck className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <span className="font-black text-slate-900 text-xs block">Envío a Domicilio</span>
-                        <span className="text-[10px] font-bold text-indigo-600">A los 14 departamentos</span>
-                      </div>
-                    </div>
-
-                    {/* Indicador de Selección Claymórfico */}
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300 ${
-                      metodoEntrega === 'ENVIO'
-                        ? 'bg-indigo-600 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.5),inset_-1px_-1px_2px_rgba(0,0,0,0.2)]'
-                        : 'border-2 border-slate-300 bg-white shadow-inner'
-                    }`}>
-                      {metodoEntrega === 'ENVIO' && (
-                        <div className="w-2 h-2 rounded-full bg-white animate-in zoom-in-50 duration-200" />
-                      )}
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                    Entregamos a domicilio en <strong className="text-slate-800 font-bold">absolutamente todas partes de El Salvador</strong>.
-                  </p>
-                </button>
-
-                {/* Botón Retiro en Sucursal */}
-                <button
-                  type="button"
-                  onClick={() => setMetodoEntrega('RETIRO')}
-                  className={`relative p-3.5 sm:p-4 rounded-2xl text-left flex flex-col justify-between gap-2.5 cursor-pointer select-none transition-all duration-300 ease-out active:scale-[0.97] ${
-                    metodoEntrega === 'RETIRO'
-                      ? 'bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/70 border-2 border-emerald-500 shadow-[5px_7px_18px_rgba(16,185,129,0.25),-4px_-4px_12px_rgba(255,255,255,0.95),inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),inset_-2px_-2px_5px_rgba(16,185,129,0.15)] scale-[1.01]'
-                      : 'bg-slate-50/90 border border-white/80 shadow-[4px_6px_14px_rgba(164,177,198,0.25),-4px_-4px_10px_rgba(255,255,255,0.95),inset_1px_1px_2px_rgba(255,255,255,0.9)] hover:bg-white hover:border-slate-200/80 hover:shadow-[6px_8px_18px_rgba(164,177,198,0.32),-5px_-5px_12px_rgba(255,255,255,1)] hover:-translate-y-0.5'
-                  }`}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-2.5">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                        metodoEntrega === 'RETIRO'
-                          ? 'bg-emerald-600 text-white shadow-[2px_3px_8px_rgba(16,185,129,0.45),inset_1px_1px_2px_rgba(255,255,255,0.4)] scale-110'
-                          : 'bg-white text-emerald-600 shadow-[2px_3px_6px_rgba(164,177,198,0.3),inset_1px_1px_2px_rgba(255,255,255,0.9)]'
-                      }`}>
-                        <Store className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <span className="font-black text-slate-900 text-xs block">Retiro en Sucursal</span>
-                        <span className="text-[10px] font-bold text-emerald-600">Centro Comercial El Rosal, Calle El Progreso • ¡Gratis!</span>
-                      </div>
-                    </div>
-
-                    {/* Indicador de Selección Claymórfico */}
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300 ${
-                      metodoEntrega === 'RETIRO'
-                        ? 'bg-emerald-600 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.5),inset_-1px_-1px_2px_rgba(0,0,0,0.2)]'
-                        : 'border-2 border-slate-300 bg-white shadow-inner'
-                    }`}>
-                      {metodoEntrega === 'RETIRO' && (
-                        <div className="w-2 h-2 rounded-full bg-white animate-in zoom-in-50 duration-200" />
-                      )}
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                    Pasa a retirar gratis o envía tu delivery (<strong className="text-slate-800 font-bold">PedidosYa, Uber</strong>) a nuestro local en <strong className="text-slate-800 font-bold">Centro Comercial El Rosal, Calle El Progreso, San Salvador</strong>.
-                  </p>
-                </button>
-              </div>
-
-              {/* Cuadro de Tiempos de Envío y Despacho (únicamente si seleccionó Envío a Domicilio) */}
-              {metodoEntrega === 'ENVIO' && (
-                <div className="py-2.5 px-3.5 rounded-xl bg-indigo-50/70 border border-indigo-100/80 text-xs text-slate-700 flex items-center gap-2.5 animate-in fade-in slide-in-from-top-2 duration-300 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.9),inset_-1px_-1px_2px_rgba(99,102,241,0.06)]">
-                  <Truck className="w-4 h-4 text-indigo-600 shrink-0" />
-                  <p className="text-[11.5px] text-slate-600 leading-snug">
-                    <strong className="text-slate-900 font-bold">Entrega de 24 a 48 horas</strong> a todo El Salvador.
-                    <span className="text-slate-500 text-[11px] ml-1">Despachos de lunes a sábado (domingos no laborables).</span>
-                  </p>
-                </div>
-              )}
-
-              {/* Formulario de contacto y destino */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
-                <div className="sm:col-span-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="font-bold text-slate-700">
-                      Nombre Completo <span className="text-rose-500">*</span>
-                    </label>
-                    <span className="text-[10px] font-semibold text-slate-400">
-                      {nombre.length}/75
-                    </span>
-                  </div>
-                  <input
-                    type="text"
-                    required
-                    maxLength={75}
-                    placeholder="Ej. Carmen Santos de López"
-                    value={nombre}
-                    onChange={(e) => setNombre(e.target.value.slice(0, 75))}
-                    className="clay-input w-full font-medium"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="font-bold text-slate-700">
-                      Teléfono / WhatsApp <span className="text-rose-500">*</span>
-                    </label>
-                    <span className="text-[10px] font-semibold text-slate-400">
-                      {telefono.length}/25
-                    </span>
-                  </div>
-                  <input
-                    type="tel"
-                    required
-                    maxLength={25}
-                    placeholder="7000-0000"
-                    value={telefono}
-                    onChange={(e) => setTelefono(e.target.value.slice(0, 25))}
-                    className="clay-input w-full font-medium"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="font-bold text-slate-700">
-                      Correo Electrónico {tipoComprobante === '03' ? <span className="text-rose-500">*</span> : '(Recomendado para guardar tus datos)'}
-                    </label>
-                    <span className="text-[10px] font-semibold text-slate-400">
-                      {email.length}/75
-                    </span>
-                  </div>
-                  <input
-                    type="email"
-                    required={tipoComprobante === '03'}
-                    maxLength={75}
-                    placeholder="carmen@ejemplo.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value.slice(0, 75))}
-                    className="clay-input w-full font-medium"
-                  />
-                </div>
-
-                {metodoEntrega === 'ENVIO' ? (
-                  <>
-                    <div>
-                      <label htmlFor="checkout-departamento" className="font-bold text-slate-700 block mb-1">
-                        Departamento <span className="text-rose-500">*</span>
-                      </label>
-                      <select
-                        id="checkout-departamento"
-                        name="department"
-                        required
-                        aria-describedby="checkout-location-warning"
-                        value={departamento}
-                        onChange={(e) => {
-                          const newDept = e.target.value;
-                          setDepartamento(newDept);
-                          const munis = getMunicipiosByDepartamento(newDept);
-                          if (munis.length > 0) {
-                            setMunicipio(munis[0].nombre);
-                          }
-                        }}
-                        className="clay-input w-full font-bold"
-                      >
-                        {DEPARTAMENTOS_CATALOG.map((dep) => (
-                          <option key={dep.id} value={dep.nombre}>{dep.nombre}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label htmlFor="checkout-municipio" className="font-bold text-slate-700 block mb-1">
-                        Municipio / Distrito <span className="text-rose-500">*</span>
-                      </label>
-                      <select
-                        id="checkout-municipio"
-                        name="municipality"
-                        required
-                        aria-describedby="checkout-location-warning"
-                        value={municipio}
-                        onChange={(e) => setMunicipio(e.target.value)}
-                        className="clay-input w-full font-bold"
-                      >
-                        {getMunicipiosByDepartamento(departamento).map((m) => (
-                          <option key={m.id} value={m.nombre}>{m.nombre}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div
-                      id="checkout-location-warning"
-                      role="note"
-                      className="sm:col-span-2 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/90 px-3.5 py-2.5 text-xs text-amber-900"
+                          ? 'border-indigo-600 bg-indigo-50/25 ring-1 ring-indigo-600'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
                     >
-                      <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" aria-hidden="true" />
-                      <p className="font-semibold leading-relaxed">
-                        Importante: Verifica que tu departamento y municipio sean correctos. Los paquetes podrían no llegar o retrasarse de ingresarse departamentos o municipios incorrectos en la dirección.
-                      </p>
-                    </div>
-
-                    {(() => {
-                      const maxDir = referencia.trim() ? Math.max(120, 242 - referencia.trim().length) : 250;
-                      const maxRef = Math.max(40, Math.min(120, 242 - direccion.trim().length));
-                      return (
-                        <>
-                          <div className="sm:col-span-2">
-                            <div className="flex items-center justify-between mb-1">
-                              <label className="font-bold text-slate-700">
-                                Dirección Exacta de Entrega <span className="text-rose-500">*</span>
-                              </label>
-                              <span className="text-[10px] font-semibold text-slate-400">
-                                {direccion.length}/{maxDir}
-                              </span>
-                            </div>
-                            <input
-                              type="text"
-                              required
-                              maxLength={maxDir}
-                              placeholder="Colonia, Calle, Pasaje, Número de Casa o Edificio..."
-                              value={direccion}
-                              onChange={(e) => setDireccion(e.target.value.slice(0, maxDir))}
-                              className="clay-input w-full font-medium"
-                            />
+                      <div className="flex items-start justify-between gap-2 w-full">
+                        <div className="flex items-center gap-2.5">
+                          <Truck
+                            className={`w-4 h-4 shrink-0 ${
+                              metodoEntrega === 'ENVIO' ? 'text-indigo-600' : 'text-slate-500'
+                            }`}
+                          />
+                          <div>
+                            <span className="font-bold text-slate-900 text-sm block leading-tight">
+                              Envío a domicilio
+                            </span>
+                            <span className="text-xs font-semibold text-slate-500">
+                              Tarifa estándar $2.90
+                            </span>
                           </div>
-
-                          <div className="sm:col-span-2">
-                            <div className="flex items-center justify-between mb-1">
-                              <label className="font-bold text-slate-700">
-                                Puntos de Referencia para el Repartidor
-                              </label>
-                              <span className="text-[10px] font-semibold text-slate-400">
-                                {referencia.length}/{maxRef}
-                              </span>
-                            </div>
-                            <input
-                              type="text"
-                              maxLength={maxRef}
-                              placeholder="Ej. Frente a parque infantil, portón negro con timbre blanco..."
-                              value={referencia}
-                              onChange={(e) => setReferencia(e.target.value.slice(0, maxRef))}
-                              className="clay-input w-full font-medium"
-                            />
-                          </div>
-                        </>
-                      );
-                    })()}
-                  </>
-                ) : (
-                  <div className="sm:col-span-2 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 space-y-1.5">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                      <p className="font-black flex items-center gap-1.5 text-emerald-800">
-                        <Store className="w-4 h-4" />
-                        <span>Retiro en Sucursal — Centro Comercial El Rosal, Calle El Progreso, San Salvador</span>
+                        </div>
+                        <span
+                          className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${
+                            metodoEntrega === 'ENVIO'
+                              ? 'border-indigo-600 bg-indigo-600'
+                              : 'border-slate-300 bg-white'
+                          }`}
+                        >
+                          {metodoEntrega === 'ENVIO' && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                          )}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        Entrega de 24 a 48 horas hábiles en todo El Salvador (lunes a sábado).
                       </p>
-                      <a
-                        href="https://maps.app.goo.gl/shtetXTGcPZQpBwY6"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-900 underline shrink-0 cursor-pointer"
-                      >
-                        <span>Ver en Google Maps</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-                    <p className="text-[11px] text-emerald-900 leading-relaxed">
-                      Tu pedido será preparado en nuestro punto ubicado en <strong className="font-bold text-emerald-950">Centro Comercial El Rosal, Calle El Progreso, San Salvador</strong> sin costo de envío. Puedes pasar a retirar personalmente o mandar tu propio delivery de <strong className="font-bold text-emerald-950">PedidosYa</strong> o de <strong className="font-bold text-emerald-950">Uber</strong> a recoger tu pedido; solo indícale al delivery el nombre de quien es la orden y ya. Te notificaremos vía WhatsApp al <strong>{telefono || 'número proporcionado'}</strong> en cuanto esté listo para retirar.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
+                    </button>
 
-            {/* 2. Método de Pago */}
-            <div className="clay-card p-5 sm:p-6 space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
-                    2
-                  </div>
-                  <h3 className="font-extrabold text-sm text-slate-900">
-                    Forma de Pago
-                  </h3>
-                </div>
-                <span className="text-[10.5px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
-                  Pago seguro en línea o transferencia
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                {/* Botón Tarjeta */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMetodoPago('CARD');
-                    trackMetaAddPaymentInfo(cart, totalConEnvio, 'CARD');
-                  }}
-                  className={`relative p-3.5 sm:p-4 rounded-2xl text-left flex flex-col justify-between gap-2.5 cursor-pointer select-none transition-all duration-300 ease-out active:scale-[0.97] ${
-                    metodoPago === 'CARD'
-                      ? 'bg-gradient-to-br from-indigo-50/90 via-white to-purple-50/70 border-2 border-indigo-500 shadow-[5px_7px_18px_rgba(99,102,241,0.25),-4px_-4px_12px_rgba(255,255,255,0.95),inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),inset_-2px_-2px_5px_rgba(99,102,241,0.15)] scale-[1.01]'
-                      : 'bg-slate-50/90 border border-white/80 shadow-[4px_6px_14px_rgba(164,177,198,0.25),-4px_-4px_10px_rgba(255,255,255,0.95),inset_1px_1px_2px_rgba(255,255,255,0.9)] hover:bg-white hover:border-slate-200/80 hover:shadow-[6px_8px_18px_rgba(164,177,198,0.32),-5px_-5px_12px_rgba(255,255,255,1)] hover:-translate-y-0.5'
-                  }`}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-2.5">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                        metodoPago === 'CARD'
-                          ? 'bg-indigo-600 text-white shadow-[2px_3px_8px_rgba(99,102,241,0.45),inset_1px_1px_2px_rgba(255,255,255,0.4)] scale-110'
-                          : 'bg-white text-indigo-600 shadow-[2px_3px_6px_rgba(164,177,198,0.3),inset_1px_1px_2px_rgba(255,255,255,0.9)]'
-                      }`}>
-                        <CreditCard className="w-4 h-4" />
+                    {/* Opción: Retiro en Sucursal */}
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={metodoEntrega === 'RETIRO'}
+                      onClick={() => setMetodoEntrega('RETIRO')}
+                      className={`p-4 rounded-xl border text-left flex flex-col justify-between gap-2 transition-colors cursor-pointer ${
+                        metodoEntrega === 'RETIRO'
+                          ? 'border-indigo-600 bg-indigo-50/25 ring-1 ring-indigo-600'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2 w-full">
+                        <div className="flex items-center gap-2.5">
+                          <Store
+                            className={`w-4 h-4 shrink-0 ${
+                              metodoEntrega === 'RETIRO' ? 'text-indigo-600' : 'text-slate-500'
+                            }`}
+                          />
+                          <div>
+                            <span className="font-bold text-slate-900 text-sm block leading-tight">
+                              Retiro en sucursal
+                            </span>
+                            <span className="text-xs font-semibold text-emerald-700">
+                              Sin costo de envío (Gratis)
+                            </span>
+                          </div>
+                        </div>
+                        <span
+                          className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${
+                            metodoEntrega === 'RETIRO'
+                              ? 'border-indigo-600 bg-indigo-600'
+                              : 'border-slate-300 bg-white'
+                          }`}
+                        >
+                          {metodoEntrega === 'RETIRO' && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                          )}
+                        </span>
                       </div>
-                      <div>
-                        <span className="font-black text-slate-900 text-xs block">Tarjeta Crédito / Débito (Wompi)</span>
-                        <span className="text-[10px] font-bold text-indigo-600">Visa, Mastercard, Puntos y Cuotas</span>
-                      </div>
-                    </div>
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        Retira personalmente o envía PedidosYa / Uber a C.C. El Rosal, San Salvador.
+                      </p>
+                    </button>
+                  </div>
 
-                    {/* Indicador de Selección Claymórfico */}
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300 ${
-                      metodoPago === 'CARD'
-                        ? 'bg-indigo-600 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.5),inset_-1px_-1px_2px_rgba(0,0,0,0.2)]'
-                        : 'border-2 border-slate-300 bg-white shadow-inner'
-                    }`}>
-                      {metodoPago === 'CARD' && (
-                        <div className="w-2 h-2 rounded-full bg-white animate-in zoom-in-50 duration-200" />
-                      )}
-                    </div>
-                  </div>
-                  <div className="rounded-xl bg-white border border-slate-200/80 px-3 py-2 flex items-center justify-around gap-3 shadow-2xs">
-                    <img
-                      src="/images/banks/wompi.svg"
-                      alt="Wompi El Salvador"
-                      className="h-4 sm:h-[18px] w-auto object-contain"
-                    />
-                    <span className="h-3.5 w-px bg-slate-200 shrink-0" aria-hidden="true" />
-                    <svg className="h-3.5 sm:h-4 w-auto shrink-0" viewBox="0 0 66 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Visa">
-                      <path d="M24.5 1.5L16.2 18.5H10.8L6.6 4.8C6.3 3.8 6.1 3.4 5.3 3C4.1 2.3 2.1 1.7 0.5 1.4L0.6 0.8H9.2C10.3 0.8 11.3 1.5 11.5 2.8L13.6 13.7L18.8 0.8H24.5V1.5ZM45.8 12.8C45.8 8 39 7.7 39 5.5C39 4.8 39.7 4.1 41.1 3.9C41.8 3.8 43.8 3.7 45.8 4.7L46.6 0.9C45.5 0.5 44 0 42.2 0C37.1 0 33.5 2.7 33.5 6.6C33.5 9.5 36.1 11.1 38 12.1C40 13.1 40.7 13.7 40.7 14.6C40.7 15.9 39.1 16.5 37.7 16.5C35.1 16.5 33.5 15.8 32.3 15.2L31.4 19.3C32.7 19.9 35 20.4 37.3 20.4C42.8 20.4 45.8 17.7 45.8 12.8ZM59.5 18.5H64.3L60.1 0.8H55.9C54.9 0.8 54.1 1.4 53.8 2.2L46 18.5H51.2L52.2 15.7H58.6L59.5 18.5ZM53.6 11.8L56.3 4.5L57.8 11.8H53.6ZM32.4 0.8L28.2 18.5H23.3L27.5 0.8H32.4Z" fill="#1434CB"/>
-                    </svg>
-                    <span className="h-3.5 w-px bg-slate-200 shrink-0" aria-hidden="true" />
-                    <svg className="h-4 sm:h-[18px] w-auto shrink-0" viewBox="0 0 36 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Mastercard">
-                      <circle cx="12" cy="12" r="10" fill="#EB001B"/>
-                      <circle cx="24" cy="12" r="10" fill="#F79E1B"/>
-                      <path d="M18 4.8A9.95 9.95 0 0 0 14.5 12c0 2.8 1.1 5.3 2.9 7.1a9.95 9.95 0 0 0 7.1-7.1c0-2.8-1.1-5.3-2.9-7.1C18.4 4.6 18.2 4.7 18 4.8Z" fill="#FF5F00"/>
-                    </svg>
-                  </div>
-                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                    Pasarela segura de <strong className="text-slate-800 font-bold">Wompi / Bancoagrícola</strong> con protección 3D Secure.
-                  </p>
-                </button>
-
-                {/* Botón Transferencia Bancaria */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMetodoPago('TRANSFER');
-                    trackMetaAddPaymentInfo(cart, totalConEnvio, 'TRANSFER');
-                  }}
-                  className={`relative p-3.5 sm:p-4 rounded-2xl text-left flex flex-col justify-between gap-2.5 cursor-pointer select-none transition-all duration-300 ease-out active:scale-[0.97] ${
-                    metodoPago === 'TRANSFER'
-                      ? 'bg-gradient-to-br from-indigo-50/90 via-white to-purple-50/70 border-2 border-indigo-500 shadow-[5px_7px_18px_rgba(99,102,241,0.25),-4px_-4px_12px_rgba(255,255,255,0.95),inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),inset_-2px_-2px_5px_rgba(99,102,241,0.15)] scale-[1.01]'
-                      : 'bg-slate-50/90 border border-white/80 shadow-[4px_6px_14px_rgba(164,177,198,0.25),-4px_-4px_10px_rgba(255,255,255,0.95),inset_1px_1px_2px_rgba(255,255,255,0.9)] hover:bg-white hover:border-slate-200/80 hover:shadow-[6px_8px_18px_rgba(164,177,198,0.32),-5px_-5px_12px_rgba(255,255,255,1)] hover:-translate-y-0.5'
-                  }`}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-2.5">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                        metodoPago === 'TRANSFER'
-                          ? 'bg-indigo-600 text-white shadow-[2px_3px_8px_rgba(99,102,241,0.45),inset_1px_1px_2px_rgba(255,255,255,0.4)] scale-110'
-                          : 'bg-white text-indigo-600 shadow-[2px_3px_6px_rgba(164,177,198,0.3),inset_1px_1px_2px_rgba(255,255,255,0.9)]'
-                      }`}>
-                        <Building className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <span className="font-black text-slate-900 text-xs block">Transferencia Bancaria</span>
-                        <span className="text-[10px] font-bold text-indigo-600">Cuentas Corrientes Oficiales</span>
-                      </div>
-                    </div>
-
-                    {/* Indicador de Selección Claymórfico */}
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300 ${
-                      metodoPago === 'TRANSFER'
-                        ? 'bg-indigo-600 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.5),inset_-1px_-1px_2px_rgba(0,0,0,0.2)]'
-                        : 'border-2 border-slate-300 bg-white shadow-inner'
-                    }`}>
-                      {metodoPago === 'TRANSFER' && (
-                        <div className="w-2 h-2 rounded-full bg-white animate-in zoom-in-50 duration-200" />
-                      )}
-                    </div>
-                  </div>
-                  <div className="rounded-xl bg-white border border-slate-200/80 px-3 py-2 flex items-center justify-between gap-3 shadow-2xs">
-                    <img
-                      src="/images/banks/bancoagricola.svg"
-                      alt="Bancoagrícola"
-                      className="h-4 sm:h-[18px] w-auto object-contain"
-                    />
-                    <span className="h-3.5 w-px bg-slate-200" aria-hidden="true" />
-                    <img
-                      src="/images/banks/bac.svg"
-                      alt="BAC Credomatic"
-                      className="h-3.5 sm:h-4 w-auto object-contain"
-                    />
-                  </div>
-                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                    Envía tu comprobante por <strong className="text-slate-800 font-bold">WhatsApp al 6043-7496</strong> o súbelo en la página de tu orden.
-                  </p>
-                </button>
-              </div>
-
-              {metodoPago === 'CARD' ? (
-                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/90 border border-slate-200/80 text-[11px] text-slate-600 leading-relaxed">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <p>
-                    Todas las compras son seguras y se procesan por medio de <strong className="font-bold text-slate-800">Wompi</strong>, que es propiedad de <strong className="font-bold text-slate-800">Bancoagrícola</strong>. <strong className="font-bold text-slate-800">Aromaniak</strong> no tiene ningún tipo de acceso ni puede ver tu número de tarjeta o información personal de acuerdo a las leyes de El Salvador.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/90 border border-slate-200/80 text-[11px] text-slate-600 leading-relaxed">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <p>
-                      Realiza tu depósito o transferencia a cualquiera de nuestras cuentas corrientes (<strong className="font-bold text-slate-800">Banco Agrícola</strong> o <strong className="font-bold text-slate-800">BAC Credomatic</strong>). Al confirmar tu pedido podrás enviar el comprobante por WhatsApp o subir el archivo directamente en la página o desde tu menú de órdenes.
-                    </p>
-                  </div>
-                  <BankAccountsCardsList />
-                </div>
-              )}
-            </div>
-
-            {/* 3. Comprobante Fiscal */}
-            <div className="clay-card p-5 sm:p-6 space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
-                    3
-                  </div>
-                  <h3 className="font-extrabold text-sm text-slate-900">
-                    Tipo de Comprobante
-                  </h3>
-                </div>
-                <span className="text-[11px] font-bold text-slate-400">Factura Electrónica DTE</span>
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setTipoComprobante('01')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    tipoComprobante === '01' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'
-                  }`}
-                >
-                  Factura de Consumidor Final
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTipoComprobante('03')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    tipoComprobante === '03' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'
-                  }`}
-                >
-                  Crédito Fiscal (Empresas)
-                </button>
-              </div>
-
-              {tipoComprobante === '01' ? (
-                <div className="text-xs">
-                  <label className="font-bold text-slate-700 block mb-1">
-                    Número de DUI (Opcional)
-                  </label>
-                  <input
-                    type="text"
-                    maxLength={75}
-                    placeholder="00000000-0"
-                    value={numDoc}
-                    onChange={(e) => setNumDoc(e.target.value.slice(0, 75))}
-                    className="clay-input w-full font-mono"
-                  />
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs animate-in fade-in duration-150">
-                  <div className="sm:col-span-2">
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="font-bold text-slate-700">
-                        Razón Social / Nombre según Tarjeta de Contribuyente <span className="text-rose-500">*</span>
-                      </label>
-                      <span className="text-[10px] font-semibold text-slate-400">
-                        {razonSocial.length}/75
-                      </span>
-                    </div>
-                    <input
-                      type="text"
-                      required
-                      maxLength={75}
-                      placeholder="Ej. Distribuidora Las Fragancias S.A. de C.V."
-                      value={razonSocial}
-                      onChange={(e) => setRazonSocial(e.target.value.slice(0, 75))}
-                      className="clay-input w-full font-bold"
-                    />
-                  </div>
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1">
-                      NRC <span className="text-rose-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      maxLength={25}
-                      placeholder="123456-7"
-                      value={nrc}
-                      onChange={(e) => setNrc(e.target.value.slice(0, 25))}
-                      className="clay-input w-full font-mono"
-                    />
-                  </div>
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1">
-                      NIT / DUI de Contribuyente <span className="text-rose-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      maxLength={75}
-                      placeholder="0614-000000-000-0"
-                      value={numDoc}
-                      onChange={(e) => setNumDoc(e.target.value.slice(0, 75))}
-                      className="clay-input w-full font-mono"
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="font-bold text-slate-700 block mb-1">
-                      Giro o Actividad Económica (Catálogo Oficial MH CAT-019) <span className="text-rose-500">*</span>
-                    </label>
-                    <GiroSearchSelect
-                      value={giro}
-                      onChange={(val) => setGiro(val)}
-                      required
-                      variant="pos"
-                      placeholder="Buscar giro oficial de Hacienda por código o actividad (ej. 47722, cosméticos...)"
-                    />
-                  </div>
                   {metodoEntrega === 'RETIRO' && (
-                    <>
+                    <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/90 text-xs text-slate-700 space-y-1.5">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                        <p className="font-bold text-slate-900">
+                          Punto de retiro: Centro Comercial El Rosal, Calle El Progreso, San Salvador
+                        </p>
+                        <a
+                          href="https://maps.app.goo.gl/shtetXTGcPZQpBwY6"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 underline shrink-0"
+                        >
+                          <span>Ver en Google Maps</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                      <p className="text-slate-600 leading-relaxed">
+                        Te notificaremos por WhatsApp al{' '}
+                        <strong className="font-semibold text-slate-800">
+                          {telefono || 'número registrado'}
+                        </strong>{' '}
+                        en cuanto tu orden esté lista. Si envías un repartidor de PedidosYa o Uber, solo indícale el nombre del titular del pedido.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bloque 1B: Datos de Contacto */}
+                <div className="p-5 sm:p-6 space-y-4">
+                  <span className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Datos de quien recibe
+                  </span>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="sm:col-span-2">
+                      <label
+                        htmlFor="checkout-nombre"
+                        className="block text-xs font-semibold text-slate-700 mb-1.5"
+                      >
+                        Nombre completo <span className="text-rose-600">*</span>
+                      </label>
+                      <input
+                        id="checkout-nombre"
+                        name="name"
+                        type="text"
+                        autoComplete="name"
+                        required
+                        maxLength={75}
+                        aria-invalid={fieldErrors.nombre ? 'true' : 'false'}
+                        aria-describedby={fieldErrors.nombre ? 'error-nombre' : undefined}
+                        placeholder="Ej. Carmen Santos de López"
+                        value={nombre}
+                        onChange={(e) => {
+                          setNombre(e.target.value.slice(0, 75));
+                          clearFieldError('nombre');
+                        }}
+                        className="checkout-field font-medium"
+                      />
+                      {fieldErrors.nombre && (
+                        <p id="error-nombre" className="mt-1 text-xs font-medium text-rose-600">
+                          {fieldErrors.nombre}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="checkout-telefono"
+                        className="block text-xs font-semibold text-slate-700 mb-1.5"
+                      >
+                        Teléfono / WhatsApp <span className="text-rose-600">*</span>
+                      </label>
+                      <input
+                        id="checkout-telefono"
+                        name="phone"
+                        type="tel"
+                        inputMode="tel"
+                        autoComplete="tel"
+                        required
+                        maxLength={25}
+                        aria-invalid={fieldErrors.telefono ? 'true' : 'false'}
+                        aria-describedby={fieldErrors.telefono ? 'error-telefono' : undefined}
+                        placeholder="7000-0000"
+                        value={telefono}
+                        onChange={(e) => {
+                          setTelefono(e.target.value.slice(0, 25));
+                          clearFieldError('telefono');
+                        }}
+                        className="checkout-field font-medium"
+                      />
+                      {fieldErrors.telefono && (
+                        <p id="error-telefono" className="mt-1 text-xs font-medium text-rose-600">
+                          {fieldErrors.telefono}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="checkout-email"
+                        className="block text-xs font-semibold text-slate-700 mb-1.5"
+                      >
+                        Correo electrónico{' '}
+                        {tipoComprobante === '03' ? (
+                          <span className="text-rose-600">*</span>
+                        ) : (
+                          <span className="font-normal text-slate-400">(recomendado)</span>
+                        )}
+                      </label>
+                      <input
+                        id="checkout-email"
+                        name="email"
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        autoCorrect="off"
+                        autoCapitalize="none"
+                        spellCheck={false}
+                        required={tipoComprobante === '03'}
+                        maxLength={75}
+                        aria-invalid={fieldErrors.email ? 'true' : 'false'}
+                        aria-describedby={fieldErrors.email ? 'error-email' : undefined}
+                        placeholder="carmen@ejemplo.com"
+                        value={email}
+                        onChange={(e) => {
+                          setEmail(e.target.value.slice(0, 75));
+                          clearFieldError('email');
+                        }}
+                        className="checkout-field font-medium"
+                      />
+                      {fieldErrors.email && (
+                        <p id="error-email" className="mt-1 text-xs font-medium text-rose-600">
+                          {fieldErrors.email}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bloque 1C: Dirección de Envío (Solo cuando es Envío a Domicilio) */}
+                {metodoEntrega === 'ENVIO' && (
+                  <div className="p-5 sm:p-6 space-y-4">
+                    <span className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Dirección de entrega
+                    </span>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Departamento Fiscal <span className="text-rose-500">*</span>
+                        <label
+                          htmlFor="checkout-departamento"
+                          className="block text-xs font-semibold text-slate-700 mb-1.5"
+                        >
+                          Departamento <span className="text-rose-600">*</span>
                         </label>
                         <select
+                          id="checkout-departamento"
+                          name="department"
+                          required
+                          aria-invalid={fieldErrors.departamento ? 'true' : 'false'}
+                          aria-describedby={
+                            fieldErrors.departamento
+                              ? 'checkout-location-warning error-departamento'
+                              : 'checkout-location-warning'
+                          }
                           value={departamento}
                           onChange={(e) => {
                             const newDept = e.target.value;
                             setDepartamento(newDept);
-                            const munis = getMunicipiosByDepartamento(newDept);
-                            if (munis.length > 0) setMunicipio(munis[0].nombre);
+                            setMunicipio('');
+                            clearFieldError('departamento');
+                            clearFieldError('municipio');
                           }}
-                          className="clay-input w-full font-bold"
+                          className={`checkout-field font-semibold ${
+                            !departamento ? 'text-slate-400 font-normal' : 'text-slate-900'
+                          }`}
                         >
+                          <option value="" disabled>
+                            Selecciona tu departamento
+                          </option>
                           {DEPARTAMENTOS_CATALOG.map((dep) => (
-                            <option key={dep.id} value={dep.nombre}>{dep.nombre}</option>
+                            <option key={dep.id} value={dep.nombre} className="text-slate-900">
+                              {dep.nombre}
+                            </option>
                           ))}
                         </select>
+                        {fieldErrors.departamento && (
+                          <p id="error-departamento" className="mt-1 text-xs font-medium text-rose-600">
+                            {fieldErrors.departamento}
+                          </p>
+                        )}
                       </div>
+
                       <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Municipio / Distrito Fiscal <span className="text-rose-500">*</span>
+                        <label
+                          htmlFor="checkout-municipio"
+                          className="block text-xs font-semibold text-slate-700 mb-1.5"
+                        >
+                          Municipio / Distrito <span className="text-rose-600">*</span>
                         </label>
                         <select
+                          id="checkout-municipio"
+                          name="municipality"
+                          required
+                          disabled={!departamento}
+                          aria-invalid={fieldErrors.municipio ? 'true' : 'false'}
+                          aria-describedby={
+                            fieldErrors.municipio
+                              ? 'checkout-location-warning error-municipio'
+                              : 'checkout-location-warning'
+                          }
                           value={municipio}
-                          onChange={(e) => setMunicipio(e.target.value)}
-                          className="clay-input w-full font-bold"
+                          onChange={(e) => {
+                            setMunicipio(e.target.value);
+                            clearFieldError('municipio');
+                          }}
+                          className={`checkout-field font-semibold ${
+                            !municipio ? 'text-slate-400 font-normal' : 'text-slate-900'
+                          }`}
                         >
-                          {getMunicipiosByDepartamento(departamento).map((m) => (
-                            <option key={m.id} value={m.nombre}>{m.nombre}</option>
+                          <option value="" disabled>
+                            {departamento
+                              ? 'Selecciona tu municipio o distrito'
+                              : 'Elige primero tu departamento'}
+                          </option>
+                          {availableMunicipios.map((m) => (
+                            <option key={m.id} value={m.nombre} className="text-slate-900">
+                              {m.nombre}
+                            </option>
                           ))}
                         </select>
+                        {fieldErrors.municipio && (
+                          <p id="error-municipio" className="mt-1 text-xs font-medium text-rose-600">
+                            {fieldErrors.municipio}
+                          </p>
+                        )}
                       </div>
-                    </>
-                  )}
-                  <div className="sm:col-span-2">
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="font-bold text-slate-700">
-                        Dirección Fiscal (según tarjeta NRC) <span className="text-rose-500">*</span>
-                      </label>
-                      <span className="text-[10px] font-semibold text-slate-400">
-                        {(direccionFiscal || direccion).length}/250
+
+                      <div
+                        id="checkout-location-warning"
+                        role="note"
+                        className="sm:col-span-2 flex items-start gap-2.5 rounded-xl border border-amber-200/90 bg-amber-50/70 px-3.5 py-2.5 text-xs text-amber-950"
+                      >
+                        <AlertTriangle
+                          className="w-4 h-4 text-amber-600 shrink-0 mt-0.5"
+                          aria-hidden="true"
+                        />
+                        <p className="leading-relaxed">
+                          <strong className="font-bold">Importante:</strong> Verifica que tu departamento y municipio sean correctos. Los paquetes podrían no llegar o retrasarse de ingresarse departamentos o municipios incorrectos en la dirección.
+                        </p>
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label
+                            htmlFor="checkout-direccion"
+                            className="text-xs font-semibold text-slate-700"
+                          >
+                            Dirección exacta de entrega <span className="text-rose-600">*</span>
+                          </label>
+                          {direccion.length > maxDir - 40 && (
+                            <span className="text-[11px] font-medium text-slate-400 tabular-nums">
+                              {direccion.length}/{maxDir}
+                            </span>
+                          )}
+                        </div>
+                        <input
+                          id="checkout-direccion"
+                          name="street-address"
+                          type="text"
+                          autoComplete="street-address"
+                          required
+                          maxLength={maxDir}
+                          aria-invalid={fieldErrors.direccion ? 'true' : 'false'}
+                          aria-describedby={fieldErrors.direccion ? 'error-direccion' : undefined}
+                          placeholder="Colonia, calle, pasaje, número de casa o edificio..."
+                          value={direccion}
+                          onChange={(e) => {
+                            setDireccion(e.target.value.slice(0, maxDir));
+                            clearFieldError('direccion');
+                          }}
+                          className="checkout-field font-medium"
+                        />
+                        {fieldErrors.direccion && (
+                          <p id="error-direccion" className="mt-1 text-xs font-medium text-rose-600">
+                            {fieldErrors.direccion}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label
+                            htmlFor="checkout-referencia"
+                            className="text-xs font-semibold text-slate-700"
+                          >
+                            Puntos de referencia para el repartidor{' '}
+                            <span className="font-normal text-slate-400">(opcional)</span>
+                          </label>
+                          {referencia.length > maxRef - 30 && (
+                            <span className="text-[11px] font-medium text-slate-400 tabular-nums">
+                              {referencia.length}/{maxRef}
+                            </span>
+                          )}
+                        </div>
+                        <input
+                          id="checkout-referencia"
+                          name="address-line2"
+                          type="text"
+                          autoComplete="address-line2"
+                          maxLength={maxRef}
+                          placeholder="Ej. Frente a parque infantil, portón negro..."
+                          value={referencia}
+                          onChange={(e) => setReferencia(e.target.value.slice(0, maxRef))}
+                          className="checkout-field font-medium"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* SECCIÓN 2: FORMA DE PAGO */}
+            <section className="bg-white rounded-2xl border border-slate-200/95 shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden">
+              <div className="px-5 sm:px-6 py-4 bg-slate-50/70 border-b border-slate-200/80 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <span className="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                    2
+                  </span>
+                  <h2 className="font-bold text-sm sm:text-base text-slate-900">Forma de pago</h2>
+                </div>
+                <span className="text-[11px] font-semibold text-slate-500 hidden sm:inline">
+                  Transacción protegida
+                </span>
+              </div>
+
+              <div className="p-5 sm:p-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Forma de pago">
+                  {/* Opción: Tarjeta */}
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={metodoPago === 'CARD'}
+                    onClick={() => {
+                      setMetodoPago('CARD');
+                      trackMetaAddPaymentInfo(cart, totalConEnvio, 'CARD');
+                    }}
+                    className={`p-4 rounded-xl border text-left flex flex-col justify-between gap-2.5 transition-colors cursor-pointer ${
+                      metodoPago === 'CARD'
+                        ? 'border-indigo-600 bg-indigo-50/25 ring-1 ring-indigo-600'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2 w-full">
+                      <div className="flex items-center gap-2.5">
+                        <CreditCard
+                          className={`w-4 h-4 shrink-0 ${
+                            metodoPago === 'CARD' ? 'text-indigo-600' : 'text-slate-500'
+                          }`}
+                        />
+                        <div>
+                          <span className="font-bold text-slate-900 text-sm block leading-tight">
+                            Tarjeta crédito o débito
+                          </span>
+                          <span className="text-xs font-medium text-slate-500">
+                            Visa, Mastercard, puntos y cuotas
+                          </span>
+                        </div>
+                      </div>
+                      <span
+                        className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${
+                          metodoPago === 'CARD'
+                            ? 'border-indigo-600 bg-indigo-600'
+                            : 'border-slate-300 bg-white'
+                        }`}
+                      >
+                        {metodoPago === 'CARD' && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                        )}
                       </span>
                     </div>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      Pago inmediato en línea mediante <strong className="font-semibold text-slate-800">Wompi (Bancoagrícola)</strong>.
+                    </p>
+                  </button>
+
+                  {/* Opción: Transferencia */}
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={metodoPago === 'TRANSFER'}
+                    onClick={() => {
+                      setMetodoPago('TRANSFER');
+                      trackMetaAddPaymentInfo(cart, totalConEnvio, 'TRANSFER');
+                    }}
+                    className={`p-4 rounded-xl border text-left flex flex-col justify-between gap-2.5 transition-colors cursor-pointer ${
+                      metodoPago === 'TRANSFER'
+                        ? 'border-indigo-600 bg-indigo-50/25 ring-1 ring-indigo-600'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2 w-full">
+                      <div className="flex items-center gap-2.5">
+                        <Building
+                          className={`w-4 h-4 shrink-0 ${
+                            metodoPago === 'TRANSFER' ? 'text-indigo-600' : 'text-slate-500'
+                          }`}
+                        />
+                        <div>
+                          <span className="font-bold text-slate-900 text-sm block leading-tight">
+                            Transferencia bancaria
+                          </span>
+                          <span className="text-xs font-medium text-slate-500">
+                            Bancoagrícola o BAC Credomatic
+                          </span>
+                        </div>
+                      </div>
+                      <span
+                        className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${
+                          metodoPago === 'TRANSFER'
+                            ? 'border-indigo-600 bg-indigo-600'
+                            : 'border-slate-300 bg-white'
+                        }`}
+                      >
+                        {metodoPago === 'TRANSFER' && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                        )}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      Envía tu comprobante al <strong className="font-semibold text-slate-800">6043-7496</strong> o súbelo al confirmar tu orden.
+                    </p>
+                  </button>
+                </div>
+
+                {metodoPago === 'CARD' ? (
+                  <div className="flex items-start gap-2.5 pt-3 border-t border-slate-100 text-xs text-slate-600 leading-relaxed">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <p>
+                      Serás redirigido a la pasarela oficial de <strong className="font-semibold text-slate-800">Wompi</strong> (propiedad de <strong className="font-semibold text-slate-800">Bancoagrícola</strong>). Aromaniak no almacena ni tiene acceso a los datos de tu tarjeta.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="pt-3 border-t border-slate-200/80 space-y-3">
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      Puedes transferir a cualquiera de nuestras cuentas corrientes oficiales. Al confirmar el pedido podrás adjuntar la captura o enviarla por WhatsApp.
+                    </p>
+                    <BankAccountsCardsList />
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* SECCIÓN 3: COMPROBANTE FISCAL */}
+            <section className="bg-white rounded-2xl border border-slate-200/95 shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden">
+              <div className="px-5 sm:px-6 py-4 bg-slate-50/70 border-b border-slate-200/80 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <span className="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                    3
+                  </span>
+                  <h2 className="font-bold text-sm sm:text-base text-slate-900">
+                    Tipo de comprobante
+                  </h2>
+                </div>
+                <span className="text-[11px] font-semibold text-slate-500">
+                  Factura electrónica DTE
+                </span>
+              </div>
+
+              <div className="p-5 sm:p-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Tipo de comprobante fiscal">
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={tipoComprobante === '01'}
+                    onClick={() => setTipoComprobante('01')}
+                    className={`px-4 py-3 rounded-xl border text-left flex items-center justify-between gap-2 transition-colors cursor-pointer ${
+                      tipoComprobante === '01'
+                        ? 'border-indigo-600 bg-indigo-50/25 ring-1 ring-indigo-600'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <div>
+                      <span className="font-bold text-slate-900 text-xs sm:text-sm block">
+                        Factura Consumidor Final
+                      </span>
+                      <span className="text-[11px] text-slate-500">Persona natural</span>
+                    </div>
+                    <span
+                      className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                        tipoComprobante === '01'
+                          ? 'border-indigo-600 bg-indigo-600'
+                          : 'border-slate-300 bg-white'
+                      }`}
+                    >
+                      {tipoComprobante === '01' && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                      )}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={tipoComprobante === '03'}
+                    onClick={() => setTipoComprobante('03')}
+                    className={`px-4 py-3 rounded-xl border text-left flex items-center justify-between gap-2 transition-colors cursor-pointer ${
+                      tipoComprobante === '03'
+                        ? 'border-indigo-600 bg-indigo-50/25 ring-1 ring-indigo-600'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <div>
+                      <span className="font-bold text-slate-900 text-xs sm:text-sm block">
+                        Crédito Fiscal (CCF)
+                      </span>
+                      <span className="text-[11px] text-slate-500">Contribuyente inscrito con NRC</span>
+                    </div>
+                    <span
+                      className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                        tipoComprobante === '03'
+                          ? 'border-indigo-600 bg-indigo-600'
+                          : 'border-slate-300 bg-white'
+                      }`}
+                    >
+                      {tipoComprobante === '03' && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                      )}
+                    </span>
+                  </button>
+                </div>
+
+                {tipoComprobante === '01' ? (
+                  <div>
+                    <label
+                      htmlFor="checkout-dui-opcional"
+                      className="block text-xs font-semibold text-slate-700 mb-1.5"
+                    >
+                      Número de DUI <span className="font-normal text-slate-400">(opcional)</span>
+                    </label>
                     <input
+                      id="checkout-dui-opcional"
+                      name="dui"
                       type="text"
-                      required={metodoEntrega === 'RETIRO'}
-                      maxLength={250}
-                      placeholder="Colonia, calle, número de local o casa registrada en Hacienda"
-                      value={direccionFiscal || direccion}
-                      onChange={(e) => setDireccionFiscal(e.target.value.slice(0, 250))}
-                      className="clay-input w-full font-medium"
+                      autoCorrect="off"
+                      autoCapitalize="none"
+                      spellCheck={false}
+                      maxLength={75}
+                      placeholder="00000000-0"
+                      value={numDoc}
+                      onChange={(e) => setNumDoc(e.target.value.slice(0, 75))}
+                      className="checkout-field font-mono"
                     />
                   </div>
-                </div>
-              )}
-            </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    <div className="sm:col-span-2">
+                      <label
+                        htmlFor="checkout-razon-social"
+                        className="block text-xs font-semibold text-slate-700 mb-1.5"
+                      >
+                        Razón social o nombre según tarjeta de contribuyente{' '}
+                        <span className="text-rose-600">*</span>
+                      </label>
+                      <input
+                        id="checkout-razon-social"
+                        name="organization"
+                        type="text"
+                        autoComplete="organization"
+                        required
+                        maxLength={75}
+                        aria-invalid={fieldErrors.razonSocial ? 'true' : 'false'}
+                        aria-describedby={fieldErrors.razonSocial ? 'error-razon-social' : undefined}
+                        placeholder="Ej. Distribuidora Las Fragancias S.A. de C.V."
+                        value={razonSocial}
+                        onChange={(e) => {
+                          setRazonSocial(e.target.value.slice(0, 75));
+                          clearFieldError('razonSocial');
+                        }}
+                        className="checkout-field font-semibold"
+                      />
+                      {fieldErrors.razonSocial && (
+                        <p id="error-razon-social" className="mt-1 text-xs font-medium text-rose-600">
+                          {fieldErrors.razonSocial}
+                        </p>
+                      )}
+                    </div>
 
+                    <div>
+                      <label
+                        htmlFor="checkout-nrc"
+                        className="block text-xs font-semibold text-slate-700 mb-1.5"
+                      >
+                        NRC <span className="text-rose-600">*</span>
+                      </label>
+                      <input
+                        id="checkout-nrc"
+                        name="nrc"
+                        type="text"
+                        autoCorrect="off"
+                        autoCapitalize="none"
+                        spellCheck={false}
+                        required
+                        maxLength={25}
+                        aria-invalid={fieldErrors.nrc ? 'true' : 'false'}
+                        aria-describedby={fieldErrors.nrc ? 'error-nrc' : undefined}
+                        placeholder="123456-7"
+                        value={nrc}
+                        onChange={(e) => {
+                          setNrc(e.target.value.slice(0, 25));
+                          clearFieldError('nrc');
+                        }}
+                        className="checkout-field font-mono"
+                      />
+                      {fieldErrors.nrc && (
+                        <p id="error-nrc" className="mt-1 text-xs font-medium text-rose-600">
+                          {fieldErrors.nrc}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="checkout-num-doc"
+                        className="block text-xs font-semibold text-slate-700 mb-1.5"
+                      >
+                        NIT / DUI de contribuyente <span className="text-rose-600">*</span>
+                      </label>
+                      <input
+                        id="checkout-num-doc"
+                        name="tax-id"
+                        type="text"
+                        autoCorrect="off"
+                        autoCapitalize="none"
+                        spellCheck={false}
+                        required
+                        maxLength={75}
+                        aria-invalid={fieldErrors.numDoc ? 'true' : 'false'}
+                        aria-describedby={fieldErrors.numDoc ? 'error-num-doc' : undefined}
+                        placeholder="0614-000000-000-0"
+                        value={numDoc}
+                        onChange={(e) => {
+                          setNumDoc(e.target.value.slice(0, 75));
+                          clearFieldError('numDoc');
+                        }}
+                        className="checkout-field font-mono"
+                      />
+                      {fieldErrors.numDoc && (
+                        <p id="error-num-doc" className="mt-1 text-xs font-medium text-rose-600">
+                          {fieldErrors.numDoc}
+                        </p>
+                      )}
+                    </div>
+
+                    <div id="checkout-giro-wrapper" className="sm:col-span-2">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                        Giro o actividad económica (Catálogo MH CAT-019){' '}
+                        <span className="text-rose-600">*</span>
+                      </label>
+                      <GiroSearchSelect
+                        value={giro}
+                        onChange={(val) => {
+                          setGiro(val);
+                          clearFieldError('giro');
+                        }}
+                        required
+                        variant="checkout"
+                        placeholder="Buscar giro por código o actividad (ej. 47722, cosméticos...)"
+                      />
+                      {fieldErrors.giro && (
+                        <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.giro}</p>
+                      )}
+                    </div>
+
+                    {metodoEntrega === 'RETIRO' && (
+                      <>
+                        <div>
+                          <label
+                            htmlFor="checkout-departamento-fiscal"
+                            className="block text-xs font-semibold text-slate-700 mb-1.5"
+                          >
+                            Departamento fiscal <span className="text-rose-600">*</span>
+                          </label>
+                          <select
+                            id="checkout-departamento-fiscal"
+                            name="fiscal-department"
+                            required
+                            aria-invalid={fieldErrors.departamento ? 'true' : 'false'}
+                            aria-describedby={
+                              fieldErrors.departamento ? 'error-depto-fiscal' : undefined
+                            }
+                            value={departamento}
+                            onChange={(e) => {
+                              const newDept = e.target.value;
+                              setDepartamento(newDept);
+                              setMunicipio('');
+                              clearFieldError('departamento');
+                              clearFieldError('municipio');
+                            }}
+                            className={`checkout-field font-semibold ${
+                              !departamento ? 'text-slate-400 font-normal' : 'text-slate-900'
+                            }`}
+                          >
+                            <option value="" disabled>
+                              Selecciona tu departamento
+                            </option>
+                            {DEPARTAMENTOS_CATALOG.map((dep) => (
+                              <option key={dep.id} value={dep.nombre} className="text-slate-900">
+                                {dep.nombre}
+                              </option>
+                            ))}
+                          </select>
+                          {fieldErrors.departamento && (
+                            <p id="error-depto-fiscal" className="mt-1 text-xs font-medium text-rose-600">
+                              {fieldErrors.departamento}
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="checkout-municipio-fiscal"
+                            className="block text-xs font-semibold text-slate-700 mb-1.5"
+                          >
+                            Municipio / Distrito fiscal <span className="text-rose-600">*</span>
+                          </label>
+                          <select
+                            id="checkout-municipio-fiscal"
+                            name="fiscal-municipality"
+                            required
+                            disabled={!departamento}
+                            aria-invalid={fieldErrors.municipio ? 'true' : 'false'}
+                            aria-describedby={fieldErrors.municipio ? 'error-muni-fiscal' : undefined}
+                            value={municipio}
+                            onChange={(e) => {
+                              setMunicipio(e.target.value);
+                              clearFieldError('municipio');
+                            }}
+                            className={`checkout-field font-semibold ${
+                              !municipio ? 'text-slate-400 font-normal' : 'text-slate-900'
+                            }`}
+                          >
+                            <option value="" disabled>
+                              {departamento
+                                ? 'Selecciona tu municipio o distrito'
+                                : 'Elige primero tu departamento'}
+                            </option>
+                            {availableMunicipios.map((m) => (
+                              <option key={m.id} value={m.nombre} className="text-slate-900">
+                                {m.nombre}
+                              </option>
+                            ))}
+                          </select>
+                          {fieldErrors.municipio && (
+                            <p id="error-muni-fiscal" className="mt-1 text-xs font-medium text-rose-600">
+                              {fieldErrors.municipio}
+                            </p>
+                          )}
+                        </div>
+                      </>
+                    )}
+
+                    <div className="sm:col-span-2">
+                      <label
+                        htmlFor="checkout-direccion-fiscal"
+                        className="block text-xs font-semibold text-slate-700 mb-1.5"
+                      >
+                        Dirección fiscal (según tarjeta NRC) <span className="text-rose-600">*</span>
+                      </label>
+                      <input
+                        id="checkout-direccion-fiscal"
+                        name="fiscal-address"
+                        type="text"
+                        required={metodoEntrega === 'RETIRO'}
+                        maxLength={250}
+                        aria-invalid={fieldErrors.direccionFiscal ? 'true' : 'false'}
+                        aria-describedby={
+                          fieldErrors.direccionFiscal ? 'error-direccion-fiscal' : undefined
+                        }
+                        placeholder="Colonia, calle, número de local o casa registrada en Hacienda"
+                        value={direccionFiscal || direccion}
+                        onChange={(e) => {
+                          setDireccionFiscal(e.target.value.slice(0, 250));
+                          clearFieldError('direccionFiscal');
+                        }}
+                        className="checkout-field font-medium"
+                      />
+                      {fieldErrors.direccionFiscal && (
+                        <p
+                          id="error-direccion-fiscal"
+                          className="mt-1 text-xs font-medium text-rose-600"
+                        >
+                          {fieldErrors.direccionFiscal}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
           </div>
 
           {/* ================= COLUMNA DERECHA: RESUMEN DEL PEDIDO ================= */}
-          <div className="lg:col-span-5 sticky top-24 space-y-4">
-            
-            <div className="clay-card p-5 sm:p-6 space-y-4 bg-white/80">
-              <h3 className="font-extrabold text-sm text-slate-900 pb-2 border-b border-slate-100 flex items-center justify-between">
-                <span>Resumen del Pedido</span>
-                <span className="clay-badge text-[10px] bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded-md">
+          <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-4">
+            <aside className="bg-white rounded-2xl border border-slate-200/95 shadow-[0_1px_3px_rgba(15,23,42,0.05)] overflow-hidden">
+              <div className="px-5 sm:px-6 py-4 bg-slate-50/70 border-b border-slate-200/80 flex items-center justify-between">
+                <h2 className="font-bold text-sm sm:text-base text-slate-900">
+                  Resumen del pedido
+                </h2>
+                <span className="text-xs font-semibold text-slate-600 tabular-nums">
                   {totalItems} artículo{totalItems === 1 ? '' : 's'}
                 </span>
-              </h3>
+              </div>
 
-              {/* Lista de productos en checkout */}
-              <div className="max-h-60 overflow-y-auto space-y-2.5 pr-1 divide-y divide-slate-100">
+              {/* Lista de productos */}
+              <div className="px-5 sm:px-6 py-4 max-h-72 overflow-y-auto divide-y divide-slate-100">
                 {cart.map((it) => (
-                  <div key={it.id} className="pt-2 first:pt-0 flex items-start gap-2.5 text-xs">
-                    <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-slate-50 border border-slate-200/70 shrink-0 flex items-center justify-center">
+                  <div
+                    key={it.id}
+                    className="py-3 first:pt-0 last:pb-0 flex items-start gap-3 text-xs"
+                  >
+                    <div className="relative w-11 h-11 rounded-lg overflow-hidden bg-slate-50 border border-slate-200/80 shrink-0 flex items-center justify-center">
                       {it.kitDetails ? (
-                        <div className="relative w-full h-full p-0.5 bg-gradient-to-br from-amber-50/60 to-purple-50/60">
+                        <div className="relative w-full h-full p-0.5 bg-slate-50">
                           <img
-                            src={"/images/essence_bottle_blank.webp"}
+                            src="/images/essence_bottle_blank.webp"
                             alt={it.kitDetails.essenceName || it.product.name}
                             loading="lazy"
                             decoding="async"
                             onError={(e) => {
                               e.currentTarget.src = '/images/essence_bottle_blank.webp';
                             }}
-                            className="absolute left-0.5 top-0.5 w-6 h-6 rounded object-cover border border-amber-300 z-10"
+                            className="absolute left-0.5 top-0.5 w-6 h-6 rounded object-cover border border-slate-200 z-10"
                           />
                           <img
-                            src={it.kitDetails.bottleImageUrl || '/images/botes/bote_100ml_degrade_azul_noche.jpg'}
+                            src={
+                              it.kitDetails.bottleImageUrl ||
+                              '/images/botes/bote_100ml_degrade_azul_noche.jpg'
+                            }
                             alt={it.kitDetails.bottleName}
                             loading="lazy"
                             decoding="async"
                             onError={(e) => {
-                              e.currentTarget.src = '/images/botes/bote_100ml_degrade_azul_noche.jpg';
+                              e.currentTarget.src =
+                                '/images/botes/bote_100ml_degrade_azul_noche.jpg';
                             }}
                             className="absolute right-0.5 bottom-0.5 w-6 h-6 rounded object-cover border border-slate-300 z-20"
                           />
@@ -1697,206 +2082,249 @@ export default function CheckoutPage() {
                         />
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-slate-800 truncate">
+                    <div className="flex-1 min-w-0 space-y-0.5">
+                      <p className="font-bold text-slate-900 truncate">
                         {it.product.officialName || it.product.name}
                       </p>
                       {it.product.category === 'Esencias para Perfume' && (
-                        <p className="text-[11px] text-slate-600 font-medium truncate" title={`Inspirado en ${getInspiracionPerfumeName(it.product)}`}>
-                          Inspirado en <strong className="font-black text-slate-950">{getInspiracionPerfumeName(it.product)}</strong>
+                        <p
+                          className="text-[11px] text-slate-500 truncate"
+                          title={`Inspirado en ${getInspiracionPerfumeName(it.product)}`}
+                        >
+                          Inspirado en{' '}
+                          <strong className="font-semibold text-slate-700">
+                            {getInspiracionPerfumeName(it.product)}
+                          </strong>
                         </p>
                       )}
-                      <p className="text-[10.5px] text-indigo-600 font-semibold">
-                        {it.quantity}x {it.presentationName}
+                      <p className="text-[11px] text-slate-500 font-medium">
+                        {it.quantity} × {it.presentationName}
                       </p>
                     </div>
-                    <span className="font-bold text-slate-900 shrink-0">
+                    <span className="font-bold text-slate-900 tabular-nums shrink-0">
                       ${it.totalPrice.toFixed(2)}
                     </span>
                   </div>
                 ))}
               </div>
 
-              {/* Cálculos */}
-              <div className="pt-3 border-t border-slate-100 space-y-2 text-xs">
-                <div className="flex justify-between text-slate-600">
-                  <span>Subtotal productos:</span>
-                  <span className={discountTotal > 0 ? "font-bold text-slate-400 line-through" : "font-bold text-slate-800"}>
-                    ${rawSubtotal.toFixed(2)}
-                  </span>
-                </div>
-
-                {discountTotal > 0 && (() => {
-                  let halloweenPromoDiscount = 0;
-                  let vipDiscount = 0;
-                  for (const it of cart) {
-                    const orig = it.originalUnitPrice ?? it.unitPrice;
-                    const itemDisc = Number((Math.max(0, orig - it.unitPrice) * it.quantity).toFixed(2));
-                    if (!it.kitDetails && isHalloweenPromoProduct(it.product)) {
-                      halloweenPromoDiscount = Number((halloweenPromoDiscount + itemDisc).toFixed(2));
-                    } else {
-                      vipDiscount = Number((vipDiscount + itemDisc).toFixed(2));
-                    }
-                  }
-
-                  const activeTierLabels: string[] = [];
-                  const fmtTier = (label: string, t: any, cPct: any) => {
-                    if (t?.name === 'Personalizado' && cPct) return `${label}: ${cPct}%`;
-                    if (t?.name) return `${label}: ${t.name}${t.discountPct ? ` ${t.discountPct}%` : ''}`;
-                    if (cPct && Number(cPct) > 0) return `${label}: ${cPct}%`;
-                    return null;
-                  };
-                  const essLbl = fmtTier('Esencias', customer?.tier, customer?.customDiscountPct);
-                  const botLbl = fmtTier('Botes', customer?.bottleTier, customer?.bottleCustomDiscountPct);
-                  const supLbl = fmtTier('Insumos', customer?.suppliesTier, customer?.suppliesCustomDiscountPct);
-                  if (essLbl) activeTierLabels.push(essLbl);
-                  if (botLbl) activeTierLabels.push(botLbl);
-                  if (supLbl) activeTierLabels.push(supLbl);
-                  const discountLabel = activeTierLabels.length > 0 ? activeTierLabels.join(' • ') : 'Tarifa Preferencial';
-                  return (
-                    <>
-                      {halloweenPromoDiscount > 0 && (
-                        <div className="flex items-center justify-between text-[#ea580c] font-bold mb-1">
-                          <span>Descuento Promo Halloween (Precio fijo):</span>
-                          <span>-${halloweenPromoDiscount.toFixed(2)}</span>
-                        </div>
-                      )}
-                      {vipDiscount > 0 && (
-                        <div className="flex items-center justify-between text-indigo-700 font-bold mb-1">
-                          <span>Descuento VIP ({discountLabel}):</span>
-                          <span>-${vipDiscount.toFixed(2)}</span>
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
-                {discountTotal > 0 && (
-                  <div className="flex items-center justify-between text-slate-800 font-bold">
-                    <span>Subtotal con descuento:</span>
-                    <span>${subtotal.toFixed(2)}</span>
+              {/* Desglose y botón principal */}
+              <div className="px-5 sm:px-6 py-5 bg-slate-50/60 border-t border-slate-200/80 space-y-4">
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between text-slate-600">
+                    <span>Subtotal productos</span>
+                    <span
+                      className={`tabular-nums ${
+                        discountTotal > 0
+                          ? 'font-semibold text-slate-400 line-through'
+                          : 'font-semibold text-slate-800'
+                      }`}
+                    >
+                      ${rawSubtotal.toFixed(2)}
+                    </span>
                   </div>
-                )}
 
-                <div className="flex justify-between text-slate-600">
-                  <div className="flex items-center gap-1">
-                    {metodoEntrega === 'RETIRO' ? (
-                      <>
-                        <Store className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Retiro en local (San Salvador):</span>
-                      </>
-                    ) : (
-                      <>
-                        <Truck className="w-3.5 h-3.5 text-indigo-500" />
-                        <span>Envío a domicilio ({departamento}):</span>
-                      </>
-                    )}
-                  </div>
-                  <span className={`font-bold ${metodoEntrega === 'RETIRO' ? 'text-emerald-700' : 'text-slate-800'}`}>
-                    {metodoEntrega === 'RETIRO' ? '¡Gratis!' : `$${shippingCost.toFixed(2)}`}
-                  </span>
-                </div>
+                  {discountTotal > 0 &&
+                    (() => {
+                      let halloweenPromoDiscount = 0;
+                      let vipDiscount = 0;
+                      for (const it of cart) {
+                        const orig = it.originalUnitPrice ?? it.unitPrice;
+                        const itemDisc = Number(
+                          (Math.max(0, orig - it.unitPrice) * it.quantity).toFixed(2)
+                        );
+                        if (!it.kitDetails && isHalloweenPromoProduct(it.product)) {
+                          halloweenPromoDiscount = Number(
+                            (halloweenPromoDiscount + itemDisc).toFixed(2)
+                          );
+                        } else {
+                          vipDiscount = Number((vipDiscount + itemDisc).toFixed(2));
+                        }
+                      }
 
-                <div className="flex justify-between text-base font-black text-slate-900 pt-3 border-t border-slate-200">
-                  <span>Total a Pagar:</span>
-                  <span className="text-indigo-700 text-lg font-black">${totalConEnvio.toFixed(2)}</span>
-                </div>
+                      const activeTierLabels: string[] = [];
+                      const fmtTier = (label: string, t: any, cPct: any) => {
+                        if (t?.name === 'Personalizado' && cPct) return `${label}: ${cPct}%`;
+                        if (t?.name)
+                          return `${label}: ${t.name}${t.discountPct ? ` ${t.discountPct}%` : ''}`;
+                        if (cPct && Number(cPct) > 0) return `${label}: ${cPct}%`;
+                        return null;
+                      };
+                      const essLbl = fmtTier('Esencias', customer?.tier, customer?.customDiscountPct);
+                      const botLbl = fmtTier(
+                        'Botes',
+                        customer?.bottleTier,
+                        customer?.bottleCustomDiscountPct
+                      );
+                      const supLbl = fmtTier(
+                        'Insumos',
+                        customer?.suppliesTier,
+                        customer?.suppliesCustomDiscountPct
+                      );
+                      if (essLbl) activeTierLabels.push(essLbl);
+                      if (botLbl) activeTierLabels.push(botLbl);
+                      if (supLbl) activeTierLabels.push(supLbl);
+                      const discountLabel =
+                        activeTierLabels.length > 0
+                          ? activeTierLabels.join(' • ')
+                          : 'Tarifa Preferencial';
+                      return (
+                        <>
+                          {halloweenPromoDiscount > 0 && (
+                            <div className="flex items-center justify-between text-[#ea580c] font-semibold">
+                              <span>Descuento Promo Halloween (Precio fijo)</span>
+                              <span className="tabular-nums">
+                                -${halloweenPromoDiscount.toFixed(2)}
+                              </span>
+                            </div>
+                          )}
+                          {vipDiscount > 0 && (
+                            <div className="flex items-center justify-between text-indigo-700 font-semibold">
+                              <span>Descuento VIP ({discountLabel})</span>
+                              <span className="tabular-nums">-${vipDiscount.toFixed(2)}</span>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
 
-                {discountTotal > 0 && (() => {
-                  const hasHalloweenItems = cart.some(it => !it.kitDetails && isHalloweenPromoProduct(it.product));
-                  const hasVipItems = cart.some(it => {
-                    const orig = it.originalUnitPrice ?? it.unitPrice;
-                    return orig > it.unitPrice && (it.kitDetails || !isHalloweenPromoProduct(it.product));
-                  });
-                  const savingsLabel = hasHalloweenItems && hasVipItems
-                    ? 'Total ahorrado (Promo Halloween + Nivel VIP):'
-                    : hasHalloweenItems
-                    ? 'Total ahorrado con Promo Halloween:'
-                    : `Total ahorrado con tu nivel ${customer?.tier?.name || customer?.bottleTier?.name || customer?.suppliesTier?.name || 'Preferencial'}:`;
-                  return (
-                    <div className="mt-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs text-emerald-800">
-                      <span className="font-bold">
-                        {savingsLabel}
-                      </span>
-                      <span className="font-black text-emerald-700">
-                        ${discountTotal.toFixed(2)}
-                      </span>
+                  {discountTotal > 0 && (
+                    <div className="flex items-center justify-between text-slate-800 font-semibold">
+                      <span>Subtotal con descuento</span>
+                      <span className="tabular-nums">${subtotal.toFixed(2)}</span>
                     </div>
-                  );
-                })()}
-              </div>
+                  )}
 
-              {/* Botón de Confirmación */}
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="clay-btn clay-btn-primary w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 !shadow-[3px_5px_15px_rgba(99,102,241,0.4)] disabled:opacity-50 transition-all active:scale-95"
-              >
-                {isSubmitting ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  <div className="flex justify-between text-slate-600">
                     <span>
-                      {metodoPago === 'CARD' 
-                        ? (wompiStatusText || 'Redirigiendo a Wompi, por favor espere (5s)...')
-                        : 'Procesando comanda...'}
+                      {metodoEntrega === 'RETIRO'
+                        ? 'Retiro en sucursal (San Salvador)'
+                        : departamento
+                        ? `Envío a domicilio (${departamento})`
+                        : 'Envío a domicilio'}
                     </span>
-                  </span>
-                ) : (
-                  <>
-                    <span>
-                      {metodoPago === 'CARD' 
-                        ? `Pagar con Tarjeta ($${totalConEnvio.toFixed(2)})` 
-                        : `Confirmar Pedido ($${totalConEnvio.toFixed(2)})`}
+                    <span
+                      className={`font-semibold tabular-nums ${
+                        metodoEntrega === 'RETIRO' ? 'text-emerald-700' : 'text-slate-800'
+                      }`}
+                    >
+                      {metodoEntrega === 'RETIRO' ? 'Gratis' : `$${shippingCost.toFixed(2)}`}
                     </span>
-                    <CheckCircle2 className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-
-              {metodoPago === 'CARD' && (
-                <div className="pt-1">
-                  <div className="p-3 rounded-xl bg-slate-50/90 border border-slate-200/80 flex items-start gap-2.5">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
-                      Todas las compras son seguras y se procesan por medio de <strong className="font-bold text-slate-800">Wompi</strong>, que es propiedad de <strong className="font-bold text-slate-800">Bancoagrícola</strong>. <strong className="font-bold text-slate-800">Aromaniak</strong> no tiene ningún tipo de acceso ni puede ver tu número de tarjeta o información personal de acuerdo a las leyes de El Salvador.
-                    </p>
                   </div>
-                </div>
-              )}
-            </div>
 
-            {/* Aviso de Maceración y Advertencias de Salud en Checkout (debajo del resumen de pedido) */}
-            <div className="space-y-3">
-              <div className="p-3.5 rounded-2xl bg-indigo-50/80 border border-indigo-100 flex items-start gap-2.5 text-xs text-slate-700 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.9),inset_-1px_-1px_2px_rgba(99,102,241,0.06)]">
-                <Droplets className="w-4 h-4 text-indigo-700 shrink-0 mt-0.5" />
-                <p>
-                  <strong>Aviso: Nosotros no maceramos ningún perfume.</strong> Nuestras esencias se entregan 100% puras listas para ser combinadas con alcohol especial de perfumería.
+                  <div className="flex items-baseline justify-between pt-3 border-t border-slate-200/90">
+                    <span className="text-sm font-bold text-slate-900">Total a pagar</span>
+                    <span className="text-xl font-extrabold text-slate-900 tabular-nums">
+                      ${totalConEnvio.toFixed(2)}
+                    </span>
+                  </div>
+
+                  {discountTotal > 0 &&
+                    (() => {
+                      const hasHalloweenItems = cart.some(
+                        (it) => !it.kitDetails && isHalloweenPromoProduct(it.product)
+                      );
+                      const hasVipItems = cart.some((it) => {
+                        const orig = it.originalUnitPrice ?? it.unitPrice;
+                        return (
+                          orig > it.unitPrice &&
+                          (it.kitDetails || !isHalloweenPromoProduct(it.product))
+                        );
+                      });
+                      const savingsLabel =
+                        hasHalloweenItems && hasVipItems
+                          ? 'Ahorro aplicado (Promo + Nivel VIP)'
+                          : hasHalloweenItems
+                          ? 'Ahorro aplicado con Promo Halloween'
+                          : `Ahorro aplicado (${
+                              customer?.tier?.name ||
+                              customer?.bottleTier?.name ||
+                              customer?.suppliesTier?.name ||
+                              'Preferencial'
+                            })`;
+                      return (
+                        <div className="p-2.5 rounded-lg bg-emerald-50/80 border border-emerald-200/80 flex items-center justify-between text-xs text-emerald-900">
+                          <span className="font-semibold">{savingsLabel}</span>
+                          <span className="font-bold text-emerald-700 tabular-nums">
+                            ${discountTotal.toFixed(2)}
+                          </span>
+                        </div>
+                      );
+                    })()}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      <span>
+                        {metodoPago === 'CARD'
+                          ? wompiStatusText || 'Redirigiendo a Wompi, por favor espere (5s)...'
+                          : 'Procesando pedido...'}
+                      </span>
+                    </span>
+                  ) : (
+                    <>
+                      {metodoPago === 'CARD' ? (
+                        <Lock className="w-4 h-4" />
+                      ) : (
+                        <CheckCircle2 className="w-4 h-4" />
+                      )}
+                      <span>
+                        {metodoPago === 'CARD'
+                          ? `Pagar con tarjeta • $${totalConEnvio.toFixed(2)}`
+                          : `Confirmar pedido • $${totalConEnvio.toFixed(2)}`}
+                      </span>
+                    </>
+                  )}
+                </button>
+
+                <p className="text-[11px] text-slate-500 text-center leading-snug">
+                  {metodoPago === 'CARD'
+                    ? 'Conexión cifrada 3D Secure procesada por Wompi • Bancoagrícola'
+                    : 'Tu pedido quedará reservado al confirmar para que envíes tu comprobante'}
+                </p>
+              </div>
+            </aside>
+
+            {/* Notas informativas de producto y uso responsable en bloque editorial sobrio */}
+            <div className="bg-white/90 rounded-2xl border border-slate-200/85 p-4 sm:p-5 divide-y divide-slate-200/75 text-xs text-slate-600">
+              <div className="pb-3 flex items-start gap-2.5">
+                <Droplets className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" aria-hidden="true" />
+                <p className="leading-relaxed">
+                  <strong className="font-semibold text-slate-800">
+                    Esencias 100% puras sin macerar:
+                  </strong>{' '}
+                  Nosotros no maceramos ningún perfume; nuestras esencias se entregan puras listas para combinarse con alcohol especial de perfumería.
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-amber-50/90 border border-amber-200 text-xs text-amber-950 space-y-2 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.9),inset_-1px_-1px_2px_rgba(245,158,11,0.12)]">
-                <div className="flex items-center gap-2 font-black text-amber-900">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                  <span>Aviso Importante de Seguridad y Uso Responsable</span>
-                </div>
-                <ul className="space-y-1 pl-4 list-disc text-[11px] text-amber-900/90 font-medium leading-relaxed">
+              <div className="pt-3 space-y-1.5">
+                <p className="font-semibold text-slate-800 flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" aria-hidden="true" />
+                  <span>Uso responsable de materias primas</span>
+                </p>
+                <ul className="space-y-1 pl-4 list-disc text-[11px] text-slate-500 leading-relaxed">
                   <li>
-                    <strong>No usar directamente sobre la piel:</strong> Las esencias puras tienen que ser mezcladas sí o sí con alcohol especial de perfumería antes de cualquier aplicación. El máximo recomendado para 100ml es de una onza y una media onza, más de eso no es recomendado.
+                    <strong className="text-slate-700">No aplicar puras sobre la piel:</strong>{' '}
+                    deben diluirse previamente en alcohol de perfumería (máximo recomendado para 100 ml: 1.5 oz de esencia).
                   </li>
                   <li>
-                    <strong>Bajo ningún motivo deben ser ingeridas, inhaladas directamente o tener contacto con los ojos.</strong>
+                    No ingerir, inhalar directamente ni permitir el contacto con los ojos.
                   </li>
                   <li>
-                    <strong>Uso restringido ante alergias:</strong> No deben ser usadas por personas con antecedentes o experiencias previas de alergia a los perfumes, fragancias, alcohol o sus componentes.
+                    Evitar su uso en caso de antecedentes de alergia a fragancias, alcohol o sus componentes.
                   </li>
                 </ul>
               </div>
             </div>
-
           </div>
-
         </div>
       </form>
-
     </div>
   );
 }

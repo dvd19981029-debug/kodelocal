@@ -19,18 +19,18 @@ export interface BankAccountInfo {
 export const OFFICIAL_BANK_ACCOUNTS: BankAccountInfo[] = [
   {
     id: 'agricola',
-    bankName: 'Banco Agrícola',
-    shortName: 'Banco Agrícola',
-    logoUrl: '/images/banks/bancoagricola.svg',
+    bankName: 'Bancoagrícola',
+    shortName: 'Bancoagrícola',
+    logoUrl: '/images/banks/bancoagricola.svg?v=2026',
     accountType: 'Cuenta Corriente',
     accountNumber: '5520052467',
     holderName: 'Grupo Kode SaS De Cv',
     personType: 'Persona jurídica',
     email: 'ventas@forbiddensoluciones.com',
-    badgeBg: 'bg-amber-50 border-amber-200 text-amber-900',
-    badgeText: 'text-amber-800',
-    borderColor: 'border-amber-200/90',
-    accentColor: 'text-indigo-700',
+    badgeBg: 'bg-slate-100 border-slate-200 text-slate-900',
+    badgeText: 'text-slate-800',
+    borderColor: 'border-slate-200',
+    accentColor: 'text-slate-900',
   },
   {
     id: 'bac',
@@ -44,8 +44,8 @@ export const OFFICIAL_BANK_ACCOUNTS: BankAccountInfo[] = [
     email: 'ventas@forbiddensoluciones.com',
     badgeBg: 'bg-rose-50 border-rose-200 text-rose-900',
     badgeText: 'text-rose-800',
-    borderColor: 'border-rose-200/90',
-    accentColor: 'text-rose-700',
+    borderColor: 'border-slate-200',
+    accentColor: 'text-slate-900',
   },
 ];
 
