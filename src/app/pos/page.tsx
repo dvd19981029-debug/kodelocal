@@ -57,6 +57,7 @@ import {
   PosProductGrid, 
   PosCartPanel, 
   PosQuickEditProductModal,
+  PosArmaTuPerfumeModal,
   PosCustomerFormModal,
   PosCustomerDetailModal,
   PosCheckoutModal,
@@ -72,6 +73,25 @@ export default function PosPage() {
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [isInitializing, setIsInitializing] = useState(true);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
+  const [isArmaTuPerfumeOpen, setIsArmaTuPerfumeOpen] = useState(false);
+  const [kitConfig, setKitConfig] = useState<{ basePrice: number; extraShotPrice: number }>({
+    basePrice: 15.0,
+    extraShotPrice: 3.0,
+  });
+
+  useEffect(() => {
+    fetch('/api/kit-config')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data && typeof data.basePrice === 'number') {
+          setKitConfig({
+            basePrice: data.basePrice,
+            extraShotPrice: typeof data.extraShotPrice === 'number' ? data.extraShotPrice : 3.0,
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
   
   // Pestaña activa en el menú lateral de Punto de Venta:
   // 'nueva_orden' (o 'pos'): Terminal de venta / Cotizador
@@ -1002,6 +1022,9 @@ export default function PosPage() {
   // Helper para formatear items de venta/comanda con presentación
   const getItemPriceDetails = (item: CartItem) => {
     let listPrice = item.product.price;
+    if (item.product.id.startsWith('kit-') || item.product.category === 'Arma tu propio perfume') {
+      return { listPrice, finalPrice: listPrice, discountAmt: 0 };
+    }
     const cat = item.product.category || '';
     const isEssence = cat === "Esencias para Perfume" || cat === "Esencias & Fragancias" || (!cat && item.product.unit === 'Onza');
     const isBottle = !isEssence && (cat === "Botes" || cat === "Botes & Envases" || cat === "Envases & Botes" || item.product.name.toLowerCase().startsWith('bote') || item.product.name.toLowerCase().includes('frasco'));
@@ -1097,11 +1120,12 @@ export default function PosPage() {
   const getItemUnitPrice = (item: CartItem): number => getItemPriceDetails(item).finalPrice;
 
   const formatCartItem = (i: CartItem) => {
+    const isKit = i.product.id.startsWith('kit-') || i.product.category === 'Arma tu propio perfume';
     const cat = i.product.category || '';
-    const isEssence = cat === 'Esencias para Perfume' || cat === 'Esencias & Fragancias' || (!cat && i.product.unit === 'Onza');
+    const isEssence = !isKit && (cat === 'Esencias para Perfume' || cat === 'Esencias & Fragancias' || (!cat && i.product.unit === 'Onza'));
     const isHalfOz = isEssence && i.presentation === 'MEDIA_ONZA';
     const details = getItemPriceDetails(i);
-    const displayName = i.product.officialName && i.product.officialName !== i.product.name
+    const displayName = !isKit && i.product.officialName && i.product.officialName !== i.product.name
       ? `${i.product.officialName} (${i.product.name})`
       : i.product.name;
     return {
@@ -1112,8 +1136,8 @@ export default function PosPage() {
       listPrice: details.listPrice,
       discountAmt: details.discountAmt,
       total: Number((i.quantity * details.finalPrice).toFixed(2)),
-      unit: isHalfOz ? '½ Onza' : (i.product.unit || 'Unidad'),
-      presentation: isHalfOz ? 'MEDIA_ONZA' : (isEssence ? 'ONZA_COMPLETA' : 'UNIDAD'),
+      unit: isKit ? 'Perfume 100ml' : isHalfOz ? '½ Onza' : (i.product.unit || 'Unidad'),
+      presentation: isKit ? (i.presentation || 'KIT_PREPARADO') : isHalfOz ? 'MEDIA_ONZA' : (isEssence ? 'ONZA_COMPLETA' : 'UNIDAD'),
       puesto: i.product.puesto
     };
   };
@@ -1581,10 +1605,60 @@ export default function PosPage() {
     });
   };
 
+  const addKitToPosCart = ({
+    essence,
+    bottle,
+    hasLabel,
+    isPlus,
+    quantity,
+    unitPrice,
+    maxStock,
+  }: {
+    essence: ProductItem;
+    bottle: ProductItem;
+    hasLabel: boolean;
+    isPlus: boolean;
+    quantity: number;
+    unitPrice: number;
+    maxStock: number;
+  }) => {
+    const presentation: CartItem['presentation'] = isPlus ? 'KIT_PREPARADO_PLUS' : 'KIT_PREPARADO';
+    const kitId = `kit-${essence.id}-${bottle.id}-${hasLabel ? 'label' : 'nolabel'}-${isPlus ? 'plus' : 'std'}`;
+    const essenceLabel = essence.officialName && essence.officialName !== essence.name
+      ? `${essence.officialName} (${essence.name})`
+      : essence.name;
+    const bottleLabel = bottle.name || 'Frasco 100ml';
+    const labelTag = hasLabel ? 'Con etiqueta' : 'Sin etiqueta';
+    const formulaTag = isPlus ? 'PLUS 1.5 oz' : '1 oz';
+    const kitName = `Arma tu propio perfume: ${essenceLabel} • ${bottleLabel} • ${formulaTag} • ${labelTag}`;
+
+    const kitProduct: ProductItem = {
+      ...essence,
+      id: kitId,
+      name: kitName,
+      officialName: kitName,
+      category: 'Arma tu propio perfume',
+      unit: 'Perfume 100ml',
+      price: unitPrice,
+      stock: maxStock,
+    };
+
+    setCart((prev) => {
+      const existing = prev.find((it) => it.product.id === kitId);
+      if (existing) {
+        const nextQty = Math.min(maxStock, existing.quantity + quantity);
+        return prev.map((it) =>
+          it.product.id === kitId ? { ...it, product: kitProduct, quantity: nextQty } : it
+        );
+      }
+      return [...prev, { product: kitProduct, quantity, presentation }];
+    });
+  };
+
   const updateQuantity = (
     productId: string, 
     delta: number, 
-    presentation?: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD'
+    presentation?: CartItem['presentation']
   ) => {
     if (delta === 0) return;
     setCart(prev => {
@@ -1632,7 +1706,7 @@ export default function PosPage() {
 
   const removeFromCart = (
     productId: string, 
-    presentation?: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD'
+    presentation?: CartItem['presentation']
   ) => {
     if (productId === 'ENVIO-DOM') {
       setIsOrderDomicilio(false);
@@ -3687,6 +3761,7 @@ export default function PosPage() {
                 onAddToCart={addToCart}
                 onOpenEditProduct={handleOpenEditProduct}
                 onOpenNewProduct={handleOpenNewProductInPos}
+                onOpenArmaTuPerfume={() => setIsArmaTuPerfumeOpen(true)}
               />
 
               {/* Panel de Carrito en Pantallas de Escritorio (xl+) */}
@@ -4229,6 +4304,14 @@ export default function PosPage() {
         <ThermalTicket ticket={(completedSale || selectedSaleDetail)!} />
       )}
 
+      <PosArmaTuPerfumeModal
+        isOpen={isArmaTuPerfumeOpen}
+        onClose={() => setIsArmaTuPerfumeOpen(false)}
+        products={products}
+        cart={cart}
+        kitConfig={kitConfig}
+        onAddKit={addKitToPosCart}
+      />
     </div>
   );
 }

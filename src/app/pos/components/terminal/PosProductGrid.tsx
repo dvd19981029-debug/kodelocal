@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Barcode, Sparkles, Edit3, Plus, Check } from 'lucide-react';
+import { Search, Barcode, Sparkles, Edit3, Plus, Check, Wand2 } from 'lucide-react';
 import { ProductItem, CartItem } from '@/lib/store';
 import { getProductImage } from '@/lib/perfumeImages';
 import { isIncomingEssence } from '@/lib/perfumeNames';
@@ -28,6 +28,7 @@ export interface PosProductGridProps {
   onAddToCart: (product: ProductItem, presentation?: 'ONZA_COMPLETA' | 'MEDIA_ONZA') => void;
   onOpenEditProduct: (e: React.MouseEvent, product: ProductItem) => void;
   onOpenNewProduct?: () => void;
+  onOpenArmaTuPerfume?: () => void;
 }
 
 export const PosProductGrid: React.FC<PosProductGridProps> = ({
@@ -52,6 +53,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
   onAddToCart,
   onOpenEditProduct,
   onOpenNewProduct,
+  onOpenArmaTuPerfume,
 }) => {
   const [clickedFeedback, setClickedFeedback] = React.useState<
     Record<string, { pres: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD'; tick: number; phase: 'press' | 'glow' }>
@@ -146,6 +148,17 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
             className="clay-input has-icon w-full pr-4 py-2 sm:py-2.5 text-xs sm:text-sm font-mono font-bold border-indigo-200"
           />
         </form>
+
+        {onOpenArmaTuPerfume && (
+          <button
+            type="button"
+            onClick={onOpenArmaTuPerfume}
+            className="clay-btn bg-indigo-600 hover:bg-indigo-700 !text-white w-full sm:w-auto px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm font-black rounded-xl flex items-center justify-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
+          >
+            <Wand2 className="w-4 h-4" />
+            <span>Arma tu perfume</span>
+          </button>
+        )}
 
         {onOpenNewProduct && (
           <button

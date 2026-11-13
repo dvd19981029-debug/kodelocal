@@ -32,7 +32,7 @@ export interface ProductItem {
 export interface CartItem {
   product: ProductItem;
   quantity: number;
-  presentation?: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD';
+  presentation?: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD' | 'KIT_PREPARADO' | 'KIT_PREPARADO_PLUS';
 }
 
 export interface SaleRecord {

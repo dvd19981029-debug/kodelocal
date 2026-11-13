@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { verifyStaffInternalToken } from '@/lib/customerAuthToken';
 import { prisma } from '@/lib/prisma';
 import { c807Client } from '@/lib/c807';
+import {
+  deductArmedPerfumeStickersOnInvoice,
+  restoreArmedPerfumeStickersOnCancel,
+} from '@/lib/armedPerfumeStickerInventory';
 
 export const dynamic = 'force-dynamic';
 
@@ -482,6 +486,12 @@ export async function POST(request: Request) {
                 },
               });
             }
+
+            await deductArmedPerfumeStickersOnInvoice(prisma, {
+              saleNumber: existingSale.saleNumber,
+              items: Array.isArray(items) && items.length > 0 ? items : existingSale.items,
+              userName: cashierName || existingSale.cashierName || 'Sistema (Caja)',
+            });
           }
 
           const refreshedSale = await prisma.sale.findUnique({
@@ -539,6 +549,11 @@ export async function POST(request: Request) {
               data: { paymentMethod },
             });
           }
+          await deductArmedPerfumeStickersOnInvoice(prisma, {
+            saleNumber: existingSale.saleNumber,
+            items: Array.isArray(items) && items.length > 0 ? items : existingSale.items,
+            userName: cashierName || existingSale.cashierName || 'Sistema (Caja)',
+          });
         }
 
         return NextResponse.json({
@@ -652,8 +667,34 @@ export async function POST(request: Request) {
         nameLower.includes('servicio de envío') ||
         nameLower.includes('envío a domicilio');
 
+      let kitEssenceId = '';
+      let kitBottleId = '';
+      let kitIsPlus = false;
+      if (rawId.startsWith('kit-')) {
+        const fullMatch = rawId.match(/^kit-(.+?)-(bote-[a-z0-9-]+|bottle-\d+)-(label|nolabel)-(plus|std)$/i);
+        if (fullMatch) {
+          kitEssenceId = fullMatch[1];
+          kitBottleId = fullMatch[2];
+          kitIsPlus = fullMatch[4].toLowerCase() === 'plus';
+        } else {
+          const shortMatch = rawId.match(/^kit-(.+?)-(label|nolabel)-(plus|std)$/i);
+          if (shortMatch) {
+            kitEssenceId = shortMatch[1];
+            kitIsPlus = shortMatch[3].toLowerCase() === 'plus';
+          }
+        }
+      }
+
       let matchedProd =
-        byId.get(rawId) || bySku.get(rawId.toLowerCase()) || byBarcode.get(rawId.toLowerCase());
+        (kitEssenceId ? byId.get(kitEssenceId) : undefined) ||
+        byId.get(rawId) ||
+        bySku.get(rawId.toLowerCase()) ||
+        byBarcode.get(rawId.toLowerCase());
+
+      if (!matchedProd && kitEssenceId) {
+        matchedProd = (await prisma.product.findUnique({ where: { id: kitEssenceId } })) as any;
+        if (matchedProd) byId.set(matchedProd.id, matchedProd);
+      }
 
       // Si aún no coincidió por ID/SKU y no es un servicio, buscar por nombre limpio en la DB
       if (!matchedProd && !isServiceItem && rawName) {
@@ -704,10 +745,18 @@ export async function POST(request: Request) {
         unitPrice: Number(it.unitPrice || it.price || 0),
         ivaRate: 0.13,
         total: Number(it.total || 0),
-        presentation: isHalfOz ? 'MEDIA_ONZA' : (isNonEssenceOrLitro ? 'UNIDAD' : (it.presentation || 'ONZA_COMPLETA')),
-        unit: isServiceItem ? 'Servicio' : isHalfOz ? '½ Onza' : (it.unit || matchedProd?.unit || 'Onza'),
+        presentation: kitEssenceId
+          ? (kitIsPlus ? 'KIT_PREPARADO_PLUS' : 'KIT_PREPARADO')
+          : isHalfOz
+          ? 'MEDIA_ONZA'
+          : isNonEssenceOrLitro
+          ? 'UNIDAD'
+          : (it.presentation || 'ONZA_COMPLETA'),
+        unit: isServiceItem ? 'Servicio' : kitEssenceId ? 'Perfume 100ml' : isHalfOz ? '½ Onza' : (it.unit || matchedProd?.unit || 'Onza'),
         puesto: it.puesto || matchedProd?.puesto || null,
-        isHalfOz,
+        isHalfOz: kitEssenceId ? false : isHalfOz,
+        kitBottleId: kitBottleId || null,
+        kitIsPlus,
         skipStockDeduction,
       });
     }
@@ -888,7 +937,12 @@ export async function POST(request: Request) {
 
       if (shouldDeductInventory && resolvedItems.length > 0) {
         const physicalItems = resolvedItems.filter((it) => !it.skipStockDeduction && it.productId);
-        const productIds = Array.from(new Set(physicalItems.map((it) => it.productId))) as string[];
+        const productIds = Array.from(
+          new Set([
+            ...physicalItems.map((it) => it.productId),
+            ...physicalItems.map((it) => it.kitBottleId).filter(Boolean),
+          ])
+        ) as string[];
 
         if (productIds.length > 0) {
           const dbProducts = await tx.product.findMany({
@@ -907,6 +961,13 @@ export async function POST(request: Request) {
               halfDeltas.set(prod.id, (halfDeltas.get(prod.id) || 0) + soldQty);
             } else {
               stockDeltas.set(prod.id, (stockDeltas.get(prod.id) || 0) + soldQty);
+            }
+
+            if (it.kitIsPlus) {
+              halfDeltas.set(prod.id, (halfDeltas.get(prod.id) || 0) + soldQty);
+            }
+            if (it.kitBottleId && productMap.has(it.kitBottleId)) {
+              stockDeltas.set(it.kitBottleId, (stockDeltas.get(it.kitBottleId) || 0) + soldQty);
             }
           }
 
@@ -970,6 +1031,14 @@ export async function POST(request: Request) {
             });
           }
         }
+      }
+
+      if (isIncomingCompleted) {
+        await deductArmedPerfumeStickersOnInvoice(tx, {
+          saleNumber: createdSale.saleNumber,
+          items: rawItems,
+          userName: cashierName || 'Sistema (Caja)',
+        });
       }
 
       return { sale: createdSale, payment: paymentRecord };
@@ -1205,6 +1274,12 @@ export async function PATCH(request: Request) {
           throw deductErr;
         }
       }
+
+      await deductArmedPerfumeStickersOnInvoice(prisma, {
+        saleNumber: sale.saleNumber,
+        items: sale.items,
+        userName: cashierName || 'Sistema (Caja)',
+      });
     }
     
     // Si se está CANCELANDO, solo devolver stock si realmente fue descontado previamente
@@ -1298,6 +1373,13 @@ export async function PATCH(request: Request) {
           }
         }
       }, { maxWait: 15000, timeout: 30000 });
+    }
+
+    if (isCancelling && body.restock !== false) {
+      await restoreArmedPerfumeStickersOnCancel(prisma, {
+        saleNumber: sale.saleNumber,
+        userName: 'Sistema (Anulación)',
+      });
     }
 
 

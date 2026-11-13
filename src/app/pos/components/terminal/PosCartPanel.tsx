@@ -58,13 +58,13 @@ export interface PosCartPanelProps {
   setPosTab: (tab: PosTab) => void;
   // Cart item management
   getItemUnitPrice: (item: CartItem) => number;
-  removeFromCart: (productId: string, presentation?: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD') => void;
+  removeFromCart: (productId: string, presentation?: CartItem['presentation']) => void;
   setItemPresentation: (
     productId: string, 
     currentPresentation: 'ONZA_COMPLETA' | 'MEDIA_ONZA', 
     newPresentation: 'ONZA_COMPLETA' | 'MEDIA_ONZA'
   ) => void;
-  updateQuantity: (productId: string, delta: number, presentation?: 'ONZA_COMPLETA' | 'MEDIA_ONZA' | 'UNIDAD') => void;
+  updateQuantity: (productId: string, delta: number, presentation?: CartItem['presentation']) => void;
   // Financial totals
   subtotalNeto: number;
   ivaCalculado: number;
