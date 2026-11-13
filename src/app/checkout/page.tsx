@@ -98,12 +98,14 @@ export default function CheckoutPage() {
   // Método de entrega: Envío a domicilio o Retiro en sucursal
   const [metodoEntrega, setMetodoEntrega] = useState<'ENVIO' | 'RETIRO'>('ENVIO');
 
-  // Datos de Envío y Contacto (Departamento y Municipio inician sin preseleccionar para evitar envíos erróneos)
+  const hasSavedCustomerLocation = Boolean(customer?.department && customer?.municipality);
+
+  // Datos de Envío y Contacto (para invitados o sin ubicación guardada inician sin preseleccionar; clientes registrados cargan su ubicación guardada)
   const [nombre, setNombre] = useState(customer?.name || '');
   const [telefono, setTelefono] = useState(customer?.phone || '');
   const [email, setEmail] = useState(customer?.email || '');
-  const [departamento, setDepartamento] = useState('');
-  const [municipio, setMunicipio] = useState('');
+  const [departamento, setDepartamento] = useState(customer?.department || '');
+  const [municipio, setMunicipio] = useState(customer?.municipality || '');
   const [direccion, setDireccion] = useState(customer?.address || '');
   const [referencia, setReferencia] = useState('');
 
@@ -131,13 +133,15 @@ export default function CheckoutPage() {
     });
   };
 
-  // Actualizar si el cliente inicia sesión o tiene datos guardados en su perfil (sin preseleccionar departamento/municipio)
+  // Actualizar si el cliente inicia sesión o tiene datos guardados en su perfil
   React.useEffect(() => {
     if (customer) {
       if (customer.name) setNombre(customer.name);
       if (customer.businessName || customer.name) setRazonSocial(customer.businessName || customer.name);
       if (customer.email) setEmail(customer.email);
       if (customer.phone) setTelefono(customer.phone);
+      if (customer.department) setDepartamento((prev) => prev || customer.department || '');
+      if (customer.municipality) setMunicipio((prev) => prev || customer.municipality || '');
       if (customer.address) {
         setDireccion(customer.address);
         setDireccionFiscal((prev) => prev || customer.address || '');
@@ -155,6 +159,8 @@ export default function CheckoutPage() {
     customer?.nrc,
     customer?.activityDesc,
     customer?.businessName,
+    customer?.department,
+    customer?.municipality,
     customer?.address,
     customer?.phone,
     customer?.name,
@@ -1440,9 +1446,12 @@ export default function CheckoutPage() {
                           required
                           aria-invalid={fieldErrors.departamento ? 'true' : 'false'}
                           aria-describedby={
-                            fieldErrors.departamento
-                              ? 'checkout-location-warning error-departamento'
-                              : 'checkout-location-warning'
+                            [
+                              !hasSavedCustomerLocation ? 'checkout-location-warning' : '',
+                              fieldErrors.departamento ? 'error-departamento' : '',
+                            ]
+                              .filter(Boolean)
+                              .join(' ') || undefined
                           }
                           value={departamento}
                           onChange={(e) => {
@@ -1486,9 +1495,12 @@ export default function CheckoutPage() {
                           disabled={!departamento}
                           aria-invalid={fieldErrors.municipio ? 'true' : 'false'}
                           aria-describedby={
-                            fieldErrors.municipio
-                              ? 'checkout-location-warning error-municipio'
-                              : 'checkout-location-warning'
+                            [
+                              !hasSavedCustomerLocation ? 'checkout-location-warning' : '',
+                              fieldErrors.municipio ? 'error-municipio' : '',
+                            ]
+                              .filter(Boolean)
+                              .join(' ') || undefined
                           }
                           value={municipio}
                           onChange={(e) => {
@@ -1517,19 +1529,21 @@ export default function CheckoutPage() {
                         )}
                       </div>
 
-                      <div
-                        id="checkout-location-warning"
-                        role="note"
-                        className="sm:col-span-2 flex items-start gap-2.5 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-2.5 text-xs text-amber-950"
-                      >
-                        <AlertTriangle
-                          className="w-4 h-4 text-amber-700 shrink-0 mt-0.5"
-                          aria-hidden="true"
-                        />
-                        <p className="font-medium leading-relaxed">
-                          <strong className="font-extrabold">Importante:</strong> Verifica que tu departamento y municipio sean correctos. Los paquetes podrían no llegar o retrasarse de ingresarse departamentos o municipios incorrectos en la dirección.
-                        </p>
-                      </div>
+                      {!hasSavedCustomerLocation && (
+                        <div
+                          id="checkout-location-warning"
+                          role="note"
+                          className="sm:col-span-2 flex items-start gap-2.5 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-2.5 text-xs text-amber-950"
+                        >
+                          <AlertTriangle
+                            className="w-4 h-4 text-amber-700 shrink-0 mt-0.5"
+                            aria-hidden="true"
+                          />
+                          <p className="font-medium leading-relaxed">
+                            <strong className="font-extrabold">Importante:</strong> Verifica que tu departamento y municipio sean correctos. Los paquetes podrían no llegar o retrasarse de ingresarse departamentos o municipios incorrectos en la dirección.
+                          </p>
+                        </div>
+                      )}
 
                       <div className="sm:col-span-2">
                         <div className="flex items-center justify-between mb-1.5">
