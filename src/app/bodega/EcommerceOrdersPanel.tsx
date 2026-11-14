@@ -76,6 +76,8 @@ interface EcoOrder {
     dteDocument?: { status?: string | null; controlNumber?: string | null; generationCode?: string | null } | null;
   } | null;
   items: EcoItem[];
+  isPosDomicilio?: boolean;
+  c807PaymentMode?: 'CONTRA_ENTREGA' | 'TARJETA' | 'TRANSFERENCIA';
 }
 
 const PAYMENT_LABELS: Record<string, string> = {
@@ -116,11 +118,130 @@ const STATUS_COLORS: Record<string, string> = {
 
 const money = (n: number) => `$${Number(n || 0).toFixed(2)}`;
 
-const isPickup = (o: EcoOrder) =>
-  /retiro/i.test(o.deliveryReference || '') ||
-  /retiro/i.test(o.shippingAddress || '') ||
-  /retiro/i.test(o.notes || '') ||
-  Number(o.shippingCost ?? 1) === 0;
+const isPickup = (o: EcoOrder) => {
+  if (o.isPosDomicilio && Number(o.shippingCost || 0) > 0) return false;
+  return (
+    /retiro/i.test(o.deliveryReference || '') ||
+    /retiro/i.test(o.shippingAddress || '') ||
+    /retiro/i.test(o.notes || '') ||
+    Number(o.shippingCost ?? 1) === 0
+  );
+};
+
+function mapPosSaleToEcoOrder(s: any): EcoOrder | null {
+  let pNotes: any = null;
+  if (s.notes && typeof s.notes === 'string' && s.notes.trim().startsWith('{')) {
+    try {
+      pNotes = JSON.parse(s.notes);
+    } catch {
+      pNotes = null;
+    }
+  }
+  const itemsRaw: any[] = Array.isArray(s.items) ? s.items : [];
+  const envioItem = itemsRaw.find(
+    (it) =>
+      it.productId === 'ENVIO-DOM' ||
+      String(it.productName || it.name || '').toLowerCase().includes('envío a domicilio')
+  );
+  const hasShipment = Array.isArray(s.shipments) && s.shipments.length > 0;
+  const isDomicilioFlag = Boolean(
+    s.isDomicilio ||
+      pNotes?.isDomicilio ||
+      pNotes?.domicilio?.isDomicilio ||
+      envioItem ||
+      hasShipment
+  );
+  if (!isDomicilioFlag) return null;
+
+  const dom = pNotes?.domicilio || s.domicilio || {};
+  const cli = pNotes?.cliente || s.cliente || {};
+  const cust = s.customer || {};
+  const shipment = hasShipment ? s.shipments[0] : null;
+  const shippingCost = envioItem ? Number(envioItem.total || 2.9) : Number(s.shippingCost || 0);
+  const shippingAddress = String(dom.shippingAddress || cli.direccion || cust.address || '').trim();
+  if (shippingCost === 0 && !envioItem && /retiro/i.test(shippingAddress)) return null;
+
+  const trackingNumber = dom.trackingNumber || shipment?.trackingNumber || null;
+  const courierName = dom.courierName || shipment?.carrier || (trackingNumber ? 'C807 Express' : null);
+
+  const rawStatus = String(s.orderStatus || s.status || '').toUpperCase();
+  const isCancelled = ['CANCELLED', 'CANCELADO', 'ANULADA'].includes(rawStatus);
+  let orderStatus = 'PROCESANDO';
+  if (isCancelled) {
+    orderStatus = 'CANCELADO';
+  } else if (dom.domicilioStatus === 'ENTREGADO' || shipment?.status === 'DELIVERED') {
+    orderStatus = 'ENTREGADO';
+  } else if (trackingNumber || dom.domicilioStatus === 'EN_RUTA' || shipment?.status === 'IN_TRANSIT') {
+    orderStatus = 'EN_RUTA';
+  } else if (rawStatus === 'COMPLETED' || rawStatus === 'READY_AT_WINDOW') {
+    orderStatus = 'LISTO_ENTREGA';
+  }
+
+  const rawMethod = String(s.paymentMethod || 'CASH').toUpperCase();
+  const explicitC807Mode = String(dom.c807PaymentMode || '').toUpperCase();
+  const contraEntregaPartSum = Array.isArray(s.payments)
+    ? s.payments
+        .filter((p: any) => String(p.paymentMethod || '').toUpperCase() === 'CONTRA_ENTREGA')
+        .reduce((acc: number, p: any) => acc + Number(p.amount || 0), 0)
+    : 0;
+  let c807PaymentMode: 'CONTRA_ENTREGA' | 'TARJETA' | 'TRANSFERENCIA' = 'CONTRA_ENTREGA';
+  if (contraEntregaPartSum > 0) c807PaymentMode = 'CONTRA_ENTREGA';
+  else if (explicitC807Mode === 'TARJETA' || explicitC807Mode === 'YA_PAGADO_TARJETA') c807PaymentMode = 'TARJETA';
+  else if (explicitC807Mode === 'TRANSFERENCIA' || explicitC807Mode === 'YA_PAGADO_TRANSFERENCIA') c807PaymentMode = 'TRANSFERENCIA';
+  else if (rawMethod === 'CARD' || rawMethod === 'WOMPI') c807PaymentMode = 'TARJETA';
+  else if (rawMethod === 'TRANSFER') c807PaymentMode = 'TRANSFERENCIA';
+
+  return {
+    id: s.id,
+    orderNumber: s.saleNumber || s.orderNumber,
+    customerName: String(dom.customerName || cli.nombre || cust.name || 'Consumidor Final').trim(),
+    customerEmail: dom.customerEmail || cli.correo || cust.email || null,
+    customerPhone: String(dom.customerPhone || cli.telefono || cust.phone || '').trim(),
+    department: String(dom.department || cli.departamento || cust.department || 'San Salvador').trim(),
+    municipality: String(dom.municipality || cli.municipio || cust.municipality || 'San Salvador').trim(),
+    shippingAddress,
+    deliveryReference: dom.deliveryReference || cli.referencia || null,
+    subtotal: Number(s.subtotal || 0),
+    shippingCost,
+    total: Number(s.total || 0),
+    paymentMethod: s.paymentMethod || 'CASH',
+    paymentStatus: s.dteDocument?.estado === 'PROCESADO' ? 'COMPLETED' : (s.paymentStatus || 'PENDING'),
+    orderStatus,
+    trackingNumber,
+    courierName,
+    notes: pNotes?.desc || 'Pedido a domicilio ingresado desde POS / Chat',
+    createdAt: s.createdAt,
+    customer: {
+      documentType: cli.tipoDocumento || cust.documentType || null,
+      documentNum: cli.numDocumento || cust.documentNum || null,
+      nrc: cli.nrc || cust.nrc || null,
+      businessName: cli.nombreComercial || cust.businessName || null,
+      activityDesc: cli.actividadEconomica || cust.activityDesc || null,
+    },
+    sale: {
+      saleNumber: s.saleNumber,
+      tipoComprobante: s.tipoComprobante || pNotes?.tipoComprobante || null,
+      dteDocument: s.dteDocument
+        ? {
+            status: s.dteDocument.estado,
+            controlNumber: s.dteDocument.numeroControl,
+            generationCode: s.dteDocument.codigoGeneracion,
+          }
+        : null,
+    },
+    items: itemsRaw.map((it: any, idx: number) => ({
+      id: it.id || `${s.id}-it-${idx}`,
+      productId: it.productId || '',
+      productName: it.productName || it.name || 'Producto',
+      presentation: it.unit || 'Unidad',
+      unitPrice: Number(it.unitPrice || 0),
+      quantity: Number(it.quantity || 1),
+      total: Number(it.total || 0),
+    })),
+    isPosDomicilio: true,
+    c807PaymentMode,
+  };
+}
 
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleString('es-SV', { dateStyle: 'medium', timeStyle: 'short' });
@@ -231,17 +352,17 @@ export default function EcommerceOrdersPanel() {
     setVerifyingId(o.id);
     try {
       const staffToken = await getStaffToken();
-      const res = await fetch('/api/ecommerce/orders', {
+      const res = await fetch(o.isPosDomicilio ? '/api/sales' : '/api/ecommerce/orders', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           ...(staffToken ? { 'x-staff-token': staffToken } : {}),
         },
-        body: JSON.stringify({
-          orderId: o.id,
-          orderNumber: o.orderNumber,
-          paymentStatus: 'COMPLETED',
-        }),
+        body: JSON.stringify(
+          o.isPosDomicilio
+            ? { id: o.id, saleNumber: o.orderNumber, paymentStatus: 'COMPLETED' }
+            : { orderId: o.id, orderNumber: o.orderNumber, paymentStatus: 'COMPLETED' }
+        ),
       });
       const data = await res.json();
       if (data.success) {
@@ -281,13 +402,32 @@ export default function EcommerceOrdersPanel() {
       setLoading(true);
       setError(null);
       const staffToken = await getStaffToken();
-      const res = await fetch('/api/ecommerce/orders', {
-        headers: { ...(staffToken ? { 'x-staff-token': staffToken } : {}) },
-      });
-      const data = await res.json();
+      const headers = { ...(staffToken ? { 'x-staff-token': staffToken } : {}) };
+      const [ecoRes, salesRes] = await Promise.all([
+        fetch('/api/ecommerce/orders', { headers }),
+        fetch('/api/sales?limit=200', { headers }),
+      ]);
+      const data = await ecoRes.json();
       if (!data.success) throw new Error(data.error || 'No se pudieron cargar los pedidos');
-      // Mostrar solo pedidos web (excluye ventas POS que la API agrega al consultar por cliente)
-      setOrders((data.orders as any[]).filter((o) => o.channel !== 'POS'));
+      const webOrders: EcoOrder[] = (data.orders as any[]).filter((o) => o.channel !== 'POS');
+      const webSaleIds = new Set(webOrders.map((o: any) => o.saleId).filter(Boolean));
+      const webOrderNums = new Set(webOrders.map((o) => o.orderNumber).filter(Boolean));
+
+      let posDomOrders: EcoOrder[] = [];
+      try {
+        const salesData = await salesRes.json();
+        if (salesData.success && Array.isArray(salesData.sales)) {
+          posDomOrders = (salesData.sales as any[])
+            .filter((s) => !webSaleIds.has(s.id) && !webOrderNums.has(s.saleNumber))
+            .map(mapPosSaleToEcoOrder)
+            .filter((o): o is EcoOrder => o !== null);
+        }
+      } catch (_) {}
+
+      const merged = [...webOrders, ...posDomOrders].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      setOrders(merged);
     } catch (e: any) {
       setError(e.message || 'Error al cargar pedidos');
     } finally {
@@ -890,19 +1030,40 @@ function OrderDetailModal({
     setSavingManualGuide(true);
     try {
       const staffToken = await getStaffToken();
-      const res = await fetch('/api/ecommerce/orders', {
+      const res = await fetch(o.isPosDomicilio ? '/api/sales' : '/api/ecommerce/orders', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           ...(staffToken ? { 'x-staff-token': staffToken } : {}),
         },
-        body: JSON.stringify({
-          orderId: o.id,
-          orderNumber: o.orderNumber,
-          trackingNumber: cleanGuide,
-          courierName: o.courierName || 'C807 Express',
-          orderStatus: o.orderStatus === 'ENTREGADO' ? 'ENTREGADO' : 'EN_RUTA',
-        }),
+        body: JSON.stringify(
+          o.isPosDomicilio
+            ? {
+                id: o.id,
+                saleNumber: o.orderNumber,
+                isDomicilio: true,
+                domicilio: {
+                  isDomicilio: true,
+                  customerName: o.customerName,
+                  customerPhone: o.customerPhone,
+                  customerEmail: o.customerEmail || undefined,
+                  department: o.department,
+                  municipality: o.municipality,
+                  shippingAddress: o.shippingAddress,
+                  deliveryReference: o.deliveryReference || undefined,
+                  trackingNumber: cleanGuide,
+                  courierName: o.courierName || 'C807 Express',
+                  domicilioStatus: o.orderStatus === 'ENTREGADO' ? 'ENTREGADO' : 'EN_RUTA',
+                },
+              }
+            : {
+                orderId: o.id,
+                orderNumber: o.orderNumber,
+                trackingNumber: cleanGuide,
+                courierName: o.courierName || 'C807 Express',
+                orderStatus: o.orderStatus === 'ENTREGADO' ? 'ENTREGADO' : 'EN_RUTA',
+              }
+        ),
       });
       const data = await res.json();
       if (data.success) {
@@ -950,29 +1111,47 @@ function OrderDetailModal({
     setSavingDelivery(true);
     try {
       const staffToken = await getStaffToken();
-      const res = await fetch('/api/ecommerce/orders', {
+      const res = await fetch(o.isPosDomicilio ? '/api/sales' : '/api/ecommerce/orders', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           ...(staffToken ? { 'x-staff-token': staffToken } : {}),
         },
-        body: JSON.stringify({
-          orderId: o.id,
-          orderNumber: o.orderNumber,
-          department: editDepartment.trim(),
-          municipality: editMunicipality.trim(),
-          shippingAddress: editAddress.trim(),
-          deliveryReference: editReference.trim() || null,
-        }),
+        body: JSON.stringify(
+          o.isPosDomicilio
+            ? {
+                id: o.id,
+                saleNumber: o.orderNumber,
+                isDomicilio: true,
+                domicilio: {
+                  isDomicilio: true,
+                  customerName: o.customerName,
+                  customerPhone: o.customerPhone,
+                  customerEmail: o.customerEmail || undefined,
+                  department: editDepartment.trim(),
+                  municipality: editMunicipality.trim(),
+                  shippingAddress: editAddress.trim(),
+                  deliveryReference: editReference.trim() || null,
+                },
+              }
+            : {
+                orderId: o.id,
+                orderNumber: o.orderNumber,
+                department: editDepartment.trim(),
+                municipality: editMunicipality.trim(),
+                shippingAddress: editAddress.trim(),
+                deliveryReference: editReference.trim() || null,
+              }
+        ),
       });
       const data = await res.json();
-      if (data.success && data.order) {
+      if (data.success && (data.order || o.isPosDomicilio)) {
         onOrderUpdated({
           id: o.id,
-          department: data.order.department,
-          municipality: data.order.municipality,
-          shippingAddress: data.order.shippingAddress,
-          deliveryReference: data.order.deliveryReference,
+          department: data.order?.department ?? editDepartment.trim(),
+          municipality: data.order?.municipality ?? editMunicipality.trim(),
+          shippingAddress: data.order?.shippingAddress ?? editAddress.trim(),
+          deliveryReference: data.order?.deliveryReference ?? (editReference.trim() || null),
         });
         setIsEditingDelivery(false);
       } else {
@@ -990,47 +1169,82 @@ function OrderDetailModal({
     setGeneratingGuide(true);
     try {
       const staffToken = await getStaffToken();
-      const res = await fetch('/api/ecommerce/orders', {
+      const finalDept = isEditingDelivery ? editDepartment.trim() : o.department;
+      const finalMuni = isEditingDelivery ? editMunicipality.trim() : o.municipality;
+      const finalAddr = isEditingDelivery ? editAddress.trim() : o.shippingAddress;
+      const finalRef = isEditingDelivery ? (editReference.trim() || null) : (o.deliveryReference || null);
+      const posC807Mode =
+        o.c807PaymentMode ||
+        (o.paymentMethod === 'CARD' || o.paymentMethod === 'WOMPI'
+          ? 'TARJETA'
+          : o.paymentMethod === 'TRANSFER'
+          ? 'TRANSFERENCIA'
+          : 'CONTRA_ENTREGA');
+      const posServiceType = posC807Mode === 'CONTRA_ENTREGA' ? 'CCE' : 'SER';
+
+      const res = await fetch(o.isPosDomicilio ? '/api/sales' : '/api/ecommerce/orders', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           ...(staffToken ? { 'x-staff-token': staffToken } : {}),
         },
-        body: JSON.stringify({
-          orderId: o.id,
-          orderNumber: o.orderNumber,
-          ...(isEditingDelivery
+        body: JSON.stringify(
+          o.isPosDomicilio
             ? {
-                department: editDepartment.trim(),
-                municipality: editMunicipality.trim(),
-                shippingAddress: editAddress.trim(),
-                deliveryReference: editReference.trim() || null,
+                id: o.id,
+                saleNumber: o.orderNumber,
+                isDomicilio: true,
+                domicilio: {
+                  isDomicilio: true,
+                  customerName: o.customerName,
+                  customerPhone: o.customerPhone,
+                  customerEmail: o.customerEmail || undefined,
+                  department: finalDept,
+                  municipality: finalMuni,
+                  shippingAddress: finalAddr,
+                  deliveryReference: finalRef || undefined,
+                  c807PaymentMode: posC807Mode,
+                  c807ServiceType: posServiceType,
+                },
+                generarGuiaC807: true,
               }
-            : {}),
-          generarGuiaC807: true,
-        }),
+            : {
+                orderId: o.id,
+                orderNumber: o.orderNumber,
+                ...(isEditingDelivery
+                  ? {
+                      department: editDepartment.trim(),
+                      municipality: editMunicipality.trim(),
+                      shippingAddress: editAddress.trim(),
+                      deliveryReference: editReference.trim() || null,
+                    }
+                  : {}),
+                generarGuiaC807: true,
+              }
+        ),
       });
       const data = await res.json();
-      if (data.success && data.order?.trackingNumber) {
+      const generatedTracking = data.trackingNumber || data.order?.trackingNumber;
+      if (data.success && generatedTracking) {
         onOrderUpdated({
           id: o.id,
-          department: data.order.department || o.department,
-          municipality: data.order.municipality || o.municipality,
-          shippingAddress: data.order.shippingAddress || o.shippingAddress,
-          deliveryReference: data.order.deliveryReference ?? o.deliveryReference,
-          trackingNumber: data.order.trackingNumber,
-          courierName: data.order.courierName || 'C807 Express',
-          orderStatus: data.order.orderStatus || 'EN_RUTA',
+          department: data.order?.department || finalDept,
+          municipality: data.order?.municipality || finalMuni,
+          shippingAddress: data.order?.shippingAddress || finalAddr,
+          deliveryReference: data.order?.deliveryReference ?? finalRef,
+          trackingNumber: generatedTracking,
+          courierName: data.order?.courierName || 'C807 Express',
+          orderStatus: data.order?.orderStatus || 'EN_RUTA',
         });
         setIsEditingDelivery(false);
         if (typeof window !== 'undefined') {
           window.open(
-            `/api/c807/pdf?guia=${encodeURIComponent(data.order.trackingNumber)}`,
+            `/api/c807/pdf?guia=${encodeURIComponent(generatedTracking)}`,
             '_blank',
             'noopener,noreferrer'
           );
         }
-        alert(`✅ Guía C807 generada exitosamente: ${data.order.trackingNumber}\nSe abrió el PDF de la guía listo para imprimir.`);
+        alert(`✅ Guía C807 generada exitosamente: ${generatedTracking}\nSe abrió el PDF de la guía listo para imprimir.`);
       } else {
         alert(`Error al generar guía C807: ${data.error || 'No se pudo generar la guía'}`);
       }
@@ -1275,17 +1489,17 @@ function OrderDetailModal({
                       }
                       try {
                         const staffToken = await getStaffToken();
-                        const res = await fetch('/api/ecommerce/orders', {
+                        const res = await fetch(o.isPosDomicilio ? '/api/sales' : '/api/ecommerce/orders', {
                           method: 'PATCH',
                           headers: {
                             'Content-Type': 'application/json',
                             ...(staffToken ? { 'x-staff-token': staffToken } : {}),
                           },
-                          body: JSON.stringify({
-                            orderId: o.id,
-                            orderNumber: o.orderNumber,
-                            paymentStatus: 'COMPLETED',
-                          }),
+                          body: JSON.stringify(
+                            o.isPosDomicilio
+                              ? { id: o.id, saleNumber: o.orderNumber, paymentStatus: 'COMPLETED' }
+                              : { orderId: o.id, orderNumber: o.orderNumber, paymentStatus: 'COMPLETED' }
+                          ),
                         });
                         const data = await res.json();
                         if (data.success) {
