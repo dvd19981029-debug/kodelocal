@@ -214,6 +214,8 @@ export default function EcommerceOrdersPanel() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selected, setSelected] = useState<EcoOrder | null>(null);
   const [showUnpaid, setShowUnpaid] = useState(false);
+  const [onlyPendingGuide, setOnlyPendingGuide] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [downloadingBatch, setDownloadingBatch] = useState(false);
@@ -299,21 +301,37 @@ export default function EcommerceOrdersPanel() {
 
   const hiddenCount = useMemo(() => orders.filter((o) => !isRealOrder(o)).length, [orders]);
 
+  const pendingGuideCount = useMemo(
+    () =>
+      orders.filter(
+        (o) => isRealOrder(o) && !isPickup(o) && !(o.trackingNumber && o.trackingNumber.trim())
+      ).length,
+    [orders]
+  );
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return orders.filter((o) => {
-      if (!showUnpaid && !isRealOrder(o)) return false;
-      if (statusFilter !== 'ALL' && o.orderStatus !== statusFilter) return false;
-      if (!q) return true;
-      return (
-        o.orderNumber.toLowerCase().includes(q) ||
-        o.customerName.toLowerCase().includes(q) ||
-        (o.customerPhone || '').includes(q) ||
-        (o.customerEmail || '').toLowerCase().includes(q) ||
-        (o.trackingNumber || '').toLowerCase().includes(q)
-      );
-    });
-  }, [orders, search, statusFilter, showUnpaid]);
+    return orders
+      .filter((o) => {
+        if (!showUnpaid && !isRealOrder(o)) return false;
+        if (statusFilter !== 'ALL' && o.orderStatus !== statusFilter) return false;
+        if (onlyPendingGuide && (isPickup(o) || Boolean(o.trackingNumber && o.trackingNumber.trim()))) {
+          return false;
+        }
+        if (!q) return true;
+        return (
+          o.orderNumber.toLowerCase().includes(q) ||
+          o.customerName.toLowerCase().includes(q) ||
+          (o.customerPhone || '').includes(q) ||
+          (o.customerEmail || '').toLowerCase().includes(q) ||
+          (o.trackingNumber || '').toLowerCase().includes(q)
+        );
+      })
+      .sort((a, b) => {
+        const diff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        return sortOrder === 'desc' ? diff : -diff;
+      });
+  }, [orders, search, statusFilter, showUnpaid, onlyPendingGuide, sortOrder]);
 
   const selectableOrdersWithGuide = useMemo(
     () => filtered.filter((o) => Boolean(o.trackingNumber && o.trackingNumber.trim())),
@@ -460,6 +478,35 @@ export default function EcommerceOrdersPanel() {
             </option>
           ))}
         </select>
+        <select
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value as 'desc' | 'asc')}
+          className="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white font-bold"
+          title="Ordenar pedidos por fecha de entrada"
+        >
+          <option value="desc">Más recientes primero</option>
+          <option value="asc">Orden de entrada (más antiguos)</option>
+        </select>
+        <button
+          type="button"
+          onClick={() => setOnlyPendingGuide((prev) => !prev)}
+          className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-lg border transition-colors cursor-pointer select-none whitespace-nowrap ${
+            onlyPendingGuide
+              ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
+              : 'bg-white text-slate-700 border-slate-200 hover:bg-amber-50 hover:border-amber-300'
+          }`}
+          title="Filtrar pedidos a domicilio que aún no tienen guía C807 generada"
+        >
+          <Truck className="w-3.5 h-3.5 shrink-0" />
+          <span>Domicilio sin guía</span>
+          <span
+            className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+              onlyPendingGuide ? 'bg-white/25 text-white' : 'bg-amber-100 text-amber-800'
+            }`}
+          >
+            {pendingGuideCount}
+          </span>
+        </button>
         <label className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-600 rounded-lg border border-slate-200 bg-white cursor-pointer select-none">
           <input
             type="checkbox"
