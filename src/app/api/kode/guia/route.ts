@@ -95,7 +95,7 @@ export async function POST(request: Request) {
       const rawCode = String(row.kodigo || '').trim();
       if (!rawCode) continue;
       const ver = String(row.version || '').trim().toLowerCase();
-      const isPlus = ver === 'plus' || ver === 'extra_shot';
+      const isPlus = ver.includes('plus') || ver.includes('extra');
       const token = isPlus && !rawCode.endsWith('+') ? `${rawCode}+` : rawCode;
       const qty = Math.max(1, parseInt(String(row.cantidad || 1), 10) || 1);
       for (let i = 0; i < qty; i++) {

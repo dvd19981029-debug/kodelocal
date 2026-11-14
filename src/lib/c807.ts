@@ -733,17 +733,28 @@ export class C807Client {
         }
 
         // Banda central de Número de Guía y Contador de Bultos (185 <= y < 215 en PDF original C807)
+        // Solo capturar aquí si no estamos leyendo un campo de texto como Contenido/Dirección/Referencia,
+        // o si el token tiene formato real de número de guía (ej. KODE-25696-2026110392), nunca un código de perfume (KODE-01).
+        const isFullGuideToken = /^(?:KODE|C807)-\d{3,}-\d{4,}/i.test(txt);
         if (/^\d+\s+de\s+\d+$/i.test(txt)) {
           data.piezas = txt;
           currentField = null;
           continue;
         }
-        if (tk.y >= 185 && tk.y < 215 && !labels.has(txt)) {
+        if (isFullGuideToken && tk.y < 225) {
           data.numeroGuia = txt;
           currentField = null;
           continue;
         }
-        if (/^(KODE-|C807)/i.test(txt) && tk.y < 225) {
+        if (
+          tk.y >= 185 &&
+          tk.y < 215 &&
+          !labels.has(txt) &&
+          currentField !== 'Contenido:' &&
+          currentField !== 'Dirección:' &&
+          currentField !== 'Referencia:' &&
+          currentField !== 'Solicitud:'
+        ) {
           data.numeroGuia = txt;
           currentField = null;
           continue;
