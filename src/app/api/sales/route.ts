@@ -264,7 +264,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const {
+    let {
       saleNumber,
       channel,
       subtotal,
@@ -293,10 +293,24 @@ export async function POST(request: Request) {
     const isIncomingCompleted = targetOrderStatus === 'COMPLETED';
 
     if (saleNumber) {
-      const existingSale = await prisma.sale.findUnique({
+      let existingSale = await prisma.sale.findUnique({
         where: { saleNumber },
         include: { items: true, customer: true, dteDocument: true, payments: true },
       });
+
+      // Evitar colisión de folio aleatorio CMD-XXXX cuando se envía una nueva comanda a Bodega
+      if (
+        existingSale &&
+        targetOrderStatus === 'PENDING_PREPARATION' &&
+        (existingSale.orderStatus === 'COMPLETED' ||
+          existingSale.orderStatus === 'CANCELADO' ||
+          existingSale.orderStatus === 'CANCELLED' ||
+          Math.abs(Number(existingSale.total || 0) - Number(total || 0)) > 0.05)
+      ) {
+        saleNumber = `${saleNumber}-${Math.floor(10 + Math.random() * 90)}`;
+        existingSale = null;
+      }
+
       if (existingSale) {
         if (codigoGeneracion || dteInfo?.codigoGeneracion) {
           await linkOrUpsertDteForSale(

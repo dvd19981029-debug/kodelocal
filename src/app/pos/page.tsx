@@ -2674,8 +2674,9 @@ export default function PosPage() {
 
   // Enviar una prefactura confirmada directamente a Bodega (con los precios cotizados)
   const handleSendQuoteToBodega = async (quote: SavedQuote): Promise<boolean> => {
-    const ordNum = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
-    const cmdNum = `CMD-${Math.floor(1000 + Math.random() * 9000)}`;
+    const quoteSuffix = String(quote.quoteNumber || '').split('-').pop() || String(Math.floor(1000 + Math.random() * 9000));
+    const ordNum = `ORD-${quoteSuffix}`;
+    const cmdNum = `CMD-${quoteSuffix}`;
 
     // 1. Reclamar la prefactura (evita que otro cajero la envíe al mismo tiempo)
     const claim = await patchQuote(quote.id, 'send', { saleNumber: cmdNum });
