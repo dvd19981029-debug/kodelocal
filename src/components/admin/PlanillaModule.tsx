@@ -3724,15 +3724,27 @@ export default function PlanillaModule() {
                           <th className="py-2.5 px-3 border-b border-slate-700 text-center bg-indigo-950">
                             4. Salida de Turno
                           </th>
-                          <th className="py-2.5 px-3 border-b border-slate-700 text-right">
-                            Estado / Min. Tardía
+                          <th className="py-2.5 px-2.5 border-b border-slate-700 text-center">
+                            Min. Llegada Tarde
+                          </th>
+                          <th className="py-2.5 px-2.5 border-b border-slate-700 text-center">
+                            Min. Tarde Almuerzo
+                          </th>
+                          <th className="py-2.5 px-2.5 border-b border-slate-700 text-center">
+                            Min. Salida Antes
+                          </th>
+                          <th className="py-2.5 px-2.5 border-b border-slate-700 text-center bg-rose-950/80">
+                            Total Resta
+                          </th>
+                          <th className="py-2.5 px-3 border-b border-slate-700 text-right bg-slate-800">
+                            Efectivos (de 480m)
                           </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {rowsForEmp.length === 0 ? (
                           <tr>
-                            <td colSpan={7} className="py-4 text-center text-slate-400 font-semibold">
+                            <td colSpan={11} className="py-4 text-center text-slate-400 font-semibold">
                               Sin marcaciones registradas en este filtro.
                             </td>
                           </tr>
@@ -3862,17 +3874,73 @@ export default function PlanillaModule() {
                                     }`}
                                   />
                                 </td>
-                                <td className="py-2 px-3 text-right font-mono font-bold whitespace-nowrap">
+                                <td className="py-2 px-2.5 text-center font-mono font-bold whitespace-nowrap">
                                   {!isWork ? (
-                                    <span className="text-slate-400">Descanso</span>
-                                  ) : cross.totalMinutosDescuento > 0 ? (
-                                    <span className="text-rose-700 font-black">
-                                      +{cross.totalMinutosDescuento} min
+                                    <span className="text-slate-300">—</span>
+                                  ) : cross.minTardeEntrada > 0 ? (
+                                    <span className="text-rose-600 font-black">
+                                      -{cross.minTardeEntrada} min
                                     </span>
                                   ) : hasAnyPunch ? (
-                                    <span className="text-emerald-700 font-black">Puntual</span>
+                                    <span className="text-slate-400">0 min</span>
                                   ) : (
                                     <span className="text-slate-300">—</span>
+                                  )}
+                                </td>
+                                <td className="py-2 px-2.5 text-center font-mono font-bold whitespace-nowrap">
+                                  {!isWork ? (
+                                    <span className="text-slate-300">—</span>
+                                  ) : cross.minTardeEntradaAlmuerzo + cross.minSalidaAntesAlmuerzo > 0 ? (
+                                    <span className="text-amber-700 font-black">
+                                      -{cross.minTardeEntradaAlmuerzo + cross.minSalidaAntesAlmuerzo} min
+                                    </span>
+                                  ) : hasAnyPunch ? (
+                                    <span className="text-slate-400">0 min</span>
+                                  ) : (
+                                    <span className="text-slate-300">—</span>
+                                  )}
+                                </td>
+                                <td className="py-2 px-2.5 text-center font-mono font-bold whitespace-nowrap">
+                                  {!isWork ? (
+                                    <span className="text-slate-300">—</span>
+                                  ) : cross.minSalidaAntesTurno > 0 ? (
+                                    <span className="text-rose-600 font-black">
+                                      -{cross.minSalidaAntesTurno} min
+                                    </span>
+                                  ) : hasAnyPunch ? (
+                                    <span className="text-slate-400">0 min</span>
+                                  ) : (
+                                    <span className="text-slate-300">—</span>
+                                  )}
+                                </td>
+                                <td className="py-2 px-2.5 text-center font-mono font-bold whitespace-nowrap bg-rose-50/30">
+                                  {!isWork ? (
+                                    <span className="text-slate-300">—</span>
+                                  ) : cross.totalMinutosDescuento > 0 ? (
+                                    <span className="text-rose-700 font-black">
+                                      -{cross.totalMinutosDescuento} min
+                                    </span>
+                                  ) : hasAnyPunch ? (
+                                    <span className="text-emerald-700 font-black">0 min</span>
+                                  ) : (
+                                    <span className="text-slate-300">—</span>
+                                  )}
+                                </td>
+                                <td className="py-2 px-3 text-right font-mono font-bold whitespace-nowrap bg-slate-50/60">
+                                  {!isWork ? (
+                                    <span className="text-slate-400">Descanso</span>
+                                  ) : hasAnyPunch ? (
+                                    <span
+                                      className={
+                                        cross.totalMinutosDescuento > 0
+                                          ? 'text-slate-900 font-black'
+                                          : 'text-emerald-700 font-black'
+                                      }
+                                    >
+                                      {Math.max(0, 480 - cross.totalMinutosDescuento)} / 480 min
+                                    </span>
+                                  ) : (
+                                    <span className="text-slate-300">480 min</span>
                                   )}
                                 </td>
                               </tr>
