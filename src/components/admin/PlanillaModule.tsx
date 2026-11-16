@@ -201,7 +201,8 @@ export function buildStandardWeekDays(
   entradaAlm = '13:00',
   salida = '17:00',
   sabEntrada = '08:00',
-  sabSalida = '12:00'
+  sabSalida = '12:00',
+  sabIsWorkDay = true
 ): JornadaDaySchedule[] {
   return [
     { dayOfWeek: 1, dayName: 'Lunes', isWorkDay: true, entradaTurno: entrada, hasLunch: true, salidaAlmuerzo: salidaAlm, entradaAlmuerzo: entradaAlm, salidaTurno: salida },
@@ -209,7 +210,7 @@ export function buildStandardWeekDays(
     { dayOfWeek: 3, dayName: 'Miércoles', isWorkDay: true, entradaTurno: entrada, hasLunch: true, salidaAlmuerzo: salidaAlm, entradaAlmuerzo: entradaAlm, salidaTurno: salida },
     { dayOfWeek: 4, dayName: 'Jueves', isWorkDay: true, entradaTurno: entrada, hasLunch: true, salidaAlmuerzo: salidaAlm, entradaAlmuerzo: entradaAlm, salidaTurno: salida },
     { dayOfWeek: 5, dayName: 'Viernes', isWorkDay: true, entradaTurno: entrada, hasLunch: true, salidaAlmuerzo: salidaAlm, entradaAlmuerzo: entradaAlm, salidaTurno: salida },
-    { dayOfWeek: 6, dayName: 'Sábado', isWorkDay: true, entradaTurno: sabEntrada, hasLunch: false, salidaAlmuerzo: '12:00', entradaAlmuerzo: '12:00', salidaTurno: sabSalida },
+    { dayOfWeek: 6, dayName: 'Sábado', isWorkDay: sabIsWorkDay, entradaTurno: sabEntrada, hasLunch: false, salidaAlmuerzo: '12:00', entradaAlmuerzo: '12:00', salidaTurno: sabSalida },
     { dayOfWeek: 0, dayName: 'Domingo', isWorkDay: false, entradaTurno: '08:00', hasLunch: false, salidaAlmuerzo: '12:00', entradaAlmuerzo: '13:00', salidaTurno: '17:00' },
   ];
 }
@@ -219,10 +220,10 @@ const DEFAULT_JORNADAS: WorkJornada[] = [
     id: 'jor-gerencia',
     code: 'JOR-GER',
     name: 'Gerencia',
-    description: 'Jornada de Gerencia y Administración General (Lun–Vie 08:45–18:15 con 1h 30m almuerzo, Sáb 09:00–13:00)',
+    description: 'Jornada de Gerencia y Administración General (Lun–Vie 08:45–18:15 con 1h 30m almuerzo • Sáb y Dom libre = 40h)',
     graceMinutesEntrada: 0,
     graceMinutesAlmuerzo: 0,
-    days: buildStandardWeekDays('08:45', '12:00', '13:30', '18:15', '09:00', '13:00'),
+    days: buildStandardWeekDays('08:45', '12:00', '13:30', '18:15', '09:00', '13:00', false),
   },
   {
     id: 'jor-ventas',
