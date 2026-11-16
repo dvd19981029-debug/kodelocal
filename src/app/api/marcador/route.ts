@@ -95,6 +95,15 @@ const FALLBACK_EMPLOYEES = [
     department: 'MARKETING',
     docNumber: '06694167-0',
   },
+  {
+    id: 'emp-6',
+    code: '006',
+    firstName: 'ANDREA',
+    fullName: 'Andrea Guadalupe Cuadra Cruz',
+    position: 'Servicios Profesionales',
+    department: 'VENTA',
+    docNumber: '06863792-6',
+  },
 ];
 
 function getElSalvadorNow() {

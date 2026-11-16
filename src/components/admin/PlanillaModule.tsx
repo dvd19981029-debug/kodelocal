@@ -131,6 +131,12 @@ export interface PayrollEmployee {
   vacationAmount: number; // Monto de vacación
   vacationDays: number; // Días de vacación
   otherDeductions: number; // Anticipos / préstamos / descuentos directos al líquido
+  contractType?: 'PLANILLA' | 'SERVICIOS_PROFESIONALES';
+  phone?: string;
+  email?: string;
+  address?: string;
+  departmentGeo?: string;
+  municipioGeo?: string;
 }
 
 export interface SavedPayrollSnapshot {
@@ -412,6 +418,45 @@ const INITIAL_EMPLOYEES: PayrollEmployee[] = [
     vacationAmount: 0,
     vacationDays: 0,
     otherDeductions: 0,
+  },
+  {
+    id: 'emp-6',
+    code: '006',
+    firstName: 'ANDREA',
+    secondName: 'GUADALUPE',
+    firstLastName: 'CUADRA',
+    secondLastName: 'CRUZ',
+    marriedLastName: '',
+    fullName: 'Andrea Guadalupe Cuadra Cruz',
+    gender: 'FEMENINO',
+    hireDate: '2026-11-16',
+    position: 'Servicios Profesionales',
+    department: 'VENTA',
+    jornadaId: 'jor-ventas',
+    docType: '01 DUI',
+    docNumber: '06863792-6',
+    isssNumber: '',
+    afpInstitution: 'COF - AFP CONFÍA',
+    baseSalaryMonthly: 0,
+    hoursPerDay: 8,
+    workplaceCenter: '001 SUCURSAL PRINCIPAL',
+    obsCode1: '00 Sin Cambios',
+    obsCode2: '00 Sin Cambios',
+    daysOverride: null,
+    absenceDays: 0,
+    subsidyDays: 0,
+    subsidyAmount: 0,
+    tardyMinutes: 0,
+    otherIncome: 0,
+    vacationAmount: 0,
+    vacationDays: 0,
+    otherDeductions: 0,
+    contractType: 'SERVICIOS_PROFESIONALES',
+    phone: '70180617',
+    email: 'andreacruz2005vv@gmail.com',
+    address: 'final calle la campiña, casa 8 block c, san Salvador cuscatancingo',
+    departmentGeo: 'San Salvador',
+    municipioGeo: 'San Salvador',
   },
 ];
 
@@ -981,11 +1026,17 @@ export default function PlanillaModule() {
         )
       );
 
-      // Columnas H, I, J, K, L, M exactas según el archivo Excel del contador
-      const isssLabExact = Math.min(totalDevengado * parameters.isssLaboralRate, isssLabMax);
-      const afpLabExact = totalDevengado * parameters.afpLaboralRate;
+      const isServiciosProf = emp.contractType === 'SERVICIOS_PROFESIONALES';
+
+      // Columnas H, I, J, K, L, M exactas según el archivo Excel del contador (o 10% Renta fijo en Servicios Profesionales)
+      const isssLabExact = isServiciosProf
+        ? 0
+        : Math.min(totalDevengado * parameters.isssLaboralRate, isssLabMax);
+      const afpLabExact = isServiciosProf ? 0 : totalDevengado * parameters.afpLaboralRate;
       const baseGravableIsrExact = Math.max(0, totalDevengado - isssLabExact - afpLabExact);
-      const isrExact = calculateIsrFromBracketsExact(baseGravableIsrExact, brackets);
+      const isrExact = isServiciosProf
+        ? totalDevengado * 0.1
+        : calculateIsrFromBracketsExact(baseGravableIsrExact, brackets);
 
       const otherDeductions = round2(
         Number(emp.otherDeductions || 0) +
@@ -1001,11 +1052,14 @@ export default function PlanillaModule() {
       const totalDeducciones = round2(totalDeduccionesExact);
       const liquidoPagar = round2(liquidoPagarExact);
 
-      const isssPatExact = Math.min(totalDevengado * parameters.isssPatronalRate, isssPatMax);
-      const afpPatExact = totalDevengado * parameters.afpPatronalRate;
-      const incafPatExact = appliesIncaf
-        ? Math.min(totalDevengado * parameters.incafRate, incafPatMax)
-        : 0;
+      const isssPatExact = isServiciosProf
+        ? 0
+        : Math.min(totalDevengado * parameters.isssPatronalRate, isssPatMax);
+      const afpPatExact = isServiciosProf ? 0 : totalDevengado * parameters.afpPatronalRate;
+      const incafPatExact =
+        !isServiciosProf && appliesIncaf
+          ? Math.min(totalDevengado * parameters.incafRate, incafPatMax)
+          : 0;
       const totalPatronalExact = isssPatExact + afpPatExact + incafPatExact;
       const costoTotalEmpresaExact = totalDevengado + nonTaxableBonus + totalPatronalExact;
 
@@ -1158,6 +1212,7 @@ export default function PlanillaModule() {
     let seq = 1;
     for (const r of computedRows) {
       const e = r.emp;
+      if (e.contractType === 'SERVICIOS_PROFESIONALES') continue;
       // En SPU mensual la base es 30 días (o los días efectivos si hubo ausencia/incapacidad/vacación)
       const factor = frequency === 'QUINCENAL' ? 2 : 1;
       const spuBaseDays = Math.max(
