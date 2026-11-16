@@ -219,10 +219,10 @@ const DEFAULT_JORNADAS: WorkJornada[] = [
     id: 'jor-gerencia',
     code: 'JOR-GER',
     name: 'Gerencia',
-    description: 'Jornada de Gerencia y Administración General (Lun–Vie 08:00–17:00, Sáb 08:00–12:00)',
+    description: 'Jornada de Gerencia y Administración General (Lun–Vie 08:45–18:15 con 1h 30m almuerzo, Sáb 09:00–13:00)',
     graceMinutesEntrada: 0,
     graceMinutesAlmuerzo: 0,
-    days: buildStandardWeekDays('08:00', '12:00', '13:00', '17:00', '08:00', '12:00'),
+    days: buildStandardWeekDays('08:45', '12:00', '13:30', '18:15', '09:00', '13:00'),
   },
   {
     id: 'jor-ventas',
