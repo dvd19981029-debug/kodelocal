@@ -3343,7 +3343,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Onza",
     "price": 3.75,
     "priceHalfOunce": 1.9,
-    "finishedPerfumePrice": 15,
+    "finishedPerfumePrice": 10,
     "cost": 1.91,
     "stock": 0,
     "minStock": 15,
