@@ -88,6 +88,7 @@ export default function EcommerceHomePage() {
   const [selectedInsumoSubTab, setSelectedInsumoSubTab] = useState<'Insumos' | 'Stickers'>('Insumos');
   const [selectedStockFilter, setSelectedStockFilter] = useState<'Todos' | 'Disponibles' | 'Agotados'>('Todos');
   const [onlyHalloweenPromo, setOnlyHalloweenPromo] = useState<boolean>(false);
+  const [onlyNewArrivals, setOnlyNewArrivals] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
   // Columnas dinámicas según el tamaño de pantalla para calcular exactamente 7 filas
   const [columns, setColumns] = useState(2);
@@ -365,6 +366,12 @@ export default function EcommerceHomePage() {
         if (!isHalloweenPromoProduct(p)) return false;
       }
 
+      // Filtro de Nuevos Ingresos (desde el banner principal)
+      if (onlyNewArrivals && selectedCategory === 'Esencias para Perfume') {
+        const skuVal = String(p.sku || '').trim();
+        if (!['106', '107', '108', '109', '110', '111'].includes(skuVal)) return false;
+      }
+
       // Filtro de género (solo si es categoría de esencias)
       let matchesGender = true;
       if (selectedCategory === 'Esencias para Perfume' && selectedGender !== 'Todos') {
@@ -425,8 +432,12 @@ export default function EcommerceHomePage() {
       });
     }
 
+    if (onlyNewArrivals && selectedCategory === 'Esencias para Perfume') {
+      list.sort((a, b) => Number(b.sku || 0) - Number(a.sku || 0));
+    }
+
     return list;
-  }, [products, searchQuery, selectedGender, selectedCategory, selectedInsumoSubTab, selectedStockFilter, onlyHalloweenPromo]);
+  }, [products, searchQuery, selectedGender, selectedCategory, selectedInsumoSubTab, selectedStockFilter, onlyHalloweenPromo, onlyNewArrivals]);
 
   // Paginación: Exactamente 7 filas por página según el número de columnas del dispositivo
   const targetRows = 7;
@@ -597,6 +608,7 @@ export default function EcommerceHomePage() {
 
   const handleSelectCategory = (cat: string) => {
     setSelectedCategory(cat);
+    setOnlyNewArrivals(false);
     if (cat === 'Botes' || cat === 'Insumos' || cat === 'Arma tu perfume') {
       setSelectedGender('Todos');
       setSelectedStockFilter('Todos');
@@ -649,6 +661,18 @@ export default function EcommerceHomePage() {
                 const el = document.getElementById('catalogo');
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
               }
+            }}
+            onFilterNewArrivals={() => {
+              setSelectedCategory('Esencias para Perfume');
+              setSelectedGender('Todos');
+              setSelectedStockFilter('Todos');
+              setOnlyHalloweenPromo(false);
+              setOnlyNewArrivals(true);
+              setCurrentPage(1);
+              setTimeout(() => {
+                const el = document.getElementById('catalogo');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }, 40);
             }}
           />
         </section>
@@ -768,6 +792,21 @@ export default function EcommerceHomePage() {
                 <span className="clay-badge text-[10px] sm:text-xs bg-purple-50 text-purple-900 border border-purple-200 px-2.5 py-0.5 rounded-lg font-black">
                   {filteredProducts.length} {selectedCategory === 'Esencias para Perfume' && !isSearching ? 'fragancias' : (selectedCategory === 'Insumos' && selectedInsumoSubTab === 'Stickers' && !isSearching) ? 'stickers' : 'productos'}
                 </span>
+                {onlyNewArrivals && selectedCategory === 'Esencias para Perfume' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOnlyNewArrivals(false);
+                      setCurrentPage(1);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-gradient-to-r from-[#48266c] to-[#7c3aed] text-white text-[10px] sm:text-xs font-black shadow-xs hover:opacity-90 cursor-pointer"
+                    title="Quitar filtro de Nuevos Ingresos"
+                  >
+                    <Sparkles className="w-3 h-3 text-amber-300" />
+                    <span>Nuevos Ingresos</span>
+                    <span className="ml-0.5 text-purple-200">× Ver todas</span>
+                  </button>
+                )}
               </div>
             </div>
 
