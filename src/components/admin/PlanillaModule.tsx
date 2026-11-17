@@ -905,11 +905,11 @@ export default function PlanillaModule() {
       payDate = `${year}-${mm}-${String(lastDay).padStart(2, '0')}`;
     } else if (type === 'OCT_18') {
       nextFreq = 'MENSUAL';
-      pStart = `${year}-${mm}-14`;
-      pEnd = `${year}-${mm}-${String(lastDay).padStart(2, '0')}`;
-      cStart = `${year}-${mm}-14`;
-      cEnd = `${year}-${mm}-${String(lastDay).padStart(2, '0')}`;
-      payDate = `${year}-${mm}-${String(lastDay).padStart(2, '0')}`;
+      pStart = '2026-10-14';
+      pEnd = '2026-10-31';
+      cStart = '2026-10-14';
+      cEnd = '2026-10-31';
+      payDate = '2026-10-31';
     }
 
     const resetDaysEmployees = employees.map((e) => ({ ...e, daysOverride: null }));
@@ -1234,17 +1234,20 @@ export default function PlanillaModule() {
       let rawObs1 = (e.obsCode1 || '01').slice(0, 2);
       let rawObs2 = (e.obsCode2 || '00').slice(0, 2);
 
-      // Según manual SSF (pág. 3): en CSV Col 20 (Obs 1) no existe '00' (usa '01' sin cambios o '02' pagos adicionales); Col 21 (Obs 2) usa '00' si no aplica.
-      if (rawObs1 === '00') {
+      // En octubre 2026 (102026, ingreso 14 de oct = 18 días), el código obligatorio SPU es '08' (Ingreso o Reingreso del Trabajador)
+      if (spuPeriodCode === '102026' || (spuBaseDays < 30 && (rawObs1 === '00' || rawObs1 === '01'))) {
+        rawObs1 = '08';
+      } else if (rawObs1 === '00') {
         rawObs1 = '01';
       }
+
       if (e.subsidyDays > 0) {
         rawObs1 = '06';
-      } else if (e.vacationDays > 0 && r.otherIncome > 0) {
+      } else if (e.vacationDays > 0 && r.taxableBonus > 0) {
         rawObs1 = '10';
       } else if (e.vacationDays > 0) {
         rawObs1 = '09';
-      } else if (r.otherIncome > 0) {
+      } else if (r.taxableBonus > 0) {
         if (rawObs1 === '08') {
           rawObs2 = '02';
         } else {
@@ -1269,7 +1272,7 @@ export default function PlanillaModule() {
         segundoApellido: e.secondLastName,
         apellidoCasada: e.marriedLastName,
         salario: Math.max(0, spuSalary),
-        pagoAdicional: r.otherIncome,
+        pagoAdicional: r.taxableBonus,
         montoVacacion: r.vacationAmount,
         dias: spuBaseDays,
         horas: e.hoursPerDay || 8,
