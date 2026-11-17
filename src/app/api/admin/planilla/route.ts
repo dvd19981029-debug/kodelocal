@@ -63,7 +63,35 @@ export async function POST(request: Request) {
         category: PLANILLA_CATEGORY,
         topic: PLANILLA_TOPIC,
       },
+      orderBy: { updatedAt: 'desc' },
     });
+
+    // Preservar marcaciones recientes hechas por QR desde /marcador para que una pestaña abierta de /planilla no las pise
+    if (existing?.instruction) {
+      try {
+        const prev = JSON.parse(existing.instruction);
+        if (prev?.punchRecords && typeof prev.punchRecords === 'object') {
+          const mergedPunches: Record<string, any> = { ...prev.punchRecords };
+          const incomingPunches: Record<string, any> =
+            body.punchRecords && typeof body.punchRecords === 'object' ? body.punchRecords : {};
+          for (const [k, incVal] of Object.entries(incomingPunches)) {
+            const prevVal = mergedPunches[k] || {};
+            mergedPunches[k] = {
+              ...prevVal,
+              ...incVal,
+              marcacionEntrada: incVal?.marcacionEntrada || prevVal?.marcacionEntrada || '',
+              marcacionSalidaAlmuerzo:
+                incVal?.marcacionSalidaAlmuerzo || prevVal?.marcacionSalidaAlmuerzo || '',
+              marcacionEntradaAlmuerzo:
+                incVal?.marcacionEntradaAlmuerzo || prevVal?.marcacionEntradaAlmuerzo || '',
+              marcacionSalidaTurno:
+                incVal?.marcacionSalidaTurno || prevVal?.marcacionSalidaTurno || '',
+            };
+          }
+          body.punchRecords = mergedPunches;
+        }
+      } catch {}
+    }
 
     const serialized = JSON.stringify(body);
 

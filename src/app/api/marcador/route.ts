@@ -171,14 +171,32 @@ async function loadPlanillaData(): Promise<{ recordId: string | null; data: any 
   };
 }
 
-async function savePlanillaData(recordId: string | null, data: any) {
-  const serialized = JSON.stringify(data);
+async function savePlanillaPunchAtomic(
+  recordId: number | string | null,
+  dayKey: string,
+  updatedPunch: any,
+  fallbackData: any
+) {
   if (recordId) {
-    await prisma.mirandaBusinessMemory.update({
-      where: { id: recordId },
-      data: { instruction: serialized },
-    });
+    const punchJson = JSON.stringify(updatedPunch);
+    await prisma.$executeRaw`
+      UPDATE miranda_business_memory
+      SET instruction = jsonb_set(
+            jsonb_set(
+              instruction::jsonb,
+              '{punchRecords}',
+              COALESCE(instruction::jsonb -> 'punchRecords', '{}'::jsonb),
+              true
+            ),
+            ARRAY['punchRecords', ${dayKey}],
+            ${punchJson}::jsonb,
+            true
+          )::text,
+          "updatedAt" = NOW()
+      WHERE id = ${Number(recordId)}
+    `;
   } else {
+    const serialized = JSON.stringify(fallbackData);
     await prisma.mirandaBusinessMemory.create({
       data: {
         category: PLANILLA_CATEGORY,
@@ -743,7 +761,7 @@ async function processQrAttendanceScan({
   ].slice(0, 50);
 
   await Promise.all([
-    savePlanillaData(planillaRecId, planilla),
+    savePlanillaPunchAtomic(planillaRecId, dayKey, updatedPunch, planilla),
     saveKioskState(kioskRecId, state),
   ]);
 
