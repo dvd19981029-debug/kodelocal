@@ -1256,14 +1256,14 @@ export default function PlanillaModule() {
       // En SPU mensual la base es 30 días (o los días efectivos si hubo ausencia/incapacidad/vacación)
       const factor = frequency === 'QUINCENAL' ? 2 : 1;
       const spuBaseDays =
-        frequency === 'QUINCENAL'
+        frequency === 'QUINCENAL' && spuPeriodCode !== '102026' && e.daysOverride === null
           ? Math.max(
               1,
               30 - Number(e.absenceDays || 0) - Number(e.subsidyDays || 0) - Number(e.vacationDays || 0)
             )
           : Math.max(1, r.workedDays - Number(e.vacationDays || 0));
       const spuSalary = round2(
-        frequency === 'QUINCENAL'
+        frequency === 'QUINCENAL' && spuPeriodCode !== '102026' && e.daysOverride === null
           ? (e.baseSalaryMonthly / 30) * spuBaseDays -
               (parameters.tardinessMode === 'REDUCE_BASE' ? r.tardyDiscount : 0)
           : r.ordinarySalary - (parameters.tardinessMode === 'REDUCE_BASE' ? r.tardyDiscount : 0)
@@ -1360,7 +1360,7 @@ export default function PlanillaModule() {
           horas: e.hoursPerDay || 8,
           diasVacacion: 0,
           codObs1: '12',
-          codObs2: '01',
+          codObs2: '00',
           departamento: e.department,
           cargo: e.position,
         });
