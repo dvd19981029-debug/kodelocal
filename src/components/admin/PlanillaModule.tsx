@@ -5137,56 +5137,62 @@ export default function PlanillaModule() {
                       <td className="py-2 px-2 text-center font-bold">{row.dias}</td>
                       <td className="py-2 px-2 text-center">{row.horas}</td>
                       <td className="py-2 px-2 text-center">{row.diasVacacion}</td>
-                      <td className="py-1.5 px-1.5 text-center">
+                      <td className="py-1.5 px-2 text-center">
                         {row.empId ? (
-                          <select
-                            aria-label={`Observación 1 de ${row.primerNombre}`}
-                            title={
-                              SPU_OBS_CODES.find((c) => c.startsWith(row.codObs1)) ||
-                              `Código ${row.codObs1}`
-                            }
-                            value={
-                              SPU_OBS_CODES.find((c) => c.startsWith(row.codObs1)) ||
-                              SPU_OBS_CODES[0]
-                            }
-                            onChange={(e) =>
-                              updateEmployeeField(row.empId!, 'obsCode1', e.target.value)
-                            }
-                            className="py-1 px-1.5 rounded-lg border border-emerald-200 bg-emerald-50/70 text-emerald-800 font-mono font-black text-[11px] max-w-[150px] cursor-pointer focus:outline-none focus:border-emerald-500"
-                          >
-                            {SPU_OBS_CODES.filter((c) => !c.startsWith('00')).map((c) => (
-                              <option key={c} value={c}>
-                                {c}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="relative inline-flex items-center justify-center px-2 py-0.5 rounded-md border border-emerald-200 bg-emerald-50/70 text-emerald-800 font-mono font-black text-[11px] hover:bg-emerald-100/80">
+                            <span>{row.codObs1}</span>
+                            <select
+                              aria-label={`Observación 1 de ${row.primerNombre}`}
+                              title={
+                                SPU_OBS_CODES.find((c) => c.startsWith(row.codObs1)) ||
+                                `Código ${row.codObs1}`
+                              }
+                              value={
+                                SPU_OBS_CODES.find((c) => c.startsWith(row.codObs1)) ||
+                                SPU_OBS_CODES[0]
+                              }
+                              onChange={(e) =>
+                                updateEmployeeField(row.empId!, 'obsCode1', e.target.value)
+                              }
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            >
+                              {SPU_OBS_CODES.filter((c) => !c.startsWith('00')).map((c) => (
+                                <option key={c} value={c}>
+                                  {c}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
                         ) : (
                           <span className="font-bold text-emerald-700">{row.codObs1}</span>
                         )}
                       </td>
-                      <td className="py-1.5 px-1.5 text-center">
+                      <td className="py-1.5 px-2 text-center">
                         {row.empId ? (
-                          <select
-                            aria-label={`Observación 2 de ${row.primerNombre}`}
-                            title={
-                              SPU_OBS_CODES.find((c) => c.startsWith(row.codObs2)) ||
-                              `Código ${row.codObs2}`
-                            }
-                            value={
-                              SPU_OBS_CODES.find((c) => c.startsWith(row.codObs2)) ||
-                              SPU_OBS_CODES[0]
-                            }
-                            onChange={(e) =>
-                              updateEmployeeField(row.empId!, 'obsCode2', e.target.value)
-                            }
-                            className="py-1 px-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 font-mono font-bold text-[11px] max-w-[150px] cursor-pointer focus:outline-none focus:border-indigo-500"
-                          >
-                            {SPU_OBS_CODES.map((c) => (
-                              <option key={c} value={c}>
-                                {c}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="relative inline-flex items-center justify-center px-2 py-0.5 rounded-md border border-slate-200 bg-slate-50 text-slate-800 font-mono font-bold text-[11px] hover:bg-slate-100">
+                            <span>{row.codObs2}</span>
+                            <select
+                              aria-label={`Observación 2 de ${row.primerNombre}`}
+                              title={
+                                SPU_OBS_CODES.find((c) => c.startsWith(row.codObs2)) ||
+                                `Código ${row.codObs2}`
+                              }
+                              value={
+                                SPU_OBS_CODES.find((c) => c.startsWith(row.codObs2)) ||
+                                SPU_OBS_CODES[0]
+                              }
+                              onChange={(e) =>
+                                updateEmployeeField(row.empId!, 'obsCode2', e.target.value)
+                              }
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            >
+                              {SPU_OBS_CODES.map((c) => (
+                                <option key={c} value={c}>
+                                  {c}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
                         ) : (
                           <span>{row.codObs2}</span>
                         )}
