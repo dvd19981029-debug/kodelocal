@@ -1217,10 +1217,13 @@ export default function PlanillaModule() {
       if (e.contractType === 'SERVICIOS_PROFESIONALES') continue;
       // En SPU mensual la base es 30 días (o los días efectivos si hubo ausencia/incapacidad/vacación)
       const factor = frequency === 'QUINCENAL' ? 2 : 1;
-      const spuBaseDays = Math.max(
-        0,
-        30 - Number(e.absenceDays || 0) - Number(e.subsidyDays || 0) - Number(e.vacationDays || 0)
-      );
+      const spuBaseDays =
+        frequency === 'QUINCENAL'
+          ? Math.max(
+              1,
+              30 - Number(e.absenceDays || 0) - Number(e.subsidyDays || 0) - Number(e.vacationDays || 0)
+            )
+          : Math.max(1, r.workedDays - Number(e.vacationDays || 0));
       const spuSalary = round2(
         frequency === 'QUINCENAL'
           ? (e.baseSalaryMonthly / 30) * spuBaseDays -
@@ -1228,27 +1231,37 @@ export default function PlanillaModule() {
           : r.ordinarySalary - (parameters.tardinessMode === 'REDUCE_BASE' ? r.tardyDiscount : 0)
       );
 
-      let autoObs1 = e.obsCode1;
+      let rawObs1 = (e.obsCode1 || '01').slice(0, 2);
+      let rawObs2 = (e.obsCode2 || '00').slice(0, 2);
+
+      // Según manual SSF (pág. 3): en CSV Col 20 (Obs 1) no existe '00' (usa '01' sin cambios o '02' pagos adicionales); Col 21 (Obs 2) usa '00' si no aplica.
+      if (rawObs1 === '00') {
+        rawObs1 = '01';
+      }
       if (e.subsidyDays > 0) {
-        autoObs1 = '06 Incapacidad';
+        rawObs1 = '06';
       } else if (e.vacationDays > 0 && r.otherIncome > 0) {
-        autoObs1 = '10 Vacaciones más pagos adicionales';
+        rawObs1 = '10';
       } else if (e.vacationDays > 0) {
-        autoObs1 = '09 Vacaciones';
+        rawObs1 = '09';
       } else if (r.otherIncome > 0) {
-        autoObs1 = '02 Pagos adicionales';
+        if (rawObs1 === '08') {
+          rawObs2 = '02';
+        } else {
+          rawObs1 = '02';
+        }
       }
 
       list.push({
         rowNum: seq++,
         referencia: e.code,
         nitEmpleador: parameters.employerNitDui.replace(/-/g, ''),
-        numPatronalIsss: parameters.isssPatronalNumber,
+        numPatronalIsss: (e.patronalNumber || parameters.isssPatronalNumber).replace(/-/g, ''),
         periodo: spuPeriodCode,
-        centroTrabajo: e.workplaceCenter || parameters.workplaceCorrelative,
+        centroTrabajo: (e.workplaceCenter || parameters.workplaceCorrelative).slice(0, 3),
         numDocumento: e.docNumber.replace(/-/g, ''),
         tipoDocumento: e.docType.slice(0, 2),
-        numAfiliacion: e.isssNumber,
+        numAfiliacion: e.isssNumber.replace(/-/g, ''),
         institucionPrevisional: e.afpInstitution.slice(0, 3),
         primerNombre: e.firstName,
         segundoNombre: e.secondName,
@@ -1261,8 +1274,8 @@ export default function PlanillaModule() {
         dias: spuBaseDays,
         horas: e.hoursPerDay || 8,
         diasVacacion: Number(e.vacationDays || 0),
-        codObs1: autoObs1.slice(0, 2),
-        codObs2: e.obsCode2.slice(0, 2),
+        codObs1: rawObs1,
+        codObs2: rawObs2,
         departamento: e.department,
         cargo: e.position,
       });
@@ -1463,7 +1476,7 @@ export default function PlanillaModule() {
     showToast('✅ Novedades del período reiniciadas.');
   };
 
-  // Exportar CSV Oficial SPU (21 columnas separadas por ;)
+  // Exportar CSV Oficial SPU (21 columnas separadas por coma según manual SSF, sin encabezados ni comillas, nombre <= 25 chars)
   const handleExportSpuCsv = () => {
     const lines = spuRows.map((r) =>
       [
@@ -1481,24 +1494,24 @@ export default function PlanillaModule() {
         r.segundoApellido,
         r.apellidoCasada,
         r.salario.toFixed(2),
-        r.pagoAdicional.toFixed(2),
-        r.montoVacacion.toFixed(2),
+        r.pagoAdicional > 0 ? r.pagoAdicional.toFixed(2) : '0.00',
+        r.montoVacacion > 0 ? r.montoVacacion.toFixed(2) : '0.00',
         r.dias,
         r.horas,
         r.diasVacacion,
         r.codObs1,
         r.codObs2,
-      ].join(';')
+      ].join(',')
     );
     const csvContent = lines.join('\r\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Planilla_Unica_SPU_${spuPeriodCode}.csv`;
+    a.download = `SPU_${spuPeriodCode}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast(`📄 Archivo CSV para SPU (${spuPeriodCode}) descargado.`);
+    showToast(`📄 Archivo SPU_${spuPeriodCode}.csv descargado (21 columnas, separado por coma).`);
   };
 
   // Exportar CSV de Planilla Contable Quincenal/Mensual
