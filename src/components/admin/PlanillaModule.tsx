@@ -181,7 +181,7 @@ const DEFAULT_PARAMETERS: PayrollParameters = {
   employerNitDui: '06232907261069',
   employerName: 'Grupo KODE S.A.S. de C.V.',
   isssPatronalNumber: '701263289',
-  workplaceCorrelative: '001 SUCURSAL PRINCIPAL',
+  workplaceCorrelative: '1 - AROMANIAK EL SALVADOR',
   quincenalBrackets: [
     { tramo: 'I', desde: 0.01, hasta: 275.0, porcentaje: 0, sobreExcesoDe: 0, cuotaFija: 0 },
     { tramo: 'II', desde: 275.01, hasta: 447.62, porcentaje: 0.1, sobreExcesoDe: 341.665, cuotaFija: 8.83 },
@@ -1293,7 +1293,8 @@ export default function PlanillaModule() {
         nitEmpleador: parameters.employerNitDui.replace(/-/g, ''),
         numPatronalIsss: (e.patronalNumber || parameters.isssPatronalNumber).replace(/-/g, ''),
         periodo: spuPeriodCode,
-        centroTrabajo: (e.workplaceCenter || parameters.workplaceCorrelative).slice(0, 3),
+        centroTrabajo:
+          (e.workplaceCenter || parameters.workplaceCorrelative).match(/^\d+/)?.[0] || '1',
         numDocumento: e.docNumber.replace(/-/g, ''),
         tipoDocumento: e.docType.slice(0, 2),
         numAfiliacion: e.isssNumber.replace(/-/g, ''),
@@ -1327,7 +1328,8 @@ export default function PlanillaModule() {
           nitEmpleador: parameters.employerNitDui.replace(/-/g, ''),
           numPatronalIsss: parameters.isssPatronalNumber,
           periodo: spuPeriodCode,
-          centroTrabajo: e.workplaceCenter || parameters.workplaceCorrelative,
+          centroTrabajo:
+            (e.workplaceCenter || parameters.workplaceCorrelative).match(/^\d+/)?.[0] || '1',
           numDocumento: e.docNumber.replace(/-/g, ''),
           tipoDocumento: e.docType.slice(0, 2),
           numAfiliacion: e.isssNumber,
