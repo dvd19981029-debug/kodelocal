@@ -47,17 +47,6 @@ export async function POST(request: Request) {
     }
 
     const pedido = res.rows[0];
-    const estActual = String(pedido.estado || '').trim().toUpperCase();
-
-    if (estActual === 'ENTREGADO') {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `El pedido ${pedido.numero_pedido} ya figura como Entregado y no puede cancelarse desde aquí.`,
-        },
-        { status: 400 }
-      );
-    }
 
     const dteId = String(pedido.dte_codigo_generacion || '').trim();
     const dteEst = String(pedido.dte_estado || '').trim().toUpperCase();

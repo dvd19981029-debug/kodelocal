@@ -555,8 +555,6 @@ export const PedidosTabla: React.FC<PedidosTablaProps> = ({
                                 </div>
 
                                 {onCancelarPedido &&
-                                  p.estado !== 'Entregado' &&
-                                  p.estado !== 'ENTREGADO' &&
                                   p.estado !== 'Cancelado' &&
                                   p.estado !== 'CANCELADO' && (
                                     <div className="pt-1.5 mt-1.5 border-t border-slate-100 flex items-center justify-end">
