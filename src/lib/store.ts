@@ -3332,6 +3332,28 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "stockHalf": 0
   },
   {
+    "id": "esencia-apae-111",
+    "sku": "111",
+    "barcode": "741001000111",
+    "name": "Baccarat Rouge 540 Extrait",
+    "officialName": "Cristal Rouge Extrait",
+    "brand": "Maison Francis Kurkdjian",
+    "gender": "Unisex",
+    "category": "Esencias para Perfume",
+    "unit": "Onza",
+    "price": 3.75,
+    "priceHalfOunce": 1.9,
+    "finishedPerfumePrice": 15,
+    "cost": 1.91,
+    "stock": 0,
+    "minStock": 15,
+    "imageUrl": "/images/essence_bottle_blank.webp",
+    "description": "Inspirado en BACCARAT ROUGE 540 EXTRAIT MFK",
+    "isAvailableOnline": true,
+    "puesto": "A1",
+    "stockHalf": 0
+  },
+  {
     "id": "ENVIO-DOM",
     "sku": "ENVIO-DOM",
     "barcode": "741009000001",

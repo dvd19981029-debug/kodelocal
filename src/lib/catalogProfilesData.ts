@@ -1110,6 +1110,16 @@ export const CATALOG_PROFILES_48: Record<string, StaticProfile> = {
     occasion: 'Eventos especiales, fiestas, uso firma de lujo y máxima estela',
     intensity: 'Intensa'
   },
+  '111': {
+    family: 'Ámbar Floral',
+    accords: ['almendrado', 'ámbar', 'amaderado', 'cálido especiado', 'animálico', 'dulce'],
+    topNotes: ['Almendra amarga', 'Azafrán'],
+    heartNotes: ['Jazmín egipcio', 'Cedro'],
+    baseNotes: ['Ámbar gris', 'Notas amaderadas', 'Almizcle'],
+    season: 'Otoño / Invierno / Noche',
+    occasion: 'Eventos de gala, noches especiales, estela intensa de lujo',
+    intensity: 'Extrema'
+  },
   'APAE-2154': {
     family: 'Floral Frutal',
     accords: ['floral', 'afrutado', 'fresco', 'dulce', 'acuático'],

@@ -116,7 +116,8 @@ export const CATALOG_DESCRIPTIONS_48: Record<string, string> = {
   '107': 'Frescura acuática explosiva con sello árabe de alta proyección. Manzana crujiente, bergamota, limón siciliano y un toque de canela abren paso a notas marinas, ciruela jugosa, flor de azahar y cardamomo sobre ámbar gris, madera flotante, almizcle y pachulí.',
   '108': 'Sofisticación parisina en su faceta más profunda, nocturna y sensual. Una apertura vibrante de pimienta negra especiada y bergamota da paso a un corazón absoluto de flor de azahar de Túnez, fundiéndose en una estela opulenta de vainilla Bourbon, ámbar, pachulí y maderas.',
   '109': 'Un elixir gourmand especiado de lujo árabe inconfundible. Canela cálida, nuez moscada y bergamota envuelven un corazón opulento de dátiles dulces, praliné cremoso y nardos sobre una base majestuosa de vainilla tostada, haba tonka, mirra, benjuí y amberwood.',
-  '110': 'Opulencia frutal dorada y fijación extraordinaria. Bergamota luminosa y notas verdes frescas abren paso a un corazón jugoso e irresistible de melón dulce, piña tropical y ámbar cálido, reposando sobre una estela envolvente de vainilla, almizcle blanco y maderas preciosas.'
+  '110': 'Opulencia frutal dorada y fijación extraordinaria. Bergamota luminosa y notas verdes frescas abren paso a un corazón jugoso e irresistible de melón dulce, piña tropical y ámbar cálido, reposando sobre una estela envolvente de vainilla, almizcle blanco y maderas preciosas.',
+  '111': 'La versión más profunda, cremosa y adictiva del ícono parisino. Almendra amarga tostada y azafrán precioso abren paso a un corazón luminoso de jazmín egipcio y cedro, descansando sobre una base intensa de ámbar gris mineral, maderas nobles y almizcle envolvente.'
 };
 
 /**

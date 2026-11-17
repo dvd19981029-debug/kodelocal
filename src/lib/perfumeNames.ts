@@ -115,7 +115,8 @@ export const INSPIRACION_PERFUME_MAP: Record<string, string> = {
   '107': 'Hawas H',
   '108': 'MYSLF Intense H',
   '109': 'Khamrah',
-  '110': 'Amber Oud'
+  '110': 'Amber Oud',
+  '111': 'Baccarat Rouge 540 Extrait'
 };
 
 export const INSPIRACION_BRAND_MAP: Record<string, string> = {
@@ -228,7 +229,8 @@ export const INSPIRACION_BRAND_MAP: Record<string, string> = {
   '107': 'Rasasi',
   '108': 'Yves Saint Laurent',
   '109': 'Lattafa',
-  '110': 'Al Haramain'
+  '110': 'Al Haramain',
+  '111': 'Maison Francis Kurkdjian'
 };
 
 export const INCOMING_ESSENCE_SKUS = new Set([
@@ -236,7 +238,7 @@ export const INCOMING_ESSENCE_SKUS = new Set([
   '72', '73', '74', '75', '76', '77', '78', '79', '80', '81', '82',
   '83', '84', '85', '86', '87', '88', '89', '90',
   '91', '92', '93', '94', '95', '96', '97', '98', '99', '100', '101', '102', '103', '104', '105',
-  '106', '107', '108', '109', '110'
+  '106', '107', '108', '109', '110', '111'
 ]);
 
 export function isIncomingEssence(product: { id?: string | null; sku?: string | null; category?: string | null } | null | undefined): boolean {
@@ -642,6 +644,7 @@ export const OFFICIAL_TO_ORIGINAL_MAP: Record<string, { originalName: string; br
   'SULTÁN ELIXIR': { originalName: 'Khamrah', brand: 'Lattafa', sku: '109' },
   'SULTAN ELIXIR': { originalName: 'Khamrah', brand: 'Lattafa', sku: '109' },
   'GOLDEN OUD': { originalName: 'Amber Oud', brand: 'Al Haramain', sku: '110' },
+  'CRISTAL ROUGE EXTRAIT': { originalName: 'Baccarat Rouge 540 Extrait', brand: 'Maison Francis Kurkdjian', sku: '111' },
 };
 
 // Generar variaciones con sufijos H / F / M / U para match instantáneo

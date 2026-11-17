@@ -127,6 +127,7 @@ const DEFAULT_APAESA_CATALOG: SupplierCatalogEntry[] = [
   { sku: '108', id_proveedor: 'MYLI1kg', name: 'MYSLF INTENSE H', contratipo: 'STARBOY INTENSE', price_per_kg: 71.68 },
   { sku: '109', id_proveedor: 'KHA1kg', name: 'KHAMRAH', contratipo: 'SULTÁN ELIXIR', price_per_kg: 71.68 },
   { sku: '110', id_proveedor: 'AO1kg', name: 'AMBER OUD', contratipo: 'GOLDEN OUD', price_per_kg: 69.91 },
+  { sku: '111', id_proveedor: 'BR540E1kg', name: 'BACCARAT ROUGE 540 EXTRAIT', contratipo: 'CRISTAL ROUGE EXTRAIT', price_per_kg: 67.37 },
 ];
 
 function checkStaffAuth(request: Request): boolean {

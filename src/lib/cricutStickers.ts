@@ -984,7 +984,7 @@ export const CRICUT_STICKERS_CATALOG: CricutStickerCatalogEntry[] = [
   {
     "sku": "37",
     "contratipo": "GEORGIA ICON",
-    "nombre": "Acqua Di Giò",
+    "nombre": "Acqua Di Giò Mujer",
     "genero": "F",
     "marca": "Giorgio Armani",
     "anio": "1995",
@@ -2520,7 +2520,7 @@ export const CRICUT_STICKERS_CATALOG: CricutStickerCatalogEntry[] = [
   {
     "sku": "95",
     "contratipo": "OCEAN LADY",
-    "nombre": "Light Blue",
+    "nombre": "Light Blue Mujer",
     "genero": "F",
     "marca": "Dolce & Gabbana",
     "anio": "2001",
@@ -2725,7 +2725,7 @@ export const CRICUT_STICKERS_CATALOG: CricutStickerCatalogEntry[] = [
   {
     "sku": "103",
     "contratipo": "PARTYGIRL",
-    "nombre": "Scandal",
+    "nombre": "Scandal Mujer",
     "genero": "F",
     "marca": "Jean Paul Gaultier",
     "anio": "2017",
@@ -2919,6 +2919,29 @@ export const CRICUT_STICKERS_CATALOG: CricutStickerCatalogEntry[] = [
       "Almizcle",
       "Vainilla",
       "Notas amaderadas"
+    ]
+  },
+  {
+    "sku": "111",
+    "contratipo": "CRISTAL ROUGE EXTRAIT",
+    "nombre": "Baccarat Rouge 540 Extrait",
+    "genero": "U",
+    "marca": "Maison Francis Kurkdjian",
+    "anio": "2017",
+    "familia": "Ámbar Floral",
+    "fraseOlfativa": "Almendra amarga y azafrán sobre ámbar gris y maderas intensas.",
+    "topNotes": [
+      "Almendra amarga",
+      "Azafrán"
+    ],
+    "heartNotes": [
+      "Jazmín egipcio",
+      "Cedro"
+    ],
+    "baseNotes": [
+      "Ámbar gris",
+      "Notas amaderadas",
+      "Almizcle"
     ]
   }
 ];
