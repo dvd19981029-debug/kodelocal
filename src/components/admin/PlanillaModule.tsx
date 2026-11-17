@@ -469,18 +469,26 @@ const INITIAL_EMPLOYEES: PayrollEmployee[] = [
 ];
 
 const SPU_OBS_CODES = [
-  '00 - Sin Observación',
+  '00 - Sin Observación (Uso en Obs 2 cuando no aplica)',
   '01 - Sin cambios con respecto al mes anterior',
-  '02 - Pagos adicionales',
+  '02 - Pagos adicionales (Permite monto en Col 15)',
   '03 - Aprendices',
   '04 - Pensionado',
-  '05 - Licencia',
-  '06 - Incapacidad',
+  '05 - Licencia (Permite declarar menos días)',
+  '06 - Incapacidad (Permite declarar menos días)',
   '07 - Retiro del Trabajador de la empresa',
-  '08 - Ingreso o Reingreso del Trabajador',
-  '09 - Vacaciones',
+  '08 - Ingreso o Reingreso del Trabajador (Nuevo ingreso)',
+  '09 - Vacaciones (Permite monto y días en Cols 16 y 19)',
   '10 - Vacaciones más pagos adicionales',
+  '11 - Planilla catorcenales y semanales fraccionadas',
   '12 - Cotizaciones patronales por subsidios del ISSS',
+  '13 - Cotizante al IPSFA',
+  '18 - Complemento de salario',
+  '19 - Retiro por fallecimiento del trabajador',
+  '20 - Vacaciones Salario Mixto',
+  '21 - Pagos Adicionales y Vacaciones Salario Mixto',
+  '22 - Pago de complemento por subsidio',
+  '23 - Trabajador independiente régimen general',
 ];
 
 const AFP_INSTITUTIONS = [
@@ -1223,6 +1231,7 @@ export default function PlanillaModule() {
   const spuRows = useMemo(() => {
     const list: Array<{
       rowNum: number;
+      empId?: string;
       referencia: string;
       nitEmpleador: string;
       numPatronalIsss: string;
@@ -1269,32 +1278,34 @@ export default function PlanillaModule() {
           : r.ordinarySalary - (parameters.tardinessMode === 'REDUCE_BASE' ? r.tardyDiscount : 0)
       );
 
-      let rawObs1 = (e.obsCode1 || '01').slice(0, 2);
+      let rawObs1 = (e.obsCode1 || '00').slice(0, 2);
       let rawObs2 = (e.obsCode2 || '00').slice(0, 2);
 
-      // En octubre 2026 (102026, ingreso 14 de oct = 18 días), el código obligatorio SPU es '08' (Ingreso o Reingreso del Trabajador)
-      if (spuPeriodCode === '102026' || (spuBaseDays < 30 && (rawObs1 === '00' || rawObs1 === '01'))) {
-        rawObs1 = '08';
-      } else if (rawObs1 === '00') {
-        rawObs1 = '01';
-      }
-
-      if (e.subsidyDays > 0) {
-        rawObs1 = '06';
-      } else if (e.vacationDays > 0 && r.taxableBonus > 0) {
-        rawObs1 = '10';
-      } else if (e.vacationDays > 0) {
-        rawObs1 = '09';
-      } else if (r.taxableBonus > 0) {
-        if (rawObs1 === '08') {
-          rawObs2 = '02';
+      // Si el usuario dejó '00' (automático), calculamos los códigos sugeridos por norma SSF; si eligió otro código manualmente, se respeta su selección
+      if (rawObs1 === '00') {
+        if (spuPeriodCode === '102026' || spuBaseDays < 30) {
+          rawObs1 = '08';
         } else {
-          rawObs1 = '02';
+          rawObs1 = '01';
+        }
+        if (e.subsidyDays > 0) {
+          rawObs1 = '06';
+        } else if (e.vacationDays > 0 && r.taxableBonus > 0) {
+          rawObs1 = '10';
+        } else if (e.vacationDays > 0) {
+          rawObs1 = '09';
+        } else if (r.taxableBonus > 0) {
+          if (rawObs1 === '08') {
+            if (rawObs2 === '00') rawObs2 = '02';
+          } else {
+            rawObs1 = '02';
+          }
         }
       }
 
       list.push({
         rowNum: seq++,
+        empId: e.id,
         referencia: e.code,
         nitEmpleador: parameters.employerNitDui.replace(/-/g, ''),
         numPatronalIsss: (e.patronalNumber || parameters.isssPatronalNumber).replace(/-/g, ''),
@@ -5126,8 +5137,60 @@ export default function PlanillaModule() {
                       <td className="py-2 px-2 text-center font-bold">{row.dias}</td>
                       <td className="py-2 px-2 text-center">{row.horas}</td>
                       <td className="py-2 px-2 text-center">{row.diasVacacion}</td>
-                      <td className="py-2 px-2 text-center font-bold text-emerald-700">{row.codObs1}</td>
-                      <td className="py-2 px-2 text-center">{row.codObs2}</td>
+                      <td className="py-1.5 px-1.5 text-center">
+                        {row.empId ? (
+                          <select
+                            aria-label={`Observación 1 de ${row.primerNombre}`}
+                            title={
+                              SPU_OBS_CODES.find((c) => c.startsWith(row.codObs1)) ||
+                              `Código ${row.codObs1}`
+                            }
+                            value={
+                              SPU_OBS_CODES.find((c) => c.startsWith(row.codObs1)) ||
+                              SPU_OBS_CODES[0]
+                            }
+                            onChange={(e) =>
+                              updateEmployeeField(row.empId!, 'obsCode1', e.target.value)
+                            }
+                            className="py-1 px-1.5 rounded-lg border border-emerald-200 bg-emerald-50/70 text-emerald-800 font-mono font-black text-[11px] max-w-[150px] cursor-pointer focus:outline-none focus:border-emerald-500"
+                          >
+                            {SPU_OBS_CODES.filter((c) => !c.startsWith('00')).map((c) => (
+                              <option key={c} value={c}>
+                                {c}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span className="font-bold text-emerald-700">{row.codObs1}</span>
+                        )}
+                      </td>
+                      <td className="py-1.5 px-1.5 text-center">
+                        {row.empId ? (
+                          <select
+                            aria-label={`Observación 2 de ${row.primerNombre}`}
+                            title={
+                              SPU_OBS_CODES.find((c) => c.startsWith(row.codObs2)) ||
+                              `Código ${row.codObs2}`
+                            }
+                            value={
+                              SPU_OBS_CODES.find((c) => c.startsWith(row.codObs2)) ||
+                              SPU_OBS_CODES[0]
+                            }
+                            onChange={(e) =>
+                              updateEmployeeField(row.empId!, 'obsCode2', e.target.value)
+                            }
+                            className="py-1 px-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 font-mono font-bold text-[11px] max-w-[150px] cursor-pointer focus:outline-none focus:border-indigo-500"
+                          >
+                            {SPU_OBS_CODES.map((c) => (
+                              <option key={c} value={c}>
+                                {c}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span>{row.codObs2}</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
