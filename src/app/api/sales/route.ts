@@ -298,7 +298,7 @@ export async function POST(request: Request) {
         include: { items: true, customer: true, dteDocument: true, payments: true },
       });
 
-      // Evitar colisión de folio aleatorio CMD-XXXX cuando se envía una nueva comanda a Bodega
+      // Evitar colisión de folio aleatorio CMD- cuando se envía una nueva comanda a Bodega
       if (
         existingSale &&
         targetOrderStatus === 'PENDING_PREPARATION' &&
@@ -307,7 +307,25 @@ export async function POST(request: Request) {
           existingSale.orderStatus === 'CANCELLED' ||
           Math.abs(Number(existingSale.total || 0) - Number(total || 0)) > 0.05)
       ) {
-        saleNumber = `${saleNumber}-${Math.floor(10 + Math.random() * 90)}`;
+        const svDateParts = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'America/El_Salvador',
+          year: '2-digit',
+          month: '2-digit',
+          day: '2-digit',
+        }).formatToParts(new Date());
+        const yy = svDateParts.find((p) => p.type === 'year')?.value || '26';
+        const mm = svDateParts.find((p) => p.type === 'month')?.value || '01';
+        const dd = svDateParts.find((p) => p.type === 'day')?.value || '01';
+        for (let attempt = 0; attempt < 15; attempt++) {
+          const letter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+          const digits = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+          const candidate = `CMD-${yy}${mm}${dd}-${letter}${digits}`;
+          const check = await prisma.sale.findUnique({ where: { saleNumber: candidate } });
+          if (!check) {
+            saleNumber = candidate;
+            break;
+          }
+        }
         existingSale = null;
       }
 

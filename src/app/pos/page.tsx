@@ -2392,6 +2392,40 @@ export default function PosPage() {
     }
   };
 
+  // Generador de folios CMD-YYMMDD-L999 (fecha El Salvador + 1 letra A-Z + 3 dígitos = 26,000 combinaciones por día)
+  const generateUniqueComandaPair = () => {
+    const svDateParts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/El_Salvador',
+      year: '2-digit',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(new Date());
+    const yy = svDateParts.find((p) => p.type === 'year')?.value || String(new Date().getFullYear()).slice(-2);
+    const mm = svDateParts.find((p) => p.type === 'month')?.value || String(new Date().getMonth() + 1).padStart(2, '0');
+    const dd = svDateParts.find((p) => p.type === 'day')?.value || String(new Date().getDate()).padStart(2, '0');
+    const yymmdd = `${yy}${mm}${dd}`;
+    const existingSet = new Set(
+      sales.flatMap((s) => [s.saleNumber, s.orderNumber].filter(Boolean) as string[])
+    );
+
+    for (let attempt = 0; attempt < 25; attempt++) {
+      const letter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+      const digits = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+      const code = `${yymmdd}-${letter}${digits}`;
+      const cmdCandidate = `CMD-${code}`;
+      const ordCandidate = `ORD-${code}`;
+      if (!existingSet.has(cmdCandidate) && !existingSet.has(ordCandidate)) {
+        return { cmdNum: cmdCandidate, ordNum: ordCandidate };
+      }
+    }
+    const fallbackLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+    const fallbackDigits = String(Date.now() % 1000).padStart(3, '0');
+    return {
+      cmdNum: `CMD-${yymmdd}-${fallbackLetter}${fallbackDigits}`,
+      ordNum: `ORD-${yymmdd}-${fallbackLetter}${fallbackDigits}`,
+    };
+  };
+
   // Enviar comanda a Bodega para preparación física
   const handleSendOrderToBodega = () => {
     if (sendingComandaLockRef.current) return;
@@ -2403,8 +2437,7 @@ export default function PosPage() {
     setTimeout(() => {
       sendingComandaLockRef.current = false;
     }, 1500);
-    const ordNum = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
-    const cmdNum = `CMD-${Math.floor(1000 + Math.random() * 9000)}`;
+    const { ordNum, cmdNum } = generateUniqueComandaPair();
     const clientObj = activeCustomer || customers.find(c => c.id === selectedCustomerId);
 
     const resolvedClientName = clientObj?.name || (clienteNombre && clienteNombre !== 'Consumidor Final' ? clienteNombre : (cartCustomerQuery.trim() || 'Consumidor Final'));
@@ -2674,9 +2707,7 @@ export default function PosPage() {
 
   // Enviar una prefactura confirmada directamente a Bodega (con los precios cotizados)
   const handleSendQuoteToBodega = async (quote: SavedQuote): Promise<boolean> => {
-    const quoteSuffix = String(quote.quoteNumber || '').split('-').pop() || String(Math.floor(1000 + Math.random() * 9000));
-    const ordNum = `ORD-${quoteSuffix}`;
-    const cmdNum = `CMD-${quoteSuffix}`;
+    const { ordNum, cmdNum } = generateUniqueComandaPair();
 
     // 1. Reclamar la prefactura (evita que otro cajero la envíe al mismo tiempo)
     const claim = await patchQuote(quote.id, 'send', { saleNumber: cmdNum });
@@ -3068,7 +3099,7 @@ export default function PosPage() {
       } catch (_) {}
     }
 
-    const counterSaleNumber = !isOrderFromWindow ? `CMD-${Math.floor(1000 + Math.random() * 9000)}` : undefined;
+    const counterSaleNumber = !isOrderFromWindow ? generateUniqueComandaPair().cmdNum : undefined;
     let dteResponseData = null;
     if (tipoComprobante === '01' || tipoComprobante === '03') {
       try {
