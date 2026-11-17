@@ -273,14 +273,9 @@ async function saveKioskState(recordId: string | null, state: KioskStateData) {
 
 function rotateTokenIfNeeded(state: KioskStateData, forceRotate = false): boolean {
   const now = Date.now();
-  if (
-    forceRotate ||
-    !state.currentToken ||
-    now >= state.tokenExpiresAt ||
-    state.usedTokens.includes(state.currentToken)
-  ) {
+  if (forceRotate || !state.currentToken || now >= state.tokenExpiresAt) {
     state.previousToken = state.currentToken;
-    state.previousTokenExpiresAt = now + 4000; // 4s de tolerancia mientras viaja el request por red móvil
+    state.previousTokenExpiresAt = now + 25000; // 25s de tolerancia mientras abre el navegador móvil tras leer con la cámara
     state.currentToken = generateFreshToken();
     state.tokenIssuedAt = now;
     state.tokenExpiresAt = now + QR_TTL_MS;
@@ -636,18 +631,19 @@ async function processQrAttendanceScan({
     };
   }
 
-  // Verificar si el QR ya fue utilizado (protección contra captura de pantalla / reenvío por WhatsApp)
-  if (state.usedTokens.includes(cleanToken)) {
+  // Verificar si este colaborador ya utilizó este mismo QR (permite que dos compañeros escaneen simultáneamente sin bloquearse entre sí)
+  const empTokenKey = `${cleanToken}:${emp.id}`;
+  if (state.usedTokens.includes(empTokenKey)) {
     return {
       success: false,
       code: 'TOKEN_ALREADY_USED',
-      error: 'Este código QR ya fue utilizado y se invalidó automáticamente. Escanea el nuevo QR en el monitor.',
+      error: 'Ya registraste tu marcación con este código QR. Espera al siguiente código si necesitas volver a marcar.',
     };
   }
 
   const now = Date.now();
   const isCurrentValid =
-    cleanToken === state.currentToken && now <= state.tokenExpiresAt + 4000;
+    cleanToken === state.currentToken && now <= state.tokenExpiresAt + 25000;
   const isPreviousValid =
     cleanToken === state.previousToken &&
     state.previousTokenExpiresAt &&
@@ -663,8 +659,8 @@ async function processQrAttendanceScan({
     };
   }
 
-  // Invalidar el token inmediatamente y generar uno nuevo para el monitor
-  state.usedTokens.push(cleanToken);
+  // Registrar el uso por empleado y rotar el QR para el monitor (conservando previousToken válido 25s para quien escaneó al mismo tiempo)
+  state.usedTokens.push(empTokenKey);
   if (state.usedTokens.length > 60) {
     state.usedTokens = state.usedTokens.slice(-60);
   }
