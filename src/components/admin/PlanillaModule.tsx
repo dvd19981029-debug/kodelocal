@@ -116,6 +116,7 @@ export interface PayrollEmployee {
   baseSalaryMonthly: number;
   hoursPerDay: number;
   workplaceCenter: string;
+  patronalNumber?: string;
   obsCode1: string;
   obsCode2: string;
   // Variables del período actual
@@ -270,14 +271,14 @@ const INITIAL_EMPLOYEES: PayrollEmployee[] = [
     department: 'ADMINISTRACIÓN',
     jornadaId: 'jor-gerencia',
     docType: '01 DUI',
-    docNumber: '05593529-2',
+    docNumber: '055935292',
     isssNumber: 'ISSS00001',
     afpInstitution: 'COF - AFP CONFÍA',
     baseSalaryMonthly: 700.0,
     hoursPerDay: 8,
     workplaceCenter: '001 SUCURSAL PRINCIPAL',
-    obsCode1: '08 Ingreso o Reingreso del Trabajador',
-    obsCode2: '00 Sin Cambios',
+    obsCode1: '00 - Sin Observación',
+    obsCode2: '00 - Sin Observación',
     daysOverride: null,
     absenceDays: 0,
     subsidyDays: 0,
@@ -303,14 +304,14 @@ const INITIAL_EMPLOYEES: PayrollEmployee[] = [
     department: 'VENTA',
     jornadaId: 'jor-ventas',
     docType: '01 DUI',
-    docNumber: '06616646-6',
+    docNumber: '066166466',
     isssNumber: 'ISSS00002',
     afpInstitution: 'MAX - AFP CRECER',
     baseSalaryMonthly: 450.0,
     hoursPerDay: 8,
     workplaceCenter: '001 SUCURSAL PRINCIPAL',
-    obsCode1: '08 Ingreso o Reingreso del Trabajador',
-    obsCode2: '00 Sin Cambios',
+    obsCode1: '00 - Sin Observación',
+    obsCode2: '00 - Sin Observación',
     daysOverride: null,
     absenceDays: 0,
     subsidyDays: 0,
@@ -342,8 +343,8 @@ const INITIAL_EMPLOYEES: PayrollEmployee[] = [
     baseSalaryMonthly: 425.0,
     hoursPerDay: 8,
     workplaceCenter: '001 SUCURSAL PRINCIPAL',
-    obsCode1: '08 Ingreso o Reingreso del Trabajador',
-    obsCode2: '00 Sin Cambios',
+    obsCode1: '00 - Sin Observación',
+    obsCode2: '00 - Sin Observación',
     daysOverride: null,
     absenceDays: 0,
     subsidyDays: 0,
@@ -369,14 +370,14 @@ const INITIAL_EMPLOYEES: PayrollEmployee[] = [
     department: 'MARKETING',
     jornadaId: 'jor-marketing',
     docType: '01 DUI',
-    docNumber: '05785262-8',
+    docNumber: '057852628',
     isssNumber: 'ISSS00004',
     afpInstitution: 'COF - AFP CONFÍA',
     baseSalaryMonthly: 425.0,
     hoursPerDay: 8,
     workplaceCenter: '001 SUCURSAL PRINCIPAL',
-    obsCode1: '08 Ingreso o Reingreso del Trabajador',
-    obsCode2: '00 Sin Cambios',
+    obsCode1: '00 - Sin Observación',
+    obsCode2: '00 - Sin Observación',
     daysOverride: null,
     absenceDays: 0,
     subsidyDays: 0,
@@ -402,14 +403,14 @@ const INITIAL_EMPLOYEES: PayrollEmployee[] = [
     department: 'MARKETING',
     jornadaId: 'jor-marketing',
     docType: '01 DUI',
-    docNumber: '06694167-0',
+    docNumber: '066941670',
     isssNumber: 'ISSS00005',
     afpInstitution: 'COF - AFP CONFÍA',
     baseSalaryMonthly: 425.0,
     hoursPerDay: 8,
     workplaceCenter: '001 SUCURSAL PRINCIPAL',
-    obsCode1: '08 Ingreso o Reingreso del Trabajador',
-    obsCode2: '00 Sin Cambios',
+    obsCode1: '00 - Sin Observación',
+    obsCode2: '00 - Sin Observación',
     daysOverride: null,
     absenceDays: 0,
     subsidyDays: 0,
@@ -435,14 +436,14 @@ const INITIAL_EMPLOYEES: PayrollEmployee[] = [
     department: 'VENTA',
     jornadaId: 'jor-ventas',
     docType: '01 DUI',
-    docNumber: '06863792-6',
+    docNumber: '068637926',
     isssNumber: '',
     afpInstitution: 'COF - AFP CONFÍA',
     baseSalaryMonthly: 0,
     hoursPerDay: 8,
     workplaceCenter: '001 SUCURSAL PRINCIPAL',
-    obsCode1: '00 Sin Cambios',
-    obsCode2: '00 Sin Cambios',
+    obsCode1: '00 - Sin Observación',
+    obsCode2: '00 - Sin Observación',
     daysOverride: null,
     absenceDays: 0,
     subsidyDays: 0,
@@ -462,18 +463,18 @@ const INITIAL_EMPLOYEES: PayrollEmployee[] = [
 ];
 
 const SPU_OBS_CODES = [
-  '00 Sin Cambios',
-  '01 Sin cambios con respecto al mes anterior',
-  '02 Pagos adicionales',
-  '03 Aprendices',
-  '04 Pensionado',
-  '05 Licencia',
-  '06 Incapacidad',
-  '07 Retiro del Trabajador de la empresa',
-  '08 Ingreso o Reingreso del Trabajador',
-  '09 Vacaciones',
-  '10 Vacaciones más pagos adicionales',
-  '12 Cotizaciones patronales por subsidios del ISSS',
+  '00 - Sin Observación',
+  '01 - Sin cambios con respecto al mes anterior',
+  '02 - Pagos adicionales',
+  '03 - Aprendices',
+  '04 - Pensionado',
+  '05 - Licencia',
+  '06 - Incapacidad',
+  '07 - Retiro del Trabajador de la empresa',
+  '08 - Ingreso o Reingreso del Trabajador',
+  '09 - Vacaciones',
+  '10 - Vacaciones más pagos adicionales',
+  '12 - Cotizaciones patronales por subsidios del ISSS',
 ];
 
 const AFP_INSTITUTIONS = [
@@ -5418,17 +5419,17 @@ export default function PlanillaModule() {
         </div>
       )}
 
-      {/* ================= MODAL: CREAR / EDITAR EMPLEADO Y FICHA SPU ================= */}
+      {/* ================= MODAL: CREAR / EDITAR EMPLEADO Y FICHA SPU (FORMATO OFICIAL ISSS) ================= */}
       {isEmpModalOpen && editingEmp && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="clay-card bg-white w-full max-w-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="clay-card bg-slate-800 text-white w-full max-w-3xl p-6 space-y-4 max-h-[92vh] overflow-y-auto border border-slate-600 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-700 pb-3">
               <div>
-                <h3 className="text-base font-black text-slate-800">
-                  Ficha de Empleado & Datos SPU (ISSS / AFP)
+                <h3 className="text-base font-black text-white">
+                  Registro de Empleado SPU (ISSS / AFP) & Planilla
                 </h3>
-                <p className="text-xs text-slate-500">
-                  Configura el sueldo mensual, cargo, departamento, afiliación ISSS/AFP y novedades de incapacidad o vacación.
+                <p className="text-xs text-slate-300">
+                  Estructura idéntica al formulario del Sistema de Planilla Única (SPU) para copiar o exportar directo.
                 </p>
               </div>
               <button
@@ -5437,131 +5438,57 @@ export default function PlanillaModule() {
                   setIsEmpModalOpen(false);
                   setEditingEmp(null);
                 }}
-                className="p-1.5 text-slate-400 hover:text-slate-700"
+                className="p-1.5 text-slate-400 hover:text-white cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveEmployeeModal} className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <form onSubmit={handleSaveEmployeeModal} className="space-y-3.5 text-xs">
+              {/* Fila 1 SPU: Número Patronal y Centro de Trabajo */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="font-bold text-slate-700 block mb-1">Código / Referencia</label>
+                  <label className="font-bold text-slate-300 block mb-1">
+                    Seleccionar Número Patronal:
+                  </label>
                   <input
                     type="text"
-                    required
-                    value={editingEmp.code}
-                    onChange={(e) => setEditingEmp({ ...editingEmp, code: e.target.value })}
-                    className="clay-input w-full font-mono"
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="font-bold text-slate-700 block mb-1">Nombre Mostrar en Planilla</label>
-                  <input
-                    type="text"
-                    required
-                    value={editingEmp.fullName}
-                    onChange={(e) => setEditingEmp({ ...editingEmp, fullName: e.target.value })}
-                    placeholder="Ej. Jorge Luis"
-                    className="clay-input w-full font-bold"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div>
-                  <label className="font-bold text-slate-600 block mb-1">Primer Nombre (SPU)</label>
-                  <input
-                    type="text"
-                    value={editingEmp.firstName}
-                    onChange={(e) => setEditingEmp({ ...editingEmp, firstName: e.target.value.toUpperCase() })}
-                    className="clay-input w-full"
+                    value={editingEmp.patronalNumber ?? parameters.isssPatronalNumber}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setEditingEmp({ ...editingEmp, patronalNumber: val });
+                      setParameters({ ...parameters, isssPatronalNumber: val });
+                    }}
+                    placeholder="Ej. NP0000123"
+                    className="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-600 text-white font-mono text-xs focus:outline-none focus:border-amber-400"
                   />
                 </div>
                 <div>
-                  <label className="font-bold text-slate-600 block mb-1">Segundo Nombre (SPU)</label>
+                  <label className="font-bold text-slate-300 block mb-1">
+                    Seleccionar Centro de Trabajo:
+                  </label>
                   <input
                     type="text"
-                    value={editingEmp.secondName}
-                    onChange={(e) => setEditingEmp({ ...editingEmp, secondName: e.target.value.toUpperCase() })}
-                    className="clay-input w-full"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-slate-600 block mb-1">Primer Apellido (SPU)</label>
-                  <input
-                    type="text"
-                    value={editingEmp.firstLastName}
-                    onChange={(e) => setEditingEmp({ ...editingEmp, firstLastName: e.target.value.toUpperCase() })}
-                    className="clay-input w-full"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-slate-600 block mb-1">Segundo Apellido (SPU)</label>
-                  <input
-                    type="text"
-                    value={editingEmp.secondLastName}
-                    onChange={(e) => setEditingEmp({ ...editingEmp, secondLastName: e.target.value.toUpperCase() })}
-                    className="clay-input w-full"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Cargo</label>
-                  <input
-                    type="text"
-                    value={editingEmp.position}
-                    onChange={(e) => setEditingEmp({ ...editingEmp, position: e.target.value })}
-                    className="clay-input w-full"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Departamento</label>
-                  <input
-                    type="text"
-                    value={editingEmp.department}
-                    onChange={(e) => setEditingEmp({ ...editingEmp, department: e.target.value.toUpperCase() })}
-                    className="clay-input w-full"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Jornada (Evolution)</label>
-                  <select
-                    value={editingEmp.jornadaId || jornadas[0]?.id || 'jor-gerencia'}
-                    onChange={(e) => setEditingEmp({ ...editingEmp, jornadaId: e.target.value })}
-                    className="clay-input w-full font-bold text-cyan-800"
-                  >
-                    {jornadas.map((j) => (
-                      <option key={j.id} value={j.id}>
-                        {j.name} ({j.code})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Salario Base Mensual ($)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    value={editingEmp.baseSalaryMonthly}
+                    value={editingEmp.workplaceCenter || parameters.workplaceCorrelative}
                     onChange={(e) =>
-                      setEditingEmp({ ...editingEmp, baseSalaryMonthly: parseFloat(e.target.value) || 0 })
+                      setEditingEmp({ ...editingEmp, workplaceCenter: e.target.value })
                     }
-                    className="clay-input w-full font-mono font-black text-emerald-700"
+                    placeholder="001 SUCURSAL PRINCIPAL"
+                    className="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-600 text-white font-mono text-xs focus:outline-none focus:border-amber-400"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+              {/* Fila 2 SPU: Tipo de documento y Número de documento (Sin Guiones) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="font-bold text-slate-600 block mb-1">Tipo Documento</label>
+                  <label className="font-bold text-slate-300 block mb-1">
+                    Tipo de documento:
+                  </label>
                   <select
                     value={editingEmp.docType}
                     onChange={(e) => setEditingEmp({ ...editingEmp, docType: e.target.value })}
-                    className="clay-input w-full"
+                    className="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-600 text-white text-xs font-bold focus:outline-none focus:border-amber-400"
                   >
                     {DOC_TYPES.map((dt) => (
                       <option key={dt} value={dt}>
@@ -5571,29 +5498,36 @@ export default function PlanillaModule() {
                   </select>
                 </div>
                 <div>
-                  <label className="font-bold text-slate-600 block mb-1">N° Documento (DUI)</label>
+                  <label className="font-bold text-slate-300 block mb-1">
+                    Numero de documento (Sin Guiones):
+                  </label>
                   <input
                     type="text"
-                    value={editingEmp.docNumber}
-                    onChange={(e) => setEditingEmp({ ...editingEmp, docNumber: e.target.value })}
-                    className="clay-input w-full font-mono"
+                    value={editingEmp.docNumber.replace(/-/g, '')}
+                    onChange={(e) =>
+                      setEditingEmp({
+                        ...editingEmp,
+                        docNumber: e.target.value.replace(/-/g, '').trim(),
+                      })
+                    }
+                    placeholder="N° Documento sin guiones"
+                    className="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-600 text-white font-mono font-bold text-xs focus:outline-none focus:border-amber-400"
                   />
                 </div>
+              </div>
+
+              {/* Fila 3 SPU: Institución previsional y Número Afiliación ISSS */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="font-bold text-slate-600 block mb-1">N° Afiliación ISSS</label>
-                  <input
-                    type="text"
-                    value={editingEmp.isssNumber}
-                    onChange={(e) => setEditingEmp({ ...editingEmp, isssNumber: e.target.value })}
-                    className="clay-input w-full font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-slate-600 block mb-1">Institución AFP</label>
+                  <label className="font-bold text-slate-300 block mb-1">
+                    Institución previsional:
+                  </label>
                   <select
                     value={editingEmp.afpInstitution}
-                    onChange={(e) => setEditingEmp({ ...editingEmp, afpInstitution: e.target.value })}
-                    className="clay-input w-full"
+                    onChange={(e) =>
+                      setEditingEmp({ ...editingEmp, afpInstitution: e.target.value })
+                    }
+                    className="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-600 text-white text-xs font-bold focus:outline-none focus:border-amber-400"
                   >
                     {AFP_INSTITUTIONS.map((inst) => (
                       <option key={inst} value={inst}>
@@ -5602,63 +5536,338 @@ export default function PlanillaModule() {
                     ))}
                   </select>
                 </div>
+                <div>
+                  <label className="font-bold text-slate-300 block mb-1">
+                    Número Afiliación ISSS:
+                  </label>
+                  <input
+                    type="text"
+                    value={editingEmp.isssNumber}
+                    onChange={(e) =>
+                      setEditingEmp({ ...editingEmp, isssNumber: e.target.value.replace(/-/g, '') })
+                    }
+                    placeholder="Número Afiliación ISSS (9 dígitos)"
+                    className="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-600 text-white font-mono text-xs focus:outline-none focus:border-amber-400"
+                  />
+                </div>
               </div>
 
-              {/* Novedades Especiales SPU (Vacaciones / Subsidio por Incapacidad) */}
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
-                <span className="text-[10.5px] font-black uppercase text-indigo-700 block">
-                  Novedades Especiales del Período (Vacaciones / Incapacidad ISSS)
+              {/* Fila 4 SPU: Primer Nombre y Segundo Nombre */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label className="font-bold text-slate-300 block mb-1">Primer Nombre:</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingEmp.firstName}
+                    onChange={(e) => {
+                      const firstName = e.target.value.toUpperCase();
+                      const fullName = [
+                        firstName,
+                        editingEmp.secondName,
+                        editingEmp.firstLastName,
+                        editingEmp.secondLastName,
+                      ]
+                        .filter(Boolean)
+                        .join(' ');
+                      setEditingEmp({ ...editingEmp, firstName, fullName });
+                    }}
+                    placeholder="Primer Nombre"
+                    className="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-600 text-white font-bold text-xs focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-300 block mb-1">Segundo Nombre:</label>
+                  <input
+                    type="text"
+                    value={editingEmp.secondName}
+                    onChange={(e) => {
+                      const secondName = e.target.value.toUpperCase();
+                      const fullName = [
+                        editingEmp.firstName,
+                        secondName,
+                        editingEmp.firstLastName,
+                        editingEmp.secondLastName,
+                      ]
+                        .filter(Boolean)
+                        .join(' ');
+                      setEditingEmp({ ...editingEmp, secondName, fullName });
+                    }}
+                    placeholder="Segundo Nombre"
+                    className="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-600 text-white font-bold text-xs focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+              </div>
+
+              {/* Fila 5 SPU: Primer Apellido y Segundo Apellido */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label className="font-bold text-slate-300 block mb-1">Primer Apellido:</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingEmp.firstLastName}
+                    onChange={(e) => {
+                      const firstLastName = e.target.value.toUpperCase();
+                      const fullName = [
+                        editingEmp.firstName,
+                        editingEmp.secondName,
+                        firstLastName,
+                        editingEmp.secondLastName,
+                      ]
+                        .filter(Boolean)
+                        .join(' ');
+                      setEditingEmp({ ...editingEmp, firstLastName, fullName });
+                    }}
+                    placeholder="Primer Apellido"
+                    className="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-600 text-white font-bold text-xs focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-300 block mb-1">Segundo Apellido:</label>
+                  <input
+                    type="text"
+                    value={editingEmp.secondLastName}
+                    onChange={(e) => {
+                      const secondLastName = e.target.value.toUpperCase();
+                      const fullName = [
+                        editingEmp.firstName,
+                        editingEmp.secondName,
+                        editingEmp.firstLastName,
+                        secondLastName,
+                      ]
+                        .filter(Boolean)
+                        .join(' ');
+                      setEditingEmp({ ...editingEmp, secondLastName, fullName });
+                    }}
+                    placeholder="Segundo Apellido"
+                    className="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-600 text-white font-bold text-xs focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+              </div>
+
+              {/* Fila 6 SPU: Apellido Casada y Salario($) */}
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
+                <div className="sm:col-span-8">
+                  <label className="font-bold text-slate-300 block mb-1">Apellido Casada:</label>
+                  <input
+                    type="text"
+                    value={editingEmp.marriedLastName}
+                    onChange={(e) =>
+                      setEditingEmp({ ...editingEmp, marriedLastName: e.target.value.toUpperCase() })
+                    }
+                    placeholder="Apellido de Casada"
+                    className="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-600 text-white text-xs focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+                <div className="sm:col-span-4">
+                  <label className="font-bold text-slate-300 block mb-1">Salario($):</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    value={editingEmp.baseSalaryMonthly}
+                    onChange={(e) =>
+                      setEditingEmp({
+                        ...editingEmp,
+                        baseSalaryMonthly: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="$0.00"
+                    className="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-600 text-emerald-400 font-mono font-black text-xs focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+              </div>
+
+              {/* Fila 7 SPU: Dias Laborados, Horas laboradas y Pago Adicional */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <div>
+                  <label className="font-bold text-slate-300 block mb-1">Dias Laborados:</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="31"
+                    value={editingEmp.daysOverride ?? defaultCommercialDays}
+                    onChange={(e) =>
+                      setEditingEmp({
+                        ...editingEmp,
+                        daysOverride:
+                          e.target.value === '' ? null : parseInt(e.target.value, 10) || 0,
+                      })
+                    }
+                    placeholder="30"
+                    className="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-600 text-white font-mono font-bold text-xs focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-300 block mb-1">Horas laboradas:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="24"
+                    value={editingEmp.hoursPerDay || 8}
+                    onChange={(e) =>
+                      setEditingEmp({
+                        ...editingEmp,
+                        hoursPerDay: parseInt(e.target.value, 10) || 8,
+                      })
+                    }
+                    placeholder="8"
+                    className="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-600 text-white font-mono font-bold text-xs focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-300 block mb-1">Pago Adicional:</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={editingEmp.otherIncome || 0}
+                    onChange={(e) =>
+                      setEditingEmp({
+                        ...editingEmp,
+                        otherIncome: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="0"
+                    className="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-600 text-white font-mono font-bold text-xs focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+              </div>
+
+              {/* Fila 8 SPU: Pago Vacación y Dias de Vacaciones */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label className="font-bold text-slate-300 block mb-1">Pago Vacación:</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={editingEmp.vacationAmount}
+                    onChange={(e) =>
+                      setEditingEmp({
+                        ...editingEmp,
+                        vacationAmount: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="0"
+                    className="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-600 text-white font-mono text-xs focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-300 block mb-1">Dias de Vacaciones:</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={editingEmp.vacationDays}
+                    onChange={(e) =>
+                      setEditingEmp({
+                        ...editingEmp,
+                        vacationDays: parseInt(e.target.value, 10) || 0,
+                      })
+                    }
+                    placeholder="0"
+                    className="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-600 text-white font-mono text-xs focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+              </div>
+
+              {/* Fila 9 SPU: Observación 01 y Observación 02 */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label className="font-bold text-slate-300 block mb-1">Observación 01:</label>
+                  <select
+                    value={editingEmp.obsCode1}
+                    onChange={(e) => setEditingEmp({ ...editingEmp, obsCode1: e.target.value })}
+                    className="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-600 text-white text-xs font-bold focus:outline-none focus:border-amber-400"
+                  >
+                    {SPU_OBS_CODES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="font-bold text-slate-300 block mb-1">Observación 02:</label>
+                  <select
+                    value={editingEmp.obsCode2}
+                    onChange={(e) => setEditingEmp({ ...editingEmp, obsCode2: e.target.value })}
+                    className="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-600 text-white text-xs font-bold focus:outline-none focus:border-amber-400"
+                  >
+                    {SPU_OBS_CODES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Datos internos de Planilla y Reloj Marcador */}
+              <div className="p-3.5 rounded-xl bg-slate-900/70 border border-slate-700 space-y-3 mt-2">
+                <span className="text-[10.5px] font-black uppercase text-amber-400 block">
+                  Configuración Interna (Cargo, Departamento, Jornada y Régimen)
                 </span>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                   <div>
-                    <label className="font-bold text-slate-600 block mb-1">Días Vacación</label>
+                    <label className="font-bold text-slate-300 block mb-1">Código</label>
                     <input
-                      type="number"
-                      min="0"
-                      value={editingEmp.vacationDays}
-                      onChange={(e) =>
-                        setEditingEmp({ ...editingEmp, vacationDays: parseInt(e.target.value, 10) || 0 })
-                      }
-                      className="clay-input w-full font-mono"
+                      type="text"
+                      required
+                      value={editingEmp.code}
+                      onChange={(e) => setEditingEmp({ ...editingEmp, code: e.target.value })}
+                      className="w-full py-1.5 px-2.5 rounded-lg bg-slate-800 border border-slate-600 text-white font-mono text-xs"
                     />
                   </div>
                   <div>
-                    <label className="font-bold text-slate-600 block mb-1">Monto Vacación ($)</label>
+                    <label className="font-bold text-slate-300 block mb-1">Cargo</label>
                     <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={editingEmp.vacationAmount}
-                      onChange={(e) =>
-                        setEditingEmp({ ...editingEmp, vacationAmount: parseFloat(e.target.value) || 0 })
-                      }
-                      className="clay-input w-full font-mono"
+                      type="text"
+                      value={editingEmp.position}
+                      onChange={(e) => setEditingEmp({ ...editingEmp, position: e.target.value })}
+                      className="w-full py-1.5 px-2.5 rounded-lg bg-slate-800 border border-slate-600 text-white text-xs"
                     />
                   </div>
                   <div>
-                    <label className="font-bold text-slate-600 block mb-1">Días Subsidio ISSS</label>
+                    <label className="font-bold text-slate-300 block mb-1">Departamento</label>
                     <input
-                      type="number"
-                      min="0"
-                      value={editingEmp.subsidyDays}
+                      type="text"
+                      value={editingEmp.department}
                       onChange={(e) =>
-                        setEditingEmp({ ...editingEmp, subsidyDays: parseInt(e.target.value, 10) || 0 })
+                        setEditingEmp({ ...editingEmp, department: e.target.value.toUpperCase() })
                       }
-                      className="clay-input w-full font-mono"
+                      className="w-full py-1.5 px-2.5 rounded-lg bg-slate-800 border border-slate-600 text-white text-xs"
                     />
                   </div>
                   <div>
-                    <label className="font-bold text-slate-600 block mb-1">Código Observación 1</label>
+                    <label className="font-bold text-slate-300 block mb-1">Jornada Reloj</label>
                     <select
-                      value={editingEmp.obsCode1}
-                      onChange={(e) => setEditingEmp({ ...editingEmp, obsCode1: e.target.value })}
-                      className="clay-input w-full"
+                      value={editingEmp.jornadaId || jornadas[0]?.id || 'jor-gerencia'}
+                      onChange={(e) => setEditingEmp({ ...editingEmp, jornadaId: e.target.value })}
+                      className="w-full py-1.5 px-2.5 rounded-lg bg-slate-800 border border-slate-600 text-cyan-300 font-bold text-xs"
                     >
-                      {SPU_OBS_CODES.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
+                      {jornadas.map((j) => (
+                        <option key={j.id} value={j.id}>
+                          {j.name}
                         </option>
                       ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-300 block mb-1">Régimen</label>
+                    <select
+                      value={editingEmp.contractType || 'PLANILLA'}
+                      onChange={(e) =>
+                        setEditingEmp({
+                          ...editingEmp,
+                          contractType: e.target.value as 'PLANILLA' | 'SERVICIOS_PROFESIONALES',
+                        })
+                      }
+                      className="w-full py-1.5 px-2.5 rounded-lg bg-slate-800 border border-slate-600 text-amber-300 font-bold text-xs"
+                    >
+                      <option value="PLANILLA">Planilla ISSS/AFP</option>
+                      <option value="SERVICIOS_PROFESIONALES">Servicios Prof. (10%)</option>
                     </select>
                   </div>
                 </div>
@@ -5671,11 +5880,14 @@ export default function PlanillaModule() {
                     setIsEmpModalOpen(false);
                     setEditingEmp(null);
                   }}
-                  className="clay-btn clay-btn-light px-4 py-2 text-xs font-bold"
+                  className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold cursor-pointer"
                 >
                   Cancelar
                 </button>
-                <button type="submit" className="clay-btn clay-btn-primary px-5 py-2 text-xs font-black">
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black cursor-pointer"
+                >
                   Guardar Empleado
                 </button>
               </div>
