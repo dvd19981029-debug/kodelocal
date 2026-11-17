@@ -180,7 +180,7 @@ const DEFAULT_PARAMETERS: PayrollParameters = {
   tardinessMode: 'REDUCE_BASE',
   employerNitDui: '06232907261069',
   employerName: 'Grupo KODE S.A.S. de C.V.',
-  isssPatronalNumber: 'NP0000123',
+  isssPatronalNumber: '701263289',
   workplaceCorrelative: '001 SUCURSAL PRINCIPAL',
   quincenalBrackets: [
     { tramo: 'I', desde: 0.01, hasta: 275.0, porcentaje: 0, sobreExcesoDe: 0, cuotaFija: 0 },
