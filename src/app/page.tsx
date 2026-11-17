@@ -28,7 +28,7 @@ import { ProductItem, INITIAL_PRODUCTS, getStoredProducts, saveStoredProducts } 
 import ProductCard from '@/components/ecommerce/ProductCard';
 import PromoBannerCarousel from '@/components/ecommerce/PromoBannerCarousel';
 import ReactiveSearchBar from '@/components/ecommerce/ReactiveSearchBar';
-import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
+import { getInspiracionPerfumeName, isIncomingEssence } from '@/lib/perfumeNames';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
 import { isHalloweenPromoProduct, isHalloweenSeasonActive } from '@/lib/halloweenPromo';
 import { WitchPotionsEventSection } from '@/app/pociones-halloween/page';
@@ -366,10 +366,9 @@ export default function EcommerceHomePage() {
         if (!isHalloweenPromoProduct(p)) return false;
       }
 
-      // Filtro de Nuevos Ingresos (desde el banner principal)
+      // Filtro de Nuevos Ingresos (todas las esencias marcadas como Nuevo Ingreso: SKUs 62–111)
       if (onlyNewArrivals && selectedCategory === 'Esencias para Perfume') {
-        const skuVal = String(p.sku || '').trim();
-        if (!['106', '107', '108', '109', '110', '111'].includes(skuVal)) return false;
+        if (!isIncomingEssence(p)) return false;
       }
 
       // Filtro de género (solo si es categoría de esencias)
