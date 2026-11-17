@@ -178,7 +178,7 @@ const DEFAULT_PARAMETERS: PayrollParameters = {
   forceIncaf: false,
   tardinessGraceMinutes: 0,
   tardinessMode: 'REDUCE_BASE',
-  employerNitDui: '0614-010190-101-1',
+  employerNitDui: '06232907261069',
   employerName: 'Grupo KODE S.A.S. de C.V.',
   isssPatronalNumber: 'NP0000123',
   workplaceCorrelative: '001 SUCURSAL PRINCIPAL',
