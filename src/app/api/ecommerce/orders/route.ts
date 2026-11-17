@@ -901,7 +901,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const {
+    let {
       orderNumber,
       customerId,
       customerName,
@@ -1473,10 +1473,38 @@ export async function POST(request: Request) {
       const verifiedShippingCost = isRetiro ? 0.00 : 2.90;
       const verifiedTotal = Number((verifiedSubtotal + verifiedShippingCost).toFixed(2));
 
-      // 3. Crear la orden oficial de ecommerce con los precios y totales verificados
+      // 3. Garantizar folio único WEB-YYMMDD-L9999 en la base de datos antes de crear la orden
+      const generateWebOrderNumber = () => {
+        const svDateParts = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'America/El_Salvador',
+          year: '2-digit',
+          month: '2-digit',
+          day: '2-digit',
+        }).formatToParts(new Date());
+        const yy = svDateParts.find((p) => p.type === 'year')?.value || '26';
+        const mm = svDateParts.find((p) => p.type === 'month')?.value || '01';
+        const dd = svDateParts.find((p) => p.type === 'day')?.value || '01';
+        const letter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+        const digits4 = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+        return `WEB-${yy}${mm}${dd}-${letter}${digits4}`;
+      };
+
+      if (!orderNumber) {
+        orderNumber = generateWebOrderNumber();
+      }
+      for (let attempt = 0; attempt < 15; attempt++) {
+        const existingWeb = await tx.ecommerceOrder.findUnique({
+          where: { orderNumber },
+          select: { id: true },
+        });
+        if (!existingWeb) break;
+        orderNumber = generateWebOrderNumber();
+      }
+
+      // Crear la orden oficial de ecommerce con los precios y totales verificados
       return await tx.ecommerceOrder.create({
         data: {
-          orderNumber: orderNumber || `WEB-${Math.floor(100000 + Math.random() * 900000)}`,
+          orderNumber,
           customerId: resolvedCustomerId || null,
           customerName: cleanCustomerName,
           customerEmail: cleanCustomerEmail || null,

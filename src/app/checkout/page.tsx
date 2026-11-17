@@ -462,7 +462,18 @@ export default function CheckoutPage() {
     }
 
     try {
-      const orderNumber = `WEB-${Math.floor(100000 + Math.random() * 900000)}`;
+      const svDateParts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/El_Salvador',
+        year: '2-digit',
+        month: '2-digit',
+        day: '2-digit',
+      }).formatToParts(new Date());
+      const yy = svDateParts.find((p) => p.type === 'year')?.value || String(new Date().getFullYear()).slice(-2);
+      const mm = svDateParts.find((p) => p.type === 'month')?.value || String(new Date().getMonth() + 1).padStart(2, '0');
+      const dd = svDateParts.find((p) => p.type === 'day')?.value || String(new Date().getDate()).padStart(2, '0');
+      const randLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+      const rand4Digits = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+      const orderNumber = `WEB-${yy}${mm}${dd}-${randLetter}${rand4Digits}`;
       const saleId = `sale-${Date.now()}`;
       const now = new Date().toISOString();
       const resolvedDepto =
