@@ -912,7 +912,39 @@ export default function PlanillaModule() {
       payDate = '2026-10-31';
     }
 
-    const resetDaysEmployees = employees.map((e) => ({ ...e, daysOverride: null }));
+    const resetDaysEmployees = employees.map((e) => {
+      if (type === 'OCT_18') {
+        if (e.id === 'emp-1') {
+          return {
+            ...e,
+            daysOverride: null,
+            otherIncome: 15,
+            otherIncomeNote: 'Bono ($15.00)',
+            otherIncomeTaxable: true,
+            bonusItems: [{ id: 'bon-oct-1', concept: 'Bono', amount: 15, taxable: true }],
+          };
+        }
+        if (e.id === 'emp-3') {
+          return {
+            ...e,
+            daysOverride: null,
+            otherIncome: 11.75,
+            otherIncomeNote: 'Bono ($11.75)',
+            otherIncomeTaxable: true,
+            bonusItems: [{ id: 'bon-oct-3', concept: 'Bono', amount: 11.75, taxable: true }],
+          };
+        }
+        return {
+          ...e,
+          daysOverride: null,
+          otherIncome: 0,
+          otherIncomeNote: '',
+          otherIncomeTaxable: true,
+          bonusItems: [],
+        };
+      }
+      return { ...e, daysOverride: null };
+    });
     setEmployees(resetDaysEmployees);
     setFrequency(nextFreq);
     setPeriodStart(pStart);
