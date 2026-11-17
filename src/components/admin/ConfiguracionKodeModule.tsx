@@ -169,6 +169,7 @@ export default function ConfiguracionKodeModule() {
   const [empleadoToFse, setEmpleadoToFse] = useState<Empleado | null>(null);
   const [isFseModalOpen, setIsFseModalOpen] = useState(false);
   const [fseMonto, setFseMonto] = useState<number>(0);
+  const [fseBonoAdicional, setFseBonoAdicional] = useState<number>(0);
   const [fseRetencionRenta, setFseRetencionRenta] = useState<number>(0);
   const [fseConcepto, setFseConcepto] = useState('Servicios profesionales de intermediación comercial y comisiones por venta');
   const [fseLoading, setFseLoading] = useState(false);
@@ -613,6 +614,7 @@ export default function ConfiguracionKodeModule() {
     const comisiones = Number(emp.total_comisiones || 0);
     const montoBase = comisiones > 0 ? comisiones : 50.00;
     setFseMonto(montoBase);
+    setFseBonoAdicional(0);
     // Retención sugerida en El Salvador para servicios profesionales: 10%
     const ret = Number((montoBase * 0.10).toFixed(2));
     setFseRetencionRenta(ret);
@@ -639,12 +641,13 @@ export default function ConfiguracionKodeModule() {
       setFseLoading(true);
       setFseResult(null);
 
+      const montoTotalDte = Number((Number(fseMonto || 0) + Number(fseBonoAdicional || 0)).toFixed(2));
       const res = await kodeFetch('/api/kode/dte/fse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           empleado_id: empleadoToFse.id,
-          monto: fseMonto,
+          monto: montoTotalDte,
           concepto: fseConcepto,
           retencion_renta: fseRetencionRenta,
         }),
@@ -2607,23 +2610,44 @@ export default function ConfiguracionKodeModule() {
             {/* Formulario de Emisión */}
             {!fseResult ? (
               <form onSubmit={handleEmitirFse} className="space-y-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Monto de Comisiones a Liquidar ($) *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="1"
-                    value={fseMonto}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value) || 0;
-                      setFseMonto(val);
-                      setFseRetencionRenta(Number((val * 0.10).toFixed(2)));
-                    }}
-                    className="clay-input w-full font-mono text-xs font-black text-indigo-700"
-                    required
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Monto de Comisiones a Liquidar ($) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={fseMonto}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value) || 0;
+                        setFseMonto(val);
+                        setFseRetencionRenta(Number(((val + Number(fseBonoAdicional || 0)) * 0.10).toFixed(2)));
+                      }}
+                      className="clay-input w-full font-mono text-xs font-black text-indigo-700"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Bonos / Ingresos Adicionales ($)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      value={fseBonoAdicional || ''}
+                      onChange={(e) => {
+                        const valBono = e.target.value === '' ? 0 : parseFloat(e.target.value) || 0;
+                        setFseBonoAdicional(valBono);
+                        setFseRetencionRenta(Number(((Number(fseMonto || 0) + valBono) * 0.10).toFixed(2)));
+                      }}
+                      className="clay-input w-full font-mono text-xs font-black text-emerald-700 placeholder:text-slate-300"
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 bg-purple-50/60 p-3 rounded-2xl border border-purple-200">
@@ -2646,7 +2670,7 @@ export default function ConfiguracionKodeModule() {
                       Neto a Pagar ($)
                     </label>
                     <div className="clay-input w-full font-mono text-xs font-black text-emerald-700 bg-white flex items-center">
-                      ${Math.max(0, fseMonto - fseRetencionRenta).toFixed(2)}
+                      ${Math.max(0, Number(fseMonto || 0) + Number(fseBonoAdicional || 0) - fseRetencionRenta).toFixed(2)}
                     </div>
                   </div>
                 </div>
