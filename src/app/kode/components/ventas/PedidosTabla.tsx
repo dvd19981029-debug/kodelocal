@@ -19,6 +19,7 @@ import {
   Download,
   Edit2,
   Lock,
+  Ban,
 } from 'lucide-react';
 import { Pedido } from '../../types';
 import {
@@ -40,6 +41,8 @@ interface PedidosTablaProps {
   onViewComprobante: (url: string) => void;
   onEliminarAbono: (pagoId: string) => Promise<void> | void;
   onEditarPedido?: (pedido: Pedido) => void;
+  onCancelarPedido?: (pedido: Pedido) => Promise<void> | void;
+  cancelandoPedidoId?: string | null;
 }
 
 export const PedidosTabla: React.FC<PedidosTablaProps> = ({
@@ -54,6 +57,8 @@ export const PedidosTabla: React.FC<PedidosTablaProps> = ({
   onViewComprobante,
   onEliminarAbono,
   onEditarPedido,
+  onCancelarPedido,
+  cancelandoPedidoId,
 }) => {
   const [expandedPedidoId, setExpandedPedidoId] = useState<string | null>(null);
 
@@ -548,6 +553,30 @@ export const PedidosTabla: React.FC<PedidosTablaProps> = ({
                                     {p.cliente_referencia ? ` · Ref: ${p.cliente_referencia}` : ''}
                                   </p>
                                 </div>
+
+                                {onCancelarPedido &&
+                                  p.estado !== 'Entregado' &&
+                                  p.estado !== 'ENTREGADO' &&
+                                  p.estado !== 'Cancelado' &&
+                                  p.estado !== 'CANCELADO' && (
+                                    <div className="pt-1.5 mt-1.5 border-t border-slate-100 flex items-center justify-end">
+                                      <button
+                                        type="button"
+                                        disabled={cancelandoPedidoId === p.id}
+                                        onClick={() => onCancelarPedido(p)}
+                                        className="text-[10px] font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-lg inline-flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                      >
+                                        <Ban className="w-3 h-3" />
+                                        <span>
+                                          {cancelandoPedidoId === p.id
+                                            ? 'Anulando...'
+                                            : p.dte_codigo_generacion
+                                            ? 'Cancelar Pedido y Anular DTE'
+                                            : 'Cancelar Pedido'}
+                                        </span>
+                                      </button>
+                                    </div>
+                                  )}
                               </div>
                             </div>
                           </td>

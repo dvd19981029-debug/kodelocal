@@ -18,6 +18,7 @@ import {
   MapPin,
   Printer,
   Download,
+  Ban,
 } from 'lucide-react';
 import { Pedido } from '../../types';
 import {
@@ -34,6 +35,8 @@ interface LogisticaViewProps {
   onAsignarGuiaManual: (pedido: Pedido) => void;
   onEmitirDte: (pedido: Pedido) => Promise<void>;
   emitiendoDteId: string | null;
+  onCancelarPedido?: (pedido: Pedido) => Promise<void> | void;
+  cancelandoPedidoId?: string | null;
   showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
@@ -45,6 +48,8 @@ export function LogisticaView({
   onAsignarGuiaManual,
   onEmitirDte,
   emitiendoDteId,
+  onCancelarPedido,
+  cancelandoPedidoId,
   showToast,
 }: LogisticaViewProps) {
   const [filtroLogisticaDias, setFiltroLogisticaDias] = useState<'7dias' | 'todos'>('7dias');
@@ -746,6 +751,30 @@ export function LogisticaView({
                                     {p.cliente_referencia ? ` · Ref: ${p.cliente_referencia}` : ''}
                                   </p>
                                 </div>
+
+                                {onCancelarPedido &&
+                                  p.estado !== 'Entregado' &&
+                                  p.estado !== 'ENTREGADO' &&
+                                  p.estado !== 'Cancelado' &&
+                                  p.estado !== 'CANCELADO' && (
+                                    <div className="pt-1.5 mt-1.5 border-t border-slate-100 flex items-center justify-end">
+                                      <button
+                                        type="button"
+                                        disabled={cancelandoPedidoId === p.id}
+                                        onClick={() => onCancelarPedido(p)}
+                                        className="text-[10px] font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-lg inline-flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                      >
+                                        <Ban className="w-3 h-3" />
+                                        <span>
+                                          {cancelandoPedidoId === p.id
+                                            ? 'Anulando...'
+                                            : p.dte_codigo_generacion
+                                            ? 'Cancelar Pedido y Anular DTE'
+                                            : 'Cancelar Pedido'}
+                                        </span>
+                                      </button>
+                                    </div>
+                                  )}
                               </div>
                             </div>
                           </td>

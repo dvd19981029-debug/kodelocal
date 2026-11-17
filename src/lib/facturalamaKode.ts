@@ -230,6 +230,122 @@ export async function emitirDteKode(input: EmitirDteKodeInput): Promise<KodeDteR
   }
 }
 
+export interface InvalidarDteKodeInput {
+  dte_id: string;
+  reason?: string;
+  dte_replace_id?: string;
+  manager_name?: string;
+  manager_doc_type?: string;
+  manager_doc_number?: string;
+  requester_name?: string;
+  requester_doc_type?: string;
+  requester_doc_number?: string;
+}
+
+export interface InvalidarDteKodeResult {
+  success: boolean;
+  dte_id: string;
+  estado: string;
+  mensaje: string;
+  sello_anulacion?: string;
+  rawResponse?: any;
+  sentPayload?: any;
+}
+
+/**
+ * Invalida (anula) un DTE en el Ministerio de Hacienda a través del endpoint oficial de Factura Llama:
+ * POST https://api.facturallama.com/dte/invalidate
+ */
+export async function invalidarDteKode(input: InvalidarDteKodeInput): Promise<InvalidarDteKodeResult> {
+  const config = await getKodeConfigAsync();
+  const activeApiKey = getActiveFacturaLlamaApiKey(config);
+  const endpoint = `${config.facturaLlamaBaseUrl}/dte/invalidate`;
+  const cleanDteId = String(input.dte_id || '').trim();
+
+  const payload: Record<string, any> = {
+    dteId: cleanDteId,
+    reason: String(input.reason || 'Anulación por pedido cancelado / no entregado al cliente').slice(0, 250),
+  };
+
+  if (input.dte_replace_id) {
+    payload.dteReplaceId = input.dte_replace_id.trim();
+  }
+
+  if (input.manager_name && input.manager_doc_number) {
+    payload.manager = {
+      name: input.manager_name.trim().slice(0, 150),
+      identificationDocument: {
+        type: input.manager_doc_type || 'DUI',
+        number: input.manager_doc_number.replace(/\D/g, ''),
+      },
+    };
+  }
+
+  if (input.requester_name && input.requester_doc_number) {
+    payload.requester = {
+      name: input.requester_name.trim().slice(0, 150),
+      identificationDocument: {
+        type: input.requester_doc_type || 'DUI',
+        number: input.requester_doc_number.replace(/\D/g, ''),
+      },
+    };
+  }
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': activeApiKey,
+        'X-API-Version': config.facturaLlamaApiVersion,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const errorMsg = Array.isArray(data?.message)
+        ? data.message.join('; ')
+        : data?.message || data?.error || `HTTP ${response.status} al invalidar DTE en Factura Llama`;
+
+      console.error('[FacturaLlama KODE INVALIDATE RECHAZO]', response.status, data);
+
+      return {
+        success: false,
+        dte_id: cleanDteId,
+        estado: 'RECHAZADO',
+        mensaje: errorMsg,
+        rawResponse: data,
+        sentPayload: payload,
+      };
+    }
+
+    const mhData = data?.mhResponse?.data;
+    const sello = mhData?.selloRecibido || data?.selloRecibido;
+
+    return {
+      success: true,
+      dte_id: cleanDteId,
+      estado: 'ANULADO',
+      mensaje: mhData?.descripcionMsg || 'DTE anulado / invalidado exitosamente en Hacienda.',
+      sello_anulacion: sello,
+      rawResponse: data,
+      sentPayload: payload,
+    };
+  } catch (error: any) {
+    console.error('[FacturaLlama KODE INVALIDATE Network Error]', error);
+    return {
+      success: false,
+      dte_id: cleanDteId,
+      estado: 'ERROR',
+      mensaje: error.message || 'Error de conexión con Factura Llama al invalidar DTE',
+      sentPayload: payload,
+    };
+  }
+}
+
+
 export interface EmitirDteFseKodeInput {
   empleado_id?: string;
   empleado_nombre: string;
@@ -357,4 +473,6 @@ export async function emitirDteFseKode(input: EmitirDteFseKodeInput): Promise<Ko
     };
   }
 }
+
+
 

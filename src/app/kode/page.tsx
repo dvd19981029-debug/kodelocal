@@ -169,6 +169,7 @@ export default function KodeSystemPage() {
 
   // Modal y estado Factura Llama (DTE)
   const [emitiendoDteId, setEmitiendoDteId] = useState<string | null>(null);
+  const [cancelandoPedidoId, setCancelandoPedidoId] = useState<string | null>(null);
   const [dteResultModal, setDteResultModal] = useState<{
     pedido: Pedido;
     result: any;
@@ -838,6 +839,62 @@ export default function KodeSystemPage() {
     }
   };
 
+  const handleCancelarPedidoKode = async (pedido: Pedido) => {
+    const tieneDte = Boolean(pedido.dte_codigo_generacion);
+    const msgConfirm = tieneDte
+      ? `¿Pasar el pedido ${pedido.numero_pedido} (${pedido.cliente_nombre}) a CANCELADO y anular su Factura DTE (${pedido.dte_numero_control || pedido.dte_codigo_generacion?.slice(0, 8)}) en Factura Llama?`
+      : `¿Pasar el pedido ${pedido.numero_pedido} (${pedido.cliente_nombre}) a estado CANCELADO?`;
+
+    if (!confirm(msgConfirm)) return;
+
+    try {
+      setCancelandoPedidoId(pedido.id);
+      const res = await fetch('/api/kode/pedidos/cancelar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pedido_id: pedido.id,
+          motivo: `Anulación por pedido no entregado / cancelado (${pedido.numero_pedido})`,
+        }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        showToast(data.message || `Pedido ${pedido.numero_pedido} cancelado.`, 'success');
+        await fetchPedidos();
+        await fetchInsumos();
+      } else if (data.dteError) {
+        const forceOnly = confirm(
+          `${data.error}\n\n¿Deseas marcar el pedido ${pedido.numero_pedido} como Cancelado en el sistema de todas formas?`
+        );
+        if (forceOnly) {
+          const res2 = await fetch('/api/kode/pedidos/cancelar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              pedido_id: pedido.id,
+              force_cancel_only: true,
+            }),
+          });
+          const data2 = await res2.json();
+          if (data2.success) {
+            showToast(`Pedido ${pedido.numero_pedido} pasado a Cancelado.`, 'success');
+            await fetchPedidos();
+            await fetchInsumos();
+          } else {
+            showToast(data2.error || 'No se pudo cancelar el pedido.', 'error');
+          }
+        }
+      } else {
+        showToast(data.error || 'Error al cancelar pedido', 'error');
+      }
+    } catch (e: any) {
+      showToast(e.message || 'Error de conexión al cancelar pedido', 'error');
+    } finally {
+      setCancelandoPedidoId(null);
+    }
+  };
+
   const handleEliminarCompra = (id: string) => {
     const actualizadas = compras.filter((c) => c.id !== id);
     guardarComprasLocal(actualizadas);
@@ -1167,6 +1224,8 @@ export default function KodeSystemPage() {
                   onViewComprobante={(url) => setModalComprobanteUrl(url)}
                   onEliminarAbono={handleEliminarAbono}
                   onEditarPedido={handleEditarPedido}
+                  onCancelarPedido={handleCancelarPedidoKode}
+                  cancelandoPedidoId={cancelandoPedidoId}
                 />
               )}
 
@@ -1304,6 +1363,8 @@ export default function KodeSystemPage() {
               onAsignarGuiaManual={(pedido) => setGuiaModalPedido(pedido)}
               onEmitirDte={handleEmitirDte}
               emitiendoDteId={emitiendoDteId}
+              onCancelarPedido={handleCancelarPedidoKode}
+              cancelandoPedidoId={cancelandoPedidoId}
               showToast={showToast}
             />
           )}
