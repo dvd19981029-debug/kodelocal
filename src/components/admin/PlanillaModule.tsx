@@ -687,6 +687,16 @@ export default function PlanillaModule() {
   const [subTab, setSubTab] = useState<'quincenal' | 'marcaciones' | 'jornadas' | 'spu' | 'resumen' | 'parametros'>('quincenal');
   const [marcacionesEmpFilter, setMarcacionesEmpFilter] = useState<string>('ALL');
   const [marcacionesOnlyRecorded, setMarcacionesOnlyRecorded] = useState<boolean>(false);
+  const todaySvDefault = useMemo(() => {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/El_Salvador',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+  }, []);
+  const [marcacionesStartDate, setMarcacionesStartDate] = useState<string>(todaySvDefault);
+  const [marcacionesEndDate, setMarcacionesEndDate] = useState<string>(todaySvDefault);
   const [frequency, setFrequency] = useState<PayrollFrequency>('MENSUAL');
   const [selectedWorkEmpId, setSelectedWorkEmpId] = useState<string>('emp-1');
   const [showFullEmployerCols, setShowFullEmployerCols] = useState<boolean>(false);
@@ -3637,15 +3647,7 @@ export default function PlanillaModule() {
 
       {/* ================= SUBPESTAÑA MARCACIONES: REPORTE POR ASESOR Y FECHA (4 MARCADAS DEL DÍA) ================= */}
       {subTab === 'marcaciones' && (() => {
-        const extraDatesSet = new Set<string>(cutoffDates);
-        for (const k of Object.keys(punchRecords)) {
-          const parts = k.split('_');
-          const dStr = parts[parts.length - 1];
-          if (/^\d{4}-\d{2}-\d{2}$/.test(dStr)) {
-            extraDatesSet.add(dStr);
-          }
-        }
-        const allDatesSorted = Array.from(extraDatesSet).sort();
+        const allDatesSorted = getDatesInRange(marcacionesStartDate, marcacionesEndDate);
 
         const filteredEmps =
           marcacionesEmpFilter === 'ALL'
@@ -3689,15 +3691,15 @@ export default function PlanillaModule() {
                   <span className="font-bold text-slate-500">Desde:</span>
                   <input
                     type="date"
-                    value={cutoffStart}
-                    onChange={(e) => setCutoffStart(e.target.value)}
+                    value={marcacionesStartDate}
+                    onChange={(e) => setMarcacionesStartDate(e.target.value)}
                     className="clay-input py-1 px-2 text-xs font-mono font-bold"
                   />
                   <span className="font-bold text-slate-500">Hasta:</span>
                   <input
                     type="date"
-                    value={cutoffEnd}
-                    onChange={(e) => setCutoffEnd(e.target.value)}
+                    value={marcacionesEndDate}
+                    onChange={(e) => setMarcacionesEndDate(e.target.value)}
                     className="clay-input py-1 px-2 text-xs font-mono font-bold"
                   />
                 </div>
