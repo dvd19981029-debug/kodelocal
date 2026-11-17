@@ -29,15 +29,6 @@ interface PromoBannerCarouselProps {
   onFilterNewArrivals?: () => void;
 }
 
-const NEW_ARRIVALS_PREVIEW = [
-  { sku: '111', name: 'Baccarat Rouge 540 Extrait', house: 'MFK', tag: 'Nuevo' },
-  { sku: '109', name: 'Khamrah', house: 'Lattafa', tag: 'Árabe' },
-  { sku: '110', name: 'Amber Oud', house: 'Al Haramain', tag: 'Top' },
-  { sku: '108', name: 'MYSLF Intense H', house: 'YSL', tag: 'Hombre' },
-  { sku: '106', name: 'Hawas Fire H', house: 'Rasasi', tag: 'Árabe' },
-  { sku: '107', name: 'Hawas H', house: 'Rasasi', tag: 'Fresco' },
-];
-
 export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory, onFilterNewArrivals }: PromoBannerCarouselProps) {
   const router = useRouter();
   // Inicializa en 1 porque el índice 0 es el clon del último slide (bucle infinito sin rebobinado)
@@ -99,9 +90,9 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
 
   const newArrivalsSlide: PromoSlide = {
     id: 'promo-nuevos-ingresos',
-    imageAlt: 'Nuevos Ingresos en Aromaniak: Baccarat Rouge 540 Extrait, Khamrah, Amber Oud, MYSLF Intense, Hawas Fire y Hawas',
+    imageUrl: '/images/promo/banner_nuevos_ingresos.webp',
+    imageAlt: 'Nuevos Ingresos en Aromaniak: Baccarat Rouge Extrait, Khamrah, Amber Oud, MYSLF y Hawas',
     action: 'nuevos-ingresos',
-    customRender: true,
   };
 
   const slides: PromoSlide[] = [newArrivalsSlide, ...blogSlides, ...baseSlides];
@@ -303,73 +294,7 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
                 }}
                 className="min-w-full w-full h-full shrink-0 relative cursor-pointer overflow-hidden flex items-center justify-center bg-slate-900"
               >
-                {slide.action === 'nuevos-ingresos' ? (
-                  <div className="w-full h-full relative overflow-hidden bg-gradient-to-br from-[#19082e] via-[#48266c] to-[#7c3aed] flex items-center justify-between gap-2 sm:gap-5 px-3.5 sm:px-8 md:px-10 py-3 sm:py-6 text-white">
-                    {/* Brillos ambientales estilo Aromaniak */}
-                    <div className="pointer-events-none absolute -top-16 -left-16 w-56 h-56 rounded-full bg-fuchsia-400/20 blur-3xl" />
-                    <div className="pointer-events-none absolute -bottom-20 right-0 w-72 h-72 rounded-full bg-amber-300/15 blur-3xl" />
-
-                    {/* Columna izquierda: Título, descripción y CTA */}
-                    <div className="relative z-10 flex-1 min-w-0 space-y-1.5 sm:space-y-3">
-                      <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-white/15 border border-purple-200/40 text-amber-200 text-[8.5px] sm:text-xs font-black uppercase tracking-wider shadow-sm">
-                        <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-300 shrink-0" />
-                        <span>Nuevos Ingresos • Recién Llegados</span>
-                      </div>
-
-                      <h2 className="text-sm sm:text-2xl md:text-[28px] font-black leading-[1.1] tracking-tight text-white drop-shadow-sm">
-                        ¡Nuevas Esencias{' '}
-                        <span className="text-amber-300">en Aromaniak!</span>
-                      </h2>
-
-                      <p className="hidden xs:block text-[10px] sm:text-xs md:text-sm font-semibold text-purple-100/90 max-w-md leading-snug">
-                        Las fragancias más pedidas ya están disponibles. Desde{' '}
-                        <span className="font-black text-white">$1.90</span> (½ Oz) y{' '}
-                        <span className="font-black text-white">$3.75</span> (1 Oz).
-                      </p>
-
-                      {/* Lista compacta en móvil (pills) */}
-                      <div className="flex sm:hidden flex-wrap gap-1 pt-0.5">
-                        {NEW_ARRIVALS_PREVIEW.slice(0, 4).map((item) => (
-                          <span
-                            key={item.sku}
-                            className="px-1.5 py-0.5 rounded-md bg-white/15 border border-white/20 text-[8.5px] font-extrabold text-white truncate max-w-[130px]"
-                          >
-                            {item.name}
-                          </span>
-                        ))}
-                      </div>
-
-                      <div className="pt-0.5 sm:pt-1">
-                        <span className="inline-flex items-center gap-1.5 px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#facc15] via-[#fde047] to-[#f59e0b] text-[#260e40] font-black text-[10px] sm:text-xs md:text-sm shadow-[0_6px_20px_rgba(250,204,21,0.35)] border border-yellow-200 group-hover:scale-[1.03] transition-transform">
-                          <span>Ver Nuevos Ingresos</span>
-                          <span aria-hidden="true">→</span>
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Columna derecha: Tarjetas llamativas de los 6 nuevos ingresos */}
-                    <div className="relative z-10 hidden sm:grid grid-cols-2 gap-2 w-[310px] md:w-[370px] shrink-0">
-                      {NEW_ARRIVALS_PREVIEW.map((item) => (
-                        <div
-                          key={item.sku}
-                          className="rounded-2xl bg-white/12 backdrop-blur-md border border-white/25 px-3 py-2 shadow-lg flex flex-col justify-between hover:bg-white/20 transition-colors"
-                        >
-                          <div className="flex items-center justify-between gap-1.5 mb-0.5">
-                            <span className="text-[9px] font-black uppercase tracking-wider text-purple-200 truncate">
-                              {item.house}
-                            </span>
-                            <span className="px-1.5 py-0.5 rounded-full bg-amber-400 text-[#260e40] text-[8.5px] font-black uppercase leading-none shrink-0">
-                              {item.tag}
-                            </span>
-                          </div>
-                          <p className="text-[11px] md:text-xs font-black text-white leading-tight line-clamp-2">
-                            {item.name}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : slide.customRender ? (
+                {slide.customRender ? (
                   <div className="w-full h-full relative overflow-hidden bg-gradient-to-br from-[#120722] via-[#3b0764] to-[#c2410c] flex items-center justify-between px-3.5 sm:px-8 md:px-11 py-3 sm:py-6 text-white">
                     {/* Columna Izquierda: Textos de la Bruja Aromaniaka */}
                     <div className="relative z-10 flex-1 min-w-0 pr-2 sm:pr-4 space-y-1.5 sm:space-y-3">
