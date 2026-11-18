@@ -208,9 +208,23 @@ function renderTicketToDoc(doc: any, ticket: SaleRecord): number {
     const qty = String(it.quantity || 1);
     const price = Number(it.price || 0).toFixed(2);
     const itemTotal = `${Number(it.total || 0).toFixed(2)}G`;
-    const baseName = (it.name || 'PRODUCTO').toUpperCase();
-    const alreadyHasUnit = /\((?:1\s*)?onza|½\s*(?:onza|oz)|1\/2\s*(?:onza|oz)|media\s*onza\)/i.test(baseName);
-    const fullName = `${baseName}${it.unit && !alreadyHasUnit ? ` (${it.unit})` : ''}`;
+    const kitInfo = parseKitOrderItem(it);
+    let fullName = '';
+    if (kitInfo) {
+      const origPart = kitInfo.originalName ? ` (${kitInfo.originalName})` : '';
+      const concPart = kitInfo.isPlus ? 'PLUS 1.5 OZ' : '1 OZ';
+      const lblPart = kitInfo.hasLabel ? 'CON ETIQUETA' : 'SIN ETIQUETA';
+      fullName = cleanPdfText(
+        `ARMA TU PERFUME: ${kitInfo.fragranceName}${origPart} - ${kitInfo.bottleName} - ${concPart} - ${lblPart}`
+      ).toUpperCase();
+    } else {
+      const baseName = cleanPdfText(it.name || 'PRODUCTO').toUpperCase();
+      const alreadyHasUnit =
+        /\((?:1\s*)?onza|½\s*(?:onza|oz)|1\/2\s*(?:onza|oz)|media\s*onza|perfume\s*100ml|arma\s*tu\s*propio/i.test(
+          baseName
+        );
+      fullName = `${baseName}${it.unit && !alreadyHasUnit ? ` (${cleanPdfText(it.unit)})` : ''}`;
+    }
 
     // Partir descripción si es larga para que no se sobreponga
     const splitDesc = doc.splitTextToSize(fullName, 33);

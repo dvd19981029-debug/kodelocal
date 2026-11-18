@@ -910,41 +910,68 @@ export function parseKitOrderItem(
   const rawPresentation = String(item.presentation || item.unit || '').trim();
   const combined = `${rawName} | ${rawPresentation}`;
   const kitDetails = item.kitDetails;
+  const rawId = String(item.productId || '').trim();
 
   const isKit =
     Boolean(kitDetails) ||
     /arma tu propio perfume|kit_preparado/i.test(combined) ||
-    String(item.productId || '').startsWith('kit-');
+    rawId.startsWith('kit-');
 
   if (!isKit) return null;
 
-  // 1. Nombre de la fragancia (Aromaniak)
+  let kitEssenceIdFromId = '';
+  let kitBottleIdFromId = '';
+  if (rawId.startsWith('kit-')) {
+    const idMatch = rawId.match(/^kit-(.+?)-(bote-[a-z0-9-]+|bottle-\d+)-(label|nolabel)-(plus|std)$/i);
+    if (idMatch) {
+      kitEssenceIdFromId = idMatch[1];
+      kitBottleIdFromId = idMatch[2];
+    }
+  }
+
+  // 1. Nombre de la fragancia (Aromaniak) e inspiración inline (formato POS: "Fiera Elixir H (Sauvage Elixir H) • Bote...")
   let fragranceName = String(kitDetails?.essenceName || '').trim();
+  let inlineOriginalName: string | undefined = undefined;
   if (!fragranceName) {
-    fragranceName = rawName
+    const headSegment = rawName
       .replace(/\s*\(Arma tu propio perfume[\s\S]*$/i, '')
-      .replace(/\s*\|[\s\S]*$/, '')
+      .replace(/\s*[|•][\s\S]*$/, '')
       .replace(/^Arma tu propio perfume:\s*/i, '')
-      .replace(/\s*\([^)]*\)/g, '')
       .trim();
+
+    const parenMatch = headSegment.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+    if (parenMatch) {
+      fragranceName = parenMatch[1].trim();
+      const candidateOrig = parenMatch[2].trim();
+      if (candidateOrig && !/arma tu propio|1\s*oz|1\.5\s*oz|plus/i.test(candidateOrig)) {
+        inlineOriginalName = candidateOrig;
+      }
+    } else {
+      fragranceName = headSegment.replace(/\s*\([^)]*\)/g, '').trim();
+    }
   }
   if (!fragranceName || /\$1|alcohol/i.test(fragranceName)) {
     const prodOff = String(item.product?.officialName || item.product?.name || '').trim();
     if (prodOff && !/\$1|alcohol/i.test(prodOff)) {
-      fragranceName = prodOff;
+      fragranceName = prodOff
+        .replace(/\s*\(Arma tu propio perfume[\s\S]*$/i, '')
+        .replace(/\s*[|•][\s\S]*$/, '')
+        .replace(/^Arma tu propio perfume:\s*/i, '')
+        .replace(/\s*\([^)]*\)/g, '')
+        .trim();
     }
   }
 
   // 2. Buscar el producto de esencia en el catálogo para puesto e inspiración
   const upperFrag = fragranceName.toUpperCase();
   const withoutGender = upperFrag.replace(/\s+[HFUM]$/i, '').trim();
+  const targetEssenceId = String(kitDetails?.essenceId || kitEssenceIdFromId || item.productId || '').trim();
   const essenceProd =
-    (item.product && !/\$1|alcohol/i.test(String(item.product.name || '')) ? item.product : null) ||
+    (item.product && !String(item.product.id || '').startsWith('kit-') && !/\$1|alcohol|arma tu propio perfume/i.test(String(item.product.name || '')) ? item.product : null) ||
     (Array.isArray(allProducts)
       ? allProducts.find(
           (p) =>
-            (kitDetails?.essenceId && p.id === kitDetails.essenceId) ||
-            (item.productId && p.id === item.productId && !/\$1|alcohol/i.test(String(p.name || ''))) ||
+            (targetEssenceId && p.id === targetEssenceId && !/\$1|alcohol/i.test(String(p.name || ''))) ||
             (upperFrag && p.officialName && p.officialName.trim().toUpperCase() === upperFrag) ||
             (withoutGender && p.officialName && p.officialName.trim().toUpperCase() === withoutGender) ||
             (upperFrag && p.name && p.name.trim().toUpperCase() === upperFrag)
@@ -958,10 +985,11 @@ export function parseKitOrderItem(
   const origInfo = getOriginalFragranceInfo(
     {
       ...item,
+      productId: essenceProd?.id || targetEssenceId || item.productId,
       name: fragranceName,
       product: essenceProd,
-      originalName: !/\$1|alcohol/i.test(String(item.originalName || '')) ? item.originalName : undefined,
-      inspiredBy: !/\$1|alcohol/i.test(String(item.inspiredBy || '')) ? item.inspiredBy : undefined,
+      originalName: inlineOriginalName || (!/\$1|alcohol/i.test(String(item.originalName || '')) ? item.originalName : undefined),
+      inspiredBy: inlineOriginalName || (!/\$1|alcohol/i.test(String(item.inspiredBy || '')) ? item.inspiredBy : undefined),
     },
     allProducts
   );
@@ -986,28 +1014,39 @@ export function parseKitOrderItem(
   let explicitBottlePuesto = String(kitDetails?.bottlePuesto || '').trim();
 
   if (!bottleName) {
-    const bottleMatch = combined.match(/(?:Frasco|Bote):\s*([^|•)\]]+?)(?:\s*\[([A-Z0-9-]+)\])?(?=\s*(?:\||•|\)|$))/i);
-    if (bottleMatch) {
-      bottleName = bottleMatch[1].trim();
-      if (bottleMatch[2]) explicitBottlePuesto = bottleMatch[2].trim();
+    const colonBottleMatch = combined.match(/(?:Frasco|Bote):\s*([^|•)\]]+?)(?:\s*\[([A-Z0-9-]+)\])?(?=\s*(?:\||•|\)|$))/i);
+    if (colonBottleMatch) {
+      bottleName = colonBottleMatch[1].trim();
+      if (colonBottleMatch[2]) explicitBottlePuesto = colonBottleMatch[2].trim();
+    } else {
+      const bulletBottleMatch = combined.match(/(?:[•|])\s*((?:Bote|Frasco)\s+[^|•)\]]+?)(?:\s*\[([A-Z0-9-]+)\])?(?=\s*(?:\||•|\)|$))/i);
+      if (bulletBottleMatch) {
+        bottleName = bulletBottleMatch[1].trim();
+        if (bulletBottleMatch[2]) explicitBottlePuesto = bulletBottleMatch[2].trim();
+      }
     }
+  }
+  const targetBottleId = String(kitDetails?.bottleId || kitBottleIdFromId || '').trim();
+
+  const bottleProd = Array.isArray(allProducts)
+    ? allProducts.find(
+        (p) =>
+          (targetBottleId && p.id === targetBottleId) ||
+          (bottleName && p.name && p.name.trim().toLowerCase() === bottleName.toLowerCase()) ||
+          (bottleName && p.officialName && p.officialName.trim().toLowerCase() === bottleName.toLowerCase())
+      )
+    : null;
+
+  if (!bottleName && bottleProd) {
+    bottleName = bottleProd.name;
   }
   if (!bottleName) {
     bottleName = 'Bote Rey Luis 100ml Rosca';
   }
 
-  const bottleProd = Array.isArray(allProducts)
-    ? allProducts.find(
-        (p) =>
-          (kitDetails?.bottleId && p.id === kitDetails.bottleId) ||
-          (p.name && p.name.trim().toLowerCase() === bottleName.toLowerCase()) ||
-          (p.officialName && p.officialName.trim().toLowerCase() === bottleName.toLowerCase())
-      )
-    : null;
-
   const resolvedBottleImg = resolveBottleImageInfo(
     {
-      productId: kitDetails?.bottleId || bottleProd?.id,
+      productId: targetBottleId || bottleProd?.id,
       name: bottleName,
       product: bottleProd,
     },
@@ -1029,7 +1068,7 @@ export function parseKitOrderItem(
   return {
     isKit: true,
     fragranceName: fragranceName || 'Fragancia',
-    originalName: origInfo?.originalName,
+    originalName: origInfo?.originalName || inlineOriginalName,
     brand: origInfo?.brand || (essenceProd?.brand && !/aromaniak/i.test(essenceProd.brand) ? essenceProd.brand : undefined),
     essencePuesto,
     isPlus,
