@@ -90,6 +90,9 @@ export async function generateMetadata({
   const isSticker = product.category === 'Stickers' || String(product.id || '').startsWith('sticker-');
   const isBottle = !isSticker && (product.category?.toLowerCase().includes('bote') || product.name.toLowerCase().includes('bote'));
   const isEssence = product.category === 'Esencias para Perfume';
+  const isDipropilenglicol = product.id.includes('dipropilenglicol') || product.name.toLowerCase().includes('dipropilenglicol');
+  const isGalaxolide = product.id.includes('galaxolide') || product.name.toLowerCase().includes('galaxolide');
+  const isFixativeOrSolvent = isDipropilenglicol || isGalaxolide;
 
   const title = isSticker
     ? `${product.name} - Etiqueta Adhesiva para Frasco de Perfume`
@@ -97,7 +100,11 @@ export async function generateMetadata({
     ? `${displayName} - Frasco de Vidrio para Perfume`
     : isEssence
     ? `${displayName} - Esencia de Perfumería Fina`
-    : `${displayName} - Insumos para Perfumería`;
+    : isDipropilenglicol
+    ? `${displayName} - Fijador y Solvente de Perfumería (DPG)`
+    : isGalaxolide
+    ? `${displayName} - Fijador de Perfumería Almizclado`
+    : `${displayName} - Insumos y Fijadores para Perfumería`;
 
   const fullSocialTitle = `${title} | Aromaniak SV`;
 
@@ -107,16 +114,49 @@ export async function generateMetadata({
     ? `${displayName} con atomizador para envasado y perfumería. Envases de vidrio disponibles en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.`
     : isEssence
     ? `Esencia concentrada ${displayName} para elaboración de fragancias y perfumería fina. ${notesText}Venta por onza y media onza. Entregas a domicilio a todo El Salvador o retiro en local.`
-    : `${displayName} - Insumos para elaboración de perfumería fina en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.`;
+    : isDipropilenglicol
+    ? `MP-191 Dipropilenglicol (DPG, CAS 25265-71-8) en gotero de 20 ml: fijador de perfumería, solvente, cosolvente y humectante 100% inodoro para aumentar la fijación y duración de perfumes en El Salvador. Entregas a domicilio o retiro en local.`
+    : isGalaxolide
+    ? `Galaxolide 50% DEP (MP-99, CAS 1222-05-5) en gotero de 20 ml: fijador de perfumería almizclado (musk dulce floral) y potenciador de estela para perfumería fina en El Salvador. Norma IFRA sin alérgenos. Entregas a domicilio o retiro en local.`
+    : `${displayName} - Insumos y fijadores para elaboración de perfumería fina en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.`;
+
+  const keywords = isDipropilenglicol
+    ? [
+        'dipropilenglicol el salvador',
+        'dipropilenglicol para perfumes',
+        'fijador de perfumeria el salvador',
+        'fijadores para perfumes el salvador',
+        'dpg perfumeria',
+        'solvente para perfumes el salvador',
+        'cosolvente perfumeria fina',
+        'mp-191 dipropilenglicol',
+        'cas 25265-71-8',
+        'insumos de perfumeria el salvador',
+      ]
+    : isGalaxolide
+    ? [
+        'galaxolide 50% dep el salvador',
+        'galaxolide fijador de perfume',
+        'fijador de perfumeria el salvador',
+        'fijadores para perfumes el salvador',
+        'fijador almizclado perfumeria',
+        'almizcle para perfumes el salvador',
+        'potenciador de estela perfume',
+        'cas 1222-05-5',
+        'mp-99 galaxolide',
+        'insumos de perfumeria el salvador',
+      ]
+    : undefined;
 
   const canonical = `https://aromaniaksv.com${getProductUrl(product)}`;
-  const imageUrl = isSticker && product.imageUrl
+  const imageUrl = (isSticker || isFixativeOrSolvent) && product.imageUrl
     ? `https://aromaniaksv.com${product.imageUrl}`
     : `https://aromaniaksv.com/images/meta/${encodeURIComponent(product.id)}.jpg?v=5`;
 
   return {
     title,
     description,
+    ...(keywords ? { keywords } : {}),
     alternates: {
       canonical,
     },
@@ -166,6 +206,9 @@ export default async function ProductLayout({
   const isSticker = product ? (product.category === 'Stickers' || String(product.id || '').startsWith('sticker-')) : false;
   const displayName = product ? (isSticker ? product.name : (product.officialName?.trim() || product.name)) : '';
   const isBottle = product && !isSticker ? (product.category?.toLowerCase().includes('bote') || product.name.toLowerCase().includes('bote')) : false;
+  const isDipropilenglicol = product ? (product.id.includes('dipropilenglicol') || product.name.toLowerCase().includes('dipropilenglicol')) : false;
+  const isGalaxolide = product ? (product.id.includes('galaxolide') || product.name.toLowerCase().includes('galaxolide')) : false;
+  const isFixativeOrSolvent = isDipropilenglicol || isGalaxolide;
 
   const jsonLd = product ? {
     '@context': 'https://schema.org',
@@ -174,13 +217,22 @@ export default async function ProductLayout({
     productID: product.id,
     sku: product.id,
     mpn: product.sku || product.id,
-    name: displayName,
+    name: isDipropilenglicol
+      ? `${displayName} - Fijador y Solvente de Perfumería`
+      : isGalaxolide
+      ? `${displayName} - Fijador de Perfumería Almizclado`
+      : displayName,
+    category: isFixativeOrSolvent ? 'Fijadores e Insumos de Perfumería' : product.category,
     description: isSticker
       ? (product.description || `${product.name} adhesivo para frasco de perfume en El Salvador.`)
       : isBottle
       ? `${displayName} con atomizador para elaboración y envasado de perfumes. Entregas a domicilio a todo El Salvador o retiro en local.`
+      : isDipropilenglicol
+      ? `MP-191 Dipropilenglicol (DPG, CAS 25265-71-8) en gotero de 20 ml: fijador de perfumería, solvente, cosolvente y humectante 100% inodoro para aumentar la fijación y duración de perfumes en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.`
+      : isGalaxolide
+      ? `Galaxolide 50% DEP (MP-99, CAS 1222-05-5) en gotero de 20 ml: fijador de perfumería almizclado (musk dulce floral) y potenciador de estela para perfumería fina en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.`
       : `Esencia concentrada ${displayName} para elaboración de perfumería fina en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.`,
-    image: isSticker && product.imageUrl
+    image: (isSticker || isFixativeOrSolvent) && product.imageUrl
       ? `https://aromaniaksv.com${product.imageUrl}`
       : `https://aromaniaksv.com/images/meta/${encodeURIComponent(product.id)}.jpg?v=5`,
     brand: {
