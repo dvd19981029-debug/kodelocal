@@ -490,33 +490,38 @@ export async function POST(request: Request) {
               }
 
             if (Array.isArray(body.payments) && body.payments.length > 0) {
-              await prisma.salePayment.deleteMany({ where: { saleId: existingSale.id } });
-              await prisma.salePayment.createMany({
-                data: body.payments.map((p: any) => ({
-                  saleId: existingSale.id,
-                  amount: Number(p.amount || 0),
-                  paymentMethod: p.paymentMethod || 'CASH',
-                  reference: p.reference || paymentReference || null,
-                  notes:
-                    p.paymentMethod === 'CASH' && cashReceived
-                      ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}`
-                      : null,
-                  cashierName: cashierName || existingSale.cashierName || 'Caja 1',
-                  shiftId: existingSale.shiftId || null,
-                })),
-              });
-            } else if (!existingSale.payments || existingSale.payments.length === 0) {
-              await prisma.salePayment.create({
-                data: {
-                  saleId: existingSale.id,
-                  amount: Number(total || existingSale.total || 0),
-                  paymentMethod: paymentMethod || existingSale.paymentMethod || 'CASH',
-                  reference: paymentReference || null,
-                  notes: cashReceived ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}` : null,
-                  cashierName: cashierName || existingSale.cashierName || 'Caja 1',
-                  shiftId: existingSale.shiftId || null,
-                },
-              });
+              await prisma.$transaction([
+                prisma.salePayment.deleteMany({ where: { saleId: existingSale.id } }),
+                prisma.salePayment.createMany({
+                  data: body.payments.map((p: any) => ({
+                    saleId: existingSale.id,
+                    amount: Number(p.amount || 0),
+                    paymentMethod: p.paymentMethod || 'CASH',
+                    reference: p.reference || paymentReference || null,
+                    notes:
+                      p.paymentMethod === 'CASH' && cashReceived
+                        ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}`
+                        : null,
+                    cashierName: cashierName || existingSale.cashierName || 'Caja 1',
+                    shiftId: existingSale.shiftId || null,
+                  })),
+                }),
+              ]);
+            } else {
+              const currentPaymentCount = await prisma.salePayment.count({ where: { saleId: existingSale.id } });
+              if (currentPaymentCount === 0) {
+                await prisma.salePayment.create({
+                  data: {
+                    saleId: existingSale.id,
+                    amount: Number(total || existingSale.total || 0),
+                    paymentMethod: paymentMethod || existingSale.paymentMethod || 'CASH',
+                    reference: paymentReference || null,
+                    notes: cashReceived ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}` : null,
+                    cashierName: cashierName || existingSale.cashierName || 'Caja 1',
+                    shiftId: existingSale.shiftId || null,
+                  },
+                });
+              }
             }
 
             await deductArmedPerfumeStickersOnInvoice(prisma, {
@@ -548,38 +553,43 @@ export async function POST(request: Request) {
             },
           });
           if (Array.isArray(body.payments) && body.payments.length > 0) {
-            await prisma.salePayment.deleteMany({ where: { saleId: existingSale.id } });
-            await prisma.salePayment.createMany({
-              data: body.payments.map((p: any) => ({
-                saleId: existingSale.id,
-                amount: Number(p.amount || 0),
-                paymentMethod: p.paymentMethod || 'CASH',
-                reference: p.reference || paymentReference || null,
-                notes:
-                  p.paymentMethod === 'CASH' && cashReceived
-                    ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}`
-                    : null,
-                cashierName: cashierName || existingSale.cashierName || 'Caja 1',
-                shiftId: existingSale.shiftId || null,
-              })),
-            });
-          } else if (!existingSale.payments || existingSale.payments.length === 0) {
-            await prisma.salePayment.create({
-              data: {
-                saleId: existingSale.id,
-                amount: Number(total || existingSale.total || 0),
-                paymentMethod,
-                reference: paymentReference || null,
-                notes: cashReceived ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}` : null,
-                cashierName: cashierName || existingSale.cashierName || 'Caja 1',
-                shiftId: existingSale.shiftId || null,
-              },
-            });
+            await prisma.$transaction([
+              prisma.salePayment.deleteMany({ where: { saleId: existingSale.id } }),
+              prisma.salePayment.createMany({
+                data: body.payments.map((p: any) => ({
+                  saleId: existingSale.id,
+                  amount: Number(p.amount || 0),
+                  paymentMethod: p.paymentMethod || 'CASH',
+                  reference: p.reference || paymentReference || null,
+                  notes:
+                    p.paymentMethod === 'CASH' && cashReceived
+                      ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}`
+                      : null,
+                  cashierName: cashierName || existingSale.cashierName || 'Caja 1',
+                  shiftId: existingSale.shiftId || null,
+                })),
+              }),
+            ]);
           } else {
-            await prisma.salePayment.updateMany({
-              where: { saleId: existingSale.id },
-              data: { paymentMethod },
-            });
+            const currentPaymentCount = await prisma.salePayment.count({ where: { saleId: existingSale.id } });
+            if (currentPaymentCount === 0) {
+              await prisma.salePayment.create({
+                data: {
+                  saleId: existingSale.id,
+                  amount: Number(total || existingSale.total || 0),
+                  paymentMethod,
+                  reference: paymentReference || null,
+                  notes: cashReceived ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}` : null,
+                  cashierName: cashierName || existingSale.cashierName || 'Caja 1',
+                  shiftId: existingSale.shiftId || null,
+                },
+              });
+            } else {
+              await prisma.salePayment.updateMany({
+                where: { saleId: existingSale.id },
+                data: { paymentMethod },
+              });
+            }
           }
           await deductArmedPerfumeStickersOnInvoice(prisma, {
             saleNumber: existingSale.saleNumber,
@@ -1817,39 +1827,44 @@ export async function PATCH(request: Request) {
 
     if ((paymentStatus === 'COMPLETED' || orderStatus === 'COMPLETED') && paymentMethod) {
       if (Array.isArray(body.payments) && body.payments.length > 0) {
-        await prisma.salePayment.deleteMany({ where: { saleId: updated.id } });
-        await prisma.salePayment.createMany({
-          data: body.payments.map((p: any) => ({
-            saleId: updated.id,
-            amount: Number(p.amount || 0),
-            paymentMethod: p.paymentMethod || 'CASH',
-            reference: p.reference || null,
-            notes:
-              p.paymentMethod === 'CASH' && cashReceived
+        await prisma.$transaction([
+          prisma.salePayment.deleteMany({ where: { saleId: updated.id } }),
+          prisma.salePayment.createMany({
+            data: body.payments.map((p: any) => ({
+              saleId: updated.id,
+              amount: Number(p.amount || 0),
+              paymentMethod: p.paymentMethod || 'CASH',
+              reference: p.reference || null,
+              notes:
+                p.paymentMethod === 'CASH' && cashReceived
+                  ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}`
+                  : null,
+              cashierName: cashierName || updated.cashierName || 'Caja 1',
+              shiftId: updated.shiftId || null,
+            })),
+          }),
+        ]);
+      } else {
+        const currentPaymentCount = await prisma.salePayment.count({ where: { saleId: updated.id } });
+        if (currentPaymentCount === 0) {
+          await prisma.salePayment.create({
+            data: {
+              saleId: updated.id,
+              amount: Number(updated.total || 0),
+              paymentMethod,
+              notes: cashReceived
                 ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}`
                 : null,
-            cashierName: cashierName || updated.cashierName || 'Caja 1',
-            shiftId: updated.shiftId || null,
-          })),
-        });
-      } else if (!updated.payments || updated.payments.length === 0) {
-        await prisma.salePayment.create({
-          data: {
-            saleId: updated.id,
-            amount: Number(updated.total || 0),
-            paymentMethod,
-            notes: cashReceived
-              ? `Efectivo recibido: $${Number(cashReceived).toFixed(2)}, Cambio: $${Number(cashChange || 0).toFixed(2)}`
-              : null,
-            cashierName: cashierName || updated.cashierName || 'Caja 1',
-            shiftId: updated.shiftId || null,
-          },
-        });
-      } else {
-        await prisma.salePayment.updateMany({
-          where: { saleId: updated.id },
-          data: { paymentMethod },
-        });
+              cashierName: cashierName || updated.cashierName || 'Caja 1',
+              shiftId: updated.shiftId || null,
+            },
+          });
+        } else {
+          await prisma.salePayment.updateMany({
+            where: { saleId: updated.id },
+            data: { paymentMethod },
+          });
+        }
       }
     }
 
