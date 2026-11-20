@@ -2115,57 +2115,156 @@ export default function ProductDetailPage() {
                   </div>
                 </div>
               ) : (product.id.includes('dipropilenglicol') || product.name.toLowerCase().includes('dipropilenglicol')) ? (
-                <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-4 shadow-xs">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                    <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-amber-500" />
-                      <span>Especificaciones Técnicas del Insumo</span>
-                    </h3>
-                    <span className="text-[10.5px] font-bold text-slate-400 font-mono">
-                      {product.sku || 'MP-191'}
-                    </span>
+                <>
+                  {/* Tarjeta 1: Ficha Técnica Oficial (APAESA MP-191) */}
+                  <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-4 shadow-xs">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                      <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-amber-500" />
+                        <span>Ficha Técnica Oficial (Dipropilenglicol)</span>
+                      </h3>
+                      <span className="text-[10.5px] font-bold text-slate-400 font-mono">
+                        MP-191 · CAS 25265-71-8
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Nombre Químico</span>
+                        <strong className="text-xs sm:text-sm font-bold text-slate-800">Dipropylenglycol</strong>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Número CAS</span>
+                        <strong className="text-xs sm:text-sm font-bold text-slate-800">25265-71-8 (MP-191)</strong>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Olor y Color</span>
+                        <strong className="text-xs sm:text-sm font-bold text-slate-800">Inodoro · Incoloro</strong>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Densidad</span>
+                        <strong className="text-xs sm:text-sm font-bold text-slate-800">0.9933 – 1.0333 g/mL</strong>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Índice Refracción</span>
+                        <strong className="text-xs sm:text-sm font-bold text-slate-800">1.4300 – 1.4500</strong>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Presentación</span>
+                        <strong className="text-xs sm:text-sm font-bold text-indigo-700">Gotero 20 ml · 12m</strong>
+                      </div>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
-                      <span className="text-[10px] font-black uppercase text-slate-400">Compuesto</span>
-                      <strong className="text-xs sm:text-sm font-bold text-slate-800">Dipropilenglicol (DPG)</strong>
-                    </div>
-                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
-                      <span className="text-[10px] font-black uppercase text-slate-400">Función</span>
-                      <strong className="text-xs sm:text-sm font-bold text-slate-800">Solvente / Fijador</strong>
-                    </div>
-                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
-                      <span className="text-[10px] font-black uppercase text-slate-400">Presentación</span>
-                      <strong className="text-xs sm:text-sm font-bold text-indigo-700">Gotero 20 ml</strong>
+
+                  {/* Tarjeta 2: Recomendaciones de Uso en Perfumería */}
+                  <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-3 shadow-xs">
+                    <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                      <Droplets className="w-4 h-4 text-indigo-600" />
+                      <span>Recomendaciones de Uso y Dosificación</span>
+                    </h4>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      El <strong>Dipropilenglicol (DPG)</strong> es un solvente, cosolvente y humectante 100% inodoro que retarda la evaporación de las notas volátiles y mejora la fijación en piel sin alterar el perfil olfativo. Para un perfume de <strong>100 ml</strong>, se recomienda añadir entre <strong>2% y 5% (2 ml a 5 ml)</strong> junto con la esencia y el alcohol perfumero, mezclando hasta obtener una solución transparente y libre de partículas.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                      <div className="p-2.5 rounded-xl bg-indigo-50/60 border border-indigo-100/80 text-[11px] font-bold text-indigo-950 flex items-center gap-2">
+                        <Check className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                        <span>100% Inodoro: no altera la fragancia</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-emerald-50/60 border border-emerald-100/80 text-[11px] font-bold text-emerald-950 flex items-center gap-2">
+                        <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span>Aumenta fijación y suavidad en piel</span>
+                      </div>
                     </div>
                   </div>
-                </div>
+
+                  {/* Tarjeta 3: Advertencias de Seguridad y Almacenamiento */}
+                  <div className="clay-card p-4 sm:p-5 rounded-3xl bg-amber-50/40 border border-amber-200/80 space-y-2.5 shadow-xs">
+                    <h4 className="text-xs sm:text-sm font-black text-amber-950 uppercase tracking-wider flex items-center gap-2">
+                      <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
+                      <span>Advertencias, Seguridad y Almacenamiento</span>
+                    </h4>
+                    <ul className="text-[11.5px] text-slate-700 space-y-1.5 leading-relaxed font-medium">
+                      <li>• <strong>Almacenamiento oficial:</strong> Conservar en área fresca y seca (entre <strong>20 °C y 25 °C</strong>), en su envase bien cerrado y protegido de la luz solar y el calor.</li>
+                      <li>• <strong>Precauciones de manejo:</strong> Exclusivo para formulación de fragancias. No ingerir, no comer, beber ni fumar durante su manipulación. Mantener fuera del alcance de los niños.</li>
+                      <li>• <strong>Primeros auxilios:</strong> En contacto con los ojos, enjuagar con abundante agua limpia durante 15 minutos. En piel, lavar con agua y jabón.</li>
+                    </ul>
+                  </div>
+                </>
               ) : (product.id.includes('galaxolide') || product.name.toLowerCase().includes('galaxolide')) ? (
-                <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-4 shadow-xs">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                    <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-amber-500" />
-                      <span>Especificaciones Técnicas del Insumo</span>
-                    </h3>
-                    <span className="text-[10.5px] font-bold text-slate-400 font-mono">
-                      {product.sku || 'INS-GAL-20ML'}
-                    </span>
+                <>
+                  {/* Tarjeta 1: Ficha Técnica Oficial (APAESA MP-99) */}
+                  <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-4 shadow-xs">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                      <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-amber-500" />
+                        <span>Ficha Técnica Oficial (Galaxolide 50% DEP)</span>
+                      </h3>
+                      <span className="text-[10.5px] font-bold text-slate-400 font-mono">
+                        MP-99 · CAS 1222-05-5
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Código & CAS</span>
+                        <strong className="text-xs sm:text-sm font-bold text-slate-800">MP-99 · 1222-05-5</strong>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Perfil Olfativo</span>
+                        <strong className="text-xs sm:text-sm font-bold text-slate-800">Musk, Dulce, Floral</strong>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Densidad</span>
+                        <strong className="text-xs sm:text-sm font-bold text-slate-800">1.0299 – 1.0499 g/mL</strong>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Índice Refracción</span>
+                        <strong className="text-xs sm:text-sm font-bold text-slate-800">1.5000 – 1.5310 (20°C)</strong>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Flash Point</span>
+                        <strong className="text-xs sm:text-sm font-bold text-slate-800">144 °C · IFRA Apto</strong>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Presentación</span>
+                        <strong className="text-xs sm:text-sm font-bold text-indigo-700">Gotero 20 ml · 12m</strong>
+                      </div>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
-                      <span className="text-[10px] font-black uppercase text-slate-400">Compuesto</span>
-                      <strong className="text-xs sm:text-sm font-bold text-slate-800">Galaxolide 50% en DEP</strong>
-                    </div>
-                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
-                      <span className="text-[10px] font-black uppercase text-slate-400">Función</span>
-                      <strong className="text-xs sm:text-sm font-bold text-slate-800">Fijador Almizclado</strong>
-                    </div>
-                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
-                      <span className="text-[10px] font-black uppercase text-slate-400">Presentación</span>
-                      <strong className="text-xs sm:text-sm font-bold text-indigo-700">Gotero 20 ml</strong>
+
+                  {/* Tarjeta 2: Recomendaciones de Uso en Perfumería */}
+                  <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-3 shadow-xs">
+                    <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                      <Droplets className="w-4 h-4 text-indigo-600" />
+                      <span>Recomendaciones de Uso y Dosificación</span>
+                    </h4>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      El <strong>Galaxolide 50% en DEP</strong> (<em>1,3,4,6,7,8-hexametilciclopenta(g)-2-benzopiran</em>) es un fijador almizclado limpio, dulce y floral que redondea la fórmula y prolonga notablemente la duración de las notas de fondo. Para un perfume de <strong>100 ml</strong>, se recomienda dosificar entre <strong>1% y 3% (1 ml a 3 ml / ~20 a 60 gotas)</strong> directamente en la mezcla de esencia y alcohol.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                      <div className="p-2.5 rounded-xl bg-indigo-50/60 border border-indigo-100/80 text-[11px] font-bold text-indigo-950 flex items-center gap-2">
+                        <Check className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                        <span>Norma IFRA: Sin alérgenos ni restrictos</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-amber-50/60 border border-amber-100/80 text-[11px] font-bold text-amber-950 flex items-center gap-2">
+                        <Check className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span>Fijador almizclado de larga estela</span>
+                      </div>
                     </div>
                   </div>
-                </div>
+
+                  {/* Tarjeta 3: Hoja de Seguridad (MSDS) y Primeros Auxilios */}
+                  <div className="clay-card p-4 sm:p-5 rounded-3xl bg-amber-50/40 border border-amber-200/80 space-y-2.5 shadow-xs">
+                    <h4 className="text-xs sm:text-sm font-black text-amber-950 uppercase tracking-wider flex items-center gap-2">
+                      <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
+                      <span>Hoja de Seguridad (MSDS), Riesgos y Primeros Auxilios</span>
+                    </h4>
+                    <ul className="text-[11.5px] text-slate-700 space-y-1.5 leading-relaxed font-medium">
+                      <li>• <strong>Riesgos por exposición:</strong> Puede ser irritante en contacto directo con la piel y los ojos. En caso de ingestión accidental puede provocar vómitos.</li>
+                      <li>• <strong>Primeros auxilios:</strong> <em>Ojos:</em> lavar inmediatamente bajo chorro de agua limpia durante al menos 15 minutos y acudir al médico. <em>Piel:</em> lavar con abundante agua. <em>Ingestión:</em> retirar de la boca, beber 1 a 2 vasos de agua o leche y procurar atención médica.</li>
+                      <li>• <strong>Manipulación y EPP:</strong> Usar en área ventilada, preferiblemente con guantes y protección ocular. Lavarse las manos tras su uso. No comer, beber ni fumar al manipular. Evitar contacto con ácidos o álcalis fuertes.</li>
+                      <li>• <strong>Almacenamiento oficial:</strong> Conservar en lugar fresco y ventilado (<strong>15 °C a 25 °C</strong>), lejos de la luz solar directa y en contenedor bien cerrado (Vida útil: 12 meses).</li>
+                    </ul>
+                  </div>
+                </>
               ) : (product.id.includes('piseta') || product.name.toLowerCase().includes('piseta') || product.id.includes('embudo') || product.name.toLowerCase().includes('embudo')) ? (
                 <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-4 shadow-xs">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
@@ -2299,31 +2398,31 @@ export default function ProductDetailPage() {
           ) : (product.id.includes('dipropilenglicol') || product.name.toLowerCase().includes('dipropilenglicol')) ? (
             <div className="grid grid-cols-3 gap-2 pt-1 text-center">
               <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
-                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Presentación</span>
-                <span className="text-xs font-bold text-slate-800">{product.unit || '20 ML'}</span>
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Código CAS</span>
+                <span className="text-xs font-bold text-slate-800">25265-71-8</span>
               </div>
               <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
-                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Tipo</span>
-                <span className="text-xs font-bold text-slate-800">Solvente / Cosolvente</span>
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Apariencia</span>
+                <span className="text-xs font-bold text-slate-800">Transparente · Inodoro</span>
               </div>
               <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
-                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Grado</span>
-                <span className="text-xs font-bold text-indigo-700">Perfumería</span>
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Almacenaje</span>
+                <span className="text-xs font-bold text-indigo-700">20–25 °C · Sin Luz</span>
               </div>
             </div>
           ) : (product.id.includes('galaxolide') || product.name.toLowerCase().includes('galaxolide')) ? (
             <div className="grid grid-cols-3 gap-2 pt-1 text-center">
               <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
-                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Presentación</span>
-                <span className="text-xs font-bold text-slate-800">{product.unit || '20 ML'}</span>
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Código CAS</span>
+                <span className="text-xs font-bold text-slate-800">1222-05-5 (MP-99)</span>
               </div>
               <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
-                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Tipo</span>
-                <span className="text-xs font-bold text-slate-800">Fijador Almizclado</span>
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Aroma</span>
+                <span className="text-xs font-bold text-slate-800">Musk · Dulce · Floral</span>
               </div>
               <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
-                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Grado</span>
-                <span className="text-xs font-bold text-indigo-700">Perfumería Fina</span>
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Almacenaje</span>
+                <span className="text-xs font-bold text-indigo-700">15–25 °C · IFRA OK</span>
               </div>
             </div>
           ) : (product.id.includes('piseta') || product.name.toLowerCase().includes('piseta') || product.id.includes('embudo') || product.name.toLowerCase().includes('embudo')) ? (
