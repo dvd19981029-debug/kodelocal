@@ -5,7 +5,12 @@ import { checkRateLimit } from '@/lib/rateLimit';
 import { sanitizeText, sanitizeEmail, sanitizePhone, sanitizeDocument } from '@/lib/sanitize';
 import { supabase } from '@/lib/supabaseClient';
 import { resolveGiroMH, formatGiroOption } from '@/lib/svGirosCat019';
-import { buildCustomerLookupOrConditions, consolidateCustomerDiscounts } from '@/lib/customerDiscounts';
+import {
+  buildCustomerLookupOrConditions,
+  consolidateCustomerDiscounts,
+  isGenericDocument,
+  isGenericEmail,
+} from '@/lib/customerDiscounts';
 
 export const dynamic = 'force-dynamic';
 
@@ -122,7 +127,7 @@ async function linkCustomerPurchases(customer: any) {
       }
     }
 
-    if (cleanEmail) {
+    if (cleanEmail && cleanEmail.includes('@') && cleanEmail.length >= 6 && !isGenericEmail(cleanEmail)) {
       await prisma.ecommerceOrder.updateMany({
         where: {
           customerId: null,
@@ -143,7 +148,8 @@ async function linkCustomerPurchases(customer: any) {
       });
     }
 
-    if (cleanDoc && cleanDoc !== '00000000-0') {
+    const docDigits = (cleanDoc || '').replace(/\D/g, '');
+    if (cleanDoc && docDigits.length >= 8 && !isGenericDocument(cleanDoc)) {
       await prisma.sale.updateMany({
         where: {
           customerId: null,

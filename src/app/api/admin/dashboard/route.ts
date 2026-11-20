@@ -815,8 +815,8 @@ export async function GET(request: Request) {
     > = {};
 
     validOrders.forEach((o) => {
-      const cleanPhone = (o.customerPhone || '').replace(/\D/g, '');
-      const key = cleanPhone || (o.customerName || '').trim().toLowerCase();
+      const cleanPhone = (o.customerPhone || '').replace(/\D/g, '').slice(-8);
+      const key = o.customerId || (cleanPhone.length === 8 ? cleanPhone : '') || (o.customerName || '').trim().toLowerCase();
       if (!key) return;
       if (!customerAggMap[key]) {
         customerAggMap[key] = {
@@ -841,8 +841,9 @@ export async function GET(request: Request) {
       const cName = (s.customer.name || '').trim();
       const lowerName = cName.toLowerCase();
       if (!cName || lowerName.includes('consumidor final') || lowerName.includes('mostrador')) return;
-      const cleanPhone = (s.customer.phone || '').replace(/\D/g, '');
-      const key = cleanPhone || lowerName;
+      const cleanPhone = (s.customer.phone || '').replace(/\D/g, '').slice(-8);
+      const existingByPhone = cleanPhone.length === 8 && customerAggMap[cleanPhone] ? cleanPhone : null;
+      const key = existingByPhone || s.customer.id || (cleanPhone.length === 8 ? cleanPhone : lowerName);
       if (!customerAggMap[key]) {
         customerAggMap[key] = {
           name: cName,
