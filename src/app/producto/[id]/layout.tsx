@@ -101,9 +101,9 @@ export async function generateMetadata({
     : isEssence
     ? `${displayName} - Esencia de Perfumería Fina`
     : isDipropilenglicol
-    ? `${displayName} - Fijador y Solvente de Perfumería (DPG)`
+    ? `Fijador / Humectante (20 ml) - MP-191 Dipropilenglicol (DPG)`
     : isGalaxolide
-    ? `${displayName} - Fijador de Perfumería Almizclado`
+    ? `Fijador Almizclado (20 ml) - Galaxolide 50% DEP`
     : `${displayName} - Insumos y Fijadores para Perfumería`;
 
   const fullSocialTitle = `${title} | Aromaniak SV`;

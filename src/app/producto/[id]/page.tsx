@@ -1522,10 +1522,20 @@ export default function ProductDetailPage() {
 
               {!isEssence && !isBottle && (
                 <div className="text-xs sm:text-sm text-slate-600 font-medium flex items-center gap-1.5 flex-wrap pt-0.5">
-                  <span className="text-slate-400">{isSticker ? 'Inspirado en:' : 'Categoría:'}</span>
+                  <span className="text-slate-400">
+                    {isSticker
+                      ? 'Inspirado en:'
+                      : (product.id.includes('dipropilenglicol') || product.id.includes('galaxolide'))
+                      ? 'Compuesto:'
+                      : 'Categoría:'}
+                  </span>
                   <strong className="text-slate-900 font-black">
                     {isSticker && stickerEntry
                       ? `${stickerEntry.nombre} (${stickerEntry.marca} · ${stickerEntry.anio})`
+                      : product.id.includes('dipropilenglicol')
+                      ? 'MP-191 Dipropilenglicol (DPG)'
+                      : product.id.includes('galaxolide')
+                      ? 'Galaxolide 50% DEP (MP-99)'
                       : 'Insumos de Perfumería'}
                   </strong>
                   <span className="text-slate-300">•</span>
