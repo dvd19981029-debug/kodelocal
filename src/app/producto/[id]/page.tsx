@@ -2114,6 +2114,84 @@ export default function ProductDetailPage() {
                     </div>
                   </div>
                 </div>
+              ) : (product.id.includes('dipropilenglicol') || product.name.toLowerCase().includes('dipropilenglicol')) ? (
+                <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-4 shadow-xs">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                    <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-500" />
+                      <span>Especificaciones Técnicas del Insumo</span>
+                    </h3>
+                    <span className="text-[10.5px] font-bold text-slate-400 font-mono">
+                      {product.sku || 'MP-191'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Compuesto</span>
+                      <strong className="text-xs sm:text-sm font-bold text-slate-800">Dipropilenglicol (DPG)</strong>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Función</span>
+                      <strong className="text-xs sm:text-sm font-bold text-slate-800">Solvente / Fijador</strong>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Presentación</span>
+                      <strong className="text-xs sm:text-sm font-bold text-indigo-700">Gotero 20 ml</strong>
+                    </div>
+                  </div>
+                </div>
+              ) : (product.id.includes('galaxolide') || product.name.toLowerCase().includes('galaxolide')) ? (
+                <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-4 shadow-xs">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                    <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-500" />
+                      <span>Especificaciones Técnicas del Insumo</span>
+                    </h3>
+                    <span className="text-[10.5px] font-bold text-slate-400 font-mono">
+                      {product.sku || 'INS-GAL-20ML'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Compuesto</span>
+                      <strong className="text-xs sm:text-sm font-bold text-slate-800">Galaxolide 50% en DEP</strong>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Función</span>
+                      <strong className="text-xs sm:text-sm font-bold text-slate-800">Fijador Almizclado</strong>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Presentación</span>
+                      <strong className="text-xs sm:text-sm font-bold text-indigo-700">Gotero 20 ml</strong>
+                    </div>
+                  </div>
+                </div>
+              ) : (product.id.includes('piseta') || product.name.toLowerCase().includes('piseta') || product.id.includes('embudo') || product.name.toLowerCase().includes('embudo')) ? (
+                <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-4 shadow-xs">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                    <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-500" />
+                      <span>Especificaciones del Utensilio</span>
+                    </h3>
+                    <span className="text-[10.5px] font-bold text-slate-400 font-mono">
+                      {product.sku || 'INSUMO'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Material</span>
+                      <strong className="text-xs sm:text-sm font-bold text-slate-800">Polietileno Resistente</strong>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Uso</span>
+                      <strong className="text-xs sm:text-sm font-bold text-slate-800">Dosificación Limpia</strong>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Grado</span>
+                      <strong className="text-xs sm:text-sm font-bold text-indigo-700">Laboratorio / Perfumería</strong>
+                    </div>
+                  </div>
+                </div>
               ) : (
                 <div className="clay-card p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 space-y-4 shadow-xs">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
@@ -2216,6 +2294,51 @@ export default function ProductDetailPage() {
               <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
                 <span className="text-[9.5px] font-black uppercase text-slate-400 block">Diseño</span>
                 <span className="text-xs font-bold text-indigo-700">Con Notas y Casa</span>
+              </div>
+            </div>
+          ) : (product.id.includes('dipropilenglicol') || product.name.toLowerCase().includes('dipropilenglicol')) ? (
+            <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Presentación</span>
+                <span className="text-xs font-bold text-slate-800">{product.unit || '20 ML'}</span>
+              </div>
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Tipo</span>
+                <span className="text-xs font-bold text-slate-800">Solvente / Cosolvente</span>
+              </div>
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Grado</span>
+                <span className="text-xs font-bold text-indigo-700">Perfumería</span>
+              </div>
+            </div>
+          ) : (product.id.includes('galaxolide') || product.name.toLowerCase().includes('galaxolide')) ? (
+            <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Presentación</span>
+                <span className="text-xs font-bold text-slate-800">{product.unit || '20 ML'}</span>
+              </div>
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Tipo</span>
+                <span className="text-xs font-bold text-slate-800">Fijador Almizclado</span>
+              </div>
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Grado</span>
+                <span className="text-xs font-bold text-indigo-700">Perfumería Fina</span>
+              </div>
+            </div>
+          ) : (product.id.includes('piseta') || product.name.toLowerCase().includes('piseta') || product.id.includes('embudo') || product.name.toLowerCase().includes('embudo')) ? (
+            <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Presentación</span>
+                <span className="text-xs font-bold text-slate-800">{product.unit || 'Unidad'}</span>
+              </div>
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Material</span>
+                <span className="text-xs font-bold text-slate-800">Polietileno</span>
+              </div>
+              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[9.5px] font-black uppercase text-slate-400 block">Uso</span>
+                <span className="text-xs font-bold text-indigo-700">Envasado / Mezcla</span>
               </div>
             </div>
           ) : (
