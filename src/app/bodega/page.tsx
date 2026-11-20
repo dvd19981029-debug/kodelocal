@@ -3052,7 +3052,7 @@ export default function BodegaPage() {
                                     </span>
                                   )}
                                 </div>
-                                {(prod.category === 'Esencias para Perfume' || prod.unit === 'Onza') && (
+                                {(prod.category === 'Esencias para Perfume' || prod.unit === 'Onza' || prod.unit === '20 ML') && (
                                   <div className="flex items-center gap-1.5">
                                     {Number(prod.stockKg || 0) > 0 && (
                                       <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">

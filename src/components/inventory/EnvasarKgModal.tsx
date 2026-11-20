@@ -119,10 +119,10 @@ export default function EnvasarKgModal({
     setHalfOzProduced(Math.round(validKg * baseYieldHalfPerKg));
   };
 
-  // Filtrado de esencias si el usuario abre el modal desde el botón general sin elegir fila
+  // Filtrado de esencias e insumos envasables (20 ML) si el usuario abre el modal desde el botón general sin elegir fila
   const essenceOptions = useMemo(() => {
     const essences = allProducts.filter(
-      (p) => p.category === 'Esencias para Perfume' || p.unit === 'Onza'
+      (p) => p.category === 'Esencias para Perfume' || p.unit === 'Onza' || p.unit === '20 ML'
     );
     if (!searchQuery.trim()) return essences.slice(0, 30);
     const q = searchQuery.toLowerCase().trim();

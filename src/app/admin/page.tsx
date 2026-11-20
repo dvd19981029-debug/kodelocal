@@ -2024,7 +2024,7 @@ export default function AdminPage() {
                     {(() => {
                       const q = kgSearchQuery.toLowerCase().trim();
                       const list = products.filter(p => {
-                        const isEssence = p.category === 'Esencias para Perfume' || p.unit === 'Onza';
+                        const isEssence = p.category === 'Esencias para Perfume' || p.unit === 'Onza' || p.unit === '20 ML';
                         if (!isEssence) return false;
                         if (!showAllEssencesInKgView && !q && Number(p.stockKg || 0) <= 0) return false;
                         if (!q) return true;

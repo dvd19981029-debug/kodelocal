@@ -248,15 +248,26 @@ export async function GET(request: Request) {
       const genderVal = p.gender || 'Unisex';
       const rawName = p.name || '';
       const rawOfficial = (p as any).officialName || '';
+      const isLabelsSync = (request.headers.get('user-agent') || '').includes('LabelsSync');
+      const is20mlInsumo = String(p.unit || '').toUpperCase() === '20 ML';
+      const clean20mlLabel = rawName.replace(/\s*\(20\s*ml\)/i, '').trim().toUpperCase();
       return {
         id: p.id,
         sku: p.sku || '',
         barcode: p.barcode || '',
-        name: isEssence ? formatWithGenderSuffix(rawName, genderVal) : rawName,
-        officialName: isEssence && rawOfficial ? formatWithGenderSuffix(rawOfficial, genderVal) : rawOfficial,
+        name: isLabelsSync && is20mlInsumo
+          ? clean20mlLabel
+          : isEssence
+          ? formatWithGenderSuffix(rawName, genderVal)
+          : rawName,
+        officialName: isLabelsSync && is20mlInsumo
+          ? clean20mlLabel
+          : isEssence && rawOfficial
+          ? formatWithGenderSuffix(rawOfficial, genderVal)
+          : rawOfficial,
         brand: catName === 'Botes' ? '' : (p.brand || '').replace(/&amp;/g, '&'),
         gender: genderVal,
-        category: catName,
+        category: isLabelsSync && is20mlInsumo ? 'Esencias para Perfume' : catName,
         unit: p.unit || (isEssence ? 'Onza' : 'Unidad'),
         price: Number(p.price),
         priceHalfOunce: isEssence
