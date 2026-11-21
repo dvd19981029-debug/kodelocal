@@ -92,10 +92,26 @@ export async function POST(request: Request) {
 
       if (order) {
         // SEC-08: Control de idempotencia ante reintentos de red de Wompi
-        const alreadyHasTx = IdTransaccion && order.notes?.includes(String(IdTransaccion));
+        const cleanWebhookTxId = IdTransaccion ? String(IdTransaccion).trim() : '';
+        const alreadyHasTx = cleanWebhookTxId.length >= 4 && order.notes?.includes(cleanWebhookTxId);
         if (order.paymentStatus === 'COMPLETED' || alreadyHasTx) {
           console.log(`ℹ️ Webhook Wompi: Orden ${orderNumber} ya fue procesada anteriormente. Respuesta idempotente.`);
           return NextResponse.json({ success: true, message: 'Transacción ya procesada' });
+        }
+
+        // Bloqueo Anti-Replay (Unicidad 1 a 1 en Base de Datos)
+        if (cleanWebhookTxId.length >= 4) {
+          const replayOrder = await prisma.ecommerceOrder.findFirst({
+            where: {
+              id: { not: order.id },
+              notes: { contains: cleanWebhookTxId },
+            },
+            select: { id: true, orderNumber: true },
+          });
+          if (replayOrder) {
+            console.error(`🚨 ALERTA ANTI-REPLAY WEBHOOK: IdTransaccion ${cleanWebhookTxId} ya está asignado a la orden ${replayOrder.orderNumber}`);
+            return NextResponse.json({ success: false, error: 'Transacción ya utilizada en otro pedido' }, { status: 409 });
+          }
         }
 
         // SEC-FINANCIAL: Validar que el monto cobrado por Wompi coincida con el total de la orden

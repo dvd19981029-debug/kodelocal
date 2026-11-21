@@ -470,18 +470,67 @@ export async function PATCH(request: Request) {
       }
 
       // Exigir ID de transacción y verificarla directamente con la API oficial de Wompi
-      const txId = body.transactionId || body.idTransaccion;
-      if (!txId) {
+      const rawTxId = body.transactionId || body.idTransaccion;
+      const cleanTxId = String(rawTxId || '').trim();
+      if (!cleanTxId || cleanTxId.length < 4 || !/^[a-zA-Z0-9\-_]+$/.test(cleanTxId)) {
         return NextResponse.json(
           { success: false, error: 'No autorizado: se requiere comprobante/ID de transacción bancaria verificado.' },
           { status: 403 }
         );
       }
 
+      // 1. Bloqueo Anti-Replay (Unicidad 1 a 1 en Base de Datos): verificar que este transactionId jamás haya sido usado en otra orden
+      const replayOrder = await prisma.ecommerceOrder.findFirst({
+        where: {
+          id: { not: order.id },
+          notes: { contains: cleanTxId },
+        },
+        select: { id: true, orderNumber: true },
+      });
+      if (replayOrder) {
+        console.error(`🚨 ALERTA ANTI-REPLAY: Intento de reutilizar transacción Wompi ${cleanTxId} (ya usada en ${replayOrder.orderNumber}) para la orden ${order.orderNumber}`);
+        return NextResponse.json(
+          { success: false, error: 'Esta transacción bancaria ya fue utilizada en otro pedido.' },
+          { status: 403 }
+        );
+      }
+
       try {
-        const txData = await getWompiTransaction(String(txId));
-        const isApproved = txData.esAprobada === true || txData.resultadoTransaccion === 'ExitosaAprobada';
-        const numMatches = !txData.identificadorEnlaceComercio || txData.identificadorEnlaceComercio === order.orderNumber;
+        const txData = await getWompiTransaction(cleanTxId);
+        const isApproved =
+          txData.esAprobada === true ||
+          txData.EsAprobada === true ||
+          txData.resultadoTransaccion === 'ExitosaAprobada' ||
+          txData.ResultadoTransaccion === 'ExitosaAprobada';
+
+        // 2. Verificación Estricta del Folio/Enlace y Monto contra la API de Wompi
+        const txMerchantRef = String(
+          txData.identificadorEnlaceComercio ||
+          txData.IdentificadorEnlaceComercio ||
+          txData.enlacePago?.identificadorEnlaceComercio ||
+          txData.enlacePago?.IdentificadorEnlaceComercio ||
+          txData.EnlacePago?.IdentificadorEnlaceComercio ||
+          txData.EnlacePago?.identificadorEnlaceComercio ||
+          ''
+        ).trim();
+
+        const txIdEnlace = String(
+          txData.idEnlace ||
+          txData.IdEnlace ||
+          txData.enlacePago?.idEnlace ||
+          txData.enlacePago?.IdEnlace ||
+          txData.EnlacePago?.IdEnlace ||
+          txData.EnlacePago?.idEnlace ||
+          ''
+        ).trim();
+
+        const storedIdEnlaceMatch = (order.notes || '').match(/\[Wompi idEnlace:\s*(\d+)\]/i);
+        const storedIdEnlace = storedIdEnlaceMatch ? storedIdEnlaceMatch[1] : '';
+
+        const numMatches =
+          (txMerchantRef !== '' && txMerchantRef === order.orderNumber) ||
+          (txIdEnlace !== '' && storedIdEnlace !== '' && txIdEnlace === storedIdEnlace);
+
         const txMonto = Number(txData.monto ?? txData.Monto ?? 0);
         const orderTotal = Number(order.total);
 
@@ -492,8 +541,8 @@ export async function PATCH(request: Request) {
           );
         }
 
-        // SEC-FINANCIAL: Verificar que el monto pagado en Wompi cubra el total de la orden
-        if (txMonto > 0 && txMonto < orderTotal - 0.05) {
+        // SEC-FINANCIAL: Exigir obligatoriamente monto > 0 y que cubra el total de la orden
+        if (!(txMonto > 0) || txMonto < orderTotal - 0.05) {
           return NextResponse.json(
             { success: false, error: `El monto pagado ($${txMonto}) es menor al total de la orden ($${orderTotal}).` },
             { status: 403 }
