@@ -550,3 +550,124 @@ export async function sendOrderRecoveryEmail(orderData: OrderEmailData): Promise
     return false;
   }
 }
+
+export function buildPasswordResetHtml(params: {
+  customerName: string;
+  customerEmail: string;
+  code: string;
+}): string {
+  const { customerName, customerEmail, code } = params;
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>Código de Recuperación de Contraseña - Aromaniak SV</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#f8fafc" style="background-color: #f8fafc; padding: 28px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#ffffff" style="max-width: 520px; background-color: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06); overflow: hidden;">
+          <tr>
+            <td align="center" bgcolor="#ffffff" style="padding: 26px 24px 16px 24px; border-bottom: 1px solid #f1f5f9;">
+              <img src="https://aromaniaksv.com/images/logo.png" alt="Aromaniak SV" width="160" style="display: block; max-width: 160px; height: auto; border: 0; margin: 0 auto 8px auto;">
+              <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #6366f1;">
+                Distribuidora de esencias y más
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td bgcolor="#ffffff" style="padding: 26px 24px 18px 24px; text-align: center;">
+              <span style="display: inline-block; padding: 5px 14px; border-radius: 999px; background-color: #f3e8ff; border: 1px solid #d8b4fe; color: #6b21a8; font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;">
+                RECUPERACIÓN DE CUENTA
+              </span>
+              <h1 style="margin: 14px 0 8px 0; font-size: 21px; font-weight: 900; color: #0f172a; line-height: 1.25;">
+                ¡Hola, ${customerName}!
+              </h1>
+              <p style="margin: 0 auto 18px auto; font-size: 13.5px; color: #475569; line-height: 1.55; max-width: 420px;">
+                Recibimos una solicitud para restablecer la contraseña de tu cuenta (<strong style="color: #0f172a;">${customerEmail}</strong>) en <strong>aromaniaksv.com</strong>. Ingresa este código de 6 dígitos en la ventana de recuperación:
+              </p>
+
+              <div style="margin: 20px auto; padding: 18px 24px; max-width: 260px; background-color: #f8fafc; border: 2px dashed #7c3aed; border-radius: 18px;">
+                <div style="font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: #64748b; margin-bottom: 6px;">
+                  Tu código de verificación
+                </div>
+                <div style="font-family: 'Courier New', Courier, monospace; font-size: 32px; font-weight: 900; letter-spacing: 0.25em; color: #7c3aed;">
+                  ${code}
+                </div>
+              </div>
+
+              <p style="margin: 14px 0 0 0; font-size: 12px; color: #64748b; line-height: 1.5;">
+                Este código es válido por <strong>15 minutos</strong> y solo puede utilizarse una vez.<br>
+                Si tú no solicitaste este cambio, puedes ignorar este mensaje con total tranquilidad.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" bgcolor="#f8fafc" style="padding: 18px 24px; background-color: #f8fafc; border-top: 1px solid #f1f5f9; text-align: center;">
+              <div style="font-size: 11.5px; font-weight: 700; color: #475569; margin-bottom: 4px;">
+                Aromaniak SV &bull; Distribuidora de esencias y más
+              </div>
+              <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">
+                Centro Comercial El Rosal, Calle El Progreso, San Salvador &bull; WhatsApp: <a href="https://wa.me/50360437496" style="color: #6366f1; text-decoration: none; font-weight: 700;">+503 6043-7496</a>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+export async function sendPasswordResetEmail(params: {
+  customerName: string;
+  customerEmail: string;
+  code: string;
+}): Promise<boolean> {
+  const scriptUrl =
+    process.env.GOOGLE_APPS_SCRIPT_ORDER_EMAIL_URL ||
+    'https://script.google.com/macros/s/AKfycbwyIh24jLuSBr5iRKXh1q_EgZNrSSQNhexweALIPiNTYmo6wnaYsDm9bbS152tySx3r/exec';
+
+  if (!scriptUrl || !params.customerEmail) return false;
+
+  try {
+    const generatedHtml = buildPasswordResetHtml(params);
+    const payload = {
+      orderNumber: `REC-${params.code}`,
+      customerName: params.customerName,
+      customerEmail: params.customerEmail,
+      subject: `${params.code} es tu código de recuperación de Aromaniak SV`,
+      storeTagline: 'Distribuidora de esencias y más',
+      subtotal: 0,
+      shippingCost: 0,
+      total: 0,
+      paymentMethod: 'RESET_PASSWORD',
+      items: [],
+      htmlBody: generatedHtml,
+      html: generatedHtml,
+      body: generatedHtml,
+    };
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const response = await fetch(scriptUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+    return response.ok;
+  } catch (err) {
+    console.error('⚠️ Error enviando correo de recuperación de contraseña:', err);
+    return false;
+  }
+}
+

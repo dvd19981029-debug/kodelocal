@@ -72,6 +72,8 @@ interface CustomerAuthContextType {
   loginWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   loginWithCredentials: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   registerCustomer: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
+  requestPasswordReset: (email: string) => Promise<{ success: boolean; resetToken?: string; message?: string; error?: string }>;
+  confirmPasswordReset: (params: { email: string; code: string; newPassword: string; resetToken: string }) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
 
@@ -343,6 +345,59 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     }
   };
 
+  // 4.1 Solicitar código de recuperación de contraseña por correo
+  const requestPasswordReset = async (email: string) => {
+    try {
+      const res = await fetch('/api/customer/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'request_password_reset',
+          email,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        return { success: false, error: data.error || 'No se pudo enviar el código de recuperación' };
+      }
+      return {
+        success: true,
+        resetToken: data.resetToken,
+        message: data.message,
+      };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Error al solicitar recuperación' };
+    }
+  };
+
+  // 4.2 Confirmar código y establecer nueva contraseña (con inicio de sesión automático)
+  const confirmPasswordReset = async (params: {
+    email: string;
+    code: string;
+    newPassword: string;
+    resetToken: string;
+  }) => {
+    try {
+      const res = await fetch('/api/customer/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'confirm_password_reset',
+          ...params,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        return { success: false, error: data.error || 'No se pudo actualizar la contraseña' };
+      }
+      saveCustomerSession(data.customer);
+      closeAuthModal();
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Error al actualizar la contraseña' };
+    }
+  };
+
   // 5. Cerrar Sesión
   const logout = async () => {
     try {
@@ -373,6 +428,8 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
         loginWithGoogle,
         loginWithCredentials,
         registerCustomer,
+        requestPasswordReset,
+        confirmPasswordReset,
         logout,
       }}
     >

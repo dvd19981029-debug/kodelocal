@@ -23,6 +23,8 @@ export default function CustomerAuthModal() {
     loginWithGoogle,
     loginWithCredentials,
     registerCustomer,
+    requestPasswordReset,
+    confirmPasswordReset,
     isLoggedIn
   } = useCustomerAuth();
 
@@ -30,6 +32,12 @@ export default function CustomerAuthModal() {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Estados de recuperación de contraseña por correo
+  const [forgotStep, setForgotStep] = useState<'none' | 'request' | 'confirm'>('none');
+  const [resetToken, setResetToken] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
 
   // Cerrar modal automáticamente si el usuario ya inició sesión
   React.useEffect(() => {
@@ -73,6 +81,55 @@ export default function CustomerAuthModal() {
     setIsLoading(true);
     setErrorMessage('');
     setSuccessMessage('');
+
+    if (forgotStep === 'request') {
+      if (!email.trim()) {
+        setErrorMessage('Por favor ingresa tu correo electrónico');
+        setIsLoading(false);
+        return;
+      }
+      const res = await requestPasswordReset(email.trim());
+      if (!res.success || !res.resetToken) {
+        setErrorMessage(res.error || 'No se pudo enviar el código');
+      } else {
+        setResetToken(res.resetToken);
+        setForgotStep('confirm');
+        setSuccessMessage(res.message || 'Código enviado a tu correo.');
+      }
+      setIsLoading(false);
+      return;
+    }
+
+    if (forgotStep === 'confirm') {
+      if (!resetCode.trim() || resetCode.trim().length !== 6) {
+        setErrorMessage('Ingresa el código de 6 dígitos que enviamos a tu correo');
+        setIsLoading(false);
+        return;
+      }
+      if (!newPassword || newPassword.length < 6) {
+        setErrorMessage('La nueva contraseña debe tener al menos 6 caracteres');
+        setIsLoading(false);
+        return;
+      }
+      const res = await confirmPasswordReset({
+        email: email.trim(),
+        code: resetCode.trim(),
+        newPassword,
+        resetToken,
+      });
+      if (!res.success) {
+        setErrorMessage(res.error || 'Código inválido o expirado');
+      } else {
+        setSuccessMessage('¡Contraseña actualizada! Has iniciado sesión.');
+        setForgotStep('none');
+        setResetCode('');
+        setNewPassword('');
+        setResetToken('');
+        setTimeout(() => closeAuthModal(), 700);
+      }
+      setIsLoading(false);
+      return;
+    }
 
     if (authModalTab === 'login') {
       if (!email || !password) {
@@ -143,14 +200,24 @@ export default function CustomerAuthModal() {
         {/* Encabezado con Ícono y Saludo */}
         <div className="text-center space-y-1 mb-6">
           <span className="text-4xl select-none inline-block">
-            {authModalTab === 'login' ? '👋' : '✨'}
+            {forgotStep !== 'none' ? '🔐' : authModalTab === 'login' ? '👋' : '✨'}
           </span>
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-1">
-            {authModalTab === 'login' ? '¡Hola de nuevo!' : '¡Crea tu cuenta!'}
+            {forgotStep === 'request'
+              ? 'Recuperar contraseña'
+              : forgotStep === 'confirm'
+              ? 'Ingresa tu código'
+              : authModalTab === 'login'
+              ? '¡Hola de nuevo!'
+              : '¡Crea tu cuenta!'}
           </h2>
           <p className="text-xs sm:text-sm text-slate-700 font-medium">
-            {authModalTab === 'login' 
-              ? 'Inicia sesión para agilizar tus compras y ver tus pedidos' 
+            {forgotStep === 'request'
+              ? 'Te enviaremos un código de 6 dígitos a tu correo electrónico'
+              : forgotStep === 'confirm'
+              ? `Escribe el código enviado a ${email} y tu nueva contraseña`
+              : authModalTab === 'login'
+              ? 'Inicia sesión para agilizar tus compras y ver tus pedidos'
               : 'Regístrate para guardar tus datos y comprar más rápido'}
           </p>
         </div>
@@ -170,47 +237,51 @@ export default function CustomerAuthModal() {
           </div>
         )}
 
-        {/* Botón Continuar con Google */}
-        <button
-          type="button"
-          onClick={handleGoogleAuth}
-          disabled={isLoading}
-          className="w-full py-3.5 px-4 rounded-full bg-white hover:bg-slate-50/80 border border-slate-200/90 text-slate-800 font-bold text-sm sm:text-[15px] shadow-[0_3px_10px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)] flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
-        >
-          {/* Logo Oficial de Google */}
-          <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
-            <path
-              fill="#4285F4"
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-            />
-            <path
-              fill="#EA4335"
-              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-            />
-          </svg>
-          <span>Continuar con Google</span>
-        </button>
+        {forgotStep === 'none' && (
+          <>
+            {/* Botón Continuar con Google */}
+            <button
+              type="button"
+              onClick={handleGoogleAuth}
+              disabled={isLoading}
+              className="w-full py-3.5 px-4 rounded-full bg-white hover:bg-slate-50/80 border border-slate-200/90 text-slate-800 font-bold text-sm sm:text-[15px] shadow-[0_3px_10px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)] flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+            >
+              {/* Logo Oficial de Google */}
+              <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                />
+              </svg>
+              <span>Continuar con Google</span>
+            </button>
 
-        {/* Divisor con la letra 'o' */}
-        <div className="relative flex items-center justify-center my-5">
-          <div className="w-full border-t border-slate-200/80" />
-          <span className="absolute px-3 bg-white text-xs font-bold text-slate-400">
-            o
-          </span>
-        </div>
+            {/* Divisor con la letra 'o' */}
+            <div className="relative flex items-center justify-center my-5">
+              <div className="w-full border-t border-slate-200/80" />
+              <span className="absolute px-3 bg-white text-xs font-bold text-slate-400">
+                o
+              </span>
+            </div>
+          </>
+        )}
 
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="space-y-4">
           
-          {authModalTab === 'register' && (
+          {forgotStep === 'none' && authModalTab === 'register' && (
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs sm:text-sm font-bold text-slate-800">
@@ -237,15 +308,74 @@ export default function CustomerAuthModal() {
             <input
               type="email"
               required
+              disabled={forgotStep === 'confirm'}
               maxLength={75}
               placeholder="tu@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value.slice(0, 75))}
-              className="w-full px-4 py-3 text-sm rounded-2xl bg-white border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] font-medium transition-all"
+              className="w-full px-4 py-3 text-sm rounded-2xl bg-white disabled:bg-slate-100 disabled:text-slate-500 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] font-medium transition-all"
             />
           </div>
 
-          {authModalTab === 'register' && (
+          {forgotStep === 'confirm' && (
+            <>
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs sm:text-sm font-bold text-slate-800">
+                    Código de 6 dígitos
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotStep('request');
+                      setErrorMessage('');
+                      setSuccessMessage('');
+                    }}
+                    className="text-xs font-bold text-[#7c3aed] hover:underline cursor-pointer"
+                  >
+                    Reenviar código
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  required
+                  maxLength={6}
+                  placeholder="000000"
+                  value={resetCode}
+                  onChange={(e) => setResetCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  className="w-full px-4 py-3 text-center tracking-[0.35em] font-mono text-lg font-black rounded-2xl bg-white border border-slate-200 text-slate-900 placeholder:text-slate-300 focus:outline-none focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs sm:text-sm font-bold text-slate-800 block mb-1.5">
+                  Nueva Contraseña (mínimo 6 caracteres)
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    minLength={6}
+                    placeholder="Escribe tu nueva contraseña"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-4 py-3 pr-11 text-sm rounded-2xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] font-medium transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1 cursor-pointer"
+                    aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {forgotStep === 'none' && authModalTab === 'register' && (
             <div>
               <label className="text-xs sm:text-sm font-bold text-slate-800 block mb-1.5">
                 Teléfono / WhatsApp
@@ -261,7 +391,7 @@ export default function CustomerAuthModal() {
             </div>
           )}
 
-          {authModalTab === 'register' && (
+          {forgotStep === 'none' && authModalTab === 'register' && (
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-3">
               <label className="flex items-center justify-between gap-2 cursor-pointer select-none">
                 <span className="flex items-center gap-2 text-xs font-extrabold text-slate-800">
@@ -398,41 +528,46 @@ export default function CustomerAuthModal() {
             </div>
           )}
 
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs sm:text-sm font-bold text-slate-800">
-                Contraseña
-              </label>
-              {authModalTab === 'login' && (
-                <a
-                  href="https://wa.me/50360437496?text=Hola%2C%20olvid%C3%A9%20la%20contrase%C3%B1a%20de%20mi%20cuenta%20de%20Aromaniak%20y%20necesito%20recuperarla"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs font-bold text-[#7c3aed] hover:text-[#6d28d9] transition-colors"
-                >
-                  ¿Olvidaste tu contraseña?
-                </a>
-              )}
-            </div>
+          {forgotStep === 'none' && (
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs sm:text-sm font-bold text-slate-800">
+                  Contraseña
+                </label>
+                {authModalTab === 'login' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setErrorMessage('');
+                      setSuccessMessage('');
+                      setForgotStep('request');
+                    }}
+                    className="text-xs font-bold text-[#7c3aed] hover:text-[#6d28d9] hover:underline transition-colors cursor-pointer"
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </button>
+                )}
+              </div>
 
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 pr-11 text-sm rounded-2xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] font-medium transition-all"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1 cursor-pointer"
-                aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 pr-11 text-sm rounded-2xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] font-medium transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1 cursor-pointer"
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Botón Morado Aromaniak */}
           <button
@@ -446,14 +581,34 @@ export default function CustomerAuthModal() {
                 <span>Procesando...</span>
               </>
             ) : (
-              <span>{authModalTab === 'login' ? 'Entrar' : 'Registrarme'}</span>
+              <span>
+                {forgotStep === 'request'
+                  ? 'Enviar código a mi correo'
+                  : forgotStep === 'confirm'
+                  ? 'Cambiar contraseña y entrar'
+                  : authModalTab === 'login'
+                  ? 'Entrar'
+                  : 'Registrarme'}
+              </span>
             )}
           </button>
         </form>
 
-        {/* Enlace Inferior para Alternar entre Login y Registro */}
+        {/* Enlace Inferior para Alternar entre Login, Registro y Recuperación */}
         <div className="text-center mt-6">
-          {authModalTab === 'login' ? (
+          {forgotStep !== 'none' ? (
+            <button
+              type="button"
+              onClick={() => {
+                setForgotStep('none');
+                setErrorMessage('');
+                setSuccessMessage('');
+              }}
+              className="text-xs sm:text-sm text-[#7c3aed] font-bold hover:underline cursor-pointer"
+            >
+              ← Volver a iniciar sesión
+            </button>
+          ) : authModalTab === 'login' ? (
             <p className="text-xs sm:text-sm text-slate-600 font-medium">
               ¿No tienes cuenta?{' '}
               <button

@@ -336,3 +336,129 @@ export function verifyPasswordSecure(password: string, storedHash: string): { va
   return { valid: false, needsRehash: false };
 }
 
+export interface PasswordResetChallengePayload {
+  customerId: string;
+  email: string;
+  codeHash: string;
+  pwdFp: string;
+  scope: 'customer_password_reset';
+  exp: number;
+}
+
+/**
+ * Crea un token temporal firmado (15 min) con el hash del código de 6 dígitos
+ * y una huella de la contraseña actual (para que el token quede invalidado en el acto tras usarse una sola vez).
+ */
+export function createPasswordResetChallenge(params: {
+  customerId: string;
+  email: string;
+  code: string;
+  currentPasswordHash?: string | null;
+}): string {
+  const secret = ensureAuthSecret();
+  const normalizedEmail = params.email.toLowerCase().trim();
+  const normalizedCode = params.code.trim();
+  const pwdFp = crypto
+    .createHmac('sha256', secret)
+    .update(params.currentPasswordHash || 'no_pwd')
+    .digest('hex')
+    .slice(0, 16);
+  const codeHash = crypto
+    .createHmac('sha256', secret)
+    .update(`${params.customerId}:${normalizedEmail}:${normalizedCode}:${pwdFp}`)
+    .digest('hex');
+
+  const payload: PasswordResetChallengePayload = {
+    customerId: params.customerId,
+    email: normalizedEmail,
+    codeHash,
+    pwdFp,
+    scope: 'customer_password_reset',
+    exp: Date.now() + 15 * 60 * 1000, // 15 minutos
+  };
+
+  const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const signature = crypto
+    .createHmac('sha256', secret)
+    .update(payloadB64)
+    .digest('base64url');
+
+  return `${payloadB64}.${signature}`;
+}
+
+export function verifyPasswordResetChallenge(params: {
+  resetToken: string;
+  email: string;
+  code: string;
+  currentPasswordHash?: string | null;
+}): { valid: boolean; customerId?: string; error?: string } {
+  const { resetToken, email, code, currentPasswordHash } = params;
+  if (!resetToken || typeof resetToken !== 'string') {
+    return { valid: false, error: 'Solicitud de recuperación no válida.' };
+  }
+
+  const parts = resetToken.split('.');
+  if (parts.length !== 2) {
+    return { valid: false, error: 'Token de recuperación inválido.' };
+  }
+
+  const [payloadB64, receivedSig] = parts;
+
+  try {
+    const secret = ensureAuthSecret();
+    const expectedSig = crypto
+      .createHmac('sha256', secret)
+      .update(payloadB64)
+      .digest('base64url');
+
+    const expectedBuf = Buffer.from(expectedSig);
+    const receivedBuf = Buffer.from(receivedSig);
+    if (expectedBuf.length !== receivedBuf.length || !crypto.timingSafeEqual(expectedBuf, receivedBuf)) {
+      return { valid: false, error: 'Token de recuperación alterado o inválido.' };
+    }
+
+    const payload: PasswordResetChallengePayload = JSON.parse(
+      Buffer.from(payloadB64, 'base64url').toString('utf8')
+    );
+
+    if (payload.scope !== 'customer_password_reset') {
+      return { valid: false, error: 'Token de recuperación no válido.' };
+    }
+
+    if (Date.now() > payload.exp) {
+      return { valid: false, error: 'El código ha expirado (vigencia 15 min). Solicita uno nuevo.' };
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    if (payload.email !== normalizedEmail) {
+      return { valid: false, error: 'El correo no coincide con la solicitud de recuperación.' };
+    }
+
+    const currentPwdFp = crypto
+      .createHmac('sha256', secret)
+      .update(currentPasswordHash || 'no_pwd')
+      .digest('hex')
+      .slice(0, 16);
+
+    if (payload.pwdFp !== currentPwdFp) {
+      return { valid: false, error: 'Este código ya fue utilizado anteriormente.' };
+    }
+
+    const expectedCodeHash = crypto
+      .createHmac('sha256', secret)
+      .update(`${payload.customerId}:${normalizedEmail}:${code.trim()}:${currentPwdFp}`)
+      .digest('hex');
+
+    const a = Buffer.from(expectedCodeHash);
+    const b = Buffer.from(payload.codeHash);
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+      return { valid: false, error: 'Código de verificación incorrecto. Revisa tu correo.' };
+    }
+
+    return { valid: true, customerId: payload.customerId };
+  } catch {
+    return { valid: false, error: 'No se pudo verificar el código de recuperación.' };
+  }
+}
+
+

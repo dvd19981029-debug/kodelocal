@@ -1,6 +1,16 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
-import { createCustomerToken, verifyCustomerToken, verifyGoogleHandoffToken, hashPasswordSecure, verifyPasswordSecure } from '@/lib/customerAuthToken';
+import {
+  createCustomerToken,
+  verifyCustomerToken,
+  verifyGoogleHandoffToken,
+  hashPasswordSecure,
+  verifyPasswordSecure,
+  createPasswordResetChallenge,
+  verifyPasswordResetChallenge,
+} from '@/lib/customerAuthToken';
+import { sendPasswordResetEmail } from '@/lib/orderEmailService';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { sanitizeText, sanitizeEmail, sanitizePhone, sanitizeDocument } from '@/lib/sanitize';
 import { supabase } from '@/lib/supabaseClient';
@@ -172,10 +182,17 @@ export async function POST(request: Request) {
     const { action } = body;
 
     // ================= RATE LIMITING (SEC-05 / REQ-SEC-01) =================
-    if (action === 'login' || action === 'register' || action === 'google' || action === 'get_token') {
+    if (
+      action === 'login' ||
+      action === 'register' ||
+      action === 'google' ||
+      action === 'get_token' ||
+      action === 'request_password_reset' ||
+      action === 'confirm_password_reset'
+    ) {
       const rl = await checkRateLimit(request, {
-        keyPrefix: 'customer_auth',
-        maxRequests: action === 'get_token' ? 20 : 8,
+        keyPrefix: action === 'request_password_reset' ? 'customer_pwd_req' : 'customer_auth',
+        maxRequests: action === 'get_token' ? 20 : action === 'request_password_reset' ? 5 : 8,
         windowMs: 60 * 1000,
       });
       if (!rl.allowed) {
@@ -637,6 +654,127 @@ export async function POST(request: Request) {
         success: true,
         sessionToken,
         customer: formatAuthCustomerResponse(existing, existing.googleId ? 'google' : 'credentials', sessionToken),
+      });
+    }
+
+    // ================= 6. SOLICITAR CÓDIGO DE RECUPERACIÓN DE CONTRASEÑA =================
+    if (action === 'request_password_reset') {
+      const cleanEmail = sanitizeEmail(body.email);
+      if (!cleanEmail) {
+        return NextResponse.json(
+          { success: false, error: 'Ingresa un correo electrónico válido.' },
+          { status: 400 }
+        );
+      }
+
+      const customer = await prisma.customer.findFirst({
+        where: { email: { equals: cleanEmail, mode: 'insensitive' } },
+      });
+
+      if (!customer) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'No encontramos ninguna cuenta registrada con ese correo electrónico.',
+          },
+          { status: 404 }
+        );
+      }
+
+      const code = String(crypto.randomInt(100000, 1000000));
+      const resetToken = createPasswordResetChallenge({
+        customerId: customer.id,
+        email: cleanEmail,
+        code,
+        currentPasswordHash: customer.passwordHash,
+      });
+
+      const emailSent = await sendPasswordResetEmail({
+        customerName: customer.name || 'Cliente Aromaniak',
+        customerEmail: cleanEmail,
+        code,
+      });
+
+      if (!emailSent) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'No se pudo enviar el correo en este momento. Intenta nuevamente en unos segundos.',
+          },
+          { status: 502 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        resetToken,
+        message: `Enviamos un código de 6 dígitos a ${cleanEmail}. Revisa tu bandeja de entrada o spam.`,
+      });
+    }
+
+    // ================= 7. CONFIRMAR CÓDIGO Y ESTABLECER NUEVA CONTRASEÑA =================
+    if (action === 'confirm_password_reset') {
+      const cleanEmail = sanitizeEmail(body.email);
+      const cleanCode = String(body.code || '').replace(/\D/g, '').trim();
+      const newPassword = String(body.newPassword || '');
+      const resetToken = String(body.resetToken || '').trim();
+
+      if (!cleanEmail || !cleanCode || cleanCode.length !== 6 || !resetToken) {
+        return NextResponse.json(
+          { success: false, error: 'Ingresa el código de 6 dígitos enviado a tu correo.' },
+          { status: 400 }
+        );
+      }
+
+      if (newPassword.length < 6) {
+        return NextResponse.json(
+          { success: false, error: 'La nueva contraseña debe tener al menos 6 caracteres.' },
+          { status: 400 }
+        );
+      }
+
+      const customer = await prisma.customer.findFirst({
+        where: { email: { equals: cleanEmail, mode: 'insensitive' } },
+        include: { tier: true, bottleTier: true, suppliesTier: true },
+      });
+
+      if (!customer) {
+        return NextResponse.json(
+          { success: false, error: 'Cuenta no encontrada.' },
+          { status: 404 }
+        );
+      }
+
+      const check = verifyPasswordResetChallenge({
+        resetToken,
+        email: cleanEmail,
+        code: cleanCode,
+        currentPasswordHash: customer.passwordHash,
+      });
+
+      if (!check.valid || check.customerId !== customer.id) {
+        return NextResponse.json(
+          { success: false, error: check.error || 'Código inválido o expirado.' },
+          { status: 401 }
+        );
+      }
+
+      const newPasswordHash = hashPasswordSecure(newPassword);
+      const updatedCustomer = await prisma.customer.update({
+        where: { id: customer.id },
+        include: { tier: true, bottleTier: true, suppliesTier: true },
+        data: {
+          passwordHash: newPasswordHash,
+        },
+      });
+
+      await linkCustomerPurchases(updatedCustomer);
+
+      const sessionToken = createCustomerToken(updatedCustomer.id, updatedCustomer.email || '');
+      return NextResponse.json({
+        success: true,
+        sessionToken,
+        customer: formatAuthCustomerResponse(updatedCustomer, 'credentials', sessionToken),
       });
     }
 
