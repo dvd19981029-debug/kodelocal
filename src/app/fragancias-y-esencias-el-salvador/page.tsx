@@ -6,6 +6,7 @@ import {
   Sparkles,
   Truck,
   MapPin,
+  Droplets,
   Package,
   CheckCircle2,
   ArrowRight,
@@ -41,6 +42,17 @@ export const metadata: Metadata = {
     images: [{ url: '/images/og-default.jpg?v=normal2026', width: 1200, height: 630 }],
   },
 };
+
+const FEATURED_FRAGRANCES = [
+  { name: 'Baccarat Rouge 540 Extrait', house: 'Maison Francis Kurkdjian', type: 'Unisex • Ámbar Floral', href: '/producto/esencia-111' },
+  { name: 'Baccarat Rouge 540', house: 'Maison Francis Kurkdjian', type: 'Unisex • Ámbar Floral', href: '/producto/esencia-60' },
+  { name: 'Khamrah', house: 'Lattafa', type: 'Unisex • Ámbar Especiado', href: '/producto/esencia-109' },
+  { name: 'Amber Oud', house: 'Al Haramain', type: 'Unisex • Ámbar Vainilla', href: '/producto/esencia-110' },
+  { name: 'Sauvage Elixir H', house: 'Dior', type: 'Caballero • Aromática Especiada', href: '/producto/esencia-49' },
+  { name: 'Santal 33', house: 'Le Labo', type: 'Unisex • Amaderada Aromática', href: '/producto/esencia-1' },
+  { name: 'MYSLF Intense H', house: 'Yves Saint Laurent', type: 'Caballero • Amaderada Floral', href: '/producto/esencia-108' },
+  { name: 'Hawas Fire H', house: 'Rasasi', type: 'Caballero • Ámbar Especiado', href: '/producto/esencia-106' },
+];
 
 const FAQS = [
   {
@@ -94,10 +106,23 @@ export default function FraganciasYEsenciasElSalvadorPage() {
     ],
   };
 
+  const itemListSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Fragancias y Esencias Más Buscadas en El Salvador — Aromaniak SV',
+    itemListElement: FEATURED_FRAGRANCES.map((f, idx) => ({
+      '@type': 'ListItem',
+      position: idx + 1,
+      name: `Inspirado en ${f.name} (${f.house})`,
+      url: `https://aromaniaksv.com${f.href}`,
+    })),
+  };
+
   return (
     <main className="min-h-screen bg-[#f8f9fc] text-slate-900 pb-20">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }} />
 
       {/* HERO EDITORIAL */}
       <section className="bg-white border-b border-slate-200/80 pt-10 pb-14 px-4">
@@ -199,6 +224,51 @@ export default function FraganciasYEsenciasElSalvadorPage() {
               rastreable C807 Express o retira en C.C. El Rosal.
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* FRAGANCIAS DESTACADAS (URLs limpias /producto/esencia-[sku] sin mencionar proveedores) */}
+      <section className="max-w-5xl mx-auto px-4 pt-12 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
+              Fragancias y Esencias Más Buscadas
+            </h2>
+            <p className="text-sm text-slate-600 font-medium">
+              Inspiraciones de diseñador, perfumería árabe y nicho disponibles hoy mismo.
+            </p>
+          </div>
+          <Link
+            href="/?categoria=Esencias+para+Perfume"
+            className="text-sm font-black text-[#48266c] hover:underline inline-flex items-center gap-1"
+          >
+            <span>Explorar las 110+ esencias</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          {FEATURED_FRAGRANCES.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="group bg-white rounded-2xl border border-slate-200/90 hover:border-purple-300 p-4 shadow-xs transition-all flex flex-col justify-between gap-2"
+            >
+              <div>
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-purple-700">
+                  {item.house}
+                </span>
+                <h3 className="text-sm font-black text-slate-900 group-hover:text-[#48266c] mt-0.5">
+                  Inspirado en {item.name}
+                </h3>
+                <p className="text-xs text-slate-500 font-medium mt-1">{item.type}</p>
+              </div>
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs font-black text-[#48266c]">
+                <span>1 Oz $3.75 · ½ Oz $1.90</span>
+                <Droplets className="w-3.5 h-3.5 opacity-70" />
+              </div>
+            </Link>
+          ))}
         </div>
       </section>
 
