@@ -27,11 +27,16 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL("https://aromaniaksv.com"),
   title: {
-    default: "Aromaniak SV | Distribuidora de Esencias Perfumería Fina en El Salvador",
+    default: "Aromaniak SV | Fragancias y Esencias en El Salvador — Perfumería Fina",
     template: "%s | Aromaniak SV",
   },
-  description: "Distribuidora de esencias de perfumería fina, aromas químicos, aromas de esencias, botes de vidrio y materias primas en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.",
+  description: "Tienda y distribuidora líder de fragancias y esencias puras de perfumería fina en El Salvador. Más de 110 aromas AAA+ sin diluir, botes de vidrio y materias primas. Envíos a todo El Salvador o retiro en San Salvador.",
   keywords: [
+    "fragancias y esencias",
+    "fragancias y esencias el salvador",
+    "fragancias y esencias san salvador",
+    "venta de fragancias y esencias el salvador",
+    "distribuidora de fragancias y esencias",
     "distribuidora de esencias perfumeria fina",
     "esencias de perfumeria fina el salvador",
     "venta de esencias el salvador",
@@ -77,22 +82,22 @@ export const metadata: Metadata = {
     type: "website",
     locale: "es_SV",
     url: "https://aromaniaksv.com",
-    siteName: "Aromaniak SV - Distribuidora de Esencias",
-    title: "Aromaniak SV | Distribuidora de Esencias Perfumería Fina en El Salvador",
-    description: "Distribuidora de esencias de perfumería fina, aromas químicos, botes de vidrio y materias primas en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.",
+    siteName: "Aromaniak SV - Fragancias y Esencias en El Salvador",
+    title: "Aromaniak SV | Fragancias y Esencias en El Salvador — Perfumería Fina",
+    description: "Distribuidora líder de fragancias y esencias puras AAA+ en El Salvador. Más de 110 aromas, botes de vidrio y materias primas con envíos a todo el país.",
     images: [
       {
         url: "/images/og-default.jpg?v=normal2026",
         width: 1200,
         height: 630,
-        alt: "Aromaniak SV - Distribuidora de Esencias Perfumería Fina",
+        alt: "Aromaniak SV - Fragancias y Esencias de Perfumería Fina en El Salvador",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Aromaniak SV | Distribuidora de Esencias Perfumería Fina en El Salvador",
-    description: "Distribuidora de esencias de perfumería fina, aromas químicos, botes de vidrio y materias primas en El Salvador. Entregas a domicilio a todo El Salvador o retiro en local.",
+    title: "Aromaniak SV | Fragancias y Esencias en El Salvador — Perfumería Fina",
+    description: "Distribuidora líder de fragancias y esencias puras AAA+ en El Salvador. Más de 110 aromas, botes de vidrio y materias primas con envíos a todo el país.",
     images: ["/images/og-default.jpg?v=normal2026"],
   },
   robots: {
@@ -150,6 +155,70 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=4" />
         <link rel="https://api.w.org/" href="https://aromaniaksv.com/wp-json/" />
         <link rel="alternate" type="application/json" href="https://aromaniaksv.com/wp-json/" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "Store",
+                  "@id": "https://aromaniaksv.com/#store",
+                  "name": "Aromaniak SV — Fragancias y Esencias en El Salvador",
+                  "alternateName": ["Aromaniak", "Aromaniak El Salvador", "Fragancias y Esencias Aromaniak"],
+                  "url": "https://aromaniaksv.com",
+                  "logo": "https://aromaniaksv.com/images/logo.png",
+                  "image": "https://aromaniaksv.com/images/og-default.jpg?v=normal2026",
+                  "description": "Distribuidora y tienda en línea de fragancias y esencias puras de perfumería fina AAA+, botes de vidrio y materias primas en El Salvador.",
+                  "telephone": "+50360437496",
+                  "priceRange": "$",
+                  "address": {
+                    "@type": "PostalAddress",
+                    "streetAddress": "Centro Comercial El Rosal, Calle El Progreso",
+                    "addressLocality": "San Salvador",
+                    "addressRegion": "San Salvador",
+                    "addressCountry": "SV"
+                  },
+                  "geo": {
+                    "@type": "GeoCoordinates",
+                    "latitude": 13.6967763,
+                    "longitude": -89.2208348
+                  },
+                  "areaServed": {
+                    "@type": "Country",
+                    "name": "El Salvador"
+                  },
+                  "openingHoursSpecification": [
+                    {
+                      "@type": "OpeningHoursSpecification",
+                      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                      "opens": "09:00",
+                      "closes": "18:00"
+                    },
+                    {
+                      "@type": "OpeningHoursSpecification",
+                      "dayOfWeek": "Saturday",
+                      "opens": "09:00",
+                      "closes": "13:00"
+                    }
+                  ],
+                  "sameAs": [
+                    "https://www.instagram.com/aromaniaksv/",
+                    "https://www.facebook.com/aromaniaksv"
+                  ]
+                },
+                {
+                  "@type": "WebSite",
+                  "@id": "https://aromaniaksv.com/#website",
+                  "url": "https://aromaniaksv.com",
+                  "name": "Aromaniak SV — Fragancias y Esencias en El Salvador",
+                  "inLanguage": "es-SV",
+                  "publisher": { "@id": "https://aromaniaksv.com/#store" }
+                }
+              ]
+            }),
+          }}
+        />
       </head>
       <body className={`${quicksand.className} min-h-full flex flex-col bg-[#f1f4f9] text-slate-800 antialiased touch-manipulation font-sans w-full max-w-full overflow-x-clip`}>
         <MarketingScripts />
