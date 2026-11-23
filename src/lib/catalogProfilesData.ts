@@ -1120,6 +1120,86 @@ export const CATALOG_PROFILES_48: Record<string, StaticProfile> = {
     occasion: 'Eventos de gala, noches especiales, estela intensa de lujo',
     intensity: 'Extrema'
   },
+  '112': {
+    family: 'Amaderada Aromática',
+    accords: ['coco', 'avainillado', 'dulce', 'amaderado', 'cítrico', 'aromático'],
+    topNotes: ['Bergamota'],
+    heartNotes: ['Coco'],
+    baseNotes: ['Haba tonka'],
+    season: 'Primavera / Verano / Todo el año',
+    occasion: 'Salidas casuales, citas de verano, uso diario seductor',
+    intensity: 'Intensa'
+  },
+  '113': {
+    family: 'Ámbar Fougère',
+    accords: ['cítrico', 'aromático', 'café', 'cálido especiado', 'amaderado', 'verde'],
+    topNotes: ['Bergamota de Calabria'],
+    heartNotes: ['Café'],
+    baseNotes: ['Vetiver'],
+    season: 'Todo el año / Día y Noche',
+    occasion: 'Estilo urbano moderno, salidas nocturnas y uso diario con carácter',
+    intensity: 'Intensa'
+  },
+  '114': {
+    family: 'Cítrica Aromática',
+    accords: ['cítrico', 'fresco especiado', 'aromático', 'verde', 'ámbar', 'cálido especiado'],
+    topNotes: ['Cidra', 'Bergamota de Calabria', 'Naranja siciliana'],
+    heartNotes: ['Jengibre nigeriano', 'Neroli de Túnez', 'Canela de Ceilán'],
+    baseNotes: ['Té negro chino', 'Ambroxan', 'Incienso de olíbano', 'Madera de gaiac'],
+    season: 'Primavera / Verano / Todo el año',
+    occasion: 'Reuniones ejecutivas, eventos de lujo, firma personal elegante',
+    intensity: 'Intensa'
+  },
+  '115': {
+    family: 'Ámbar Aromática',
+    accords: ['avainillado', 'aromático', 'dulce', 'ciruela', 'cálido especiado', 'ámbar', 'lavanda'],
+    topNotes: ['Ciruela', 'Canela', 'Cardamomo', 'Bergamota'],
+    heartNotes: ['Lavanda', 'Davana', 'Abrótano'],
+    baseNotes: ['Haba tonka', 'Benjuí', 'Ambreta', 'Pachulí', 'Ládano'],
+    season: 'Otoño / Invierno / Noche',
+    occasion: 'Citas nocturnas, fiestas, máxima proyección y seducción',
+    intensity: 'Extrema'
+  },
+  '116': {
+    family: 'Floral Frutal',
+    accords: ['floral', 'fresco', 'cítrico', 'acuático', 'rosa', 'amaderado'],
+    topNotes: ['Yuzu', 'Granada', 'Acorde de hielo'],
+    heartNotes: ['Peonía', 'Flor de loto', 'Magnolia'],
+    baseNotes: ['Almizcle', 'Caoba', 'Ámbar'],
+    season: 'Primavera / Verano / Día',
+    occasion: 'Uso diario elegante, oficina, salidas frescas y luminosas',
+    intensity: 'Moderada a Intensa'
+  },
+  '117': {
+    family: 'Floral Frutal Gourmand',
+    accords: ['dulce', 'avainillado', 'lactónico', 'coco', 'almizclado', 'atalcado'],
+    topNotes: ['Lavanda', 'Pera', 'Bergamota'],
+    heartNotes: ['Crema batida', 'Coco', 'Praliné', 'Orquídea de vainilla'],
+    baseNotes: ['Almizcle', 'Notas amaderadas'],
+    season: 'Todo el año / Día y Noche',
+    occasion: 'Salidas juveniles, citas románticas, uso diario acogedor',
+    intensity: 'Intensa'
+  },
+  '118': {
+    family: 'Floral Frutal',
+    accords: ['afrutado', 'floral', 'cítrico', 'dulce', 'fresco', 'almizclado'],
+    topNotes: ['Membrillo', 'Pomelo'],
+    heartNotes: ['Jacinto', 'Jazmín'],
+    baseNotes: ['Almizcle', 'Iris', 'Cedro de Virginia', 'Ámbar'],
+    season: 'Primavera / Verano / Todo el año',
+    occasion: 'Eventos elegantes, oficina, citas de día y estilo sofisticado',
+    intensity: 'Moderada a Intensa'
+  },
+  '119': {
+    family: 'Amaderada Acuática',
+    accords: ['verde', 'acuático', 'coco', 'aromático', 'salado', 'amaderado', 'fresco'],
+    topNotes: ['Notas verdes', 'Notas acuáticas', 'Menta', 'Jengibre'],
+    heartNotes: ['Agua de coco', 'Higo verde', 'Sal'],
+    baseNotes: ['Sándalo', 'Haba tonka'],
+    season: 'Primavera / Verano / Todo el año',
+    occasion: 'Días soleados, vacaciones, salidas casuales y frescura tropical',
+    intensity: 'Intensa'
+  },
   'APAE-2154': {
     family: 'Floral Frutal',
     accords: ['floral', 'afrutado', 'fresco', 'dulce', 'acuático'],

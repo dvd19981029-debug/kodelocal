@@ -117,7 +117,15 @@ export const CATALOG_DESCRIPTIONS_48: Record<string, string> = {
   '108': 'Sofisticación parisina en su faceta más profunda, nocturna y sensual. Una apertura vibrante de pimienta negra especiada y bergamota da paso a un corazón absoluto de flor de azahar de Túnez, fundiéndose en una estela opulenta de vainilla Bourbon, ámbar, pachulí y maderas.',
   '109': 'Un elixir gourmand especiado de lujo árabe inconfundible. Canela cálida, nuez moscada y bergamota envuelven un corazón opulento de dátiles dulces, praliné cremoso y nardos sobre una base majestuosa de vainilla tostada, haba tonka, mirra, benjuí y amberwood.',
   '110': 'Opulencia frutal dorada y fijación extraordinaria. Bergamota luminosa y notas verdes frescas abren paso a un corazón jugoso e irresistible de melón dulce, piña tropical y ámbar cálido, reposando sobre una estela envolvente de vainilla, almizcle blanco y maderas preciosas.',
-  '111': 'La versión más profunda, cremosa y adictiva del ícono parisino. Almendra amarga tostada y azafrán precioso abren paso a un corazón luminoso de jazmín egipcio y cedro, descansando sobre una base intensa de ámbar gris mineral, maderas nobles y almizcle envolvente.'
+  '111': 'La versión más profunda, cremosa y adictiva del ícono parisino. Almendra amarga tostada y azafrán precioso abren paso a un corazón luminoso de jazmín egipcio y cedro, descansando sobre una base intensa de ámbar gris mineral, maderas nobles y almizcle envolvente.',
+  '112': 'Seducción tropical fresca y magnética. Una apertura vibrante de bergamota luminosa da paso a un corazón exótico de madera de coco cremosa, descansando sobre una base cálida, envolvente y adictiva de haba tonka.',
+  '113': 'Audacia italiana con energía verde vibrante. Bergamota fresca de Calabria se funde con un corazón aromático e intenso de café tostado, reposando sobre una estela elegante y terrosa de vetiver de Haití.',
+  '114': 'Lujo contemporáneo y frescura luminosa sin límites. Cidra, bergamota de Calabria y naranja siciliana abren paso a un corazón especiado de jengibre nigeriano, neroli de Túnez y canela de Ceilán sobre una base refinada de té negro chino, ambroxan, olíbano y madera de gaiac.',
+  '115': 'Un elixir dorado, opulento y ardientemente sensual. Ciruela jugosa, canela y cardamomo envuelven un corazón aromático de lavanda imperial y davana sobre una estela profunda de haba tonka, benjuí, ambreta y pachulí.',
+  '116': 'Luminosidad cristalina y sensualidad floral pura. Yuzu vibrante, granada jugosa y un acorde helado abren paso a un bouquet delicado de peonía, magnolia y flor de loto sobre una base envolvente de almizcle blanco, caoba y ámbar.',
+  '117': 'Un sueño cremoso, dulce y reconfortante en las nubes. Lavanda suave, pera jugosa y bergamota iluminan un corazón adictivo de crema batida de coco, praliné y orquídea de vainilla sobre almizcles sensuales y maderas cremosas.',
+  '118': 'Ternura floral radiante con elegancia parisina. Un destello frutal de membrillo y pomelo fresco envuelve un corazón luminoso de jacinto y jazmín absoluto, sellado con una caricia suave de almizcle blanco, iris, cedro y ámbar.',
+  '119': 'Un jardín paradisíaco exorbitante y refrescante. Notas acuáticas, menta fresca y jengibre despiertan un corazón exótico de agua de coco salada e higo verde cremoso sobre una base sensual de sándalo y haba tonka.'
 };
 
 /**

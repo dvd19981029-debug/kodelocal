@@ -116,7 +116,15 @@ export const INSPIRACION_PERFUME_MAP: Record<string, string> = {
   '108': 'MYSLF Intense H',
   '109': 'Khamrah',
   '110': 'Amber Oud',
-  '111': 'Baccarat Rouge 540 Extrait'
+  '111': 'Baccarat Rouge 540 Extrait',
+  '112': 'Le Beau H',
+  '113': 'Born in Roma Green Stravaganza H',
+  '114': 'Imagination H',
+  '115': 'Le Male Elixir Absolu H',
+  '116': 'Bright Crystal F',
+  '117': 'Cloud F',
+  '118': 'Chance Eau Tendre F',
+  '119': 'Le Beau Paradise Garden H'
 };
 
 export const INSPIRACION_BRAND_MAP: Record<string, string> = {
@@ -230,7 +238,15 @@ export const INSPIRACION_BRAND_MAP: Record<string, string> = {
   '108': 'Yves Saint Laurent',
   '109': 'Lattafa',
   '110': 'Al Haramain',
-  '111': 'Maison Francis Kurkdjian'
+  '111': 'Maison Francis Kurkdjian',
+  '112': 'Jean Paul Gaultier',
+  '113': 'Valentino',
+  '114': 'Louis Vuitton',
+  '115': 'Jean Paul Gaultier',
+  '116': 'Versace',
+  '117': 'Ariana Grande',
+  '118': 'Chanel',
+  '119': 'Jean Paul Gaultier'
 };
 
 export const INCOMING_ESSENCE_SKUS = new Set([
@@ -238,7 +254,8 @@ export const INCOMING_ESSENCE_SKUS = new Set([
   '72', '73', '74', '75', '76', '77', '78', '79', '80', '81', '82',
   '83', '84', '85', '86', '87', '88', '89', '90',
   '91', '92', '93', '94', '95', '96', '97', '98', '99', '100', '101', '102', '103', '104', '105',
-  '106', '107', '108', '109', '110', '111'
+  '106', '107', '108', '109', '110', '111',
+  '112', '113', '114', '115', '116', '117', '118', '119'
 ]);
 
 export function isIncomingEssence(product: { id?: string | null; sku?: string | null; category?: string | null } | null | undefined): boolean {
@@ -645,6 +662,14 @@ export const OFFICIAL_TO_ORIGINAL_MAP: Record<string, { originalName: string; br
   'SULTAN ELIXIR': { originalName: 'Khamrah', brand: 'Lattafa', sku: '109' },
   'GOLDEN OUD': { originalName: 'Amber Oud', brand: 'Al Haramain', sku: '110' },
   'CRISTAL ROUGE EXTRAIT': { originalName: 'Baccarat Rouge 540 Extrait', brand: 'Maison Francis Kurkdjian', sku: '111' },
+  'THE MAN TROPICS': { originalName: 'Le Beau H', brand: 'Jean Paul Gaultier', sku: '112' },
+  'EUROBOY GREEN': { originalName: 'Born in Roma Green Stravaganza H', brand: 'Valentino', sku: '113' },
+  'ROYAL VISION': { originalName: 'Imagination H', brand: 'Louis Vuitton', sku: '114' },
+  'THE MAN ABSOLU': { originalName: 'Le Male Elixir Absolu H', brand: 'Jean Paul Gaultier', sku: '115' },
+  'MEDUSA CRYSTAL': { originalName: 'Bright Crystal F', brand: 'Versace', sku: '116' },
+  'BLUE HEAVEN': { originalName: 'Cloud F', brand: 'Ariana Grande', sku: '117' },
+  'NEW YORK TENDRE': { originalName: 'Chance Eau Tendre F', brand: 'Chanel', sku: '118' },
+  'THE MAN PARADISE': { originalName: 'Le Beau Paradise Garden H', brand: 'Jean Paul Gaultier', sku: '119' },
 };
 
 // Generar variaciones con sufijos H / F / M / U para match instantáneo
