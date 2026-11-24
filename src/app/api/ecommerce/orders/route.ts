@@ -8,7 +8,14 @@ import { sendOrderConfirmationEmail } from '@/lib/orderEmailService';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { resolveGiroMH, formatGiroOption } from '@/lib/svGirosCat019';
 import { c807Client } from '@/lib/c807';
-import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ, HALLOWEEN_PROMO_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
+import {
+  isHalloweenPromoProduct,
+  isHalloweenSeasonActive,
+  HALLOWEEN_PROMO_PRICE_1OZ,
+  HALLOWEEN_PROMO_PRICE_HALF_OZ,
+  BLACK_WEEK_KIT_BASE_PRICE,
+  BLACK_WEEK_KIT_EXTRASHOT_ADDON,
+} from '@/lib/halloweenPromo';
 import { buildCustomerLookupOrConditions, consolidateCustomerDiscounts, isFixedPriceEssence } from '@/lib/customerDiscounts';
 import { extractTransferReceiptUrl, stripTransferReceiptTag, upsertTransferReceiptInNotes } from '@/lib/bankAccounts';
 import { restoreArmedPerfumeStickersOnCancel } from '@/lib/armedPerfumeStickerInventory';
@@ -1267,10 +1274,12 @@ export async function POST(request: Request) {
           const bottleProd = parsedKit.bottleId ? productMap.get(parsedKit.bottleId) : undefined;
 
           const targetProductId = essenceProd.id;
-          let baseKitPrice = dynamicKitBasePrice;
-          if (essenceProd.finishedPerfumePrice != null) {
+          const isBlackWeekKitPromo = isHalloweenSeasonActive();
+          let baseKitPrice = isBlackWeekKitPromo ? BLACK_WEEK_KIT_BASE_PRICE : dynamicKitBasePrice;
+          if (!isBlackWeekKitPromo && essenceProd.finishedPerfumePrice != null) {
             baseKitPrice = Number(essenceProd.finishedPerfumePrice);
           }
+          const effectiveExtraShotPrice = isBlackWeekKitPromo ? BLACK_WEEK_KIT_EXTRASHOT_ADDON : dynamicExtraShotPrice;
 
           stockDeltas.set(essenceProd.id, (stockDeltas.get(essenceProd.id) || 0) + qty);
           if (isPlus) {
@@ -1280,8 +1289,8 @@ export async function POST(request: Request) {
             stockDeltas.set(bottleProd.id, (stockDeltas.get(bottleProd.id) || 0) + qty);
           }
 
-          let kitUnitPrice = isPlus ? Number((baseKitPrice + dynamicExtraShotPrice).toFixed(2)) : baseKitPrice;
-          if (dbCustomer?.tier) {
+          let kitUnitPrice = isPlus ? Number((baseKitPrice + effectiveExtraShotPrice).toFixed(2)) : baseKitPrice;
+          if (!isBlackWeekKitPromo && dbCustomer?.tier) {
             let appliedPct = 0;
             if (dbCustomer.tier.name === 'Personalizado' && dbCustomer.customDiscountPct) {
               appliedPct = Number(dbCustomer.customDiscountPct);
@@ -1292,7 +1301,7 @@ export async function POST(request: Request) {
               const discountAmt = kitUnitPrice * (appliedPct / 100);
               kitUnitPrice = Number((kitUnitPrice - discountAmt).toFixed(2));
             }
-          } else if (dbCustomer?.customDiscountPct && Number(dbCustomer.customDiscountPct) > 0) {
+          } else if (!isBlackWeekKitPromo && dbCustomer?.customDiscountPct && Number(dbCustomer.customDiscountPct) > 0) {
             const appliedPct = Number(dbCustomer.customDiscountPct);
             const discountAmt = kitUnitPrice * (appliedPct / 100);
             kitUnitPrice = Number((kitUnitPrice - discountAmt).toFixed(2));

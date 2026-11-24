@@ -7,10 +7,14 @@ import { ProductItem, getStoredProducts, saveStoredProducts } from '@/lib/store'
 import { trackMetaAddToCart } from '@/components/analytics/MarketingScripts';
 import {
   isHalloweenPromoProduct,
+  isHalloweenSeasonActive,
   HALLOWEEN_PROMO_PRICE_1OZ,
   HALLOWEEN_ORIGINAL_PRICE_1OZ,
   HALLOWEEN_PROMO_PRICE_HALF_OZ,
   HALLOWEEN_ORIGINAL_PRICE_HALF_OZ,
+  BLACK_WEEK_KIT_BASE_PRICE,
+  BLACK_WEEK_KIT_EXTRASHOT_ADDON,
+  BLACK_WEEK_KIT_EXTRASHOT_TOTAL_PRICE,
 } from '@/lib/halloweenPromo';
 import { isFixedPriceEssence } from '@/lib/customerDiscounts';
 
@@ -650,8 +654,32 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
       let changed = false;
       const updated = prev.map((item) => {
         if (item.kitDetails) {
-          const baseKit = item.originalUnitPrice ?? item.product.price;
-          const kitPricing = applyCustomerProductPricing(baseKit, item.product, item.presentation, customer);
+          const isPlusKit = Boolean(item.kitDetails.isPlus);
+          const storedCatalog = typeof window !== 'undefined' ? getStoredProducts() : [];
+          const liveEssence = storedCatalog.find((p) => p.id === item.kitDetails?.essenceId);
+          const regularBaseKit =
+            liveEssence?.finishedPerfumePrice != null
+              ? Number(liveEssence.finishedPerfumePrice)
+              : kitConfig.basePrice;
+          const regularRawKit = isPlusKit
+            ? Number((regularBaseKit + kitConfig.extraShotPrice).toFixed(2))
+            : regularBaseKit;
+
+          if (isHalloweenSeasonActive()) {
+            const promoKitPrice = isPlusKit ? BLACK_WEEK_KIT_EXTRASHOT_TOTAL_PRICE : BLACK_WEEK_KIT_BASE_PRICE;
+            if (item.unitPrice !== promoKitPrice || item.originalUnitPrice !== regularRawKit) {
+              changed = true;
+              return {
+                ...item,
+                unitPrice: promoKitPrice,
+                originalUnitPrice: regularRawKit,
+                totalPrice: Number((promoKitPrice * item.quantity).toFixed(2)),
+              };
+            }
+            return item;
+          }
+
+          const kitPricing = applyCustomerProductPricing(regularRawKit, item.product, item.presentation, customer);
           if (kitPricing.price !== item.unitPrice || kitPricing.originalPrice !== item.originalUnitPrice) {
             changed = true;
             return {
@@ -871,9 +899,14 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     const liveEssence = storedCatalog.find((p) => p.id === essence.id) || essence;
     const liveBottle = storedCatalog.find((p) => p.id === bottle.id) || bottle;
 
-    // Precio dinámico: base + extra shot si seleccionó PLUS
-    const baseKitPrice = liveEssence.finishedPerfumePrice != null ? Number(liveEssence.finishedPerfumePrice) : kitConfig.basePrice;
-    const extraShotPrice = kitConfig.extraShotPrice;
+    // Precio dinámico: base + extra shot si seleccionó PLUS (con tarifa fija Black Week si la temporada está activa)
+    const isBlackWeekKitPromo = isHalloweenSeasonActive();
+    const regularBaseKitPrice = liveEssence.finishedPerfumePrice != null ? Number(liveEssence.finishedPerfumePrice) : kitConfig.basePrice;
+    const regularExtraShotPrice = kitConfig.extraShotPrice;
+    const regularRawKitPrice = isPlus ? Number((regularBaseKitPrice + regularExtraShotPrice).toFixed(2)) : regularBaseKitPrice;
+
+    const baseKitPrice = isBlackWeekKitPromo ? BLACK_WEEK_KIT_BASE_PRICE : regularBaseKitPrice;
+    const extraShotPrice = isBlackWeekKitPromo ? BLACK_WEEK_KIT_EXTRASHOT_ADDON : regularExtraShotPrice;
     const rawKitPrice = isPlus ? Number((baseKitPrice + extraShotPrice).toFixed(2)) : baseKitPrice;
     const presentation: ProductPresentation = isPlus ? 'KIT_PREPARADO_PLUS' : 'KIT_PREPARADO';
     const bottleDisplayName = liveBottle.name || liveBottle.officialName || 'Frasco 100ml';
@@ -905,7 +938,9 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
       imageUrl: essenceImageUrl,
     };
 
-    const kitPricing = applyCustomerProductPricing(rawKitPrice, kitProduct, presentation, customer);
+    const kitPricing = isBlackWeekKitPromo
+      ? { price: rawKitPrice, originalPrice: regularRawKitPrice }
+      : applyCustomerProductPricing(rawKitPrice, kitProduct, presentation, customer);
     const unitPrice = kitPricing.price;
     const originalUnitPrice = kitPricing.originalPrice;
 

@@ -19,6 +19,11 @@ import { MOCK_100ML_BOTTLES } from '@/lib/bottles';
 import { useEcommerceCart, getEssenceDiscreteStock, getBottleAvailableStock } from '@/context/EcommerceCartContext';
 import { getInspiracionPerfumeName, formatPerfumeDisplayName, isNewEssence } from '@/lib/perfumeNames';
 import { getProductImage } from '@/lib/perfumeImages';
+import {
+  isHalloweenSeasonActive,
+  BLACK_WEEK_KIT_BASE_PRICE,
+  BLACK_WEEK_KIT_EXTRASHOT_ADDON,
+} from '@/lib/halloweenPromo';
 
 interface PerfumeKitBuilderModalProps {
   isOpen?: boolean;
@@ -198,12 +203,16 @@ export default function PerfumeKitBuilderModal({
     }
   }, [hasHalfOzAvailable, isPlus]);
 
-  const basePrice = selectedEssence?.finishedPerfumePrice != null 
+  const isBlackWeekPromo = isHalloweenSeasonActive();
+  const regularBasePrice = selectedEssence?.finishedPerfumePrice != null 
     ? Number(selectedEssence.finishedPerfumePrice) 
     : (kitConfig?.basePrice ?? 15.00);
-  const extraShotPrice = kitConfig?.extraShotPrice ?? 3.00;
+  const regularExtraShotPrice = kitConfig?.extraShotPrice ?? 3.00;
+  const basePrice = isBlackWeekPromo ? BLACK_WEEK_KIT_BASE_PRICE : regularBasePrice;
+  const extraShotPrice = isBlackWeekPromo ? BLACK_WEEK_KIT_EXTRASHOT_ADDON : regularExtraShotPrice;
   const plusCost = (isPlus && hasHalfOzAvailable) ? extraShotPrice : 0.00;
   const totalPrice = basePrice + plusCost;
+  const regularTotalPrice = regularBasePrice + ((isPlus && hasHalfOzAvailable) ? regularExtraShotPrice : 0.00);
 
   const handleConfirmKit = () => {
     if (!selectedEssence || !activeBottle || activeBottleAvailableStock <= 0) return;
@@ -252,8 +261,13 @@ export default function PerfumeKitBuilderModal({
               1 oz pura de tu esencia favorita, frasco de 100ml y alcohol con fijador
             </p>
           </div>
-          <span className="bg-purple-100/80 text-purple-900 border border-purple-200/90 text-[11px] sm:text-xs font-black px-2.5 py-0.5 rounded-full shadow-2xs shrink-0 ml-1">
-            ${totalPrice.toFixed(2)}
+          <span className="bg-purple-100/80 text-purple-900 border border-purple-200/90 text-[11px] sm:text-xs font-black px-2.5 py-0.5 rounded-full shadow-2xs shrink-0 ml-1 flex items-center gap-1.5">
+            {isBlackWeekPromo && regularTotalPrice > totalPrice && (
+              <span className="text-[10px] text-slate-400 line-through font-bold">
+                ${regularTotalPrice.toFixed(2)}
+              </span>
+            )}
+            <span>${totalPrice.toFixed(2)}</span>
           </span>
         </div>
 
@@ -849,7 +863,12 @@ export default function PerfumeKitBuilderModal({
               <span className="text-[9px] uppercase font-black text-slate-400 block tracking-wider leading-none mb-0.5">
                 Total:
               </span>
-              <div className="flex items-baseline gap-1">
+              <div className="flex items-baseline gap-1.5">
+                {isBlackWeekPromo && regularTotalPrice > totalPrice && (
+                  <span className="text-xs sm:text-sm font-bold text-slate-400 line-through decoration-rose-500">
+                    ${regularTotalPrice.toFixed(2)}
+                  </span>
+                )}
                 <span className="text-lg sm:text-2xl font-black text-purple-950 leading-none">
                   ${totalPrice.toFixed(2)}
                 </span>

@@ -12,6 +12,7 @@ import { getProductImage } from '@/lib/perfumeImages';
 import { getBottleLabelConfig } from '@/lib/perfumeNames';
 import { useLiveProducts } from '@/hooks/useLiveProducts';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
+import { isHalloweenSeasonActive, BLACK_WEEK_KIT_BASE_PRICE } from '@/lib/halloweenPromo';
 
 interface BlogReadingSidebarProps {
   product?: ProductItem;
@@ -335,7 +336,9 @@ export default function BlogReadingSidebar({
           >
             <Wand2 className="w-3.5 h-3.5" />
             Armar mi Perfume ($
-            {(currentEssence?.finishedPerfumePrice != null
+            {(isHalloweenSeasonActive()
+              ? BLACK_WEEK_KIT_BASE_PRICE
+              : currentEssence?.finishedPerfumePrice != null
               ? Number(currentEssence.finishedPerfumePrice)
               : (kitConfig?.basePrice ?? 10.00)
             ).toFixed(2)}

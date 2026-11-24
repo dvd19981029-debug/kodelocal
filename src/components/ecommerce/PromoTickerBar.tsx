@@ -17,8 +17,8 @@ const BLACK_WEEK_MESSAGE: TickerMessage = {
   id: 'black-week',
   badge: 'BLACK WEEK',
   icon: Sparkles,
-  text: 'Esencias seleccionadas de perfumería fina: 1 Onza a $3.40 (antes $3.75) y ½ Onza a $1.85',
-  highlight: 'Hasta el domingo 29 de noviembre',
+  text: 'Esencias seleccionadas: 1 Oz a $3.40 y ½ Oz a $1.85 • Arma tu Perfume 100ml: Kit Normal a $9.00 y Extrashot a $10.00',
+  highlight: 'Precios especiales exclusivos en web',
 };
 
 const TICKER_MESSAGES: TickerMessage[] = [

@@ -1,11 +1,11 @@
 // Promoción Especial de Black Week (y compatibilidad histórica de Halloween) — Exclusivo Ecommerce
-// Black Week (24 al 29 de noviembre de 2026 a las 11:59:59 PM, UTC-6):
-// Todas las esencias de perfumería fina cuyo precio normal es $3.75 quedan en:
-// - 1 Onza: Antes $3.75 -> Ahora $3.40 (Descuento $0.35)
-// - ½ Onza: Antes $1.90 -> Ahora $1.85 (Descuento $0.05)
+// Black Week (24 de noviembre al lunes 30 de noviembre de 2026 a las 11:59:59 PM, UTC-6):
+// El martes 1 de diciembre a las 00:00:00 todo vuelve automáticamente a la normalidad (precios y tema).
+// - Esencias de perfumería fina ($3.75 normal): 1 Onza a $3.40 (Descuento $0.35), ½ Onza a $1.85 (Descuento $0.05)
+// - Arma tu propio perfume (100 ml): Kit Normal (1 Oz) a $9.00 (Antes $10.00), Kit Extrashot (+½ Oz PLUS) a $10.00 (Antes $13.00)
 // Las esencias caras (> $3.75) mantienen su precio normal sin descuento.
 
-export const HALLOWEEN_END_ISO = '2026-11-29T23:59:59.999-06:00';
+export const HALLOWEEN_END_ISO = '2026-11-30T23:59:59.999-06:00';
 export const HALLOWEEN_END_TIMESTAMP = new Date(HALLOWEEN_END_ISO).getTime();
 
 export function isHalloweenSeasonActive(nowMs: number = Date.now()): boolean {
@@ -19,6 +19,12 @@ export const HALLOWEEN_PROMO_DISCOUNT_1OZ = 0.35;
 export const HALLOWEEN_PROMO_PRICE_HALF_OZ = 1.85;
 export const HALLOWEEN_ORIGINAL_PRICE_HALF_OZ = 1.90;
 export const HALLOWEEN_PROMO_DISCOUNT_HALF_OZ = 0.05;
+
+export const BLACK_WEEK_KIT_BASE_PRICE = 9.00;
+export const BLACK_WEEK_KIT_ORIGINAL_BASE_PRICE = 10.00;
+export const BLACK_WEEK_KIT_EXTRASHOT_ADDON = 1.00;
+export const BLACK_WEEK_KIT_EXTRASHOT_TOTAL_PRICE = 10.00;
+export const BLACK_WEEK_KIT_ORIGINAL_EXTRASHOT_TOTAL_PRICE = 13.00;
 
 export interface HalloweenPotionInfo {
   id: string;
@@ -300,6 +306,24 @@ export function resolveDteItemDiscount(item: {
       originalUnitPriceConIva: HALLOWEEN_ORIGINAL_PRICE_HALF_OZ,
       unitDiscountConIva: HALLOWEEN_PROMO_DISCOUNT_HALF_OZ,
     };
+  }
+
+  // 3. Detección automática para Kits "Arma tu propio perfume" en Black Week ($9.00 Normal -> orig $10.00; $10.00 PLUS/Extrashot -> orig $13.00)
+  const isKitItem = descLower.includes('arma tu propio perfume');
+  if (isKitItem) {
+    const isPlusKit = descLower.includes('plus') || descLower.includes('1.5');
+    if (!isPlusKit && Math.abs(paidUnit - BLACK_WEEK_KIT_BASE_PRICE) < 0.005) {
+      return {
+        originalUnitPriceConIva: BLACK_WEEK_KIT_ORIGINAL_BASE_PRICE,
+        unitDiscountConIva: Number((BLACK_WEEK_KIT_ORIGINAL_BASE_PRICE - BLACK_WEEK_KIT_BASE_PRICE).toFixed(2)),
+      };
+    }
+    if (isPlusKit && Math.abs(paidUnit - BLACK_WEEK_KIT_EXTRASHOT_TOTAL_PRICE) < 0.005) {
+      return {
+        originalUnitPriceConIva: BLACK_WEEK_KIT_ORIGINAL_EXTRASHOT_TOTAL_PRICE,
+        unitDiscountConIva: Number((BLACK_WEEK_KIT_ORIGINAL_EXTRASHOT_TOTAL_PRICE - BLACK_WEEK_KIT_EXTRASHOT_TOTAL_PRICE).toFixed(2)),
+      };
+    }
   }
 
   return { originalUnitPriceConIva: paidUnit, unitDiscountConIva: 0 };

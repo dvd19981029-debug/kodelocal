@@ -95,6 +95,13 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
     action: 'aromas',
   };
 
+  const blackWeekKitSlide: PromoSlide = {
+    id: 'promo-black-week-kit',
+    imageUrl: '/images/promo/banner_black_week_arma_tu_perfume.jpg',
+    imageAlt: 'Black Week Aromaniak: Arma tu propio perfume 100 ml a $9.00 el Kit Normal y $10.00 el Kit Extrashot',
+    action: 'arma-tu-perfume',
+  };
+
   const newArrivalsSlide: PromoSlide = {
     id: 'promo-nuevos-ingresos',
     imageUrl: '/images/promo/banner_nuevos_ingresos.webp',
@@ -103,7 +110,7 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
   };
 
   const slides: PromoSlide[] = halloweenActive
-    ? [blackWeekSlide, newArrivalsSlide, ...blogSlides, ...baseSlides]
+    ? [blackWeekSlide, blackWeekKitSlide, newArrivalsSlide, ...blogSlides, ...baseSlides]
     : [newArrivalsSlide, ...blogSlides, ...baseSlides];
 
   // Diapositivas extendidas con clones en ambos extremos para bucle infinito 100% continuo

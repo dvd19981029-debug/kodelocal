@@ -36,7 +36,7 @@ import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { saveGuestOrder, saveGuestShippingProfile, getGuestShippingProfile } from '@/lib/guestOrderStorage';
 import { GiroSearchSelect } from '@/components/common/GiroSearchSelect';
-import { isHalloweenPromoProduct } from '@/lib/halloweenPromo';
+import { isHalloweenPromoProduct, isHalloweenSeasonActive } from '@/lib/halloweenPromo';
 import { BankAccountsCardsList, OrderTransferReceiptSection } from '@/components/ecommerce/TransferBankAccountsWidget';
 
 type FieldKey =
@@ -2218,7 +2218,10 @@ export default function CheckoutPage() {
                         const itemDisc = Number(
                           (Math.max(0, orig - it.unitPrice) * it.quantity).toFixed(2)
                         );
-                        if (!it.kitDetails && isHalloweenPromoProduct(it.product)) {
+                        if (
+                          (!it.kitDetails && isHalloweenPromoProduct(it.product)) ||
+                          (it.kitDetails && isHalloweenSeasonActive())
+                        ) {
                           halloweenPromoDiscount = Number(
                             (halloweenPromoDiscount + itemDisc).toFixed(2)
                           );
