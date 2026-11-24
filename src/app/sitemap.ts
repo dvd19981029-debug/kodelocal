@@ -73,7 +73,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
     },
     {
-      url: `${baseUrl}/fragancias-y-esencias-el-salvador`,
+      url: `${baseUrl}/esencias-y-fragancias-el-salvador`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.95,

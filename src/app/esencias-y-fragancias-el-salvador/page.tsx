@@ -14,31 +14,31 @@ import {
 } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Fragancias y Esencias en El Salvador | Distribuidora Aromaniak SV',
+  title: 'Esencias y Fragancias en El Salvador | Distribuidora Aromaniak SV',
   description:
-    'Compra fragancias y esencias puras calidad europea AAA+ en El Salvador. Más de 110 aromas desde $1.90 (½ oz) y $3.75 (1 oz), botes de vidrio y alcohol perfumero. Envíos a todo el país y tienda en San Salvador.',
+    'Compra esencias puras y fragancias finas calidad europea AAA+ en El Salvador. Más de 110 aromas desde $1.90 (½ oz) y $3.75 (1 oz), botes de vidrio y alcohol perfumero. Envíos a todo el país y tienda en San Salvador.',
   keywords: [
-    'fragancias y esencias',
-    'fragancias y esencias el salvador',
-    'fragancias y esencias san salvador',
-    'venta de fragancias y esencias el salvador',
-    'distribuidora de fragancias y esencias',
+    'esencias y fragancias',
+    'esencias y fragancias el salvador',
+    'esencias y fragancias san salvador',
+    'venta de esencias y fragancias el salvador',
+    'distribuidora de esencias y fragancias',
     'esencias puras para perfume el salvador',
     'esencias AAA+ el salvador',
     'comprar esencias de perfume san salvador',
     'aromaniak el salvador',
   ],
   alternates: {
-    canonical: 'https://aromaniaksv.com/fragancias-y-esencias-el-salvador',
+    canonical: 'https://aromaniaksv.com/esencias-y-fragancias-el-salvador',
   },
   openGraph: {
     type: 'website',
     locale: 'es_SV',
-    url: 'https://aromaniaksv.com/fragancias-y-esencias-el-salvador',
+    url: 'https://aromaniaksv.com/esencias-y-fragancias-el-salvador',
     siteName: 'Aromaniak SV',
-    title: 'Fragancias y Esencias en El Salvador | Aromaniak SV',
+    title: 'Esencias y Fragancias en El Salvador | Aromaniak SV',
     description:
-      'Distribuidora líder de fragancias y esencias puras AAA+ sin diluir en El Salvador. Envíos a los 14 departamentos y tienda oficial en C.C. El Rosal, San Salvador.',
+      'Distribuidora líder de esencias puras y fragancias finas AAA+ sin diluir en El Salvador. Envíos a los 14 departamentos y tienda oficial en C.C. El Rosal, San Salvador.',
     images: [{ url: '/images/og-default.jpg?v=normal2026', width: 1200, height: 630 }],
   },
 };
@@ -56,11 +56,11 @@ const FEATURED_FRAGRANCES = [
 
 const FAQS = [
   {
-    q: '¿Dónde comprar fragancias y esencias puras en El Salvador?',
-    a: 'En Aromaniak SV puedes comprar fragancias y esencias concentradas 100% puras calidad europea AAA+ en línea en aromaniaksv.com con entrega a domicilio a todo El Salvador, o directamente en nuestra tienda física en Centro Comercial El Rosal, Calle El Progreso, San Salvador.',
+    q: '¿Dónde comprar esencias puras y fragancias en El Salvador?',
+    a: 'En Aromaniak SV puedes comprar esencias concentradas y fragancias finas 100% puras calidad europea AAA+ en línea en aromaniaksv.com con entrega a domicilio a todo El Salvador, o directamente en nuestra tienda física en Centro Comercial El Rosal, Calle El Progreso, San Salvador.',
   },
   {
-    q: '¿Cuánto cuestan las fragancias y esencias en Aromaniak?',
+    q: '¿Cuánto cuestan las esencias para perfume en Aromaniak?',
     a: 'Ofrecemos esencias puras desde $1.90 la media onza (½ oz) y $3.75 la onza completa (1 oz), además de precios preferenciales para emprendedores y mayoristas.',
   },
   {
@@ -69,11 +69,11 @@ const FAQS = [
   },
   {
     q: '¿Venden también botes de vidrio, alcohol perfumero y cajas para emprender?',
-    a: 'Sí. Además de más de 110 fragancias y esencias, contamos con botes de vidrio 100ml con atomizador, alcohol perfumero con fijador, cajas listas para sellar, pisetas dosificadoras, mini embudos y stickers.',
+    a: 'Sí. Además de más de 110 esencias y fragancias finas, contamos con botes de vidrio 100ml con atomizador, alcohol perfumero con fijador, cajas listas para sellar, pisetas dosificadoras, mini embudos y stickers.',
   },
 ];
 
-export default function FraganciasYEsenciasElSalvadorPage() {
+export default function EsenciasYFraganciasElSalvadorPage() {
   const faqSchema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -100,8 +100,8 @@ export default function FraganciasYEsenciasElSalvadorPage() {
       {
         '@type': 'ListItem',
         position: 2,
-        name: 'Fragancias y Esencias en El Salvador',
-        item: 'https://aromaniaksv.com/fragancias-y-esencias-el-salvador',
+        name: 'Esencias y Fragancias en El Salvador',
+        item: 'https://aromaniaksv.com/esencias-y-fragancias-el-salvador',
       },
     ],
   };
@@ -109,7 +109,7 @@ export default function FraganciasYEsenciasElSalvadorPage() {
   const itemListSchema = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: 'Fragancias y Esencias Más Buscadas en El Salvador — Aromaniak SV',
+    name: 'Esencias y Fragancias Más Buscadas en El Salvador — Aromaniak SV',
     itemListElement: FEATURED_FRAGRANCES.map((f, idx) => ({
       '@type': 'ListItem',
       position: idx + 1,
@@ -133,12 +133,12 @@ export default function FraganciasYEsenciasElSalvadorPage() {
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-[#260e40] leading-[1.1]">
-            Fragancias y Esencias Puras en El Salvador
+            Esencias Puras y Fragancias Finas en El Salvador
           </h1>
 
           <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto font-medium leading-relaxed">
             En <strong className="text-[#48266c]">Aromaniak SV</strong> encuentras más de{' '}
-            <strong>110 fragancias y esencias de perfumería fina calidad europea AAA+</strong> sin diluir,
+            <strong>110 esencias y fragancias de perfumería fina calidad europea AAA+</strong> sin diluir,
             envases de vidrio de lujo y materias primas con envíos rápidos a los 14 departamentos.
           </p>
 
@@ -147,7 +147,7 @@ export default function FraganciasYEsenciasElSalvadorPage() {
               href="/?categoria=Esencias+para+Perfume"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#48266c] hover:bg-[#381b57] text-white font-black text-sm shadow-md transition-colors"
             >
-              <span>Ver Catálogo de Fragancias y Esencias</span>
+              <span>Ver Catálogo de Esencias y Fragancias</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
@@ -184,7 +184,7 @@ export default function FraganciasYEsenciasElSalvadorPage() {
       <section className="max-w-5xl mx-auto px-4 pt-12 space-y-6">
         <div className="text-center max-w-2xl mx-auto space-y-2">
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
-            ¿Por qué elegir las fragancias y esencias de Aromaniak?
+            ¿Por qué elegir las esencias y fragancias de Aromaniak?
           </h2>
           <p className="text-sm sm:text-base text-slate-600 font-medium">
             Transparencia total en concentración, precios publicados en línea y frescura garantizada en cada lote.
@@ -232,7 +232,7 @@ export default function FraganciasYEsenciasElSalvadorPage() {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
           <div>
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
-              Fragancias y Esencias Más Buscadas
+              Esencias y Fragancias Más Buscadas
             </h2>
             <p className="text-sm text-slate-600 font-medium">
               Inspiraciones de diseñador, perfumería árabe y nicho disponibles hoy mismo.
@@ -280,7 +280,7 @@ export default function FraganciasYEsenciasElSalvadorPage() {
               Visítanos en San Salvador o pide en línea
             </h2>
             <p className="text-sm text-slate-600 leading-relaxed">
-              Contamos con atención presencial para que pruebes las fragancias y esencias directamente antes de comprar,
+              Contamos con atención presencial para que pruebes las esencias y fragancias directamente antes de comprar,
               así como asesoría para emprender tu propia marca de perfumería.
             </p>
             <ul className="space-y-2 text-sm text-slate-700 font-semibold">
@@ -327,7 +327,7 @@ export default function FraganciasYEsenciasElSalvadorPage() {
       {/* PREGUNTAS FRECUENTES */}
       <section className="max-w-5xl mx-auto px-4 pt-12 space-y-5">
         <h2 className="text-2xl font-black text-slate-900 text-center">
-          Preguntas frecuentes sobre Fragancias y Esencias en El Salvador
+          Preguntas frecuentes sobre Esencias y Fragancias en El Salvador
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {FAQS.map((item) => (

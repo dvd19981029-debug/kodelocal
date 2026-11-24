@@ -27,16 +27,16 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL("https://aromaniaksv.com"),
   title: {
-    default: "Aromaniak SV | Fragancias y Esencias en El Salvador — Perfumería Fina",
+    default: "Aromaniak SV | Esencias y Fragancias de Perfumería Fina en El Salvador",
     template: "%s | Aromaniak SV",
   },
-  description: "Tienda y distribuidora líder de fragancias y esencias puras de perfumería fina en El Salvador. Más de 110 aromas AAA+ sin diluir, botes de vidrio y materias primas. Envíos a todo El Salvador o retiro en San Salvador.",
+  description: "Tienda y distribuidora líder de esencias puras y fragancias de perfumería fina en El Salvador. Más de 110 aromas AAA+ sin diluir, botes de vidrio y materias primas. Envíos a todo El Salvador o retiro en San Salvador.",
   keywords: [
-    "fragancias y esencias",
-    "fragancias y esencias el salvador",
-    "fragancias y esencias san salvador",
-    "venta de fragancias y esencias el salvador",
-    "distribuidora de fragancias y esencias",
+    "esencias y fragancias",
+    "esencias y fragancias el salvador",
+    "esencias y fragancias san salvador",
+    "venta de esencias y fragancias el salvador",
+    "distribuidora de esencias y fragancias",
     "distribuidora de esencias perfumeria fina",
     "esencias de perfumeria fina el salvador",
     "venta de esencias el salvador",
@@ -82,22 +82,22 @@ export const metadata: Metadata = {
     type: "website",
     locale: "es_SV",
     url: "https://aromaniaksv.com",
-    siteName: "Aromaniak SV - Fragancias y Esencias en El Salvador",
-    title: "Aromaniak SV | Fragancias y Esencias en El Salvador — Perfumería Fina",
-    description: "Distribuidora líder de fragancias y esencias puras AAA+ en El Salvador. Más de 110 aromas, botes de vidrio y materias primas con envíos a todo el país.",
+    siteName: "Aromaniak SV - Esencias y Fragancias en El Salvador",
+    title: "Aromaniak SV | Esencias y Fragancias de Perfumería Fina en El Salvador",
+    description: "Distribuidora líder de esencias puras y fragancias finas AAA+ en El Salvador. Más de 110 aromas, botes de vidrio y materias primas con envíos a todo el país.",
     images: [
       {
         url: "/images/og-default.jpg?v=normal2026",
         width: 1200,
         height: 630,
-        alt: "Aromaniak SV - Fragancias y Esencias de Perfumería Fina en El Salvador",
+        alt: "Aromaniak SV - Esencias y Fragancias de Perfumería Fina en El Salvador",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Aromaniak SV | Fragancias y Esencias en El Salvador — Perfumería Fina",
-    description: "Distribuidora líder de fragancias y esencias puras AAA+ en El Salvador. Más de 110 aromas, botes de vidrio y materias primas con envíos a todo el país.",
+    title: "Aromaniak SV | Esencias y Fragancias de Perfumería Fina en El Salvador",
+    description: "Distribuidora líder de esencias puras y fragancias finas AAA+ en El Salvador. Más de 110 aromas, botes de vidrio y materias primas con envíos a todo el país.",
     images: ["/images/og-default.jpg?v=normal2026"],
   },
   robots: {
@@ -164,12 +164,12 @@ export default function RootLayout({
                 {
                   "@type": "Store",
                   "@id": "https://aromaniaksv.com/#store",
-                  "name": "Aromaniak SV — Fragancias y Esencias en El Salvador",
-                  "alternateName": ["Aromaniak", "Aromaniak El Salvador", "Fragancias y Esencias Aromaniak"],
+                  "name": "Aromaniak SV — Esencias y Fragancias en El Salvador",
+                  "alternateName": ["Aromaniak", "Aromaniak El Salvador", "Esencias y Fragancias Aromaniak"],
                   "url": "https://aromaniaksv.com",
                   "logo": "https://aromaniaksv.com/images/logo.png",
                   "image": "https://aromaniaksv.com/images/og-default.jpg?v=normal2026",
-                  "description": "Distribuidora y tienda en línea de fragancias y esencias puras de perfumería fina AAA+, botes de vidrio y materias primas en El Salvador.",
+                  "description": "Distribuidora y tienda en línea de esencias puras y fragancias de perfumería fina AAA+, botes de vidrio y materias primas en El Salvador.",
                   "telephone": "+50360437496",
                   "priceRange": "$",
                   "address": {
@@ -211,7 +211,7 @@ export default function RootLayout({
                   "@type": "WebSite",
                   "@id": "https://aromaniaksv.com/#website",
                   "url": "https://aromaniaksv.com",
-                  "name": "Aromaniak SV — Fragancias y Esencias en El Salvador",
+                  "name": "Aromaniak SV — Esencias y Fragancias en El Salvador",
                   "inLanguage": "es-SV",
                   "publisher": { "@id": "https://aromaniaksv.com/#store" }
                 }

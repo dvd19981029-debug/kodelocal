@@ -4,8 +4,8 @@ import { CheckCircle2, XCircle, ShieldCheck, Truck, Zap, Droplets, Gem } from 'l
 import LandingMarquee from '@/components/ecommerce/LandingMarquee';
 
 export const metadata: Metadata = {
-  title: 'Mejor Proveedor de Fragancias y Esencias en El Salvador | Aromaniak SV',
-  description: 'Descubre por qué Aromaniak SV es la distribuidora #1 de fragancias y esencias puras AAA+, envases de vidrio y alcohol perfumero en El Salvador.',
+  title: 'Mejor Proveedor de Esencias y Fragancias en El Salvador | Aromaniak SV',
+  description: 'Descubre por qué Aromaniak SV es la distribuidora #1 de esencias puras y fragancias finas AAA+, envases de vidrio y alcohol perfumero en El Salvador.',
   alternates: {
     canonical: 'https://aromaniaksv.com/mejor-proveedor-esencias-el-salvador',
   }

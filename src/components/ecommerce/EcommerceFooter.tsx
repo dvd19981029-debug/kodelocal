@@ -164,7 +164,7 @@ export default function EcommerceFooter() {
         {/* Enlaces de Navegación, Legal y Mapa del Sitio para Indexación de Googlebot */}
         <div className="pt-6 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-3 text-[11px] font-medium text-slate-500">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-            <Link href="/fragancias-y-esencias-el-salvador" className="hover:text-purple-700 transition-colors">Fragancias y Esencias El Salvador</Link>
+            <Link href="/esencias-y-fragancias-el-salvador" className="hover:text-purple-700 transition-colors">Esencias y Fragancias El Salvador</Link>
             <Link href="/mejor-proveedor-esencias-el-salvador" className="hover:text-purple-700 transition-colors">Mejor Proveedor de Esencias</Link>
             <Link href="/?categoria=Esencias+para+Perfume" className="hover:text-purple-700 transition-colors">Esencias Puras</Link>
             <Link href="/?categoria=Botes" className="hover:text-purple-700 transition-colors">Botes de Vidrio</Link>

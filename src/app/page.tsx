@@ -625,7 +625,7 @@ export default function EcommerceHomePage() {
       
       {/* ================= ENCABEZADO H1 SEMÁNTICO (SEO EL SALVADOR) ================= */}
       <h1 className="sr-only">
-        Aromaniak SV | Fragancias y Esencias de Perfumería Fina en El Salvador
+        Aromaniak SV | Esencias y Fragancias de Perfumería Fina en El Salvador
       </h1>
 
       {/* ================= BARRA DE BÚSQUEDA REACTIVA PERMANENTEMENTE STICKY (SE OCULTA EN ARMA TU PERFUME) ================= */}
@@ -1244,9 +1244,9 @@ export default function EcommerceHomePage() {
         <nav aria-label="Directorio e Índice de Páginas para Googlebot">
           <h4>Secciones y Catálogo Aromaniak</h4>
           <ul>
-            <li><Link href="/">Catálogo Principal de Fragancias y Esencias</Link></li>
-            <li><Link href="/fragancias-y-esencias-el-salvador">Fragancias y Esencias Puras en El Salvador</Link></li>
-            <li><Link href="/mejor-proveedor-esencias-el-salvador">Mejor Proveedor de Fragancias y Esencias en El Salvador</Link></li>
+            <li><Link href="/">Catálogo Principal de Esencias y Fragancias</Link></li>
+            <li><Link href="/esencias-y-fragancias-el-salvador">Esencias Puras y Fragancias en El Salvador</Link></li>
+            <li><Link href="/mejor-proveedor-esencias-el-salvador">Mejor Proveedor de Esencias y Fragancias en El Salvador</Link></li>
             <li><Link href="/?categoria=Botes">Botes y Frascos de Vidrio 100ml con Atomizador</Link></li>
             <li><Link href="/?categoria=Arma+tu+perfume">Arma tu Propio Perfume en El Salvador</Link></li>
             <li><Link href="/?categoria=Insumos">Insumos y Materias Primas de Perfumería</Link></li>
