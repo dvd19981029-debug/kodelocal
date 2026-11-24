@@ -90,14 +90,14 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
 
   const blackWeekSlide: PromoSlide = {
     id: 'promo-black-week',
-    imageUrl: '/images/promo/banner_black_week.jpg',
+    imageUrl: '/images/promo/banner_black_week.jpg?v=2',
     imageAlt: 'Black Week Aromaniak: Esencias seleccionadas de perfumería fina a $3.40 la Onza y $1.85 la Media Onza',
     action: 'aromas',
   };
 
   const blackWeekKitSlide: PromoSlide = {
     id: 'promo-black-week-kit',
-    imageUrl: '/images/promo/banner_black_week_arma_tu_perfume.jpg',
+    imageUrl: '/images/promo/banner_black_week_arma_tu_perfume.jpg?v=2',
     imageAlt: 'Black Week Aromaniak: Arma tu propio perfume 100 ml a $9.00 el Kit Normal y $10.00 el Kit Extrashot',
     action: 'arma-tu-perfume',
   };
