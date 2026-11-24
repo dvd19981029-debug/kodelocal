@@ -2256,8 +2256,8 @@ export default function CheckoutPage() {
                       return (
                         <>
                           {halloweenPromoDiscount > 0 && (
-                            <div className="flex items-center justify-between text-[#c2410c] font-bold">
-                              <span>Descuento Promo Halloween (Precio fijo)</span>
+                            <div className="flex items-center justify-between text-purple-700 font-bold">
+                              <span>Descuento Black Week</span>
                               <span className="tabular-nums">
                                 -${halloweenPromoDiscount.toFixed(2)}
                               </span>

@@ -327,9 +327,15 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
               </div>
             )}
 
-            {/* Badge Nuevo / Agotado / En camino en esquina superior derecha */}
-            {(isNewEssenceItem || isOutOfStock) && (
+            {/* Badge Nuevo / Black Week / Agotado / En camino en esquina superior derecha */}
+            {(isNewEssenceItem || isHalloweenPromo || isOutOfStock) && (
               <div className="absolute top-2 right-2 z-10 flex flex-col items-end gap-1 pointer-events-none">
+                {isHalloweenPromo && !isOutOfStock && (
+                  <span className="bg-[#160d29]/95 backdrop-blur-xs text-white border border-white/15 text-[8px] sm:text-[9px] font-extrabold py-0.5 px-2 rounded-md shadow-sm tracking-[0.1em] uppercase flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                    <span>BLACK WEEK</span>
+                  </span>
+                )}
                 {isNewEssenceItem && (
                   <span className="gold-ticket-wrap">
                     <span className="gold-ticket-badge text-[8px] sm:text-[9px] font-black tracking-wider uppercase">
@@ -351,8 +357,8 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
             {/* Etiqueta flotante de descuento en esquina inferior izquierda */}
             {isHalloweenPromo && !isOutOfStock && (
               <div className="absolute bottom-2 left-2 z-10 pointer-events-none">
-                <span className="bg-purple-700/95 text-white border border-purple-400/60 text-[8px] sm:text-[9px] font-black py-0.5 px-1.5 rounded-md shadow-md flex items-center gap-0.5">
-                  <span>{selectedPresentation === 'MEDIA_ONZA' ? '½ Oz a $1.85' : '1 Oz a $3.30'}</span>
+                <span className="bg-[#160d29]/90 backdrop-blur-xs text-white border border-white/15 text-[8px] sm:text-[9px] font-extrabold py-0.5 px-1.5 rounded-md shadow-sm flex items-center gap-0.5">
+                  <span>{selectedPresentation === 'MEDIA_ONZA' ? '½ Oz a $1.85' : '1 Oz a $3.40'}</span>
                 </span>
               </div>
             )}

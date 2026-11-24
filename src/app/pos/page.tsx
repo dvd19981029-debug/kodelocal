@@ -1030,7 +1030,7 @@ export default function PosPage() {
     const isBottle = !isEssence && (cat === "Botes" || cat === "Botes & Envases" || cat === "Envases & Botes" || item.product.name.toLowerCase().startsWith('bote') || item.product.name.toLowerCase().includes('frasco'));
     const isLogistics = cat === "Logística" || cat === "Logistica" || item.product.id === "ENVIO-DOM" || item.product.unit === "Servicio";
 
-    if (isEssence && isHalloweenPromoProduct(item.product)) {
+    if (false && isEssence && isHalloweenPromoProduct(item.product)) {
       if (item.presentation === "MEDIA_ONZA") {
         const regularHalf = item.product.priceHalfOunce != null
           ? Number(item.product.priceHalfOunce)

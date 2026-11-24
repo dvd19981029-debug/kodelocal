@@ -579,7 +579,7 @@ export const PosCartPanel: React.FC<PosCartPanelProps> = ({
               const isEssence = cat === 'Esencias para Perfume' || cat === 'Esencias & Fragancias' || item.product.unit === 'Onza';
               const isBottle = cat === 'Botes' || cat === 'Botes & Envases' || cat === 'Envases & Botes' || item.product.name.toLowerCase().startsWith('bote') || item.product.name.toLowerCase().includes('frasco');
               const unitPrice = getItemUnitPrice(item);
-              const isHalloweenPromo = isEssence && isHalloweenPromoProduct(item.product);
+              const isHalloweenPromo = false; // Black Week es exclusivo de Ecommerce
               const isFixedEssence = isEssence && isFixedPriceEssence(item.product);
               const fullPriceVal = isHalloweenPromo
                 ? HALLOWEEN_PROMO_PRICE_1OZ

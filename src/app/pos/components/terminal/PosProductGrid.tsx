@@ -243,7 +243,7 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
           const isOutOfStock = isEssence ? (product.stock <= 0 && stockHalfBottles <= 0) : product.stock <= 0;
           const isLowStock = product.stock > 0 && product.stock <= product.minStock;
           const availableRemaining = isEssence ? fullRemaining + halfRemaining : Math.max(0, product.stock - cartFullForProduct);
-          const isHalloweenPromo = isEssence && isHalloweenPromoProduct(product);
+          const isHalloweenPromo = false; // Black Week es exclusivo de Ecommerce
           const isFixedEssence = isEssence && isFixedPriceEssence(product);
           const fullPrice = isHalloweenPromo
             ? HALLOWEEN_PROMO_PRICE_1OZ

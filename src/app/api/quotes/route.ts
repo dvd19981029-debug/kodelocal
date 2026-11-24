@@ -291,7 +291,7 @@ export async function POST(request: Request) {
           prod.id === 'ENVIO-DOM' ||
           prod.unit === 'Servicio';
 
-        const isHalloweenPromo = isEssence && isHalloweenPromoProduct(prod);
+        const isHalloweenPromo = false; // Black Week es exclusivo de Ecommerce
         const isFixedEssence = isEssence && isFixedPriceEssence(prod);
         if (isHalloweenPromo) {
           const promoPrice =

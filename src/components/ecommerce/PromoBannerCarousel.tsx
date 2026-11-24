@@ -88,6 +88,13 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
     },
   ];
 
+  const blackWeekSlide: PromoSlide = {
+    id: 'promo-black-week',
+    imageUrl: '/images/promo/banner_black_week.jpg',
+    imageAlt: 'Black Week Aromaniak: Esencias seleccionadas de perfumería fina a $3.40 la Onza y $1.85 la Media Onza',
+    action: 'aromas',
+  };
+
   const newArrivalsSlide: PromoSlide = {
     id: 'promo-nuevos-ingresos',
     imageUrl: '/images/promo/banner_nuevos_ingresos.webp',
@@ -95,7 +102,9 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
     action: 'nuevos-ingresos',
   };
 
-  const slides: PromoSlide[] = [newArrivalsSlide, ...blogSlides, ...baseSlides];
+  const slides: PromoSlide[] = halloweenActive
+    ? [blackWeekSlide, newArrivalsSlide, ...blogSlides, ...baseSlides]
+    : [newArrivalsSlide, ...blogSlides, ...baseSlides];
 
   // Diapositivas extendidas con clones en ambos extremos para bucle infinito 100% continuo
   const extendedSlides = [

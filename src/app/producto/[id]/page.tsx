@@ -1555,8 +1555,8 @@ export default function ProductDetailPage() {
                     <span className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
                       Ahora ${(activeOption.price * quantity).toFixed(2)}
                     </span>
-                    <span className="text-[11px] font-black bg-purple-700 text-white px-2 py-0.5 rounded-lg">
-                      Oferta Especial
+                    <span className="text-[11px] font-black bg-[#160d29] text-white px-2.5 py-0.5 rounded-lg tracking-wider uppercase">
+                      • Black Week
                     </span>
                   </div>
                 ) : (
@@ -1632,7 +1632,7 @@ export default function ProductDetailPage() {
                           ) : null}
                         </div>
                         <div className="flex items-baseline gap-1.5">
-                          {pres.id === 'ONZA_COMPLETA' && isHalloweenPromo && pres.originalPrice && pres.originalPrice > pres.price && (
+                          {isHalloweenPromo && pres.originalPrice && pres.originalPrice > pres.price && (
                             <span className="text-[10px] font-bold text-slate-400 line-through decoration-rose-500">
                               ${pres.originalPrice.toFixed(2)}
                             </span>

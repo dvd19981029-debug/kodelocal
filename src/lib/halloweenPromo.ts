@@ -1,18 +1,20 @@
-// Promoción Especial de Halloween — Top 10 Esencias Menos Vendidas
-// 1 Onza: Antes $3.75 -> Ahora $3.30 (Descuento $0.45)
-// ½ Onza: Antes $1.90 -> Ahora $1.85 (Descuento $0.05)
-// Vigencia: Hasta el 31 de octubre de 2026 a las 11:59:59 PM (Hora de El Salvador, UTC-6)
+// Promoción Especial de Black Week (y compatibilidad histórica de Halloween) — Exclusivo Ecommerce
+// Black Week (24 al 29 de noviembre de 2026 a las 11:59:59 PM, UTC-6):
+// Todas las esencias de perfumería fina cuyo precio normal es $3.75 quedan en:
+// - 1 Onza: Antes $3.75 -> Ahora $3.40 (Descuento $0.35)
+// - ½ Onza: Antes $1.90 -> Ahora $1.85 (Descuento $0.05)
+// Las esencias caras (> $3.75) mantienen su precio normal sin descuento.
 
-export const HALLOWEEN_END_ISO = '2026-10-31T23:59:59.999-06:00';
+export const HALLOWEEN_END_ISO = '2026-11-29T23:59:59.999-06:00';
 export const HALLOWEEN_END_TIMESTAMP = new Date(HALLOWEEN_END_ISO).getTime();
 
 export function isHalloweenSeasonActive(nowMs: number = Date.now()): boolean {
   return nowMs <= HALLOWEEN_END_TIMESTAMP;
 }
 
-export const HALLOWEEN_PROMO_PRICE_1OZ = 3.30;
+export const HALLOWEEN_PROMO_PRICE_1OZ = 3.40;
 export const HALLOWEEN_ORIGINAL_PRICE_1OZ = 3.75;
-export const HALLOWEEN_PROMO_DISCOUNT_1OZ = 0.45;
+export const HALLOWEEN_PROMO_DISCOUNT_1OZ = 0.35;
 
 export const HALLOWEEN_PROMO_PRICE_HALF_OZ = 1.85;
 export const HALLOWEEN_ORIGINAL_PRICE_HALF_OZ = 1.90;
@@ -201,9 +203,52 @@ export function getHalloweenPotionInfo(
 }
 
 export function isHalloweenPromoProduct(
-  product?: { id?: string | null; sku?: string | null; name?: string | null; officialName?: string | null } | null
+  product?: {
+    id?: string | null;
+    sku?: string | null;
+    name?: string | null;
+    officialName?: string | null;
+    category?: string | { name?: string | null } | null;
+    unit?: string | null;
+    price?: number | string | null;
+  } | null
 ): boolean {
-  return getHalloweenPotionInfo(product) !== null;
+  if (!isHalloweenSeasonActive() || !product) return false;
+
+  const rawCat =
+    typeof product.category === 'string'
+      ? product.category
+      : product.category?.name || '';
+  const catLower = String(rawCat || '').trim().toLowerCase();
+  const unitLower = String(product.unit || '').trim().toLowerCase();
+  const nameLower = String(product.name || '').trim().toLowerCase();
+  const idLower = String(product.id || '').trim().toLowerCase();
+
+  if (
+    nameLower.includes('litro') ||
+    nameLower.includes('alcohol') ||
+    idLower.startsWith('sticker-') ||
+    idLower.startsWith('bote-') ||
+    catLower === 'botes' ||
+    catLower === 'stickers' ||
+    catLower === 'insumos y materia prima' ||
+    catLower === 'logística'
+  ) {
+    return false;
+  }
+
+  const isEssence =
+    catLower === 'esencias para perfume' ||
+    catLower === 'esencias & fragancias' ||
+    unitLower === 'onza' ||
+    idLower.startsWith('esencia-');
+
+  if (!isEssence) return false;
+
+  // Solo entran a Black Week ($3.40) las esencias cuyo precio normal es $3.75.
+  // Las que valen más de $3.75 ($4.00, $4.25, $4.50, $6.00) quedan a su precio normal.
+  const priceNum = Number(product.price ?? 3.75);
+  return priceNum > 0 && priceNum <= 3.75 + 0.005;
 }
 
 /**
@@ -232,14 +277,21 @@ export function resolveDteItemDiscount(item: {
     return { originalUnitPriceConIva: orig, unitDiscountConIva: disc };
   }
 
-  // 2. Detección automática para compras de la promoción de Halloween ($3.30 la onza -> orig $3.75, dto $0.45; $1.85 media onza -> orig $1.90, dto $0.05)
+  // 2. Detección automática para compras de promoción ($3.40 o $3.30 la onza -> orig $3.75; $1.85 media onza -> orig $1.90)
   const descLower = String(item.descripcion || '').toLowerCase();
   const isHalf = !descLower.includes('litro') && (descLower.includes('½') || descLower.includes('media onza') || descLower.includes('1/2'));
 
-  if (!isHalf && Math.abs(paidUnit - HALLOWEEN_PROMO_PRICE_1OZ) < 0.005) {
+  if (!isHalf && Math.abs(paidUnit - 3.40) < 0.005) {
     return {
-      originalUnitPriceConIva: HALLOWEEN_ORIGINAL_PRICE_1OZ,
-      unitDiscountConIva: HALLOWEEN_PROMO_DISCOUNT_1OZ,
+      originalUnitPriceConIva: 3.75,
+      unitDiscountConIva: 0.35,
+    };
+  }
+
+  if (!isHalf && Math.abs(paidUnit - 3.30) < 0.005) {
+    return {
+      originalUnitPriceConIva: 3.75,
+      unitDiscountConIva: 0.45,
     };
   }
 

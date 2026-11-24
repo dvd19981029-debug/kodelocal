@@ -3,6 +3,7 @@
 import React from 'react';
 import { Truck, Droplets, Sparkles, ShieldCheck } from 'lucide-react';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
+import { isHalloweenSeasonActive } from '@/lib/halloweenPromo';
 
 interface TickerMessage {
   id: string;
@@ -11,6 +12,14 @@ interface TickerMessage {
   text: string;
   highlight?: string;
 }
+
+const BLACK_WEEK_MESSAGE: TickerMessage = {
+  id: 'black-week',
+  badge: 'BLACK WEEK',
+  icon: Sparkles,
+  text: 'Esencias seleccionadas de perfumería fina: 1 Onza a $3.40 (antes $3.75) y ½ Onza a $1.85',
+  highlight: 'Hasta el domingo 29 de noviembre',
+};
 
 const TICKER_MESSAGES: TickerMessage[] = [
   {
@@ -40,6 +49,8 @@ const TICKER_MESSAGES: TickerMessage[] = [
 
 export default function PromoTickerBar() {
   const { isArmaTuPerfumeActive } = useEcommerceCart();
+  const isBlackWeek = isHalloweenSeasonActive();
+  const activeMessages = isBlackWeek ? [BLACK_WEEK_MESSAGE, ...TICKER_MESSAGES] : TICKER_MESSAGES;
 
   // Se oculta única y exclusivamente en la sección Arma tu propio perfume
   if (isArmaTuPerfumeActive) {
@@ -49,18 +60,18 @@ export default function PromoTickerBar() {
   return (
     <aside
       aria-label="Avisos y Beneficios de Aromaniak SV"
-      className="w-full bg-[#4338ca] text-white border-b border-indigo-500/25 overflow-hidden relative select-none pointer-events-none sm:pointer-events-auto z-30"
+      className={`w-full ${isBlackWeek ? 'bg-[#160d29] border-white/10' : 'bg-[#4338ca] border-indigo-500/25'} text-white border-b overflow-hidden relative select-none pointer-events-none sm:pointer-events-auto z-30`}
     >
       <div className="relative py-2 sm:py-2.5 overflow-hidden flex items-center">
         {/* Pista continua con animación infinita sin cortes ni espacios en blanco */}
         <div className="ticker-track flex items-center whitespace-nowrap hover:[animation-play-state:paused]">
           {/* Primer bloque */}
           <div className="flex items-center gap-8 px-4 shrink-0">
-            {TICKER_MESSAGES.map((msg) => {
+            {activeMessages.map((msg) => {
               const Icon = msg.icon;
               return (
                 <div key={`track1-${msg.id}`} className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-semibold tracking-tight text-white/95">
-                  <Icon className="w-3.5 h-3.5 text-indigo-200 shrink-0 stroke-[2.2]" />
+                  <Icon className="w-3.5 h-3.5 text-purple-200 shrink-0 stroke-[2.2]" />
                   {msg.badge && (
                     <span className="bg-white/15 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded tracking-wider uppercase border border-white/20">
                       {msg.badge}
@@ -75,7 +86,7 @@ export default function PromoTickerBar() {
                       </>
                     )}
                   </span>
-                  <span className="text-indigo-300/40 text-xs ml-6" aria-hidden="true">✦</span>
+                  <span className="text-purple-300/40 text-xs ml-6" aria-hidden="true">✦</span>
                 </div>
               );
             })}
@@ -83,11 +94,11 @@ export default function PromoTickerBar() {
 
           {/* Bloque duplicado idéntico para efecto infinito 100% continuo */}
           <div className="flex items-center gap-8 px-4 shrink-0" aria-hidden="true">
-            {TICKER_MESSAGES.map((msg) => {
+            {activeMessages.map((msg) => {
               const Icon = msg.icon;
               return (
                 <div key={`track2-${msg.id}`} className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-semibold tracking-tight text-white/95">
-                  <Icon className="w-3.5 h-3.5 text-indigo-200 shrink-0 stroke-[2.2]" />
+                  <Icon className="w-3.5 h-3.5 text-purple-200 shrink-0 stroke-[2.2]" />
                   {msg.badge && (
                     <span className="bg-white/15 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded tracking-wider uppercase border border-white/20">
                       {msg.badge}
@@ -102,7 +113,7 @@ export default function PromoTickerBar() {
                       </>
                     )}
                   </span>
-                  <span className="text-indigo-300/40 text-xs ml-6" aria-hidden="true">✦</span>
+                  <span className="text-purple-300/40 text-xs ml-6" aria-hidden="true">✦</span>
                 </div>
               );
             })}
