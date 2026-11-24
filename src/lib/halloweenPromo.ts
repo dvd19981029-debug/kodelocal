@@ -5,11 +5,22 @@
 // - Arma tu propio perfume (100 ml): Kit Normal (1 Oz) a $9.00 (Antes $10.00), Kit Extrashot (+½ Oz PLUS) a $10.00 (Antes $13.00)
 // Las esencias caras (> $3.75) mantienen su precio normal sin descuento.
 
+export const BLACK_WEEK_END_ISO = '2026-11-29T23:59:59.999-06:00';
+export const BLACK_WEEK_END_TIMESTAMP = new Date(BLACK_WEEK_END_ISO).getTime();
+
 export const HALLOWEEN_END_ISO = '2026-11-30T23:59:59.999-06:00';
 export const HALLOWEEN_END_TIMESTAMP = new Date(HALLOWEEN_END_ISO).getTime();
 
 export function isHalloweenSeasonActive(nowMs: number = Date.now()): boolean {
   return nowMs <= HALLOWEEN_END_TIMESTAMP;
+}
+
+export function isCyberMondayPhaseActive(nowMs: number = Date.now()): boolean {
+  return nowMs > BLACK_WEEK_END_TIMESTAMP && nowMs <= HALLOWEEN_END_TIMESTAMP;
+}
+
+export function getActivePromoCampaignName(nowMs: number = Date.now()): 'BLACK WEEK' | 'CYBER MONDAY' {
+  return isCyberMondayPhaseActive(nowMs) ? 'CYBER MONDAY' : 'BLACK WEEK';
 }
 
 export const HALLOWEEN_PROMO_PRICE_1OZ = 3.40;

@@ -37,7 +37,7 @@ import {
 import StickerBottlePreview from '@/components/ecommerce/StickerBottlePreview';
 import { getFragranceDescription } from '@/lib/fragranceDescriptions';
 import { resolveTargetProductId } from '@/lib/productUrl';
-import { isHalloweenPromoProduct, getHalloweenPotionInfo, HALLOWEEN_ORIGINAL_PRICE_1OZ, HALLOWEEN_ORIGINAL_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
+import { isHalloweenPromoProduct, getHalloweenPotionInfo, getActivePromoCampaignName, HALLOWEEN_ORIGINAL_PRICE_1OZ, HALLOWEEN_ORIGINAL_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
 import { trackMarketingEvent } from '@/components/analytics/MarketingScripts';
 
 export default function ProductDetailPage() {
@@ -1556,7 +1556,7 @@ export default function ProductDetailPage() {
                       Ahora ${(activeOption.price * quantity).toFixed(2)}
                     </span>
                     <span className="text-[11px] font-black bg-[#160d29] text-white px-2.5 py-0.5 rounded-lg tracking-wider uppercase">
-                      • Black Week
+                      • {getActivePromoCampaignName()}
                     </span>
                   </div>
                 ) : (

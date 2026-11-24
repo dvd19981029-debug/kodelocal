@@ -36,7 +36,7 @@ import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { saveGuestOrder, saveGuestShippingProfile, getGuestShippingProfile } from '@/lib/guestOrderStorage';
 import { GiroSearchSelect } from '@/components/common/GiroSearchSelect';
-import { isHalloweenPromoProduct, isHalloweenSeasonActive } from '@/lib/halloweenPromo';
+import { isHalloweenPromoProduct, isHalloweenSeasonActive, getActivePromoCampaignName } from '@/lib/halloweenPromo';
 import { BankAccountsCardsList, OrderTransferReceiptSection } from '@/components/ecommerce/TransferBankAccountsWidget';
 
 type FieldKey =
@@ -2260,7 +2260,7 @@ export default function CheckoutPage() {
                         <>
                           {halloweenPromoDiscount > 0 && (
                             <div className="flex items-center justify-between text-purple-700 font-bold">
-                              <span>Descuento Black Week</span>
+                              <span>Descuento {getActivePromoCampaignName() === 'CYBER MONDAY' ? 'Cyber Monday' : 'Black Week'}</span>
                               <span className="tabular-nums">
                                 -${halloweenPromoDiscount.toFixed(2)}
                               </span>

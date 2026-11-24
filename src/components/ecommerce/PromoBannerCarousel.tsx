@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
-import { isHalloweenSeasonActive } from '@/lib/halloweenPromo';
+import { isHalloweenSeasonActive, isCyberMondayPhaseActive } from '@/lib/halloweenPromo';
 import { AnimatedWitchCauldronSVG } from '@/components/ecommerce/WitchCauldronHeaderBanner';
 
 interface PromoSlide {
@@ -39,6 +39,7 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
   const touchEndX = useRef<number | null>(null);
 
   const halloweenActive = isHalloweenSeasonActive();
+  const isCyberMonday = isCyberMondayPhaseActive();
 
   const blogSlides: PromoSlide[] = [
     {
@@ -89,16 +90,24 @@ export default function PromoBannerCarousel({ onExploreCatalog, onFilterCategory
   ];
 
   const blackWeekSlide: PromoSlide = {
-    id: 'promo-black-week',
-    imageUrl: '/images/promo/banner_black_week.jpg?v=3',
-    imageAlt: 'Black Week Aromaniak: Esencias seleccionadas de perfumería fina a $3.40 la Onza y $1.85 la Media Onza',
+    id: isCyberMonday ? 'promo-cyber-monday' : 'promo-black-week',
+    imageUrl: isCyberMonday
+      ? '/images/promo/banner_cyber_monday.jpg?v=1'
+      : '/images/promo/banner_black_week.jpg?v=3',
+    imageAlt: isCyberMonday
+      ? 'Cyber Monday Aromaniak: Esencias seleccionadas de perfumería fina a $3.40 la Onza y $1.85 la Media Onza'
+      : 'Black Week Aromaniak: Esencias seleccionadas de perfumería fina a $3.40 la Onza y $1.85 la Media Onza',
     action: 'aromas',
   };
 
   const blackWeekKitSlide: PromoSlide = {
-    id: 'promo-black-week-kit',
-    imageUrl: '/images/promo/banner_black_week_arma_tu_perfume.jpg?v=2',
-    imageAlt: 'Black Week Aromaniak: Arma tu propio perfume 100 ml a $9.00 el Kit Normal y $10.00 el Kit Extrashot',
+    id: isCyberMonday ? 'promo-cyber-monday-kit' : 'promo-black-week-kit',
+    imageUrl: isCyberMonday
+      ? '/images/promo/banner_cyber_monday_arma_tu_perfume.jpg?v=1'
+      : '/images/promo/banner_black_week_arma_tu_perfume.jpg?v=2',
+    imageAlt: isCyberMonday
+      ? 'Cyber Monday Aromaniak: Arma tu propio perfume 100 ml a $9.00 el Kit Normal y $10.00 el Kit Extrashot'
+      : 'Black Week Aromaniak: Arma tu propio perfume 100 ml a $9.00 el Kit Normal y $10.00 el Kit Extrashot',
     action: 'arma-tu-perfume',
   };
 

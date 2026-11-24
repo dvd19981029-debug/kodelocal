@@ -11,6 +11,7 @@ import { getInspiracionPerfumeName, formatPerfumeDisplayName, getBottleLabelConf
 import { getProductUrl } from '@/lib/productUrl';
 import {
   isHalloweenPromoProduct,
+  getActivePromoCampaignName,
   HALLOWEEN_ORIGINAL_PRICE_1OZ,
   HALLOWEEN_ORIGINAL_PRICE_HALF_OZ,
 } from '@/lib/halloweenPromo';
@@ -333,7 +334,7 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
                 {isHalloweenPromo && !isOutOfStock && (
                   <span className="bg-[#160d29]/95 backdrop-blur-xs text-white border border-white/15 text-[8px] sm:text-[9px] font-extrabold py-0.5 px-2 rounded-md shadow-sm tracking-[0.1em] uppercase flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
-                    <span>BLACK WEEK</span>
+                    <span>{getActivePromoCampaignName()}</span>
                   </span>
                 )}
                 {isNewEssenceItem && (

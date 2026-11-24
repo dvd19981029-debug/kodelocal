@@ -3,7 +3,7 @@
 import React from 'react';
 import { Truck, Droplets, Sparkles, ShieldCheck } from 'lucide-react';
 import { useEcommerceCart } from '@/context/EcommerceCartContext';
-import { isHalloweenSeasonActive } from '@/lib/halloweenPromo';
+import { isHalloweenSeasonActive, getActivePromoCampaignName } from '@/lib/halloweenPromo';
 
 interface TickerMessage {
   id: string;
@@ -50,7 +50,10 @@ const TICKER_MESSAGES: TickerMessage[] = [
 export default function PromoTickerBar() {
   const { isArmaTuPerfumeActive } = useEcommerceCart();
   const isBlackWeek = isHalloweenSeasonActive();
-  const activeMessages = isBlackWeek ? [BLACK_WEEK_MESSAGE, ...TICKER_MESSAGES] : TICKER_MESSAGES;
+  const campaignName = getActivePromoCampaignName();
+  const activeMessages = isBlackWeek
+    ? [{ ...BLACK_WEEK_MESSAGE, badge: campaignName }, ...TICKER_MESSAGES]
+    : TICKER_MESSAGES;
 
   // Se oculta única y exclusivamente en la sección Arma tu propio perfume
   if (isArmaTuPerfumeActive) {
