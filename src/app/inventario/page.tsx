@@ -142,6 +142,10 @@ export default function InventarioPage() {
       setProducts(prev => [payload as ProductItem, ...prev]);
     }
 
+    const isEditingExisting = Boolean(editingProduct);
+    const invStockChanged = !isEditingExisting || Number(payload.stock || 0) !== Number(editingProduct?.stock || 0);
+    const invStockHalfChanged = !isEditingExisting || Number((payload as any).stockHalf || 0) !== Number((editingProduct as any)?.stockHalf || 0);
+
     setIsNewProductOpen(false);
     setEditingProduct(null);
 
@@ -149,7 +153,7 @@ export default function InventarioPage() {
     try {
       const staffToken = await getStaffToken();
       const res = await fetch('/api/products', {
-        method: editingProduct ? 'PATCH' : 'POST',
+        method: isEditingExisting ? 'PATCH' : 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(staffToken ? { 'x-staff-token': staffToken } : {}),
@@ -167,8 +171,8 @@ export default function InventarioPage() {
           priceHalfOunce: payload.priceHalfOunce,
           finishedPerfumePrice: payload.finishedPerfumePrice,
           cost: payload.cost,
-          stock: payload.stock,
-          stockHalf: (payload as any).stockHalf,
+          ...(invStockChanged ? { stock: payload.stock } : {}),
+          ...(invStockHalfChanged ? { stockHalf: (payload as any).stockHalf } : {}),
           imageUrl: payload.imageUrl,
           isAvailableOnline: payload.isAvailableOnline,
         }),

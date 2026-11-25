@@ -322,6 +322,7 @@ export default function PosPage() {
   // Edición rápida de producto desde POS
   const [isEditingProductOpen, setIsEditingProductOpen] = useState(false);
   const [editingProductInPos, setEditingProductInPos] = useState<ProductItem | null>(null);
+  const posEditingInitialStockRef = useRef<{ stock: number; stockHalf: number } | null>(null);
   const [isSavingProductInPos, setIsSavingProductInPos] = useState(false);
 
   // Monitoreo y auto-sincronización de cola offline
@@ -1854,6 +1855,10 @@ export default function PosPage() {
 
   const handleOpenEditProduct = (e: React.MouseEvent, product: ProductItem) => {
     e.stopPropagation();
+    posEditingInitialStockRef.current = {
+      stock: Number(product.stock || 0),
+      stockHalf: Number(product.stockHalf || 0),
+    };
     setEditingProductInPos({ ...product });
     setIsEditingProductOpen(true);
   };
@@ -1901,6 +1906,10 @@ export default function PosPage() {
     setIsEditingProductOpen(false);
 
     // 2. Persistir en la base de datos de Supabase
+    const posInitialStockSnap = posEditingInitialStockRef.current;
+    const posStockChanged = isNewProduct || !posInitialStockSnap || Number(prodToSave.stock || 0) !== posInitialStockSnap.stock;
+    const posStockHalfChanged = isNewProduct || !posInitialStockSnap || Number(prodToSave.stockHalf || 0) !== posInitialStockSnap.stockHalf;
+    posEditingInitialStockRef.current = null;
     try {
       const staffToken = await getStaffToken();
       const res = await fetch('/api/products', {
@@ -1922,8 +1931,8 @@ export default function PosPage() {
           priceHalfOunce: isEssenceProd && prodToSave.priceHalfOunce != null ? Number(prodToSave.priceHalfOunce) : null,
           finishedPerfumePrice: isEssenceProd && prodToSave.finishedPerfumePrice != null ? Number(prodToSave.finishedPerfumePrice) : null,
           cost: Number(prodToSave.cost || 0),
-          stock: Number(prodToSave.stock || 0),
-          stockHalf: Number(prodToSave.stockHalf || 0),
+          ...(posStockChanged ? { stock: Number(prodToSave.stock || 0) } : {}),
+          ...(posStockHalfChanged ? { stockHalf: Number(prodToSave.stockHalf || 0) } : {}),
           puesto: prodToSave.puesto || '',
           imageUrl: prodToSave.imageUrl || '',
           isAvailableOnline: prodToSave.isAvailableOnline,

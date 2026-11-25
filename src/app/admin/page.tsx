@@ -147,6 +147,7 @@ export default function AdminPage() {
   };
   const [isBulkPriceModalOpen, setIsBulkPriceModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
+  const editingInitialStockRef = React.useRef<{ stock: number; stockHalf: number } | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isMobileAdminMenuOpen, setIsMobileAdminMenuOpen] = useState(false);
 
@@ -759,11 +760,16 @@ export default function AdminPage() {
   };
 
   const handleStartEdit = (p: ProductItem) => {
+    editingInitialStockRef.current = {
+      stock: Number(p.stock || 0),
+      stockHalf: Number(p.stockHalf || 0),
+    };
     setEditingProduct({ ...p });
     setIsEditModalOpen(true);
   };
 
   const handleOpenNewProduct = () => {
+    editingInitialStockRef.current = null;
     const nextSku = (products.length + 1).toString();
     setEditingProduct({
       id: `prod_${Date.now()}`,
@@ -848,6 +854,10 @@ export default function AdminPage() {
 
     const prodToSave = { ...editingProduct };
     const isNewLocal = prodToSave.id.startsWith('prod_');
+    const initialStockSnap = editingInitialStockRef.current;
+    const stockChanged = isNewLocal || !initialStockSnap || Number(prodToSave.stock || 0) !== initialStockSnap.stock;
+    const stockHalfChanged = isNewLocal || !initialStockSnap || Number(prodToSave.stockHalf || 0) !== initialStockSnap.stockHalf;
+    editingInitialStockRef.current = null;
 
     setIsEditModalOpen(false);
     setEditingProduct(null);
@@ -874,8 +884,8 @@ export default function AdminPage() {
           priceHalfOunce: prodToSave.priceHalfOunce != null ? Number(prodToSave.priceHalfOunce) : undefined,
           finishedPerfumePrice: prodToSave.finishedPerfumePrice != null ? Number(prodToSave.finishedPerfumePrice) : undefined,
           cost: Number(prodToSave.cost || 0),
-          stock: Number(prodToSave.stock || 0),
-          stockHalf: Number(prodToSave.stockHalf || 0),
+          ...(stockChanged ? { stock: Number(prodToSave.stock || 0) } : {}),
+          ...(stockHalfChanged ? { stockHalf: Number(prodToSave.stockHalf || 0) } : {}),
           puesto: prodToSave.puesto || '',
           supplier: prodToSave.supplier || 'APAESA',
           imageUrl: prodToSave.imageUrl || '',
