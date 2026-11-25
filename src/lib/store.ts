@@ -1961,11 +1961,11 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "unit": "Unidad",
     "price": 4.0,
     "cost": 0.9,
-    "stock": 72,
+    "stock": 1,
     "minStock": 10,
     "imageUrl": "/images/insumos/piseta_dosificadora_250ml.jpg",
     "description": "Perfecta para alcohol perfumero • Con pico curvo para verter sin derrames",
-    "isAvailableOnline": true,
+    "isAvailableOnline": false,
     "puesto": "C2",
     "stockHalf": 0
   },

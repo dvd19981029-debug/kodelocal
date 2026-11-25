@@ -197,11 +197,15 @@ export default function CartDrawer() {
     if (hasLooseEssence && !hasBottle && !hasAlcohol) {
       subtitle = 'Llevas esencia: ¿necesitas frasco, alcohol, embudo o fijador?';
     } else if (hasLooseEssence && hasBottle && !hasAlcohol) {
-      subtitle = 'Llevas esencia y bote: ¿agregamos alcohol, embudo o piseta?';
+      subtitle = pisetaItems.length > 0
+        ? 'Llevas esencia y bote: ¿agregamos alcohol, embudo o piseta?'
+        : 'Llevas esencia y bote: ¿agregamos alcohol, embudo o fijador?';
     } else if (hasLooseEssence && hasAlcohol && !hasBottle) {
       subtitle = 'Llevas esencia y alcohol: ¿necesitas frascos de 100ml o embudo?';
     } else if (hasLooseEssence && hasBottle && hasAlcohol) {
-      subtitle = '¿Te falta embudo, piseta dosificadora o fijador extra?';
+      subtitle = pisetaItems.length > 0
+        ? '¿Te falta embudo, piseta dosificadora o fijador extra?'
+        : '¿Te falta embudo, fijador extra o caja de presentación?';
     }
 
     const pricedItems = ordered.slice(0, 10).map(({ product, tag }) => {
