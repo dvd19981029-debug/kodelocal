@@ -1,6 +1,6 @@
 import { NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getWompiTransaction } from '@/lib/wompi';
+import { getWompiTransaction, getWompiPaymentLinkDetails } from '@/lib/wompi';
 import { verifyCustomerToken, verifyStaffInternalToken, verifyStaffRequest } from '@/lib/customerAuthToken';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { sanitizeText, sanitizeEmail, sanitizePhone, sanitizeDocument } from '@/lib/sanitize';
@@ -503,43 +503,83 @@ export async function PATCH(request: Request) {
       }
 
       try {
-        const txData = await getWompiTransaction(cleanTxId);
-        const isApproved =
-          txData.esAprobada === true ||
-          txData.EsAprobada === true ||
-          txData.resultadoTransaccion === 'ExitosaAprobada' ||
-          txData.ResultadoTransaccion === 'ExitosaAprobada';
-
-        // 2. Verificación Estricta del Folio/Enlace y Monto contra la API de Wompi
-        const txMerchantRef = String(
-          txData.identificadorEnlaceComercio ||
-          txData.IdentificadorEnlaceComercio ||
-          txData.enlacePago?.identificadorEnlaceComercio ||
-          txData.enlacePago?.IdentificadorEnlaceComercio ||
-          txData.EnlacePago?.IdentificadorEnlaceComercio ||
-          txData.EnlacePago?.identificadorEnlaceComercio ||
-          ''
-        ).trim();
-
-        const txIdEnlace = String(
-          txData.idEnlace ||
-          txData.IdEnlace ||
-          txData.enlacePago?.idEnlace ||
-          txData.enlacePago?.IdEnlace ||
-          txData.EnlacePago?.IdEnlace ||
-          txData.EnlacePago?.idEnlace ||
-          ''
-        ).trim();
-
         const storedIdEnlaceMatch = (order.notes || '').match(/\[Wompi idEnlace:\s*(\d+)\]/i);
         const storedIdEnlace = storedIdEnlaceMatch ? storedIdEnlaceMatch[1] : '';
-
-        const numMatches =
-          (txMerchantRef !== '' && txMerchantRef === order.orderNumber) ||
-          (txIdEnlace !== '' && storedIdEnlace !== '' && txIdEnlace === storedIdEnlace);
-
-        const txMonto = Number(txData.monto ?? txData.Monto ?? 0);
         const orderTotal = Number(order.total);
+
+        let isApproved = false;
+        let numMatches = false;
+        let txMonto = 0;
+
+        try {
+          const txData = await getWompiTransaction(cleanTxId);
+          isApproved =
+            txData.esAprobada === true ||
+            txData.EsAprobada === true ||
+            txData.resultadoTransaccion === 'ExitosaAprobada' ||
+            txData.ResultadoTransaccion === 'ExitosaAprobada';
+
+          const txMerchantRef = String(
+            txData.identificadorEnlaceComercio ||
+            txData.IdentificadorEnlaceComercio ||
+            txData.enlacePago?.identificadorEnlaceComercio ||
+            txData.enlacePago?.IdentificadorEnlaceComercio ||
+            txData.EnlacePago?.IdentificadorEnlaceComercio ||
+            txData.EnlacePago?.identificadorEnlaceComercio ||
+            ''
+          ).trim();
+
+          const txIdEnlace = String(
+            txData.idEnlace ||
+            txData.IdEnlace ||
+            txData.enlacePago?.idEnlace ||
+            txData.enlacePago?.IdEnlace ||
+            txData.EnlacePago?.IdEnlace ||
+            txData.EnlacePago?.idEnlace ||
+            ''
+          ).trim();
+
+          numMatches =
+            (txMerchantRef !== '' && txMerchantRef === order.orderNumber) ||
+            (txIdEnlace !== '' && storedIdEnlace !== '' && txIdEnlace === storedIdEnlace);
+
+          txMonto = Number(txData.monto ?? txData.Monto ?? 0);
+        } catch (txErr) {
+          console.warn('Aviso consultando TransaccionCompra en Wompi, intentando por EnlacePago:', txErr);
+        }
+
+        // Fallback oficial por EnlacePago/{idEnlace} cuando TransaccionCompra no devuelve el objeto enlacePago
+        if ((!isApproved || !numMatches) && storedIdEnlace) {
+          const linkDetails = await getWompiPaymentLinkDetails(storedIdEnlace);
+          const linkRef = String(
+            linkDetails?.identificadorEnlaceComercio ||
+            linkDetails?.IdentificadorEnlaceComercio ||
+            ''
+          ).trim();
+          const txs: any[] =
+            linkDetails?.transaccionesCompra ||
+            linkDetails?.TransaccionesCompra ||
+            (linkDetails?.transaccionCompra ? [linkDetails.transaccionCompra] : []) ||
+            [];
+          const approvedTx = Array.isArray(txs)
+            ? txs.find((t: any) => {
+                const approved =
+                  t?.resultadoTransaccion === 'ExitosaAprobada' ||
+                  t?.ResultadoTransaccion === 'ExitosaAprobada' ||
+                  t?.esAprobada === true ||
+                  t?.EsAprobada === true;
+                if (!approved) return false;
+                const tId = String(t?.idTransaccion || t?.IdTransaccion || '').trim();
+                return !tId || !cleanTxId || tId.toLowerCase() === cleanTxId.toLowerCase();
+              })
+            : null;
+
+          if (approvedTx) {
+            isApproved = true;
+            numMatches = !linkRef || linkRef === order.orderNumber;
+            txMonto = Number(approvedTx.monto ?? approvedTx.Monto ?? linkDetails?.monto ?? linkDetails?.Monto ?? orderTotal);
+          }
+        }
 
         if (!isApproved || !numMatches) {
           return NextResponse.json(
